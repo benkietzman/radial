@@ -1,0 +1,234 @@
+// vim600: fdm=marker
+/* -*- c++ -*- */
+///////////////////////////////////////////
+// Radial
+// -------------------------------------
+// file       : Interface.cpp
+// author     : Ben Kietzman
+// begin      : 2022-04-19
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+///////////////////////////////////////////
+
+/**************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+**************************************************************************/
+
+/*! \file Interface.cpp
+* \brief Interface Class
+*
+* Provides Interface functionality.
+*/
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{ 
+  namespace radial
+  {
+    // {{{ Interface()
+    Interface::Interface(const string strName, int argc, char *argv[]) : Base(argc, argv)
+    {
+      m_strName = strName;
+      m_unUnique = 0;
+    }
+    // }}}
+    // {{{ ~Interface()
+    Interface::~Interface()
+    {
+    }
+    // }}}
+    // {{{ alert()
+    void Interface::alert(const string strMessage)
+    {
+      log("alert", strMessage);
+    }
+    // }}}
+    // {{{ log()
+    void Interface::log(const string strMessage)
+    {
+      log("log", strMessage);
+    }
+    void Interface::log(const string strFunction, const string strMessage)
+    {
+      Json *ptJson = new Json;
+
+      ptJson->insert("Function", strFunction);
+      ptJson->insert("Message", strMessage);
+      target("log", ptJson, false);
+      delete ptJson;
+    }
+    // }}}
+    // {{{ notify()
+    void Interface::notify(const string strMessage)
+    {
+      log("notify", strMessage);
+    }
+    // }}}
+    // {{{ process()
+    bool Interface::process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError)
+    {
+      bool bExit = false, bResult = true;
+      char szBuffer[65536];
+      int nReturn;
+      size_t unPosition;
+      string strBuffers[2], strLine;
+      stringstring ssMessage;
+
+      while (!bExit)
+      {
+        pollfd fds[2];
+        fds[0].fd = 0;
+        fds[0].events = POLLIN;
+        fds[1].fd = -1;
+        fds[1].events = POLLOUT;
+        if (strBuffers[1].empty() && !responses.empty())
+        {
+          strBuffers[1] = responses.front() + "\n";
+          responses.pop_front();
+        }
+        if (!strBuffers[1].empty())
+        {
+          fds[1].fd = 1;
+        }
+        if ((nReturn = poll(fds, 2, 250)) > 0)
+        {
+          if (fds[0].revents & POLLIN)
+          {
+            if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
+            {
+              strBuffer[0].append(szBuffer, nReturn);
+              while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+              {
+                Json *ptJson;
+                strLine = strBuffer[0].substr(0, unPosition);
+                strBuffer.erase(0, (unPosition + 1));
+                ptJson = new Json(strLine);
+                if (ptJson->m.find("_unique") != ptJson->m.end())
+                {
+                  size_t unUnique;
+                  stringstream ssUnique(ptJson->m["_unique"]->v);
+                  ssUnique >> unUnique;
+                  mutexResponses.lock();
+                  if (m_waiting.find(unUnique) != m_waiting.end())
+                  {
+                    m_waiting[unUnique] = new Json(ptJson);
+                  }
+                  mutexResponses.unlock();
+                }
+                else
+                {
+                  (*pCallback)(strPrefix, ptJson, strError);
+                }
+                delete ptJson;
+              }
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                bReturn = false;
+                ssMessage.str("");
+                ssMessage << "read(" << errno << ") " << strerror(errno);
+                strError = ssMessage.str();
+              }
+            }
+          }
+          if (fds[1].revents & POLLOUT)
+          {
+            if ((nReturn = write(fds[1].fd, strBuffers[1].c_str(), strBuffers[1].size())) > 0)
+            {
+              strBuffers[1].erase(0, nReturn);
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                bReturn = false;
+                ssMessage.str("");
+                ssMessage << "write(" << errno << ") " << strerror(errno);
+                strError = ssMessage.str();
+              }
+            }
+          }
+        }
+        else if (nReturn < 0)
+        {
+          bExit = true;
+          bResult = false;
+          ssMessage.str("");
+          ssMessage << "poll(" << errno << ") " << strerror(errno);
+          strError = ssMessage.str();
+        }
+      }
+
+      return bResult;
+    }
+    // }}}
+    // {{{ response()
+    void Interface::response(Json *ptJson)
+    {
+      string strJson;
+
+      ptJson->json(strJson);
+      m_mutexResponses.lock();
+      responses.push_back(strJson);
+      m_mutexResponses.unlock();
+    }
+    // }}}
+    // {{{ target()
+    bool Interface::target(const string strTarget, Json *ptJson, bool bWait)
+    {
+      bool bResult;
+      size_t unUnique;
+      string strJson;
+
+      ptJson->insert("Target", strTarget);
+      if (bWait)
+      {
+        stringstream ssUnique;
+        ptJson->insert("Source", m_strName);
+        mutexResponses.lock();
+        while (m_waiting.find(m_unUnique) != m_waiting.end())
+        {
+          m_unUnique++;
+        }
+        unUnique = m_unUnique++;
+        ssUnique << unUnique;
+        ptJson->insert("_unique", ssUnique.str(),'n');
+        m_waiting[unUnique] = NULL;
+        mutexResponses.unlock();
+      }
+      m_strBuffer[1].append(ptJson->json(strJson) + "\n");
+      if (bWait)
+      {
+        bool bFound = false;
+        while (!bFound)
+        {
+          mutexResponses.lock();
+          if (m_waiting[unUnique] != NULL)
+          {
+            bFound = true;
+            ptJson->merge(wating[unUnique], true, true);
+            delete m_waiting[unUnique];
+            m_waiting.erase(unUnique];
+          }
+          mutexResponses.unlock();
+          if (!bFound)
+          {
+            usleep(1000);
+          }
+        }
+        }
+      }
+    }
+    // }}}
+  }
+}

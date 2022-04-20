@@ -1,0 +1,60 @@
+// vim600: fdm=marker
+/* -*- c++ -*- */
+///////////////////////////////////////////
+// Radial
+// -------------------------------------
+// file       : Interface
+// author     : Ben Kietzman
+// begin      : 2022-04-19
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+///////////////////////////////////////////
+
+/**************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+**************************************************************************/
+
+/*! \file Interface
+* \brief Interface Class
+*
+* Provides Interface functionality.
+*/
+#ifndef _RADIAL_INTERFACE_
+#define _RADIAL_INTERFACE_
+// {{{ includes
+#include "Base"
+// }}}
+extern "C++"
+{
+  namespace radial
+  {
+    // {{{ Interface
+    class Interface : public Base
+    {
+      protected:
+      list<string> m_responses;
+      map<size_t, Json *> m_waiting;
+      mutex m_mutexResponses;
+      size_t m_unUnique;
+      string m_strName;
+
+      void alert(const string strMessage);
+      void log(const string strMessage);
+      void notify(const string strMessage);
+      bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
+      void response(Json *ptJson);
+      bool target(const string strTarget, Json *ptJson, bWait = true);
+
+      public:
+      Interface(const string strName, int argc, char *argv[]);
+      ~Interface();
+    };
+    // }}}
+  }
+}
+#endif

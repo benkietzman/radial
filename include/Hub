@@ -1,0 +1,71 @@
+// vim600: fdm=marker
+/* -*- c++ -*- */
+///////////////////////////////////////////
+// Radial
+// -------------------------------------
+// file       : Hub
+// author     : Ben Kietzman
+// begin      : 2022-04-19
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+///////////////////////////////////////////
+
+/**************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+**************************************************************************/
+
+/*! \file Hub
+* \brief Hub Class
+*
+* Provides Hub functionality.
+*/
+#ifndef _RADIAL_HUB_
+#define _RADIAL_HUB_
+// {{{ includes
+#include "Base"
+// }}}
+extern "C++"
+{
+  namespace radial
+  {
+    // {{{ radialHubInterface
+    struct radialHubInterface
+    {
+      bool bRespawn;
+      int fdRead;
+      int fdWrite;
+      list<string> buffers[2]
+      pid_t nPid;
+      string strBuffers[2];
+    };
+    // }}}
+    // {{{ Hub
+    class Hub : public Base
+    {
+      private:
+      char **m_env;
+      map<string, radialHubInterface *> m_interfaces;
+
+      void alert(const string strMessage);
+      bool interfaceAdd(const string strName, const string strCommand, const bool bRespawn, string &strError);
+      void interfaceRemove(const string strName);
+      bool interfacesLoad();
+      void log(const string strMessage);
+      void log(const string strFunction, const string strMessage);
+      void notify(const string strMessage);
+      void target(const string strTarget, Json *ptJson);
+
+      public:
+      Hub(int argc, char *argv[], char **env);
+      ~Hub();
+      bool process(string strPrefix, string &strError);
+    };
+    // }}}
+  }
+}
+#endif
