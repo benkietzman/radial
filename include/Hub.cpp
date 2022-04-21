@@ -32,7 +32,7 @@ extern "C++"
   namespace radial
   {
     // {{{ Hub()
-    Hub::Hub(int argc, char *argv[], char **env, string &strError) : Base(argc, argv)
+    Hub::Hub(int argc, char **argv, char **env) : Base(argc, argv)
     {
       m_env = env;
     }
@@ -62,8 +62,9 @@ extern "C++"
 
       if (m_interfaces.find(strName) == m_interfaces.end() || bRespawn)
       {
-        char *argx[100], *pszArgument;
-        int nPid, readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
+        char *args[100], *pszArgument;
+        int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
+        size_t unIndex = 0;
         pid_t nPid;
         string strArgument;
         stringstream ssCommand(strCommand);
@@ -91,7 +92,7 @@ extern "C++"
             }
             else if (nPid > 0)
             {
-              Json *ptConfig;
+              Json *ptConfig = new Json;
               bResult = true;
               close(writepipe[0]);
               close(readpipe[1]);
@@ -105,7 +106,9 @@ extern "C++"
               m_interfaces[strName]->nPid = nPid;
               ptConfig->insert("Data", m_strData);
               ptConfig->json(m_interfaces[strName]->strBuffers[1]);
+              delete ptConfig;
               m_interfaces[strName]->strBuffers[1] += "\n";
+              m_interfaces[strName]->strCommand = strCommand;
             }
             else
             {
@@ -139,6 +142,8 @@ extern "C++"
     // {{{ interfaceRemove()
     void Hub::interfaceRemove(const string strName)
     {
+      string strError;
+
       if (m_interfaces.find(strName) != m_interfaces.end())
       {
         close(m_interfaces[strName]->fdRead);
@@ -179,11 +184,11 @@ extern "C++"
           ssJson << strLine;
         }
         ptInterfaces = new Json(ssJson.str());
-        for (auto &i : ptInterfaces->m);
+        for (auto &i : ptInterfaces->m)
         {
           if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
           {
-            if (interfaceAdd(i.first, i->second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i->second->m["Respawn"]->v == "1")?true:false), strError))
+            if (interfaceAdd(i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), strError))
             {
               ssMessage.str("");
               ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "] Loaded interface.";
@@ -191,7 +196,7 @@ extern "C++"
             }
             else
             {
-              bResult false;
+              bResult = false;
               ssMessage.str("");
               ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "] " << strError;
               strError = ssMessage.str();
@@ -199,7 +204,7 @@ extern "C++"
           }
           else
           {
-            bResult false;
+            bResult = false;
             ssMessage.str("");
             ssMessage << "[" << ssInterfaces.str() << "," << i.first << "] Please provide the Command.";
             strError = ssMessage.str();
@@ -324,7 +329,7 @@ extern "C++"
                           {
                             if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
                             {
-                              if (interfaceAdd(ptJson->m["Name"]->v, ptJson->m["Command"]->v, strError))
+                              if (interfaceAdd(ptJson->m["Name"]->v, ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), strError))
                               {
                                 bSubResult = true;
                                 ssMessage.str("");
@@ -474,10 +479,12 @@ extern "C++"
     // {{{ target()
     void Hub::target(const string strTarget, Json *ptJson)
     {
+      string strJson;
+
       if (m_interfaces.find(strTarget) != m_interfaces.end())
       {
         ptJson->insert("Target", strTarget);
-        m_interfaces[strTarget]->buffers[1].append(ptJson->json(strJson) + "\n");
+        m_interfaces[strTarget]->buffers[1].push_back(ptJson->json(strJson) + "\n");
       }
     }
     // }}}

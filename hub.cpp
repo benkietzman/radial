@@ -25,14 +25,14 @@
 * Provides the central hub to which interfaces connect radially.
 */
 // {{{ includes
-#include "include/hub"
+#include "include/Hub"
 using namespace radial;
 // }}}
 // {{{ global variables
 extern char **environ;
 // }}}
 // {{{ main()
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
   string strError, strPrefix = "main()";
   Hub hub(argc, argv, environ);

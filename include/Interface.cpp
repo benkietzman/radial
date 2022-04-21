@@ -32,7 +32,7 @@ extern "C++"
   namespace radial
   {
     // {{{ Interface()
-    Interface::Interface(const string strName, int argc, char *argv[]) : Base(argc, argv)
+    Interface::Interface(const string strName, int argc, char **argv) : Base(argc, argv)
     {
       m_strName = strName;
       m_unUnique = 0;

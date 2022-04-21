@@ -42,7 +42,6 @@ using namespace std;
 #include <Central>
 #include <Json>
 #include <StringManip>
-#include <SignalHandling>
 using namespace common;
 // }}}
 extern "C++"
@@ -54,7 +53,7 @@ extern "C++"
     {
       protected:
       bool m_bShutdown;
-      char *m_argv[];
+      char **m_argv;
       int m_argc;
       string m_strApplication;
       string m_strData;
@@ -64,10 +63,9 @@ extern "C++"
 
       void setShutdown();
       bool shutdown();
-      void sighandle(const int nSignal);
 
       public:
-      Base(int argc, char *argv[]);
+      Base(int argc, char **argv);
       ~Base();
     };
     // }}}

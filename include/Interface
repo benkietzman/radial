@@ -51,7 +51,7 @@ extern "C++"
       void target(const string strTarget, Json *ptJson, bWait = true);
 
       public:
-      Interface(const string strName, int argc, char *argv[]);
+      Interface(const string strName, int argc, char **argv);
       ~Interface();
     };
     // }}}

@@ -32,21 +32,12 @@ extern "C++"
   namespace radial
   {
     // {{{ Base()
-    Base::Base(int argc, char *argv[])
+    Base::Base(int argc, char **argv)
     {
       string strError;
 
       m_argc = argc;
       m_argv = argv;
-      // {{{ set signal handling
-      sethandles(sighandle);
-      sigignore(SIGBUS);
-      sigignore(SIGCHLD);
-      sigignore(SIGCONT);
-      sigignore(SIGPIPE);
-      sigignore(SIGSEGV);
-      sigignore(SIGWINCH);
-      // }}}
       m_strApplication = "Radial";
       m_ulMaxResident = 40 * 1024;
       // {{{ command line arguments
@@ -102,13 +93,6 @@ extern "C++"
     void Base::setShutdown()
     {
       m_bShutdown = true;
-    }
-    // }}}
-    // {{{ sighandle()
-    void Base::sighandle(const int nSignal)
-    {
-      sethandles(sigdummy);
-      setShutdown();
     }
     // }}}
   }

@@ -32,7 +32,7 @@ extern "C++"
   namespace radial
   {
     // {{{ Log()
-    Log::Log(int argc, char *argv[]) : Interface("log", argc, argv)
+    Log::Log(int argc, char **argv) : Interface("log", argc, argv)
     {
       // {{{ command line arguments
       for (int i = 1; i < argc; i++)
