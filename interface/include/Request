@@ -3,9 +3,9 @@
 ///////////////////////////////////////////
 // Radial
 // -------------------------------------
-// file       : Base
+// file       : Request
 // author     : Ben Kietzman
-// begin      : 2022-04-19
+// begin      : 2022-04-21
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
@@ -17,58 +17,31 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-/*! \file Base
-* \brief Base Class
+/*! \file Request
+* \brief Request Class
 *
-* Provides Base functionality.
+* Provides Request interface.
 */
-#ifndef _RADIAL_BASE_
-#define _RADIAL_BASE_
+#ifndef _RADIAL_REQUEST_
+#define _RADIAL_REQUEST_
 // {{{ includes
-#include <cerrno>
-#include <cstring>
-#include <fstream>
-#include <list>
-#include <map>
-#include <mutex>
-#include <netdb.h>
-#include <poll.h>
-#include <sstream>
-#include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <thread>
-#include <unistd.h>
-#include <vector>
-using namespace std;
-#include <Central>
-#include <Json>
-#include <StringManip>
-using namespace common;
+#include "Interface"
 // }}}
 extern "C++"
 {
 namespace radial
 {
-// {{{ Base
-class Base
+// {{{ Request
+class Request : public Interface
 {
   protected:
-  bool m_bShutdown;
-  char **m_argv;
-  int m_argc;
-  string m_strApplication;
-  string m_strData;
-  unsigned long m_ulMaxResident;
-  Central *m_pCentral;
-  StringManip m_manip;
-
-  void setShutdown();
-  bool shutdown();
+  void incoming();
 
   public:
-  Base(int argc, char **argv);
-  ~Base();
+  Request(int argc, char **argv);
+  ~Request();
+  void callback(string strPrefix, Json *ptJson, string &strError);
+  void incoming(string strPrefix);
 };
 // }}}
 }
