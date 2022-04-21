@@ -70,6 +70,72 @@ extern "C++"
       log("notify", strMessage);
     }
     // }}}
+    // {{{ mysql
+    // {{{ mysql()
+    bool Interface::mysql(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
+    {
+      bool bResult;
+      Json *ptJson = new Json;
+
+      ptJson->insert("Server", strServer);
+      ptJson->insert("User", strUser);
+      ptJson->insert("Password", strPassword);
+      ptJson->insert("Database", strDatabase);
+      ptJson->insert(strType, strQuery);
+      target("mysql", ptJson);
+      if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+      {
+        bResult = true;
+        if (ptJson->m.find("Data") != ptJson->m.end())
+        {
+          for (auto &ptRow : ptJson->m["Data"]->l)
+          {
+            map<string, string> row;
+            ptRow->flatten(row, true, false);
+            rows.push_back(row);
+          }
+        }
+        if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+        {
+          stringstream ssID(ptJson->m["ID"]->v);
+          ssID >> ullID;
+        }
+        if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+        {
+          stringstream ssRows(ptJson->m["Rows"]->v);
+          ssRows >> ullRows;
+        }
+      }
+      else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+      {
+        strError = ptJson->m["Error"]->v;
+      }
+      else
+      {
+        strError = "Encountered an unknown error.";
+      }
+      delete ptJson;
+
+      return bResult;
+    }
+    // }}}
+    // {{{ mysqlQuery()
+    bool Interface::mysqlQuery(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
+    {
+      unsigned long long ullID;
+
+      return mysql(strServer, strUser, strPassword, strDatabase, "Query", strQuery, ullID, ullRows, rows, strError);
+    }
+    // }}}
+    // {{{ mysqlUpdate()
+    bool Interface::mysqlUpdate(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+    {
+      list<map<string, string> > rows;
+
+      return mysql(strServer, strUser, strPassword, strDatabase, "Update", strQuery, ullID, ullRows, rows, strError);
+    }
+    // }}}
+    // }}}
     // {{{ process()
     bool Interface::process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError)
     {

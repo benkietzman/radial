@@ -44,17 +44,20 @@ extern "C++"
       string m_strBuffers[2];
       string m_strName;
 
-      void alert(const string strMessage);
-      void log(const string strMessage);
       void log(const string strFunction, const string strMessage);
-      void notify(const string strMessage);
       void response(Json *ptJson);
-      void target(const string strTarget, Json *ptJson, const bool bWait = true);
 
       public:
       Interface(const string strName, int argc, char **argv);
       ~Interface();
+      void alert(const string strMessage);
+      void log(const string strMessage);
+      void notify(const string strMessage);
+      bool mysql(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
+      bool mysqlQuery(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
+      bool mysqlUpdate(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
       bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
+      void target(const string strTarget, Json *ptJson, const bool bWait = true);
     };
     // }}}
   }

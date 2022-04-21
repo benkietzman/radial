@@ -1,0 +1,73 @@
+// vim600: fdm=marker
+/* -*- c++ -*- */
+///////////////////////////////////////////
+// Radial
+// -------------------------------------
+// file       : Mysql
+// author     : Ben Kietzman
+// begin      : 2022-04-21
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+///////////////////////////////////////////
+
+/**************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+**************************************************************************/
+
+/*! \file Mysql
+* \brief MySQL Class
+*
+* Provides Mysql interface.
+*/
+#ifndef _RADIAL_MYSQL_
+#define _RADIAL_MYSQL_
+// {{{ includes
+#include <mysql/mysql.h>
+#include "Interface"
+// }}}
+extern "C++"
+{
+  namespace radial
+  {
+    // {{{ structs
+    struct radial_mysql
+    {
+      mutex secure;
+      size_t unThreads;
+      time_t CTime;
+      MYSQL *conn;
+    };
+    // }}}
+    // {{{ Mysql
+    class Mysql : public Interface
+    {
+      protected:
+      map<string, list<radial_mysql *> > m_conn;
+      mutex m_mutex;
+
+      map<string, list<radial_mysql *> > *conn();
+      bool connect(const string strServer, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError);
+      void disconnect(list<radial_mysql *>::iterator &iter);
+      map<string, string> *fetch(MYSQL_RES *result, vector<string> subFields);
+      bool fields(MYSQL_RES *result, vector<string> &subFields);
+      void free(MYSQL_RES *result);
+      void lock();
+      void pause();
+      MYSQL_RES *query(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullRows, string &strError);
+      void unlock();
+      bool update(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
+
+      public:
+      Mysql(int argc, char **argv);
+      ~Mysql();
+      void callback(string strPrefix, Json *ptJson, string &strError);
+    };
+    // }}}
+  }
+}
+#endif

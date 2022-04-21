@@ -5,7 +5,7 @@
 // -------------------------------------
 // file       : log.cpp
 // author     : Ben Kietzman
-// begin      : 2022-03-19
+// begin      : 2022-04-19
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
@@ -20,9 +20,9 @@
 **************************************************************************/
 
 /*! \file hub.cpp
-* \brief Radial Hub
+* \brief Radial Log
 *
-* Provides the central hub to which interfaces connect radially.
+* Provides the log interface.
 */
 // {{{ includes
 #include "include/Log"

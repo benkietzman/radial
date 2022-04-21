@@ -186,14 +186,14 @@ extern "C++"
             if (interfaceAdd(i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), strError))
             {
               ssMessage.str("");
-              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "," << i.first << "] Loaded interface.";
+              ssMessage << "Hub::interfaceAdd() [" << ssInterfaces.str() << "," << i.first << "] Loaded interface.";
               log(ssMessage.str());
             }
             else
             {
               bResult = false;
               ssMessage.str("");
-              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "," << i.first << "] " << strError;
+              ssMessage << "Hub::interfaceAdd(" << i.first << ") [" << ssInterfaces.str() << "," << i.first << "] " << strError;
               strError = ssMessage.str();
             }
           }

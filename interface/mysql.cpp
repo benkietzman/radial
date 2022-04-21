@@ -3,9 +3,9 @@
 ///////////////////////////////////////////
 // Radial
 // -------------------------------------
-// file       : Log
+// file       : mysql.cpp
 // author     : Ben Kietzman
-// begin      : 2022-04-19
+// begin      : 2022-04-21
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
@@ -19,32 +19,39 @@
 *                                                                         *
 **************************************************************************/
 
-/*! \file Log
-* \brief Log Class
+/*! \file mysql.cpp
+* \brief Radial MySQL
 *
-* Provides Log interface.
+* Provides the mysql interface.
 */
-#ifndef _RADIAL_LOG_
-#define _RADIAL_LOG_
 // {{{ includes
-#include "Interface"
+#include "include/Mysql"
+using namespace radial;
 // }}}
-extern "C++"
+// {{{ global variables
+Mysql *gpMysql;
+// }}}
+// {{{ prototypes
+void callback(string strPrefix, Json *ptJson, string &strError);
+// }}}
+// {{{ main()
+int main(int argc, char *argv[])
 {
-  namespace radial
-  {
-    // {{{ Log
-    class Log : public Interface
-    {
-      protected:
-      string m_strEmail;
+  string strError, strPrefix = "main()";
 
-      public:
-      Log(int argc, char **argv);
-      ~Log();
-      void callback(string strPrefix, Json *ptJson, string &strError);
-    };
-    // }}}
+  gpMysql = new Mysql(argc, argv);
+  if (!gpMysql->process(strPrefix, callback, strError))
+  {
+    cerr << strPrefix << "->Mysql::process() error:  " << strError << endl;
   }
+  delete gpMysql;
+
+  return 0;
 }
-#endif
+// }}}
+// {{{ callback()
+void callback(string strPrefix, Json *ptJson, string &strError)
+{
+  gpMysql->callback(strPrefix, ptJson, strError);
+}
+// }}}

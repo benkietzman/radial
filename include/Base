@@ -38,6 +38,7 @@
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 using namespace std;
 #include <Central>
 #include <Json>
