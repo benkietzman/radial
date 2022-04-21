@@ -9,7 +9,6 @@
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
-
 /**************************************************************************
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +17,6 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-
 /*! \file hub.cpp
 * \brief Radial Hub
 *

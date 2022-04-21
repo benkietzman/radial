@@ -9,7 +9,6 @@
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
-
 /**************************************************************************
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +17,6 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-
 /*! \file Interface
 * \brief Interface Class
 *
@@ -31,35 +29,35 @@
 // }}}
 extern "C++"
 {
-  namespace radial
-  {
-    // {{{ Interface
-    class Interface : public Base
-    {
-      protected:
-      list<string> m_responses;
-      map<size_t, int> m_waiting;
-      mutex m_mutex;
-      size_t m_unUnique;
-      string m_strBuffers[2];
-      string m_strName;
+namespace radial
+{
+// {{{ Interface
+class Interface : public Base
+{
+  protected:
+  list<string> m_responses;
+  map<size_t, int> m_waiting;
+  mutex m_mutex;
+  size_t m_unUnique;
+  string m_strBuffers[2];
+  string m_strName;
 
-      void log(const string strFunction, const string strMessage);
-      void response(Json *ptJson);
+  void log(const string strFunction, const string strMessage);
+  void response(Json *ptJson);
 
-      public:
-      Interface(const string strName, int argc, char **argv);
-      ~Interface();
-      void alert(const string strMessage);
-      void log(const string strMessage);
-      void notify(const string strMessage);
-      bool mysql(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
-      bool mysqlQuery(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
-      bool mysqlUpdate(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
-      bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
-      void target(const string strTarget, Json *ptJson, const bool bWait = true);
-    };
-    // }}}
-  }
+  public:
+  Interface(const string strName, int argc, char **argv);
+  ~Interface();
+  void alert(const string strMessage);
+  void log(const string strMessage);
+  void notify(const string strMessage);
+  bool mysql(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
+  bool mysqlQuery(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
+  bool mysqlUpdate(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
+  bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
+  void target(const string strTarget, Json *ptJson, const bool bWait = true);
+};
+// }}}
+}
 }
 #endif

@@ -9,7 +9,6 @@
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
-
 /**************************************************************************
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +17,6 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-
 /*! \file Hub
 * \brief Hub Class
 *
@@ -31,42 +29,42 @@
 // }}}
 extern "C++"
 {
-  namespace radial
-  {
-    // {{{ radialHubInterface
-    struct radialHubInterface
-    {
-      bool bRespawn;
-      int fdRead;
-      int fdWrite;
-      list<string> buffers[2];
-      pid_t nPid;
-      string strBuffers[2];
-      string strCommand;
-    };
-    // }}}
-    // {{{ Hub
-    class Hub : public Base
-    {
-      private:
-      char **m_env;
-      map<string, radialHubInterface *> m_interfaces;
+namespace radial
+{
+// {{{ radialHubInterface
+struct radialHubInterface
+{
+  bool bRespawn;
+  int fdRead;
+  int fdWrite;
+  list<string> buffers[2];
+  pid_t nPid;
+  string strBuffers[2];
+  string strCommand;
+};
+// }}}
+// {{{ Hub
+class Hub : public Base
+{
+  private:
+  char **m_env;
+  map<string, radialHubInterface *> m_interfaces;
 
-      void alert(const string strMessage);
-      bool interfaceAdd(const string strName, const string strCommand, const bool bRespawn, string &strError);
-      void interfaceRemove(const string strName);
-      bool interfacesLoad(string &strError);
-      void log(const string strMessage);
-      void log(const string strFunction, const string strMessage);
-      void notify(const string strMessage);
-      void target(const string strTarget, Json *ptJson);
+  void alert(const string strMessage);
+  bool interfaceAdd(const string strName, const string strCommand, const bool bRespawn, string &strError);
+  void interfaceRemove(const string strName);
+  bool interfacesLoad(string &strError);
+  void log(const string strMessage);
+  void log(const string strFunction, const string strMessage);
+  void notify(const string strMessage);
+  void target(const string strTarget, Json *ptJson);
 
-      public:
-      Hub(int argc, char **argv, char **env);
-      ~Hub();
-      bool process(string strPrefix, string &strError);
-    };
-    // }}}
-  }
+  public:
+  Hub(int argc, char **argv, char **env);
+  ~Hub();
+  bool process(string strPrefix, string &strError);
+};
+// }}}
+}
 }
 #endif

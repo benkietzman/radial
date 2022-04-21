@@ -9,7 +9,6 @@
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
-
 /**************************************************************************
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +17,6 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-
 /*! \file Base.cpp
 * \brief Base Class
 *
@@ -29,71 +27,71 @@
 // }}}
 extern "C++"
 { 
-  namespace radial
-  {
-    // {{{ Base()
-    Base::Base(int argc, char **argv)
-    {
-      string strError;
+namespace radial
+{
+// {{{ Base()
+Base::Base(int argc, char **argv)
+{
+  string strError;
 
-      m_argc = argc;
-      m_argv = argv;
-      m_strApplication = "Radial";
-      m_ulMaxResident = 40 * 1024;
-      // {{{ command line arguments
-      for (int i = 1; i < argc; i++)
+  m_argc = argc;
+  m_argv = argv;
+  m_strApplication = "Radial";
+  m_ulMaxResident = 40 * 1024;
+  // {{{ command line arguments
+  for (int i = 1; i < argc; i++)
+  {
+    string strArg = argv[i];
+    if (strArg == "-d" || (strArg.size() > 7 && strArg.substr(0, 7) == "--data="))
+    {
+      if (strArg == "-d" && i + 1 < argc && argv[i+1][0] != '-')
       {
-        string strArg = argv[i];
-        if (strArg == "-d" || (strArg.size() > 7 && strArg.substr(0, 7) == "--data="))
-        {
-          if (strArg == "-d" && i + 1 < argc && argv[i+1][0] != '-')
-          {
-            m_strData = argv[++i];
-          }
-          else
-          {
-            m_strData = strArg.substr(7, strArg.size() - 7);
-          }
-          m_manip.purgeChar(m_strData, m_strData, "'");
-          m_manip.purgeChar(m_strData, m_strData, "\"");
-        }
-        else if (strArg == "-m" || (strArg.size() > 9 && strArg.substr(0, 9) == "--memory="))
-        {
-          stringstream ssMaxResident;
-          if (strArg == "-m" && i + 1 < argc && argv[i+1][0] != '-')
-          {
-            ssMaxResident.str(argv[++i]);
-          }
-          else
-          {
-            ssMaxResident.str(strArg.substr(9, strArg.size() - 9));
-          }
-          ssMaxResident >> m_ulMaxResident;
-          m_ulMaxResident *= 1024;
-        }
+        m_strData = argv[++i];
       }
-      // }}}
-      m_pCentral = new Central(strError);
-      m_pCentral->setApplication(m_strApplication);
+      else
+      {
+        m_strData = strArg.substr(7, strArg.size() - 7);
+      }
+      m_manip.purgeChar(m_strData, m_strData, "'");
+      m_manip.purgeChar(m_strData, m_strData, "\"");
     }
-    // }}}
-    // {{{ ~Base()
-    Base::~Base()
+    else if (strArg == "-m" || (strArg.size() > 9 && strArg.substr(0, 9) == "--memory="))
     {
-      delete m_pCentral;
+      stringstream ssMaxResident;
+      if (strArg == "-m" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        ssMaxResident.str(argv[++i]);
+      }
+      else
+      {
+        ssMaxResident.str(strArg.substr(9, strArg.size() - 9));
+      }
+      ssMaxResident >> m_ulMaxResident;
+      m_ulMaxResident *= 1024;
     }
-    // }}}
-    // {{{ shutdown()
-    bool Base::shutdown()
-    {
-      return m_bShutdown;
-    }
-    // }}}
-    // {{{ setShutdown()
-    void Base::setShutdown()
-    {
-      m_bShutdown = true;
-    }
-    // }}}
   }
+  // }}}
+  m_pCentral = new Central(strError);
+  m_pCentral->setApplication(m_strApplication);
+}
+// }}}
+// {{{ ~Base()
+Base::~Base()
+{
+  delete m_pCentral;
+}
+// }}}
+// {{{ shutdown()
+bool Base::shutdown()
+{
+  return m_bShutdown;
+}
+// }}}
+// {{{ setShutdown()
+void Base::setShutdown()
+{
+  m_bShutdown = true;
+}
+// }}}
+}
 }

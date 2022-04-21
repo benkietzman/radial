@@ -9,7 +9,6 @@
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
-
 /**************************************************************************
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +17,6 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 **************************************************************************/
-
 /*! \file Log
 * \brief Log Class
 *
@@ -31,20 +29,20 @@
 // }}}
 extern "C++"
 {
-  namespace radial
-  {
-    // {{{ Log
-    class Log : public Interface
-    {
-      protected:
-      string m_strEmail;
+namespace radial
+{
+// {{{ Log
+class Log : public Interface
+{
+  protected:
+  string m_strEmail;
 
-      public:
-      Log(int argc, char **argv);
-      ~Log();
-      void callback(string strPrefix, Json *ptJson, string &strError);
-    };
-    // }}}
-  }
+  public:
+  Log(int argc, char **argv);
+  ~Log();
+  void callback(string strPrefix, Json *ptJson, string &strError);
+};
+// }}}
+}
 }
 #endif
