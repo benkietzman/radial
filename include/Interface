@@ -38,8 +38,8 @@ extern "C++"
     {
       protected:
       list<string> m_responses;
-      map<size_t, Json *> m_waiting;
-      mutex m_mutexResponses;
+      map<size_t, int> m_waiting;
+      mutex m_mutex;
       size_t m_unUnique;
       string m_strName;
 
@@ -48,7 +48,7 @@ extern "C++"
       void notify(const string strMessage);
       bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
       void response(Json *ptJson);
-      bool target(const string strTarget, Json *ptJson, bWait = true);
+      void target(const string strTarget, Json *ptJson, bWait = true);
 
       public:
       Interface(const string strName, int argc, char *argv[]);
