@@ -77,8 +77,8 @@ extern "C++"
       char szBuffer[65536];
       int nReturn;
       size_t unPosition;
-      string strBuffers[2], strLine;
-      stringstring ssMessage;
+      string strLine;
+      stringstream ssMessage;
 
       while (!bExit)
       {
@@ -87,27 +87,29 @@ extern "C++"
         fds[0].events = POLLIN;
         fds[1].fd = -1;
         fds[1].events = POLLOUT;
-        if (strBuffers[1].empty() && !responses.empty())
+        m_mutex.lock();
+        if (m_strBuffers[1].empty() && !m_responses.empty())
         {
-          strBuffers[1] = responses.front() + "\n";
-          responses.pop_front();
+          m_strBuffers[1] = m_responses.front() + "\n";
+          m_responses.pop_front();
         }
-        if (!strBuffers[1].empty())
+        if (!m_strBuffers[1].empty())
         {
           fds[1].fd = 1;
         }
+        m_mutex.unlock();
         if ((nReturn = poll(fds, 2, 250)) > 0)
         {
           if (fds[0].revents & POLLIN)
           {
             if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
             {
-              strBuffer[0].append(szBuffer, nReturn);
-              while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+              m_strBuffers[0].append(szBuffer, nReturn);
+              while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
               {
                 Json *ptJson;
-                strLine = strBuffer[0].substr(0, unPosition);
-                strBuffer.erase(0, (unPosition + 1));
+                strLine = m_strBuffers[0].substr(0, unPosition);
+                m_strBuffers[0].erase(0, (unPosition + 1));
                 ptJson = new Json(strLine);
                 if (ptJson->m.find("_unique") != ptJson->m.end())
                 {
@@ -138,7 +140,7 @@ extern "C++"
               bExit = true;
               if (nReturn < 0)
               {
-                bReturn = false;
+                bResult = false;
                 ssMessage.str("");
                 ssMessage << "read(" << errno << ") " << strerror(errno);
                 strError = ssMessage.str();
@@ -147,21 +149,23 @@ extern "C++"
           }
           if (fds[1].revents & POLLOUT)
           {
-            if ((nReturn = write(fds[1].fd, strBuffers[1].c_str(), strBuffers[1].size())) > 0)
+            m_mutex.lock();
+            if ((nReturn = write(fds[1].fd, m_strBuffers[1].c_str(), m_strBuffers[1].size())) > 0)
             {
-              strBuffers[1].erase(0, nReturn);
+              m_strBuffers[1].erase(0, nReturn);
             }
             else
             {
               bExit = true;
               if (nReturn < 0)
               {
-                bReturn = false;
+                bResult = false;
                 ssMessage.str("");
                 ssMessage << "write(" << errno << ") " << strerror(errno);
                 strError = ssMessage.str();
               }
             }
+            m_mutex.unlock();
           }
         }
         else if (nReturn < 0)
@@ -184,16 +188,16 @@ extern "C++"
 
       ptJson->json(strJson);
       m_mutex.lock();
-      responses.push_back(strJson);
+      m_responses.push_back(strJson);
       m_mutex.unlock();
     }
     // }}}
     // {{{ target()
-    void Interface::target(const string strTarget, Json *ptJson, bool bWait)
+    void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     {
-      bool bResult;
       size_t unUnique;
       string strJson;
+      stringstream ssMessage;
 
       ptJson->insert("Target", strTarget);
       if (bWait)
@@ -213,7 +217,7 @@ extern "C++"
         if (pipe(readpipe) == 0)
         {
           bGood = true;
-          m_strBuffer[1].append(ptJson->json(strJson) + "\n");
+          m_strBuffers[1].append(ptJson->json(strJson) + "\n");
           m_waiting[unUnique] = readpipe[1];
         }
         else
@@ -236,14 +240,15 @@ extern "C++"
           ptJson->parse(strJson);
           close(readpipe[0]);
           m_mutex.lock();
-          delete m_waiting[unUnique];
-          m_waiting.erase(unUnique];
+          m_waiting.erase(unUnique);
           m_mutex.unlock();
         }
       }
       else
       {
-        m_strBuffer[1].append(ptJson->json(strJson) + "\n");
+        m_mutex.lock();
+        m_strBuffers[1].append(ptJson->json(strJson) + "\n");
+        m_mutex.unlock();
       }
     }
     // }}}

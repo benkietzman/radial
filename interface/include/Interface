@@ -27,7 +27,7 @@
 #ifndef _RADIAL_INTERFACE_
 #define _RADIAL_INTERFACE_
 // {{{ includes
-#include "Base"
+#include "../../include/Base"
 // }}}
 extern "C++"
 {
@@ -41,18 +41,20 @@ extern "C++"
       map<size_t, int> m_waiting;
       mutex m_mutex;
       size_t m_unUnique;
+      string m_strBuffers[2];
       string m_strName;
 
       void alert(const string strMessage);
       void log(const string strMessage);
+      void log(const string strFunction, const string strMessage);
       void notify(const string strMessage);
-      bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
       void response(Json *ptJson);
-      void target(const string strTarget, Json *ptJson, bWait = true);
+      void target(const string strTarget, Json *ptJson, const bool bWait = true);
 
       public:
       Interface(const string strName, int argc, char **argv);
       ~Interface();
+      bool process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError);
     };
     // }}}
   }

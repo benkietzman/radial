@@ -92,7 +92,6 @@ extern "C++"
             }
             else if (nPid > 0)
             {
-              Json *ptConfig = new Json;
               bResult = true;
               close(writepipe[0]);
               close(readpipe[1]);
@@ -104,10 +103,6 @@ extern "C++"
               m_interfaces[strName]->fdRead = readpipe[0];
               m_interfaces[strName]->fdWrite = writepipe[1];
               m_interfaces[strName]->nPid = nPid;
-              ptConfig->insert("Data", m_strData);
-              ptConfig->json(m_interfaces[strName]->strBuffers[1]);
-              delete ptConfig;
-              m_interfaces[strName]->strBuffers[1] += "\n";
               m_interfaces[strName]->strCommand = strCommand;
             }
             else
@@ -191,14 +186,14 @@ extern "C++"
             if (interfaceAdd(i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), strError))
             {
               ssMessage.str("");
-              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "] Loaded interface.";
+              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "," << i.first << "] Loaded interface.";
               log(ssMessage.str());
             }
             else
             {
               bResult = false;
               ssMessage.str("");
-              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "] " << strError;
+              ssMessage << "Hub::interface(" << i.first << ") [" << ssInterfaces.str() << "," << i.first << "] " << strError;
               strError = ssMessage.str();
             }
           }
@@ -312,7 +307,14 @@ extern "C++"
                     Json *ptJson = new Json(strLine);
                     if (ptJson->m.find("Target") != ptJson->m.end() && !ptJson->m["Target"]->v.empty() && m_interfaces.find(ptJson->m["Target"]->v) != m_interfaces.end())
                     {
-                      m_interfaces[ptJson->m["Target"]->v]->strBuffers[1].append(strLine + "\n");
+                      if (ptJson->m["Target"]->v != sockets[fds[i].fd])
+                      {
+                        m_interfaces[ptJson->m["Target"]->v]->buffers[1].push_back(strLine);
+                      }
+                      else if (ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty() && ptJson->m.find("Source") != ptJson->m.end() && !ptJson->m["Source"]->v.empty() && m_interfaces.find(ptJson->m["Source"]->v) != m_interfaces.end())
+                      {
+                        m_interfaces[ptJson->m["Source"]->v]->buffers[1].push_back(strLine);
+                      }
                     }
                     else
                     {
@@ -409,7 +411,7 @@ extern "C++"
                         ptJson->insert("Error", strError);
                       }
                       ptJson->json(strLine);
-                      m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(strLine + "\n");
+                      m_interfaces[sockets[fds[i].fd]]->buffers[1].push_back(strLine);
                       // }}}
                     }
                     delete ptJson;
@@ -484,7 +486,7 @@ extern "C++"
       if (m_interfaces.find(strTarget) != m_interfaces.end())
       {
         ptJson->insert("Target", strTarget);
-        m_interfaces[strTarget]->buffers[1].push_back(ptJson->json(strJson) + "\n");
+        m_interfaces[strTarget]->buffers[1].push_back(ptJson->json(strJson));
       }
     }
     // }}}

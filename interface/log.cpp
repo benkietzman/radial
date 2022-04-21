@@ -25,20 +25,33 @@
 * Provides the central hub to which interfaces connect radially.
 */
 // {{{ includes
-#include "../include/Log"
+#include "include/Log"
 using namespace radial;
+// }}}
+// {{{ global variables
+Log *gpLog;
+// }}}
+// {{{ prototypes
+void callback(string strPrefix, Json *ptJson, string &strError);
 // }}}
 // {{{ main()
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "main()";
-  Log log(argc, argv);
 
-  if (!log.process(strPrefix, log.callback, strError))
+  gpLog = new Log(argc, argv);
+  if (!gpLog->process(strPrefix, callback, strError))
   {
     cerr << strPrefix << "->Log::process() error:  " << strError << endl;
   }
+  delete gpLog;
 
   return 0;
+}
+// }}}
+// {{{ callback()
+void callback(string strPrefix, Json *ptJson, string &strError)
+{
+  gpLog->callback(strPrefix, ptJson, strError);
 }
 // }}}
