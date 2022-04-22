@@ -39,7 +39,7 @@ class Mysql : public Interface
   mutex m_mutex;
 
   map<string, list<radial_mysql *> > *conn();
-  bool connect(const string strServer, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError);
+  bool connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError);
   void disconnect(list<radial_mysql *>::iterator &iter);
   map<string, string> *fetch(MYSQL_RES *result, vector<string> subFields);
   bool fields(MYSQL_RES *result, vector<string> &subFields);

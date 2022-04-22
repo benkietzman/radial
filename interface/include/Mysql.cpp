@@ -58,8 +58,14 @@ void Mysql::callback(string strPrefix, Json *ptJson)
           {
             list<radial_mysql *>::iterator mysqlIter;
             stringstream ssError;
+            unsigned int unPort = 0;
             unsigned long long ullRows = 0;
-            if (connect(ptJson->m["Server"]->v, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
+            if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
+            {
+              stringstream ssPort(ptJson->m["Port"]->v);
+              ssPort >> unPort;
+            }
+            if (connect(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
             {
               (*mysqlIter)->secure.lock();
               if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
@@ -144,7 +150,7 @@ map<string, list<radial_mysql *> > *Mysql::conn()
 }
 // }}}
 // {{{ connect()
-bool Mysql::connect(const string strServer, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError)
+bool Mysql::connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError)
 {
   bool bResult = false;
   string strName;
@@ -187,7 +193,7 @@ bool Mysql::connect(const string strServer, const string strUser, const string s
         radial_mysql *ptMysql = new radial_mysql;
         if ((ptMysql->conn = mysql_init(NULL)) != NULL)
         {
-          unsigned int unPort = 0, unTimeout = 2;
+          unsigned int unTimeout = 2;
           mysql_options(ptMysql->conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeout);
           if (mysql_real_connect(ptMysql->conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
           {

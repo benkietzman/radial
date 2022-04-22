@@ -167,8 +167,85 @@ void Request::request(string strPrefix, Json *ptJson)
   // }}}
   if (ptJson->m.find("Section") != ptJson->m.end() && !ptJson->m["Section"]->v.empty())
   {
+    // {{{ mysql
+    if (ptJson->m["Section"]->v == "mysql")
+    {
+      if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+      {
+        if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+        {
+          if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+          {
+            if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+            {
+              if ((ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty()) || (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty()))
+              {
+                unsigned int unPort = 0;
+                unsigned long long ullRows = 0;
+                if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
+                {
+                  stringstream ssPort(ptJson->m["Port"]->v);
+                  ssPort >> unPort;
+                }
+                if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
+                {
+                  list<map<string, string> > rows;
+                  if (mysqlQuery(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, rows, strError))
+                  {
+                    bResult = true;
+                    ptJson->m["Data"] = new Json;
+                    for (auto &row: rows)
+                    {
+                      ptJson->m["Data"]->push_back(row);
+                    }
+                  }
+                }
+                else
+                {
+                  unsigned long long ullID = 0;
+                  if (mysqlUpdate(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, ptJson->m["Update"]->v, ullID, ullRows, strError))
+                  {
+                    stringstream ssID;
+                    bResult = true;
+                    ssID << ullID;
+                    ptJson->insert("ID", ssID.str(), 'n');
+                  }
+                }
+                if (bResult)
+                {
+                  stringstream ssRows;
+                  ssRows << ullRows;
+                  ptJson->insert("Rows", ssRows.str(), 'n');
+                }
+              }
+              else
+              {
+                strError = "Please provide the Query or Update.";
+              }
+            }
+            else
+            {
+              strError = "Please provide the Database.";
+            }
+          }
+          else
+          {
+            strError = "Please provide the Password.";
+          }
+        }
+        else
+        {
+          strError = "Please provide the User.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Server.";
+      }
+    }
+    // }}}
     // {{{ ping
-    if (ptJson->m["Section"]->v == "ping")
+    else if (ptJson->m["Section"]->v == "ping")
     {
       bResult = true;
     }

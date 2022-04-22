@@ -60,12 +60,15 @@ void Interface::notify(const string strMessage)
 // }}}
 // {{{ mysql
 // {{{ mysql()
-bool Interface::mysql(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
+bool Interface::mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
 {
   bool bResult;
+  stringstream ssPort;
   Json *ptJson = new Json;
 
   ptJson->insert("Server", strServer);
+  ssPort << unPort;
+  ptJson->insert("Port", ssPort.str(), 'n');
   ptJson->insert("User", strUser);
   ptJson->insert("Password", strPassword);
   ptJson->insert("Database", strDatabase);
@@ -108,19 +111,19 @@ bool Interface::mysql(const string strServer, const string strUser, const string
 }
 // }}}
 // {{{ mysqlQuery()
-bool Interface::mysqlQuery(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
+bool Interface::mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
 {
   unsigned long long ullID;
 
-  return mysql(strServer, strUser, strPassword, strDatabase, "Query", strQuery, ullID, ullRows, rows, strError);
+  return mysql(strServer, unPort, strUser, strPassword, strDatabase, "Query", strQuery, ullID, ullRows, rows, strError);
 }
 // }}}
 // {{{ mysqlUpdate()
-bool Interface::mysqlUpdate(const string strServer, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   list<map<string, string> > rows;
 
-  return mysql(strServer, strUser, strPassword, strDatabase, "Update", strQuery, ullID, ullRows, rows, strError);
+  return mysql(strServer, unPort, strUser, strPassword, strDatabase, "Update", strQuery, ullID, ullRows, rows, strError);
 }
 // }}}
 // }}}
