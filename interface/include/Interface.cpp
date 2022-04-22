@@ -274,7 +274,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     if (pipe(readpipe) == 0)
     {
       bGood = true;
-      m_strBuffers[1].append(ptJson->json(strJson) + "\n");
+      m_responses.push_back(ptJson->json(strJson));
       m_waiting[unUnique] = readpipe[1];
     }
     else
@@ -304,7 +304,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   else
   {
     m_mutex.lock();
-    m_strBuffers[1].append(ptJson->json(strJson) + "\n");
+    m_responses.push_back(ptJson->json(strJson));
     m_mutex.unlock();
   }
 }
