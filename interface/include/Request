@@ -29,13 +29,13 @@ class Request : public Interface
   function<bool(string, Json *, string &)> m_callback;
 
   void request(string strPrefix, Json *ptJson);
+  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 
   public:
   Request(int argc, char **argv);
   Request(int argc, char **argv, function<bool(string, Json *, string &)> callback);
   ~Request();
   void accept(string strPrefix);
-  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 };
 // }}}
 }
