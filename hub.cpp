@@ -1,5 +1,4 @@
-// vim600: fdm=marker
-///////////////////////////////////////////
+// -*- C++ -*-
 // Radial
 // -------------------------------------
 // file       : hub.cpp
@@ -7,7 +6,6 @@
 // begin      : 2022-03-19
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
-///////////////////////////////////////////
 /***********************************************************************
 * This program is free software; you can redistribute it and/or modify *
 * it under the terms of the GNU General Public License as published by *
