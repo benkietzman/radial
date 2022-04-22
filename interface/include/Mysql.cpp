@@ -50,9 +50,10 @@ Mysql::~Mysql()
 }
 // }}}
 // {{{ callback()
-void Mysql::callback(string strPrefix, Json *ptJson, string &strError)
+void Mysql::callback(string strPrefix, Json *ptJson)
 {
   bool bResult = false;
+  string strError;
 
   strPrefix += "->Mysql::callback()";
   if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())

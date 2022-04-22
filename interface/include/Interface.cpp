@@ -135,7 +135,7 @@ bool Interface::mysqlUpdate(const string strServer, const string strUser, const 
 // }}}
 // }}}
 // {{{ process()
-bool Interface::process(string strPrefix, void (*pCallback)(string, Json *ptJson, string &), string &strError)
+bool Interface::process(string strPrefix, function<void(string, Json *)> callback, string &strError)
 {
   bool bExit = false, bResult = true;
   char szBuffer[65536];
@@ -194,7 +194,7 @@ bool Interface::process(string strPrefix, void (*pCallback)(string, Json *ptJson
             }
             else
             {
-              (*pCallback)(strPrefix, ptJson, strError);
+              callback(strPrefix, ptJson);
             }
             delete ptJson;
           }

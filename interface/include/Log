@@ -40,7 +40,7 @@ class Log : public Interface
   public:
   Log(int argc, char **argv);
   ~Log();
-  void callback(string strPrefix, Json *ptJson, string &strError);
+  void callback(string strPrefix, Json *ptJson);
 };
 // }}}
 }

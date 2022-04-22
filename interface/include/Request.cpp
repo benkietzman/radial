@@ -161,8 +161,8 @@ void Request::accept(string strPrefix)
   m_pUtility->sslDeinit();
 }
 // }}}
-// {{{ process()
-void Request::process(string strPrefix, Json *ptJson)
+// {{{ request()
+void Request::request(string strPrefix, Json *ptJson)
 {
   // {{{ prep work
   bool bResult = false;
@@ -261,7 +261,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
           {
             ptJson = new Json(strBuffer[0].substr(0, unPosition));
             strBuffer[0].erase(0, (unPosition + 1));
-            process(strPrefix, ptJson);
+            request(strPrefix, ptJson);
             ptJson->json(strBuffer[1]);
             strBuffer[1] += "\n";
             delete ptJson;

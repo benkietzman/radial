@@ -29,28 +29,18 @@ using namespace radial;
 // {{{ global variables
 Mysql *gpMysql;
 // }}}
-// {{{ prototypes
-void callback(string strPrefix, Json *ptJson, string &strError);
-// }}}
 // {{{ main()
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "main()";
 
   gpMysql = new Mysql(argc, argv);
-  if (!gpMysql->process(strPrefix, callback, strError))
+  if (!gpMysql->process(strPrefix, bind(&Mysql::callback, gpMysql, placeholders::_1, placeholders::_2), strError))
   {
     cerr << strPrefix << "->Mysql::process() error:  " << strError << endl;
   }
   delete gpMysql;
 
   return 0;
-}
-// }}}
-// {{{ callback()
-void callback(string strPrefix, Json *ptJson, string &strError)
-{
-  strPrefix += "->callback()";
-  gpMysql->callback(strPrefix, ptJson, strError);
 }
 // }}}

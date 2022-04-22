@@ -61,9 +61,10 @@ Log::~Log()
 }
 // }}}
 // {{{ callback()
-void Log::callback(string strPrefix, Json *ptJson, string &strError)
+void Log::callback(string strPrefix, Json *ptJson)
 {
   bool bResult = false;
+  string strError;
   stringstream ssMessage;
 
   strPrefix += "->Log::callback()";

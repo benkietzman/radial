@@ -63,7 +63,7 @@ class Mysql : public Interface
   public:
   Mysql(int argc, char **argv);
   ~Mysql();
-  void callback(string strPrefix, Json *ptJson, string &strError);
+  void callback(string strPrefix, Json *ptJson);
 };
 // }}}
 }
