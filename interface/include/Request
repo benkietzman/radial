@@ -25,10 +25,14 @@ namespace radial
 class Request : public Interface
 {
   protected:
+  bool m_bCallback;
+  function<bool(string, Json *, string &)> m_callback;
+
   void request(string strPrefix, Json *ptJson);
 
   public:
   Request(int argc, char **argv);
+  Request(int argc, char **argv, function<bool(string, Json *, string &)> callback);
   ~Request();
   void accept(string strPrefix);
   void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);

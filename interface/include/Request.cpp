@@ -22,6 +22,12 @@ namespace radial
 // {{{ Request()
 Request::Request(int argc, char **argv) : Interface("request", argc, argv)
 {
+  m_bCallback = false;
+}
+Request::Request(int argc, char **argv, function<bool(string, Json *, string &)> callback) : Interface("request", argc, argv)
+{
+  m_bCallback = true;
+  m_callback = callback;
 }
 // }}}
 // {{{ ~Request()
@@ -159,32 +165,30 @@ void Request::request(string strPrefix, Json *ptJson)
   string strError;
   stringstream ssMessage;
   // }}}
-  if (ptJson->m.find("Request") != ptJson->m.end())
+  if (ptJson->m.find("Section") != ptJson->m.end() && !ptJson->m["Section"]->v.empty())
   {
-    if (ptJson->m.find("Section") != ptJson->m.end() && !ptJson->m["Section"]->v.empty())
+    // {{{ ping
+    if (ptJson->m["Section"]->v == "ping")
     {
-      // {{{ ping
-      if (ptJson->m["Section"]->v == "ping")
-      {
-        bResult = true;
-        ptJson->m["Response"] = new Json;
-      }
-      // }}}
-      // {{{ invalid
-      else
-      {
-        strError = "Please provide a valid Section.";
-      }
-      // }}}
+      bResult = true;
     }
+    // }}}
+    // {{{ callback
+    else if (m_bCallback)
+    {
+      bResult = m_callback(strPrefix, ptJson, strError);
+    }
+    // }}}
+    // {{{ invalid
     else
     {
-      strError = "Please provide the Section.";
+      strError = "Please provide a valid Section.";
     }
+    // }}}
   }
   else
   {
-    strError = "Please provide the Request.";
+    strError = "Please provide the Section.";
   }
   // {{{ post work
   ptJson->insert("Status", ((bResult)?"okay":"error"));
