@@ -29,38 +29,15 @@ using namespace radial;
 // {{{ global variables
 Request *gpRequest;
 // }}}
-// {{{ prototypes
-void callback(string strPrefix, Json *ptJson, string &strError);
-void incoming(string strPrefix);
-// }}}
 // {{{ main()
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "main()";
 
   gpRequest = new Request(argc, argv);
-  thread threadIncoming(incoming, strPrefix);
-  pthread_setname_np(threadIncoming.native_handle(), "incoming");
-  if (!gpRequest->process(strPrefix, callback, strError))
-  {
-    cerr << strPrefix << "->Request::process() error:  " << strError << endl;
-  }
+  gpRequest->accept(strPrefix);
   delete gpRequest;
-  threadIncoming.join();
 
   return 0;
-}
-// }}}
-// {{{ callback()
-void callback(string strPrefix, Json *ptJson, string &strError)
-{
-  gpRequest->callback(strPrefix, ptJson, strError);
-}
-// }}}
-// {{{ incoming()
-void incoming(string strPrefix)
-{
-  strPrefix += "->incoming()";
-  gpRequest->incoming(strPrefix);
 }
 // }}}

@@ -33,6 +33,7 @@
 #include <mutex>
 #include <netdb.h>
 #include <poll.h>
+#include <semaphore.h>
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
@@ -44,6 +45,7 @@ using namespace std;
 #include <Central>
 #include <Json>
 #include <StringManip>
+#include <Utility>
 using namespace common;
 // }}}
 extern "C++"
@@ -62,6 +64,7 @@ class Base
   unsigned long m_ulMaxResident;
   Central *m_pCentral;
   StringManip m_manip;
+  Utility *m_pUtility;
 
   void setShutdown();
   bool shutdown();

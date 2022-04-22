@@ -35,13 +35,13 @@ namespace radial
 class Request : public Interface
 {
   protected:
-  void incoming();
+  void process(string strPrefix, Json *ptJson);
 
   public:
   Request(int argc, char **argv);
   ~Request();
-  void callback(string strPrefix, Json *ptJson, string &strError);
-  void incoming(string strPrefix);
+  void accept(string strPrefix);
+  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 };
 // }}}
 }

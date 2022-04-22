@@ -73,6 +73,7 @@ Base::Base(int argc, char **argv)
   // }}}
   m_pCentral = new Central(strError);
   m_pCentral->setApplication(m_strApplication);
+  m_pUtility = new Utility(strError);
 }
 // }}}
 // {{{ ~Base()

@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
 // {{{ callback()
 void callback(string strPrefix, Json *ptJson, string &strError)
 {
+  strPrefix += "->callback()";
   gpMysql->callback(strPrefix, ptJson, strError);
 }
 // }}}
