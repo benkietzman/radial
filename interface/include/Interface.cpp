@@ -128,15 +128,16 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
 // }}}
 // }}}
 // {{{ process()
-void Interface::process(function<void(string, Json *)> callback)
+void Interface::process(string strPrefix, function<void(string, Json *)> callback)
 {
   bool bExit = false;
   char szBuffer[65536];
   int nReturn;
   size_t unPosition;
-  string strError, strLine, strPrefix = "Interface::process()";
+  string strError, strLine;
   stringstream ssMessage;
 
+  strPrefix += "->Interface::process()";
   while (!bExit)
   {
     pollfd fds[2];

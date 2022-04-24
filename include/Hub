@@ -52,7 +52,7 @@ class Hub : public Base
   public:
   Hub(int argc, char **argv, char **env);
   ~Hub();
-  void process();
+  void process(string strPrefix);
 };
 // }}}
 }

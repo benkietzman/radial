@@ -16,7 +16,8 @@
 using namespace radial;
 int main(int argc, char *argv[])
 {
+  string strPrefix = "log->main()";
   Log log(argc, argv);
-  log.process(bind(&Log::callback, &log, placeholders::_1, placeholders::_2));
+  log.process(strPrefix, bind(&Log::callback, &log, placeholders::_1, placeholders::_2));
   return 0;
 }

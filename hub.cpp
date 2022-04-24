@@ -17,7 +17,8 @@ using namespace radial;
 extern char **environ;
 int main(int argc, char **argv)
 {
+  string strPrefix = "hub->main()";
   Hub hub(argc, argv, environ);
-  hub.process();
+  hub.process(strPrefix);
   return 0;
 }

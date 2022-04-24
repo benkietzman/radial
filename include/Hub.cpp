@@ -228,11 +228,12 @@ void Hub::notify(const string strMessage)
 }
 // }}}
 // {{{ process()
-void Hub::process()
+void Hub::process(string strPrefix)
 {
-  string strError, strPrefix = "Hub::process()";
+  string strError;
   stringstream ssMessage;
 
+  strPrefix += "->Hub::process()";
   if (interfacesLoad(strError))
   {
     // {{{ prep work
