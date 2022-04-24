@@ -17,6 +17,8 @@ using namespace radial;
 int main(int argc, char *argv[])
 {
   Request request(argc, argv);
-  request.accept();
+  thread threadAccept(&Request::accept, &request);
+  request.process(bind(&Request::callback, &request, placeholders::_1, placeholders::_2));
+  threadAccept.join();
   return 0;
 }

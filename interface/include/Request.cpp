@@ -156,6 +156,37 @@ void Request::accept()
   m_pUtility->sslDeinit();
 }
 // }}}
+// {{{ callback()
+void Request::callback(string strPrefix, Json *ptJson)
+{
+  bool bResult = false;
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Request::callback()";
+  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  {
+    if (ptJson->m["Function"]->v == "ping")
+    {
+      bResult = true;
+    }
+    else
+    {
+      strError = "Please provide a valid Function:  ping.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the Function.";
+  }
+  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  if (!strError.empty())
+  {
+    ptJson->insert("Error", strError);
+  }
+  response(ptJson);
+}
+// }}}
 // {{{ request()
 void Request::request(string strPrefix, Json *ptJson)
 {
