@@ -128,13 +128,13 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
 // }}}
 // }}}
 // {{{ process()
-bool Interface::process(string strPrefix, function<void(string, Json *)> callback, string &strError)
+void Interface::process(function<void(string, Json *)> callback)
 {
-  bool bExit = false, bResult = true;
+  bool bExit = false;
   char szBuffer[65536];
   int nReturn;
   size_t unPosition;
-  string strLine;
+  string strError, strLine, strPrefix = "Interface::process()";
   stringstream ssMessage;
 
   while (!bExit)
@@ -197,10 +197,9 @@ bool Interface::process(string strPrefix, function<void(string, Json *)> callbac
           bExit = true;
           if (nReturn < 0)
           {
-            bResult = false;
             ssMessage.str("");
             ssMessage << "read(" << errno << ") " << strerror(errno);
-            strError = ssMessage.str();
+            notify(ssMessage.str());
           }
         }
       }
@@ -216,10 +215,9 @@ bool Interface::process(string strPrefix, function<void(string, Json *)> callbac
           bExit = true;
           if (nReturn < 0)
           {
-            bResult = false;
             ssMessage.str("");
             ssMessage << "write(" << errno << ") " << strerror(errno);
-            strError = ssMessage.str();
+            notify(ssMessage.str());
           }
         }
         m_mutex.unlock();
@@ -228,14 +226,11 @@ bool Interface::process(string strPrefix, function<void(string, Json *)> callbac
     else if (nReturn < 0)
     {
       bExit = true;
-      bResult = false;
       ssMessage.str("");
       ssMessage << "poll(" << errno << ") " << strerror(errno);
-      strError = ssMessage.str();
+      notify(ssMessage.str());
     }
   }
-
-  return bResult;
 }
 // }}}
 // {{{ response()

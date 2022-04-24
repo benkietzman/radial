@@ -35,7 +35,7 @@ class Request : public Interface
   Request(int argc, char **argv);
   Request(int argc, char **argv, function<bool(string, Json *, string &)> callback);
   ~Request();
-  void accept(string strPrefix);
+  void accept();
 };
 // }}}
 }

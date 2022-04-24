@@ -228,22 +228,20 @@ void Hub::notify(const string strMessage)
 }
 // }}}
 // {{{ process()
-bool Hub::process(string strPrefix, string &strError)
+void Hub::process()
 {
-  bool bResult = false;
+  string strError, strPrefix = "Hub::process()";
+  stringstream ssMessage;
 
-  strPrefix += "->Hub::process()";
   if (interfacesLoad(strError))
   {
     // {{{ prep work
     bool bExit = false;
     char szBuffer[65536];
-    stringstream ssMessage;
     int nReturn;
     size_t unIndex, unPosition;
     string strLine;
     pollfd *fds;
-    bResult = true;
     // }}}
     while (!bExit)
     {
@@ -307,7 +305,7 @@ bool Hub::process(string strPrefix, string &strError)
                 else
                 {
                   // {{{ prep work
-                  bool bSubResult = false;
+                  bool bResult = false;
                   strError.clear();
                   // }}}
                   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
@@ -321,7 +319,7 @@ bool Hub::process(string strPrefix, string &strError)
                         {
                           if (interfaceAdd(ptJson->m["Name"]->v, ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), strError))
                           {
-                            bSubResult = true;
+                            bResult = true;
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << sockets[fds[i].fd] << "," << fds[i].fd << ",addInterface," << ptJson->m["Name"]->v << "]:  Interface added.";
                             log(ssMessage.str());
@@ -355,7 +353,7 @@ bool Hub::process(string strPrefix, string &strError)
                       {
                         if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
                         {
-                          bSubResult = true;
+                          bResult = true;
                           removals.push_back(ptJson->m["Name"]->v);
                         }
                         else
@@ -376,7 +374,7 @@ bool Hub::process(string strPrefix, string &strError)
                     // {{{ shutdown
                     else if (ptJson->m["Function"]->v == "shutdown")
                     {
-                      bSubResult = true;
+                      bResult = true;
                       setShutdown();
                       ssMessage.str("");
                       ssMessage << strPrefix << " [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  Shutdown requested." << endl;
@@ -393,7 +391,7 @@ bool Hub::process(string strPrefix, string &strError)
                     // }}}
                   }
                   // {{{ post work
-                  ptJson->insert("Status", ((bSubResult)?"okay":"error"));
+                  ptJson->insert("Status", ((bResult)?"okay":"error"));
                   if (!strError.empty())
                   {
                     ptJson->insert("Error", strError);
@@ -442,10 +440,9 @@ bool Hub::process(string strPrefix, string &strError)
       else if (nReturn < 0)
       {
         bExit = true;
-        bResult = false;
         ssMessage.str("");
         ssMessage << "poll(" << errno << ") " << strerror(errno);
-        strError = ssMessage.str();
+        notify(ssMessage.str());
       }
       // {{{ post work
       delete[] fds;
@@ -462,8 +459,12 @@ bool Hub::process(string strPrefix, string &strError)
       // }}}
     }
   }
-
-  return bResult;
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->Hub::interfacesLoad() error:  " << strError;
+    notify(ssMessage.str());
+  }
 }
 // }}}
 // {{{ target()

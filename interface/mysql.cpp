@@ -18,9 +18,6 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "main()";
   Mysql mysql(argc, argv);
-  if (!mysql.process(strPrefix, bind(&Mysql::callback, &mysql, placeholders::_1, placeholders::_2), strError))
-  {
-    cerr << strPrefix << "->Mysql::process() error:  " << strError << endl;
-  }
+  mysql.process(bind(&Mysql::callback, &mysql, placeholders::_1, placeholders::_2));
   return 0;
 }

@@ -17,11 +17,7 @@ using namespace radial;
 extern char **environ;
 int main(int argc, char **argv)
 {
-  string strError, strPrefix = "main()";
   Hub hub(argc, argv, environ);
-  if (!hub.process(strPrefix, strError))
-  {
-    cerr << strPrefix << "->Hub::process() error:  " << strError << endl;
-  }
+  hub.process();
   return 0;
 }

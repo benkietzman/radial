@@ -16,11 +16,7 @@
 using namespace radial;
 int main(int argc, char *argv[])
 {
-  string strError, strPrefix = "main()";
   Log log(argc, argv);
-  if (!log.process(strPrefix, bind(&Log::callback, &log, placeholders::_1, placeholders::_2), strError))
-  {
-    cerr << strPrefix << "->Log::process() error:  " << strError << endl;
-  }
+  log.process(bind(&Log::callback, &log, placeholders::_1, placeholders::_2));
   return 0;
 }

@@ -36,13 +36,12 @@ Request::~Request()
 }
 // }}}
 // {{{ accept()
-void Request::accept(string strPrefix)
+void Request::accept()
 {
   SSL_CTX *ctx = NULL;
-  string strError;
+  string strError, strPrefix = "Request::accept()";
   stringstream ssMessage;
 
-  strPrefix += "->Request::accept()";
   setlocale(LC_ALL, "");
   if ((ctx = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {

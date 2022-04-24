@@ -16,8 +16,7 @@
 using namespace radial;
 int main(int argc, char *argv[])
 {
-  string strPrefix = "main()";
   Request request(argc, argv);
-  request.accept(strPrefix);
+  request.accept();
   return 0;
 }
