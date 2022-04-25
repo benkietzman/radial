@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Mysql()
-Mysql::Mysql(int argc, char **argv) : Interface("mysql", argc, argv)
+Mysql::Mysql(int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface("mysql", argc, argv, callback)
 {
 }
 // }}}
@@ -40,7 +40,7 @@ Mysql::~Mysql()
 }
 // }}}
 // {{{ callback()
-void Mysql::callback(string strPrefix, Json *ptJson)
+void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
   string strError;
@@ -140,7 +140,10 @@ void Mysql::callback(string strPrefix, Json *ptJson)
   {
     ptJson->insert("Error", strError);
   }
-  response(ptJson);
+  if (bResponse)
+  {
+    response(ptJson);
+  }
 }
 // }}}
 // {{{ conn()

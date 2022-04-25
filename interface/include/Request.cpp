@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Request()
-Request::Request(int argc, char **argv) : Interface("request", argc, argv)
+Request::Request(int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface("request", argc, argv, callback)
 {
 }
 // }}}
@@ -151,7 +151,7 @@ void Request::accept()
 }
 // }}}
 // {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson)
+void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
   string strError;
@@ -178,7 +178,10 @@ void Request::callback(string strPrefix, Json *ptJson)
   {
     ptJson->insert("Error", strError);
   }
-  response(ptJson);
+  if (bResponse)
+  {
+    response(ptJson);
+  }
 }
 // }}}
 // {{{ request()

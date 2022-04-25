@@ -20,8 +20,9 @@ extern "C++"
 namespace radial
 {
 // {{{ Interface()
-Interface::Interface(const string strName, int argc, char **argv) : Base(argc, argv)
+Interface::Interface(const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Base(argc, argv)
 {
+  m_callback = callback;
   m_strName = strName;
   m_threadMonitor = thread(&Interface::monitor, this, argv[0]);
 }
@@ -49,7 +50,15 @@ void Interface::log(const string strFunction, const string strMessage)
 
   ptJson->insert("Function", strFunction);
   ptJson->insert("Message", strMessage);
-  target("log", ptJson, false);
+  if (m_strName == "log")
+  {
+    m_callback("Interface::log", ptJson, false);
+  }
+  else
+  {
+    target("log", ptJson, false);
+  }
+
   delete ptJson;
 }
 // }}}
@@ -165,7 +174,7 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
 // }}}
 // }}}
 // {{{ process()
-void Interface::process(string strPrefix, function<void(string, Json *)> callback)
+void Interface::process(string strPrefix)
 {
   bool bExit = false;
   char szBuffer[65536];
@@ -225,7 +234,7 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
             m_mutex.unlock();
             if (!bUnique)
             {
-              callback(strPrefix, ptJson);
+              m_callback(strPrefix, ptJson, true);
             }
             delete ptJson;
           }

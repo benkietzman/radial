@@ -25,6 +25,7 @@ namespace radial
 class Interface : public Base
 {
   protected:
+  function<void(string, Json *, const bool)> m_callback;
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutex;
@@ -37,7 +38,7 @@ class Interface : public Base
   void response(Json *ptJson);
 
   public:
-  Interface(const string strName, int argc, char **argv);
+  Interface(const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Interface();
   void alert(const string strMessage);
   void log(const string strMessage);
@@ -45,7 +46,7 @@ class Interface : public Base
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
-  void process(string strPrefix, function<void(string, Json *)> callback);
+  void process(string strPrefix);
   void target(Json *ptJson, const bool bWait = true);
   void target(const string strTarget, Json *ptJson, const bool bWait = true);
 };

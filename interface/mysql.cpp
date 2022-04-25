@@ -17,7 +17,7 @@ using namespace radial;
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "mysql->main()";
-  Mysql mysql(argc, argv);
-  mysql.process(strPrefix, bind(&Mysql::callback, &mysql, placeholders::_1, placeholders::_2));
+  Mysql mysql(argc, argv, bind(&Mysql::callback, &mysql, placeholders::_1, placeholders::_2, placeholders::_3));
+  mysql.process(strPrefix);
   return 0;
 }

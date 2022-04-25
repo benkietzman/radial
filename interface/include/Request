@@ -30,10 +30,10 @@ class Request : public Interface
   void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 
   public:
-  Request(int argc, char **argv);
+  Request(int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Request();
   void accept();
-  void callback(string strPrefix, Json *ptJson);
+  void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
 // }}}
 }
