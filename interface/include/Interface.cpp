@@ -24,11 +24,13 @@ Interface::Interface(const string strName, int argc, char **argv) : Base(argc, a
 {
   m_strName = strName;
   m_unUnique = 0;
+  m_threadMonitor = thread(&Interface::monitor, this, argv[0]);
 }
 // }}}
 // {{{ ~Interface()
 Interface::~Interface()
 {
+  m_threadMonitor.join();
 }
 // }}}
 // {{{ alert()
@@ -50,6 +52,42 @@ void Interface::log(const string strFunction, const string strMessage)
   ptJson->insert("Message", strMessage);
   target("log", ptJson, false);
   delete ptJson;
+}
+// }}}
+// {{{ monitor()
+void Interface::monitor(string strProcess)
+{
+  float fCpu, fMem;
+  string strError, strPrefix = "Interface::monitor()";
+  time_t CTime;
+  unsigned int unCount = 0;
+  unsigned long ulImage, ulResident;
+
+  while (!m_bShutdown)
+  {
+    m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
+    if (ulResident >= m_ulMaxResident)
+    {
+      stringstream ssMessage;
+      ssMessage << strPrefix << " [" << strProcess << "]:  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      notify(ssMessage.str());
+      m_bShutdown = true;
+    }
+    if (!m_bShutdown)
+    {
+      if (unCount++ >= 15)
+      {
+        stringstream ssMessage;
+        unCount = 0;
+        ssMessage << strPrefix << " [" << strProcess << "]:  Resident size is " << ulResident << ".";
+        log(ssMessage.str());
+      }
+      for (size_t i = 0; !m_bShutdown && i < 240; i++)
+      {
+        msleep(250);
+      }
+    }
+  }
 }
 // }}}
 // {{{ notify()
@@ -77,9 +115,9 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
   {
     bResult = true;
-    if (ptJson->m.find("Data") != ptJson->m.end())
+    if (ptJson->m.find("Response") != ptJson->m.end())
     {
-      for (auto &ptRow : ptJson->m["Data"]->l)
+      for (auto &ptRow : ptJson->m["Response"]->l)
       {
         map<string, string> row;
         ptRow->flatten(row, true, false);
@@ -151,12 +189,12 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
       m_strBuffers[1] = m_responses.front() + "\n";
       m_responses.pop_front();
     }
+    m_mutex.unlock();
     if (!m_strBuffers[1].empty())
     {
       fds[1].fd = 1;
     }
-    m_mutex.unlock();
-    if ((nReturn = poll(fds, 2, 250)) > 0)
+    if ((nReturn = poll(fds, 2, 100)) > 0)
     {
       if (fds[0].revents & POLLIN)
       {
@@ -178,6 +216,7 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
               if (m_waiting.find(unUnique) != m_waiting.end())
               {
                 int nReturn;
+                strLine += "\n";
                 while (!strLine.empty() && (nReturn = write(m_waiting[unUnique], strLine.c_str(), strLine.size())) > 0)
                 {
                   strLine.erase(0, nReturn);
@@ -206,7 +245,6 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
       }
       if (fds[1].revents & POLLOUT)
       {
-        m_mutex.lock();
         if ((nReturn = write(fds[1].fd, m_strBuffers[1].c_str(), m_strBuffers[1].size())) > 0)
         {
           m_strBuffers[1].erase(0, nReturn);
@@ -221,7 +259,6 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
             notify(ssMessage.str());
           }
         }
-        m_mutex.unlock();
       }
     }
     else if (nReturn < 0)
@@ -246,19 +283,26 @@ void Interface::response(Json *ptJson)
 }
 // }}}
 // {{{ target()
+void Interface::target(Json *ptJson, const bool bWait)
+{
+  return target("", ptJson, bWait);
+}
 void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
 {
   size_t unUnique;
   string strJson;
   stringstream ssMessage;
 
-  ptJson->insert("Target", strTarget);
+  if (!strTarget.empty())
+  {
+    ptJson->insert("_target", strTarget);
+  }
   if (bWait)
   {
     bool bGood = false;
     int readpipe[2] = {-1, -1};
     stringstream ssUnique;
-    ptJson->insert("Source", m_strName);
+    ptJson->insert("_source", m_strName);
     m_mutex.lock();
     while (m_waiting.find(m_unUnique) != m_waiting.end())
     {
@@ -285,12 +329,24 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     {
       char szBuffer[65536];
       int nReturn;
+      size_t unPosition;
+      strJson.clear();
       while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
       {
         strJson.append(szBuffer, nReturn);
       }
-      ptJson->clear();
-      ptJson->parse(strJson);
+      if ((unPosition = strJson.find("\n")) != string::npos)
+      {
+        ptJson->clear();
+        ptJson->parse(strJson.substr(0, unPosition));
+      }
+      else
+      {
+        ptJson->insert("Status", "error");
+        ssMessage.str("");
+        ssMessage << "write(" << errno << ") " << strerror(errno);
+        ptJson->insert("Error", ssMessage.str());
+      }
       close(readpipe[0]);
       m_mutex.lock();
       m_waiting.erase(unUnique);

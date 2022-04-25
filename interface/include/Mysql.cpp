@@ -81,10 +81,10 @@ void Mysql::callback(string strPrefix, Json *ptJson)
                     bResult = true;
                     ssRows << ullRows;
                     ptJson->insert("Rows", ssRows.str(), 'n');
-                    ptJson->m["Data"] = new Json;
+                    ptJson->m["Response"] = new Json;
                     while ((row = fetch(result, subFields)) != NULL)
                     {
-                      ptJson->m["Data"]->push_back(*row);
+                      ptJson->m["Response"]->push_back(*row);
                       row->clear();
                       delete row;
                     }
@@ -368,7 +368,7 @@ MYSQL_RES *Mysql::query(list<radial_mysql *>::iterator &iter, const string strQu
     }
     if (bRetry)
     {
-      m_pCentral->utility()->msleep(250);
+      msleep(250);
     }
   }
 
@@ -409,7 +409,7 @@ bool Mysql::update(list<radial_mysql *>::iterator &iter, const string strQuery, 
     }
     if (bRetry)
     {
-      m_pCentral->utility()->msleep(250);
+      msleep(250);
     }
   }
 

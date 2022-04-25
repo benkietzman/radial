@@ -22,12 +22,6 @@ namespace radial
 // {{{ Request()
 Request::Request(int argc, char **argv) : Interface("request", argc, argv)
 {
-  m_bCallback = false;
-}
-Request::Request(int argc, char **argv, function<bool(string, Json *, string &)> callback) : Interface("request", argc, argv)
-{
-  m_bCallback = true;
-  m_callback = callback;
 }
 // }}}
 // {{{ ~Request()
@@ -92,7 +86,7 @@ void Request::accept()
           pollfd fds[1];
           fds[0].fd = fdSocket;
           fds[0].events = POLLIN;
-          if ((nReturn = poll(fds, 1, 250)) > 0)
+          if ((nReturn = poll(fds, 1, 100)) > 0)
           {
             if (fds[0].revents & POLLIN)
             {
@@ -188,122 +182,60 @@ void Request::callback(string strPrefix, Json *ptJson)
 }
 // }}}
 // {{{ request()
-void Request::request(string strPrefix, Json *ptJson)
+void Request::request(Json *ptJson)
 {
-  // {{{ prep work
-  bool bResult = false;
-  string strError;
-  stringstream ssMessage;
-  // }}}
-  if (ptJson->m.find("Section") != ptJson->m.end() && !ptJson->m["Section"]->v.empty())
+  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
-    // {{{ mysql
-    if (ptJson->m["Section"]->v == "mysql")
+    if (ptJson->m["Interface"]->v == "hub")
     {
-      if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+      if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
       {
-        if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+        if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
         {
-          if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
-          {
-            if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
-            {
-              if ((ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty()) || (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty()))
-              {
-                unsigned int unPort = 0;
-                unsigned long long ullRows = 0;
-                if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
-                {
-                  stringstream ssPort(ptJson->m["Port"]->v);
-                  ssPort >> unPort;
-                }
-                if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
-                {
-                  list<map<string, string> > rows;
-                  if (mysqlQuery(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, rows, strError))
-                  {
-                    bResult = true;
-                    ptJson->m["Data"] = new Json;
-                    for (auto &row: rows)
-                    {
-                      ptJson->m["Data"]->push_back(row);
-                    }
-                  }
-                }
-                else
-                {
-                  unsigned long long ullID = 0;
-                  if (mysqlUpdate(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, ptJson->m["Update"]->v, ullID, ullRows, strError))
-                  {
-                    stringstream ssID;
-                    bResult = true;
-                    ssID << ullID;
-                    ptJson->insert("ID", ssID.str(), 'n');
-                  }
-                }
-                if (bResult)
-                {
-                  stringstream ssRows;
-                  ssRows << ullRows;
-                  ptJson->insert("Rows", ssRows.str(), 'n');
-                }
-              }
-              else
-              {
-                strError = "Please provide the Query or Update.";
-              }
-            }
-            else
-            {
-              strError = "Please provide the Database.";
-            }
-          }
-          else
-          {
-            strError = "Please provide the Password.";
-          }
+          target(ptJson);
         }
         else
         {
-          strError = "Please provide the User.";
+          ptJson->insert("Status", "error");
+          ptJson->insert("Error", "Please provide a valid Function:  list, ping.");
         }
       }
       else
       {
-        strError = "Please provide the Server.";
+        ptJson->insert("Status", "error");
+        ptJson->insert("Error", "Please provide the Function.");
       }
     }
-    // }}}
-    // {{{ ping
-    else if (ptJson->m["Section"]->v == "ping")
-    {
-      bResult = true;
-    }
-    // }}}
-    // {{{ callback
-    else if (m_bCallback)
-    {
-      bResult = m_callback(strPrefix, ptJson, strError);
-    }
-    // }}}
-    // {{{ invalid
     else
     {
-      strError = "Please provide a valid Section.";
+      Json *ptInterfaces = new Json;
+      ptInterfaces->insert("Function", "list");
+      target(ptInterfaces);
+      if (ptInterfaces->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m.end() && ptInterfaces->m[ptJson->m["Interface"]->v]->m.find("Public") != ptInterfaces->m[ptJson->m["Interface"]->v]->m.end() && ptInterfaces->m[ptJson->m["Interface"]->v]->m["Public"]->v == "1")
+      {
+        target(ptJson->m["Interface"]->v, ptJson);
+      }
+      else
+      {
+        ptJson->insert("Status", "error");
+        ptJson->insert("Error", "Access to interface is restricted.");
+      }
+      delete ptInterfaces;
     }
-    // }}}
+    for (auto &i : ptJson->m)
+    {
+      if (!i.first.empty() && i.first[0] == '_')
+      {
+        delete i.second;
+        ptJson->m.erase(i.first);
+      }
+    }
   }
   else
   {
-    strError = "Please provide the Section.";
+    ptJson->insert("Status", "error");
+    ptJson->insert("Error", "Please provide the Interface.");
   }
-  // {{{ post work
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->insert("Error", strError);
-  }
-  // }}}
 }
 // }}}
 // {{{ socket()
@@ -328,7 +260,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
     {
       fds[0].events |= POLLOUT;
     }
-    if ((nReturn = poll(fds, 1, 250)) > 0)
+    if ((nReturn = poll(fds, 1, 100)) > 0)
     {
       if (fds[0].revents & POLLIN)
       {
@@ -362,7 +294,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
           {
             ptJson = new Json(strBuffer[0].substr(0, unPosition));
             strBuffer[0].erase(0, (unPosition + 1));
-            request(strPrefix, ptJson);
+            request(ptJson);
             ptJson->json(strBuffer[1]);
             strBuffer[1] += "\n";
             delete ptJson;

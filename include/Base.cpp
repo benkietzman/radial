@@ -26,6 +26,7 @@ Base::Base(int argc, char **argv)
 
   m_argc = argc;
   m_argv = argv;
+  m_bShutdown = false;
   m_strApplication = "Radial";
   m_ulMaxResident = 40 * 1024;
   // {{{ command line arguments
@@ -70,6 +71,12 @@ Base::Base(int argc, char **argv)
 Base::~Base()
 {
   delete m_pCentral;
+}
+// }}}
+// {{{ msleep()
+void Base::msleep(const unsigned long ulMilliSec)
+{
+  m_pUtility->msleep(ulMilliSec);
 }
 // }}}
 // {{{ shutdown()

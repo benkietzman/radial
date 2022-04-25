@@ -31,8 +31,10 @@ class Interface : public Base
   size_t m_unUnique;
   string m_strBuffers[2];
   string m_strName;
+  thread m_threadMonitor;
 
   void log(const string strFunction, const string strMessage);
+  void monitor(string strProcess);
   void response(Json *ptJson);
 
   public:
@@ -45,6 +47,7 @@ class Interface : public Base
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void process(string strPrefix, function<void(string, Json *)> callback);
+  void target(Json *ptJson, const bool bWait = true);
   void target(const string strTarget, Json *ptJson, const bool bWait = true);
 };
 // }}}

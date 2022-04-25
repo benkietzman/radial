@@ -57,6 +57,7 @@ class Base
   StringManip m_manip;
   Utility *m_pUtility;
 
+  void msleep(const unsigned long ulMilliSec);
   void setShutdown();
   bool shutdown();
 

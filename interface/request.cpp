@@ -16,7 +16,7 @@
 using namespace radial;
 int main(int argc, char *argv[])
 {
-  string strPrefix = "request->main()"
+  string strPrefix = "request->main()";
   Request request(argc, argv);
   thread threadAccept(&Request::accept, &request);
   request.process(strPrefix, bind(&Request::callback, &request, placeholders::_1, placeholders::_2));
