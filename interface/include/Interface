@@ -26,9 +26,8 @@ class Interface : public Base
 {
   protected:
   list<string> m_responses;
-  map<size_t, int> m_waiting;
+  map<string, int> m_waiting;
   mutex m_mutex;
-  size_t m_unUnique;
   string m_strBuffers[2];
   string m_strName;
   thread m_threadMonitor;

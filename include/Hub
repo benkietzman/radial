@@ -24,8 +24,8 @@ namespace radial
 // {{{ radialHubInterface
 struct radialHubInterface
 {
-  bool bPublic;
   bool bRespawn;
+  bool bRestricted;
   int fdRead;
   int fdWrite;
   list<string> buffers[2];
@@ -42,14 +42,14 @@ class Hub : public Base
   map<string, radialHubInterface *> m_interfaces;
   thread m_threadMonitor;
 
+  bool add(const string strName, const string strCommand, const bool bRespawn, const bool bRestricted, string &strError);
   void alert(const string strMessage);
-  bool interfaceAdd(const string strName, const string strCommand, const bool bPublic, const bool bRespawn, string &strError);
-  void interfaceRemove(const string strName);
-  bool interfacesLoad(string &strError);
+  bool load(string &strError);
   void log(const string strMessage);
   void log(const string strFunction, const string strMessage);
   void monitor(string strProcess);
   void notify(const string strMessage);
+  void remove(const string strName);
   void target(const string strTarget, Json *ptJson);
 
   public:

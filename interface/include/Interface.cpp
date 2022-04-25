@@ -23,7 +23,6 @@ namespace radial
 Interface::Interface(const string strName, int argc, char **argv) : Base(argc, argv)
 {
   m_strName = strName;
-  m_unUnique = 0;
   m_threadMonitor = thread(&Interface::monitor, this, argv[0]);
 }
 // }}}
@@ -203,29 +202,28 @@ void Interface::process(string strPrefix, function<void(string, Json *)> callbac
           m_strBuffers[0].append(szBuffer, nReturn);
           while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
+            bool bUnique = false;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-            if (ptJson->m.find("_unique") != ptJson->m.end())
+            m_mutex.lock();
+            if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
             {
-              size_t unUnique;
-              stringstream ssUnique(ptJson->m["_unique"]->v);
-              ssUnique >> unUnique;
-              m_mutex.lock();
-              if (m_waiting.find(unUnique) != m_waiting.end())
+              bUnique = true;
+              if (m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
               {
                 int nReturn;
                 strLine += "\n";
-                while (!strLine.empty() && (nReturn = write(m_waiting[unUnique], strLine.c_str(), strLine.size())) > 0)
+                while (!strLine.empty() && (nReturn = write(m_waiting[ptJson->m["_unique"]->v], strLine.c_str(), strLine.size())) > 0)
                 {
                   strLine.erase(0, nReturn);
                 }
-                close(m_waiting[unUnique]);
+                close(m_waiting[ptJson->m["_unique"]->v]);
               }
-              m_mutex.unlock();
             }
-            else
+            m_mutex.unlock();
+            if (!bUnique)
             {
               callback(strPrefix, ptJson);
             }
@@ -289,7 +287,7 @@ void Interface::target(Json *ptJson, const bool bWait)
 }
 void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
 {
-  size_t unUnique;
+  size_t unUnique = 0;
   string strJson;
   stringstream ssMessage;
 
@@ -304,18 +302,20 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
     m_mutex.lock();
-    while (m_waiting.find(m_unUnique) != m_waiting.end())
+    ssUnique.str("");
+    ssUnique << m_strName << "_" << unUnique;
+    while (m_waiting.find(ssUnique.str()) != m_waiting.end())
     {
-      m_unUnique++;
-    }
-    unUnique = m_unUnique++;
-    ssUnique << unUnique;
-    ptJson->insert("_unique", ssUnique.str(),'n');
+      unUnique++;
+      ssUnique.str("");
+      ssUnique << m_strName << "_" << unUnique;
+    } 
+    ptJson->insert("_unique", ssUnique.str());
     if (pipe(readpipe) == 0)
     {
       bGood = true;
       m_responses.push_back(ptJson->json(strJson));
-      m_waiting[unUnique] = readpipe[1];
+      m_waiting[ssUnique.str()] = readpipe[1];
     }
     else
     {
@@ -349,7 +349,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       }
       close(readpipe[0]);
       m_mutex.lock();
-      m_waiting.erase(unUnique);
+      m_waiting.erase(ssUnique.str());
       m_mutex.unlock();
     }
   }

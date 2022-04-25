@@ -211,14 +211,30 @@ void Request::request(Json *ptJson)
       Json *ptInterfaces = new Json;
       ptInterfaces->insert("Function", "list");
       target(ptInterfaces);
-      if (ptInterfaces->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m.end() && ptInterfaces->m[ptJson->m["Interface"]->v]->m.find("Public") != ptInterfaces->m[ptJson->m["Interface"]->v]->m.end() && ptInterfaces->m[ptJson->m["Interface"]->v]->m["Public"]->v == "1")
+      if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
       {
-        target(ptJson->m["Interface"]->v, ptJson);
+        if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
+        {
+          if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0")
+          {
+            target(ptJson->m["Interface"]->v, ptJson);
+          }
+          else
+          {
+            ptJson->insert("Status", "error");
+            ptJson->insert("Error", "Access to interface is restricted.");
+          }
+        }
+        else
+        {
+          ptJson->insert("Status", "error");
+          ptJson->insert("Error", "Interface does not exist.");
+        }
       }
       else
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Access to interface is restricted.");
+        ptJson->insert("Error", "Failed to retrieve interfaces.");
       }
       delete ptInterfaces;
     }
