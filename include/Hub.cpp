@@ -40,7 +40,7 @@ Hub::~Hub()
   {
     close(i.second->fdRead);
     close(i.second->fdWrite);
-    delete i.second;
+    delete (i.second);
   }
 }
 // }}}
@@ -94,6 +94,7 @@ bool Hub::add(string strPrefix, const string strName, const string strCommand, c
           }
           m_interfaces[strName]->bRespawn = bRespawn;
           m_interfaces[strName]->bRestricted = bRestricted;
+          m_interfaces[strName]->bShutdown = false;
           m_interfaces[strName]->fdRead = readpipe[0];
           m_interfaces[strName]->fdWrite = writepipe[1];
           m_interfaces[strName]->nPid = nPid;
@@ -385,7 +386,7 @@ void Hub::process(string strPrefix)
                         if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
                         {
                           bResult = true;
-                          removals.push_back(ptJson->m["Name"]->v);
+                          remove(strPrefix, ptJson->m["Name"]->v);
                         }
                         else
                         {
@@ -463,11 +464,11 @@ void Hub::process(string strPrefix)
           // }}}
         }
       }
-      else if (nReturn < 0)
+      else if (nReturn < 0 && errno != EINTR)
       {
         bExit = true;
         ssMessage.str("");
-        ssMessage << "poll(" << errno << ") " << strerror(errno);
+        ssMessage << strPrefix << "->poll(" << errno << ") " << strerror(errno);
         notify(ssMessage.str());
       }
       // {{{ post work
@@ -509,14 +510,14 @@ void Hub::remove(string strPrefix, const string strName)
 {
   stringstream ssMessage;
 
-  strPrefix += "->Hub::remote()";
+  strPrefix += "->Hub::remove()";
   if (m_interfaces.find(strName) != m_interfaces.end())
   {
     setShutdown(strPrefix, strName);
     close(m_interfaces[strName]->fdRead);
-    m_interfaces[strName]->fdRead = false;
+    m_interfaces[strName]->fdRead = -1;
     close(m_interfaces[strName]->fdWrite);
-    m_interfaces[strName]->fdWrite = false;
+    m_interfaces[strName]->fdWrite = -1;
     m_interfaces[strName]->strBuffers[0].clear();
     m_interfaces[strName]->strBuffers[1].clear();
     ssMessage.str("");
@@ -546,21 +547,20 @@ void Hub::setShutdown(string strPrefix, const string strTarget)
   ptJson->insert("Function", "shutdown");
   ptJson->json(strJson);
   delete ptJson;
-  ssMessage << strPrefix << ":  " << ((!strTarget.empty() && m_interfaces.find(strTarget) != m_interfaces.end())?strTarget+" interface s":"S") << "hutdown.";
-  log(ssMessage.str());
   if (strTarget.empty())
   {
     Base::setShutdown();
   }
   for (auto &i : m_interfaces)
   {
-    if (strTarget.empty() || i.first == strTarget)
+    if (!i.second->bShutdown && (strTarget.empty() || i.first == strTarget) && (i.first != "log" || strTarget == "log"))
     {
-      if (i.first != "log" || strTarget == "log")
-      {
-        i.second->bRespawn = false;
-        i.second->buffers[1].push_back(strJson);
-      }
+      ssMessage.str("");
+      ssMessage << strPrefix << " [" << i.first << "]:  Interface shutdown.";
+      log(ssMessage.str());
+      i.second->bRespawn = false;
+      i.second->bShutdown = true;
+      i.second->buffers[1].push_back(strJson);
     }
   }
 }

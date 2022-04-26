@@ -23,6 +23,13 @@ namespace radial
 Interface::Interface(string strPrefix, const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Base(argc, argv)
 {
   strPrefix += "->Interface::Interface()";
+  sigignore(SIGBUS);
+  sigignore(SIGCHLD);
+  sigignore(SIGCONT);
+  sigignore(SIGPIPE);
+  sigignore(SIGSEGV);
+  sigignore(SIGTERM);
+  sigignore(SIGWINCH);
   m_callback = callback;
   m_strName = strName;
 }
@@ -243,7 +250,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->read(" << errno << ") " << strerror(errno);
+            ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -260,17 +267,17 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->write(" << errno << ") " << strerror(errno);
+            ssMessage << strPrefix << "->write(" << errno << "):  " << strerror(errno);
             notify(ssMessage.str());
           }
         }
       }
     }
-    else if (nReturn < 0)
+    else if (nReturn < 0 && errno != EINTR)
     {
       bExit = true;
       ssMessage.str("");
-      ssMessage << strPrefix << "->poll(" << errno << ") " << strerror(errno);
+      ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
       notify(ssMessage.str());
     }
     if (!monitor(strPrefix))
@@ -280,7 +287,7 @@ void Interface::process(string strPrefix)
     if (shutdown())
     {
       m_mutex.lock();
-      if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty())
+      if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
       {
         bExit = true;
       }

@@ -26,6 +26,7 @@ struct radialHubInterface
 {
   bool bRespawn;
   bool bRestricted;
+  bool bShutdown;
   int fdRead;
   int fdWrite;
   list<string> buffers[2];

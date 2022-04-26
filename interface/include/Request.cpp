@@ -108,12 +108,16 @@ void Request::accept(string strPrefix)
               }
             }
           }
-          else if (nReturn < 0)
+          else if (nReturn < 0 && errno != EINTR)
           {
             bExit = true;
             ssMessage.str("");
             ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
             notify(ssMessage.str());
+          }
+          if (shutdown())
+          {
+            bExit = true;
           }
         }
       }
@@ -264,7 +268,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
   bool bExit = false;
   int nReturn;
   size_t unPosition;
-  string strBuffer[2], strError;
+  string strBuffers[2], strError;
   stringstream ssMessage;
   SSL *ssl;
   common_socket_type eSocketType = COMMON_SOCKET_UNKNOWN;
@@ -276,7 +280,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
     pollfd fds[1];
     fds[0].fd = fdSocket;
     fds[0].events = POLLIN;
-    if (!strBuffer[1].empty())
+    if (!strBuffers[1].empty())
     {
       fds[0].events |= POLLOUT;
     }
@@ -308,15 +312,15 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             log(ssMessage.str());
           }
         }
-        if (!bExit && ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(ssl, strBuffer[0], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fdSocket, strBuffer[0], nReturn))))
+        if (!bExit && ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(ssl, strBuffers[0], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))))
         {
-          if ((unPosition = strBuffer[0].find("\n")) != string::npos)
+          if ((unPosition = strBuffers[0].find("\n")) != string::npos)
           {
-            ptJson = new Json(strBuffer[0].substr(0, unPosition));
-            strBuffer[0].erase(0, (unPosition + 1));
+            ptJson = new Json(strBuffers[0].substr(0, unPosition));
+            strBuffers[0].erase(0, (unPosition + 1));
             request(ptJson);
-            ptJson->json(strBuffer[1]);
-            strBuffer[1] += "\n";
+            ptJson->json(strBuffers[1]);
+            strBuffers[1] += "\n";
             delete ptJson;
           }
         }
@@ -341,9 +345,9 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
       }
       if (fds[0].revents & POLLOUT)
       {
-        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffer[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fdSocket, strBuffer[1], nReturn)))
+        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn)))
         {
-          if (strBuffer[1].empty())
+          if (strBuffers[1].empty())
           {
             bExit = true;
           }
@@ -368,12 +372,16 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
         }
       }
     }
-    else if (nReturn < 0)
+    else if (nReturn < 0 && errno != EINTR)
     {
       bExit = true;
       ssMessage.str("");
       ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
       log(ssMessage.str());
+    }
+    if (shutdown() && strBuffers[0].empty() && strBuffers[1].empty())
+    {
+      bExit = true;
     }
   }
   if (eSocketType == COMMON_SOCKET_ENCRYPTED)
