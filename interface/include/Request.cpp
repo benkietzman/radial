@@ -74,13 +74,13 @@ void Request::accept(string strPrefix)
     if (bBound[2])
     {
       ssMessage.str("");
-      ssMessage << strPrefix << "->bind() [" << fdSocket << "]:  Bound incoming socket.";
+      ssMessage << strPrefix << "->bind():  Bound incoming socket.";
       log(ssMessage.str());
       if (listen(fdSocket, 5) == 0)
       {
         bool bExit = false;
         ssMessage.str("");
-        ssMessage << strPrefix << "->listen() [" << fdSocket << "]:  Listening to incoming socket.";
+        ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
         while (!bExit)
         {
@@ -103,7 +103,7 @@ void Request::accept(string strPrefix)
               {
                 bExit = true;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->accept(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+                ssMessage << strPrefix << "->accept(" << errno << ") error:  " << strerror(errno);
                 notify(ssMessage.str());
               }
             }
@@ -112,7 +112,7 @@ void Request::accept(string strPrefix)
           {
             bExit = true;
             ssMessage.str("");
-            ssMessage << strPrefix << "->poll(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+            ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -120,7 +120,7 @@ void Request::accept(string strPrefix)
       else
       {
         ssMessage.str("");
-        ssMessage << strPrefix << "->listen(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+        ssMessage << strPrefix << "->listen(" << errno << ") error:  " << strerror(errno);
         notify(ssMessage.str());
       }
       close(fdSocket);
@@ -295,7 +295,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
               {
                 bExit = true;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslAccept() error [" << fdSocket << "]:  " << strError;
+                ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
                 log(ssMessage.str());
               }
             }
@@ -304,7 +304,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
           {
             bExit = true;
             ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::socketType() error [" << fdSocket << "]:  " << strError;
+            ssMessage << strPrefix << "->Utility::socketType() error:  " << strError;
             log(ssMessage.str());
           }
         }
@@ -329,11 +329,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error [" << fdSocket << "]:  " << m_pUtility->sslstrerror();
+              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
             }
             else
             {
-              ssMessage << "fdRead(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+              ssMessage << "fdRead(" << errno << ") error:  " << strerror(errno);
             }
             log(ssMessage.str());
           }
@@ -357,11 +357,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error [" << fdSocket << "]:  " << m_pUtility->sslstrerror();
+              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
             }
             else
             {
-              ssMessage << "fdWrite(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+              ssMessage << "fdWrite(" << errno << ") error:  " << strerror(errno);
             }
             log(ssMessage.str());
           }
@@ -372,7 +372,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
     {
       bExit = true;
       ssMessage.str("");
-      ssMessage << strPrefix << "->poll(" << errno << ") error [" << fdSocket << "]:  " << strerror(errno);
+      ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
       log(ssMessage.str());
     }
   }
