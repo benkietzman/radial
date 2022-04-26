@@ -482,9 +482,16 @@ void Hub::process(string strPrefix)
       {
         setShutdown(strPrefix);
       }
-      if (shutdown() && m_interfaces.empty())
+      if (shutdown())
       {
-        bExit = true;
+        if (m_interfaces.empty())
+        {
+          bExit = true;
+        }
+        else if (m_interfaces.size() == 1 && m_interfaces.find("log") != m_interfaces.end())
+        {
+          setShutdown(strPrefix, "log");
+        }
       }
       // }}}
     }
@@ -549,8 +556,11 @@ void Hub::setShutdown(string strPrefix, const string strTarget)
   {
     if (strTarget.empty() || i.first == strTarget)
     {
-      i.second->bRespawn = false;
-      i.second->buffers[1].push_back(strJson);
+      if (i.first != "log" || strTarget == "log")
+      {
+        i.second->bRespawn = false;
+        i.second->buffers[1].push_back(strJson);
+      }
     }
   }
 }
