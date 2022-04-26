@@ -20,11 +20,12 @@ extern "C++"
 namespace radial
 {
 // {{{ Interface()
-Interface::Interface(const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Base(argc, argv)
+Interface::Interface(string strPrefix, const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Base(argc, argv)
 {
+  strPrefix += "->Interface::Interface()";
   m_callback = callback;
   m_strName = strName;
-  m_threadMonitor = thread(&Interface::monitor, this, argv[0]);
+  m_threadMonitor = thread(&Interface::monitor, this, strPrefix);
 }
 // }}}
 // {{{ ~Interface()
@@ -63,23 +64,24 @@ void Interface::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-void Interface::monitor(string strProcess)
+void Interface::monitor(string strPrefix)
 {
   float fCpu, fMem;
-  string strError, strPrefix = "Interface::monitor()";
+  string strError;
   time_t CTime;
   unsigned int unCount = 0;
   unsigned long ulImage, ulResident;
 
+  strPrefix += "->Interface::monitor()";
   while (!m_bShutdown)
   {
     m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
     if (ulResident >= m_ulMaxResident)
     {
       stringstream ssMessage;
-      ssMessage << strPrefix << " [" << strProcess << "]:  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      ssMessage << strPrefix << ":  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
       notify(ssMessage.str());
-      m_bShutdown = true;
+      setShutdown();
     }
     if (!m_bShutdown)
     {
@@ -87,7 +89,7 @@ void Interface::monitor(string strProcess)
       {
         stringstream ssMessage;
         unCount = 0;
-        ssMessage << strPrefix << " [" << strProcess << "]:  Resident size is " << ulResident << ".";
+        ssMessage << strPrefix << ":  Resident size is " << ulResident << ".";
         log(ssMessage.str());
       }
       for (size_t i = 0; !m_bShutdown && i < 240; i++)
@@ -211,7 +213,7 @@ void Interface::process(string strPrefix)
           m_strBuffers[0].append(szBuffer, nReturn);
           while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
-            bool bUnique = false;
+            int fdUnique = -1;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
@@ -219,20 +221,29 @@ void Interface::process(string strPrefix)
             m_mutex.lock();
             if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
             {
-              bUnique = true;
-              if (m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
-              {
-                int nReturn;
-                strLine += "\n";
-                while (!strLine.empty() && (nReturn = write(m_waiting[ptJson->m["_unique"]->v], strLine.c_str(), strLine.size())) > 0)
-                {
-                  strLine.erase(0, nReturn);
-                }
-                close(m_waiting[ptJson->m["_unique"]->v]);
-              }
+              fdUnique = m_waiting[ptJson->m["_unique"]->v];
             }
             m_mutex.unlock();
-            if (!bUnique)
+            if (fdUnique != -1)
+            {
+              strLine += "\n";
+              while (!strLine.empty() && (nReturn = write(fdUnique, strLine.c_str(), strLine.size())) > 0)
+              {
+                strLine.erase(0, nReturn);
+              }
+              close(fdUnique);
+            }
+            else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "hub")
+            {
+              if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+              {
+                if (ptJson->m["Function"]->v == "shutdown")
+                {
+                  setShutdown();
+                }
+              }
+            }
+            else
             {
               m_callback(strPrefix, ptJson, true);
             }
@@ -245,7 +256,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << "read(" << errno << ") " << strerror(errno);
+            ssMessage << strPrefix << "->read(" << errno << ") " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -262,7 +273,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << "write(" << errno << ") " << strerror(errno);
+            ssMessage << strPrefix << "->write(" << errno << ") " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -272,8 +283,17 @@ void Interface::process(string strPrefix)
     {
       bExit = true;
       ssMessage.str("");
-      ssMessage << "poll(" << errno << ") " << strerror(errno);
+      ssMessage << strPrefix << "->poll(" << errno << ") " << strerror(errno);
       notify(ssMessage.str());
+    }
+    if (shutdown())
+    {
+      m_mutex.lock();
+      if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty())
+      {
+        bExit = true;
+      }
+      m_mutex.unlock();
     }
   }
 }

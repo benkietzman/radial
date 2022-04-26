@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Log()
-Log::Log(int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface("log", argc, argv, callback)
+Log::Log(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "log", argc, argv, callback)
 {
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)

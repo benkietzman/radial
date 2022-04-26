@@ -15,10 +15,30 @@
 #include "include/Hub"
 using namespace radial;
 extern char **environ;
+Hub *gpHub;
+void sighandle(const int nSignal);
 int main(int argc, char **argv)
 {
   string strPrefix = "hub->main()";
-  Hub hub(argc, argv, environ);
-  hub.process(strPrefix);
+  gpHub = new Hub(strPrefix, argc, argv, environ, sighandle);
+  gpHub->process(strPrefix);
+  delete gpHub;
   return 0;
+}
+void sighandle(const int nSignal)
+{
+  string strSignal;
+  stringstream ssMessage, ssPrefix;
+  sethandles(sigdummy);
+  ssPrefix << "hub->sighandle(" << nSignal << ")";
+  ssMessage << ssPrefix.str() << ":  " << sigstring(strSignal, nSignal);
+  if (nSignal != SIGINT && nSignal != SIGTERM)
+  {
+    gpHub->notify(ssMessage.str());
+  }
+  else
+  {
+    gpHub->log(ssMessage.str());
+  }
+  gpHub->setShutdown(ssPrefix.str());
 }

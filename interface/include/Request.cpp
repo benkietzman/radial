@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Request()
-Request::Request(int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface("request", argc, argv, callback)
+Request::Request(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "request", argc, argv, callback)
 {
 }
 // }}}
@@ -30,12 +30,13 @@ Request::~Request()
 }
 // }}}
 // {{{ accept()
-void Request::accept()
+void Request::accept(string strPrefix)
 {
   SSL_CTX *ctx = NULL;
-  string strError, strPrefix = "Request::accept()";
+  string strError;
   stringstream ssMessage;
 
+  strPrefix += "->Request::accept()";
   setlocale(LC_ALL, "");
   if ((ctx = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {

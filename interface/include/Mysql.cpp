@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Mysql()
-Mysql::Mysql(int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface("mysql", argc, argv, callback)
+Mysql::Mysql(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "mysql", argc, argv, callback)
 {
 }
 // }}}

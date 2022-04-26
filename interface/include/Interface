@@ -34,11 +34,11 @@ class Interface : public Base
   thread m_threadMonitor;
 
   void log(const string strFunction, const string strMessage);
-  void monitor(string strProcess);
+  void monitor(string strPrefix);
   void response(Json *ptJson);
 
   public:
-  Interface(const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback);
+  Interface(string strPrefix, const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Interface();
   void alert(const string strMessage);
   void log(const string strMessage);

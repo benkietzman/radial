@@ -58,12 +58,12 @@ class Base
   Utility *m_pUtility;
 
   void msleep(const unsigned long ulMilliSec);
-  void setShutdown();
-  bool shutdown();
 
   public:
   Base(int argc, char **argv);
   ~Base();
+  void setShutdown();
+  bool shutdown();
 };
 // }}}
 }

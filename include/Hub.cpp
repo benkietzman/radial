@@ -20,10 +20,18 @@ extern "C++"
 namespace radial
 {
 // {{{ Hub()
-Hub::Hub(int argc, char **argv, char **env) : Base(argc, argv)
+Hub::Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(const int)) : Base(argc, argv)
 {
+  strPrefix += "->Hub::Hub()";
+  sethandles(function);
+  sigignore(SIGBUS);
+  sigignore(SIGCHLD);
+  sigignore(SIGCONT);
+  sigignore(SIGPIPE);
+  sigignore(SIGSEGV);
+  sigignore(SIGWINCH);
   m_env = env;
-  m_threadMonitor = thread(&Hub::monitor, this, argv[0]);
+  m_threadMonitor = thread(&Hub::monitor, this, strPrefix);
 }
 // }}}
 // {{{ ~Hub()
@@ -39,11 +47,13 @@ Hub::~Hub()
 }
 // }}}
 // {{{ add()
-bool Hub::add(const string strName, const string strCommand, const bool bRespawn, const bool bRestricted, string &strError)
+bool Hub::add(string strPrefix, const string strName, const string strCommand, const bool bRespawn, const bool bRestricted)
 {
   bool bResult = false;
   stringstream ssMessage;
 
+  strPrefix += "->Hub::add()";
+  ssMessage << strPrefix;
   if (m_interfaces.find(strName) == m_interfaces.end() || bRespawn)
   {
     char *args[100], *pszArgument;
@@ -77,6 +87,7 @@ bool Hub::add(const string strName, const string strCommand, const bool bRespawn
         else if (nPid > 0)
         {
           bResult = true;
+          ssMessage << " [" << strName << "]:  Interface added." << endl;
           close(writepipe[0]);
           close(readpipe[1]);
           if (m_interfaces.find(strName) == m_interfaces.end())
@@ -92,29 +103,24 @@ bool Hub::add(const string strName, const string strCommand, const bool bRespawn
         }
         else
         {
-          ssMessage.str("");
-          ssMessage << "fork(" << errno << ") " << strerror(errno);
-          strError = ssMessage.str();
+          ssMessage << "->fork(" << errno << ") error [" << strName << "]:  " << strerror(errno);
         }
       }
       else
       {
-        ssMessage.str("");
-        ssMessage << "pipe(write," << errno << ") " << strerror(errno);
-        strError = ssMessage.str();
+        ssMessage << "->pipe(write," << errno << ") error [" << strName << "]:  " << strerror(errno);
       }
     }
     else
     {
-      ssMessage.str("");
-      ssMessage << "pipe(read," << errno << ") " << strerror(errno);
-      strError = ssMessage.str();
+      ssMessage << "->pipe(read," << errno << ") error [" << strName << "]  " << strerror(errno);
     }
   }
   else
   {
-    strError = "Interface already exists.";
+    ssMessage << " error:  Interface already exists.";
   }
+  log(ssMessage.str());
 
   return bResult;
 }
@@ -126,12 +132,13 @@ void Hub::alert(const string strMessage)
 }
 // }}}
 // {{{ load()
-bool Hub::load(string &strError)
+bool Hub::load(string strPrefix, string &strError)
 {
   bool bResult = false;
   ifstream inInterfaces;
   stringstream ssInterfaces, ssMessage;
 
+  strPrefix += "->Hub::load()";
   ssInterfaces << m_strData << "/interfaces.json";
   inInterfaces.open(ssInterfaces.str().c_str());
   if (inInterfaces)
@@ -149,29 +156,26 @@ bool Hub::load(string &strError)
     {
       if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
       {
-        if (add(i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false), strError))
-        {
-          ssMessage.str("");
-          ssMessage << "Hub::add() [" << i.first << "] Loaded interface.";
-          log(ssMessage.str());
-        }
-        else
+        if (!add(strPrefix, i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false)))
         {
           bResult = false;
-          ssMessage.str("");
-          ssMessage << "Hub::add() [" << i.first << "] " << strError;
-          strError = ssMessage.str();
         }
       }
       else
       {
         bResult = false;
         ssMessage.str("");
-        ssMessage << "[" << ssInterfaces.str() << "," << i.first << "] Please provide the Command.";
-        strError = ssMessage.str();
+        ssMessage << strPrefix << " error [" << i.first << "] Please provide the Command.";
+        log(ssMessage.str());
       }
     }
     delete ptInterfaces;
+    if (!bResult)
+    {
+      ssMessage.str("");
+      ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
+      strError = ssMessage.str();
+    }
   }
   else
   {
@@ -200,34 +204,35 @@ void Hub::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-void Hub::monitor(string strProcess)
+void Hub::monitor(string strPrefix)
 {
   float fCpu, fMem;
-  string strError, strPrefix = "Hub::monitor()";
+  string strError;
   time_t CTime;
   unsigned int unCount = 0;
   unsigned long ulImage, ulResident;
 
-  while (!m_bShutdown)
+  strPrefix += "->Hub::monitor()";
+  while (!shutdown())
   {
     m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
     if (ulResident >= m_ulMaxResident)
     {
       stringstream ssMessage;
-      ssMessage << strPrefix << " [" << strProcess << "]:  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      ssMessage << strPrefix << ":  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
       notify(ssMessage.str());
-      m_bShutdown = true;
+      setShutdown(strPrefix);
     }
-    if (!m_bShutdown)
+    if (!shutdown())
     {
       if (unCount++ >= 15)
       {
         stringstream ssMessage;
         unCount = 0;
-        ssMessage << strPrefix << " [" << strProcess << "]:  Resident size is " << ulResident << ".";
+        ssMessage << strPrefix << ":  Resident size is " << ulResident << ".";
         log(ssMessage.str());
       }
-      for (size_t i = 0; !m_bShutdown && i < 240; i++)
+      for (size_t i = 0; !shutdown() && i < 240; i++)
       {
         msleep(250);
       }
@@ -248,7 +253,7 @@ void Hub::process(string strPrefix)
   stringstream ssMessage;
 
   strPrefix += "->Hub::process()";
-  if (load(strError))
+  if (load(strPrefix, strError))
   {
     // {{{ prep work
     bool bExit = false;
@@ -342,18 +347,9 @@ void Hub::process(string strPrefix)
                       {
                         if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
                         {
-                          if (add(ptJson->m["Name"]->v, ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false), strError))
+                          if (add(strPrefix, ptJson->m["Name"]->v, ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
                           {
                             bResult = true;
-                            ssMessage.str("");
-                            ssMessage << strPrefix << " [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add," << ptJson->m["Name"]->v << "]:  Interface added.";
-                            log(ssMessage.str());
-                          }
-                          else
-                          {
-                            ssMessage.str("");
-                            ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add," << ptJson->m["Name"]->v << "]:  " << strError;
-                            log(ssMessage.str());
                           }
                         }
                         else
@@ -423,18 +419,7 @@ void Hub::process(string strPrefix)
                     else if (ptJson->m["Function"]->v == "shutdown")
                     {
                       bResult = true;
-                      setShutdown();
-                      ssMessage.str("");
-                      ssMessage << strPrefix << " [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  Shutdown requested." << endl;
-                      log(ssMessage.str());
-                      for (auto &j : m_interfaces)
-                      {
-                        string strSubLine;
-                        Json *ptSubJson = new Json;
-                        ptSubJson->insert("Function", "shutdown");
-                        ptSubJson->json(strSubLine);
-                        j.second->buffers[1].push_back(strSubLine);
-                      }
+                      setShutdown(strPrefix, ((ptJson->m.find("Target") != ptJson->m.end())?ptJson->m["Target"]->v:""));
                     }
                     // }}}
                     // {{{ invalid
@@ -504,7 +489,7 @@ void Hub::process(string strPrefix)
       removals.unique();
       for (auto &i : removals)
       {
-        remove(i);
+        remove(strPrefix, i);
       }
       if (shutdown() && m_interfaces.empty())
       {
@@ -522,26 +507,59 @@ void Hub::process(string strPrefix)
 }
 // }}}
 // {{{ remove()
-void Hub::remove(const string strName)
+void Hub::remove(string strPrefix, const string strName)
 {
-  string strError;
+  stringstream ssMessage;
 
+  strPrefix += "->Hub::remote()";
   if (m_interfaces.find(strName) != m_interfaces.end())
   {
+    setShutdown(strPrefix, strName);
     close(m_interfaces[strName]->fdRead);
     m_interfaces[strName]->fdRead = false;
     close(m_interfaces[strName]->fdWrite);
     m_interfaces[strName]->fdWrite = false;
     m_interfaces[strName]->strBuffers[0].clear();
     m_interfaces[strName]->strBuffers[1].clear();
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << strName << "]:  Interface removed.";
+    log(ssMessage.str());
     if (!shutdown() && m_interfaces[strName]->bRespawn)
     {
-      add(strName, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted, strError);
+      add(strPrefix, strName, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted);
     }
     else
     {
       delete m_interfaces[strName];
       m_interfaces.erase(strName);
+    }
+  }
+}
+// }}}
+// {{{ setShutdown()
+void Hub::setShutdown(string strPrefix, const string strTarget)
+{
+  string strJson;
+  stringstream ssMessage;
+  Json *ptJson = new Json;
+
+  strPrefix += "->shutdown()";
+  ptJson->insert("_source", "hub");
+  ptJson->insert("Function", "shutdown");
+  ptJson->json(strJson);
+  delete ptJson;
+  ssMessage << strPrefix << ":  " << ((!strTarget.empty() && m_interfaces.find(strTarget) != m_interfaces.end())?strTarget+" interface s":"S") << "hutdown.";
+  log(ssMessage.str());
+  if (strTarget.empty())
+  {
+    Base::setShutdown();
+  }
+  for (auto &i : m_interfaces)
+  {
+    if (strTarget.empty() || i.first == strTarget)
+    {
+      i.second->bRespawn = false;
+      i.second->buffers[1].push_back(strJson);
     }
   }
 }

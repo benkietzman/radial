@@ -42,20 +42,21 @@ class Hub : public Base
   map<string, radialHubInterface *> m_interfaces;
   thread m_threadMonitor;
 
-  bool add(const string strName, const string strCommand, const bool bRespawn, const bool bRestricted, string &strError);
-  void alert(const string strMessage);
-  bool load(string &strError);
-  void log(const string strMessage);
+  bool add(string strPrefix, const string strName, const string strCommand, const bool bRespawn, const bool bRestricted);
+  bool load(string strPrefix, string &strError);
   void log(const string strFunction, const string strMessage);
-  void monitor(string strProcess);
-  void notify(const string strMessage);
-  void remove(const string strName);
+  void monitor(string strPrefix);
+  void remove(string strPrefix, const string strName);
   void target(const string strTarget, Json *ptJson);
 
   public:
-  Hub(int argc, char **argv, char **env);
+  Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(const int));
   ~Hub();
+  void alert(const string strMessage);
+  void log(const string strMessage);
+  void notify(const string strMessage);
   void process(string strPrefix);
+  void setShutdown(string strPrefix, const string strTarget = "");
 };
 // }}}
 }
