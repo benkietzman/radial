@@ -16,7 +16,7 @@
 #include "Base"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Base()
@@ -27,8 +27,10 @@ Base::Base(int argc, char **argv)
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;
+  time(&m_CMonitor[0]);
   m_strApplication = "Radial";
   m_ulMaxResident = 40 * 1024;
+  m_unMonitor = 0;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -71,6 +73,39 @@ Base::Base(int argc, char **argv)
 Base::~Base()
 {
   delete m_pCentral;
+}
+// }}}
+// {{{ monitor()
+size_t Base::monitor(string &strMessage)
+{
+  size_t unResult = 0;
+
+  time(&m_CMonitor[1]);
+  if (m_CMonitor[1] - m_CMonitor[0] > 10)
+  {
+    float fCpu, fMem;
+    string strError;
+    stringstream ssMessage;
+    time_t CTime;
+    unsigned long ulImage, ulResident;
+    m_CMonitor[0] = m_CMonitor[1];
+    m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
+    if (ulResident >= m_ulMaxResident)
+    {
+      unResult = 2;
+      ssMessage << "The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      strMessage = ssMessage.str();
+    }
+    else if (++m_unMonitor == 60)
+    {
+      unResult = 1;
+      m_unMonitor = 0;
+      ssMessage << "Resident size is " << ulResident << ".";
+      strMessage = ssMessage.str();
+    }
+  }
+
+  return unResult;
 }
 // }}}
 // {{{ msleep()

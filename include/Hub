@@ -40,12 +40,11 @@ class Hub : public Base
   private:
   char **m_env;
   map<string, radialHubInterface *> m_interfaces;
-  thread m_threadMonitor;
 
   bool add(string strPrefix, const string strName, const string strCommand, const bool bRespawn, const bool bRestricted);
   bool load(string strPrefix, string &strError);
   void log(const string strFunction, const string strMessage);
-  void monitor(string strPrefix);
+  bool monitor(string strPrefix);
   void remove(string strPrefix, const string strName);
   void target(const string strTarget, Json *ptJson);
 

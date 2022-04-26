@@ -31,10 +31,9 @@ class Interface : public Base
   mutex m_mutex;
   string m_strBuffers[2];
   string m_strName;
-  thread m_threadMonitor;
 
   void log(const string strFunction, const string strMessage);
-  void monitor(string strPrefix);
+  bool monitor(string strPrefix);
   void response(Json *ptJson);
 
   public:

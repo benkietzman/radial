@@ -25,13 +25,11 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   strPrefix += "->Interface::Interface()";
   m_callback = callback;
   m_strName = strName;
-  m_threadMonitor = thread(&Interface::monitor, this, strPrefix);
 }
 // }}}
 // {{{ ~Interface()
 Interface::~Interface()
 {
-  m_threadMonitor.join();
 }
 // }}}
 // {{{ alert()
@@ -64,46 +62,29 @@ void Interface::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-void Interface::monitor(string strPrefix)
+bool Interface::monitor(string strPrefix)
 {
-  float fCpu, fMem;
-  string strError;
-  time_t CTime;
-  unsigned int unCount = 0;
-  unsigned long ulImage, ulResident;
+  bool bResult = true;
+  size_t unResult;
+  string strMessage;
+  stringstream ssMessage;
 
   strPrefix += "->Interface::monitor()";
-  while (!m_bShutdown)
+  if ((unResult = Base::monitor(strMessage)) > 0)
   {
-    m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
-    if (ulResident >= m_ulMaxResident)
+    ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
+    if (unResult == 2)
     {
-      stringstream ssMessage;
-      ssMessage << strPrefix << ":  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      bResult = false;
       notify(ssMessage.str());
-      setShutdown();
-    }
-    if (!m_bShutdown)
+    } 
+    else
     {
-      if (unCount++ >= 15)
-      {
-        stringstream ssMessage;
-        unCount = 0;
-        ssMessage << strPrefix << ":  Resident size is " << ulResident << ".";
-        log(ssMessage.str());
-      }
-      for (size_t i = 0; !m_bShutdown && i < 240; i++)
-      {
-        msleep(250);
-      }
+      log(ssMessage.str());
     }
-  }
-}
-// }}}
-// {{{ notify()
-void Interface::notify(const string strMessage)
-{
-  log("notify", strMessage);
+  } 
+  
+  return bResult;
 }
 // }}}
 // {{{ mysql
@@ -174,6 +155,12 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
   return mysql(strServer, unPort, strUser, strPassword, strDatabase, "Update", strQuery, ullID, ullRows, rows, strError);
 }
 // }}}
+// }}}
+// {{{ notify()
+void Interface::notify(const string strMessage)
+{
+  log("notify", strMessage);
+}
 // }}}
 // {{{ process()
 void Interface::process(string strPrefix)
@@ -285,6 +272,10 @@ void Interface::process(string strPrefix)
       ssMessage.str("");
       ssMessage << strPrefix << "->poll(" << errno << ") " << strerror(errno);
       notify(ssMessage.str());
+    }
+    if (!monitor(strPrefix))
+    {
+      setShutdown();
     }
     if (shutdown())
     {

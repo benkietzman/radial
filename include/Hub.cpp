@@ -31,7 +31,6 @@ Hub::Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(c
   sigignore(SIGSEGV);
   sigignore(SIGWINCH);
   m_env = env;
-  m_threadMonitor = thread(&Hub::monitor, this, strPrefix);
 }
 // }}}
 // {{{ ~Hub()
@@ -43,7 +42,6 @@ Hub::~Hub()
     close(i.second->fdWrite);
     delete i.second;
   }
-  m_threadMonitor.join();
 }
 // }}}
 // {{{ add()
@@ -204,40 +202,29 @@ void Hub::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-void Hub::monitor(string strPrefix)
+bool Hub::monitor(string strPrefix)
 {
-  float fCpu, fMem;
-  string strError;
-  time_t CTime;
-  unsigned int unCount = 0;
-  unsigned long ulImage, ulResident;
+  bool bResult = true;
+  size_t unResult;
+  string strMessage;
+  stringstream ssMessage;
 
   strPrefix += "->Hub::monitor()";
-  while (!shutdown())
+  if ((unResult = Base::monitor(strMessage)) > 0)
   {
-    m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
-    if (ulResident >= m_ulMaxResident)
+    ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
+    if (unResult == 2)
     {
-      stringstream ssMessage;
-      ssMessage << strPrefix << ":  The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      bResult = false;
       notify(ssMessage.str());
-      setShutdown(strPrefix);
     }
-    if (!shutdown())
+    else
     {
-      if (unCount++ >= 15)
-      {
-        stringstream ssMessage;
-        unCount = 0;
-        ssMessage << strPrefix << ":  Resident size is " << ulResident << ".";
-        log(ssMessage.str());
-      }
-      for (size_t i = 0; !shutdown() && i < 240; i++)
-      {
-        msleep(250);
-      }
+      log(ssMessage.str());
     }
   }
+
+  return bResult;
 }
 // }}}
 // {{{ notify()
@@ -259,9 +246,9 @@ void Hub::process(string strPrefix)
     bool bExit = false;
     char szBuffer[65536];
     int nReturn;
+    pollfd *fds;
     size_t unIndex, unPosition;
     string strLine;
-    pollfd *fds;
     // }}}
     while (!bExit)
     {
@@ -490,6 +477,10 @@ void Hub::process(string strPrefix)
       for (auto &i : removals)
       {
         remove(strPrefix, i);
+      }
+      if (!monitor(strPrefix))
+      {
+        setShutdown(strPrefix);
       }
       if (shutdown() && m_interfaces.empty())
       {
