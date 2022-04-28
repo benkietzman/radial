@@ -15,6 +15,7 @@
 #ifndef _RADIAL_BASE_
 #define _RADIAL_BASE_
 // {{{ includes
+#include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
 #include <fstream>

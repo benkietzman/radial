@@ -21,13 +21,19 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ defines
+#define RADIAL_LINK_UNKNOWN 0
+#define RADIAL_LINK_SLAVE 1
+#define RADIAL_LINK_MASTER 2
+// }}}
 // {{{ structs
 struct radial_link
 {
   int fdSocket;
   SSL *ssl;
-  string strBuffer[2];
-  string strIP;
+  string strBuffers[2];
+  string strNode;
+  string strPort;
   string strServer;
 };
 // }}}
@@ -35,13 +41,18 @@ struct radial_link
 class Link : public Interface
 {
   protected:
+  bool m_bOnline;
+  list<radial_link *> m_links;
+  string m_strMaster;
   string m_strPassword;
-  Json *m_ptLinks;
+  size_t m_unLink;
+  Json *m_ptLink;
 
   public:
   Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Link();
   void accept(string strPrefix);
+  size_t add(list<radial_link *> &links, Json *ptLink);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
 // }}}

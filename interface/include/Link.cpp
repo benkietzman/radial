@@ -22,25 +22,27 @@ namespace radial
 // {{{ Link()
 Link::Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "link", argc, argv, callback)
 {
-  ifstream inLinks((m_strData + "/links.json");
-  m_ptLinks = NULL;
-  if (inLinks)
+  ifstream inLink((m_strData + "/link.json");
+  m_bOnline = false;
+  m_ptLink = NULL;
+  if (inLink)
   {
     string strLine;
     stringstream ssJson;
-    while (getline(inLinks, strLine))
+    while (getline(inLink, strLine))
     {
       ssJson << strLine;
     }
-    m_ptLinks = new Json(ssJson.str());
+    m_ptLink = new Json(ssJson.str());
   }
   m_pWarden->vaultRetrieve(["link", "Password"], m_strPassword, strError);
+  m_unLink = 0;
 }
 // }}}
 // {{{ ~Link()
 Link::~Link()
 {
-  delete m_ptLinks;
+  delete m_ptLink;
 }
 // }}}
 // {{{ accept()
@@ -48,7 +50,7 @@ void Link::accept(string strPrefix)
 {
   // {{{ prep work
   SSL_CTX *ctxC = NULL, *ctxS = NULL;
-  string strError;
+  string strError, strJson;
   stringstream ssMessage;
   strPrefix += "->Link::accept()";
   setlocale(LC_ALL, "");
@@ -103,9 +105,9 @@ void Link::accept(string strPrefix)
         {
           // {{{ prep work
           bool bExit = false;
-          list<radial_link *> links;
           pollfd *fds;
-          size_t unIndex;
+          list<int> removals;
+          size_t unIndex, unPosition, unReturn;
           ssMessage.str("");
           ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
           log(ssMessage.str());
@@ -113,16 +115,123 @@ void Link::accept(string strPrefix)
           while (!shutdown() && !bExit)
           {
             // {{{ prep work
-            fds = new pollfd[links.size() + 1];
+            fds = new pollfd[m_links.size() + 1];
             unIndex = 0;
             fds[unIndex].fd = fdSocket;
             fds[unIndex].events = POLLIN;
             unIndex++;
-            for (auto &link : links)
+            for (auto &link : m_links)
             {
               fds[unIndex].fd = link->fdSocket;
               fds[unIndex].events = POLLIN;
-              if (!link->strBuffer[1].empty())
+              if (link->fdSocket == -1)
+              {
+                memset(&hints, 0, sizeof(addrinfo));
+                hints.ai_family = AF_UNSPEC;
+                hints.ai_socktype = SOCK_STREAM;
+                if ((nReturn = getaddrinfo(link->strServer.c_str(), linnk->strPort.c_str(), &hints, &result)) == 0)
+                {
+                  bool bConnected[3] = {false, false, false};
+                  int fdClient;
+                  addrinfo *rp;
+                  SSL *ssl;
+                  for (rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
+                  {
+                    bConnected[0] = bConnected[1] = false;
+                    if ((fdClient = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+                    {
+                      bConnected[0] = true;
+                      if (connect(fdClient, rp->ai_addr, rp->ai_addrlen) == 0)
+                      {
+                        bConnected[1] = true;
+                        if ((ssl = gpCentral->utility()->sslConnect(ctxC, fdClient, strError)) != NULL)
+                        {
+                          bConnected[2] = true;
+                        }
+                        else
+                        {
+                          close(fdClient);
+                          fdClient = -1;
+                        }
+                      }
+                      else
+                      {
+                        close(fdClient);
+                        fdClient = -1;
+                      }
+                    }
+                  }
+                  freeaddrinfo(result);
+                  if (bConnected[2])
+                  {
+                    Json *ptWrite = new Json;
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "]:  Connected to link.";
+                    gpCentral->log(ssMessage.str());
+                    link->fdSocket = fdClient;
+                    link->ssl = ssl;
+                    ptWrite->insert("Action", "identity");
+                    ptWrite->m["Clients"] = new Json;
+                    for (auto &subLink : m_links)
+                    {
+                      if (!subLink->strNode.empty() && !subLink->strServer.empty() && !subLink->strPort.empty())
+                      {
+                        Json *ptClient = new Json;
+                        ptClient->insert("Node", subLink->strNode);
+                        ptClient->insert("Server", subLink->strServer);
+                        ptClient->insert("Port", subLink->strPort, 'n');
+                        ptWrite->m["Clients"]->push_back(ptClient);
+                        delete ptClient;
+                      }
+                    }
+                    if (!m_strMaster.empty())
+                    {
+                      ptWrite->insert("Master", m_strMaster);
+                    }
+                    ptWrite->m["You"] = new Json;
+                    ptWrite->m["You"]->insert("Server", link->strServer);
+                    ptWrite->m["Me"] = new Json;
+                    ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
+                    ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
+                    if (!strServer.empty())
+                    {
+                      ptWrite->m["Me"]->insert("Server", strServer);
+                    }
+                    link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                    delete ptWrite;
+                    if (m_bOnline)
+                    {
+                      ptWrite = new Json;
+                      ptWrite->insert("Action", "status");
+                      ptWrite->insert("Status", "online");
+                      link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                      delete ptWrite;
+                    }
+                  }
+                  else if (!bConnected[1])
+                  {
+                    removals.push_back(-1);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << strerror(errno);
+                    log(ssMessage.str());
+                  }
+                  else
+                  {
+                    removals.push_back(-1);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::sslConnect(" << strError << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << strError;
+                    log(ssMessage.str());
+                  }
+                }
+                else
+                {
+                  removals.push_back(-1);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << gai_strerror(nReturn);
+                  log(ssMessage.str());
+                }
+              }
+              if (link->fdSocket != -1 && !link->strBuffers[1].empty())
               {
                 fds[unIndex].events |= POLLOUT;
               }
@@ -170,13 +279,93 @@ void Link::accept(string strPrefix)
                     // }}}
                     if ((ssl = m_pUtility->sslAccept(ctxS, fdClient, strError)) != NULL)
                     {
+                      Json *ptWrite = new Json;
                       radial_link *ptLink = new radial_link;
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Utility::sslAccept() [" << szIP << "]:  Accepted incoming socket.";
                       log(ssMessage.str());
                       ptLink->fdSocket = fdClient;
                       ptLink->ssl = ssl;
-                      links.push_back(ptLink);
+                      ptWrite->insert("Action", "identity");
+                      if (!m_links.empty())
+                      {
+                        ptWrite->m["Clients"] = new Json;
+                        for (auto &link : m_links)
+                        {
+                          if (!link->strNode && !link->strServer.empty() && !link->strPort.empty())
+                          {
+                            Json *ptClient = new Json;
+                            ptClient->insert("Node", link->strNode);
+                            ptClient->insert("Server", link->strServer);
+                            ptClient->insert("Port", link->strPort);
+                            ptWrite->m["Clients"]->push_back(ptClient);
+                            delete ptClient;
+                          }
+                        }
+                      }
+                      if (!m_strMaster.empty())
+                      {
+                        ptWrite->insert("Master", m_strMaster);
+                      }
+                      ptWrite->m["You"] = new Json;
+                      ptWrite->m["You"]->insert("Server", szIP);
+                      ptWrite->m["Me"] = new Json;
+                      ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
+                      ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
+                      if (!strServer.empty())
+                      {
+                        ptWrite->m["Me"]->insert("Server", strServer);
+                      }
+                      ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                      delete ptWrite;
+                      if (m_bOnline)
+                      {
+                        ptWrite = new Json;
+                        ptWrite->insert("Action", "status");
+                        ptWrite->insert("Status", "online");
+                        ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                        delete ptWrite;
+                      }
+                      if (m_unLink == RADIAL_LINK_MASTER)
+                      {
+                        Json *ptStorage = new Json;
+                        if (storageRetrieve(ptStorage, strError))
+                        {
+                          stringstream ssWrite;
+                          ptWrite = new Json;
+                          ptWrite->insert("Action", "storage");
+                          ptWrite->insert("SubAction", "update");
+                          ptWrite->insert("Data", ptStorage);
+                          ssMessage.str("");
+                          ssMessage << strPrefix << ":  Allocated copy of storage for transmission.";
+                          log(ssMessage.str());
+                          ssWrite << ptWrite << endl;
+                          delete ptWrite;
+                          ssMessage.str("");
+                          ssMessage << strPrefix << ":  Encoded " << ssWrite.str().size() << " bytes of storage for transmission.";
+                          log(ssMessage.str());
+                          ptLink->strBuffers[1].append(ssWrite.str());
+                          ssMessage.str("");
+                          ssMessage << strPrefix << ":  Appended storage to client output buffer.";
+                          log(ssMessage.str());
+                        }
+                        delete ptStorage;
+                      }
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Link::add()";
+                      if ((unResult = add(ptLink)) > 0)
+                      {
+                        ssMessage << ":  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                        log(ssMessage.str());
+                      }
+                      else
+                      {
+                        ssMessage << " error:  Failed to add link.";
+                        SSL_shutdown(ssl);
+                        SSL_free(ssl);
+                        close(fdClient);
+                      }
+                      delete ptLink;
                     }
                     else
                     {
@@ -211,6 +400,47 @@ void Link::accept(string strPrefix)
               ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
               notify(ssMessage.str());
             }
+            delete[] fds;
+            // {{{ removals
+            removals.sort();
+            removals.unique();
+            for (auto &i : removeList)
+            {
+              list<radial_link *>::iterator removeIter = m_links.end();
+              for (auto j = m_links.begin(); removeIter == m_links.end() && j != m_links.end(); j++)
+              {
+                if ((*j)->fdSocket == i)
+                {
+                  removeIter = j;
+                }
+              }
+              if (removeIter != m_links.end())
+              { 
+                if ((*removeIter)->fdSocket != -1)
+                { 
+                  SSL_shutdown((*removeIter)->ssl);
+                  SSL_free((*removeIter)->ssl);
+                  close((*removeIter)->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->close() [" << (*removeIter)->strNode << "]:  Closed client socket.";
+                  log(ssMessage.str());
+                }
+                if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
+                { 
+                  m_strMaster.clear();
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Unset as master.";    
+                  log(ssMessage.str());
+                }
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Removed client.";
+                log(ssMessage.str());
+                delete (*removeIter);
+                m_links.erase(removeIter);
+              }
+            }
+            removals.clear();
+            // }}}
           }
         }
         else
@@ -261,6 +491,69 @@ void Link::accept(string strPrefix)
   // {{{ post work
   m_pUtility->sslDeinit();
   // }}}
+}
+// }}}
+// {{{ add()
+size_t Link::add(Json *ptLink)
+{
+  bool bHasNode = false, bHasServer = false, bHasSocket = false;
+  size_t unResult = 0;
+
+  if (!ptLink->strNode.empty())
+  {
+    bHasNode = true;
+  }
+  if (ptLink->fdSocket != -1)
+  {
+    bHasSocket = true;
+  }
+  if (!ptLink->strServer.empty() && !ptLink->strPort.empty())
+  {
+    bHasServer = true;
+  }
+  if (bHasNode || bHasSocket || bHasServer)
+  {
+    bool bFound = false;
+    for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
+    {
+      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (*linkIter)->fdSocket == ptLink->fdSocket) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
+      {
+        bFound = true;
+        if (!ptLink->strNode.empty())
+        {
+          (*linkIter)->strNode = ptLink->strNode;
+        }
+        if (ptLink->fdSocket != -1)
+        {
+          (*linkIter)->fdSocket = ptLink->fdSocket;
+        }
+        if (!ptLink->strServer.empty())
+        {
+          (*linkIter)->strServer = ptLink->strServer;
+        }
+        if (!ptLink->strPort.empty())
+        {
+          (*linkIter)->strPort = ptLink->strPort;
+        }
+        unResult = 2;
+      }
+    }
+    if (!bFound)
+    {
+      radial_link *ptAdd = new radial_link;
+      ptAdd->fdSocket = ptLink->fdSocket;
+      ptAdd->ssl = ptLink->ssl;
+      ptAdd->strBuffers[0] = ptAdd->strBuffers[0];
+      ptAdd->strBuffers[1] = ptAdd->strBuffers[1];
+      ptAdd->strNode = ptAdd->strNode;
+      ptAdd->strPort = ptAdd->strPort;
+      ptAdd->strServer = ptAdd->strServer;
+      m_links.push_back(ptAdd);
+      unResult = 1;
+    }
+  }
+
+  return unResult;
 }
 // }}}
 // {{{ callback()

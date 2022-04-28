@@ -294,6 +294,96 @@ void Interface::response(Json *ptJson)
   m_mutex.unlock();
 }
 // }}}
+// {{{ storage
+// {{{ storage()
+bool Interface::storage(const string strFunction, const list<string> keys, Json *ptJson, string &strError)
+{
+  bool bResult = false;
+  string strJson;
+  Json *ptSubJson = new Json;
+
+  ptSubJson->insert("Function", strFunction);
+  if (!keys.empty())
+  {
+    ptSubJson->insert("Keys", keys);
+  }
+  if ((strFunction == "add" || strFunction == "update") && ptJson != NULL)
+  {
+    ptSubJson->insert("Request", ptJson);
+  }
+  target("storage", ptSubJson);
+  if (ptSubJson->m.find("Status") != ptSubJson->m.end() && ptSubJson->m["Status"]->v == "okay")
+  {
+    bResult = true;
+    if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
+    {
+      ptSubJson->m["Response"]->json(strJson);
+      ptJson->clear();
+      ptJson->parse(strJson);
+    }
+  }
+  else if (ptSubJson->m.find("Error") != ptSubJson->m.end() && !ptSubJson->m["Error"]->v.empty())
+  {
+    strError = ptSubJson->m["Error"]->v;
+  }
+  else
+  {
+    strError = "Encountered an unknown error.";
+  }
+  delete ptSubJson;
+
+  return bResult;
+}
+// }}}
+// {{{ storageAdd()
+bool Interface::storageAdd(const list<string> keys, Json *ptJson, string &strError)
+{
+  return storage("add", keys, ptJson, strError);
+}
+// }}}
+// {{{ storageRemove()
+bool Interface::storageRemove(const list<string> keys, string &strError)
+{
+  return storage("remove", keys, NULL, strError);
+}
+// }}}
+// {{{ storageRetrieve()
+bool Interface::storageRetrieve(Json *ptJson, string &strError)
+{
+  return storage("retrieve", [], ptJson, strError);
+}
+bool Interface::storageRetrieve(const list<string> keys, Json *ptJson, string &strError)
+{
+  return storage("retrieve", keys, ptJson, strError);
+}
+// }}}
+// {{{ storageRetrieveKeys()
+bool Interface::storageRetrieveKeys(const list<string> keysIn, list<string> &keysOut, string &strError)
+{
+  bool bResult = false;
+  Json *ptKeys = new Json;
+
+  keysOut.clear();
+  if (storage("retrieveKeys", keysIn, ptKeys, strError))
+  {
+    bResult = true;
+    for (auto &key : ptKeys->l)
+    {
+      keysOut.push_back(key->v);
+    }
+  }
+  delete ptKeys;
+
+  return bResult;
+}
+// }}}
+// {{{ storageUpdate()
+bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &strError)
+{
+  return storage("update", keys, ptJson, strError);
+}
+// }}}
+// }}}
 // {{{ target()
 void Interface::target(Json *ptJson, const bool bWait)
 {

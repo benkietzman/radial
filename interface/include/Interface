@@ -46,6 +46,13 @@ class Interface : public Base
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void process(string strPrefix);
+  bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
+  bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
+  bool storageRemove(const list<string> keys, string &strError);
+  bool storageRetrieve(Json *ptJson, string &strError);
+  bool storageRetrieve(const list<string> keys, Json *ptJson, string &strError);
+  bool storageRetrieveKeys(const list<string> keysIn, list<string> &keysOut, string &strError);
+  bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
   void target(Json *ptJson, const bool bWait = true);
   void target(const string strTarget, Json *ptJson, const bool bWait = true);
 };
