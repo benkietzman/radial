@@ -38,9 +38,6 @@ class Link : public Interface
   string m_strPassword;
   Json *m_ptLinks;
 
-  void request(Json *ptJson);
-  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
-
   public:
   Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Link();
