@@ -84,7 +84,7 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update"))
     {
-      Json *ptLink = new Json(ptJson);
+      Json *ptLink = new Json;
       ptLink->insert("Section", "storage");
       ptLink->insert("Function", ptJson->m["Function"]->v);
       ptLink->insert("Keys", keys);

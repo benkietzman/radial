@@ -298,23 +298,28 @@ void Hub::process(string strPrefix)
                 Json *ptJson = new Json(strLine);
                 if (ptJson->m.find("_target") != ptJson->m.end() && !ptJson->m["_target"]->v.empty())
                 {
-                  if (m_interfaces.find(ptJson->m["_target"]->v) != m_interfaces.end())
+                  if (ptJson->m.find("_destination") == ptJson->m.end())
                   {
-                    if (ptJson->m["_target"]->v != sockets[fds[i].fd])
+                    if (m_interfaces.find(ptJson->m["_target"]->v) != m_interfaces.end())
                     {
+                      ptJson->insert("_destination", "target");
+                      ptJson->json(strLine);
                       m_interfaces[ptJson->m["_target"]->v]->buffers[1].push_back(strLine);
                     }
-                    else if (ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty() && ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
+                    else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
                     {
+                      ptJson->insert("_destination", "source");
+                      ptJson->insert("Status", "error");
+                      ptJson->insert("Error", "Interface does not exist.");
+                      ptJson->json(strLine);
                       m_interfaces[ptJson->m["_source"]->v]->buffers[1].push_back(strLine);
                     }
                   }
-                  else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty())
+                  else if (ptJson->m["_destination"]->v == "target" && ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
                   {
-                    ptJson->insert("Status", "error");
-                    ptJson->insert("Error", "Interface does not exist.");
+                    ptJson->insert("_destination", "source");
                     ptJson->json(strLine);
-                    m_interfaces[sockets[fds[i].fd]]->buffers[1].push_back(strLine);
+                    m_interfaces[ptJson->m["_source"]->v]->buffers[1].push_back(strLine);
                   }
                 }
                 else
@@ -415,6 +420,7 @@ void Hub::process(string strPrefix)
                     // }}}
                   }
                   // {{{ post work
+                  ptJson->insert("_destination", "source");
                   ptJson->insert("Status", ((bResult)?"okay":"error"));
                   if (!strError.empty())
                   {
@@ -569,6 +575,7 @@ void Hub::target(const string strTarget, Json *ptJson)
   if (m_interfaces.find(strTarget) != m_interfaces.end())
   {
     ptJson->insert("_target", strTarget);
+    ptJson->insert("_destination", "target");
     m_interfaces[strTarget]->buffers[1].push_back(ptJson->json(strJson));
   }
 }

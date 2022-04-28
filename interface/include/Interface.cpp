@@ -56,14 +56,7 @@ void Interface::log(const string strFunction, const string strMessage)
 
   ptJson->insert("Function", strFunction);
   ptJson->insert("Message", strMessage);
-  if (m_strName == "log")
-  {
-    m_callback("Interface::log", ptJson, false);
-  }
-  else
-  {
-    target("log", ptJson, false);
-  }
+  target("log", ptJson, false);
 
   delete ptJson;
 }
