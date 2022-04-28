@@ -62,17 +62,39 @@ Base::Base(int argc, char **argv)
       ssMaxResident >> m_ulMaxResident;
       m_ulMaxResident *= 1024;
     }
+    else if (strArg == "-w" || (strArg.size() > 9 && strArg.substr(0, 9) == "--warden="))
+    {
+      if (strArg == "-w" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        m_strWarden = argv[++i];
+      }
+      else
+      {
+        m_strWarden = strArg.substr(9, strArg.size() - 9);
+      }
+      m_manip.purgeChar(m_strWarden, m_strWarden, "'");
+      m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
+    }
   }
   // }}}
   m_pCentral = new Central(strError);
   m_pCentral->setApplication(m_strApplication);
   m_pUtility = new Utility(strError);
+  m_pWarden = NULL;
+  if (!m_strWarden.empty())
+  {
+    m_pWarden = new Warden(m_strApplication, m_strWarden, strError);
+  }
 }
 // }}}
 // {{{ ~Base()
 Base::~Base()
 {
   delete m_pCentral;
+  if (m_pWarden != NULL)
+  {
+    delete m_pWarden;
+  }
 }
 // }}}
 // {{{ monitor()

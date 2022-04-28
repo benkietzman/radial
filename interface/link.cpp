@@ -1,9 +1,9 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Request
+// file       : link.cpp
 // author     : Ben Kietzman
-// begin      : 2022-04-21
+// begin      : 2022-04-28
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 /***********************************************************************
@@ -12,29 +12,14 @@
 * the Free Software Foundation; either version 2 of the License, or    *
 * (at your option) any later version.                                  *
 ***********************************************************************/
-#ifndef _RADIAL_REQUEST_
-#define _RADIAL_REQUEST_
-// {{{ includes
-#include "Interface"
-// }}}
-extern "C++"
+#include "include/link"
+using namespace radial;
+int main(int argc, char *argv[])
 {
-namespace radial
-{
-// {{{ Request
-class Request : public Interface
-{
-  protected:
-  void request(Json *ptJson);
-  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
-
-  public:
-  Request(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
-  ~Request();
-  void accept(string strPrefix);
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
-};
-// }}}
+  string strPrefix = "link->main()";
+  Link link(strPrefix, argc, argv, bind(&Link::callback, &link, placeholders::_1, placeholders::_2, placeholders::_3));
+  thread threadAccept(&Link::accept, &link, strPrefix);
+  link.process(strPrefix);
+  threadAccept.join();
+  return 0;
 }
-}
-#endif

@@ -37,6 +37,7 @@ using namespace std;
 #include <Json>
 #include <StringManip>
 #include <Utility>
+#include <Warden>
 using namespace common;
 // }}}
 extern "C++"
@@ -58,6 +59,7 @@ class Base
   Central *m_pCentral;
   StringManip m_manip;
   Utility *m_pUtility;
+  Warden *m_pWarden;
 
   size_t monitor(string &strMessage);
   void msleep(const unsigned long ulMilliSec);

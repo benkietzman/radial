@@ -1,9 +1,9 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Request
+// file       : Link
 // author     : Ben Kietzman
-// begin      : 2022-04-21
+// begin      : 2022-04-28
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 /***********************************************************************
@@ -12,8 +12,8 @@
 * the Free Software Foundation; either version 2 of the License, or    *
 * (at your option) any later version.                                  *
 ***********************************************************************/
-#ifndef _RADIAL_REQUEST_
-#define _RADIAL_REQUEST_
+#ifndef _RADIAL_LINK_
+#define _RADIAL_LINK_
 // {{{ includes
 #include "Interface"
 // }}}
@@ -21,16 +21,29 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ Request
-class Request : public Interface
+// {{{ structs
+struct radial_link
+{
+  int fdSocket;
+  SSL *ssl;
+  string strBuffer[2];
+  string strIP;
+  string strServer;
+};
+// }}}
+// {{{ Link
+class Link : public Interface
 {
   protected:
+  string m_strPassword;
+  Json *m_ptLinks;
+
   void request(Json *ptJson);
   void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 
   public:
-  Request(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
-  ~Request();
+  Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
+  ~Link();
   void accept(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
