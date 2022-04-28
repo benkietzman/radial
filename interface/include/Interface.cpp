@@ -69,9 +69,8 @@ void Interface::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-bool Interface::monitor(string strPrefix)
+void Interface::monitor(string strPrefix)
 {
-  bool bResult = true;
   size_t unResult;
   string strMessage;
   stringstream ssMessage;
@@ -82,16 +81,14 @@ bool Interface::monitor(string strPrefix)
     ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
     if (unResult == 2)
     {
-      bResult = false;
       notify(ssMessage.str());
+      setShutdown();
     } 
     else
     {
       log(ssMessage.str());
     }
   } 
-  
-  return bResult;
 }
 // }}}
 // {{{ mysql
@@ -280,10 +277,7 @@ void Interface::process(string strPrefix)
       ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
       notify(ssMessage.str());
     }
-    if (!monitor(strPrefix))
-    {
-      setShutdown();
-    }
+    monitor(strPrefix);
     if (shutdown())
     {
       m_mutex.lock();

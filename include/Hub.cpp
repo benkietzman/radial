@@ -203,9 +203,8 @@ void Hub::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-bool Hub::monitor(string strPrefix)
+void Hub::monitor(string strPrefix)
 {
-  bool bResult = true;
   size_t unResult;
   string strMessage;
   stringstream ssMessage;
@@ -216,16 +215,14 @@ bool Hub::monitor(string strPrefix)
     ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
     if (unResult == 2)
     {
-      bResult = false;
       notify(ssMessage.str());
+      setShutdown(strPrefix);
     }
     else
     {
       log(ssMessage.str());
     }
   }
-
-  return bResult;
 }
 // }}}
 // {{{ notify()
@@ -312,7 +309,7 @@ void Hub::process(string strPrefix)
                       m_interfaces[ptJson->m["_source"]->v]->buffers[1].push_back(strLine);
                     }
                   }
-                  else
+                  else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty())
                   {
                     ptJson->insert("Status", "error");
                     ptJson->insert("Error", "Interface does not exist.");
@@ -386,7 +383,7 @@ void Hub::process(string strPrefix)
                         if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
                         {
                           bResult = true;
-                          remove(strPrefix, ptJson->m["Name"]->v);
+                          setShutdown(strPrefix, ptJson->m["Name"]->v, true);
                         }
                         else
                         {
@@ -479,10 +476,7 @@ void Hub::process(string strPrefix)
       {
         remove(strPrefix, i);
       }
-      if (!monitor(strPrefix))
-      {
-        setShutdown(strPrefix);
-      }
+      monitor(strPrefix);
       if (shutdown())
       {
         if (m_interfaces.empty())
@@ -513,7 +507,6 @@ void Hub::remove(string strPrefix, const string strName)
   strPrefix += "->Hub::remove()";
   if (m_interfaces.find(strName) != m_interfaces.end())
   {
-    setShutdown(strPrefix, strName);
     close(m_interfaces[strName]->fdRead);
     m_interfaces[strName]->fdRead = -1;
     close(m_interfaces[strName]->fdWrite);
@@ -536,7 +529,7 @@ void Hub::remove(string strPrefix, const string strName)
 }
 // }}}
 // {{{ setShutdown()
-void Hub::setShutdown(string strPrefix, const string strTarget)
+void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop)
 {
   string strJson;
   stringstream ssMessage;
@@ -558,7 +551,10 @@ void Hub::setShutdown(string strPrefix, const string strTarget)
       ssMessage.str("");
       ssMessage << strPrefix << " [" << i.first << "]:  Interface shutdown.";
       log(ssMessage.str());
-      i.second->bRespawn = false;
+      if (bStop)
+      {
+        i.second->bRespawn = false;
+      }
       i.second->bShutdown = true;
       i.second->buffers[1].push_back(strJson);
     }
