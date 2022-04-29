@@ -594,14 +594,7 @@ void Link::accept(string strPrefix)
             {
               m_bUpdate = false;
               time(&CUpdateTime[0]);
-              ssMessage.str("");
-              ssMessage << strPrefix << ":  Switching internally from ";
-              ssMessage << ((unLink == RADIAL_LINK_MASTER)?"master":((unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
-              ssMessage << " to ";
               unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
-              ssMessage << ((unLink == RADIAL_LINK_MASTER)?"master":((unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
-              ssMessage << " mode.";
-              log(ssMessage.str());
             }
             time(&CUpdateTime[1]);
             if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 30)
@@ -614,12 +607,6 @@ void Link::accept(string strPrefix)
               ssMessage << ((m_unLink == RADIAL_LINK_MASTER)?"master":((m_unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " mode.";
               log(ssMessage.str());
-              if (m_unLink == RADIAL_LINK_MASTER)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << ":  System is ready.";
-                log(ssMessage.str());
-              }
             }
             // }}}
             // }}}
