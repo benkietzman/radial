@@ -600,7 +600,7 @@ void Link::accept(string strPrefix)
             if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 30)
             {
               ssMessage.str("");
-              ssMessage << strPrefix << ":  Switching from ";
+              ssMessage << strPrefix << ":  Switched from ";
               ssMessage << ((m_unLink == RADIAL_LINK_MASTER)?"master":((m_unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " to ";
               m_unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
