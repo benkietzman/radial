@@ -141,9 +141,9 @@ void Link::accept(string strPrefix)
                 if ((nReturn = getaddrinfo(link->strServer.c_str(), link->strPort.c_str(), &hints, &result)) == 0)
                 {
                   bool bConnected[3] = {false, false, false};
-                  int fdLink;
+                  int fdLink = -1;
                   addrinfo *rp;
-                  SSL *ssl;
+                  SSL *ssl = NULL;
                   for (rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
                   {
                     bConnected[0] = bConnected[1] = false;
