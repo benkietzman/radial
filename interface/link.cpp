@@ -18,8 +18,8 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "link->main()";
   Link link(strPrefix, argc, argv, bind(&Link::callback, &link, placeholders::_1, placeholders::_2, placeholders::_3));
-  thread threadAccept(&Link::accept, &link, strPrefix);
+  thread threadSocket(&Link::socket, &link, strPrefix);
   link.process(strPrefix);
-  threadAccept.join();
+  threadSocket.join();
   return 0;
 }

@@ -48,14 +48,304 @@ Link::~Link()
   delete m_ptLink;
 }
 // }}}
-// {{{ accept()
-void Link::accept(string strPrefix)
+// {{{ add()
+size_t Link::add(radial_link *ptLink)
+{
+  bool bHasNode = false, bHasServer = false, bHasSocket = false;
+  size_t unResult = 0;
+
+  if (!ptLink->strNode.empty())
+  {
+    bHasNode = true;
+  }
+  if (ptLink->fdSocket != -1)
+  {
+    bHasSocket = true;
+  }
+  if (!ptLink->strServer.empty() && !ptLink->strPort.empty())
+  {
+    bHasServer = true;
+  }
+  if (bHasNode || bHasSocket || bHasServer)
+  {
+    bool bFound = false;
+    for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
+    {
+      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (*linkIter)->fdSocket == ptLink->fdSocket) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
+      {
+        bool bClose = false;
+        bFound = true;
+        if (ptLink->bAuthenticated)
+        {
+          (*linkIter)->bAuthenticated = ptLink->bAuthenticated;
+        }
+        if (ptLink->fdSocket != -1)
+        {
+          if ((*linkIter)->fdSocket == -1)
+          {
+            (*linkIter)->fdSocket = ptLink->fdSocket;
+          }
+          else
+          {
+            bClose = true;
+          }
+        }
+        if (!ptLink->strNode.empty())
+        {
+          (*linkIter)->strNode = ptLink->strNode;
+        }
+        if (!ptLink->strServer.empty())
+        {
+          (*linkIter)->strServer = ptLink->strServer;
+        }
+        if (!ptLink->strPort.empty())
+        {
+          (*linkIter)->strPort = ptLink->strPort;
+        }
+        if (!bClose)
+        {
+          unResult = 2;
+        }
+      }
+    }
+    if (!bFound)
+    {
+      radial_link *ptAdd = new radial_link;
+      ptAdd->bAuthenticated = ptLink->bAuthenticated;
+      ptAdd->fdSocket = ptLink->fdSocket;
+      ptAdd->ssl = ptLink->ssl;
+      ptAdd->strBuffers[0] = ptLink->strBuffers[0];
+      ptAdd->strBuffers[1] = ptLink->strBuffers[1];
+      ptAdd->strNode = ptLink->strNode;
+      ptAdd->strPort = ptLink->strPort;
+      ptAdd->strServer = ptLink->strServer;
+      m_mutex.lock();
+      m_links.push_back(ptLink);
+      m_mutex.unlock();
+      unResult = 1;
+    }
+  }
+
+  return unResult;
+}
+// }}}
+// {{{ callback()
+void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+{
+  bool bResult = false;
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Link::callback()";
+  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  {
+    if (ptJson->m["Function"]->v == "ping")
+    {
+      bResult = true;
+    }
+    else
+    {
+      strError = "Please provide a valid Function:  ping.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the Function.";
+  }
+  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  if (!strError.empty())
+  {
+    ptJson->insert("Error", strError);
+  }
+  if (bResponse)
+  {
+    response(ptJson);
+  }
+}
+// }}}
+// {{{ request()
+void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
+{
+  string strError, strJson;
+  stringstream ssMessage;
+
+  strPrefix += "->Link::request()";
+  // {{{ _function
+  if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
+  {
+    m_mutex.lock();
+    for (auto &link : m_links)
+    {
+      if (link->fdSocket == fdSocket)
+      {
+        // {{{ handshake
+        if (ptJson->m["_function"]->v == "handshake")
+        {
+          // {{{ Links
+          if (ptJson->m.find("Links") != ptJson->m.end())
+          {
+            for (auto &ptLink : ptJson->m["Links"]->l)
+            {
+              if (ptLink->m.find("Node") != ptLink->m.end() && !ptLink->m["Node"]->v.empty() && ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+              {
+                bool bFound = false;
+                for (auto &subLink : m_links)
+                {
+                  if (ptLink->m["Node"]->v == subLink->strNode)
+                  {
+                    bFound = true;
+                  }
+                }
+                if (!bFound && ptLink->m["Node"]->v != m_ptLink->m["Node"]->v)
+                {
+                  if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty())
+                  {
+                    if (ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+                    {
+                      size_t unResult;
+                      radial_link *ptSubLink = new radial_link;
+                      ptSubLink->bAuthenticated = false;
+                      ptSubLink->strNode = ptLink->m["Node"]->v;
+                      ptSubLink->strServer = ptLink->m["Server"]->v;
+                      ptSubLink->strPort = ptLink->m["Port"]->v;
+                      ptSubLink->fdSocket = -1;
+                      ptSubLink->ssl = NULL;
+                      if ((unResult = add(ptSubLink)) > 0)
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                        log(ssMessage.str());
+                      }
+                      else
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
+                        notify(ssMessage.str());
+                      }
+                      delete ptSubLink;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          // }}}
+          // {{{ Me
+          if (ptJson->m.find("Me") != ptJson->m.end())
+          {
+            if (ptJson->m["Me"]->m.find("Node") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Node"]->v.empty())
+            {
+              link->strNode = ptJson->m["Me"]->m["Node"]->v;
+            }
+            if (ptJson->m["Me"]->m.find("Server") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Server"]->v.empty())
+            {
+              link->strServer = ptJson->m["Me"]->m["Server"]->v;
+            }
+            if (ptJson->m["Me"]->m.find("Port") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Port"]->v.empty())
+            {
+              link->strPort = ptJson->m["Me"]->m["Port"]->v;
+            }
+          }
+          // }}}
+          // {{{ Password
+          if (ptJson->m.find("Password") != ptJson->m.end())
+          {
+            if (ptJson->m["Password"]->v == m_strPassword)
+            {
+              link->bAuthenticated = true;
+            }
+          }
+          // }}}
+          // {{{ You
+          if (ptJson->m.find("You") != ptJson->m.end() && ptJson->m["You"]->m.find("Server") != ptJson->m["You"]->m.end() && !ptJson->m["You"]->m["Server"]->v.empty() && m_strServer.empty())
+          {
+            m_strServer = ptJson->m["You"]->m["Server"]->v;
+          }
+          // }}}
+        }
+        // }}}
+        // {{{ master
+        else if (ptJson->m["_function"]->v == "master" && ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty() && ptJson->m["Node"]->v != m_strMaster)
+        {
+          if (m_strMaster == m_ptLink->m["Node"]->v || ptJson->m["Node"]->v == m_ptLink->m["Node"]->v)
+          {
+            m_bUpdate = true;
+          }
+          m_strMaster = ptJson->m["Node"]->v;
+          ssMessage.str("");
+          ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << ptJson->m["Node"]->v << "]:  Set as master.";
+          log(ssMessage.str());
+        }
+        // }}}
+      }
+    }
+    m_mutex.unlock();
+  }
+  // }}}
+  // {{{ Interface
+  else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  {
+    bool bAuthenticated = false;
+    m_mutex.lock();
+    for (auto &link : m_links)
+    {
+      if (link->fdSocket == fdSocket && link->bAuthenticated)
+      {
+        bAuthenticated = true;
+      }
+    }
+    m_mutex.unlock();
+    if (bAuthenticated)
+    {
+      Json *ptInterfaces = new Json;
+      ptInterfaces->insert("Function", "list");
+      target(ptInterfaces);
+      if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
+      {
+        if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
+        {
+          target(ptJson->m["Interface"]->v, ptJson);
+        }
+        else
+        {
+          ptJson->insert("Status", "error");
+          ptJson->insert("Error", "Interface does not exist.");
+        }
+      }
+      else
+      {
+        ptJson->insert("Status", "error");
+        ptJson->insert("Error", "Failed to retrieve interfaces.");
+      }
+      delete ptInterfaces;
+    }
+    else
+    {
+      ptJson->insert("Status", "error");
+      ptJson->insert("Error", "Failed authentication.");
+    }
+    m_mutex.lock();
+    for (auto &link : m_links)
+    {
+      if (link->fdSocket == fdSocket)
+      {
+        link->strBuffers[1].append(ptJson->json(strJson) + "\n");
+      }
+    }
+    m_mutex.unlock();
+  }
+  // }}}
+  delete ptJson;
+}
+// }}}
+// {{{ socket()
+void Link::socket(string strPrefix)
 {
   // {{{ prep work
   SSL_CTX *ctxC = NULL, *ctxS = NULL;
   string strError, strJson;
   stringstream ssMessage;
-  strPrefix += "->Link::accept()";
+  strPrefix += "->Link::socket()";
   setlocale(LC_ALL, "");
   // }}}
   if ((ctxS = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
@@ -147,7 +437,7 @@ void Link::accept(string strPrefix)
                   for (rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
                   {
                     bConnected[0] = bConnected[1] = false;
-                    if ((fdLink = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+                    if ((fdLink = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
                     {
                       bConnected[0] = true;
                       if (connect(fdLink, rp->ai_addr, rp->ai_addrlen) == 0)
@@ -253,7 +543,7 @@ void Link::accept(string strPrefix)
                 sockaddr_in cli_addr;
                 socklen_t clilen = sizeof(cli_addr);
                 // }}}
-                if ((fdLink = ::accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
+                if ((fdLink = accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
                 {
                   // {{{ prep work
                   sockaddr_storage addr;
@@ -685,296 +975,6 @@ void Link::accept(string strPrefix)
   // {{{ post work
   m_pUtility->sslDeinit();
   // }}}
-}
-// }}}
-// {{{ add()
-size_t Link::add(radial_link *ptLink)
-{
-  bool bHasNode = false, bHasServer = false, bHasSocket = false;
-  size_t unResult = 0;
-
-  if (!ptLink->strNode.empty())
-  {
-    bHasNode = true;
-  }
-  if (ptLink->fdSocket != -1)
-  {
-    bHasSocket = true;
-  }
-  if (!ptLink->strServer.empty() && !ptLink->strPort.empty())
-  {
-    bHasServer = true;
-  }
-  if (bHasNode || bHasSocket || bHasServer)
-  {
-    bool bFound = false;
-    for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
-    {
-      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (*linkIter)->fdSocket == ptLink->fdSocket) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
-      {
-        bool bClose = false;
-        bFound = true;
-        if (ptLink->bAuthenticated)
-        {
-          (*linkIter)->bAuthenticated = ptLink->bAuthenticated;
-        }
-        if (ptLink->fdSocket != -1)
-        {
-          if ((*linkIter)->fdSocket == -1)
-          {
-            (*linkIter)->fdSocket = ptLink->fdSocket;
-          }
-          else
-          {
-            bClose = true;
-          }
-        }
-        if (!ptLink->strNode.empty())
-        {
-          (*linkIter)->strNode = ptLink->strNode;
-        }
-        if (!ptLink->strServer.empty())
-        {
-          (*linkIter)->strServer = ptLink->strServer;
-        }
-        if (!ptLink->strPort.empty())
-        {
-          (*linkIter)->strPort = ptLink->strPort;
-        }
-        if (!bClose)
-        {
-          unResult = 2;
-        }
-      }
-    }
-    if (!bFound)
-    {
-      radial_link *ptAdd = new radial_link;
-      ptAdd->bAuthenticated = ptLink->bAuthenticated;
-      ptAdd->fdSocket = ptLink->fdSocket;
-      ptAdd->ssl = ptLink->ssl;
-      ptAdd->strBuffers[0] = ptLink->strBuffers[0];
-      ptAdd->strBuffers[1] = ptLink->strBuffers[1];
-      ptAdd->strNode = ptLink->strNode;
-      ptAdd->strPort = ptLink->strPort;
-      ptAdd->strServer = ptLink->strServer;
-      m_mutex.lock();
-      m_links.push_back(ptLink);
-      m_mutex.unlock();
-      unResult = 1;
-    }
-  }
-
-  return unResult;
-}
-// }}}
-// {{{ callback()
-void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
-{
-  bool bResult = false;
-  string strError;
-  stringstream ssMessage;
-
-  strPrefix += "->Link::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
-  {
-    if (ptJson->m["Function"]->v == "ping")
-    {
-      bResult = true;
-    }
-    else
-    {
-      strError = "Please provide a valid Function:  ping.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Function.";
-  }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->insert("Error", strError);
-  }
-  if (bResponse)
-  {
-    response(ptJson);
-  }
-}
-// }}}
-// {{{ request()
-void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
-{
-  string strError, strJson;
-  stringstream ssMessage;
-
-  strPrefix += "->Link::request()";
-  // {{{ _function
-  if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
-  {
-    m_mutex.lock();
-    for (auto &link : m_links)
-    {
-      if (link->fdSocket == fdSocket)
-      {
-        // {{{ handshake
-        if (ptJson->m["_function"]->v == "handshake")
-        {
-          // {{{ Links
-          if (ptJson->m.find("Links") != ptJson->m.end())
-          {
-            for (auto &ptLink : ptJson->m["Links"]->l)
-            {
-              if (ptLink->m.find("Node") != ptLink->m.end() && !ptLink->m["Node"]->v.empty() && ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
-              {
-                bool bFound = false;
-                for (auto &subLink : m_links)
-                {
-                  if (ptLink->m["Node"]->v == subLink->strNode)
-                  {
-                    bFound = true;
-                  }
-                }
-                if (!bFound && ptLink->m["Node"]->v != m_ptLink->m["Node"]->v)
-                {
-                  if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty())
-                  {
-                    if (ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
-                    {
-                      size_t unResult;
-                      radial_link *ptSubLink = new radial_link;
-                      ptSubLink->bAuthenticated = false;
-                      ptSubLink->strNode = ptLink->m["Node"]->v;
-                      ptSubLink->strServer = ptLink->m["Server"]->v;
-                      ptSubLink->strPort = ptLink->m["Port"]->v;
-                      ptSubLink->fdSocket = -1;
-                      ptSubLink->ssl = NULL;
-                      if ((unResult = add(ptSubLink)) > 0)
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
-                        log(ssMessage.str());
-                      }
-                      else
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
-                        notify(ssMessage.str());
-                      }
-                      delete ptSubLink;
-                    }
-                  }
-                }
-              }
-            }
-          }
-          // }}}
-          // {{{ Me
-          if (ptJson->m.find("Me") != ptJson->m.end())
-          {
-            if (ptJson->m["Me"]->m.find("Node") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Node"]->v.empty())
-            {
-              link->strNode = ptJson->m["Me"]->m["Node"]->v;
-            }
-            if (ptJson->m["Me"]->m.find("Server") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Server"]->v.empty())
-            {
-              link->strServer = ptJson->m["Me"]->m["Server"]->v;
-            }
-            if (ptJson->m["Me"]->m.find("Port") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Port"]->v.empty())
-            {
-              link->strPort = ptJson->m["Me"]->m["Port"]->v;
-            }
-          }
-          // }}}
-          // {{{ Password
-          if (ptJson->m.find("Password") != ptJson->m.end())
-          {
-            if (ptJson->m["Password"]->v == m_strPassword)
-            {
-              link->bAuthenticated = true;
-            }
-          }
-          // }}}
-          // {{{ You
-          if (ptJson->m.find("You") != ptJson->m.end() && ptJson->m["You"]->m.find("Server") != ptJson->m["You"]->m.end() && !ptJson->m["You"]->m["Server"]->v.empty() && m_strServer.empty())
-          {
-            m_strServer = ptJson->m["You"]->m["Server"]->v;
-          }
-          // }}}
-        }
-        // }}}
-        // {{{ master
-        else if (ptJson->m["_function"]->v == "master" && ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty() && ptJson->m["Node"]->v != m_strMaster)
-        {
-          if (m_strMaster == m_ptLink->m["Node"]->v || ptJson->m["Node"]->v == m_ptLink->m["Node"]->v)
-          {
-            m_bUpdate = true;
-          }
-          m_strMaster = ptJson->m["Node"]->v;
-          ssMessage.str("");
-          ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << ptJson->m["Node"]->v << "]:  Set as master.";
-          log(ssMessage.str());
-        }
-        // }}}
-      }
-    }
-    m_mutex.unlock();
-  }
-  // }}}
-  // {{{ Interface
-  else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
-  {
-    bool bAuthenticated = false;
-    m_mutex.lock();
-    for (auto &link : m_links)
-    {
-      if (link->fdSocket == fdSocket && link->bAuthenticated)
-      {
-        bAuthenticated = true;
-      }
-    }
-    m_mutex.unlock();
-    if (bAuthenticated)
-    {
-      Json *ptInterfaces = new Json;
-      ptInterfaces->insert("Function", "list");
-      target(ptInterfaces);
-      if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
-      {
-        if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
-        {
-          target(ptJson->m["Interface"]->v, ptJson);
-        }
-        else
-        {
-          ptJson->insert("Status", "error");
-          ptJson->insert("Error", "Interface does not exist.");
-        }
-      }
-      else
-      {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Failed to retrieve interfaces.");
-      }
-      delete ptInterfaces;
-    }
-    else
-    {
-      ptJson->insert("Status", "error");
-      ptJson->insert("Error", "Failed authentication.");
-    }
-    m_mutex.lock();
-    for (auto &link : m_links)
-    {
-      if (link->fdSocket == fdSocket)
-      {
-        link->strBuffers[1].append(ptJson->json(strJson) + "\n");
-      }
-    }
-    m_mutex.unlock();
-  }
-  // }}}
-  delete ptJson;
 }
 // }}}
 }

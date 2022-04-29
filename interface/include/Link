@@ -58,8 +58,8 @@ class Link : public Interface
   public:
   Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Link();
-  void accept(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void socket(string strPrefix);
 };
 // }}}
 }
