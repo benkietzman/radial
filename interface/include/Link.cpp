@@ -111,6 +111,7 @@ size_t Link::add(radial_link *ptLink)
     if (!bFound)
     {
       radial_link *ptAdd = new radial_link;
+      m_mutex.lock();
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->ssl = ptLink->ssl;
@@ -119,7 +120,6 @@ size_t Link::add(radial_link *ptLink)
       ptAdd->strNode = ptLink->strNode;
       ptAdd->strPort = ptLink->strPort;
       ptAdd->strServer = ptLink->strServer;
-      m_mutex.lock();
       m_links.push_back(ptLink);
       m_mutex.unlock();
       unResult = 1;
@@ -491,9 +491,11 @@ void Link::socket(string strPrefix)
                     ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
                     if (!m_strServer.empty())
                     {
-                      link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                      ptWrite->insert("Server", m_strMaster);
                     }
+                    m_mutex.lock();
                     link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                    m_mutex.unlock();
                     delete ptWrite;
                     if (!m_strMaster.empty())
                     {
@@ -526,10 +528,12 @@ void Link::socket(string strPrefix)
                   log(ssMessage.str());
                 }
               }
+              m_mutex.lock();
               if (link->fdSocket != -1 && !link->strBuffers[1].empty())
               {
                 fds[unIndex].events |= POLLOUT;
               }
+              m_mutex.unlock();
               unIndex++;
             }
             // }}}
@@ -724,6 +728,7 @@ void Link::socket(string strPrefix)
                     if (fds[i].revents & POLLOUT)
                     {
                       ERR_clear_error();
+                      m_mutex.lock();
                       if (!m_pUtility->sslWrite(link->ssl, link->strBuffers[1], nReturn))
                       {
                         removals.push_back(link->fdSocket);
@@ -734,6 +739,7 @@ void Link::socket(string strPrefix)
                           log(ssMessage.str());
                         }
                       }
+                      m_mutex.unlock();
                     }
                     // }}}
                   }
@@ -825,7 +831,9 @@ void Link::socket(string strPrefix)
                   strJson += "\n";
                   for (auto &link : m_links)
                   {
+                    m_mutex.lock();
                     link->strBuffers[1].append(strJson);
+                    m_mutex.unlock();
                   }
                 }
               }
