@@ -43,6 +43,7 @@ class Link : public Interface
 {
   protected:
   bool m_bOnline;
+  bool m_bUpdate;
   list<radial_link *> m_links;
   mutex m_mutex;
   string m_strMaster;
@@ -51,7 +52,7 @@ class Link : public Interface
   Json *m_ptLink;
 
   size_t add(list<radial_link *> &links, Json *ptLink);
-  void request(string strPrefix, const string strNode, Json *ptJson);
+  void request(string strPrefix, const int fdSocket, Json *ptJson);
 
   public:
   Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
