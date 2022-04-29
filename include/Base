@@ -55,6 +55,7 @@ class Base
   size_t m_unMonitor;
   string m_strApplication;
   string m_strData;
+  string m_strWarden;
   time_t m_CMonitor[2];
   unsigned long m_ulMaxResident;
   Central *m_pCentral;
