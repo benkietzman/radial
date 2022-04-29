@@ -37,6 +37,7 @@ Link::Link(string strPrefix, int argc, char **argv, function<void(string, Json *
     }
     m_ptLink = new Json(ssJson.str());
   }
+  inLink.close();
   m_pWarden->vaultRetrieve({"link", "Password"}, m_strPassword, strError);
   m_unLink = RADIAL_LINK_UNKNOWN;
 }
@@ -59,7 +60,9 @@ void Link::accept(string strPrefix)
   // }}}
   if ((ctxS = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {
+    // {{{ prep work
     SSL_CTX_set_mode(ctxS, SSL_MODE_AUTO_RETRY);
+    // }}}
     if ((ctxC = m_pUtility->sslInitClient(strError)) != NULL)
     {
       // {{{ prep work
@@ -475,10 +478,13 @@ void Link::accept(string strPrefix)
                 }
                 if (removeIter != m_links.end())
                 {
-                  if ((*removeIter)->fdSocket != -1)
+                  if ((*removeIter)->ssl != NULL)
                   {
                     SSL_shutdown((*removeIter)->ssl);
                     SSL_free((*removeIter)->ssl);
+                  }
+                  if ((*removeIter)->fdSocket != -1)
+                  {
                     close((*removeIter)->fdSocket);
                     ssMessage.str("");
                     ssMessage << strPrefix << "->close() [" << (*removeIter)->strNode << "]:  Closed link socket.";
@@ -623,10 +629,13 @@ void Link::accept(string strPrefix)
           m_mutex.lock();
           for (auto &link : m_links)
           {
-            if (link->fdSocket != -1)
+            if (link->ssl != NULL)
             {
               SSL_shutdown(link->ssl);
               SSL_free(link->ssl);
+            }
+            if (link->fdSocket != -1)
+            {
               close(link->fdSocket);
               ssMessage.str("");
               ssMessage << strPrefix << "->close() [" << link->strNode << "]:  Closed link socket.";
@@ -745,7 +754,10 @@ size_t Link::add(radial_link *ptLink)
         {
           (*linkIter)->strPort = ptLink->strPort;
         }
-        unResult = ((bClose)?0:2);
+        if (!bClose)
+        {
+          unResult = 2;
+        }
       }
     }
     if (!bFound)
@@ -754,13 +766,13 @@ size_t Link::add(radial_link *ptLink)
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->ssl = ptLink->ssl;
-      ptAdd->strBuffers[0] = ptAdd->strBuffers[0];
-      ptAdd->strBuffers[1] = ptAdd->strBuffers[1];
-      ptAdd->strNode = ptAdd->strNode;
-      ptAdd->strPort = ptAdd->strPort;
-      ptAdd->strServer = ptAdd->strServer;
+      ptAdd->strBuffers[0] = ptLink>strBuffers[0];
+      ptAdd->strBuffers[1] = ptLink->strBuffers[1];
+      ptAdd->strNode = ptLink->strNode;
+      ptAdd->strPort = ptLink->strPort;
+      ptAdd->strServer = ptLink->strServer;
       m_mutex.lock();
-      m_links.push_back(ptAdd);
+      m_links.push_back(ptLink);
       m_mutex.unlock();
       unResult = 1;
     }
