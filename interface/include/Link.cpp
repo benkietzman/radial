@@ -22,7 +22,9 @@ namespace radial
 // {{{ Link()
 Link::Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "link", argc, argv, callback)
 {
-  ifstream inLink((m_strData + "/link.json");
+  ifstream inLink((m_strData + "/link.json").c_str());
+  string strError;
+
   m_bUpdate = true;
   m_ptLink = NULL;
   if (inLink)
@@ -35,7 +37,7 @@ Link::Link(string strPrefix, int argc, char **argv, function<void(string, Json *
     }
     m_ptLink = new Json(ssJson.str());
   }
-  m_pWarden->vaultRetrieve(["link", "Password"], m_strPassword, strError);
+  m_pWarden->vaultRetrieve({"link", "Password"}, m_strPassword, strError);
   m_unLink = RADIAL_LINK_UNKNOWN;
 }
 // }}}
@@ -107,7 +109,7 @@ void Link::accept(string strPrefix)
           bool bExit = false;
           pollfd *fds;
           list<int> removals;
-          size_t unIndex, unLink = m_unLink, unPosition, unReturn;
+          size_t unIndex, unLink = m_unLink, unPosition;
           time_t CTime[2], CUpdateTime[2], unSleep = 5;
           Json *ptBoot = new Json;
           ssMessage.str("");
@@ -133,7 +135,7 @@ void Link::accept(string strPrefix)
                 memset(&hints, 0, sizeof(addrinfo));
                 hints.ai_family = AF_UNSPEC;
                 hints.ai_socktype = SOCK_STREAM;
-                if ((nReturn = getaddrinfo(link->strServer.c_str(), linnk->strPort.c_str(), &hints, &result)) == 0)
+                if ((nReturn = getaddrinfo(link->strServer.c_str(), link->strPort.c_str(), &hints, &result)) == 0)
                 {
                   bool bConnected[3] = {false, false, false};
                   int fdLink;
@@ -171,7 +173,7 @@ void Link::accept(string strPrefix)
                     Json *ptWrite = new Json;
                     ssMessage.str("");
                     ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "]:  Connected to link.";
-                    gpCentral->log(ssMessage.str());
+                    log(ssMessage.str());
                     link->fdSocket = fdLink;
                     link->ssl = ssl;
                     ptWrite->insert("_function", "handshake");
@@ -194,7 +196,7 @@ void Link::accept(string strPrefix)
                     ptWrite->m["Me"] = new Json;
                     ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
                     ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
-                    if (!strServer.empty())
+                    if (!m_strServer.empty())
                     {
                       link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
                     }
@@ -203,8 +205,8 @@ void Link::accept(string strPrefix)
                     if (!m_strMaster.empty())
                     {
                       ptWrite = new Json;
-                      ptWrite->->insert("Master", m_strMaster);
-                      ptWrite->m["Me"]->insert("Server", strServer);
+                      ptWrite->insert("Master", m_strMaster);
+                      ptWrite->m["Me"]->insert("Server", m_strServer);
                       delete ptWrite;
                     }
                   }
@@ -279,6 +281,7 @@ void Link::accept(string strPrefix)
                     // }}}
                     if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, strError)) != NULL)
                     {
+                      size_t unResult;
                       Json *ptWrite = new Json;
                       radial_link *ptLink = new radial_link;
                       ssMessage.str("");
@@ -293,7 +296,7 @@ void Link::accept(string strPrefix)
                         ptWrite->m["Links"] = new Json;
                         for (auto &link : m_links)
                         {
-                          if (!link->strNode && !link->strServer.empty() && !link->strPort.empty())
+                          if (!link->strNode.empty() && !link->strServer.empty() && !link->strPort.empty())
                           {
                             Json *ptSubLink = new Json;
                             ptSubLink->insert("Node", link->strNode);
@@ -309,9 +312,9 @@ void Link::accept(string strPrefix)
                       ptWrite->m["Me"] = new Json;
                       ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
                       ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
-                      if (!strServer.empty())
+                      if (!m_strServer.empty())
                       {
-                        ptWrite->m["Me"]->insert("Server", strServer);
+                        ptWrite->m["Me"]->insert("Server", m_strServer);
                       }
                       ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
                       delete ptWrite;
@@ -526,7 +529,7 @@ void Link::accept(string strPrefix)
                   strJson += "\n";
                   for (auto &link : m_links)
                   {
-                    link->strBuffer[1].append(strJson);
+                    link->strBuffers[1].append(strJson);
                   }
                 }
               }
@@ -554,6 +557,7 @@ void Link::accept(string strPrefix)
               {
                 if (ptBoot->l.front()->m.find("Server") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Server"]->v.empty() && ptBoot->l.front()->m.find("Port") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Port"]->v.empty())
                 {
+                  size_t unResult;
                   radial_link *ptLink = new radial_link;
                   ptLink->bAuthenticated = true;
                   ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
@@ -586,26 +590,25 @@ void Link::accept(string strPrefix)
               time(&CUpdateTime[0]);
               ssMessage.str("");
               ssMessage << strPrefix << ":  Switching internally from ";
-              ssMessage << ((unLink == LINK_MASTER)?"master":((unLink == LINK_SLAVE)?"slave":"unknown"));
+              ssMessage << ((unLink == RADIAL_LINK_MASTER)?"master":((unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " to ";
-              unLink = ((gstrMaster == gptLinkConf->m["Node"]->v)?LINK_MASTER:LINK_SLAVE);
-              ssMessage << ((unLink == LINK_MASTER)?"master":((unLink == LINK_SLAVE)?"slave":"unknown"));
+              unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
+              ssMessage << ((unLink == RADIAL_LINK_MASTER)?"master":((unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " mode.";
               log(ssMessage.str());
             }
             time(&CUpdateTime[1]);
             if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 30)
             {
-              unsigned int unOldLink = m_unLink;
               ssMessage.str("");
               ssMessage << strPrefix << ":  Switching from ";
-              ssMessage << ((gunLink == LINK_MASTER)?"master":((gunLink == LINK_SLAVE)?"slave":"unknown"));
+              ssMessage << ((m_unLink == RADIAL_LINK_MASTER)?"master":((m_unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " to ";
-              gunLink = ((gstrMaster == gptLinkConf->m["Node"]->v)?LINK_MASTER:LINK_SLAVE);
-              ssMessage << ((gunLink == LINK_MASTER)?"master":((gunLink == LINK_SLAVE)?"slave":"unknown"));
+              m_unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
+              ssMessage << ((m_unLink == RADIAL_LINK_MASTER)?"master":((m_unLink == RADIAL_LINK_SLAVE)?"slave":"unknown"));
               ssMessage << " mode.";
               log(ssMessage.str());
-              if (m_unLink == LINK_MASTER)
+              if (m_unLink == RADIAL_LINK_MASTER)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << ":  System is ready.";
@@ -618,7 +621,7 @@ void Link::accept(string strPrefix)
           // {{{ post work
           delete ptBoot;
           m_mutex.lock();
-          for (auto &link : links)
+          for (auto &link : m_links)
           {
             if (link->fdSocket != -1)
             {
@@ -689,7 +692,7 @@ void Link::accept(string strPrefix)
 }
 // }}}
 // {{{ add()
-size_t Link::add(Json *ptLink)
+size_t Link::add(radial_link *ptLink)
 {
   bool bHasNode = false, bHasServer = false, bHasSocket = false;
   size_t unResult = 0;
@@ -719,7 +722,7 @@ size_t Link::add(Json *ptLink)
         {
           (*linkIter)->bAuthenticated = ptLink->bAuthenticated;
         }
-        if (ptLink->fdSocket != -1 && )
+        if (ptLink->fdSocket != -1)
         {
           if ((*linkIter)->fdSocket == -1)
           {
@@ -839,6 +842,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
                   {
                     if (ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                     {
+                      size_t unResult;
                       radial_link *ptSubLink = new radial_link;
                       ptSubLink->bAuthenticated = false;
                       ptSubLink->strNode = ptLink->m["Node"]->v;

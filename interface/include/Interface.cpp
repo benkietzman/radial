@@ -350,7 +350,7 @@ bool Interface::storageRemove(const list<string> keys, string &strError)
 // {{{ storageRetrieve()
 bool Interface::storageRetrieve(Json *ptJson, string &strError)
 {
-  return storage("retrieve", [], ptJson, strError);
+  return storage("retrieve", {}, ptJson, strError);
 }
 bool Interface::storageRetrieve(const list<string> keys, Json *ptJson, string &strError)
 {
