@@ -421,7 +421,6 @@ void Link::socket(string strPrefix)
             unIndex++;
             for (auto &link : m_links)
             {
-              fds[unIndex].fd = link->fdSocket;
               fds[unIndex].events = POLLIN;
               if (link->fdSocket == -1)
               {
@@ -528,6 +527,7 @@ void Link::socket(string strPrefix)
                   log(ssMessage.str());
                 }
               }
+              fds[unIndex].fd = link->fdSocket;
               m_mutex.lock();
               if (link->fdSocket != -1 && !link->strBuffers[1].empty())
               {
