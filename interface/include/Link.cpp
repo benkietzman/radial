@@ -108,6 +108,7 @@ void Link::accept(string strPrefix)
           pollfd *fds;
           list<int> removals;
           size_t unIndex, unPosition, unReturn;
+          Json *ptBoot = new Json;
           ssMessage.str("");
           ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
           log(ssMessage.str());
@@ -132,32 +133,32 @@ void Link::accept(string strPrefix)
                 if ((nReturn = getaddrinfo(link->strServer.c_str(), linnk->strPort.c_str(), &hints, &result)) == 0)
                 {
                   bool bConnected[3] = {false, false, false};
-                  int fdClient;
+                  int fdLink;
                   addrinfo *rp;
                   SSL *ssl;
                   for (rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
                   {
                     bConnected[0] = bConnected[1] = false;
-                    if ((fdClient = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+                    if ((fdLink = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
                     {
                       bConnected[0] = true;
-                      if (connect(fdClient, rp->ai_addr, rp->ai_addrlen) == 0)
+                      if (connect(fdLink, rp->ai_addr, rp->ai_addrlen) == 0)
                       {
                         bConnected[1] = true;
-                        if ((ssl = gpCentral->utility()->sslConnect(ctxC, fdClient, strError)) != NULL)
+                        if ((ssl = m_pUtility->sslConnect(ctxC, fdLink, strError)) != NULL)
                         {
                           bConnected[2] = true;
                         }
                         else
                         {
-                          close(fdClient);
-                          fdClient = -1;
+                          close(fdLink);
+                          fdLink = -1;
                         }
                       }
                       else
                       {
-                        close(fdClient);
-                        fdClient = -1;
+                        close(fdLink);
+                        fdLink = -1;
                       }
                     }
                   }
@@ -168,25 +169,26 @@ void Link::accept(string strPrefix)
                     ssMessage.str("");
                     ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "]:  Connected to link.";
                     gpCentral->log(ssMessage.str());
-                    link->fdSocket = fdClient;
+                    link->fdSocket = fdLink;
                     link->ssl = ssl;
-                    ptWrite->insert("Action", "identity");
-                    ptWrite->m["Clients"] = new Json;
+                    ptWrite->insert("_function", "handshake");
+                    ptWrite->insert("Password", m_strPassword);
+                    ptWrite->m["Links"] = new Json;
                     for (auto &subLink : m_links)
                     {
                       if (!subLink->strNode.empty() && !subLink->strServer.empty() && !subLink->strPort.empty())
                       {
-                        Json *ptClient = new Json;
-                        ptClient->insert("Node", subLink->strNode);
-                        ptClient->insert("Server", subLink->strServer);
-                        ptClient->insert("Port", subLink->strPort, 'n');
-                        ptWrite->m["Clients"]->push_back(ptClient);
-                        delete ptClient;
+                        Json *ptLink = new Json;
+                        ptLink->insert("Node", subLink->strNode);
+                        ptLink->insert("Server", subLink->strServer);
+                        ptLink->insert("Port", subLink->strPort, 'n');
+                        ptWrite->m["Links"]->push_back(ptLink);
+                        delete ptLink;
                       }
                     }
                     if (!m_strMaster.empty())
                     {
-                      ptWrite->insert("Master", m_strMaster);
+                      ptWrite->->insert("Master", m_strMaster);
                     }
                     ptWrite->m["You"] = new Json;
                     ptWrite->m["You"]->insert("Server", link->strServer);
@@ -197,16 +199,12 @@ void Link::accept(string strPrefix)
                     {
                       ptWrite->m["Me"]->insert("Server", strServer);
                     }
-                    link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
-                    delete ptWrite;
                     if (m_bOnline)
                     {
-                      ptWrite = new Json;
-                      ptWrite->insert("Action", "status");
                       ptWrite->insert("Status", "online");
-                      link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
-                      delete ptWrite;
                     }
+                    link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                    delete ptWrite;
                   }
                   else if (!bConnected[1])
                   {
@@ -244,11 +242,11 @@ void Link::accept(string strPrefix)
               if (fds[0].revents & POLLIN)
               {
                 // {{{ prep work
-                int fdClient;
+                int fdLink;
                 sockaddr_in cli_addr;
                 socklen_t clilen = sizeof(cli_addr);
                 // }}}
-                if ((fdClient = ::accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
+                if ((fdLink = ::accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
                 {
                   // {{{ prep work
                   sockaddr_storage addr;
@@ -257,7 +255,7 @@ void Link::accept(string strPrefix)
                   ssMessage << strPrefix << "->accept():  Accepted incoming socket.";
                   log(ssMessage.str());
                   // }}}
-                  if (getpeername(fdClient, (sockaddr *)&addr, &len) == 0)
+                  if (getpeername(fdLink, (sockaddr *)&addr, &len) == 0)
                   {
                     // {{{ prep work
                     char szIP[INET6_ADDRSTRLEN];
@@ -277,29 +275,30 @@ void Link::accept(string strPrefix)
                     log(ssMessage.str());
                     ERR_clear_error();
                     // }}}
-                    if ((ssl = m_pUtility->sslAccept(ctxS, fdClient, strError)) != NULL)
+                    if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, strError)) != NULL)
                     {
                       Json *ptWrite = new Json;
                       radial_link *ptLink = new radial_link;
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Utility::sslAccept() [" << szIP << "]:  Accepted incoming socket.";
                       log(ssMessage.str());
-                      ptLink->fdSocket = fdClient;
+                      ptLink->bAuthenticated = false;
+                      ptLink->fdSocket = fdLink;
                       ptLink->ssl = ssl;
-                      ptWrite->insert("Action", "identity");
+                      ptWrite->insert("_function", "handshake");
                       if (!m_links.empty())
                       {
-                        ptWrite->m["Clients"] = new Json;
+                        ptWrite->m["Links"] = new Json;
                         for (auto &link : m_links)
                         {
                           if (!link->strNode && !link->strServer.empty() && !link->strPort.empty())
                           {
-                            Json *ptClient = new Json;
-                            ptClient->insert("Node", link->strNode);
-                            ptClient->insert("Server", link->strServer);
-                            ptClient->insert("Port", link->strPort);
-                            ptWrite->m["Clients"]->push_back(ptClient);
-                            delete ptClient;
+                            Json *ptSubLink = new Json;
+                            ptSubLink->insert("Node", link->strNode);
+                            ptSubLink->insert("Server", link->strServer);
+                            ptSubLink->insert("Port", link->strPort);
+                            ptWrite->m["Links"]->push_back(ptSubLink);
+                            delete ptSubLink;
                           }
                         }
                       }
@@ -316,16 +315,13 @@ void Link::accept(string strPrefix)
                       {
                         ptWrite->m["Me"]->insert("Server", strServer);
                       }
-                      ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
-                      delete ptWrite;
                       if (m_bOnline)
                       {
-                        ptWrite = new Json;
-                        ptWrite->insert("Action", "status");
                         ptWrite->insert("Status", "online");
-                        ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
-                        delete ptWrite;
                       }
+                      ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
+                      delete ptWrite;
+                      /*
                       if (m_unLink == RADIAL_LINK_MASTER)
                       {
                         Json *ptStorage = new Json;
@@ -333,9 +329,9 @@ void Link::accept(string strPrefix)
                         {
                           stringstream ssWrite;
                           ptWrite = new Json;
-                          ptWrite->insert("Action", "storage");
-                          ptWrite->insert("SubAction", "update");
-                          ptWrite->insert("Data", ptStorage);
+                          ptWrite->insert("_function", "storage");
+                          ptWrite->insert("Function", "update");
+                          ptWrite->insert("Request", ptStorage);
                           ssMessage.str("");
                           ssMessage << strPrefix << ":  Allocated copy of storage for transmission.";
                           log(ssMessage.str());
@@ -346,11 +342,12 @@ void Link::accept(string strPrefix)
                           log(ssMessage.str());
                           ptLink->strBuffers[1].append(ssWrite.str());
                           ssMessage.str("");
-                          ssMessage << strPrefix << ":  Appended storage to client output buffer.";
+                          ssMessage << strPrefix << ":  Appended storage to link output buffer.";
                           log(ssMessage.str());
                         }
                         delete ptStorage;
                       }
+                      */
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Link::add()";
                       if ((unResult = add(ptLink)) > 0)
@@ -363,7 +360,7 @@ void Link::accept(string strPrefix)
                         ssMessage << " error:  Failed to add link.";
                         SSL_shutdown(ssl);
                         SSL_free(ssl);
-                        close(fdClient);
+                        close(fdLink);
                       }
                       delete ptLink;
                     }
@@ -372,7 +369,7 @@ void Link::accept(string strPrefix)
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
                       notify(ssMessage.str());
-                      close(fdClient);
+                      close(fdLink);
                     }
                   }
                   else
@@ -380,7 +377,7 @@ void Link::accept(string strPrefix)
                     ssMessage.str("");
                     ssMessage << strPrefix << "->getpeername(" << errno << ") error:  " << strerror(errno);
                     notify(ssMessage.str());
-                    close(fdClient);
+                    close(fdLink);
                   }
                 }
                 else
@@ -392,6 +389,60 @@ void Link::accept(string strPrefix)
                 }
               }
               // }}}
+              for (auto &link : m_links)
+              {
+                for (size_t i = 1; i < unIndex; i++)
+                {
+                  // {{{ link
+                  if (link->fdSocket == fds[i].fd)
+                  {
+                    // {{{ read
+                    if (fds[i].revents & POLLIN)
+                    {
+                      nReturn = -1;
+                      ERR_clear_error();
+                      if (m_pUtility->sslRead(link->ssl, link->strBuffers[0], nReturn))
+                      {
+                        while ((unPosition = link->strBuffers[0].find("\n")) != string::npos)
+                        {
+                          Json *ptJson = new Json(link->strBuffers[0].substr(0, unPosition));
+                          link->strBuffers[0].erase(0, (unPosition + 1));
+                          thread threadLinkRequest(&Link::request, this, strPrefix, link->strNode, ptJson);
+                          threadLinkRequest.detach();
+                        }
+                      }
+                      else
+                      {
+                        removals.push_back(link->fdSocket);
+                        if (nReturn < 0)
+                        {
+                          ssMessage.str("");
+                          ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror();
+                          log(ssMessage.str());
+                        }
+                      }
+                    }
+                    // }}}
+                    // {{{ write
+                    if (fds[i].revents & POLLOUT)
+                    {
+                      ERR_clear_error();
+                      if (!m_pUtility->sslWrite(link->ssl, link->strBuffers[1], nReturn))
+                      {
+                        removals.push_back(link->fdSocket);
+                        if (nReturn < 0)
+                        {
+                          ssMessage.str("");
+                          ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror();
+                          log(ssMessage.str());
+                        }
+                      }
+                    }
+                    // }}}
+                  }
+                  // }}}
+                }
+              }
             }
             else if (nReturn < 0 && errno != EINTR)
             {
@@ -400,48 +451,123 @@ void Link::accept(string strPrefix)
               ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
               notify(ssMessage.str());
             }
+            // {{{ post work
             delete[] fds;
             // {{{ removals
-            removals.sort();
-            removals.unique();
-            for (auto &i : removeList)
+            if (!removals.empty())
             {
-              list<radial_link *>::iterator removeIter = m_links.end();
-              for (auto j = m_links.begin(); removeIter == m_links.end() && j != m_links.end(); j++)
+              removals.sort();
+              removals.unique();
+              m_mutex.lock();
+              for (auto &i : removals)
               {
-                if ((*j)->fdSocket == i)
+                list<radial_link *>::iterator removeIter = m_links.end();
+                for (auto j = m_links.begin(); removeIter == m_links.end() && j != m_links.end(); j++)
                 {
-                  removeIter = j;
+                  if ((*j)->fdSocket == i)
+                  {
+                    removeIter = j;
+                  }
+                }
+                if (removeIter != m_links.end())
+                { 
+                  if ((*removeIter)->fdSocket != -1)
+                  { 
+                    SSL_shutdown((*removeIter)->ssl);
+                    SSL_free((*removeIter)->ssl);
+                    close((*removeIter)->fdSocket);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->close() [" << (*removeIter)->strNode << "]:  Closed link socket.";
+                    log(ssMessage.str());
+                  }
+                  if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
+                  { 
+                    m_strMaster.clear();
+                    ssMessage.str("");
+                    ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Unset as master.";    
+                    log(ssMessage.str());
+                  }
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Removed link.";
+                  log(ssMessage.str());
+                  delete (*removeIter);
+                  m_links.erase(removeIter);
                 }
               }
-              if (removeIter != m_links.end())
-              { 
-                if ((*removeIter)->fdSocket != -1)
-                { 
-                  SSL_shutdown((*removeIter)->ssl);
-                  SSL_free((*removeIter)->ssl);
-                  close((*removeIter)->fdSocket);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->close() [" << (*removeIter)->strNode << "]:  Closed client socket.";
-                  log(ssMessage.str());
+              m_mutex.unlock();
+              removals.clear();
+            }
+            // }}}
+            // {{{ bootstrap links
+            if (m_links.empty() && m_ptLink->m.find("Links") != m_ptLink->m.end())
+            {
+              if (ptBoot->l.empty() && m_ptLink->m.find("Links") != m_ptLink->m.end())
+              {
+                for (auto &i : m_ptLink->m["Links"]->l)
+                {
+                  if (i->m.find("Server") != i->m.end() && !i->m["Server"]->v.empty() && i->m.find("Port") != i->m.end() && !i->m["Port"]->v.empty())
+                  {
+                    Json *ptLink = new Json;
+                    ptLink->insert("Server", i->m["Server"]->v);
+                    ptLink->insert("Port", i->m["Port"]->v, 'n');
+                    ptBoot->push_back(ptLink);
+                    delete ptLink;
+                  }
                 }
-                if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
-                { 
-                  m_strMaster.clear();
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Unset as master.";    
-                  log(ssMessage.str());
+              }
+              if (!ptBoot->l.empty())
+              {
+                if (ptBoot->l.front()->m.find("Server") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Server"]->v.empty() && ptBoot->l.front()->m.find("Port") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Port"]->v.empty())
+                {
+                  radial_link *ptLink = new radial_link;
+                  ptLink->bAuthenticated = true;
+                  ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
+                  ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
+                  ptLink->fdSocket = -1;
+                  ptLink->ssl = NULL;
+                  if ((unResult = add(ptLink)) > 0)
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Link::add() [" << ptBoot->l.front()->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                    log(ssMessage.str());
+                  }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
+                    notify(ssMessage.str());
+                  }
+                  delete ptLink;
+                  delete ptBoot->l.front();
+                  ptBoot->l.pop_front();
                 }
-                ssMessage.str("");
-                ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Removed client.";
-                log(ssMessage.str());
-                delete (*removeIter);
-                m_links.erase(removeIter);
               }
             }
-            removals.clear();
+            // }}}
             // }}}
           }
+          // {{{ post work
+          delete ptBoot;
+          m_mutex.lock();
+          for (auto &link : links)
+          {
+            if (link->fdSocket != -1)
+            { 
+              SSL_shutdown(link->ssl);
+              SSL_free(link->ssl);
+              close(link->fdSocket);
+              ssMessage.str("");
+              ssMessage << strPrefix << "->close() [" << link->strNode << "]:  Closed link socket.";
+              log(ssMessage.str());
+            }
+            ssMessage.str("");
+            ssMessage << strPrefix << " [" << link->strNode << "]:  Removed link.";
+            log(ssMessage.str());
+            delete link;
+          }
+          m_links.clear();
+          m_mutex.unlock();
+          // }}}
         }
         else
         {
@@ -518,14 +644,26 @@ size_t Link::add(Json *ptLink)
     {
       if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (*linkIter)->fdSocket == ptLink->fdSocket) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
       {
+        bool bClose = false;
         bFound = true;
+        if (ptLink->bAuthenticated)
+        {
+          (*linkIter)->bAuthenticated = ptLink->bAuthenticated;
+        }
+        if (ptLink->fdSocket != -1 && )
+        {
+          if ((*linkIter)->fdSocket == -1)
+          {
+            (*linkIter)->fdSocket = ptLink->fdSocket;
+          }
+          else
+          {
+            bClose = true;
+          }
+        }
         if (!ptLink->strNode.empty())
         {
           (*linkIter)->strNode = ptLink->strNode;
-        }
-        if (ptLink->fdSocket != -1)
-        {
-          (*linkIter)->fdSocket = ptLink->fdSocket;
         }
         if (!ptLink->strServer.empty())
         {
@@ -535,12 +673,13 @@ size_t Link::add(Json *ptLink)
         {
           (*linkIter)->strPort = ptLink->strPort;
         }
-        unResult = 2;
+        unResult = ((bClose)?0:2);
       }
     }
     if (!bFound)
     {
       radial_link *ptAdd = new radial_link;
+      ptAdd->bAuthenticated = ptLink->bAuthenticated;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->ssl = ptLink->ssl;
       ptAdd->strBuffers[0] = ptAdd->strBuffers[0];
@@ -548,7 +687,9 @@ size_t Link::add(Json *ptLink)
       ptAdd->strNode = ptAdd->strNode;
       ptAdd->strPort = ptAdd->strPort;
       ptAdd->strServer = ptAdd->strServer;
+      m_mutex.lock();
       m_links.push_back(ptAdd);
+      m_mutex.unlock();
       unResult = 1;
     }
   }
@@ -591,206 +732,52 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 }
 // }}}
 // {{{ request()
-void Link::request(Json *ptJson)
+void Link::request(string strPrefix, const string strNode, Json *ptJson)
 {
-  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  string strError, strJson;
+  stringstream ssMessage;
+
+  strPrefix += "->Link::request()";
+  if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
   {
-    if (ptJson->m["Interface"]->v == "hub")
+    if (ptJson->m["_function"]->v == "handshake")
     {
-      if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+    }
+  }
+  else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  {
+    Json *ptInterfaces = new Json;
+    ptInterfaces->insert("Function", "list");
+    target(ptInterfaces);
+    if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
+    {
+      if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
       {
-        if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
-        {
-          target(ptJson);
-        }
-        else
-        {
-          ptJson->insert("Status", "error");
-          ptJson->insert("Error", "Please provide a valid Function:  list, ping.");
-        }
+        target(ptJson->m["Interface"]->v, ptJson);
       }
       else
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Please provide the Function.");
+        ptJson->insert("Error", "Interface does not exist.");
       }
     }
     else
     {
-      Json *ptInterfaces = new Json;
-      ptInterfaces->insert("Function", "list");
-      target(ptInterfaces);
-      if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
-      {
-        if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
-        {
-          if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0")
-          {
-            target(ptJson->m["Interface"]->v, ptJson);
-          }
-          else
-          {
-            ptJson->insert("Status", "error");
-            ptJson->insert("Error", "Access to interface is restricted.");
-          }
-        }
-        else
-        {
-          ptJson->insert("Status", "error");
-          ptJson->insert("Error", "Interface does not exist.");
-        }
-      }
-      else
-      {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Failed to retrieve interfaces.");
-      }
-      delete ptInterfaces;
+      ptJson->insert("Status", "error");
+      ptJson->insert("Error", "Failed to retrieve interfaces.");
     }
-    for (auto &i : ptJson->m)
+    delete ptInterfaces;
+    m_mutex.lock();
+    for (auto &link : m_links)
     {
-      if (!i.first.empty() && i.first[0] == '_')
+      if (link->strNode == strNode)
       {
-        delete i.second;
-        ptJson->m.erase(i.first);
+        link->strBuffers[1].append(ptJson->json(strJson) + "\n");
       }
     }
+    m_mutex.unlock();
   }
-  else
-  {
-    ptJson->insert("Status", "error");
-    ptJson->insert("Error", "Please provide the Interface.");
-  }
-}
-// }}}
-// {{{ socket()
-void Link::socket(string strPrefix, SSL_CTX *ctxS, int fdSocket)
-{
-  bool bExit = false;
-  int nReturn;
-  size_t unPosition;
-  string strBuffers[2], strError;
-  stringstream ssMessage;
-  SSL *ssl;
-  common_socket_type eSocketType = COMMON_SOCKET_UNKNOWN;
-  Json *ptJson;
-
-  strPrefix += "->Link::socket()";
-  while (!bExit)
-  {
-    pollfd fds[1];
-    fds[0].fd = fdSocket;
-    fds[0].events = POLLIN;
-    if (!strBuffers[1].empty())
-    {
-      fds[0].events |= POLLOUT;
-    }
-    if ((nReturn = poll(fds, 1, 100)) > 0)
-    {
-      if (fds[0].revents & POLLIN)
-      {
-        if (eSocketType == COMMON_SOCKET_UNKNOWN)
-        {
-          if (m_pUtility->socketType(fdSocket, eSocketType, strError))
-          {
-            if (eSocketType == COMMON_SOCKET_ENCRYPTED)
-            {
-              ERR_clear_error();
-              if ((ssl = m_pUtility->sslAccept(ctxS, fdSocket, strError)) == NULL)
-              {
-                bExit = true;
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
-                log(ssMessage.str());
-              }
-            }
-          }
-          else
-          {
-            bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::socketType() error:  " << strError;
-            log(ssMessage.str());
-          }
-        }
-        if (!bExit && ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(ssl, strBuffers[0], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))))
-        {
-          if ((unPosition = strBuffers[0].find("\n")) != string::npos)
-          {
-            ptJson = new Json(strBuffers[0].substr(0, unPosition));
-            strBuffers[0].erase(0, (unPosition + 1));
-            request(ptJson);
-            ptJson->json(strBuffers[1]);
-            strBuffers[1] += "\n";
-            delete ptJson;
-          }
-        }
-        else
-        {
-          bExit = true;
-          if (nReturn < 0)
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::";
-            if (eSocketType == COMMON_SOCKET_ENCRYPTED)
-            {
-              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
-            }
-            else
-            {
-              ssMessage << "fdRead(" << errno << ") error:  " << strerror(errno);
-            }
-            log(ssMessage.str());
-          }
-        }
-      }
-      if (fds[0].revents & POLLOUT)
-      {
-        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn)))
-        {
-          if (strBuffers[1].empty())
-          {
-            bExit = true;
-          }
-        }
-        else
-        {
-          bExit = true;
-          if (nReturn < 0)
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::";
-            if (eSocketType == COMMON_SOCKET_ENCRYPTED)
-            {
-              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
-            }
-            else
-            {
-              ssMessage << "fdWrite(" << errno << ") error:  " << strerror(errno);
-            }
-            log(ssMessage.str());
-          }
-        }
-      }
-    }
-    else if (nReturn < 0 && errno != EINTR)
-    {
-      bExit = true;
-      ssMessage.str("");
-      ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-      log(ssMessage.str());
-    }
-    if (shutdown() && strBuffers[0].empty() && strBuffers[1].empty())
-    {
-      bExit = true;
-    }
-  }
-  if (eSocketType == COMMON_SOCKET_ENCRYPTED)
-  {
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
-  }
-  close(fdSocket);
+  delete ptJson;
 }
 // }}}
 }

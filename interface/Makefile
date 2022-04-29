@@ -10,12 +10,23 @@ prefix=/usr/local
 all: bin/log bin/mysql bin/request bin/storage
 # }}}
 
-install: bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
+install: bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
+	install --mode=777 bin/link $(prefix)/radial/interface/
 	install --mode=777 bin/log $(prefix)/radial/interface/
 	install --mode=777 bin/mysql $(prefix)/radial/interface/
 	install --mode=777 bin/request $(prefix)/radial/interface/
 	install --mode=777 bin/storage $(prefix)/radial/interface/
 
+# {{{ link
+link: bin/link $(prefix)/radial/interface
+	install --mode=777 bin/link $(prefix)/radial/interface/
+bin/link: ../../common/libcommon.a obj/link.o obj/Base.o obj/Interface.o obj/Link.o bin
+	g++ -o bin/link obj/link.o obj/Base.o obj/Interface.o obj/Link.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/link.o: link.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c link.cpp -o obj/link.o $(CPPFLAGS) -I../../common
+obj/Link.o: include/Link.cpp obj
+	g++ -ggdb -Wall -c include/Link.cpp -o obj/Link.o $(CPPFLAGS) -I../../common
+# }}}
 # {{{ log
 log: bin/log $(prefix)/radial/interface
 	install --mode=777 bin/log $(prefix)/radial/interface/

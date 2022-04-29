@@ -79,7 +79,7 @@ void Interface::monitor(string strPrefix)
     } 
     else
     {
-      log(ssMessage.str());
+      //log(ssMessage.str());
     }
   } 
 }

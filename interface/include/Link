@@ -29,6 +29,7 @@ namespace radial
 // {{{ structs
 struct radial_link
 {
+  bool bAuthenticated;
   int fdSocket;
   SSL *ssl;
   string strBuffers[2];
@@ -43,16 +44,19 @@ class Link : public Interface
   protected:
   bool m_bOnline;
   list<radial_link *> m_links;
+  mutex m_mutex;
   string m_strMaster;
   string m_strPassword;
   size_t m_unLink;
   Json *m_ptLink;
 
+  size_t add(list<radial_link *> &links, Json *ptLink);
+  void request(string strPrefix, const string strNode, Json *ptJson);
+
   public:
   Link(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Link();
   void accept(string strPrefix);
-  size_t add(list<radial_link *> &links, Json *ptLink);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
 // }}}
