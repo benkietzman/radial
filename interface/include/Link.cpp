@@ -766,7 +766,7 @@ size_t Link::add(radial_link *ptLink)
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->ssl = ptLink->ssl;
-      ptAdd->strBuffers[0] = ptLink>strBuffers[0];
+      ptAdd->strBuffers[0] = ptLink->strBuffers[0];
       ptAdd->strBuffers[1] = ptLink->strBuffers[1];
       ptAdd->strNode = ptLink->strNode;
       ptAdd->strPort = ptLink->strPort;
