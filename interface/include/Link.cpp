@@ -120,7 +120,7 @@ size_t Link::add(radial_link *ptLink)
       ptAdd->strNode = ptLink->strNode;
       ptAdd->strPort = ptLink->strPort;
       ptAdd->strServer = ptLink->strServer;
-      m_links.push_back(ptLink);
+      m_links.push_back(ptAdd);
       m_mutex.unlock();
       unResult = 1;
     }
@@ -529,7 +529,7 @@ void Link::socket(string strPrefix)
               }
               fds[unIndex].fd = link->fdSocket;
               m_mutex.lock();
-              if (link->fdSocket != -1 && !link->strBuffers[1].empty())
+              if (!link->strBuffers[1].empty())
               {
                 fds[unIndex].events |= POLLOUT;
               }
