@@ -403,15 +403,15 @@ void Link::socket(string strPrefix)
           pollfd *fds;
           list<int> removals;
           size_t unIndex, unLink = m_unLink, unPosition;
-          time_t CTime[2], CUpdateTime[2], unSleep = 5;
+          time_t CBootstrapTime[2], CBroadcastTime[2], CUpdateTime[2], unBootstrapSleep = 5, unBroadcastSleep = 5;
           Json *ptBoot = new Json;
           ssMessage.str("");
           ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
           log(ssMessage.str());
-          time(&CTime[0]);
-          CUpdateTime[0] = CTime[0];
+          time(&CBootstrapTime[0]);
+          CBroadcastTime[0] = CUpdateTime[0] = CBootstrapTime[0];
           // }}}
-          while (!shutdown() && !bExit)
+          while (!bExit)
           {
             // {{{ prep work
             fds = new pollfd[m_links.size() + 1];
@@ -503,20 +503,6 @@ void Link::socket(string strPrefix)
                       ptWrite->m["Me"]->insert("Server", m_strServer);
                       delete ptWrite;
                     }
-                  }
-                  else if (!bConnected[1])
-                  {
-                    removals.push_back(-1);
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << strerror(errno);
-                    log(ssMessage.str());
-                  }
-                  else
-                  {
-                    removals.push_back(-1);
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslConnect(" << strError << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << strError;
-                    log(ssMessage.str());
                   }
                 }
                 else
@@ -805,86 +791,91 @@ void Link::socket(string strPrefix)
             }
             // }}}
             // {{{ broadcast master
-            time(&CTime[1]);
-            if ((CTime[1] - CTime[0]) > unSleep)
+            time(&CBroadcastTime[1]);
+            if ((CBroadcastTime[1] - CBroadcastTime[0]) > unBroadcastSleep)
             {
-              unsigned int unSeed = CTime[1];
+              unsigned int unSeed = CBroadcastTime[1];
               srand(unSeed);
-              unSleep = (rand_r(&unSeed) % 10) + 1;
-              if (!shutdown())
+              unBroadcastSleep = (rand_r(&unSeed) % 10) + 1;
+              if (m_strMaster.empty())
               {
-                if (m_strMaster.empty())
+                m_bUpdate = true;
+                m_strMaster = m_ptLink->m["Node"]->v;
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << m_ptLink->m["Node"]->v << "]:  Set as master.";
+                log(ssMessage.str());
+              }
+              if (!m_strMaster.empty())
+              {
+                Json *ptWrite = new Json;
+                ptWrite->insert("_function", "master");
+                ptWrite->insert("Node", m_strMaster);
+                ptWrite->json(strJson);
+                delete ptWrite;
+                strJson += "\n";
+                for (auto &link : m_links)
                 {
-                  m_bUpdate = true;
-                  m_strMaster = m_ptLink->m["Node"]->v;
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << m_ptLink->m["Node"]->v << "]:  Set as master.";
-                  log(ssMessage.str());
-                }
-                if (!m_strMaster.empty())
-                {
-                  Json *ptWrite = new Json;
-                  ptWrite->insert("_function", "master");
-                  ptWrite->insert("Node", m_strMaster);
-                  ptWrite->json(strJson);
-                  delete ptWrite;
-                  strJson += "\n";
-                  for (auto &link : m_links)
-                  {
-                    m_mutex.lock();
-                    link->strBuffers[1].append(strJson);
-                    m_mutex.unlock();
-                  }
+                  m_mutex.lock();
+                  link->strBuffers[1].append(strJson);
+                  m_mutex.unlock();
                 }
               }
-              time(&CTime[0]);
+              CBroadcastTime[0] = CBroadcastTime[1];
             }
             // }}}
             // {{{ bootstrap links
             if (m_links.empty() && m_ptLink->m.find("Links") != m_ptLink->m.end())
             {
-              if (ptBoot->l.empty() && m_ptLink->m.find("Links") != m_ptLink->m.end())
+              time(&CBootstrapTime[1]);
+              if ((CBootstrapTime[1] - CBootstrapTime[0]) > unBootstrapSleep)
               {
-                for (auto &i : m_ptLink->m["Links"]->l)
+                unsigned int unSeed = CBootstrapTime[1];
+                srand(unSeed);
+                unBootstrapSleep = (rand_r(&unSeed) % 10) + 1;
+                if (ptBoot->l.empty())
                 {
-                  if (i->m.find("Server") != i->m.end() && !i->m["Server"]->v.empty() && i->m.find("Port") != i->m.end() && !i->m["Port"]->v.empty())
+                  for (auto &i : m_ptLink->m["Links"]->l)
                   {
-                    Json *ptLink = new Json;
-                    ptLink->insert("Server", i->m["Server"]->v);
-                    ptLink->insert("Port", i->m["Port"]->v, 'n');
-                    ptBoot->push_back(ptLink);
+                    if (i->m.find("Server") != i->m.end() && !i->m["Server"]->v.empty() && i->m.find("Port") != i->m.end() && !i->m["Port"]->v.empty())
+                    {
+                      Json *ptLink = new Json;
+                      ptLink->insert("Server", i->m["Server"]->v);
+                      ptLink->insert("Port", i->m["Port"]->v, 'n');
+                      ptBoot->push_back(ptLink);
+                      delete ptLink;
+                    }
+                  }
+                }
+                if (!ptBoot->l.empty())
+                {
+                  if (ptBoot->l.front()->m.find("Server") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Server"]->v.empty() && ptBoot->l.front()->m.find("Port") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Port"]->v.empty())
+                  {
+                    size_t unResult;
+                    radial_link *ptLink = new radial_link;
+                    ptLink->bAuthenticated = true;
+                    ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
+                    ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
+                    ptLink->fdSocket = -1;
+                    ptLink->ssl = NULL;
+                    if ((unResult = add(ptLink)) > 0)
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Link::add() [" << ptBoot->l.front()->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                      log(ssMessage.str());
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
+                      notify(ssMessage.str());
+                    }
                     delete ptLink;
+                    delete ptBoot->l.front();
+                    ptBoot->l.pop_front();
                   }
                 }
               }
-              if (!ptBoot->l.empty())
-              {
-                if (ptBoot->l.front()->m.find("Server") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Server"]->v.empty() && ptBoot->l.front()->m.find("Port") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Port"]->v.empty())
-                {
-                  size_t unResult;
-                  radial_link *ptLink = new radial_link;
-                  ptLink->bAuthenticated = true;
-                  ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
-                  ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
-                  ptLink->fdSocket = -1;
-                  ptLink->ssl = NULL;
-                  if ((unResult = add(ptLink)) > 0)
-                  {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Link::add() [" << ptBoot->l.front()->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
-                    log(ssMessage.str());
-                  }
-                  else
-                  {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
-                    notify(ssMessage.str());
-                  }
-                  delete ptLink;
-                  delete ptBoot->l.front();
-                  ptBoot->l.pop_front();
-                }
-              }
+              CBootstrapTime[0] = CBootstrapTime[1];
             }
             // }}}
             // {{{ update
@@ -907,6 +898,10 @@ void Link::socket(string strPrefix)
               log(ssMessage.str());
             }
             // }}}
+            if (shutdown())
+            {
+              bExit = true;
+            }
             // }}}
           }
           // {{{ post work
