@@ -490,7 +490,7 @@ void Link::socket(string strPrefix)
                     ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
                     if (!m_strServer.empty())
                     {
-                      ptWrite->insert("Server", m_strMaster);
+                      ptWrite->m["Me"]->insert("Server", m_strServer);
                     }
                     m_mutex.lock();
                     link->strBuffers[1].append(ptWrite->json(strJson) + "\n");
@@ -499,8 +499,8 @@ void Link::socket(string strPrefix)
                     if (!m_strMaster.empty())
                     {
                       ptWrite = new Json;
-                      ptWrite->insert("Master", m_strMaster);
-                      ptWrite->m["Me"]->insert("Server", m_strServer);
+                      ptWrite->insert("_function", "master");
+                      ptWrite->insert("Node", m_strMaster);
                       delete ptWrite;
                     }
                   }
@@ -604,7 +604,8 @@ void Link::socket(string strPrefix)
                       if (!m_strMaster.empty())
                       {
                         ptWrite = new Json;
-                        ptWrite->insert("Master", m_strMaster);
+                        ptWrite->insert("_function", "master");
+                        ptWrite->insert("Node", m_strMaster);
                         ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
                         delete ptWrite;
                       }
@@ -874,8 +875,8 @@ void Link::socket(string strPrefix)
                     ptBoot->l.pop_front();
                   }
                 }
+                CBootstrapTime[0] = CBootstrapTime[1];
               }
-              CBootstrapTime[0] = CBootstrapTime[1];
             }
             // }}}
             // {{{ update
