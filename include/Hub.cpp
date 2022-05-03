@@ -432,7 +432,7 @@ void Hub::process(string strPrefix)
                 ssMessage << strPrefix << "->read(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
                 if (errno == EINVAL)
                 {
-                  ssMessage << " --- POSSIBLE CORE DUMP"
+                  ssMessage << " --- POSSIBLE CORE DUMP";
                 }
                 log(ssMessage.str());
               }
