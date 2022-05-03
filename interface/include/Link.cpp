@@ -403,13 +403,12 @@ void Link::socket(string strPrefix)
           pollfd *fds;
           list<int> removals;
           size_t unIndex, unLink = m_unLink, unPosition;
-          time_t CBootstrapTime[2], CBroadcastTime[2], CUpdateTime[2], unBootstrapSleep = 5, unBroadcastSleep = 5;
-          Json *ptBoot = new Json;
+          time_t CBootstrapTime[2], CBroadcastTime[2], CDuplicateTime[2], CUpdateTime[2], unBootstrapSleep = 5, unBroadcastSleep = 5;
           ssMessage.str("");
           ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
           log(ssMessage.str());
           time(&CBootstrapTime[0]);
-          CBroadcastTime[0] = CUpdateTime[0] = CBootstrapTime[0];
+          CBroadcastTime[0] = CDuplicateTime[0] = CUpdateTime[0] = CBootstrapTime[0];
           // }}}
           while (!bExit)
           {
@@ -744,6 +743,47 @@ void Link::socket(string strPrefix)
             // {{{ post work
             delete[] fds;
             // {{{ removals
+            if (!m_links.empty())
+            {
+              time(&CDuplicateTime[1]);
+              if ((CDuplicateTime[1] - CDuplicateTime[0]) > 10)
+              {
+                list <string> nodes;
+                for (auto &link : m_links)
+                {
+                  if (!link->strNode.empty())
+                  {
+                    nodes.push_back(link->strNode);
+                  }
+                }
+                nodes.sort();
+                nodes.unique();
+                for (auto &node : nodes)
+                {
+                  bool bFound = false;
+                  list<list<radial_link *>::iterator> duplicates;
+                  for (auto linkIter = m_links.begin(); linkIter != m_links.end(); linkIter++)
+                  {
+                    if ((*linkIter)->strNode == node)
+                    {
+                      if (bFound)
+                      {
+                        duplicates.push_back(linkIter);
+                      }
+                      else
+                      {
+                        bFound = true;
+                      }
+                    }
+                  }
+                  for (auto &duplicate : duplicates)
+                  {
+                    removals.push_back((*duplicate)->fdSocket);
+                  }
+                }
+                CDuplicateTime[0] = CDuplicateTime[1];
+              }
+            }
             if (!removals.empty())
             {
               removals.sort();
@@ -825,56 +865,61 @@ void Link::socket(string strPrefix)
             }
             // }}}
             // {{{ bootstrap links
-            if (m_links.empty() && m_ptLink->m.find("Links") != m_ptLink->m.end())
+            if (m_ptLink->m.find("Links") != m_ptLink->m.end())
             {
               time(&CBootstrapTime[1]);
               if ((CBootstrapTime[1] - CBootstrapTime[0]) > unBootstrapSleep)
               {
                 unsigned int unSeed = CBootstrapTime[1];
+                Json *ptBoot = new Json;
                 srand(unSeed);
                 unBootstrapSleep = (rand_r(&unSeed) % 10) + 1;
-                if (ptBoot->l.empty())
+                for (auto &ptLink : m_ptLink->m["Links"]->l)
                 {
-                  for (auto &i : m_ptLink->m["Links"]->l)
+                  if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                   {
-                    if (i->m.find("Server") != i->m.end() && !i->m["Server"]->v.empty() && i->m.find("Port") != i->m.end() && !i->m["Port"]->v.empty())
+                    bool bFound = false;
+                    for (auto &link : m_links)
                     {
-                      Json *ptLink = new Json;
-                      ptLink->insert("Server", i->m["Server"]->v);
-                      ptLink->insert("Port", i->m["Port"]->v, 'n');
-                      ptBoot->push_back(ptLink);
-                      delete ptLink;
+                      if (link->strServer == ptLink->m["Server"]->v && link->strPort == ptLink->m["Port"]->v)
+                      {
+                        bFound = true;
+                      }
+                    }
+                    if (!bFound)
+                    {
+                      Json *ptSubLink = new Json;
+                      ptSubLink->insert("Server", ptLink->m["Server"]->v);
+                      ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
+                      ptBoot->push_back(ptSubLink);
+                      delete ptSubLink;
                     }
                   }
                 }
-                if (!ptBoot->l.empty())
+                for (auto &ptLink : ptBoot->l)
                 {
-                  if (ptBoot->l.front()->m.find("Server") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Server"]->v.empty() && ptBoot->l.front()->m.find("Port") != ptBoot->l.front()->m.end() && !ptBoot->l.front()->m["Port"]->v.empty())
+                  size_t unResult;
+                  radial_link *ptSubLink = new radial_link;
+                  ptSubLink->bAuthenticated = true;
+                  ptSubLink->strServer = ptLink->m["Server"]->v;
+                  ptSubLink->strPort = ptLink->m["Port"]->v;
+                  ptSubLink->fdSocket = -1;
+                  ptSubLink->ssl = NULL;
+                  if ((unResult = add(ptSubLink)) > 0)
                   {
-                    size_t unResult;
-                    radial_link *ptLink = new radial_link;
-                    ptLink->bAuthenticated = true;
-                    ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
-                    ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
-                    ptLink->fdSocket = -1;
-                    ptLink->ssl = NULL;
-                    if ((unResult = add(ptLink)) > 0)
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Link::add() [" << ptBoot->l.front()->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
-                      log(ssMessage.str());
-                    }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
-                      notify(ssMessage.str());
-                    }
-                    delete ptLink;
-                    delete ptBoot->l.front();
-                    ptBoot->l.pop_front();
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Link::add() [" << ptLink->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                    log(ssMessage.str());
                   }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Link::add() error [" << ptLink->m["Server"]->v << "]:  Failed to add link.";
+                    notify(ssMessage.str());
+                  }
+                  delete ptSubLink;
                 }
+                delete ptBoot;
                 CBootstrapTime[0] = CBootstrapTime[1];
               }
             }
@@ -906,7 +951,6 @@ void Link::socket(string strPrefix)
             // }}}
           }
           // {{{ post work
-          delete ptBoot;
           m_mutex.lock();
           for (auto &link : m_links)
           {
