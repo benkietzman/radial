@@ -764,7 +764,7 @@ void Link::socket(string strPrefix)
                   list<list<radial_link *>::iterator> duplicates;
                   for (auto linkIter = m_links.begin(); linkIter != m_links.end(); linkIter++)
                   {
-                    if ((*linkIter)->strNode == node)
+                    if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1)
                     {
                       if (bFound)
                       {
