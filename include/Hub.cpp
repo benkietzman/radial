@@ -426,10 +426,14 @@ void Hub::process(string strPrefix)
             else
             {
               removals.push_back(sockets[fds[i].fd]);
-              if (nReturn < 0)
+              if (nReturn < 0 || errno == EINVAL)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->read(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                if (errno == EINVAL)
+                {
+                  ssMessage << " --- POSSIBLE CORE DUMP"
+                }
                 log(ssMessage.str());
               }
             }
