@@ -111,7 +111,6 @@ size_t Link::add(radial_link *ptLink)
     if (!bFound)
     {
       radial_link *ptAdd = new radial_link;
-      m_mutex.lock();
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->ssl = ptLink->ssl;
@@ -121,7 +120,6 @@ size_t Link::add(radial_link *ptLink)
       ptAdd->strPort = ptLink->strPort;
       ptAdd->strServer = ptLink->strServer;
       m_links.push_back(ptAdd);
-      m_mutex.unlock();
       unResult = 1;
     }
   }
@@ -637,7 +635,10 @@ void Link::socket(string strPrefix)
                       */
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Link::add()";
-                      if ((unResult = add(ptLink)) > 0)
+                      m_mutex.lock();
+                      unResult = add(ptLink);
+                      m_mutex.unlock();
+                      if (unResult > 0)
                       {
                         ssMessage << ":  " << ((unResult == 1)?"Added":"Updated") << " link.";
                         log(ssMessage.str());
@@ -908,7 +909,10 @@ void Link::socket(string strPrefix)
                   ptSubLink->strPort = ptLink->m["Port"]->v;
                   ptSubLink->fdSocket = -1;
                   ptSubLink->ssl = NULL;
-                  if ((unResult = add(ptSubLink)) > 0)
+                  m_mutex.lock();
+                  unResult = add(ptSubLink);
+                  m_mutex.unlock();
+                  if (unResult > 0)
                   {
                     ssMessage.str("");
                     ssMessage << strPrefix << "->Link::add() [" << ptLink->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
