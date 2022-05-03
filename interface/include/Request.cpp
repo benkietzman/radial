@@ -198,6 +198,7 @@ void Request::request(Json *ptJson)
 {
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
+    list<string> removals;
     if (ptJson->m["Interface"]->v == "hub")
     {
       if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
@@ -254,8 +255,15 @@ void Request::request(Json *ptJson)
     {
       if (!i.first.empty() && i.first[0] == '_')
       {
-        delete i.second;
-        ptJson->m.erase(i.first);
+        removals.push_back(i.first);
+      }
+    }
+    for (auto &removal : removals)
+    {
+      if (ptJson->m.find(removal) != ptJson->m.end())
+      {
+        delete ptJson->m[removal];
+        ptJson->m.erase(removal);
       }
     }
   }
