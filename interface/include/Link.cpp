@@ -778,6 +778,9 @@ void Link::socket(string strPrefix)
                   }
                   for (auto &duplicate : duplicates)
                   {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << " [" << (*duplicate)->strNode << "]:  Found duplicate link.";
+                    log(ssMessage.str());
                     removals.push_back((*duplicate)->fdSocket);
                   }
                 }
