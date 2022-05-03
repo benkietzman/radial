@@ -277,7 +277,8 @@ void Hub::process(string strPrefix)
         for (size_t i = 0; i < unIndex; i++)
         {
           // {{{ read
-          if (fds[i].revents & (POLLHUP | POLLIN))
+          //if (fds[i].revents & (POLLHUP | POLLIN))
+          if (fds[i].revents & POLLIN)
           {
             if ((nReturn = read(fds[i].fd, szBuffer, 65536)) > 0)
             {
