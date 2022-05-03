@@ -277,8 +277,7 @@ void Hub::process(string strPrefix)
         for (size_t i = 0; i < unIndex; i++)
         {
           // {{{ read
-          //if (fds[i].revents & (POLLHUP | POLLIN))
-          if (fds[i].revents & POLLIN)
+          if (fds[i].revents & (POLLHUP | POLLIN))
           {
             if ((nReturn = read(fds[i].fd, szBuffer, 65536)) > 0)
             {
@@ -427,7 +426,7 @@ void Hub::process(string strPrefix)
             else
             {
               removals.push_back(sockets[fds[i].fd]);
-              //if (nReturn < 0)
+              if (nReturn < 0)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->read(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
@@ -446,7 +445,7 @@ void Hub::process(string strPrefix)
             else
             {
               removals.push_back(sockets[fds[i].fd]);
-              //if (nReturn < 0)
+              if (nReturn < 0)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->write(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
