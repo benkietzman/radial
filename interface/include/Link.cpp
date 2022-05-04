@@ -774,7 +774,7 @@ void Link::socket(string strPrefix)
                   }
                   if (duplicates.size() > 1)
                   {
-                    duplicates.pop_back();
+                    duplicates.pop_front();
                     for (auto &duplicate : duplicates)
                     {
                       ssMessage.str("");
