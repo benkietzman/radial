@@ -71,7 +71,7 @@ size_t Link::add(radial_link *ptLink)
     bool bFound = false;
     for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
     {
-      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (*linkIter)->fdSocket == ptLink->fdSocket) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
+      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasSocket && (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
       {
         bool bClose = false;
         bFound = true;
@@ -202,7 +202,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
                     {
                       size_t unResult;
                       radial_link *ptSubLink = new radial_link;
-                      ptSubLink->bAuthenticated = false;
+                      ptSubLink->bAuthenticated = true;
                       ptSubLink->strNode = ptLink->m["Node"]->v;
                       ptSubLink->strServer = ptLink->m["Server"]->v;
                       ptSubLink->strPort = ptLink->m["Port"]->v;
