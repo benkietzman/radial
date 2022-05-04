@@ -71,7 +71,7 @@ size_t Link::add(radial_link *ptLink)
     bool bFound = false;
     for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
     {
-      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || ((bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
+      if ((bHasNode && (*linkIter)->strNode == ptLink->strNode) || (bHasServer && (*linkIter)->strServer == ptLink->strServer && (*linkIter)->strPort == ptLink->strPort))
       {
         bool bClose = false;
         bFound = true;
