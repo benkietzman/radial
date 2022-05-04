@@ -865,7 +865,7 @@ void Link::socket(string strPrefix)
                 m_mutex.lock();
                 for (auto &link : m_links)
                 {
-                  link->strBuffers[1].append(strJson);
+                  link->strBuffers[1].append(strJson + "\n");
                 }
                 m_mutex.unlock();
               }
