@@ -764,28 +764,24 @@ void Link::socket(string strPrefix)
                 nodes.unique();
                 for (auto &node : nodes)
                 {
-                  bool bFound = false;
                   list<list<radial_link *>::iterator> duplicates;
                   for (auto linkIter = m_links.begin(); linkIter != m_links.end(); linkIter++)
                   {
                     if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1)
                     {
-                      if (bFound)
-                      {
-                        duplicates.push_back(linkIter);
-                      }
-                      else
-                      {
-                        bFound = true;
-                      }
+                      duplicates.push_back(linkIter);
                     }
                   }
-                  for (auto &duplicate : duplicates)
+                  if (duplicates.size() > 1)
                   {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << " [" << (*duplicate)->strNode << "]:  Found duplicate link.";
-                    log(ssMessage.str());
-                    removals.push_back((*duplicate)->fdSocket);
+                    duplicates.pop_back();
+                    for (auto &duplicate : duplicates)
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << " [" << (*duplicate)->strNode << "]:  Found duplicate link.";
+                      log(ssMessage.str());
+                      removals.push_back((*duplicate)->fdSocket);
+                    }
                   }
                 }
                 CDuplicateTime[0] = CDuplicateTime[1];
