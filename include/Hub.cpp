@@ -497,7 +497,7 @@ void Hub::process(string strPrefix)
             }
             if (CShutdownTime[1] - CShutdownTime[0] > 2)
             {
-              setShutdown(strPrefix, "log");
+              setShutdown(strPrefix, "log", true);
             }
           }
           else

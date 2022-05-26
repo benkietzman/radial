@@ -40,5 +40,5 @@ void sighandle(const int nSignal)
   {
     gpHub->log(ssMessage.str());
   }
-  gpHub->setShutdown(ssPrefix.str());
+  gpHub->setShutdown(ssPrefix.str(), "", true);
 }
