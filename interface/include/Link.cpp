@@ -251,6 +251,9 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
             if (ptJson->m["Password"]->v == m_strPassword)
             {
               link->bAuthenticated = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << link->strNode << "]:  Authenticated.";
+              log(ssMessage.str());
             }
           }
           // }}}
