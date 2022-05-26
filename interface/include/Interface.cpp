@@ -284,9 +284,6 @@ void Interface::process(string strPrefix)
       if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
       {
         bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << ":  Exiting due to shutdown.";
-        log(ssMessage.str());
       }
       m_mutex.unlock();
     }
