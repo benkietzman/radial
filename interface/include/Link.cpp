@@ -348,7 +348,6 @@ void Link::socket(string strPrefix)
   stringstream ssMessage;
   strPrefix += "->Link::socket()";
   setlocale(LC_ALL, "");
-  sleep(5);
   // }}}
   if ((ctxS = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {

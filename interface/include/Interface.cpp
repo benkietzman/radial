@@ -32,6 +32,10 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   sigignore(SIGWINCH);
   m_callback = callback;
   m_strName = strName;
+  if (strName != "log")
+  {
+    msleep(500);
+  }
 }
 // }}}
 // {{{ ~Interface()
