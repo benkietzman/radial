@@ -248,6 +248,7 @@ void Hub::process(string strPrefix)
     pollfd *fds;
     size_t unIndex, unPosition;
     string strLine;
+    time_t CShutdownTime[2] = {0, 0};
     // }}}
     while (!bExit)
     {
@@ -482,9 +483,24 @@ void Hub::process(string strPrefix)
         {
           bExit = true;
         }
-        else if (m_interfaces.size() == 1 && m_interfaces.find("log") != m_interfaces.end())
+        else if (m_interfaces.size() == 1)
         {
-          setShutdown(strPrefix, "log");
+          if (m_interfaces.find("log") != m_interfaces.end())
+          {
+            time(&CShutdownTime[1]);
+            if (CShutdownTime[0] == 0)
+            {
+              CShutdownTime[0] = CShutdownTime[1]
+            }
+            if (CShutdownTime[1] - CShutdownTime[0] > 2)
+            {
+              setShutdown(strPrefix, "log");
+            }
+          }
+          else
+          {
+            bExit = true;
+          }
         }
       }
       // }}}
