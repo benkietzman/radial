@@ -211,7 +211,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
                       if ((unResult = add(ptSubLink)) > 0)
                       {
                         ssMessage.str("");
-                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " shared link.";
                         log(ssMessage.str());
                       }
                       else
@@ -642,7 +642,7 @@ void Link::socket(string strPrefix)
                       m_mutex.unlock();
                       if (unResult > 0)
                       {
-                        ssMessage << ":  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                        ssMessage << ":  " << ((unResult == 1)?"Added":"Updated") << " accepted link.";
                         log(ssMessage.str());
                       }
                       else
@@ -918,7 +918,7 @@ void Link::socket(string strPrefix)
                   if (unResult > 0)
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Link::add() [" << ptBootLink->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " link.";
+                    ssMessage << strPrefix << "->Link::add() [" << ptBootLink->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " bootstrapped link.";
                     log(ssMessage.str());
                   }
                   else
