@@ -491,6 +491,9 @@ void Hub::process(string strPrefix)
             if (CShutdownTime[0] == 0)
             {
               CShutdownTime[0] = CShutdownTime[1];
+              ssMessage.str("");
+              ssMessage << strPrefix << " [log]:  Interface shutdown.";
+              log(ssMessage.str());
             }
             if (CShutdownTime[1] - CShutdownTime[0] > 2)
             {
