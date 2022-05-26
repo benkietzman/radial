@@ -227,6 +227,9 @@ void Interface::process(string strPrefix)
               {
                 if (ptJson->m["Function"]->v == "shutdown")
                 {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << ":  Shutting down.";
+                  log(ssMessage.str());
                   setShutdown();
                 }
               }

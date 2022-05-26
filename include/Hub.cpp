@@ -562,19 +562,19 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
   {
     Base::setShutdown();
   }
-  for (auto &i : m_interfaces)
+  for (auto &interface : m_interfaces)
   {
-    if (!i.second->bShutdown && (strTarget.empty() || i.first == strTarget) && (i.first != "log" || strTarget == "log"))
+    if (!interface.second->bShutdown && (strTarget.empty() || interface.first == strTarget) && (interface.first != "log" || strTarget == "log"))
     {
       ssMessage.str("");
-      ssMessage << strPrefix << " [" << i.first << "]:  Interface shutdown.";
+      ssMessage << strPrefix << " [" << interface.first << "]:  Interface shutdown.";
       log(ssMessage.str());
       if (bStop)
       {
-        i.second->bRespawn = false;
+        interface.second->bRespawn = false;
       }
-      i.second->bShutdown = true;
-      i.second->strBuffers[1].append(strJson + "\n");
+      interface.second->bShutdown = true;
+      interface.second->strBuffers[1].append(strJson + "\n");
     }
   }
 }
