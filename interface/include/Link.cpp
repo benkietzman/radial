@@ -245,9 +245,6 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
             if (ptJson->m["Password"]->v == m_strPassword)
             {
               link->bAuthenticated = true;
-              ssMessage.str("");
-              ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << link->strNode << "]:  Authenticated.";
-              log(ssMessage.str());
             }
           }
           // }}}
@@ -528,9 +525,6 @@ void Link::socket(string strPrefix)
                   // {{{ prep work
                   sockaddr_storage addr;
                   socklen_t len = sizeof(addr);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->accept():  Accepted incoming socket.";
-                  log(ssMessage.str());
                   // }}}
                   if (getpeername(fdLink, (sockaddr *)&addr, &len) == 0)
                   {
@@ -547,9 +541,6 @@ void Link::socket(string strPrefix)
                       sockaddr_in6 *s = (sockaddr_in6 *)&addr;
                       inet_ntop(AF_INET6, &s->sin6_addr, szIP, sizeof(szIP));
                     }
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->getpeername() [" << szIP << "]:  Retrieved peer information.";
-                    log(ssMessage.str());
                     ERR_clear_error();
                     // }}}
                     if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, strError)) != NULL)
@@ -557,9 +548,6 @@ void Link::socket(string strPrefix)
                       size_t unResult;
                       Json *ptWrite = new Json;
                       radial_link *ptLink = new radial_link;
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Utility::sslAccept() [" << szIP << "]:  Accepted incoming socket.";
-                      log(ssMessage.str());
                       ptLink->bAuthenticated = false;
                       ptLink->fdSocket = fdLink;
                       ptLink->ssl = ssl;
