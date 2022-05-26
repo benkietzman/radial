@@ -23,12 +23,15 @@ namespace radial
 Base::Base(int argc, char **argv)
 {
   string strError;
+  utsname tServer;
 
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;
   time(&m_CMonitor[0]);
   m_strApplication = "Radial";
+  uname(&tServer);
+  m_strNode = tServer.nodename;
   m_ulMaxResident = 40 * 1024;
   m_unMonitor = 0;
   // {{{ command line arguments

@@ -331,6 +331,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ptJson = new Json(strBuffers[0].substr(0, unPosition));
             strBuffers[0].erase(0, (unPosition + 1));
             request(ptJson);
+            ptJson->insert("Node", m_strNode);
             ptJson->json(strBuffers[1]);
             strBuffers[1] += "\n";
             delete ptJson;

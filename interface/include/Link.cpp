@@ -401,12 +401,11 @@ void Link::socket(string strPrefix)
           pollfd *fds;
           list<int> removals;
           size_t unIndex, unLink = m_unLink, unPosition;
-          time_t CBroadcastTime[2], CUpdateTime[2], unBroadcastSleep = 5;
+          time_t CBroadcastTime[2], unBroadcastSleep = 5;
           ssMessage.str("");
           ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
           log(ssMessage.str());
           time(&CBroadcastTime[0]);
-          CUpdateTime[0] = CBroadcastTime[0];
           // }}}
           while (!bExit)
           {
@@ -937,11 +936,9 @@ void Link::socket(string strPrefix)
             if (m_bUpdate)
             {
               m_bUpdate = false;
-              time(&CUpdateTime[0]);
               unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
             }
-            time(&CUpdateTime[1]);
-            if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 5)
+            if (m_unLink != unLink)
             {
               ssMessage.str("");
               ssMessage << strPrefix << ":  Switched from ";
