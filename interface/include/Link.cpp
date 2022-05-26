@@ -941,7 +941,7 @@ void Link::socket(string strPrefix)
               unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
             }
             time(&CUpdateTime[1]);
-            if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 30)
+            if (m_unLink != unLink && (CUpdateTime[1] - CUpdateTime[0]) > 5)
             {
               ssMessage.str("");
               ssMessage << strPrefix << ":  Switched from ";
