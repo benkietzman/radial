@@ -633,7 +633,7 @@ void Link::socket(string strPrefix)
                     {
                       ssMessage.str("");
                       ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
-                      notify(ssMessage.str());
+                      log(ssMessage.str());
                       close(fdLink);
                     }
                   }
