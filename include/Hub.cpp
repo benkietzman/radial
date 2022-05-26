@@ -490,7 +490,7 @@ void Hub::process(string strPrefix)
             time(&CShutdownTime[1]);
             if (CShutdownTime[0] == 0)
             {
-              CShutdownTime[0] = CShutdownTime[1]
+              CShutdownTime[0] = CShutdownTime[1];
             }
             if (CShutdownTime[1] - CShutdownTime[0] > 2)
             {
