@@ -208,13 +208,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
                       ptSubLink->strPort = ptLink->m["Port"]->v;
                       ptSubLink->fdSocket = -1;
                       ptSubLink->ssl = NULL;
-                      if ((unResult = add(ptSubLink)) > 0)
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " shared link.";
-                        log(ssMessage.str());
-                      }
-                      else
+                      if ((unResult = add(ptSubLink)) <= 0)
                       {
                         ssMessage.str("");
                         ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
@@ -465,9 +459,6 @@ void Link::socket(string strPrefix)
                   if (bConnected[2])
                   {
                     Json *ptWrite = new Json;
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "]:  Connected to link.";
-                    log(ssMessage.str());
                     link->fdSocket = fdLink;
                     link->ssl = ssl;
                     ptWrite->insert("_function", "handshake");
@@ -637,19 +628,13 @@ void Link::socket(string strPrefix)
                         delete ptStorage;
                       }
                       */
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Link::add()";
                       m_mutex.lock();
                       unResult = add(ptLink);
                       m_mutex.unlock();
-                      if (unResult > 0)
+                      if (unResult <= 0)
                       {
-                        ssMessage << ":  " << ((unResult == 1)?"Added":"Updated") << " accepted link.";
-                        log(ssMessage.str());
-                      }
-                      else
-                      {
-                        ssMessage << " error:  Failed to add link.";
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Link::add() error:  Failed to add link.";
                         SSL_shutdown(ssl);
                         SSL_free(ssl);
                         close(fdLink);
@@ -776,9 +761,6 @@ void Link::socket(string strPrefix)
                   duplicates.pop_back();
                   for (auto &duplicate : duplicates)
                   {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << " [" << (*duplicate)->strNode << "]:  Found duplicate link.";
-                    log(ssMessage.str());
                     removals.push_back((*duplicate)->fdSocket);
                   }
                 }
@@ -821,9 +803,6 @@ void Link::socket(string strPrefix)
                     ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Unset as master.";
                     log(ssMessage.str());
                   }
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Removed link.";
-                  log(ssMessage.str());
                   delete (*removeIter);
                   m_links.erase(removeIter);
                 }
@@ -917,13 +896,7 @@ void Link::socket(string strPrefix)
                   m_mutex.lock();
                   unResult = add(ptLink);
                   m_mutex.unlock();
-                  if (unResult > 0)
-                  {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Link::add() [" << ptBootLink->m["Server"]->v << "]:  " << ((unResult == 1)?"Added":"Updated") << " bootstrapped link.";
-                    log(ssMessage.str());
-                  }
-                  else
+                  if (unResult <= 0)
                   {
                     ssMessage.str("");
                     ssMessage << strPrefix << "->Link::add() error [" << ptBootLink->m["Server"]->v << "]:  Failed to add link.";
@@ -978,9 +951,6 @@ void Link::socket(string strPrefix)
               ssMessage << strPrefix << "->close() [" << link->strNode << "]:  Closed link socket.";
               log(ssMessage.str());
             }
-            ssMessage.str("");
-            ssMessage << strPrefix << " [" << link->strNode << "]:  Removed link.";
-            log(ssMessage.str());
             delete link;
           }
           m_links.clear();
