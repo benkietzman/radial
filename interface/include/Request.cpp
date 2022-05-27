@@ -232,10 +232,30 @@ void Request::request(Json *ptJson)
           {
             target(ptJson->m["Interface"]->v, ptJson);
           }
+          else if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+          {
+            if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+            {
+              if (auth(ptJson, strError))
+              {
+                target(ptJson->m["Interface"]->v, ptJson);
+              }
+              else
+              {
+                ptJson->insert("Status", "error");
+                ptJson->insert("Error", strError);
+              }
+            }
+            else
+            {
+              ptJson->insert("Status", "error");
+              ptJson->insert("Error", "Please provide the Password.");
+            }
+          }
           else
           {
             ptJson->insert("Status", "error");
-            ptJson->insert("Error", "Access to interface is restricted.");
+            ptJson->insert("Error", "Please provide the User.");
           }
         }
         else

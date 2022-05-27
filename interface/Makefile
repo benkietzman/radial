@@ -10,13 +10,24 @@ prefix=/usr/local
 all: bin/log bin/mysql bin/request bin/storage
 # }}}
 
-install: bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
+install: bin/auth bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
+	install --mode=777 bin/auth $(prefix)/radial/interface/
 	install --mode=777 bin/link $(prefix)/radial/interface/
 	install --mode=777 bin/log $(prefix)/radial/interface/
 	install --mode=777 bin/mysql $(prefix)/radial/interface/
 	install --mode=777 bin/request $(prefix)/radial/interface/
 	install --mode=777 bin/storage $(prefix)/radial/interface/
 
+# {{{ auth
+auth: bin/auth $(prefix)/radial/interface
+	install --mode=777 bin/auth $(prefix)/radial/interface/
+bin/auth: ../../common/libcommon.a obj/auth.o obj/Base.o obj/Interface.o obj/Auth.o bin
+	g++ -o bin/auth obj/auth.o obj/Base.o obj/Interface.o obj/Auth.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/auth.o: auth.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c auth.cpp -o obj/auth.o $(CPPFLAGS) -I../../common
+obj/Auth.o: include/Auth.cpp obj
+	g++ -ggdb -Wall -c include/Auth.cpp -o obj/Auth.o $(CPPFLAGS) -I../../common
+# }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface
 	install --mode=777 bin/link $(prefix)/radial/interface/

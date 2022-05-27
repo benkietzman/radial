@@ -32,6 +32,7 @@ class Interface : public Base
   string m_strBuffers[2];
   string m_strName;
 
+  bool auth(Json *ptJson, string &strError);
   void log(const string strFunction, const string strMessage);
   void monitor(string strPrefix);
   void response(Json *ptJson);

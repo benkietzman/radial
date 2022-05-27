@@ -49,6 +49,30 @@ void Interface::alert(const string strMessage)
   log("alert", strMessage);
 }
 // }}}
+// {{{ auth()
+bool Interface::auth(Json *ptJson, string &strError)
+{
+  bool bResult = false;
+  Json *ptAuth = new Json(ptJson);
+
+  target("auth", ptAuth);
+  if (ptAuth->m.find("Status") != ptAuth->m.end() && ptAuth->m["Status"]->v == "okay")
+  {
+    bResult = true;
+  }
+  else if (ptAuth->m.find("Error") != ptAuth->m.end() && !ptAuth->m["Error"]->v.empty())
+  {
+    strError = ptAuth->m["Error"]->v;
+  }
+  else
+  {
+    strError = "Encountered an unknown error.";
+  }
+  delete ptAuth;
+
+  return bResult;
+}
+// }}}
 // {{{ log()
 void Interface::log(const string strMessage)
 {

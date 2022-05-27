@@ -167,13 +167,22 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
   }
   else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
-    if (ptJson->m["Function"]->v == "list")
+    if (ptJson->m["Function"]->v == "ping")
+    {
+      bResult = true;
+    }
+    else if (ptJson->m["Function"]->v == "status")
     {
       list<string> links;
+      Json *ptStatus = new Json;
       bResult = true;
+      if (!m_strMaster.empty())
+      {
+        ptStatus->insert("Master", m_strMaster);
+      }
       if (m_ptLink->m.find("Node") != m_ptLink->m.end() && !m_ptLink->m["Node"]->v.empty())
       {
-        links.push_back(m_ptLink->m["Node"]->v);
+        ptStatus->insert("Node", m_ptLink->m["Node"]->v);
       }
       m_mutex.lock();
       for (auto &link : m_links)
@@ -186,15 +195,16 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
       m_mutex.unlock();
       links.sort();
       links.unique();
-      ptJson->insert("Response", links);
-    }
-    else if (ptJson->m["Function"]->v == "ping")
-    {
-      bResult = true;
+      if (!links.empty())
+      {
+        ptStatus->insert("Links", links);
+      }
+      ptJson->insert("Response", ptStatus);
+      delete ptStatus;
     }
     else
     {
-      strError = "Please provide a valid Function:  ping.";
+      strError = "Please provide a valid Function:  ping, status.";
     }
   }
   else
