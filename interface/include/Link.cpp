@@ -167,7 +167,28 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
   }
   else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
-    if (ptJson->m["Function"]->v == "ping")
+    if (ptJson->m["Function"]->v == "list")
+    {
+      list<string> links;
+      bResult = true;
+      if (m_ptLink->m.find("Node") != m_ptLink->m.end() && !m_ptLink->m["Node"]->v.empty())
+      {
+        links.push_back(m_ptLink->m["Node"]->v);
+      }
+      m_mutex.lock();
+      for (auto &link : m_links)
+      {
+        if (!link->strNode.empty())
+        {
+          links.push_back(link->strNode);
+        }
+      }
+      m_mutex.unlock();
+      links.sort();
+      links.unique();
+      ptJson->insert("Response", links);
+    }
+    else if (ptJson->m["Function"]->v == "ping")
     {
       bResult = true;
     }
