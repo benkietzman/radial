@@ -346,7 +346,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
+              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
             }
             else
             {
@@ -374,7 +374,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
+              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
             }
             else
             {

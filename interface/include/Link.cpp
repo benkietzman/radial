@@ -693,7 +693,7 @@ void Link::socket(string strPrefix)
                         if (nReturn < 0)
                         {
                           ssMessage.str("");
-                          ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror();
+                          ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror(link->ssl, nReturn);
                           log(ssMessage.str());
                         }
                       }
@@ -709,7 +709,7 @@ void Link::socket(string strPrefix)
                         if (nReturn < 0)
                         {
                           ssMessage.str("");
-                          ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror();
+                          ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(link->ssl, nReturn) << ") error [" << link->strNode << "]:  " << m_pUtility->sslstrerror(link->ssl, nReturn);
                           log(ssMessage.str());
                         }
                       }
