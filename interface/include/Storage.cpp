@@ -30,7 +30,7 @@ Storage::~Storage()
 }
 // }}}
 // {{{ callback()
-void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse, const bool bBroadcast)
 {
   bool bResult = false;
   string strError;
@@ -82,11 +82,12 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
         ptJson->m["Response"] = ptData;
       }
     }
-    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update"))
+    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (ptJson->m.find("Broadcast") == ptJson->m.end() || ptJson->m["Broadcast"]->v == "1"))
     {
       Json *ptLink = new Json;
       ptLink->insert("Interface", "storage");
       ptLink->insert("Function", ptJson->m["Function"]->v);
+      ptLink->insert("Broadcast", "0", '0');
       ptLink->insert("Keys", keys);
       if (ptJson->m["Function"]->v != "remove" && ptJson->m.find("Request") != ptJson->m.end())
       {
