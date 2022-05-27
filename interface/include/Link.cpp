@@ -991,18 +991,9 @@ void Link::storageTransmit(string strPrefix, radial_link *ptLink)
     ptWrite->insert("Interface", "storage");
     ptWrite->insert("Function", "update");
     ptWrite->insert("Request", ptStorage);
-    ssMessage.str("");
-    ssMessage << strPrefix << " [" << ptLink->strServer << "]:  Allocated copy of storage for transmission.";
-    log(ssMessage.str());
     ssWrite << ptWrite << endl;
     delete ptWrite;
-    ssMessage.str("");
-    ssMessage << strPrefix << " [" << ptLink->strServer << "]:  Encoded " << ssWrite.str().size() << " bytes of storage for transmission.";
-    log(ssMessage.str());
     ptLink->strBuffers[1].append(ssWrite.str());
-    ssMessage.str("");
-    ssMessage << strPrefix << " [" << ptLink->strServer << "]:  Appended storage to link output buffer.";
-    log(ssMessage.str());
   }
   // {{{ post work
   delete ptStorage;
