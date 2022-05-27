@@ -30,7 +30,7 @@ Storage::~Storage()
 }
 // }}}
 // {{{ callback()
-void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse, const bool bBroadcast)
+void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;
