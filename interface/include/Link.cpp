@@ -131,11 +131,26 @@ size_t Link::add(radial_link *ptLink)
 void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
-  string strError;
+  string strError, strJson;
   stringstream ssMessage;
 
   strPrefix += "->Link::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  {
+    bResult = true;
+    ptJson->json(strJson);
+    strJson += "\n";
+    m_mutex.lock();
+    for (auto &link : m_links)
+    {
+      if (link->bAuthenticated)
+      {
+        link->strBuffer[1].append(strJson);
+      }
+    }
+    m_mutex.unlock();
+  }
+  else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m["Function"]->v == "ping")
     {
