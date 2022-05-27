@@ -913,7 +913,7 @@ void Link::socket(string strPrefix)
             {
               m_unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
               ssMessage.str("");
-              ssMessage << strPrefix << ":  " << ((m_unLink == RADIAL_LINK_MASTER)?"Master":"Slave") << " mode.";
+              ssMessage << strPrefix << ":  Switched to " << ((m_unLink == RADIAL_LINK_MASTER)?"master":"slave") << " mode.";
               log(ssMessage.str());
             }
             // }}}
