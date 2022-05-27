@@ -137,8 +137,23 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
   strPrefix += "->Link::callback()";
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
+    list<string> removals;
+    Json *ptSubJson = new Json(ptJson);
     bResult = true;
-    ptJson->json(strJson);
+    for (auto &i : ptSubJson->m)
+    {
+      if (!i.first.empty() && i.first[0] == '_')
+      {
+        removals.push_back(i.first);
+      }
+    }
+    while (!removals.empty())
+    {
+      delete ptSubJson->m[removals.front()];
+      ptSubJson->m.erase(removals.front());
+      removals.pop_front();
+    }
+    ptSubJson->json(strJson);
     strJson += "\n";
     m_mutex.lock();
     for (auto &link : m_links)
