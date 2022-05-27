@@ -298,9 +298,6 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
             m_bUpdate = true;
           }
           m_strMaster = ptJson->m["Node"]->v;
-          ssMessage.str("");
-          ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << ptJson->m["Node"]->v << "]:  Set as master.";
-          log(ssMessage.str());
         }
         // }}}
       }
@@ -818,14 +815,11 @@ void Link::socket(string strPrefix)
             {
               unsigned int unSeed = CBroadcastTime[1];
               srand(unSeed);
-              unBroadcastSleep = (rand_r(&unSeed) % 10) + 1;
+              unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
               if (m_strMaster.empty())
               {
                 m_bUpdate = true;
                 m_strMaster = m_ptLink->m["Node"]->v;
-                ssMessage.str("");
-                ssMessage << strPrefix << " [" << m_ptLink->m["Node"]->v << "]:  Set as master.";
-                log(ssMessage.str());
               }
               if (!m_strMaster.empty())
               {
