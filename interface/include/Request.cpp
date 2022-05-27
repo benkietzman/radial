@@ -196,6 +196,8 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = tr
 // {{{ request()
 void Request::request(Json *ptJson)
 {
+  string strError;
+
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
     list<string> removals;
