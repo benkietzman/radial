@@ -145,7 +145,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
     {
       if (link->bAuthenticated)
       {
-        link->strBuffer[1].append(strJson);
+        link->strBuffers[1].append(strJson);
       }
     }
     m_mutex.unlock();
