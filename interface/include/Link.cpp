@@ -245,6 +245,10 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
             if (ptJson->m["Password"]->v == m_strPassword)
             {
               link->bAuthenticated = true;
+              if (m_unLink == RADIAL_LINK_MASTER)
+              {
+                storageTransmit(strPrefix, link);
+              }
             }
           }
           // }}}
@@ -493,6 +497,10 @@ void Link::socket(string strPrefix)
                       ptWrite->insert("Node", m_strMaster);
                       delete ptWrite;
                     }
+                    if (m_unLink == RADIAL_LINK_MASTER)
+                    {
+                      storageTransmit(strPrefix, link);
+                    }
                   }
                 }
                 else
@@ -591,33 +599,6 @@ void Link::socket(string strPrefix)
                         ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
                         delete ptWrite;
                       }
-                      /*
-                      if (m_unLink == RADIAL_LINK_MASTER)
-                      {
-                        Json *ptStorage = new Json;
-                        if (storageRetrieve(ptStorage, strError))
-                        {
-                          stringstream ssWrite;
-                          ptWrite = new Json;
-                          ptWrite->insert("_function", "storage");
-                          ptWrite->insert("Function", "update");
-                          ptWrite->insert("Request", ptStorage);
-                          ssMessage.str("");
-                          ssMessage << strPrefix << ":  Allocated copy of storage for transmission.";
-                          log(ssMessage.str());
-                          ssWrite << ptWrite << endl;
-                          delete ptWrite;
-                          ssMessage.str("");
-                          ssMessage << strPrefix << ":  Encoded " << ssWrite.str().size() << " bytes of storage for transmission.";
-                          log(ssMessage.str());
-                          ptLink->strBuffers[1].append(ssWrite.str());
-                          ssMessage.str("");
-                          ssMessage << strPrefix << ":  Appended storage to link output buffer.";
-                          log(ssMessage.str());
-                        }
-                        delete ptStorage;
-                      }
-                      */
                       m_mutex.lock();
                       unResult = add(ptLink);
                       m_mutex.unlock();
@@ -991,6 +972,40 @@ void Link::socket(string strPrefix)
   }
   // {{{ post work
   m_pUtility->sslDeinit();
+  // }}}
+}
+// }}}
+// {{{ storageTransmit()
+void Link::storageTransmit(string strPrefix, radial_link *ptLink)
+{
+  // {{{ prep work
+  string strError;
+  stringstream ssMessage;
+  strPrefix += "->Link::storageTransmit()";
+  Json *ptStorage = new Json;
+  // }}}
+  if (storageRetrieve(ptStorage, strError))
+  {
+    stringstream ssWrite;
+    Json *ptWrite = new Json;
+    ptWrite->insert("Interface", "storage");
+    ptWrite->insert("Function", "update");
+    ptWrite->insert("Request", ptStorage);
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << ptLink->strNode << "]:  Allocated copy of storage for transmission.";
+    log(ssMessage.str());
+    ssWrite << ptWrite << endl;
+    delete ptWrite;
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << ptLink->strNode << "]:  Encoded " << ssWrite.str().size() << " bytes of storage for transmission.";
+    log(ssMessage.str());
+    ptLink->strBuffers[1].append(ssWrite.str());
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << ptLink->strNode << "]:  Appended storage to link output buffer.";
+    log(ssMessage.str());
+  }
+  // {{{ post work
+  delete ptStorage;
   // }}}
 }
 // }}}
