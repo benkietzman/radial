@@ -316,12 +316,14 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
       ptJson->insert("Status", "error");
       ptJson->insert("Error", "Failed authentication.");
     }
+    ptJson->json(strJson);
+    strJson += "\n";
     m_mutex.lock();
     for (auto &link : m_links)
     {
       if (link->fdSocket == fdSocket)
       {
-        link->strBuffers[1].append(ptJson->json(strJson) + "\n");
+        link->strBuffers[1].append(strJson);
       }
     }
     m_mutex.unlock();
@@ -825,7 +827,7 @@ void Link::socket(string strPrefix)
                 m_mutex.lock();
                 for (auto &link : m_links)
                 {
-                  link->strBuffers[1].append(strJson + "\n");
+                  link->strBuffers[1].append(strJson);
                 }
                 m_mutex.unlock();
               }
