@@ -790,16 +790,10 @@ void Link::socket(string strPrefix)
                   if ((*removeIter)->fdSocket != -1)
                   {
                     close((*removeIter)->fdSocket);
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->close() [" << (*removeIter)->strNode << "]:  Closed link socket.";
-                    log(ssMessage.str());
                   }
                   if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
                   {
                     m_strMaster.clear();
-                    ssMessage.str("");
-                    ssMessage << strPrefix << " [" << (*removeIter)->strNode << "]:  Unset as master.";
-                    log(ssMessage.str());
                   }
                   delete (*removeIter);
                   m_links.erase(removeIter);
