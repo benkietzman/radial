@@ -205,13 +205,16 @@ void Interface::process(string strPrefix)
     fds[0].events = POLLIN;
     fds[1].fd = -1;
     fds[1].events = POLLOUT;
-    m_mutex.lock();
-    if (m_strBuffers[1].empty() && !m_responses.empty())
+    if (m_strBuffers[1].empty())
     {
-      m_strBuffers[1] = m_responses.front() + "\n";
-      m_responses.pop_front();
+      m_mutex.lock();
+      while (!m_responses.empty())
+      {
+        m_strBuffers[1].append(m_responses.front() + "\n");
+        m_responses.pop_front();
+      }
+      m_mutex.unlock();
     }
-    m_mutex.unlock();
     if (!m_strBuffers[1].empty())
     {
       fds[1].fd = 1;
