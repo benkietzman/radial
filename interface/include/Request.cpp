@@ -119,9 +119,6 @@ void Request::accept(string strPrefix)
           if (shutdown())
           {
             bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << ":  Exiting due to shutdown.";
-            log(ssMessage.str());
           }
         }
       }
