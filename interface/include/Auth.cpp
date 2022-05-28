@@ -83,23 +83,24 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
         {
-          if (m_ptWarden->authz(ptJson, strError))
+          Json *ptData = new Json(ptJson);
+          if (m_ptWarden->authz(ptData, strError))
           {
-            if (ptJson->m.find("radial") != ptJson->m.end() && ptJson->m["radial"]->m.find("Access") != ptJson->m["radial"]->m.end() && ptJson->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptJson->m["radial"]->m["Access"]->m.end())
+            if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {
-              if (ptJson->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == "all")
+              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == "all")
               {
                 bResult = true;
               }
               else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
               {
-                if (ptJson->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == ptJson->m["Function"]->v)
+                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == ptJson->m["Function"]->v)
                 {
                   bResult = true;
                 }
                 else
                 {
-                  for (auto &access : ptJson->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->l)
+                  for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->l)
                   {
                     if (access->v == ptJson->m["Function"]->v)
                     {
@@ -122,6 +123,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
               strError = "Authorization denied.";
             }
           }
+          delete ptData;
         }
         else
         {
