@@ -957,9 +957,6 @@ void Link::socket(string strPrefix)
             if (link->fdSocket != -1)
             {
               close(link->fdSocket);
-              ssMessage.str("");
-              ssMessage << strPrefix << "->close() [" << link->strNode << "]:  Closed link socket.";
-              log(ssMessage.str());
             }
             delete link;
           }
