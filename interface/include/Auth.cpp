@@ -99,19 +99,14 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 }
                 else
                 {
-                  bool bFound = false;
                   for (auto &access : ptJson->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->l)
                   {
                     if (access->v == ptJson->m["Function"]->v)
                     {
-                      bFound = true;
+                      bResult = true;
                     }
                   }
-                  if (bFound)
-                  {
-                    bResult = true;
-                  }
-                  else
+                  if (!bResult)
                   {
                     strError = "Authorization denied.";
                   }

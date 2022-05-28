@@ -230,34 +230,14 @@ void Request::request(Json *ptJson)
       {
         if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
         {
-          if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0")
+          if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0" || auth(ptJson, strError))
           {
             target(ptJson->m["Interface"]->v, ptJson);
-          }
-          else if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
-          {
-            if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
-            {
-              if (auth(ptJson, strError))
-              {
-                target(ptJson->m["Interface"]->v, ptJson);
-              }
-              else
-              {
-                ptJson->insert("Status", "error");
-                ptJson->insert("Error", strError);
-              }
-            }
-            else
-            {
-              ptJson->insert("Status", "error");
-              ptJson->insert("Error", "Please provide the Password.");
-            }
           }
           else
           {
             ptJson->insert("Status", "error");
-            ptJson->insert("Error", "Please provide the User.");
+            ptJson->insert("Error", strError);
           }
         }
         else
