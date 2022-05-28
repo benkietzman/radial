@@ -135,7 +135,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
   stringstream ssMessage;
 
   strPrefix += "->Link::callback()";
-  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
   {
     list<string> removals;
     Json *ptSubJson = new Json(ptJson);
