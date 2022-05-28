@@ -151,6 +151,15 @@ bool Hub::load(string strPrefix, string &strError)
       ssJson << strLine;
     }
     ptInterfaces = new Json(ssJson.str());
+    if (ptInterfaces->m.find("log") != ptInterfaces->m.end() && ptInterfaces->m["log"]->m.find("Command") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["Command"]->v.empty())
+    {
+      if (!add(strPrefix, "log", ptInterfaces->m["log"]->m["Command"]->v, ((ptInterfaces->m["log"]->m.find("Respawn") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m["log"]->m.find("Restricted") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+      {
+        bResult = false;
+      }
+      delete ptInterfaces->m["log"];
+      ptInterfaces->m.erase("log");
+    }
     for (auto &i : ptInterfaces->m)
     {
       if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
