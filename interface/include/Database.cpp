@@ -99,11 +99,11 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   stringstream ssMessage;
 
   strPrefix += "->Database::callback()";
-  if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
     {
-      auto rows = m_ptCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, strError);
+      auto rows = m_ptCentral->query(ptJson->m["Function"]->v, ptJson->m["Query"]->v, strError);
       if (rows != NULL)
       {
         bResult = true;
@@ -120,7 +120,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
     {
-      if (m_ptCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, strError))
+      if (m_ptCentral->update(ptJson->m["Function"]->v, ptJson->m["Update"]->v, strError))
       {
         bResult = true;
       }
@@ -132,7 +132,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   else
   {
-    strError = "Please provide the Database.";
+    strError = "Please provide the Function.";
   }
   ptJson->insert("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
