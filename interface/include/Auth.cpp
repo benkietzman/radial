@@ -101,21 +101,22 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
-          if (m_accessFunctions.find(ptJson->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Interface"]->v] != "Function" && ptData->m.find(m_accessFunctions[ptJson->m["Interface"]->v]) != ptData->m.end() && !ptData->m[m_accessFunctions[ptJson->m["Interface"]->v]]->v.empty())
-          {
-            ptData->insert("Function", ptData->m[m_accessFunctions[ptJson->m["Interface"]->v]]->v);
-          }
           if (m_pWarden->authz(ptData, strError))
           {
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {
+              string strAccessFunction = "Function";
+              if (m_accessFunctions.find(ptJson->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Interface"]->v] != "Function")
+              {
+                strAccessFunction = m_accessFunctions[ptJson->m["Interface"]->v];
+              }
               if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == "all")
               {
                 bResult = true;
               }
-              else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+              else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
               {
-                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == ptJson->m["Function"]->v)
+                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
                 {
                   bResult = true;
                 }
@@ -123,7 +124,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 {
                   for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->l)
                   {
-                    if (access->v == ptJson->m["Function"]->v)
+                    if (access->v == ptJson->m[strAccessFunction]->v)
                     {
                       bResult = true;
                     }
