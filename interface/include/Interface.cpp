@@ -55,18 +55,9 @@ bool Interface::auth(Json *ptJson, string &strError)
   bool bResult = false;
   Json *ptAuth = new Json(ptJson);
 
-  target("auth", ptAuth);
-  if (ptAuth->m.find("Status") != ptAuth->m.end() && ptAuth->m["Status"]->v == "okay")
+  if (target("auth", ptAuth, strError))
   {
     bResult = true;
-  }
-  else if (ptAuth->m.find("Error") != ptAuth->m.end() && !ptAuth->m["Error"]->v.empty())
-  {
-    strError = ptAuth->m["Error"]->v;
-  }
-  else
-  {
-    strError = "Encountered an unknown error.";
   }
   delete ptAuth;
 
@@ -127,8 +118,7 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   ptJson->insert("Password", strPassword);
   ptJson->insert("Database", strDatabase);
   ptJson->insert(strType, strQuery);
-  target("mysql", ptJson);
-  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+  if (target("mysql", ptJson, strError))
   {
     bResult = true;
     if (ptJson->m.find("Response") != ptJson->m.end())
@@ -150,14 +140,6 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
     }
-  }
-  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
-  {
-    strError = ptJson->m["Error"]->v;
-  }
-  else
-  {
-    strError = "Encountered an unknown error.";
   }
   delete ptJson;
 
@@ -345,8 +327,7 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
   {
     ptSubJson->insert("Request", ptJson);
   }
-  target("storage", ptSubJson);
-  if (ptSubJson->m.find("Status") != ptSubJson->m.end() && ptSubJson->m["Status"]->v == "okay")
+  if (target("storage", ptSubJson, strError))
   {
     bResult = true;
     if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
@@ -355,14 +336,6 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
       ptJson->clear();
       ptJson->parse(strJson);
     }
-  }
-  else if (ptSubJson->m.find("Error") != ptSubJson->m.end() && !ptSubJson->m["Error"]->v.empty())
-  {
-    strError = ptSubJson->m["Error"]->v;
-  }
-  else
-  {
-    strError = "Encountered an unknown error.";
   }
   delete ptSubJson;
 
@@ -421,7 +394,7 @@ bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &str
 // {{{ target()
 void Interface::target(Json *ptJson, const bool bWait)
 {
-  return target("", ptJson, bWait);
+  target("", ptJson, bWait);
 }
 void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
 {
@@ -497,6 +470,30 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     m_responses.push_back(ptJson->json(strJson));
     m_mutex.unlock();
   }
+}
+bool Interface::target(Json *ptJson, string &strError)
+{
+  return target("", ptJson, strError);
+}
+bool Interface::target(const string strTarget, Json *ptJson, string &strError)
+{
+  bool bResult = false;
+
+  target(strTarget, ptJson, true);
+  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+  {
+    bResult = true;
+  }
+  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+  {
+    strError = ptJson->m["Error"]->v;
+  }
+  else
+  {
+    strError = "Encountered an unknown error.";
+  }
+
+  return bResult;
 }
 // }}}
 }

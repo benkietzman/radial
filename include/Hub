@@ -30,6 +30,7 @@ struct radialHubInterface
   int fdRead;
   int fdWrite;
   pid_t nPid;
+  string strAccessFunction;
   string strBuffers[2];
   string strCommand;
 };
@@ -41,7 +42,7 @@ class Hub : public Base
   char **m_env;
   map<string, radialHubInterface *> m_interfaces;
 
-  bool add(string strPrefix, const string strName, const string strCommand, const bool bRespawn, const bool bRestricted);
+  bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted);
   bool load(string strPrefix, string &strError);
   void log(const string strFunction, const string strMessage);
   void monitor(string strPrefix);

@@ -45,12 +45,29 @@ Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *
   m_pWarden = NULL;
   if (!strWarden.empty())
   {
-    m_pWarden = new Warden("Radial", strWarden, m_strError);
-    if (!m_strError.empty())
+    Json *ptJson = new Json;
+    ptJson->insert("Function", "list");
+    if (target(ptJson, m_strError))
     {
-      delete m_pWarden;
-      m_pWarden = NULL;
+      if (ptJson->m.find("Response") != ptJson->m.end())
+      {
+        for (auto &interface : ptJson->m["Response"]->m)
+        {
+          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
+        }
+        m_pWarden = new Warden("Radial", strWarden, m_strError);
+        if (!m_strError.empty())
+        {
+          delete m_pWarden;
+          m_pWarden = NULL;
+        }
+      }
+      else
+      {
+        m_strError = "Failed to receive response.";
+      }
     }
+    delete ptJson;
   }
   else
   {
@@ -84,6 +101,10 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
+          if (m_accessFunctions.find(ptJson->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Interface"]->v] != "Function" && ptData->m.find(m_accessFunctions[ptJson->m["Interface"]->v]) != ptData->m.end() && !ptData->m[m_accessFunctions[ptJson->m["Interface"]->v]]->v.empty())
+          {
+            ptData->insert("Function", ptData->m[m_accessFunctions[ptJson->m["Interface"]->v]]->v);
+          }
           if (m_pWarden->authz(ptData, strError))
           {
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())

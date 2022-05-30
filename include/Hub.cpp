@@ -45,7 +45,7 @@ Hub::~Hub()
 }
 // }}}
 // {{{ add()
-bool Hub::add(string strPrefix, const string strName, const string strCommand, const bool bRespawn, const bool bRestricted)
+bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted)
 {
   bool bResult = false;
   stringstream ssMessage;
@@ -98,6 +98,7 @@ bool Hub::add(string strPrefix, const string strName, const string strCommand, c
           m_interfaces[strName]->fdRead = readpipe[0];
           m_interfaces[strName]->fdWrite = writepipe[1];
           m_interfaces[strName]->nPid = nPid;
+          m_interfaces[strName]->strAccessFunction = strAccessFunction;
           m_interfaces[strName]->strCommand = strCommand;
         }
         else
@@ -153,7 +154,7 @@ bool Hub::load(string strPrefix, string &strError)
     ptInterfaces = new Json(ssJson.str());
     if (ptInterfaces->m.find("log") != ptInterfaces->m.end() && ptInterfaces->m["log"]->m.find("Command") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["Command"]->v.empty())
     {
-      if (!add(strPrefix, "log", ptInterfaces->m["log"]->m["Command"]->v, ((ptInterfaces->m["log"]->m.find("Respawn") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m["log"]->m.find("Restricted") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+      if (!add(strPrefix, "log", ((ptInterfaces->m["log"]->m.find("AccessFunction") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["AccessFunction"]->v.empty())?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ((ptInterfaces->m["log"]->m.find("Respawn") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m["log"]->m.find("Restricted") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
       {
         bResult = false;
       }
@@ -164,7 +165,7 @@ bool Hub::load(string strPrefix, string &strError)
     {
       if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
       {
-        if (!add(strPrefix, i.first, i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false)))
+        if (!add(strPrefix, i.first, ((i.second->m.find("AccessFunction") != i.second->m.end() && !i.second->m["AccessFunction"]->v.empty())?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false)))
         {
           bResult = false;
         }
@@ -337,7 +338,7 @@ void Hub::process(string strPrefix)
                       {
                         if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
                         {
-                          if (add(strPrefix, ptJson->m["Name"]->v, ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
+                          if (add(strPrefix, ptJson->m["Name"]->v, ((ptJson->m.find("AccessFunction") != ptJson->m.end() && !ptJson->m["AccessFunction"]->v.empty())?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
                           {
                             bResult = true;
                           }
@@ -367,6 +368,7 @@ void Hub::process(string strPrefix)
                         stringstream ssPid;
                         ssPid << i.second->nPid;
                         ptJson->m["Response"]->m[i.first] = new Json;
+                        ptJson->m["Response"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
                         ptJson->m["Response"]->m[i.first]->insert("Command", i.second->strCommand);
                         ptJson->m["Response"]->m[i.first]->insert("PID", ssPid.str(), 'n');
                         ptJson->m["Response"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
@@ -545,7 +547,7 @@ void Hub::remove(string strPrefix, const string strName)
     log(ssMessage.str());
     if (!shutdown() && m_interfaces[strName]->bRespawn)
     {
-      add(strPrefix, strName, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted);
+      add(strPrefix, strName, m_interfaces[strName]->strAccessFunction, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted);
     }
     else
     {

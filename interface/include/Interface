@@ -56,6 +56,8 @@ class Interface : public Base
   bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
   void target(Json *ptJson, const bool bWait = true);
   void target(const string strTarget, Json *ptJson, const bool bWait = true);
+  bool target(Json *ptJson, string &strError);
+  bool target(const string strTarget, Json *ptJson, string &strError);
 };
 // }}}
 }

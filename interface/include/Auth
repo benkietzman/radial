@@ -25,6 +25,7 @@ namespace radial
 class Auth : public Interface
 {
   protected:
+  map<string, string> m_accessFunctions;
   string m_strError;
   Warden *m_pWarden;
 
