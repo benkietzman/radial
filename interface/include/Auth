@@ -26,7 +26,7 @@ class Auth : public Interface
 {
   protected:
   string m_strError;
-  Warden *m_ptWarden;
+  Warden *m_pWarden;
 
   public:
   Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);

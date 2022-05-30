@@ -42,14 +42,14 @@ Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *
     }
   }
   // }}}
-  m_ptWarden = NULL;
+  m_pWarden = NULL;
   if (!strWarden.empty())
   {
-    m_ptWarden = new Warden("Radial", strWarden, m_strError);
+    m_pWarden = new Warden("Radial", strWarden, m_strError);
     if (!m_strError.empty())
     {
-      delete m_ptWarden;
-      m_ptWarden = NULL;
+      delete m_pWarden;
+      m_pWarden = NULL;
     }
   }
   else
@@ -61,9 +61,9 @@ Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *
 // {{{ ~Auth()
 Auth::~Auth()
 {
-  if (m_ptWarden != NULL)
+  if (m_pWarden != NULL)
   {
-    delete m_ptWarden;
+    delete m_pWarden;
   }
 }
 // }}}
@@ -75,7 +75,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   stringstream ssMessage;
 
   strPrefix += "->Auth::callback()";
-  if (m_ptWarden != NULL)
+  if (m_pWarden != NULL)
   {
     if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
     {
@@ -84,7 +84,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
-          if (m_ptWarden->authz(ptData, strError))
+          if (m_pWarden->authz(ptData, strError))
           {
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {

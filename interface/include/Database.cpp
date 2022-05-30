@@ -42,15 +42,15 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
     }
   }
   // }}}
-  m_ptCentral = NULL;
+  m_pCentral = NULL;
   m_ptDatabases = NULL;
   if (!strWarden.empty())
   {
-    m_ptCentral = new Central(m_strError);
+    m_pCentral = new Central(m_strError);
     if (m_strError.empty())
     {
       Warden *ptWarden = new Warden("Radial", strWarden, m_strError);
-      m_ptCentral->setMysql(pMysql);
+      m_pCentral->setMysql(pMysql);
       if (m_strError.empty())
       {
         m_ptDatabases = new Json;
@@ -60,7 +60,7 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
           {
             map<string, string> cred;
             database.second->flatten(cred, true, false);
-            m_ptCentral->addDatabase(database.first, cred, strError);
+            m_pCentral->addDatabase(database.first, cred, strError);
           }
         }
       }
@@ -68,8 +68,8 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
     }
     else
     {
-      delete m_ptCentral;
-      m_ptCentral = NULL;
+      delete m_pCentral;
+      m_pCentral = NULL;
     }
   }
   else
@@ -81,9 +81,9 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
 // {{{ ~Database()
 Database::~Database()
 {
-  if (m_ptCentral != NULL)
+  if (m_pCentral != NULL)
   {
-    delete m_ptCentral;
+    delete m_pCentral;
   }
   if (m_ptDatabases != NULL)
   {
@@ -99,13 +99,13 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   stringstream ssMessage;
 
   strPrefix += "->Database::callback()";
-  if (m_ptCentral != NULL)
+  if (m_pCentral != NULL)
   {
     if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
     {
       if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
       {
-        auto rows = m_ptCentral->query(ptJson->m["Function"]->v, ptJson->m["Query"]->v, strError);
+        auto rows = m_pCentral->query(ptJson->m["Function"]->v, ptJson->m["Query"]->v, strError);
         if (rows != NULL)
         {
           bResult = true;
@@ -118,11 +118,11 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
             }
           }
         }
-        m_ptCentral->free(rows);
+        m_pCentral->free(rows);
       }
       else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
       {
-        if (m_ptCentral->update(ptJson->m["Function"]->v, ptJson->m["Update"]->v, strError))
+        if (m_pCentral->update(ptJson->m["Function"]->v, ptJson->m["Update"]->v, strError))
         {
           bResult = true;
         }

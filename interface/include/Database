@@ -26,7 +26,7 @@ class Database : public Interface
 {
   protected:
   string m_strError;
-  Central *m_ptCentral;
+  Central *m_pCentral;
   Json *m_ptDatabases;
 
   public:
