@@ -10,8 +10,9 @@ prefix=/usr/local
 all: bin/log bin/mysql bin/request bin/storage
 # }}}
 
-install: bin/auth bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
+install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
 	install --mode=777 bin/auth $(prefix)/radial/interface/
+	install --mode=777 bin/database $(prefix)/radial/interface/
 	install --mode=777 bin/link $(prefix)/radial/interface/
 	install --mode=777 bin/log $(prefix)/radial/interface/
 	install --mode=777 bin/mysql $(prefix)/radial/interface/
@@ -27,6 +28,16 @@ obj/auth.o: auth.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c auth.cpp -o obj/auth.o $(CPPFLAGS) -I../../common
 obj/Auth.o: include/Auth.cpp obj
 	g++ -ggdb -Wall -c include/Auth.cpp -o obj/Auth.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ database
+database: bin/database $(prefix)/radial/interface
+	install --mode=777 bin/database $(prefix)/radial/interface/
+bin/database: ../../common/libcommon.a obj/database.o obj/Base.o obj/Interface.o obj/Database.o bin
+	g++ -o bin/database obj/database.o obj/Base.o obj/Interface.o obj/Database.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/database.o: database.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c database.cpp -o obj/database.o $(CPPFLAGS) -I../../common
+obj/Database.o: include/Database.cpp obj
+	g++ -ggdb -Wall -c include/Database.cpp -o obj/Database.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface

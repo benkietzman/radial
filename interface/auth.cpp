@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : storage.cpp
+// file       : auth.cpp
 // author     : Ben Kietzman
 // begin      : 2022-05-27
 // copyright  : kietzman.org

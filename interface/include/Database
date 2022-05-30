@@ -1,0 +1,41 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Database
+// author     : Ben Kietzman
+// begin      : 2022-05-30
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_DATABASE_
+#define _RADIAL_DATABASE_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Database
+class Database : public Interface
+{
+  protected:
+  string m_strError;
+  Central *m_ptCentral;
+  Json *m_ptDatabases;
+
+  public:
+  Database(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback, bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
+  ~Database();
+  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  Json *databases();
+};
+// }}}
+}
+}
+#endif
