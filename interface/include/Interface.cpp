@@ -415,13 +415,13 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   }
   if (bWait)
   {
-    bool bGood = false;
-    int readpipe[2] = {-1, -1};
+    int nReturn, readpipe[2] = {-1, -1};
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  Before mutex lock.";
 log(ssMessage.str());
+    nReturn = pipe(readpipe);
     m_mutex.lock();
     ssUnique.str("");
     ssUnique << m_strName << "_" << unUnique;
@@ -432,27 +432,18 @@ log(ssMessage.str());
       ssUnique << m_strName << "_" << unUnique;
     } 
     ptJson->insert("_unique", ssUnique.str());
-    if (pipe(readpipe) == 0)
+    if (nReturn == 0)
     {
-      bGood = true;
       m_responses.push_back(ptJson->json(strJson));
       m_waiting[ssUnique.str()] = readpipe[1];
-    }
-    else
-    {
-      ssMessage.str("");
-      ssMessage << "pipe(" << errno << ") " << strerror(errno);
-      ptJson->insert("Status", "error");
-      ptJson->insert("Error", ssMessage.str());
     }
     m_mutex.unlock();
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  After mutex lock.";
 log(ssMessage.str());
-    if (bGood)
+    if (nReturn == 0)
     {
       char szBuffer[65536];
-      int nReturn;
       size_t unPosition;
       strJson.clear();
 ssMessage.str("");
@@ -481,6 +472,13 @@ log(ssMessage.str());
       m_mutex.lock();
       m_waiting.erase(ssUnique.str());
       m_mutex.unlock();
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << "pipe(" << errno << ") " << strerror(errno);
+      ptJson->insert("Status", "error");
+      ptJson->insert("Error", ssMessage.str());
     }
   }
   else
