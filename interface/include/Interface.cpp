@@ -56,12 +56,16 @@ bool Interface::auth(Json *ptJson, string &strError)
   Json *ptAuth = new Json(ptJson);
 
 stringstream ssMessage;
-ssMessage << "Interface::auth()->Interface::target(auth):  " << ptAuth;
+ssMessage.str("");
+ssMessage << "Interface::auth()->Interface::target(auth):  Before. --- " << ptAuth;
 log(ssMessage.str());
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
   }
+ssMessage.str("");
+ssMessage << "Interface::auth()->Interface::target(auth):  After. --- " << ptAuth;
+log(ssMessage.str());
   delete ptAuth;
 
   return bResult;
