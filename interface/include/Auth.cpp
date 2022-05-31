@@ -92,6 +92,9 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   stringstream ssMessage;
 
   strPrefix += "->Auth::callback()";
+ssMessage.str("");
+ssMessage << strPrefix << ":  Before.";
+log(ssMessage.str());
   if (m_pWarden != NULL)
   {
     if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
@@ -185,6 +188,9 @@ log(ssMessage.str());
   {
     response(ptJson);
   }
+ssMessage.str("");
+ssMessage << strPrefix << ":  After.";
+log(ssMessage.str());
 }
 // }}}
 }
