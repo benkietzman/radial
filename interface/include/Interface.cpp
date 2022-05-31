@@ -192,7 +192,7 @@ void Interface::process(string strPrefix)
       m_mutex.lock();
       while (!m_responses.empty())
       {
-if (m_responses.front().find("\"_target\":\"auth\"") != string::npos)
+if (m_responses.front().find("auth") != string::npos)
 {
   log((string)"m_response.front():  " + m_responses.front());
 }
