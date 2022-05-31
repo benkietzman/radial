@@ -424,7 +424,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     ptJson->insert("_unique", ssUnique.str());
     if (nReturn == 0)
     {
-      m_responses.push_back(ptJson->json(strJson));
       m_waiting[ssUnique.str()] = readpipe[1];
     }
     m_mutex.unlock();
@@ -433,6 +432,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       char szBuffer[65536];
       size_t unPosition;
       strJson.clear();
+      response(ptJson);
       while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
       {
         strJson.append(szBuffer, nReturn);
@@ -464,9 +464,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   }
   else
   {
-    m_mutex.lock();
-    m_responses.push_back(ptJson->json(strJson));
-    m_mutex.unlock();
+    response(ptJson);
   }
 }
 bool Interface::target(Json *ptJson, string &strError)
