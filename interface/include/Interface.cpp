@@ -220,6 +220,9 @@ void Interface::process(string strPrefix)
             int fdUnique = -1;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
+ssMessage.str("");
+ssMessage << strPrefix << "->read():  " << strLine << endl;
+log(ssMessage.str());
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
             m_mutex.lock();
