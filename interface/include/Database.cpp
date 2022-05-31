@@ -110,12 +110,9 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
         {
           bResult = true;
           ptJson->m["Response"] = new Json;
-          if (!rows->empty())
+          for (auto &row : *rows)
           {
-            for (auto &row : *rows)
-            {
-              ptJson->m["Response"]->push_back(row);
-            }
+            ptJson->m["Response"]->push_back(row);
           }
         }
         m_pCentral->free(rows);
