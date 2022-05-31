@@ -418,9 +418,12 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     int nReturn, readpipe[2] = {-1, -1};
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
+if (strTarget == "auth")
+{
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  Before mutex lock.";
 log(ssMessage.str());
+}
     nReturn = pipe(readpipe);
     m_mutex.lock();
     ssUnique.str("");
@@ -438,24 +441,33 @@ log(ssMessage.str());
       m_waiting[ssUnique.str()] = readpipe[1];
     }
     m_mutex.unlock();
+if (strTarget == "auth")
+{
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  After mutex lock.";
 log(ssMessage.str());
+}
     if (nReturn == 0)
     {
       char szBuffer[65536];
       size_t unPosition;
       strJson.clear();
+if (strTarget == "auth")
+{
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  Before read.";
 log(ssMessage.str());
+}
       while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
       {
         strJson.append(szBuffer, nReturn);
       }
+if (strTarget == "auth")
+{
 ssMessage.str("");
 ssMessage << "Interface::target(" << strTarget << "):  After read.";
 log(ssMessage.str());
+}
       if ((unPosition = strJson.find("\n")) != string::npos)
       {
         ptJson->clear();
