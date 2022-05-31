@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false;
+stringstream ssMessage;
   
   if (rows != NULL)
   {
@@ -42,8 +43,14 @@ bool mysql(const string strType, const string strName, const string strQuery, li
           Json *ptJson = new Json(gpDatabase->databases()->m[strName]);
           ptJson->insert("Type", strType);
           ptJson->insert(((strType == "query")?"Query":"Update"), strQuery);
+ssMessage.str("");
+ssMessage << "mysql()->Database::target(mysql):  Before target." << endl;
+gpDatabase->log(ssMessage.str());
           if (gpDatabase->target("mysql", ptJson, strError))
           {
+ssMessage.str("");
+ssMessage << "mysql()->Database::target(mysql):  After target." << endl;
+gpDatabase->log(ssMessage.str());
             bResult = true;
             if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
             {
