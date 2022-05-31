@@ -44,7 +44,6 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse = true
 {
   bool bResult = false;
   string strError;
-stringstream ssMessage;
 
   strPrefix += "->Mysql::callback()";
   if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
@@ -66,26 +65,14 @@ stringstream ssMessage;
               stringstream ssPort(ptJson->m["Port"]->v);
               ssPort >> unPort;
             }
-ssMessage.str("");
-ssMessage << strPrefix << "->connect(" << ptJson->m["Server"]->v << "," << unPort << "," << ptJson->m["User"]->v << "," << ptJson->m["Database"]->v << "):  Before connect().";
-log(ssMessage.str());
             if (connect(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
             {
-ssMessage.str("");
-ssMessage << strPrefix << "->connect(" << ptJson->m["Server"]->v << "," << unPort << "," << ptJson->m["User"]->v << "," << ptJson->m["Database"]->v << "):  After connect().";
-log(ssMessage.str());
               (*mysqlIter)->secure.lock();
               if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
               {
-ssMessage.str("");
-ssMessage << strPrefix << "->query(" << ptJson->m["Query"]->v << "):  Before query().";
-log(ssMessage.str());
                 MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
                 if (result != NULL)
                 {
-ssMessage.str("");
-ssMessage << strPrefix << "->query(" << ptJson->m["Query"]->v << "):  After query().";
-log(ssMessage.str());
                   vector<string> subFields;
                   if (fields(result, subFields))
                   {
@@ -101,9 +88,6 @@ log(ssMessage.str());
                       row->clear();
                       delete row;
                     }
-ssMessage.str("");
-ssMessage << strPrefix << "->fetch():  After fetch(). --- " << ptJson->m["Response"];
-log(ssMessage.str());
                   }
                   else
                   {

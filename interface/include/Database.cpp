@@ -96,7 +96,6 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;
-stringstream ssMessage;
 
   strPrefix += "->Database::callback()";
   if (m_pCentral != NULL)
@@ -105,9 +104,6 @@ stringstream ssMessage;
     {
       if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
       {
-ssMessage.str("");
-ssMessage << strPrefix << "->Central::query(" << ptJson->m["Database"]->v << "," << ptJson->m["Query"]->v << "):  Before query.";
-log(ssMessage.str());
         auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, strError);
         if (rows != NULL)
         {
@@ -117,22 +113,13 @@ log(ssMessage.str());
           {
             ptJson->m["Response"]->push_back(row);
           }
-ssMessage.str("");
-ssMessage << strPrefix << "->Central::query(" << ptJson->m["Database"]->v << "," << ptJson->m["Query"]->v << "):  After query. --- " << ptJson->m["Response"];
-log(ssMessage.str());
         }
         m_pCentral->free(rows);
       }
       else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
       {
-ssMessage.str("");
-ssMessage << strPrefix << "->Central::query(" << ptJson->m["Database"]->v << "," << ptJson->m["Query"]->v << "):  Before update.";
-log(ssMessage.str());
         if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, strError))
         {
-ssMessage.str("");
-ssMessage << strPrefix << "->Central::query(" << ptJson->m["Database"]->v << "," << ptJson->m["Query"]->v << "):  After update.";
-log(ssMessage.str());
           bResult = true;
         }
       }

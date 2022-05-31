@@ -55,16 +55,9 @@ bool Interface::auth(Json *ptJson, string &strError)
   bool bResult = false;
   Json *ptAuth = new Json(ptJson);
 
-stringstream ssMessage;
-ssMessage.str("");
-ssMessage << "Interface::auth()->Interface::target(auth):  Before target.";
-log(ssMessage.str());
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
-ssMessage.str("");
-ssMessage << "Interface::auth()->Interface::target(auth):  After target.";
-log(ssMessage.str());
   }
   delete ptAuth;
 
@@ -220,9 +213,6 @@ void Interface::process(string strPrefix)
             int fdUnique = -1;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
-ssMessage.str("");
-ssMessage << strPrefix << "->read():  " << strLine << endl;
-log(ssMessage.str());
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
             m_mutex.lock();
@@ -421,12 +411,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     int nReturn, readpipe[2] = {-1, -1};
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
-if (strTarget == "auth")
-{
-ssMessage.str("");
-ssMessage << "Interface::target(" << strTarget << "):  Before mutex lock.";
-log(ssMessage.str());
-}
     nReturn = pipe(readpipe);
     m_mutex.lock();
     ssUnique.str("");
@@ -444,33 +428,15 @@ log(ssMessage.str());
       m_waiting[ssUnique.str()] = readpipe[1];
     }
     m_mutex.unlock();
-if (strTarget == "auth")
-{
-ssMessage.str("");
-ssMessage << "Interface::target(" << strTarget << "):  After mutex lock.";
-log(ssMessage.str());
-}
     if (nReturn == 0)
     {
       char szBuffer[65536];
       size_t unPosition;
       strJson.clear();
-if (strTarget == "auth")
-{
-ssMessage.str("");
-ssMessage << "Interface::target(" << strTarget << "):  Before read.";
-log(ssMessage.str());
-}
       while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
       {
         strJson.append(szBuffer, nReturn);
       }
-if (strTarget == "auth")
-{
-ssMessage.str("");
-ssMessage << "Interface::target(" << strTarget << "):  After read.";
-log(ssMessage.str());
-}
       if ((unPosition = strJson.find("\n")) != string::npos)
       {
         ptJson->clear();

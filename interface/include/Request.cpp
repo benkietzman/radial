@@ -194,7 +194,6 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = tr
 void Request::request(Json *ptJson)
 {
   string strError;
-stringstream ssMessage;
 
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
@@ -223,26 +222,14 @@ stringstream ssMessage;
     {
       Json *ptInterfaces = new Json;
       ptInterfaces->insert("Function", "list");
-ssMessage.str("");
-ssMessage << "Request::request()->target():  Before target list.";
-log(ssMessage.str());
       target(ptInterfaces);
-ssMessage.str("");
-ssMessage << "Request::request()->target():  After target list. --- " << ptInterfaces;
-log(ssMessage.str());
       if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
       {
         if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
         {
           if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0" || auth(ptJson, strError))
           {
-ssMessage.str("");
-ssMessage << "Request::request()->target(" << ptJson->m["Interface"]->v << "):  Before target.";
-log(ssMessage.str());
             target(ptJson->m["Interface"]->v, ptJson);
-ssMessage.str("");
-ssMessage << "Request::request()->target(" << ptJson->m["Interface"]->v << "):  After target.";
-log(ssMessage.str());
           }
           else
           {

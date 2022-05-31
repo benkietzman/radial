@@ -92,9 +92,6 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   stringstream ssMessage;
 
   strPrefix += "->Auth::callback()";
-ssMessage.str("");
-ssMessage << strPrefix << ":  Before.";
-log(ssMessage.str());
   if (m_pWarden != NULL)
   {
     if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
@@ -104,14 +101,8 @@ log(ssMessage.str());
         if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
-ssMessage.str("");
-ssMessage << strPrefix << "->Warden::authz():  Before authz.";
-log(ssMessage.str());
           if (m_pWarden->authz(ptData, strError))
           {
-ssMessage.str("");
-ssMessage << strPrefix << "->Warden::authz():  After authz.";
-log(ssMessage.str());
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {
               string strAccessFunction = "Function";
@@ -188,9 +179,6 @@ log(ssMessage.str());
   {
     response(ptJson);
   }
-ssMessage.str("");
-ssMessage << strPrefix << ":  After.";
-log(ssMessage.str());
 }
 // }}}
 }
