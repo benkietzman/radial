@@ -55,6 +55,9 @@ bool Interface::auth(Json *ptJson, string &strError)
   bool bResult = false;
   Json *ptAuth = new Json(ptJson);
 
+stringstream ssMessage;
+ssMessage << "Interface::auth()->Interface::target(auth):  " << ptAuth;
+log(ssMessage.str());
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
