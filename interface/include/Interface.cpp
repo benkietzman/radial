@@ -419,6 +419,9 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     int readpipe[2] = {-1, -1};
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
+ssMessage.str("");
+ssMessage << "Interface::target(" << strTarget << "):  Before mutex lock.";
+log(ssMessage.str());
     m_mutex.lock();
     ssUnique.str("");
     ssUnique << m_strName << "_" << unUnique;
@@ -443,16 +446,25 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       ptJson->insert("Error", ssMessage.str());
     }
     m_mutex.unlock();
+ssMessage.str("");
+ssMessage << "Interface::target(" << strTarget << "):  After mutex lock.";
+log(ssMessage.str());
     if (bGood)
     {
       char szBuffer[65536];
       int nReturn;
       size_t unPosition;
       strJson.clear();
+ssMessage.str("");
+ssMessage << "Interface::target(" << strTarget << "):  Before read.";
+log(ssMessage.str());
       while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
       {
         strJson.append(szBuffer, nReturn);
       }
+ssMessage.str("");
+ssMessage << "Interface::target(" << strTarget << "):  After read.";
+log(ssMessage.str());
       if ((unPosition = strJson.find("\n")) != string::npos)
       {
         ptJson->clear();
