@@ -192,10 +192,6 @@ void Interface::process(string strPrefix)
       m_mutex.lock();
       while (!m_responses.empty())
       {
-if (m_responses.front().find("auth") != string::npos)
-{
-  log((string)"m_response.front():  " + m_responses.front());
-}
         m_strBuffers[1].append(m_responses.front() + "\n");
         m_responses.pop_front();
       }
@@ -219,10 +215,6 @@ if (m_responses.front().find("auth") != string::npos)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-if ((ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "auth") || (ptJson->m.find("_target") != ptJson->m.end() && ptJson->m["_target"]->v == "auth"))
-{
-  log((string)"read():  " + strLine);
-}
             m_mutex.lock();
             if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
             {
