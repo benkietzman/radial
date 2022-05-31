@@ -227,6 +227,9 @@ void Request::request(Json *ptJson)
       {
         if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
         {
+stringstream ssMessage;
+ssMessage << "Request::request()->Interface::auth():  " << ptJson;
+log(ssMessage.str());
           if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0" || auth(ptJson, strError))
           {
             target(ptJson->m["Interface"]->v, ptJson);
