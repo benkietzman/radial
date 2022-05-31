@@ -55,17 +55,10 @@ bool Interface::auth(Json *ptJson, string &strError)
   bool bResult = false;
   Json *ptAuth = new Json(ptJson);
 
-stringstream ssMessage;
-ssMessage.str("");
-ssMessage << "Interface::auth()->Interface::target(auth):  Before. --- " << ptAuth;
-log(ssMessage.str());
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
   }
-ssMessage.str("");
-ssMessage << "Interface::auth()->Interface::target(auth):  After. --- " << ptAuth;
-log(ssMessage.str());
   delete ptAuth;
 
   return bResult;
@@ -199,6 +192,10 @@ void Interface::process(string strPrefix)
       m_mutex.lock();
       while (!m_responses.empty())
       {
+if (m_responses.front().find("\"_target\":\"auth\"") != string::npos)
+{
+  log((string)"m_response.front():  " + m_responses.front());
+}
         m_strBuffers[1].append(m_responses.front() + "\n");
         m_responses.pop_front();
       }
@@ -222,6 +219,10 @@ void Interface::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
+if ((ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "auth") || (ptJson->m.find("_target") != ptJson->m.end() && ptJson->m["_target"]->v == "auth"))
+{
+  log((string)"read():  " + strLine);
+}
             m_mutex.lock();
             if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
             {
