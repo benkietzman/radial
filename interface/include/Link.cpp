@@ -128,13 +128,21 @@ size_t Link::add(radial_link *ptLink)
 }
 // }}}
 // {{{ callback()
-void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Link::callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  strPrefix += "->Link::callback()";
+  thread threadInternal(&Link::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ internal()
+void Link::internal(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
   string strError, strJson;
   stringstream ssMessage;
 
-  strPrefix += "->Link::callback()";
+  strPrefix += "->Link::internal()";
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
   {
     list<string> removals;
@@ -220,6 +228,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
   {
     response(ptJson);
   }
+  delete ptJson;
 }
 // }}}
 // {{{ request()

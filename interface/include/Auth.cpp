@@ -56,11 +56,55 @@ Auth::~Auth()
 // {{{ callback()
 void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
+  strPrefix += "->Auth::callback()";
+  thread threadInternal(&Auth::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ init()
+bool Auth::init()
+{
+  bool bResult = false;
+  string strError;
+
+  if (!m_strWarden.empty())
+  {
+    Json *ptJson = new Json;
+    ptJson->insert("Function", "list");
+    if (target(ptJson, strError))
+    {
+      if (ptJson->m.find("Response") != ptJson->m.end())
+      {
+        for (auto &interface : ptJson->m["Response"]->m)
+        {
+          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
+        }
+        m_pWarden = new Warden("Radial", m_strWarden, strError);
+        if (strError.empty())
+        {
+          bResult = true;
+        }
+        else
+        {
+          delete m_pWarden;
+          m_pWarden = NULL;
+        }
+      }
+    }
+    delete ptJson;
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ internal()
+void Auth::internal(string strPrefix, Json *ptJson, const bool bResponse)
+{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Auth::callback()";
+  strPrefix += "->Auth::internal()";
   if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
   {
     if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
@@ -137,42 +181,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     response(ptJson);
   }
-}
-// }}}
-// {{{ init()
-bool Auth::init()
-{
-  bool bResult = false;
-  string strError;
-
-  if (!m_strWarden.empty())
-  {
-    Json *ptJson = new Json;
-    ptJson->insert("Function", "list");
-    if (target(ptJson, strError))
-    {
-      if (ptJson->m.find("Response") != ptJson->m.end())
-      {
-        for (auto &interface : ptJson->m["Response"]->m)
-        {
-          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
-        }
-        m_pWarden = new Warden("Radial", m_strWarden, strError);
-        if (strError.empty())
-        {
-          bResult = true;
-        }
-        else
-        {
-          delete m_pWarden;
-          m_pWarden = NULL;
-        }
-      }
-    }
-    delete ptJson;
-  }
-
-  return bResult;
+  delete ptJson;
 }
 // }}}
 }

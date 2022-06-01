@@ -53,11 +53,19 @@ Log::~Log()
 // {{{ callback()
 void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
+  strPrefix += "->Log::callback()";
+  thread threadInternal(&Log::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ internal()
+void Log::internal(string strPrefix, Json *ptJson, const bool bResponse)
+{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Log::callback()";
+  strPrefix += "->Log::internal()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())
@@ -106,6 +114,7 @@ void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     response(ptJson);
   }
+  delete ptJson;
 }
 // }}}
 }

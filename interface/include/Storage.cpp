@@ -32,11 +32,19 @@ Storage::~Storage()
 // {{{ callback()
 void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
+  strPrefix += "->Storage::callback()";
+  thread threadInternal(&Storage::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ internal()
+void Storage::internal(string strPrefix, Json *ptJson, const bool bResponse)
+{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Storage::callback()";
+  strPrefix += "->Storage::internal()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     list<string> keys;
@@ -110,6 +118,7 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     response(ptJson);
   }
+  delete ptJson;
 }
 // }}}
 }

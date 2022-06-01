@@ -53,6 +53,7 @@ class Link : public Interface
   Json *m_ptLink;
 
   size_t add(radial_link *ptLink);
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
   void request(string strPrefix, const int fdSocket, Json *ptJson);
   void storageTransmit(string strPrefix, radial_link *ptLink);
 

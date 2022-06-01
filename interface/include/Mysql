@@ -44,6 +44,7 @@ class Mysql : public Interface
   map<string, string> *fetch(MYSQL_RES *result, vector<string> subFields);
   bool fields(MYSQL_RES *result, vector<string> &subFields);
   void free(MYSQL_RES *result);
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
   void lock();
   void pause();
   MYSQL_RES *query(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullRows, string &strError);

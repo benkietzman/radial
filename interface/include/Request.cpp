@@ -157,13 +157,21 @@ void Request::accept(string strPrefix)
 }
 // }}}
 // {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  strPrefix += "->Request::callback()";
+  thread threadInternal(&Request::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ internal()
+void Request::internal(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Request::callback()";
+  strPrefix += "->Request::internal()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m["Function"]->v == "ping")
@@ -188,6 +196,7 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = tr
   {
     response(ptJson);
   }
+  delete ptJson;
 }
 // }}}
 // {{{ request()

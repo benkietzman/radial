@@ -27,6 +27,8 @@ class Log : public Interface
   protected:
   string m_strEmail;
 
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
+
   public:
   Log(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Log();

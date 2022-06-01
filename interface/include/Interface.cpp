@@ -218,7 +218,7 @@ void Interface::process(string strPrefix)
             if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName)
             {
               m_mutex.lock();
-              if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
+              if (ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
               {
                 fdUnique = m_waiting[ptJson->m["_unique"]->v];
               }
@@ -440,6 +440,10 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       {
         strJson.append(szBuffer, nReturn);
       }
+      close(readpipe[0]);
+      m_mutex.lock();
+      m_waiting.erase(ssUnique.str());
+      m_mutex.unlock();
       if ((unPosition = strJson.find("\n")) != string::npos)
       {
         ptJson->clear();
@@ -452,10 +456,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         ssMessage << "write(" << errno << ") " << strerror(errno);
         ptJson->insert("Error", ssMessage.str());
       }
-      close(readpipe[0]);
-      m_mutex.lock();
-      m_waiting.erase(ssUnique.str());
-      m_mutex.unlock();
     }
     else
     {

@@ -66,10 +66,53 @@ Database::~Database()
 // {{{ callback()
 void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
+  strPrefix += "->Database::callback()";
+  thread threadInternal(&Database::internal, this, strPrefix, new Json(ptJson), bResponse);
+  threadInternal.detach();
+}
+// }}}
+// {{{ databases()
+Json *Database::databases()
+{
+  return m_ptDatabases;
+}
+// }}}
+// {{{ init()
+bool Database::init()
+{
   bool bResult = false;
   string strError;
 
-  strPrefix += "->Database::callback()";
+  if (!m_strWarden.empty())
+  {
+    Warden *ptWarden = new Warden("Radial", m_strWarden, strError);
+    if (strError.empty())
+    {
+      m_ptDatabases = new Json;
+      if (ptWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
+      {
+        bResult = true;
+        for (auto &database : m_ptDatabases->m)
+        {
+          map<string, string> cred;
+          database.second->flatten(cred, true, false);
+          m_pCentral->addDatabase(database.first, cred, strError);
+        }
+      }
+    }
+    delete ptWarden;
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ internal()
+void Database::internal(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  bool bResult = false;
+  string strError;
+
+  strPrefix += "->Database::internal()";
   if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
   {
     if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
@@ -111,41 +154,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     response(ptJson);
   }
-}
-// }}}
-// {{{ databases()
-Json *Database::databases()
-{
-  return m_ptDatabases;
-}
-// }}}
-// {{{ init()
-bool Database::init()
-{
-  bool bResult = false;
-  string strError;
-
-  if (!m_strWarden.empty())
-  {
-    Warden *ptWarden = new Warden("Radial", m_strWarden, strError);
-    if (strError.empty())
-    {
-      m_ptDatabases = new Json;
-      if (ptWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
-      {
-        bResult = true;
-        for (auto &database : m_ptDatabases->m)
-        {
-          map<string, string> cred;
-          database.second->flatten(cred, true, false);
-          m_pCentral->addDatabase(database.first, cred, strError);
-        }
-      }
-    }
-    delete ptWarden;
-  }
-
-  return bResult;
+  delete ptJson;
 }
 // }}}
 }

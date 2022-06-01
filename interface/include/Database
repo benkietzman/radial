@@ -29,6 +29,8 @@ class Database : public Interface
   Central *m_pCentral;
   Json *m_ptDatabases;
 
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
+
   public:
   Database(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback, bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
   ~Database();

@@ -29,6 +29,8 @@ class Storage : public Interface
   string m_strEmail;
   common::Storage m_storage;
 
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
+
   public:
   Storage(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Storage();

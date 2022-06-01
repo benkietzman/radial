@@ -25,6 +25,7 @@ namespace radial
 class Request : public Interface
 {
   protected:
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
   void request(Json *ptJson);
   void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
 

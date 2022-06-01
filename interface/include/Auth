@@ -29,6 +29,8 @@ class Auth : public Interface
   string m_strWarden;
   Warden *m_pWarden;
 
+  void internal(string strPrefix, Json *ptJson, const bool bResponse);
+
   public:
   Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Auth();
