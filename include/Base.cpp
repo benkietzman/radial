@@ -139,16 +139,16 @@ void Base::msleep(const unsigned long ulMilliSec)
   m_pUtility->msleep(ulMilliSec);
 }
 // }}}
-// {{{ shutdown()
-bool Base::shutdown()
-{
-  return m_bShutdown;
-}
-// }}}
 // {{{ setShutdown()
 void Base::setShutdown()
 {
   m_bShutdown = true;
+}
+// }}}
+// {{{ shutdown()
+bool Base::shutdown()
+{
+  return m_bShutdown;
 }
 // }}}
 }

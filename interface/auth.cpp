@@ -19,7 +19,10 @@ int main(int argc, char *argv[])
   string strError, strPrefix = "auth->main()";
   Auth auth(strPrefix, argc, argv, bind(&Auth::callback, &auth, placeholders::_1, placeholders::_2, placeholders::_3));
   thread threadProcess(&Auth::process, &auth, strPrefix);
-  auth.init();
+  if (!auth.init())
+  {
+    auth.setShutdown();
+  }
   threadProcess.join();
   return 0;
 }

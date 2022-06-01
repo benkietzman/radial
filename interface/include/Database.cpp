@@ -22,7 +22,7 @@ namespace radial
 // {{{ Database()
 Database::Database(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback, bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, callback)
 {
-  string strError, strWarden;
+  string strError;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -31,54 +31,23 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
     {
       if (strArg == "-w" && i + 1 < argc && argv[i+1][0] != '-')
       {
-        strWarden = argv[++i];
+        m_strWarden = argv[++i];
       }
       else
       {
-        strWarden = strArg.substr(9, strArg.size() - 9);
+        m_strWarden = strArg.substr(9, strArg.size() - 9);
       }
-      m_manip.purgeChar(strWarden, strWarden, "'");
-      m_manip.purgeChar(strWarden, strWarden, "\"");
+      m_manip.purgeChar(m_strWarden, m_strWarden, "'");
+      m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
     }
   }
   // }}}
-  m_pCentral = NULL;
+  m_pCentral = new Central(strError);
+  if (pMysql != NULL)
+  {
+    m_pCentral->setMysql(pMysql);
+  }
   m_ptDatabases = NULL;
-  if (!strWarden.empty())
-  {
-    m_pCentral = new Central(m_strError);
-    if (m_strError.empty())
-    {
-      Warden *ptWarden = new Warden("Radial", strWarden, m_strError);
-      if (pMysql != NULL)
-      {
-        m_pCentral->setMysql(pMysql);
-      }
-      if (m_strError.empty())
-      {
-        m_ptDatabases = new Json;
-        if (ptWarden->vaultRetrieve({"database"}, m_ptDatabases, m_strError))
-        {
-          for (auto &database : m_ptDatabases->m)
-          {
-            map<string, string> cred;
-            database.second->flatten(cred, true, false);
-            m_pCentral->addDatabase(database.first, cred, strError);
-          }
-        }
-      }
-      delete ptWarden;
-    }
-    else
-    {
-      delete m_pCentral;
-      m_pCentral = NULL;
-    }
-  }
-  else
-  {
-    m_strError = "Please provide the path to the Warden socket.";
-  }
 }
 // }}}
 // {{{ ~Database()
@@ -101,44 +70,37 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError;
 
   strPrefix += "->Database::callback()";
-  if (m_pCentral != NULL)
+  if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
   {
-    if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+    if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
     {
-      if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
+      auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, strError);
+      if (rows != NULL)
       {
-        auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, strError);
-        if (rows != NULL)
+        bResult = true;
+        ptJson->m["Response"] = new Json;
+        for (auto &row : *rows)
         {
-          bResult = true;
-          ptJson->m["Response"] = new Json;
-          for (auto &row : *rows)
-          {
-            ptJson->m["Response"]->push_back(row);
-          }
-        }
-        m_pCentral->free(rows);
-      }
-      else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
-      {
-        if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, strError))
-        {
-          bResult = true;
+          ptJson->m["Response"]->push_back(row);
         }
       }
-      else
+      m_pCentral->free(rows);
+    }
+    else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
+    {
+      if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, strError))
       {
-        strError = "Please provide the Query or Update.";
+        bResult = true;
       }
     }
     else
     {
-      strError = "Please provide the Database.";
+      strError = "Please provide the Query or Update.";
     }
   }
   else
   {
-    strError = m_strError;
+    strError = "Please provide the Database.";
   }
   ptJson->insert("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
@@ -155,6 +117,35 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 Json *Database::databases()
 {
   return m_ptDatabases;
+}
+// }}}
+// {{{ init()
+bool Database::init()
+{
+  bool bResult = false;
+  string strError;
+
+  if (!m_strWarden.empty())
+  {
+    Warden *ptWarden = new Warden("Radial", m_strWarden, strError);
+    if (strError.empty())
+    {
+      m_ptDatabases = new Json;
+      if (ptWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
+      {
+        bResult = true;
+        for (auto &database : m_ptDatabases->m)
+        {
+          map<string, string> cred;
+          database.second->flatten(cred, true, false);
+          m_pCentral->addDatabase(database.first, cred, strError);
+        }
+      }
+    }
+    delete ptWarden;
+  }
+
+  return bResult;
 }
 // }}}
 }
