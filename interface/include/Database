@@ -26,7 +26,6 @@ class Database : public Interface
 {
   protected:
   string m_strWarden;
-  Central *m_pCentral;
   Json *m_ptDatabases;
 
   void internal(string strPrefix, Json *ptJson, const bool bResponse);

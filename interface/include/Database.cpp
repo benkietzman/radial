@@ -42,7 +42,6 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
     }
   }
   // }}}
-  m_pCentral = new Central(strError);
   if (pMysql != NULL)
   {
     m_pCentral->setMysql(pMysql);
@@ -53,10 +52,6 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
 // {{{ ~Database()
 Database::~Database()
 {
-  if (m_pCentral != NULL)
-  {
-    delete m_pCentral;
-  }
   if (m_ptDatabases != NULL)
   {
     delete m_ptDatabases;
