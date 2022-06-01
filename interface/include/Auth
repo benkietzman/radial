@@ -27,12 +27,14 @@ class Auth : public Interface
   protected:
   map<string, string> m_accessFunctions;
   string m_strError;
+  string m_strWarden;
   Warden *m_pWarden;
 
   public:
   Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
   ~Auth();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void init();
 };
 // }}}
 }

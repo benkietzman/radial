@@ -22,7 +22,6 @@ namespace radial
 // {{{ Auth()
 Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "auth", argc, argv, callback)
 {
-  string strWarden;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -31,48 +30,18 @@ Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *
     {
       if (strArg == "-w" && i + 1 < argc && argv[i+1][0] != '-')
       {
-        strWarden = argv[++i];
+        m_strWarden = argv[++i];
       }
       else
       {
-        strWarden = strArg.substr(9, strArg.size() - 9);
+        m_strWarden = strArg.substr(9, strArg.size() - 9);
       }
-      m_manip.purgeChar(strWarden, strWarden, "'");
-      m_manip.purgeChar(strWarden, strWarden, "\"");
+      m_manip.purgeChar(m_strWarden, m_strWarden, "'");
+      m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
     }
   }
   // }}}
   m_pWarden = NULL;
-  if (!strWarden.empty())
-  {
-    Json *ptJson = new Json;
-    ptJson->insert("Function", "list");
-    if (target(ptJson, m_strError))
-    {
-      if (ptJson->m.find("Response") != ptJson->m.end())
-      {
-        for (auto &interface : ptJson->m["Response"]->m)
-        {
-          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
-        }
-        m_pWarden = new Warden("Radial", strWarden, m_strError);
-        if (!m_strError.empty())
-        {
-          delete m_pWarden;
-          m_pWarden = NULL;
-        }
-      }
-      else
-      {
-        m_strError = "Failed to receive response.";
-      }
-    }
-    delete ptJson;
-  }
-  else
-  {
-    m_strError = "Please provide the path to the Warden socket.";
-  }
 }
 // }}}
 // {{{ ~Auth()
@@ -178,6 +147,41 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   if (bResponse)
   {
     response(ptJson);
+  }
+}
+// }}}
+// {{{ init()
+void Auth::init()
+{
+  if (!m_strWarden.empty())
+  {
+    Json *ptJson = new Json;
+    ptJson->insert("Function", "list");
+    if (target(ptJson, m_strError))
+    {
+      if (ptJson->m.find("Response") != ptJson->m.end())
+      {
+        for (auto &interface : ptJson->m["Response"]->m)
+        {
+          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
+        }
+        m_pWarden = new Warden("Radial", m_strWarden, m_strError);
+        if (!m_strError.empty())
+        {
+          delete m_pWarden;
+          m_pWarden = NULL;
+        }
+      }
+      else
+      {
+        m_strError = "Failed to receive response.";
+      }
+    }
+    delete ptJson;
+  }
+  else
+  {
+    m_strError = "Please provide the path to the Warden socket.";
   }
 }
 // }}}

@@ -13,10 +13,13 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 #include "include/Auth"
+using namespace radial;
 int main(int argc, char *argv[])
 {
-  string strPrefix = "auth->main()";
-  radial::Auth auth(strPrefix, argc, argv, bind(&radial::Auth::callback, &auth, placeholders::_1, placeholders::_2, placeholders::_3));
-  auth.process(strPrefix);
+  string strError, strPrefix = "auth->main()";
+  Auth auth(strPrefix, argc, argv, bind(&Auth::callback, &auth, placeholders::_1, placeholders::_2, placeholders::_3));
+  thread threadProcess(&Auth::process, &auth, strPrefix);
+  auth.init();
+  threadProcess.join();
   return 0;
 }

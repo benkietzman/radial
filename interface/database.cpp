@@ -13,12 +13,13 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 #include "include/Database"
-radial::Database *gpDatabase = NULL;
+using namespace radial;
+Database *gpDatabase = NULL;
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 int main(int argc, char *argv[])
 {
   string strPrefix = "database->main()";
-  gpDatabase = new radial::Database(strPrefix, argc, argv, bind(&radial::Database::callback, gpDatabase, placeholders::_1, placeholders::_2, placeholders::_3), &mysql);
+  gpDatabase = new Database(strPrefix, argc, argv, bind(&Database::callback, gpDatabase, placeholders::_1, placeholders::_2, placeholders::_3), &mysql);
   gpDatabase->process(strPrefix);
   delete gpDatabase;
   return 0;
