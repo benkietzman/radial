@@ -7,7 +7,7 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/log bin/mysql bin/request bin/storage
+all: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/storage
 # }}}
 
 install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/storage $(prefix)/radial/interface
