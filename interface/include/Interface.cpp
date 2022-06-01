@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Interface()
-Interface::Interface(string strPrefix, const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Base(argc, argv)
+Interface::Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Base(argc, argv)
 {
   strPrefix += "->Interface::Interface()";
   sigignore(SIGBUS);
@@ -30,7 +30,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   sigignore(SIGSEGV);
   sigignore(SIGTERM);
   sigignore(SIGWINCH);
-  m_callback = callback;
+  m_pCallback = pCallback;
   m_strName = strName;
   if (strName != "log")
   {
@@ -248,7 +248,7 @@ void Interface::process(string strPrefix)
             }
             else
             {
-              m_callback(strPrefix, ptJson, true);
+              m_pCallback(strPrefix, ptJson, true);
             }
             delete ptJson;
           }

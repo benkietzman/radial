@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Log()
-Log::Log(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "log", argc, argv, callback)
+Log::Log(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "log", argc, argv, pCallback)
 {
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
@@ -53,19 +53,11 @@ Log::~Log()
 // {{{ callback()
 void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  strPrefix += "->Log::callback()";
-  thread threadInternal(&Log::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
-}
-// }}}
-// {{{ internal()
-void Log::internal(string strPrefix, Json *ptJson, const bool bResponse)
-{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Log::internal()";
+  strPrefix += "->Log::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())

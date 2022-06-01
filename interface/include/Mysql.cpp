@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Mysql()
-Mysql::Mysql(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "mysql", argc, argv, callback)
+Mysql::Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "mysql", argc, argv, pCallback)
 {
 }
 // }}}
@@ -40,11 +40,111 @@ Mysql::~Mysql()
 }
 // }}}
 // {{{ callback()
-void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
+  bool bResult = false;
+  string strError;
+
   strPrefix += "->Mysql::callback()";
-  thread threadInternal(&Mysql::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
+  if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+  {
+    if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+    {
+      if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+      {
+        if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+        {
+          if ((ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty()) || (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty()))
+          {
+            list<radial_mysql *>::iterator mysqlIter;
+            stringstream ssError;
+            unsigned int unPort = 0;
+            unsigned long long ullRows = 0;
+            if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
+            {
+              stringstream ssPort(ptJson->m["Port"]->v);
+              ssPort >> unPort;
+            }
+            if (connect(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
+            {
+              (*mysqlIter)->secure.lock();
+              if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
+              {
+                MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
+                if (result != NULL)
+                {
+                  vector<string> subFields;
+                  if (fields(result, subFields))
+                  {
+                    map<string, string> *row;
+                    stringstream ssRows;
+                    bResult = true;
+                    ssRows << ullRows;
+                    ptJson->insert("Rows", ssRows.str(), 'n');
+                    ptJson->m["Response"] = new Json;
+                    while ((row = fetch(result, subFields)) != NULL)
+                    {
+                      ptJson->m["Response"]->push_back(*row);
+                      row->clear();
+                      delete row;
+                    }
+                  }
+                  else
+                  {
+                    strError = "Failed to fetch field names.";
+                  }
+                  subFields.clear();
+                  free(result);
+                }
+              }
+              else
+              {
+                unsigned long long ullID = 0;
+                if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
+                {
+                  stringstream ssID;
+                  ssID << ullRows;
+                  ptJson->insert("ID", ssID.str(), 'n');
+                }
+              }
+              (*mysqlIter)->secure.unlock();
+              disconnect(mysqlIter);
+            }
+          }
+          else
+          {
+            strError = "Please provide the Query or Update.";
+          }
+        }
+        else
+        {
+          strError = "Please provide the Database.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Password.";
+      }
+    }
+    else
+    {
+      strError = "Please provide the User.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the Server.";
+  }
+  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  if (!strError.empty())
+  {
+    ptJson->insert("Error", strError);
+  }
+  if (bResponse)
+  {
+    response(ptJson);
+  }
+  delete ptJson;
 }
 // }}}
 // {{{ conn()
@@ -228,114 +328,6 @@ bool Mysql::fields(MYSQL_RES *result, vector<string> &subFields)
 void Mysql::free(MYSQL_RES *result)
 {
   mysql_free_result(result);
-}
-// }}}
-// {{{ internal()
-void Mysql::internal(string strPrefix, Json *ptJson, const bool bResponse = true)
-{
-  bool bResult = false;
-  string strError;
-
-  strPrefix += "->Mysql::internal()";
-  if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
-  {
-    if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
-    {
-      if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
-      {
-        if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
-        {
-          if ((ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty()) || (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty()))
-          {
-            list<radial_mysql *>::iterator mysqlIter;
-            stringstream ssError;
-            unsigned int unPort = 0;
-            unsigned long long ullRows = 0;
-            if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
-            {
-              stringstream ssPort(ptJson->m["Port"]->v);
-              ssPort >> unPort;
-            }
-            if (connect(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
-            {
-              (*mysqlIter)->secure.lock();
-              if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
-              {
-                MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
-                if (result != NULL)
-                {
-                  vector<string> subFields;
-                  if (fields(result, subFields))
-                  {
-                    map<string, string> *row;
-                    stringstream ssRows;
-                    bResult = true;
-                    ssRows << ullRows;
-                    ptJson->insert("Rows", ssRows.str(), 'n');
-                    ptJson->m["Response"] = new Json;
-                    while ((row = fetch(result, subFields)) != NULL)
-                    {
-                      ptJson->m["Response"]->push_back(*row);
-                      row->clear();
-                      delete row;
-                    }
-                  }
-                  else
-                  {
-                    strError = "Failed to fetch field names.";
-                  }
-                  subFields.clear();
-                  free(result);
-                }
-              }
-              else
-              {
-                unsigned long long ullID = 0;
-                if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
-                {
-                  stringstream ssID;
-                  ssID << ullRows;
-                  ptJson->insert("ID", ssID.str(), 'n');
-                }
-              }
-              (*mysqlIter)->secure.unlock();
-              disconnect(mysqlIter);
-            }
-          }
-          else
-          {
-            strError = "Please provide the Query or Update.";
-          }
-        }
-        else
-        {
-          strError = "Please provide the Database.";
-        }
-      }
-      else
-      {
-        strError = "Please provide the Password.";
-      }
-    }
-    else
-    {
-      strError = "Please provide the User.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Server.";
-  }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->insert("Error", strError);
-  }
-  if (bResponse)
-  {
-    response(ptJson);
-  }
-  delete ptJson;
 }
 // }}}
 // {{{ lock()

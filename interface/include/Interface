@@ -25,7 +25,7 @@ namespace radial
 class Interface : public Base
 {
   protected:
-  function<void(string, Json *, const bool)> m_callback;
+  void (*m_pCallback)(string, Json *, const bool);
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutex;
@@ -38,7 +38,7 @@ class Interface : public Base
   void response(Json *ptJson);
 
   public:
-  Interface(string strPrefix, const string strName, int argc, char **argv, function<void(string, Json *, const bool)> callback);
+  Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Interface();
   void alert(const string strMessage);
   void log(const string strMessage);

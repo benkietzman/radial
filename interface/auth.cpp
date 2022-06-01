@@ -14,15 +14,23 @@
 ***********************************************************************/
 #include "include/Auth"
 using namespace radial;
+Auth *gpAuth;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "auth->main()";
-  Auth auth(strPrefix, argc, argv, bind(&Auth::callback, &auth, placeholders::_1, placeholders::_2, placeholders::_3));
-  thread threadProcess(&Auth::process, &auth, strPrefix);
-  if (!auth.init())
+  gpAuth = new Auth(strPrefix, argc, argv, &callback);
+  thread threadProcess(&Auth::process, gpAuth, strPrefix);
+  if (!gpAuth->init())
   {
-    auth.setShutdown();
+    gpAuth->setShutdown();
   }
   threadProcess.join();
+  delete gpAuth;
   return 0;
+}
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Auth::callback, gpAuth, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
 }

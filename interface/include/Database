@@ -28,10 +28,8 @@ class Database : public Interface
   string m_strWarden;
   Json *m_ptDatabases;
 
-  void internal(string strPrefix, Json *ptJson, const bool bResponse);
-
   public:
-  Database(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback, bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
+  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
   ~Database();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
   Json *databases();

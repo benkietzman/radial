@@ -14,10 +14,18 @@
 ***********************************************************************/
 #include "include/Mysql"
 using namespace radial;
+Mysql *gpMysql;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "mysql->main()";
-  Mysql mysql(strPrefix, argc, argv, bind(&Mysql::callback, &mysql, placeholders::_1, placeholders::_2, placeholders::_3));
-  mysql.process(strPrefix);
+  gpMysql = new Mysql(strPrefix, argc, argv, &callback);
+  gpMysql->process(strPrefix);
+  delete gpMysql;
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Mysql::callback, gpMysql, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 

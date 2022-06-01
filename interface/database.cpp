@@ -15,15 +15,21 @@
 #include "include/Database"
 using namespace radial;
 Database *gpDatabase = NULL;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 int main(int argc, char *argv[])
 {
   string strPrefix = "database->main()";
-  gpDatabase = new Database(strPrefix, argc, argv, bind(&Database::callback, gpDatabase, placeholders::_1, placeholders::_2, placeholders::_3), &mysql);
+  gpDatabase = new Database(strPrefix, argc, argv, &callback, &mysql);
   gpDatabase->process(strPrefix);
   delete gpDatabase;
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Database::callback, gpDatabase, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false;

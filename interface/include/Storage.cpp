@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Storage()
-Storage::Storage(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "storage", argc, argv, callback)
+Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
 {
 }
 // }}}
@@ -32,19 +32,11 @@ Storage::~Storage()
 // {{{ callback()
 void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  strPrefix += "->Storage::callback()";
-  thread threadInternal(&Storage::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
-}
-// }}}
-// {{{ internal()
-void Storage::internal(string strPrefix, Json *ptJson, const bool bResponse)
-{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Storage::internal()";
+  strPrefix += "->Storage::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     list<string> keys;

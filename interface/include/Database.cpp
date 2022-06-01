@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Database()
-Database::Database(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback, bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, callback)
+Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
 {
   string strError;
   // {{{ command line arguments
@@ -67,24 +67,10 @@ Database::~Database()
 // {{{ callback()
 void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  strPrefix += "->Database::callback()";
-  thread threadInternal(&Database::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
-}
-// }}}
-// {{{ databases()
-Json *Database::databases()
-{
-  return m_ptDatabases;
-}
-// }}}
-// {{{ internal()
-void Database::internal(string strPrefix, Json *ptJson, const bool bResponse)
-{
   bool bResult = false;
   string strError;
 
-  strPrefix += "->Database::internal()";
+  strPrefix += "->Database::callback()";
   if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
   {
     if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
@@ -127,6 +113,12 @@ void Database::internal(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+}
+// }}}
+// {{{ databases()
+Json *Database::databases()
+{
+  return m_ptDatabases;
 }
 // }}}
 }

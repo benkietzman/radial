@@ -19,7 +19,6 @@
 #include <cerrno>
 #include <cstring>
 #include <fstream>
-#include <functional>
 #include <list>
 #include <map>
 #include <mutex>

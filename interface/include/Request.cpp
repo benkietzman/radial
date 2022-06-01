@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Request()
-Request::Request(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "request", argc, argv, callback)
+Request::Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "request", argc, argv, pCallback)
 {
 }
 // }}}
@@ -157,21 +157,13 @@ void Request::accept(string strPrefix)
 }
 // }}}
 // {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
-{
-  strPrefix += "->Request::callback()";
-  thread threadInternal(&Request::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
-}
-// }}}
-// {{{ internal()
-void Request::internal(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Request::internal()";
+  strPrefix += "->Request::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m["Function"]->v == "ping")

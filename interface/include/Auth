@@ -28,10 +28,8 @@ class Auth : public Interface
   map<string, string> m_accessFunctions;
   string m_strWarden;
 
-  void internal(string strPrefix, Json *ptJson, const bool bResponse);
-
   public:
-  Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback);
+  Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Auth();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
   bool init();

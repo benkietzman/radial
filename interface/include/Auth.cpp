@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Auth()
-Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "auth", argc, argv, callback)
+Auth::Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "auth", argc, argv, pCallback)
 {
 }
 // }}}
@@ -32,43 +32,11 @@ Auth::~Auth()
 // {{{ callback()
 void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  strPrefix += "->Auth::callback()";
-  thread threadInternal(&Auth::internal, this, strPrefix, new Json(ptJson), bResponse);
-  threadInternal.detach();
-}
-// }}}
-// {{{ init()
-bool Auth::init()
-{
-  bool bResult = false;
-  string strError;
-  Json *ptJson = new Json;
-
-  ptJson->insert("Function", "list");
-  if (target(ptJson, strError))
-  {
-    if (ptJson->m.find("Response") != ptJson->m.end())
-    {
-      bResult = true;
-      for (auto &interface : ptJson->m["Response"]->m)
-      {
-        m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
-      }
-    }
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ internal()
-void Auth::internal(string strPrefix, Json *ptJson, const bool bResponse)
-{
   bool bResult = false;
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Auth::internal()";
+  strPrefix += "->Auth::callback()";
   if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
   {
     if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
@@ -146,6 +114,30 @@ void Auth::internal(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+}
+// }}}
+// {{{ init()
+bool Auth::init()
+{
+  bool bResult = false;
+  string strError;
+  Json *ptJson = new Json;
+
+  ptJson->insert("Function", "list");
+  if (target(ptJson, strError))
+  {
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      bResult = true;
+      for (auto &interface : ptJson->m["Response"]->m)
+      {
+        m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
+      }
+    }
+  }
+  delete ptJson;
+
+  return bResult;
 }
 // }}}
 }

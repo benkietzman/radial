@@ -13,10 +13,18 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 #include "include/Storage"
+radial::Storage *gpStorage;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "storage->main()";
-  radial::Storage storage(strPrefix, argc, argv, bind(&radial::Storage::callback, &storage, placeholders::_1, placeholders::_2, placeholders::_3));
-  storage.process(strPrefix);
+  gpStorage = new radial::Storage(strPrefix, argc, argv, &callback);
+  gpStorage->process(strPrefix);
+  delete gpStorage;
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&radial::Storage::callback, gpStorage, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 

@@ -14,12 +14,20 @@
 ***********************************************************************/
 #include "include/Link"
 using namespace radial;
+Link *gpLink;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "link->main()";
-  Link link(strPrefix, argc, argv, bind(&Link::callback, &link, placeholders::_1, placeholders::_2, placeholders::_3));
-  thread threadSocket(&Link::socket, &link, strPrefix);
-  link.process(strPrefix);
+  gpLink = new Link(strPrefix, argc, argv, &callback);
+  thread threadSocket(&Link::socket, gpLink, strPrefix);
+  gpLink->process(strPrefix);
   threadSocket.join();
+  delete gpLink
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Link::callback, gpLink, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 

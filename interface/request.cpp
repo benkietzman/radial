@@ -14,12 +14,20 @@
 ***********************************************************************/
 #include "include/Request"
 using namespace radial;
+Request *gpRequest;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "request->main()";
-  Request request(strPrefix, argc, argv, bind(&Request::callback, &request, placeholders::_1, placeholders::_2, placeholders::_3));
-  thread threadAccept(&Request::accept, &request, strPrefix);
-  request.process(strPrefix);
+  gpRequest = new Request(strPrefix, argc, argv, &callback);
+  thread threadAccept(&Request::accept, gpRequest, strPrefix);
+  gpRequest->process(strPrefix);
   threadAccept.join();
+  delete gpRequest;
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Request::callback, gpRequest, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 

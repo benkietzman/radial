@@ -14,10 +14,18 @@
 ***********************************************************************/
 #include "include/Log"
 using namespace radial;
+Log *gpLog;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "log->main()";
-  Log log(strPrefix, argc, argv, bind(&Log::callback, &log, placeholders::_1, placeholders::_2, placeholders::_3));
-  log.process(strPrefix);
+  gpLog = new Log(strPrefix, argc, argv, &callback);
+  gpLog->process(strPrefix);
+  delete gpLog;
   return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Log::callback, gpLog, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
+} 
