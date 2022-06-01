@@ -22,35 +22,11 @@ namespace radial
 // {{{ Auth()
 Auth::Auth(string strPrefix, int argc, char **argv, function<void(string, Json *, const bool)> callback) : Interface(strPrefix, "auth", argc, argv, callback)
 {
-  // {{{ command line arguments
-  for (int i = 1; i < argc; i++)
-  {
-    string strArg = argv[i];
-    if (strArg == "-w" || (strArg.size() > 9 && strArg.substr(0, 9) == "--warden="))
-    {
-      if (strArg == "-w" && i + 1 < argc && argv[i+1][0] != '-')
-      {
-        m_strWarden = argv[++i];
-      }
-      else
-      {
-        m_strWarden = strArg.substr(9, strArg.size() - 9);
-      }
-      m_manip.purgeChar(m_strWarden, m_strWarden, "'");
-      m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
-    }
-  }
-  // }}}
-  m_pWarden = NULL;
 }
 // }}}
 // {{{ ~Auth()
 Auth::~Auth()
 {
-  if (m_pWarden != NULL)
-  {
-    delete m_pWarden;
-  }
 }
 // }}}
 // {{{ callback()
@@ -66,33 +42,21 @@ bool Auth::init()
 {
   bool bResult = false;
   string strError;
+  Json *ptJson = new Json;
 
-  if (!m_strWarden.empty())
+  ptJson->insert("Function", "list");
+  if (target(ptJson, strError))
   {
-    Json *ptJson = new Json;
-    ptJson->insert("Function", "list");
-    if (target(ptJson, strError))
+    if (ptJson->m.find("Response") != ptJson->m.end())
     {
-      if (ptJson->m.find("Response") != ptJson->m.end())
+      bResult = true;
+      for (auto &interface : ptJson->m["Response"]->m)
       {
-        for (auto &interface : ptJson->m["Response"]->m)
-        {
-          m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
-        }
-        m_pWarden = new Warden("Radial", m_strWarden, strError);
-        if (strError.empty())
-        {
-          bResult = true;
-        }
-        else
-        {
-          delete m_pWarden;
-          m_pWarden = NULL;
-        }
+        m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
       }
     }
-    delete ptJson;
   }
+  delete ptJson;
 
   return bResult;
 }

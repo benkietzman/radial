@@ -46,16 +46,22 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
   {
     m_pCentral->setMysql(pMysql);
   }
-  m_ptDatabases = NULL;
+  m_ptDatabases = new Json;
+  if (m_pWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
+  {
+    for (auto &database : m_ptDatabases->m)
+    {
+      map<string, string> cred;
+      database.second->flatten(cred, true, false);
+      m_pCentral->addDatabase(database.first, cred, strError);
+    }
+  }
 }
 // }}}
 // {{{ ~Database()
 Database::~Database()
 {
-  if (m_ptDatabases != NULL)
-  {
-    delete m_ptDatabases;
-  }
+  delete m_ptDatabases;
 }
 // }}}
 // {{{ callback()
@@ -70,35 +76,6 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 Json *Database::databases()
 {
   return m_ptDatabases;
-}
-// }}}
-// {{{ init()
-bool Database::init()
-{
-  bool bResult = false;
-  string strError;
-
-  if (!m_strWarden.empty())
-  {
-    Warden *ptWarden = new Warden("Radial", m_strWarden, strError);
-    if (strError.empty())
-    {
-      m_ptDatabases = new Json;
-      if (ptWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
-      {
-        bResult = true;
-        for (auto &database : m_ptDatabases->m)
-        {
-          map<string, string> cred;
-          database.second->flatten(cred, true, false);
-          m_pCentral->addDatabase(database.first, cred, strError);
-        }
-      }
-    }
-    delete ptWarden;
-  }
-
-  return bResult;
 }
 // }}}
 // {{{ internal()

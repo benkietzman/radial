@@ -20,12 +20,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "database->main()";
   gpDatabase = new Database(strPrefix, argc, argv, bind(&Database::callback, gpDatabase, placeholders::_1, placeholders::_2, placeholders::_3), &mysql);
-  thread threadProcess(&Database::process, gpDatabase, strPrefix);
-  if (!gpDatabase->init())
-  {
-    gpDatabase->setShutdown();
-  }
-  threadProcess.join();
+  gpDatabase->process(strPrefix);
   delete gpDatabase;
   return 0;
 }

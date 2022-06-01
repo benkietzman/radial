@@ -27,7 +27,6 @@ class Auth : public Interface
   protected:
   map<string, string> m_accessFunctions;
   string m_strWarden;
-  Warden *m_pWarden;
 
   void internal(string strPrefix, Json *ptJson, const bool bResponse);
 

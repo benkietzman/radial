@@ -35,7 +35,6 @@ class Database : public Interface
   ~Database();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
   Json *databases();
-  bool init();
 };
 // }}}
 }
