@@ -50,7 +50,10 @@ Database::Database(string strPrefix, int argc, char **argv, function<void(string
     if (m_strError.empty())
     {
       Warden *ptWarden = new Warden("Radial", strWarden, m_strError);
-      m_pCentral->setMysql(pMysql);
+      if (pMysql != NULL)
+      {
+        m_pCentral->setMysql(pMysql);
+      }
       if (m_strError.empty())
       {
         m_ptDatabases = new Json;
