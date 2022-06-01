@@ -215,12 +215,15 @@ void Interface::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-            m_mutex.lock();
-            if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
+            if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName)
             {
-              fdUnique = m_waiting[ptJson->m["_unique"]->v];
+              m_mutex.lock();
+              if (ptJson->m.find("_unique") != ptJson->m.end() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
+              {
+                fdUnique = m_waiting[ptJson->m["_unique"]->v];
+              }
+              m_mutex.unlock();
             }
-            m_mutex.unlock();
             if (fdUnique != -1)
             {
               strLine += "\n";
