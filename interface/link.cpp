@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   thread threadSocket(&Link::socket, gpLink, strPrefix);
   gpLink->process(strPrefix);
   threadSocket.join();
-  delete gpLink
+  delete gpLink;
   return 0;
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
