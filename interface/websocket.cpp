@@ -13,6 +13,7 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 #include <StringManip>
+#include <Utility>
 #include "include/Websocket"
 int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
 struct lws_protocols gtProtocols[] =
@@ -26,10 +27,12 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   char *pszCert, *pszKey;
-  string strData, strPrefix = "websocket->main()";
+  string strData, strError, strPrefix = "websocket->main()";
   lws_context *ptContext = NULL;
   lws_context_creation_info tInfo;
   common::StringManip manip;
+  common::Utility utility(strError);
+  utility.sslInit();
   gpWebsocket = new radial::Websocket(strPrefix, argc, argv, &callback, &websocket);
   for (int i = 1; i < argc; i++)
   {
@@ -73,6 +76,7 @@ int main(int argc, char *argv[])
   delete[] pszCert;
   delete[] pszKey;
   delete gpWebsocket;
+  utility.sslDeinit();
   return 0;
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
