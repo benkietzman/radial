@@ -16,7 +16,7 @@
 #include "Database"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Database()
@@ -115,10 +115,72 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   delete ptJson;
 }
 // }}}
-// {{{ databases()
-Json *Database::databases()
+// {{{ mysql()
+bool Database::mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
-  return m_ptDatabases;
+  bool bResult = false;
+
+  if (rows != NULL)
+  {
+    rows->clear();
+  }
+  if (m_ptDatabases != NULL && m_ptDatabases->m.find(strName) != m_ptDatabases->m.end())
+  {
+    if (!strType.empty())
+    {
+      if (strType == "query" || strType == "update")
+      {
+        if (strType == "update" || rows != NULL)
+        {
+          Json *ptJson = new Json(m_ptDatabases->m[strName]);
+          ptJson->insert("Type", strType);
+          ptJson->insert(((strType == "query")?"Query":"Update"), strQuery);
+          if (target("mysql", ptJson, strError))
+          {
+            bResult = true;
+            if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+            {
+              stringstream ssID(ptJson->m["ID"]->v);
+              ssID >> ullID;
+            }
+            if (strType == "query" && ptJson->m.find("Response") != ptJson->m.end())
+            {
+              for (auto &i : ptJson->m["Response"]->l)
+              {
+                map<string, string> row;
+                i->flatten(row, true, false);
+                rows->push_back(row);
+              }
+            }
+            if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+            {
+              stringstream ssRows(ptJson->m["Rows"]->v);
+              ssRows >> ullRows;
+            }
+          }
+          delete ptJson;
+        }
+        else
+        {
+          strError = "Please provide a placeholder for the resultant rows.";
+        }
+      }
+      else
+      {
+        strError = "Please provide a valid Type:  query, update.";
+      }
+    }
+    else
+    {
+      strError = "Please provide the Type.";
+    }
+  }
+  else
+  {
+    strError = "Please provide a valid database Name.";
+  }
+
+  return bResult;
 }
 // }}}
 }

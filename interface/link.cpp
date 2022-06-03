@@ -30,4 +30,4 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Link::callback, gpLink, strPrefix, new Json(ptJson), bResponse);
   threadCallback.detach();
-} 
+}

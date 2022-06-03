@@ -1,0 +1,53 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Websocket
+// author     : Ben Kietzman
+// begin      : 2022-06-03
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_WEBSOCKET_
+#define _RADIAL_WEBSOCKET_
+// {{{ includes
+#include <libwebsockets.h>
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+struct data
+{ 
+  bool bRemove;
+  list<string> buffers;
+  lws *wsi;
+  mutex mutexShare;
+  size_t unThreads;
+  string strBuffers[2];
+};
+// {{{ Websocket
+class Websocket : public Interface
+{
+  protected:
+  int (*m_pWebsocket)(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
+  list<data *> m_conns;
+
+  void request(data *ptConn, Json *ptJson);
+
+  public:
+  Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
+  ~Websocket();
+  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void socket(string strPrefix, lws_context *ptContext);
+  int websocket(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
+};
+// }}}
+}
+}
+#endif

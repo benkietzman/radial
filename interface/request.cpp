@@ -30,4 +30,4 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Request::callback, gpRequest, strPrefix, new Json(ptJson), bResponse);
   threadCallback.detach();
-} 
+}

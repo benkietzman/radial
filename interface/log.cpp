@@ -28,4 +28,4 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Log::callback, gpLog, strPrefix, new Json(ptJson), bResponse);
   threadCallback.detach();
-} 
+}

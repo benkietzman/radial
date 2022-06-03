@@ -16,7 +16,7 @@
 #include "Storage"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Storage()

@@ -16,7 +16,7 @@
 #include "Request"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Request()
@@ -37,7 +37,6 @@ void Request::accept(string strPrefix)
   stringstream ssMessage;
 
   strPrefix += "->Request::accept()";
-  setlocale(LC_ALL, "");
   if ((ctx = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {
     addrinfo hints, *result;
@@ -154,6 +153,7 @@ void Request::accept(string strPrefix)
     notify(ssMessage.str());
   }
   m_pUtility->sslDeinit();
+  setShutdown();
 }
 // }}}
 // {{{ callback()

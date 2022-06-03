@@ -16,7 +16,7 @@
 #include "Hub"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Hub()

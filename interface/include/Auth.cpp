@@ -16,7 +16,7 @@
 #include "Auth"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Auth()

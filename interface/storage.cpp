@@ -27,4 +27,4 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&radial::Storage::callback, gpStorage, strPrefix, new Json(ptJson), bResponse);
   threadCallback.detach();
-} 
+}

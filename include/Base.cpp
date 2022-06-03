@@ -25,6 +25,7 @@ Base::Base(int argc, char **argv)
   string strError;
   utsname tServer;
 
+  setlocale(LC_ALL, "");
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;

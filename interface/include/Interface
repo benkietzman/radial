@@ -32,21 +32,16 @@ class Interface : public Base
   string m_strBuffers[2];
   string m_strName;
 
+  void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
   void log(const string strFunction, const string strMessage);
-  void monitor(string strPrefix);
-  void response(Json *ptJson);
-
-  public:
-  Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
-  ~Interface();
-  void alert(const string strMessage);
   void log(const string strMessage);
-  void notify(const string strMessage);
+  void monitor(string strPrefix);
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
-  void process(string strPrefix);
+  void notify(const string strMessage);
+  void response(Json *ptJson);
   bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
   bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
   bool storageRemove(const list<string> keys, string &strError);
@@ -58,6 +53,11 @@ class Interface : public Base
   void target(const string strTarget, Json *ptJson, const bool bWait = true);
   bool target(Json *ptJson, string &strError);
   bool target(const string strTarget, Json *ptJson, string &strError);
+
+  public:
+  Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  ~Interface();
+  void process(string strPrefix);
 };
 // }}}
 }

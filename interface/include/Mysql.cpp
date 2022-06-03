@@ -16,7 +16,7 @@
 #include "Mysql"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Mysql()
@@ -164,12 +164,12 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
   strName = ssName.str();
   lock();
   if (m_conn.find(strName) == m_conn.end())
-  { 
+  {
     list<radial_mysql *> mysqlList;
     m_conn[strName] = mysqlList;
-  }   
+  }
   if (m_conn.find(strName) != m_conn.end())
-  { 
+  {
     iter = m_conn[strName].end();
     for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
     {

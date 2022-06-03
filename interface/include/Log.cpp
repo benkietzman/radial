@@ -16,7 +16,7 @@
 #include "Log"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Log()

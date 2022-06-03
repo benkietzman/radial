@@ -403,7 +403,6 @@ void Link::socket(string strPrefix)
   string strError, strJson;
   stringstream ssMessage;
   strPrefix += "->Link::socket()";
-  setlocale(LC_ALL, "");
   // }}}
   if ((ctxS = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {
@@ -1012,6 +1011,7 @@ void Link::socket(string strPrefix)
   }
   // {{{ post work
   m_pUtility->sslDeinit();
+  setShutdown();
   // }}}
 }
 // }}}

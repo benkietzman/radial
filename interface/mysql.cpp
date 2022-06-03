@@ -28,4 +28,4 @@ void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Mysql::callback, gpMysql, strPrefix, new Json(ptJson), bResponse);
   threadCallback.detach();
-} 
+}

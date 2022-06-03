@@ -16,7 +16,7 @@
 #include "Interface"
 // }}}
 extern "C++"
-{ 
+{
 namespace radial
 {
 // {{{ Interface()
@@ -95,12 +95,12 @@ void Interface::monitor(string strPrefix)
     {
       notify(ssMessage.str());
       setShutdown();
-    } 
+    }
     else
     {
       //log(ssMessage.str());
     }
-  } 
+  }
 }
 // }}}
 // {{{ mysql
@@ -423,7 +423,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       unUnique++;
       ssUnique.str("");
       ssUnique << m_strName << "_" << unUnique;
-    } 
+    }
     ptJson->insert("_unique", ssUnique.str());
     if (nReturn == 0)
     {
