@@ -169,7 +169,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   ssMessage.str("");
   ssMessage << strPrefix << "->lws_create_context():  Created context.";
   log(ssMessage.str());
-  while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
+  while (!shutdown())
   {
     list<list<data *>::iterator> removals;
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
@@ -188,6 +188,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
       delete (*removals.front());
       m_conns.erase(removals.front());
     }
+    lws_service_tsi(ptContext, -1, 0);
   }
   while (!m_conns.empty())
   {
