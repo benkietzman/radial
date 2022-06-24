@@ -156,6 +156,7 @@ void Websocket::request(data *ptConn, Json *ptJson)
     ptConn->unThreads--;
   }
   ptConn->mutexShare.unlock();
+  lws_callback_on_writable(ptConn->wsi);
   delete ptJson;
 }
 // }}}
