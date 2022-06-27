@@ -34,6 +34,11 @@ class Interface : public Base
 
   void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
+  list<map<string, string> > *dbquery(const string strName, const string strQuery, string &strError);
+  list<map<string, string> > *dbquery(const string strName, const string strQuery, unsigned long long &ullRows, string &strError);
+  bool dbupdate(const string strName, const string strUpdate, string &strError);
+  bool dbupdate(const string strName, const string strUpdate, string &strID, string &strError);
+  bool dbupdate(const string strName, const string strUpdate, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
   void monitor(string strPrefix);

@@ -65,6 +65,94 @@ bool Interface::auth(Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
+// {{{ db
+// {{{ dbquery()
+list<map<string, string> > *Interface::dbquery(const string strName, const string strQuery, string &strError)
+{
+  unsigned long long ullRows;
+
+  return dbquery(strName, strQuery, ullRows, strError);
+}
+list<map<string, string> > *Interface::dbquery(const string strName, const string strQuery, unsigned long long &ullRows, string &strError)
+{
+  list<map<string, string> > *rows = NULL;
+  Json *ptJson = new Json;
+
+  ullRows = 0;
+  ptJson->insert("Database", strName);
+  ptJson->insert("Query", strQuery);
+  if (target("database", ptJson, strError))
+  {
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      for (auto &ptRow : ptJson->m["Response"]->l) 
+      {
+        map<string, string> row;
+        ptRow->flatten(row, true, false);
+        rows->push_back(row);
+      }
+    }
+    if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+    {
+      stringstream ssRows(ptJson->m["Rows"]->v);
+      ssRows >> ullRows;
+    }
+  }
+  delete ptJson;
+
+  return rows;
+}
+// }}}
+// {{{ dbupdate()
+bool Interface::dbupdate(const string strName, const string strUpdate, string &strError)
+{
+  unsigned long long ullID, ullRows;
+
+  return dbupdate(strName, strUpdate, ullID, ullRows, strError);
+}
+bool Interface::dbupdate(const string strName, const string strUpdate, string &strID, string &strError)
+{
+  bool bResult = false;
+  unsigned long long ullID, ullRows;
+
+  if (dbupdate(strName, strUpdate, ullID, ullRows, strError))
+  {
+    stringstream ssID;
+    bResult = true;
+    ssID << ullID;
+    strID = ssID.str();
+  }
+
+  return bResult;
+}
+bool Interface::dbupdate(const string strName, const string strUpdate, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ullID = ullRows = 0;
+  ptJson->insert("Database", strName);
+  ptJson->insert("Update", strUpdate);
+  if (target("database", ptJson, strError))
+  {
+    bResult = true;
+    if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+    {
+      stringstream ssID(ptJson->m["ID"]->v);
+      ssID >> ullID;
+    }
+    if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+    {
+      stringstream ssRows(ptJson->m["Rows"]->v);
+      ssRows >> ullRows;
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// }}}
 // {{{ log()
 void Interface::log(const string strMessage)
 {

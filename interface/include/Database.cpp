@@ -56,10 +56,14 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
     {
-      auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, strError);
+      unsigned long long ullRows;
+      auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, strError);
       if (rows != NULL)
       {
+        stringstream ssRows;
         bResult = true;
+        ssRows << ullRows;
+        ptJson->insert("Rows", ssRows.str(), 'n');
         ptJson->m["Response"] = new Json;
         for (auto &row : *rows)
         {
@@ -70,9 +74,15 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
     {
-      if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, strError))
+      unsigned long long ullID, ullRows;
+      if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, ullID, ullRows, strError))
       {
+        stringstream ssID, ssRows;
         bResult = true;
+        ssID << ullID;
+        ptJson->insert("ID", ssID.str());
+        ssRows << ullRows;
+        ptJson->insert("Rows", ssRows.str());
       }
     }
     else
