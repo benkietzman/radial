@@ -66,25 +66,41 @@ bool Interface::auth(Json *ptJson, string &strError)
 }
 // }}}
 // {{{ db
+// {{{ dbfree()
+void Interface::dbfree(list<map<string, string> > *rows)
+{
+  if (rows != NULL)
+  {
+    for (auto &row : (*rows))
+    {
+      i.clear();
+    }
+    rows->clear();
+    delete rows;
+    rows = NULL;
+  }
+}
+// }}}
 // {{{ dbquery()
-list<map<string, string> > *Interface::dbquery(const string strName, const string strQuery, string &strError)
+list<map<string, string> > *Interface::dbquery(const string strDatabase, const string strQuery, string &strError)
 {
   unsigned long long ullRows;
 
-  return dbquery(strName, strQuery, ullRows, strError);
+  return dbquery(strDatabase, strQuery, ullRows, strError);
 }
-list<map<string, string> > *Interface::dbquery(const string strName, const string strQuery, unsigned long long &ullRows, string &strError)
+list<map<string, string> > *Interface::dbquery(const string strDatabase, const string strQuery, unsigned long long &ullRows, string &strError)
 {
   list<map<string, string> > *rows = NULL;
   Json *ptJson = new Json;
 
   ullRows = 0;
-  ptJson->insert("Database", strName);
+  ptJson->insert("Database", strDatabase);
   ptJson->insert("Query", strQuery);
   if (target("database", ptJson, strError))
   {
     if (ptJson->m.find("Response") != ptJson->m.end())
     {
+      rows = new list<map<string, string> >;
       for (auto &ptRow : ptJson->m["Response"]->l) 
       {
         map<string, string> row;
@@ -104,18 +120,18 @@ list<map<string, string> > *Interface::dbquery(const string strName, const strin
 }
 // }}}
 // {{{ dbupdate()
-bool Interface::dbupdate(const string strName, const string strUpdate, string &strError)
+bool Interface::dbupdate(const string strDatabase, const string strUpdate, string &strError)
 {
   unsigned long long ullID, ullRows;
 
-  return dbupdate(strName, strUpdate, ullID, ullRows, strError);
+  return dbupdate(strDatabase, strUpdate, ullID, ullRows, strError);
 }
-bool Interface::dbupdate(const string strName, const string strUpdate, string &strID, string &strError)
+bool Interface::dbupdate(const string strDatabase, const string strUpdate, string &strID, string &strError)
 {
   bool bResult = false;
   unsigned long long ullID, ullRows;
 
-  if (dbupdate(strName, strUpdate, ullID, ullRows, strError))
+  if (dbupdate(strDatabase, strUpdate, ullID, ullRows, strError))
   {
     stringstream ssID;
     bResult = true;
@@ -125,13 +141,13 @@ bool Interface::dbupdate(const string strName, const string strUpdate, string &s
 
   return bResult;
 }
-bool Interface::dbupdate(const string strName, const string strUpdate, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
 
   ullID = ullRows = 0;
-  ptJson->insert("Database", strName);
+  ptJson->insert("Database", strDatabase);
   ptJson->insert("Update", strUpdate);
   if (target("database", ptJson, strError))
   {

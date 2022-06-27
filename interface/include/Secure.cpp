@@ -110,8 +110,8 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       if (ptJson->m.find("Application") != ptJson->m.end() && !ptJson->m["Application"]->v.empty())
       {
         stringstream ssQuery;
-        ssQuery << "select type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["Application"]->v, strValue) << "'";
-        auto getLoginType = dbquery("central", ssQuery.str(), strError);
+        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["Application"]->v, strValue) << "'";
+        auto getLoginType = dbquery("central_r", ssQuery.str(), strError);
         if (getLoginType != NULL)
         {
           if (!getLoginType->empty())
@@ -131,7 +131,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             strError = "Security module not configured for this application.";
           }
         }
-        m_pCentral->free(getLoginType);
+        dbfree(getLoginType);
       }
       else
       {
@@ -256,7 +256,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               ptJwt->insert("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ptJson->m["Response"]->m["auth"]->insert("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ssQuery << "select a.name, b.user_id, b.password from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Bridge - WebSocket'";
-              auto getApplicationAccount = dbquery("central", ssQuery.str(), strError);
+              auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
               if (getApplicationAccount != NULL)
               {
                 ptJwt->m["BridgeCredentials"] = new Json;
@@ -270,7 +270,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                   ptJwt->m["BridgeCredentials"]->m[getApplicationAccountRow["name"]]->insert("Password", getApplicationAccountRow["password"]);
                 }
               }
-              m_pCentral->free(getApplicationAccount);
+              dbfree(getApplicationAccount);
               if (ptData->m["central"]->m.find("apps") != ptData->m["central"]->m.end())
               {
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
