@@ -71,10 +71,6 @@ void Interface::dbfree(list<map<string, string> > *rows)
 {
   if (rows != NULL)
   {
-    for (auto &row : (*rows))
-    {
-      row.clear();
-    }
     rows->clear();
     delete rows;
     rows = NULL;
