@@ -73,7 +73,7 @@ void Interface::dbfree(list<map<string, string> > *rows)
   {
     for (auto &row : (*rows))
     {
-      i.clear();
+      row.clear();
     }
     rows->clear();
     delete rows;
