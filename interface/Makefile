@@ -7,16 +7,17 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/storage bin/websocket
+all: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
 # }}}
 
-install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/storage bin/websocket $(prefix)/radial/interface
+install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=777 bin/auth $(prefix)/radial/interface/
 	install --mode=777 bin/database $(prefix)/radial/interface/
 	install --mode=777 bin/link $(prefix)/radial/interface/
 	install --mode=777 bin/log $(prefix)/radial/interface/
 	install --mode=777 bin/mysql $(prefix)/radial/interface/
 	install --mode=777 bin/request $(prefix)/radial/interface/
+	install --mode=777 bin/secure $(prefix)/radial/interface/
 	install --mode=777 bin/storage $(prefix)/radial/interface/
 	install --mode=777 bin/websocket $(prefix)/radial/interface/
 
@@ -79,6 +80,16 @@ obj/request.o: request.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c request.cpp -o obj/request.o $(CPPFLAGS) -I../../common
 obj/Request.o: include/Request.cpp obj
 	g++ -ggdb -Wall -c include/Request.cpp -o obj/Request.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ secure
+secure: bin/secure $(prefix)/radial/interface
+	install --mode=777 bin/secure $(prefix)/radial/interface/
+bin/secure: ../../common/libcommon.a obj/secure.o obj/Base.o obj/Interface.o obj/Secure.o bin
+	g++ -o bin/secure obj/secure.o obj/Base.o obj/Interface.o obj/Secure.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/secure.o: secure.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c secure.cpp -o obj/secure.o $(CPPFLAGS) -I../../common
+obj/Secure.o: include/Secure.cpp obj
+	g++ -ggdb -Wall -c include/Secure.cpp -o obj/Secure.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ storage
 storage: bin/storage $(prefix)/radial/interface

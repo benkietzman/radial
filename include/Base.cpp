@@ -83,6 +83,8 @@ Base::Base(int argc, char **argv)
   // }}}
   m_pCentral = new Central(strError);
   m_pCentral->setApplication(m_strApplication);
+  m_pJunction = new ServiceJunction(strError);
+  m_pJunction->setApplication(m_strApplication);
   m_pUtility = new Utility(strError);
   m_pWarden = NULL;
   if (!m_strWarden.empty())
@@ -95,6 +97,7 @@ Base::Base(int argc, char **argv)
 Base::~Base()
 {
   delete m_pCentral;
+  delete m_pJunction;
   if (m_pWarden != NULL)
   {
     delete m_pWarden;

@@ -31,6 +31,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   sigignore(SIGTERM);
   sigignore(SIGWINCH);
   m_pCallback = pCallback;
+  m_pJunction->setProgram(strName);
   m_strName = strName;
   if (strName != "log")
   {

@@ -25,7 +25,6 @@ namespace radial
 class Database : public Interface
 {
   protected:
-  string m_strWarden;
   Json *m_ptDatabases;
 
   public:

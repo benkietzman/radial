@@ -38,7 +38,10 @@ Link::Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Js
     m_ptLink = new Json(ssJson.str());
   }
   inLink.close();
-  m_pWarden->vaultRetrieve({"link", "Password"}, m_strPassword, strError);
+  if (m_pWarden != NULL)
+  {
+    m_pWarden->vaultRetrieve({"link", "Password"}, m_strPassword, strError);
+  }
   m_unLink = RADIAL_LINK_UNKNOWN;
 }
 // }}}

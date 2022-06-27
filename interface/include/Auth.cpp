@@ -44,7 +44,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
       if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
       {
         Json *ptData = new Json(ptJson);
-        if (m_pWarden->authz(ptData, strError))
+        if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
         {
           if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
           {
@@ -87,6 +87,10 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             strError = "Authorization denied.";
           }
+        }
+        else if (m_pWarden == NULL)
+        {
+          strError = "Please initialize Warden.";
         }
         delete ptData;
       }

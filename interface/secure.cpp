@@ -1,9 +1,9 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Auth
+// file       : secure.cpp
 // author     : Ben Kietzman
-// begin      : 2022-05-27
+// begin      : 2022-06-27
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 /***********************************************************************
@@ -12,28 +12,20 @@
 * the Free Software Foundation; either version 2 of the License, or    *
 * (at your option) any later version.                                  *
 ***********************************************************************/
-#ifndef _RADIAL_AUTH_
-#define _RADIAL_AUTH_
-// {{{ includes
-#include "Interface"
-// }}}
-extern "C++"
+#include "include/Secure"
+using namespace radial;
+Secure *gpSecure;
+void callback(string strPrefix, Json *ptJson, const bool bResponse);
+int main(int argc, char *argv[])
 {
-namespace radial
-{
-// {{{ Auth
-class Auth : public Interface
-{
-  protected:
-  map<string, string> m_accessFunctions;
-
-  public:
-  Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
-  ~Auth();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  bool init();
-};
-// }}}
+  string strError, strPrefix = "auth->main()";
+  gpSecure = new Secure(strPrefix, argc, argv, &callback);
+  gpSecure->process(strPrefix);
+  delete gpSecure;
+  return 0;
 }
+void callback(string strPrefix, Json *ptJson, const bool bResponse)
+{
+  thread threadCallback(&Secure::callback, gpSecure, strPrefix, new Json(ptJson), bResponse);
+  threadCallback.detach();
 }
-#endif

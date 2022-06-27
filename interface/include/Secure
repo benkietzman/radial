@@ -1,9 +1,9 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Auth
+// file       : Secure
 // author     : Ben Kietzman
-// begin      : 2022-05-27
+// begin      : 2022-06-27
 // copyright  : kietzman.org
 // email      : ben@kietzman.org
 /***********************************************************************
@@ -12,8 +12,8 @@
 * the Free Software Foundation; either version 2 of the License, or    *
 * (at your option) any later version.                                  *
 ***********************************************************************/
-#ifndef _RADIAL_AUTH_
-#define _RADIAL_AUTH_
+#ifndef _RADIAL_SECURE_
+#define _RADIAL_SECURE_
 // {{{ includes
 #include "Interface"
 // }}}
@@ -21,17 +21,17 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ Auth
-class Auth : public Interface
+// {{{ Secure
+class Secure : public Interface
 {
   protected:
-  map<string, string> m_accessFunctions;
+  string m_strSecret;
+  string m_strSigner;
 
   public:
-  Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
-  ~Auth();
+  Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  ~Secure();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  bool init();
 };
 // }}}
 }
