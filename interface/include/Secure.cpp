@@ -180,7 +180,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           // {{{ password
           if (ptJson->m["Request"]->m["Type"]->v == "password")
           {
-            if (ptJson->m["Request"]->m.find("Return") != ptJson->m["Return"]->m.end() && !ptJson->m["Request"]->m["Return"]->v.empty())
+            if (ptJson->m["Request"]->m.find("Return") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Return"]->v.empty())
             {
               bResult = true;
               ptJson->m["Response"] = new Json;
