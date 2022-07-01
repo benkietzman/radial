@@ -255,19 +255,19 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               ptJwt->insert("exp", ssTime.str(), 'n');
               ptJwt->insert("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ptJson->m["Response"]->m["auth"]->insert("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
-              ssQuery << "select a.name, b.user_id, b.password from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Bridge - WebSocket'";
+              ssQuery << "select a.name, b.user_id, b.password from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
               auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
               if (getApplicationAccount != NULL)
               {
-                ptJwt->m["BridgeCredentials"] = new Json;
+                ptJwt->m["RadialCredentials"] = new Json;
                 for (auto &getApplicationAccountRow : *getApplicationAccount)
                 {
-                  if (ptJwt->m["BridgeCredentials"]->m.find(getApplicationAccountRow["name"]) == ptJwt->m["BridgeCredentials"]->m.end())
+                  if (ptJwt->m["RadialCredentials"]->m.find(getApplicationAccountRow["name"]) == ptJwt->m["RadialCredentials"]->m.end())
                   {
-                    ptJwt->m["BridgeCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
+                    ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
                   }
-                  ptJwt->m["BridgeCredentials"]->m[getApplicationAccountRow["name"]]->insert("User", getApplicationAccountRow["user_id"]);
-                  ptJwt->m["BridgeCredentials"]->m[getApplicationAccountRow["name"]]->insert("Password", getApplicationAccountRow["password"]);
+                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->insert("User", getApplicationAccountRow["user_id"]);
+                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->insert("Password", getApplicationAccountRow["password"]);
                 }
               }
               dbfree(getApplicationAccount);
