@@ -107,10 +107,10 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     // {{{ getSecurityModule
     else if (ptJson->m["Function"]->v == "getSecurityModule")
     {
-      if (ptJson->m.find("Application") != ptJson->m.end() && !ptJson->m["Application"]->v.empty())
+      if (ptJson->m.find("reqApp") != ptJson->m.end() && !ptJson->m["reqApp"]->v.empty())
       {
         stringstream ssQuery;
-        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["Application"]->v, strValue) << "'";
+        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["reqApp"]->v, strValue) << "'";
         auto getLoginType = dbquery("central_r", ssQuery.str(), strError);
         if (getLoginType != NULL)
         {
@@ -135,7 +135,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       }
       else
       {
-        strError = "Please provide the Application.";
+        strError = "Please provide the reqApp.";
       }
     }
     // }}}
