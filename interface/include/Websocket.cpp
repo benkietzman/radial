@@ -461,17 +461,8 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       pstrBuffers[0]->append((char *)in, len);
       if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
       {
-        if (connIter != m_conns.end())
-        {
-          thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
-          threadRequest.detach();
-        }
-        else
-        {
-          nResult = -1;
-          ssClose.str("");
-          ssClose << strPrefix << " error [WS_CLOSED,LWS_CALLBACK_RECEIVE]:  Failed to locate the websocket session (wsi) in the list of sessions (m_conns).";
-        }
+        thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
+        threadRequest.detach();
         pstrBuffers[0]->clear();
       }
       break;
