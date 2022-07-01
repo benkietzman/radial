@@ -373,6 +373,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
   {
     list<list<data *>::iterator> removals;
+    m_mutexConns.lock();
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
     {
       if ((*i)->bRemove)
@@ -382,13 +383,14 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
     }
     while (!removals.empty())
     {
-      while ((*removals.front())->unThreads > 0)
+      if ((*removals.front())->unThreads == 0)
       {
-        msleep(10);
+        delete (*removals.front());
+        m_conns.erase(removals.front());
       }
-      //delete (*removals.front());
-      m_conns.erase(removals.front());
+      removals.pop_front();
     }
+    m_mutexConns.unlock();
   }
   while (!m_conns.empty())
   {
@@ -415,6 +417,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   string *pstrBuffers[2] = {NULL, NULL}, strPrefix = "websocket->main()->Websocket::websocket()";
   stringstream ssClose;
 
+  m_mutexConns.lock();
   for (auto i = m_conns.begin(); !bFound && i != m_conns.end(); i++)
   {
     if ((*i)->wsi == wsi)
@@ -440,15 +443,13 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       pstrBuffers[1] = &((*i)->strBuffers[1]);
     }
   }
+  m_mutexConns.unlock();
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED
     case LWS_CALLBACK_CLOSED:
     {
-      if (connIter != m_conns.end())
-      {
-        (*connIter)->wsi = NULL;
-      }
+      (*connIter)->wsi = NULL;
       nResult = -1;
       ssClose.str("");
       ssClose << strPrefix << " [WS_CLOSED,LWS_CALLBACK_CLOSED]:  Websocket closed.";
