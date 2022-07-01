@@ -386,7 +386,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
       {
         msleep(10);
       }
-      delete (*removals.front());
+      //delete (*removals.front());
       m_conns.erase(removals.front());
     }
   }
