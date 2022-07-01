@@ -22,6 +22,21 @@ namespace radial
 // {{{ Websocket()
 Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
+  string strError;
+  Json *ptJwt = new Json;
+
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
+  {
+    if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
+    {
+      m_strSecret = ptJwt->m["Secret"]->v;
+    }
+    if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
+    {
+      m_strSigner = ptJwt->m["Signer"]->v;
+    }
+  }
+  delete ptJwt;
   m_pWebsocket = pWebsocket;
 }
 // }}}
@@ -66,13 +81,193 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse = 
 }
 // }}}
 // {{{ request()
-void Websocket::request(data *ptConn, Json *ptJson)
+void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
 {
-  string strError, strJson;
+  string strApplication, strError, strJson, strPassword, strUser, strUserID;
+  stringstream ssMessage;
 
+  strPrefix += "->Websocket::request()";
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
   ptConn->mutexShare.unlock();
+  if (!ptConn->strApplication.empty())
+  {
+    strApplication = ptConn->strApplication;
+  }
+  else if (ptJson->m.find("reqApp") != ptJson->m.end() && !ptJson->m["reqApp"]->v.empty())
+  {
+    strApplication = ptJson->m["reqApp"]->v;
+  }
+  // {{{ existing
+  if (!ptConn->strUser.empty() && !ptConn->strPassword.empty() && !ptConn->strUserID.empty())
+  {
+    strUser = ptConn->strUser;
+    strPassword = ptConn->strPassword;
+    strUserID = ptConn->strUserID;
+  }
+  // }}}
+  // {{{ jwt
+  if ((strUser.empty() || strPassword.empty()) && ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
+  {
+    string strBase64 = ptJson->m["wsJwt"]->v;
+    if (!m_strSecret.empty())
+    {
+      if (!m_strSigner.empty())
+      {
+        string strPayload, strValue;
+        Json *ptJwt = new Json;
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strSecret, strPayload, strError);
+        if (strPayload.empty())
+        {
+          strPayload = strBase64;
+        }
+        if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
+        {
+          if (ptJwt->m.find("RadialCredentials") != ptJwt->m.end())
+          {
+            if (ptJwt->m["RadialCredentials"]->m.find(strApplication) != ptJwt->m["RadialCredentials"]->m.end())
+            {
+              if (ptJwt->m["RadialCredentials"]->m[strApplication]->m.find("User") != ptJwt->m["RadialCredentials"]->m[strApplication]->m.end() && !ptJwt->m["RadialCredentials"]->m[strApplication]->m["User"]->v.empty())
+              {
+                strUser = ptConn->strUser = ptJwt->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
+                if (ptJwt->m["RadialCredentials"]->m[strApplication]->m.find("Password") != ptJwt->m["RadialCredentials"]->m[strApplication]->m.end() && !ptJwt->m["RadialCredentials"]->m[strApplication]->m["Password"]->v.empty())
+                {
+                  strPassword = ptConn->strPassword = ptJwt->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Password in RadialCredentials in jwt.";
+                  log(ssMessage.str());
+                }
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find User in RadialCredentials in jwt.";
+                log(ssMessage.str());
+              }
+            }
+            else
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in jwt.";
+              log(ssMessage.str());
+            }
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find RadialCredentials in jwt.";
+            log(ssMessage.str());
+          }
+          if (ptJwt->m.find("sl_login") != ptJwt->m.end() && !ptJwt->m["sl_login"]->v.empty())
+          {
+            strUserID = ptConn->strUserID = ptJwt->m["sl_login"]->v;
+          }
+        }
+        else if (strError != "Failed: exp")
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->ServiceJunction::jwt(decode) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
+          log(ssMessage.str());
+        }
+        delete ptJwt;
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Signer.";
+        log(ssMessage.str());
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Secret.";
+      log(ssMessage.str());
+    }
+  }
+  // }}}
+  // {{{ wsSessionID
+  else if ((strUser.empty() || strPassword.empty()) && ptJson->m.find("wsSessionID") != ptJson->m.end() && !ptJson->m["wsSessionID"]->v.empty())
+  {
+    stringstream ssQuery;
+    ssQuery << "select session_json from php_session where session_id = '" << ptJson->m["wsSessionID"]->v << "'";
+    auto getSession = dbquery("central_r", ssQuery.str(), strError);
+    if (getSession != NULL)
+    {
+      if (!getSession->empty())
+      {
+        Json *ptSessionData = new Json(getSession->front()["session_json"]);
+        if (ptSessionData->m.find("RadialCredentials") != ptSessionData->m.end())
+        {
+          if (ptSessionData->m["RadialCredentials"]->m.find(strApplication) != ptSessionData->m["RadialCredentials"]->m.end())
+          {
+            if (ptSessionData->m["RadialCredentials"]->m[strApplication]->m.find("User") != ptSessionData->m["RadialCredentials"]->m[strApplication]->m.end() && !ptSessionData->m["RadialCredentials"]->m[strApplication]->m["User"]->v.empty())
+            {
+              strUser = ptConn->strUser = ptSessionData->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
+              if (ptSessionData->m["RadialCredentials"]->m[strApplication]->m.find("Password") != ptSessionData->m["RadialCredentials"]->m[strApplication]->m.end() && !ptSessionData->m["RadialCredentials"]->m[strApplication]->m["Password"]->v.empty())
+              {
+                strPassword = ptConn->strPassword = ptSessionData->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Password in Application in RadialCredentials in session.";
+                log(ssMessage.str());
+              }
+            }
+            else
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find User in Application in RadialCredentials in session.";
+              log(ssMessage.str());
+            }
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in session.";
+            log(ssMessage.str());
+          }
+        }
+        if (ptSessionData->m.find("sl_login") != ptSessionData->m.end() && !ptSessionData->m["sl_login"]->v.empty())
+        {
+          strUserID = ptConn->strUserID = ptSessionData->m["sl_login"]->v;
+        }
+        delete ptSessionData;
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->query(" << ssQuery.str() << ") error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  No results returned.";
+        log(ssMessage.str());
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->query(" << ssQuery.str() << ") error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
+      log(ssMessage.str());
+    }
+    dbfree(getSession);
+  }
+  // }}}
+  if (!strUser.empty() && !strPassword.empty())
+  {
+    ptJson->insert("User", strUser);
+    ptJson->insert("Password", strPassword);
+  }
+  if (!strUserID.empty())
+  {
+    ptJson->insert("UserID", strUserID);
+  }
+  else if (ptJson->m.find("UserID") != ptJson->m.end())
+  {
+    delete ptJson->m["UserID"];
+    ptJson->m.erase("UserID");
+  }
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
     list<string> removals;
@@ -148,6 +343,11 @@ void Websocket::request(data *ptConn, Json *ptJson)
   {
     ptJson->insert("Status", "error");
     ptJson->insert("Error", "Please provide the Interface.");
+  }
+  if (ptJson->m.find("Password") != ptJson->m.end())
+  {
+    delete ptJson->m["Password"];
+    ptJson->m.erase("Password");
   }
   ptConn->mutexShare.lock();
   ptConn->buffers.push_back(ptJson->json(strJson));
@@ -261,8 +461,17 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       pstrBuffers[0]->append((char *)in, len);
       if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
       {
-        thread threadRequest(&Websocket::request, this, *connIter, new Json(*pstrBuffers[0]));
-        threadRequest.detach();
+        if (connIter != m_conns.end())
+        {
+          thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
+          threadRequest.detach();
+        }
+        else
+        {
+          nResult = -1;
+          ssClose.str("");
+          ssClose << strPrefix << " error [WS_CLOSED,LWS_CALLBACK_RECEIVE]:  Failed to locate the websocket session (wsi) in the list of sessions (m_conns).";
+        }
         pstrBuffers[0]->clear();
       }
       break;

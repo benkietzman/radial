@@ -29,7 +29,11 @@ struct data
   lws *wsi;
   mutex mutexShare;
   size_t unThreads;
+  string strApplication;
   string strBuffers[2];
+  string strPassword;
+  string strUser;
+  string strUserID;
 };
 // {{{ Websocket
 class Websocket : public Interface
@@ -37,8 +41,10 @@ class Websocket : public Interface
   protected:
   int (*m_pWebsocket)(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
   list<data *> m_conns;
+  string m_strSecret;
+  string m_strSigner;
 
-  void request(data *ptConn, Json *ptJson);
+  void request(string strPrefix, data *ptConn, Json *ptJson);
 
   public:
   Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
