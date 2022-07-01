@@ -281,7 +281,6 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 ptJson->m["Response"]->insert("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strSecret, strValue, strError), strValue));
               }
               delete ptJwt;
-              getPersonRow.clear();
             }
             else
             {
