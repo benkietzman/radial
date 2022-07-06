@@ -27,5 +27,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Secure::callback, gpSecure, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

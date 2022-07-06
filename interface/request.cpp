@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
   string strPrefix = "request->main()";
   gpRequest = new Request(strPrefix, argc, argv, &callback);
   thread threadAccept(&Request::accept, gpRequest, strPrefix);
+  pthread_setname_np(threadAccept.native_handle(), "accept");
   gpRequest->process(strPrefix);
   threadAccept.join();
   delete gpRequest;
@@ -29,5 +30,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Request::callback, gpRequest, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

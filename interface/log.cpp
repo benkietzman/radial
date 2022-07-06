@@ -27,5 +27,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Log::callback, gpLog, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

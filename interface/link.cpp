@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
   string strPrefix = "link->main()";
   gpLink = new Link(strPrefix, argc, argv, &callback);
   thread threadSocket(&Link::socket, gpLink, strPrefix);
+  pthread_setname_np(threadSocket.native_handle(), "socket");
   gpLink->process(strPrefix);
   threadSocket.join();
   delete gpLink;
@@ -29,5 +30,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Link::callback, gpLink, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

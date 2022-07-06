@@ -96,8 +96,9 @@ void Request::accept(string strPrefix)
               socklen_t clilen = sizeof(cli_addr);
               if ((fdClient = ::accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
-                thread threadRequestSocket(&Request::socket, this, strPrefix, ctx, fdClient);
-                threadRequestSocket.detach();
+                thread threadSocket(&Request::socket, this, strPrefix, ctx, fdClient);
+                pthread_setname_np(threadSocket.native_handle(), "socket");
+                threadSocket.detach();
               }
               else
               {

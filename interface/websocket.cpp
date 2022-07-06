@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
   if ((ptContext = lws_create_context(&tInfo)) != NULL)
   {
     thread threadSocket(&radial::Websocket::socket, gpWebsocket, strPrefix, ptContext);
+    pthread_setname_np(threadSocket.native_handle(), "socket");
     gpWebsocket->process(strPrefix);
     threadSocket.join();
   }
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&radial::Websocket::callback, gpWebsocket, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }
 int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)

@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
   string strError, strPrefix = "auth->main()";
   gpAuth = new Auth(strPrefix, argc, argv, &callback);
   thread threadProcess(&Auth::process, gpAuth, strPrefix);
+  pthread_setname_np(threadProcess.native_handle(), "process");
   if (!gpAuth->init())
   {
     gpAuth->setShutdown();
@@ -32,5 +33,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   thread threadCallback(&Auth::callback, gpAuth, strPrefix, new Json(ptJson), bResponse);
+  pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

@@ -729,8 +729,9 @@ void Link::socket(string strPrefix)
                         {
                           Json *ptJson = new Json(link->strBuffers[0].substr(0, unPosition));
                           link->strBuffers[0].erase(0, (unPosition + 1));
-                          thread threadLinkRequest(&Link::request, this, strPrefix, fds[i].fd, ptJson);
-                          threadLinkRequest.detach();
+                          thread threadRequest(&Link::request, this, strPrefix, fds[i].fd, ptJson);
+                          pthread_setname_np(threadRequest.native_handle(), "request");
+                          threadRequest.detach();
                         }
                       }
                       else

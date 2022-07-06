@@ -457,6 +457,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
       {
         thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
+        pthread_setname_np(threadRequest.native_handle(), "request");
         threadRequest.detach();
         pstrBuffers[0]->clear();
       }
