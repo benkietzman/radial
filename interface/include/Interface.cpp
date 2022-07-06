@@ -295,13 +295,13 @@ void Interface::process(string strPrefix)
     fds[1].events = POLLOUT;
     if (m_strBuffers[1].empty())
     {
-      m_mutex.lock();
+      m_mutexShare.lock();
       while (!m_responses.empty())
       {
         m_strBuffers[1].append(m_responses.front() + "\n");
         m_responses.pop_front();
       }
-      m_mutex.unlock();
+      m_mutexShare.unlock();
     }
     if (!m_strBuffers[1].empty())
     {
@@ -323,12 +323,12 @@ void Interface::process(string strPrefix)
             ptJson = new Json(strLine);
             if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName)
             {
-              m_mutex.lock();
+              m_mutexShare.lock();
               if (ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
               {
                 fdUnique = m_waiting[ptJson->m["_unique"]->v];
               }
-              m_mutex.unlock();
+              m_mutexShare.unlock();
             }
             if (fdUnique != -1)
             {
@@ -398,12 +398,12 @@ void Interface::process(string strPrefix)
     monitor(strPrefix);
     if (shutdown())
     {
-      m_mutex.lock();
+      m_mutexShare.lock();
       if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
       {
         bExit = true;
       }
-      m_mutex.unlock();
+      m_mutexShare.unlock();
     }
   }
 }
@@ -414,9 +414,9 @@ void Interface::response(Json *ptJson)
   string strJson;
 
   ptJson->json(strJson);
-  m_mutex.lock();
+  m_mutexShare.lock();
   m_responses.push_back(strJson);
-  m_mutex.unlock();
+  m_mutexShare.unlock();
 }
 // }}}
 // {{{ storage
@@ -521,7 +521,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
     nReturn = pipe(readpipe);
-    m_mutex.lock();
+    m_mutexShare.lock();
     ssUnique.str("");
     ssUnique << m_strName << "_" << unUnique;
     while (m_waiting.find(ssUnique.str()) != m_waiting.end())
@@ -541,7 +541,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       }
       m_waiting[ssUnique.str()] = readpipe[1];
     }
-    m_mutex.unlock();
+    m_mutexShare.unlock();
     if (nReturn == 0)
     {
       char szBuffer[65536];
@@ -553,9 +553,9 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         strJson.append(szBuffer, nReturn);
       }
       close(readpipe[0]);
-      m_mutex.lock();
+      m_mutexShare.lock();
       m_waiting.erase(ssUnique.str());
-      m_mutex.unlock();
+      m_mutexShare.unlock();
       if ((unPosition = strJson.find("\n")) != string::npos)
       {
         ptJson->clear();

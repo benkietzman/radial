@@ -373,7 +373,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
   {
     list<list<data *>::iterator> removals;
-    m_mutexConns.lock();
+    m_mutex.lock();
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
     {
       if ((*i)->bRemove)
@@ -390,7 +390,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
       }
       removals.pop_front();
     }
-    m_mutexConns.unlock();
+    m_mutex.unlock();
   }
   lws_context_destroy(ptContext);
   ssMessage.str("");
@@ -413,7 +413,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   string *pstrBuffers[2] = {NULL, NULL}, strPrefix = "websocket->main()->Websocket::websocket()";
   stringstream ssClose;
 
-  m_mutexConns.lock();
+  m_mutex.lock();
   for (auto i = m_conns.begin(); !bFound && i != m_conns.end(); i++)
   {
     if ((*i)->wsi == wsi)
@@ -439,7 +439,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       pstrBuffers[1] = &((*i)->strBuffers[1]);
     }
   }
-  m_mutexConns.unlock();
+  m_mutex.unlock();
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED

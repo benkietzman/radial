@@ -333,7 +333,7 @@ void Mysql::free(MYSQL_RES *result)
 // {{{ lock()
 void Mysql::lock()
 {
-  m_mutexMysql.lock();
+  m_mutex.lock();
 }
 // }}}
 // {{{ query()
@@ -382,7 +382,7 @@ MYSQL_RES *Mysql::query(list<radial_mysql *>::iterator &iter, const string strQu
 // {{{ unlock()
 void Mysql::unlock()
 {
-  m_mutexMysql.unlock();
+  m_mutex.unlock();
 }
 // }}}
 // {{{ update()

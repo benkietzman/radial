@@ -41,7 +41,7 @@ class Websocket : public Interface
   protected:
   int (*m_pWebsocket)(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
   list<data *> m_conns;
-  mutex m_mutexConns;
+  mutex m_mutex;
   string m_strSecret;
   string m_strSigner;
 

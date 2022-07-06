@@ -45,7 +45,7 @@ class Link : public Interface
   bool m_bOnline;
   bool m_bUpdate;
   list<radial_link *> m_links;
-  mutex m_mutexLink;
+  mutex m_mutex;
   string m_strMaster;
   string m_strPassword;
   string m_strServer;

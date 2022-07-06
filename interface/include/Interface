@@ -28,7 +28,7 @@ class Interface : public Base
   void (*m_pCallback)(string, Json *, const bool);
   list<string> m_responses;
   map<string, int> m_waiting;
-  mutex m_mutex;
+  mutex m_mutexShare;
   string m_strBuffers[2];
   string m_strName;
 
