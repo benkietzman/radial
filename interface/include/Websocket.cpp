@@ -392,19 +392,15 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
     }
     m_mutexConns.unlock();
   }
-  while (!m_conns.empty())
-  {
-    while (m_conns.front()->unThreads > 0)
-    {
-      msleep(10);
-    }
-    delete m_conns.front();
-    m_conns.pop_front();
-  }
   lws_context_destroy(ptContext);
   ssMessage.str("");
   ssMessage << strPrefix << "->lws_context_destroy():  Destroyed context.";
   log(ssMessage.str());
+  while (!m_conns.empty())
+  {
+    delete m_conns.front();
+    m_conns.pop_front();
+  }
   setShutdown();
 }
 // }}}

@@ -76,7 +76,7 @@ void Request::accept(string strPrefix)
       ssMessage.str("");
       ssMessage << strPrefix << "->bind():  Bound incoming socket.";
       log(ssMessage.str());
-      if (listen(fdSocket, 5) == 0)
+      if (listen(fdSocket, SOMAXCONN) == 0)
       {
         bool bExit = false;
         ssMessage.str("");

@@ -184,22 +184,16 @@ void Interface::log(const string strFunction, const string strMessage)
 // {{{ monitor()
 void Interface::monitor(string strPrefix)
 {
-  size_t unResult;
-  string strMessage;
-  stringstream ssMessage;
-
   strPrefix += "->Interface::monitor()";
-  if ((unResult = Base::monitor(strMessage)) > 0)
+  if (!shutdown())
   {
-    ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
-    if (unResult == 2)
+    string strMessage;
+    if (Base::monitor(strMessage) == 2)
     {
+      stringstream ssMessage;
+      ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
       notify(ssMessage.str());
       setShutdown();
-    }
-    else
-    {
-      //log(ssMessage.str());
     }
   }
 }
