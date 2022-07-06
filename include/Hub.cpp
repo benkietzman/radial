@@ -56,6 +56,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
   {
     char *args[100], *pszArgument;
     int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
+    long lArg;
     size_t unIndex = 0;
     pid_t nPid;
     string strArgument;
@@ -88,6 +89,16 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           ssMessage << " [" << strName << "]:  Interface added." << endl;
           close(writepipe[0]);
           close(readpipe[1]);
+          if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
+          {
+            lArg |= O_NONBLOCK;
+            fcntl(readpipe[0], F_SETFL, lArg);
+          }
+          if ((lArg = fcntl(writepipe[1], F_GETFL, NULL)) >= 0)
+          {
+            lArg |= O_NONBLOCK;
+            fcntl(writepipe[1], F_SETFL, lArg);
+          }
           if (m_interfaces.find(strName) == m_interfaces.end())
           {
             m_interfaces[strName] = new radialHubInterface;

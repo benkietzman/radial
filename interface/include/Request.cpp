@@ -279,6 +279,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
 {
   bool bExit = false;
   int nReturn;
+  long lArg;
   size_t unPosition;
   string strBuffers[2], strError;
   stringstream ssMessage;
@@ -287,6 +288,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
   Json *ptJson;
 
   strPrefix += "->Request::socket()";
+  if ((lArg = fcntl(fdSocket, F_GETFL, NULL)) >= 0)
+  {
+    lArg |= O_NONBLOCK;
+    fcntl(fdSocket, F_SETFL, lArg);
+  }
   while (!bExit)
   {
     pollfd fds[1];

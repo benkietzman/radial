@@ -504,7 +504,13 @@ void Link::socket(string strPrefix)
                         bConnected[1] = true;
                         if ((ssl = m_pUtility->sslConnect(ctxC, fdLink, strError)) != NULL)
                         {
+                          long lArg;
                           bConnected[2] = true;
+                          if ((lArg = fcntl(fdLink, F_GETFL, NULL)) >= 0)
+                          {
+                            lArg |= O_NONBLOCK;
+                            fcntl(fdLink, F_SETFL, lArg);
+                          }
                         }
                         else
                         {
@@ -616,9 +622,15 @@ void Link::socket(string strPrefix)
                     // }}}
                     if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, strError)) != NULL)
                     {
+                      long lArg;
                       size_t unResult;
                       Json *ptWrite = new Json;
                       radial_link *ptLink = new radial_link;
+                      if ((lArg = fcntl(fdLink, F_GETFL, NULL)) >= 0)
+                      {
+                        lArg |= O_NONBLOCK;
+                        fcntl(fdLink, F_SETFL, lArg);
+                      }
                       ptLink->bAuthenticated = false;
                       ptLink->fdSocket = fdLink;
                       ptLink->ssl = ssl;

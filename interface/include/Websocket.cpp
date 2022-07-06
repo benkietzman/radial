@@ -451,8 +451,6 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     {
       (*connIter)->wsi = NULL;
       nResult = -1;
-      ssClose.str("");
-      ssClose << strPrefix << " [WS_CLOSED,LWS_CALLBACK_CLOSED]:  Websocket closed.";
       break;
     }
     // }}}
@@ -524,12 +522,10 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   if (nResult < 0)
   {
     (*connIter)->bRemove = true;
-    if (ssClose.str().empty())
+    if (!ssClose.str().empty())
     {
-      ssClose.str("");
-      ssClose << strPrefix << " [WS_CLOSED];  Closed for an unknown reason.";
+      log(ssClose.str());
     }
-    log(ssClose.str());
   }
 
   return nResult;

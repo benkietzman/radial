@@ -276,11 +276,22 @@ void Interface::process(string strPrefix)
   bool bExit = false;
   char szBuffer[65536];
   int nReturn;
+  long lArg;
   size_t unPosition;
   string strError, strLine;
   stringstream ssMessage;
 
   strPrefix += "->Interface::process()";
+  if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
+  {
+    lArg |= O_NONBLOCK;
+    fcntl(0, F_SETFL, lArg);
+  }
+  if ((lArg = fcntl(1, F_GETFL, NULL)) >= 0)
+  {
+    lArg |= O_NONBLOCK;
+    fcntl(1, F_SETFL, lArg);
+  }
   while (!bExit)
   {
     pollfd fds[2];
@@ -528,6 +539,12 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     ptJson->insert("_unique", ssUnique.str());
     if (nReturn == 0)
     {
+      long lArg;
+      if ((lArg = fcntl(readpipe[1], F_GETFL, NULL)) >= 0)
+      {
+        lArg |= O_NONBLOCK;
+        fcntl(readpipe[1], F_SETFL, lArg);
+      }
       m_waiting[ssUnique.str()] = readpipe[1];
     }
     m_mutex.unlock();
