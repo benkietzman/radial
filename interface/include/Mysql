@@ -36,7 +36,7 @@ class Mysql : public Interface
 {
   protected:
   map<string, list<radial_mysql *> > m_conn;
-  mutex m_mutex;
+  mutex m_mutexMysql;
 
   map<string, list<radial_mysql *> > *conn();
   bool connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError);

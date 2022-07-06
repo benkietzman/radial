@@ -158,7 +158,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
     }
     ptSubJson->json(strJson);
     strJson += "\n";
-    m_mutex.lock();
+    m_mutexLink.lock();
     for (auto &link : m_links)
     {
       if (link->bAuthenticated)
@@ -166,7 +166,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
         link->strBuffers[1].append(strJson);
       }
     }
-    m_mutex.unlock();
+    m_mutexLink.unlock();
   }
   else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
@@ -187,7 +187,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
       {
         ptStatus->insert("Node", m_ptLink->m["Node"]->v);
       }
-      m_mutex.lock();
+      m_mutexLink.lock();
       for (auto &link : m_links)
       {
         if (!link->strNode.empty())
@@ -195,7 +195,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
           links.push_back(link->strNode);
         }
       }
-      m_mutex.unlock();
+      m_mutexLink.unlock();
       links.sort();
       links.unique();
       if (!links.empty())
@@ -236,7 +236,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
   // {{{ _function
   if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
   {
-    m_mutex.lock();
+    m_mutexLink.lock();
     for (auto &link : m_links)
     {
       if (link->fdSocket == fdSocket)
@@ -337,14 +337,14 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
         // }}}
       }
     }
-    m_mutex.unlock();
+    m_mutexLink.unlock();
   }
   // }}}
   // {{{ Interface
   else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
     bool bAuthenticated = false;
-    m_mutex.lock();
+    m_mutexLink.lock();
     for (auto &link : m_links)
     {
       if (link->fdSocket == fdSocket && link->bAuthenticated)
@@ -352,7 +352,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
         bAuthenticated = true;
       }
     }
-    m_mutex.unlock();
+    m_mutexLink.unlock();
     if (bAuthenticated)
     {
       Json *ptInterfaces = new Json;
@@ -384,7 +384,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
     }
     ptJson->json(strJson);
     strJson += "\n";
-    m_mutex.lock();
+    m_mutexLink.lock();
     for (auto &link : m_links)
     {
       if (link->fdSocket == fdSocket)
@@ -392,7 +392,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
         link->strBuffers[1].append(strJson);
       }
     }
-    m_mutex.unlock();
+    m_mutexLink.unlock();
   }
   // }}}
   delete ptJson;
@@ -471,14 +471,14 @@ void Link::socket(string strPrefix)
           while (!bExit)
           {
             // {{{ prep work
-            m_mutex.lock();
+            m_mutexLink.lock();
             fds = new pollfd[m_links.size() + 1];
-            m_mutex.unlock();
+            m_mutexLink.unlock();
             unIndex = 0;
             fds[unIndex].fd = fdSocket;
             fds[unIndex].events = POLLIN;
             unIndex++;
-            m_mutex.lock();
+            m_mutexLink.lock();
             for (auto &link : m_links)
             {
               fds[unIndex].events = POLLIN;
@@ -585,7 +585,7 @@ void Link::socket(string strPrefix)
               }
               unIndex++;
             }
-            m_mutex.unlock();
+            m_mutexLink.unlock();
             // }}}
             if ((nReturn = poll(fds, unIndex, 100)) > 0)
             {
@@ -635,7 +635,7 @@ void Link::socket(string strPrefix)
                       ptLink->fdSocket = fdLink;
                       ptLink->ssl = ssl;
                       ptWrite->insert("_function", "handshake");
-                      m_mutex.lock();
+                      m_mutexLink.lock();
                       if (!m_links.empty())
                       {
                         ptWrite->m["Links"] = new Json;
@@ -652,7 +652,7 @@ void Link::socket(string strPrefix)
                           }
                         }
                       }
-                      m_mutex.unlock();
+                      m_mutexLink.unlock();
                       ptWrite->m["You"] = new Json;
                       ptWrite->m["You"]->insert("Server", szIP);
                       ptWrite->m["Me"] = new Json;
@@ -672,9 +672,9 @@ void Link::socket(string strPrefix)
                         ptLink->strBuffers[1].append(ptWrite->json(strJson) + "\n");
                         delete ptWrite;
                       }
-                      m_mutex.lock();
+                      m_mutexLink.lock();
                       unResult = add(ptLink);
-                      m_mutex.unlock();
+                      m_mutexLink.unlock();
                       if (unResult <= 0)
                       {
                         ssMessage.str("");
@@ -710,7 +710,7 @@ void Link::socket(string strPrefix)
                 }
               }
               // }}}
-              m_mutex.lock();
+              m_mutexLink.lock();
               for (auto &link : m_links)
               {
                 for (size_t i = 1; i < unIndex; i++)
@@ -766,7 +766,7 @@ void Link::socket(string strPrefix)
                   // }}}
                 }
               }
-              m_mutex.unlock();
+              m_mutexLink.unlock();
             }
             else if (nReturn < 0 && errno != EINTR)
             {
@@ -778,7 +778,7 @@ void Link::socket(string strPrefix)
             // {{{ post work
             delete[] fds;
             // {{{ removals
-            m_mutex.lock();
+            m_mutexLink.lock();
             if (!m_links.empty())
             {
               list <string> nodes;
@@ -811,14 +811,14 @@ void Link::socket(string strPrefix)
                 }
               }
             }
-            m_mutex.unlock();
+            m_mutexLink.unlock();
             if (!removals.empty())
             {
               removals.sort();
               removals.unique();
               for (auto &i : removals)
               {
-                m_mutex.lock();
+                m_mutexLink.lock();
                 list<radial_link *>::iterator removeIter = m_links.end();
                 for (auto j = m_links.begin(); removeIter == m_links.end() && j != m_links.end(); j++)
                 {
@@ -845,7 +845,7 @@ void Link::socket(string strPrefix)
                   delete (*removeIter);
                   m_links.erase(removeIter);
                 }
-                m_mutex.unlock();
+                m_mutexLink.unlock();
               }
               removals.clear();
             }
@@ -870,12 +870,12 @@ void Link::socket(string strPrefix)
                 ptWrite->json(strJson);
                 delete ptWrite;
                 strJson += "\n";
-                m_mutex.lock();
+                m_mutexLink.lock();
                 for (auto &link : m_links)
                 {
                   link->strBuffers[1].append(strJson);
                 }
-                m_mutex.unlock();
+                m_mutexLink.unlock();
               }
               CBroadcastTime[0] = CBroadcastTime[1];
             }
@@ -884,7 +884,7 @@ void Link::socket(string strPrefix)
             if (m_ptLink->m.find("Links") != m_ptLink->m.end())
             {
               bool bReady = true;
-              m_mutex.lock();
+              m_mutexLink.lock();
               for (auto &link : m_links)
               {
                 if (link->strNode.empty() || link->strServer.empty() || link->strPort.empty() || !link->bAuthenticated)
@@ -892,7 +892,7 @@ void Link::socket(string strPrefix)
                   bReady = false;
                 }
               }
-              m_mutex.unlock();
+              m_mutexLink.unlock();
               if (bReady)
               {
                 Json *ptBoot = new Json;
@@ -901,7 +901,7 @@ void Link::socket(string strPrefix)
                   if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                   {
                     bool bFound = false;
-                    m_mutex.lock();
+                    m_mutexLink.lock();
                     for (auto &link : m_links)
                     {
                       if (link->strServer == ptLink->m["Server"]->v && link->strPort == ptLink->m["Port"]->v)
@@ -909,7 +909,7 @@ void Link::socket(string strPrefix)
                         bFound = true;
                       }
                     }
-                    m_mutex.unlock();
+                    m_mutexLink.unlock();
                     if (!bFound)
                     {
                       Json *ptSubLink = new Json;
@@ -929,9 +929,9 @@ void Link::socket(string strPrefix)
                   ptLink->strPort = ptBootLink->m["Port"]->v;
                   ptLink->fdSocket = -1;
                   ptLink->ssl = NULL;
-                  m_mutex.lock();
+                  m_mutexLink.lock();
                   unResult = add(ptLink);
-                  m_mutex.unlock();
+                  m_mutexLink.unlock();
                   if (unResult <= 0)
                   {
                     ssMessage.str("");
@@ -962,7 +962,7 @@ void Link::socket(string strPrefix)
             // }}}
           }
           // {{{ post work
-          m_mutex.lock();
+          m_mutexLink.lock();
           for (auto &link : m_links)
           {
             if (link->ssl != NULL)
@@ -977,7 +977,7 @@ void Link::socket(string strPrefix)
             delete link;
           }
           m_links.clear();
-          m_mutex.unlock();
+          m_mutexLink.unlock();
           // }}}
         }
         else
