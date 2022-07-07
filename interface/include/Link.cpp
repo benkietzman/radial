@@ -619,7 +619,6 @@ void Link::socket(string strPrefix)
                       sockaddr_in6 *s = (sockaddr_in6 *)&addr;
                       inet_ntop(AF_INET6, &s->sin6_addr, szIP, sizeof(szIP));
                     }
-                    ERR_clear_error();
                     // }}}
                     if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, strError)) != NULL)
                     {
@@ -711,10 +710,10 @@ void Link::socket(string strPrefix)
                 }
               }
               // }}}
-              m_mutex.lock();
-              for (auto &link : m_links)
+              for (size_t i = 1; i < unIndex; i++)
               {
-                for (size_t i = 1; i < unIndex; i++)
+                m_mutex.lock();
+                for (auto &link : m_links)
                 {
                   // {{{ link
                   if (link->fdSocket == fds[i].fd)
@@ -722,8 +721,6 @@ void Link::socket(string strPrefix)
                     // {{{ read
                     if (fds[i].revents & POLLIN)
                     {
-                      nReturn = -1;
-                      ERR_clear_error();
                       if (m_pUtility->sslRead(link->ssl, link->strBuffers[0], nReturn))
                       {
                         while ((unPosition = link->strBuffers[0].find("\n")) != string::npos)
@@ -750,7 +747,6 @@ void Link::socket(string strPrefix)
                     // {{{ write
                     if (fds[i].revents & POLLOUT)
                     {
-                      ERR_clear_error();
                       if (!m_pUtility->sslWrite(link->ssl, link->strBuffers[1], nReturn))
                       {
                         removals.push_back(link->fdSocket);
@@ -766,8 +762,8 @@ void Link::socket(string strPrefix)
                   }
                   // }}}
                 }
+                m_mutex.unlock();
               }
-              m_mutex.unlock();
             }
             else if (nReturn < 0 && errno != EINTR)
             {

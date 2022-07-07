@@ -313,7 +313,6 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
           {
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ERR_clear_error();
               if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) == NULL)
               {
                 bExit = true;
