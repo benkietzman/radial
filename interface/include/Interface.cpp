@@ -309,7 +309,7 @@ void Interface::process(string strPrefix)
     }
     if ((nReturn = poll(fds, 2, 100)) > 0)
     {
-      if (fds[0].revents & POLLIN)
+      if (fds[0].revents & (POLLHUP | POLLIN))
       {
         if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
         {
@@ -406,6 +406,7 @@ void Interface::process(string strPrefix)
       m_mutexShare.unlock();
     }
   }
+  setShutdown();
 }
 // }}}
 // {{{ response()

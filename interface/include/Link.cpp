@@ -516,13 +516,11 @@ void Link::socket(string strPrefix)
                         else
                         {
                           close(fdLink);
-                          fdLink = -1;
                         }
                       }
                       else
                       {
                         close(fdLink);
-                        fdLink = -1;
                       }
                     }
                   }
@@ -570,13 +568,14 @@ void Link::socket(string strPrefix)
                       storageTransmit(strPrefix, link);
                     }
                   }
+                  else
+                  {
+                    removals.push_back(-1);
+                  }
                 }
                 else
                 {
                   removals.push_back(-1);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error [" << link->strServer << "," << link->strPort << "," << link->strNode << "]:  " << gai_strerror(nReturn);
-                  log(ssMessage.str());
                 }
               }
               fds[unIndex].fd = link->fdSocket;
