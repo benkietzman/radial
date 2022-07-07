@@ -18,7 +18,7 @@ Secure *gpSecure;
 void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
-  string strError, strPrefix = "auth->main()";
+  string strError, strPrefix = "secure->main()";
   gpSecure = new Secure(strPrefix, argc, argv, &callback);
   gpSecure->process(strPrefix);
   delete gpSecure;
