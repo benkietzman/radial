@@ -87,6 +87,7 @@ size_t Link::add(radial_link *ptLink)
           if ((*linkIter)->fdSocket == -1)
           {
             (*linkIter)->fdSocket = ptLink->fdSocket;
+            (*linkIter)->ssl = ptLink->ssl;
           }
           else
           {
