@@ -237,6 +237,8 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
   // {{{ _function
   if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
   {
+    bool bStorageTransmit = false;
+
     m_mutex.lock();
     for (auto &link : m_links)
     {
@@ -313,7 +315,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
               link->bAuthenticated = true;
               if (m_unLink == RADIAL_LINK_MASTER)
               {
-                storageTransmit(strPrefix, link);
+                bStorageTransmit = true;
               }
             }
           }
@@ -339,6 +341,10 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
       }
     }
     m_mutex.unlock();
+    if (bStorageTransmit)
+    {
+      storageTransmit(fdSocket);
+    }
   }
   // }}}
   // {{{ Interface
@@ -461,7 +467,7 @@ void Link::socket(string strPrefix)
           // {{{ prep work
           bool bExit = false;
           pollfd *fds;
-          list<int> removals;
+          list<int> removals, storageTransmits;
           size_t unIndex, unLink = m_unLink, unPosition;
           time_t CBroadcastTime[2], unBroadcastSleep = 5;
           ssMessage.str("");
@@ -565,7 +571,7 @@ void Link::socket(string strPrefix)
                     }
                     if (m_unLink == RADIAL_LINK_MASTER)
                     {
-                      storageTransmit(strPrefix, link);
+                      storageTransmits.push_back(fdLink);
                     }
                   }
                   else
@@ -586,6 +592,11 @@ void Link::socket(string strPrefix)
               unIndex++;
             }
             m_mutex.unlock();
+            while (!storageTransmits.empty())
+            {
+              storageTransmit(storageTransmits.front());
+              storageTransmits.pop_front();
+            }
             // }}}
             if ((nReturn = poll(fds, unIndex, 100)) > 0)
             {
@@ -1028,12 +1039,10 @@ void Link::socket(string strPrefix)
 }
 // }}}
 // {{{ storageTransmit()
-void Link::storageTransmit(string strPrefix, radial_link *ptLink)
+void Link::storageTransmit(const int fdSocket)
 {
   // {{{ prep work
   string strError;
-  stringstream ssMessage;
-  strPrefix += "->Link::storageTransmit()";
   Json *ptStorage = new Json;
   // }}}
   if (storageRetrieve(ptStorage, strError))
@@ -1045,7 +1054,15 @@ void Link::storageTransmit(string strPrefix, radial_link *ptLink)
     ptWrite->insert("Request", ptStorage);
     ssWrite << ptWrite << endl;
     delete ptWrite;
-    ptLink->strBuffers[1].append(ssWrite.str());
+    m_mutex.lock();
+    for (auto &link : m_links)
+    {
+      if (link->fdSocket == fdSocket)
+      {
+        link->strBuffers[1].append(ssWrite.str());
+      }
+    }
+    m_mutex.unlock();
   }
   // {{{ post work
   delete ptStorage;

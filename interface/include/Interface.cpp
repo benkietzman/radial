@@ -566,7 +566,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       {
         ptJson->insert("Status", "error");
         ssMessage.str("");
-        ssMessage << "write(" << errno << ") " << strerror(errno);
+        ssMessage << "read(" << errno << ") " << strerror(errno);
         ptJson->insert("Error", ssMessage.str());
       }
     }
