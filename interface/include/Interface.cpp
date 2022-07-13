@@ -567,7 +567,12 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     ptJson->insert("_source", m_strName);
     if ((nReturn = pipe(readpipe)) == 0)
     {
+      bool bExit = false;
+      char szBuffer[65536];
       long lArg;
+      size_t unPosition, unUnique = 0;
+      string strJson;
+      stringstream ssUnique;
       if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
       {
         lArg |= O_NONBLOCK;
@@ -578,14 +583,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         lArg |= O_NONBLOCK;
         fcntl(readpipe[1], F_SETFL, lArg);
       }
-    }
-    if (nReturn == 0)
-    {
-      bool bExit = false;
-      char szBuffer[65536];
-      size_t unPosition, unUnique = 0;
-      string strJson;
-      stringstream ssUnique;
       m_mutexShare.lock();
       ssUnique << m_strName << "_" << unUnique;
       while (m_waiting.find(ssUnique.str()) != m_waiting.end())
@@ -601,8 +598,8 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       while (!bExit)
       {
         pollfd fds[1];
-        fds[1].fd = readpipe[0];
-        fds[1].events = POLLIN;
+        fds[0].fd = readpipe[0];
+        fds[0].events = POLLIN;
         if ((nReturn = poll(fds, 1, 100)) > 0)
         {
           if (fds[0].revents & (POLLHUP | POLLIN))
