@@ -610,26 +610,32 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
             else
             {
               bExit = true;
-              if (nReturn == 0 && (unPosition = strJson.find("\n")) != string::npos)
+              if (nReturn == 0)
               {
-                bResult = true;
+                if (!strJson.empty())
+                {
+                  if ((unPosition = strJson.find("\n")) != string::npos)
+                  {
+                    bResult = true;
+                  }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << "Invalid response. --- " << strJson;
+                    strError = ssMessage.str();
+                  }
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << "Failed to receive a response.";
+                  strError = ssMessage.str();
+                }
               }
               else if (nReturn < 0)
               {
                 ssMessage.str("");
                 ssMessage << "read(" << errno << ") " << strerror(errno);
-                strError = ssMessage.str();
-              }
-              else if (!strJson.empty())
-              {
-                ssMessage.str("");
-                ssMessage << "Invalid response. --- " << strJson;
-                strError = ssMessage.str();
-              }
-              else
-              {
-                ssMessage.str("");
-                ssMessage << "Failed to receive a response.";
                 strError = ssMessage.str();
               }
             }
