@@ -315,7 +315,11 @@ void Interface::process(string strPrefix)
     unIndex++;
     for (auto &unique : uniques)
     {
-      fds[unIndex].fd = unique.first;
+      fds[unIndex].fd = -1;
+      if (!unique.second.empty())
+      {
+        fds[unIndex].fd = unique.first;
+      }
       fds[unIndex].events = POLLOUT;
       unIndex++;
     }
