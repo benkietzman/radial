@@ -320,6 +320,10 @@ void Interface::process(string strPrefix)
       {
         fds[unIndex].fd = unique.first;
       }
+      else
+      {
+        uniqueRemovals.push_back(unique.first);
+      }
       fds[unIndex].events = POLLOUT;
       unIndex++;
     }
@@ -431,6 +435,8 @@ void Interface::process(string strPrefix)
       notify(ssMessage.str());
     }
     delete[] fds;
+    uniqueRemovals.sort();
+    uniqueRemovals.unique();
     while (!uniqueRemovals.empty())
     {
       close(uniqueRemovals.front());
