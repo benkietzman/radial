@@ -364,14 +364,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
       }
       if (fds[0].revents & POLLOUT)
       {
-        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn)))
-        {
-          if (strBuffers[1].empty())
-          {
-            bExit = true;
-          }
-        }
-        else
+        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && !m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && !m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn)))
         {
           bExit = true;
           if (nReturn < 0)
