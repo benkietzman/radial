@@ -545,8 +545,6 @@ void Interface::target(Json *ptJson, const bool bWait)
 }
 void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
 {
-  size_t unUnique = 0;
-  string strJson;
   stringstream ssMessage;
 
   if (!strTarget.empty())
@@ -556,7 +554,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   if (bWait)
   {
     int nReturn, readpipe[2] = {-1, -1};
-    stringstream ssUnique;
     ptJson->insert("_source", m_strName);
     if ((nReturn = pipe(readpipe)) == 0)
     {
@@ -572,27 +569,24 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         fcntl(readpipe[1], F_SETFL, lArg);
       }
     }
-    m_mutexShare.lock();
-    ssUnique.str("");
-    ssUnique << m_strName << "_" << unUnique;
-    while (m_waiting.find(ssUnique.str()) != m_waiting.end())
-    {
-      unUnique++;
-      ssUnique.str("");
-      ssUnique << m_strName << "_" << unUnique;
-    }
-    ptJson->insert("_unique", ssUnique.str());
-    if (nReturn == 0)
-    {
-      m_waiting[ssUnique.str()] = readpipe[1];
-    }
-    m_mutexShare.unlock();
     if (nReturn == 0)
     {
       bool bExit = false;
       char szBuffer[65536];
-      size_t unPosition;
-      strJson.clear();
+      size_t unPosition, unUnique = 0;
+      string strJson;
+      stringstream ssUnique;
+      m_mutexShare.lock();
+      ssUnique << m_strName << "_" << unUnique;
+      while (m_waiting.find(ssUnique.str()) != m_waiting.end())
+      {
+        unUnique++;
+        ssUnique.str("");
+        ssUnique << m_strName << "_" << unUnique;
+      }
+      ptJson->insert("_unique", ssUnique.str());
+      m_waiting[ssUnique.str()] = readpipe[1];
+      m_mutexShare.unlock();
       response(ptJson);
       while (!bExit)
       {
