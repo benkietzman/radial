@@ -555,8 +555,6 @@ void Interface::target(Json *ptJson, const bool bWait)
 }
 void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
 {
-  stringstream ssMessage;
-
   if (!strTarget.empty())
   {
     ptJson->insert("_target", strTarget);
@@ -564,14 +562,15 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   if (bWait)
   {
     int nReturn, readpipe[2] = {-1, -1};
+    stringstream ssMessage;
     ptJson->insert("_source", m_strName);
     if ((nReturn = pipe(readpipe)) == 0)
     {
-      bool bExit = false;
+      bool bExit = false, bResult = false;
       char szBuffer[65536];
       long lArg;
       size_t unPosition, unUnique = 0;
-      string strJson;
+      string strError, strJson;
       stringstream ssUnique;
       if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
       {
@@ -611,12 +610,27 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
             else
             {
               bExit = true;
-              if (nReturn < 0)
+              if (nReturn == 0 && (unPosition = strJson.find("\n")) != string::npos)
               {
-                ptJson->insert("Status", "error");
+                bResult = true;
+              }
+              else if (nReturn < 0)
+              {
                 ssMessage.str("");
                 ssMessage << "read(" << errno << ") " << strerror(errno);
-                ptJson->insert("Error", ssMessage.str());
+                strError = ssMessage.str();
+              }
+              else if (!strJson.empty())
+              {
+                ssMessage.str("");
+                ssMessage << "Invalid response. --- " << strJson;
+                strError = ssMessage.str();
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << "Failed to receive a response.";
+                strError = ssMessage.str();
               }
             }
           }
@@ -624,25 +638,24 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         else if (nReturn < 0 && errno != EINTR)
         {
           bExit = true;
-          ptJson->insert("Status", "error");
           ssMessage.str("");
           ssMessage << "poll(" << errno << ") " << strerror(errno);
-          ptJson->insert("Error", ssMessage.str());
+          strError = ssMessage.str();
         }
       }
       close(readpipe[0]);
       m_mutexShare.lock();
       m_waiting.erase(ssUnique.str());
       m_mutexShare.unlock();
-      if ((unPosition = strJson.find("\n")) != string::npos)
+      if (bResult)
       {
         ptJson->clear();
         ptJson->parse(strJson.substr(0, unPosition));
       }
-      else if (ptJson->m.find("Error") == ptJson->m.end() || ptJson->m["Error"]->v.empty())
+      else
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", (string)"Invalid JSON. --- " + strJson);
+        ptJson->insert("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
       }
     }
     else
