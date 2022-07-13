@@ -270,8 +270,11 @@ void Interface::process(string strPrefix)
   bool bExit = false;
   char szBuffer[65536];
   int nReturn;
+  list<int> uniqueRemovals;
+  map<int, string> uniques;
   long lArg;
-  size_t unPosition;
+  pollfd *fds;
+  size_t unIndex, unPosition;
   string strError, strLine;
   stringstream ssMessage;
 
@@ -288,11 +291,13 @@ void Interface::process(string strPrefix)
   }
   while (!bExit)
   {
-    pollfd fds[2];
-    fds[0].fd = 0;
-    fds[0].events = POLLIN;
-    fds[1].fd = -1;
-    fds[1].events = POLLOUT;
+    fds = new pollfd[uniques.size() + 2];
+    unIndex = 0;
+    fds[unIndex].fd = 0;
+    fds[unIndex].events = POLLIN;
+    unIndex++;
+    fds[unIndex].fd = -1;
+    fds[unIndex].events = POLLOUT;
     if (m_strBuffers[1].empty())
     {
       m_mutexShare.lock();
@@ -305,9 +310,16 @@ void Interface::process(string strPrefix)
     }
     if (!m_strBuffers[1].empty())
     {
-      fds[1].fd = 1;
+      fds[unIndex].fd = 1;
     }
-    if ((nReturn = poll(fds, 2, 100)) > 0)
+    unIndex++;
+    for (auto &unique : uniques)
+    {
+      fds[unIndex].fd = unique.first;
+      fds[unIndex].events = POLLOUT;
+      unIndex++;
+    }
+    if ((nReturn = poll(fds, unIndex, 100)) > 0)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {
@@ -321,10 +333,10 @@ void Interface::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-            if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName)
+            if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
             {
               m_mutexShare.lock();
-              if (ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty() && m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
+              if (m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
               {
                 fdUnique = m_waiting[ptJson->m["_unique"]->v];
               }
@@ -332,12 +344,7 @@ void Interface::process(string strPrefix)
             }
             if (fdUnique != -1)
             {
-              strLine += "\n";
-              while (!strLine.empty() && (nReturn = write(fdUnique, strLine.c_str(), strLine.size())) > 0)
-              {
-                strLine.erase(0, nReturn);
-              }
-              close(fdUnique);
+              uniques[fdUnique] = strLine + "\n";
             }
             else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "hub")
             {
@@ -365,7 +372,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
+            ssMessage << strPrefix << "->read(" << errno << ") [0]:  " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -382,8 +389,32 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->write(" << errno << "):  " << strerror(errno);
+            ssMessage << strPrefix << "->write(" << errno << ") [1]:  " << strerror(errno);
             notify(ssMessage.str());
+          }
+        }
+      }
+      for (size_t i = 2; i < unIndex; i++)
+      {
+        if (fds[i].revents & POLLOUT)
+        {
+          if ((nReturn = write(fds[i].fd, uniques[fds[i].fd].c_str(), uniques[fds[i].fd].size())) > 0)
+          {
+            uniques[fds[i].fd].erase(0, nReturn);
+            if (uniques[fds[i].fd].empty())
+            {
+              uniqueRemovals.push_back(fds[i].fd);
+            }
+          }
+          else
+          {
+            uniqueRemovals.push_back(fds[i].fd);
+            if (nReturn < 0)
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->write(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
+              notify(ssMessage.str());
+            }
           }
         }
       }
@@ -394,6 +425,12 @@ void Interface::process(string strPrefix)
       ssMessage.str("");
       ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
       notify(ssMessage.str());
+    }
+    delete[] fds;
+    while (!uniqueRemovals.empty())
+    {
+      close(uniqueRemovals.front());
+      uniqueRemovals.pop_front();
     }
     monitor(strPrefix);
     if (shutdown())
@@ -521,7 +558,20 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     int nReturn, readpipe[2] = {-1, -1};
     stringstream ssUnique;
     ptJson->insert("_source", m_strName);
-    nReturn = pipe(readpipe);
+    if ((nReturn = pipe(readpipe)) == 0)
+    {
+      long lArg;
+      if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
+      {
+        lArg |= O_NONBLOCK;
+        fcntl(readpipe[0], F_SETFL, lArg);
+      }
+      if ((lArg = fcntl(readpipe[1], F_GETFL, NULL)) >= 0)
+      {
+        lArg |= O_NONBLOCK;
+        fcntl(readpipe[1], F_SETFL, lArg);
+      }
+    }
     m_mutexShare.lock();
     ssUnique.str("");
     ssUnique << m_strName << "_" << unUnique;
@@ -534,24 +584,39 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
     ptJson->insert("_unique", ssUnique.str());
     if (nReturn == 0)
     {
-      long lArg;
-      if ((lArg = fcntl(readpipe[1], F_GETFL, NULL)) >= 0)
-      {
-        lArg |= O_NONBLOCK;
-        fcntl(readpipe[1], F_SETFL, lArg);
-      }
       m_waiting[ssUnique.str()] = readpipe[1];
     }
     m_mutexShare.unlock();
     if (nReturn == 0)
     {
+      bool bExit = false;
       char szBuffer[65536];
       size_t unPosition;
       strJson.clear();
       response(ptJson);
-      while ((nReturn = read(readpipe[0], szBuffer, 65536)) > 0)
+      while (!bExit)
       {
-        strJson.append(szBuffer, nReturn);
+        pollfd fds[1];
+        fds[1].fd = readpipe[0];
+        fds[1].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 100)) > 0)
+        {
+          if (fds[0].revents & (POLLHUP | POLLIN))
+          {
+            if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
+            {
+              strJson.append(szBuffer, nReturn);
+            }
+            else
+            {
+              bExit = true;
+            }
+          }
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+        }
       }
       close(readpipe[0]);
       m_mutexShare.lock();
