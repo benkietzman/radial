@@ -306,11 +306,6 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
         {
           if (m_pUtility->socketType(fds[0].fd, eSocketType, strError))
           {
-            if ((lArg = fcntl(fds[0].fd, F_GETFL, NULL)) >= 0)
-            {
-              lArg |= O_NONBLOCK;
-              fcntl(fds[0].fd, F_SETFL, lArg);
-            }
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
               if ((ssl = m_pUtility->sslAccept(ctx, fds[0].fd, strError)) == NULL)
@@ -320,6 +315,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
                 ssMessage << strPrefix << "->Utility::sslAccept() error [" << fds[0].fd << "]:  " << strError;
                 log(ssMessage.str());
               }
+            }
+            if ((lArg = fcntl(fds[0].fd, F_GETFL, NULL)) >= 0)
+            {
+              lArg |= O_NONBLOCK;
+              fcntl(fds[0].fd, F_SETFL, lArg);
             }
           }
           else
