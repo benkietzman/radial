@@ -199,7 +199,6 @@ void Request::request(Json *ptJson)
 
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
-    list<string> removals;
     if (ptJson->m["Interface"]->v == "hub")
     {
       if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
@@ -251,22 +250,6 @@ void Request::request(Json *ptJson)
         ptJson->insert("Error", "Failed to retrieve interfaces.");
       }
       delete ptInterfaces;
-    }
-    for (auto &i : ptJson->m)
-    {
-      if (!i.first.empty() && i.first[0] == '_')
-      {
-        removals.push_back(i.first);
-      }
-    }
-    while (!removals.empty())
-    {
-      if (ptJson->m.find(removals.front()) != ptJson->m.end())
-      {
-        delete ptJson->m[removals.front()];
-        ptJson->m.erase(removals.front());
-      }
-      removals.pop_front();
     }
   }
   else

@@ -562,6 +562,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   if (bWait)
   {
     int nReturn, readpipe[2] = {-1, -1};
+    list<string> removals;
     stringstream ssMessage;
     ptJson->insert("_source", m_strName);
     if ((nReturn = pipe(readpipe)) == 0)
@@ -670,6 +671,22 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       ssMessage << "pipe(" << errno << ") " << strerror(errno);
       ptJson->insert("Status", "error");
       ptJson->insert("Error", ssMessage.str());
+    }
+    for (auto &i : ptJson->m)
+    {
+      if (!i.first.empty() && i.first[0] == '_')
+      {
+        removals.push_back(i.first);
+      }
+    }
+    while (!removals.empty())
+    {
+      if (ptJson->m.find(removals.front()) != ptJson->m.end())
+      {
+        delete ptJson->m[removals.front()];
+        ptJson->m.erase(removals.front());
+      }
+      removals.pop_front();
     }
   }
   else

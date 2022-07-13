@@ -270,7 +270,6 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   }
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
   {
-    list<string> removals;
     if (ptJson->m["Interface"]->v == "hub")
     {
       if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
@@ -322,21 +321,6 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         ptJson->insert("Error", "Failed to retrieve interfaces.");
       }
       delete ptInterfaces;
-    }
-    for (auto &i : ptJson->m)
-    {
-      if (!i.first.empty() && i.first[0] == '_')
-      {
-        removals.push_back(i.first);
-      }
-    }
-    for (auto &removal : removals)
-    {
-      if (ptJson->m.find(removal) != ptJson->m.end())
-      {
-        delete ptJson->m[removal];
-        ptJson->m.erase(removal);
-      }
     }
   }
   else
