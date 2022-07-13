@@ -573,6 +573,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       size_t unPosition, unUnique = 0;
       string strError, strJson;
       stringstream ssUnique;
+      /*
       if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
       {
         lArg |= O_NONBLOCK;
@@ -583,6 +584,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         lArg |= O_NONBLOCK;
         fcntl(readpipe[1], F_SETFL, lArg);
       }
+      */
       m_mutexShare.lock();
       ssUnique << m_strName << "_" << unUnique;
       while (m_waiting.find(ssUnique.str()) != m_waiting.end())
