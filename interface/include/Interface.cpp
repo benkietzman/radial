@@ -634,16 +634,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       m_mutexShare.lock();
       m_waiting.erase(ssUnique.str());
       m_mutexShare.unlock();
-      if ((unPosition = strJson.find("\n")) != string::npos)
-      {
-        ptJson->clear();
-        ptJson->parse(strJson.substr(0, unPosition));
-      }
-      else if (ptJson->m.find("Error") == ptJson->m.end() || ptJson->m["Error"]->v.empty())
-      {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Encountered an unknown error.");
-      }
+      ptJson->parse(strJson);
     }
     else
     {
