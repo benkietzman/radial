@@ -372,7 +372,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->read(" << errno << ") [0]:  " << strerror(errno);
+            ssMessage << strPrefix << "->read(" << errno << ") [" << fds[0].fd << "]:  " << strerror(errno);
             notify(ssMessage.str());
           }
         }
@@ -389,7 +389,7 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->write(" << errno << ") [1]:  " << strerror(errno);
+            ssMessage << strPrefix << "->write(" << errno << ") [" << fds[1].fd << "]:  " << strerror(errno);
             notify(ssMessage.str());
           }
         }

@@ -26,7 +26,7 @@ class Request : public Interface
 {
   protected:
   void request(Json *ptJson);
-  void socket(string strPrefix, SSL_CTX *ctx, int fdSocket);
+  void socket(string strPrefix, SSL_CTX *ctx, const int fdSocket);
 
   public:
   Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));

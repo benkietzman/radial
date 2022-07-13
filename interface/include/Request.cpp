@@ -94,7 +94,7 @@ void Request::accept(string strPrefix)
               int fdClient;
               sockaddr_in cli_addr;
               socklen_t clilen = sizeof(cli_addr);
-              if ((fdClient = ::accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
+              if ((fdClient = ::accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 thread threadSocket(&Request::socket, this, strPrefix, ctx, fdClient);
                 pthread_setname_np(threadSocket.native_handle(), "socket");
@@ -104,7 +104,7 @@ void Request::accept(string strPrefix)
               {
                 bExit = true;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->accept(" << errno << ") error:  " << strerror(errno);
+                ssMessage << strPrefix << "->accept(" << errno << ") error [" << fds[0].fd << "]:  " << strerror(errno);
                 notify(ssMessage.str());
               }
             }
@@ -276,7 +276,7 @@ void Request::request(Json *ptJson)
 }
 // }}}
 // {{{ socket()
-void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
+void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
 {
   bool bExit = false;
   int nReturn;
@@ -317,7 +317,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
               {
                 bExit = true;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
+                ssMessage << strPrefix << "->Utility::sslAccept() error [" << fds[0].fd << "]:  " << strError;
                 log(ssMessage.str());
               }
             }
@@ -326,7 +326,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
           {
             bExit = true;
             ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::socketType() error:  " << strError;
+            ssMessage << strPrefix << "->Utility::socketType() error [" << fds[0].fd << "]:  " << strError;
             log(ssMessage.str());
           }
         }
@@ -352,11 +352,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+              ssMessage << "sslRead(" << SSL_get_error(ssl, nReturn) << ") error [" << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
             }
             else
             {
-              ssMessage << "fdRead(" << errno << ") error:  " << strerror(errno);
+              ssMessage << "fdRead(" << errno << ") error [" << fds[0].fd << "]:  " << strerror(errno);
             }
             log(ssMessage.str());
           }
@@ -380,11 +380,11 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             ssMessage << strPrefix << "->Utility::";
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+              ssMessage << "sslWrite(" << SSL_get_error(ssl, nReturn) << ") error [" << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
             }
             else
             {
-              ssMessage << "fdWrite(" << errno << ") error:  " << strerror(errno);
+              ssMessage << "fdWrite(" << errno << ") error [" << fds[0].fd << "]:  " << strerror(errno);
             }
             log(ssMessage.str());
           }
