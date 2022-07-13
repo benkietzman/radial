@@ -401,9 +401,6 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
     if (shutdown() && strBuffers[0].empty() && strBuffers[1].empty())
     {
       bExit = true;
-      ssMessage.str("");
-      ssMessage << strPrefix << ":  Exiting due to shutdown.";
-      log(ssMessage.str());
     }
   }
   if (eSocketType == COMMON_SOCKET_ENCRYPTED)
