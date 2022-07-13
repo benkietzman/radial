@@ -610,12 +610,23 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
             else
             {
               bExit = true;
+              if (nReturn < 0)
+              {
+                ptJson->insert("Status", "error");
+                ssMessage.str("");
+                ssMessage << "read(" << errno << ") " << strerror(errno);
+                ptJson->insert("Error", ssMessage.str());
+              }
             }
           }
         }
         else if (nReturn < 0 && errno != EINTR)
         {
           bExit = true;
+          ptJson->insert("Status", "error");
+          ssMessage.str("");
+          ssMessage << "poll(" << errno << ") " << strerror(errno);
+          ptJson->insert("Error", ssMessage.str());
         }
       }
       close(readpipe[0]);
@@ -627,12 +638,10 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         ptJson->clear();
         ptJson->parse(strJson.substr(0, unPosition));
       }
-      else
+      else if (ptJson->m.find("Error") == ptJson->m.end() || ptJson->m["Error"]->v.empty())
       {
         ptJson->insert("Status", "error");
-        ssMessage.str("");
-        ssMessage << "read(" << errno << ") " << strerror(errno);
-        ptJson->insert("Error", ssMessage.str());
+        ptJson->insert("Error", "Encountered an unknown error.");
       }
     }
     else
