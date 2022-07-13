@@ -642,7 +642,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       else if (ptJson->m.find("Error") == ptJson->m.end() || ptJson->m["Error"]->v.empty())
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Encountered an unknown error.");
+        ptJson->insert("Error", (string)"Invalid JSON. --- " + strJson);
       }
     }
     else
