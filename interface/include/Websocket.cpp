@@ -46,7 +46,7 @@ Websocket::~Websocket()
 }
 // }}}
 // {{{ callback()
-void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;

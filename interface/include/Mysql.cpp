@@ -40,7 +40,7 @@ Mysql::~Mysql()
 }
 // }}}
 // {{{ callback()
-void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;

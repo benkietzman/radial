@@ -158,7 +158,7 @@ void Request::accept(string strPrefix)
 }
 // }}}
 // {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;

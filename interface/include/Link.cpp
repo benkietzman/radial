@@ -132,7 +132,7 @@ size_t Link::add(radial_link *ptLink)
 }
 // }}}
 // {{{ callback()
-void Link::callback(string strPrefix, Json *ptJson, const bool bResponse = true)
+void Link::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError, strJson;
