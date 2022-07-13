@@ -373,7 +373,7 @@ void Interface::process(string strPrefix)
           {
             ssMessage.str("");
             ssMessage << strPrefix << "->read(" << errno << ") [" << fds[0].fd << "]:  " << strerror(errno);
-            notify(ssMessage.str());
+            log(ssMessage.str());
           }
         }
       }
@@ -390,7 +390,7 @@ void Interface::process(string strPrefix)
           {
             ssMessage.str("");
             ssMessage << strPrefix << "->write(" << errno << ") [" << fds[1].fd << "]:  " << strerror(errno);
-            notify(ssMessage.str());
+            log(ssMessage.str());
           }
         }
       }
@@ -413,7 +413,7 @@ void Interface::process(string strPrefix)
             {
               ssMessage.str("");
               ssMessage << strPrefix << "->write(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
-              notify(ssMessage.str());
+              log(ssMessage.str());
             }
           }
         }
