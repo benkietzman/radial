@@ -343,7 +343,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
             delete ptJson;
           }
         }
-        else
+        else if (!bExit)
         {
           bExit = true;
           if (nReturn < 0)
