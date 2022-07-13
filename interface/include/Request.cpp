@@ -289,11 +289,6 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
   Json *ptJson;
 
   strPrefix += "->Request::socket()";
-  if ((lArg = fcntl(fdSocket, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(fdSocket, F_SETFL, lArg);
-  }
   while (!bExit)
   {
     pollfd fds[1];
@@ -309,11 +304,16 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
       {
         if (eSocketType == COMMON_SOCKET_UNKNOWN)
         {
-          if (m_pUtility->socketType(fdSocket, eSocketType, strError))
+          if (m_pUtility->socketType(fds[0].fd, eSocketType, strError))
           {
+            if ((lArg = fcntl(fds[0].fd, F_GETFL, NULL)) >= 0)
+            {
+              lArg |= O_NONBLOCK;
+              fcntl(fds[0].fd, F_SETFL, lArg);
+            }
             if (eSocketType == COMMON_SOCKET_ENCRYPTED)
             {
-              if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) == NULL)
+              if ((ssl = m_pUtility->sslAccept(ctx, fds[0].fd, strError)) == NULL)
               {
                 bExit = true;
                 ssMessage.str("");
@@ -330,7 +330,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
             log(ssMessage.str());
           }
         }
-        if (!bExit && ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(ssl, strBuffers[0], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))))
+        if (!bExit && ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(ssl, strBuffers[0], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fds[0].fd, strBuffers[0], nReturn))))
         {
           if ((unPosition = strBuffers[0].find("\n")) != string::npos)
           {
@@ -364,7 +364,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, int fdSocket)
       }
       if (fds[0].revents & POLLOUT)
       {
-        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn)))
+        if ((eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslWrite(ssl, strBuffers[1], nReturn)) || (eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn)))
         {
           if (strBuffers[1].empty())
           {
