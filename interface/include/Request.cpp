@@ -259,13 +259,14 @@ void Request::request(Json *ptJson)
         removals.push_back(i.first);
       }
     }
-    for (auto &removal : removals)
+    while (!removals.empty())
     {
-      if (ptJson->m.find(removal) != ptJson->m.end())
+      if (ptJson->m.find(removals.front()) != ptJson->m.end())
       {
-        delete ptJson->m[removal];
-        ptJson->m.erase(removal);
+        delete ptJson->m[removals.front()];
+        ptJson->m.erase(removals.front());
       }
+      removals.pop_front();
     }
   }
   else
