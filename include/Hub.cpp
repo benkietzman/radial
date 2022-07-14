@@ -258,7 +258,6 @@ void Hub::process(string strPrefix)
   {
     // {{{ prep work
     bool bExit = false;
-    char szBuffer[65536];
     int nReturn;
     pollfd *fds;
     size_t unIndex, unPosition;
@@ -295,9 +294,8 @@ void Hub::process(string strPrefix)
           // {{{ read
           if (fds[i].revents & (POLLHUP | POLLIN))
           {
-            if ((nReturn = read(fds[i].fd, szBuffer, 65536)) > 0)
+            if (m_pUtility->fdRead(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[0], nReturn))
             {
-              m_interfaces[sockets[fds[i].fd]]->strBuffers[0].append(szBuffer, nReturn);
               while ((unPosition = m_interfaces[sockets[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
               {
                 ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
@@ -446,7 +444,7 @@ void Hub::process(string strPrefix)
               if (nReturn < 0 || errno == EINVAL)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->read(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
                 if (errno == EINVAL)
                 {
                   ssMessage << " --- POSSIBLE CORE DUMP";
@@ -459,17 +457,13 @@ void Hub::process(string strPrefix)
           // {{{ write
           if (fds[i].revents & POLLOUT)
           {
-            if ((nReturn = write(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1].c_str(), m_interfaces[sockets[fds[i].fd]]->strBuffers[1].size())) > 0)
-            {
-              m_interfaces[sockets[fds[i].fd]]->strBuffers[1].erase(0, nReturn);
-            }
-            else
+            if (!m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
             {
               removals.push_back(sockets[fds[i].fd]);
               if (nReturn < 0)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->write(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
                 log(ssMessage.str());
               }
             }

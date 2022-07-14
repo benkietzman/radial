@@ -270,7 +270,6 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
   stringstream ssMessage;
   SSL *ssl;
   common_socket_type eSocketType = COMMON_SOCKET_UNKNOWN;
-  Json *ptJson;
 
   strPrefix += "->Request::socket()";
   while (!bExit)
@@ -318,7 +317,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
         {
           if ((unPosition = strBuffers[0].find("\n")) != string::npos)
           {
-            ptJson = new Json(strBuffers[0].substr(0, unPosition));
+            Json *ptJson = new Json(strBuffers[0].substr(0, unPosition));
             strBuffers[0].erase(0, (unPosition + 1));
             request(ptJson);
             ptJson->insert("Node", m_strNode);

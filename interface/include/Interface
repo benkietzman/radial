@@ -40,6 +40,7 @@ class Interface : public Base
   bool dbupdate(const string strDatabase, const string strUpdate, string &strError);
   bool dbupdate(const string strDatabase, const string strUpdate, string &strID, string &strError);
   bool dbupdate(const string strDatabase, const string strUpdate, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
+  void keyRemovals(Json *ptJsom);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
   void monitor(string strPrefix);

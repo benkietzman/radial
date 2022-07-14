@@ -33,10 +33,6 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
-  if (strName != "log")
-  {
-    msleep(500);
-  }
 }
 // }}}
 // {{{ ~Interface()
@@ -56,6 +52,7 @@ bool Interface::auth(Json *ptJson, string &strError)
   bool bResult = false;
   Json *ptAuth = new Json(ptJson);
 
+  keyRemovals(ptAuth);
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
@@ -165,6 +162,29 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
 }
 // }}}
 // }}}
+// {{{ keyRemovals()
+void Interface::keyRemovals(Json *ptJson)
+{
+  list<string> removals;
+
+  for (auto &i : ptJson->m)
+  {
+    if (!i.first.empty() && i.first[0] == '_')
+    {
+      removals.push_back(i.first);
+    }
+  }
+  while (!removals.empty())
+  {
+    if (ptJson->m.find(removals.front()) != ptJson->m.end())
+    {
+      delete ptJson->m[removals.front()];
+      ptJson->m.erase(removals.front());
+    }
+    removals.pop_front();
+  }
+}
+// }}}
 // {{{ log()
 void Interface::log(const string strMessage)
 {
@@ -268,7 +288,6 @@ void Interface::notify(const string strMessage)
 void Interface::process(string strPrefix)
 {
   bool bExit = false;
-  char szBuffer[65536];
   int nReturn;
   list<int> uniqueRemovals;
   map<int, string> uniques;
@@ -331,9 +350,8 @@ void Interface::process(string strPrefix)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {
-        if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
+        if (m_pUtility->fdRead(fds[0].fd, m_strBuffers[0], nReturn))
         {
-          m_strBuffers[0].append(szBuffer, nReturn);
           while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
             int fdUnique = -1;
@@ -380,24 +398,20 @@ void Interface::process(string strPrefix)
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->read(" << errno << ") [" << fds[0].fd << "]:  " << strerror(errno);
+            ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") [" << fds[0].fd << "]:  " << strerror(errno);
             log(ssMessage.str());
           }
         }
       }
       if (fds[1].revents & POLLOUT)
       {
-        if ((nReturn = write(fds[1].fd, m_strBuffers[1].c_str(), m_strBuffers[1].size())) > 0)
-        {
-          m_strBuffers[1].erase(0, nReturn);
-        }
-        else
+        if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
         {
           bExit = true;
           if (nReturn < 0)
           {
             ssMessage.str("");
-            ssMessage << strPrefix << "->write(" << errno << ") [" << fds[1].fd << "]:  " << strerror(errno);
+            ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") [" << fds[1].fd << "]:  " << strerror(errno);
             log(ssMessage.str());
           }
         }
@@ -406,9 +420,8 @@ void Interface::process(string strPrefix)
       {
         if (fds[i].revents & POLLOUT)
         {
-          if ((nReturn = write(fds[i].fd, uniques[fds[i].fd].c_str(), uniques[fds[i].fd].size())) > 0)
+          if (m_pUtility->fdWrite(fds[i].fd, uniques[fds[i].fd], nReturn))
           {
-            uniques[fds[i].fd].erase(0, nReturn);
             if (uniques[fds[i].fd].empty())
             {
               uniqueRemovals.push_back(fds[i].fd);
@@ -420,7 +433,7 @@ void Interface::process(string strPrefix)
             if (nReturn < 0)
             {
               ssMessage.str("");
-              ssMessage << strPrefix << "->write(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
+              ssMessage << strPrefix << "->m_pUtility->fdWrite(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
               log(ssMessage.str());
             }
           }
@@ -561,27 +574,25 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
   }
   if (bWait)
   {
-    int nReturn, readpipe[2] = {-1, -1};
-    list<string> removals;
+    int fdUnique[2] = {-1, -1}, nReturn;
     stringstream ssMessage;
     ptJson->insert("_source", m_strName);
-    if ((nReturn = pipe(readpipe)) == 0)
+    if ((nReturn = pipe(fdUnique)) == 0)
     {
       bool bExit = false, bResult = false;
-      char szBuffer[65536];
       long lArg;
       size_t unPosition, unUnique = 0;
-      string strError, strJson;
+      string strBuffer, strError;
       stringstream ssUnique;
-      if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
+      if ((lArg = fcntl(fdUnique[0], F_GETFL, NULL)) >= 0)
       {
         lArg |= O_NONBLOCK;
-        fcntl(readpipe[0], F_SETFL, lArg);
+        fcntl(fdUnique[0], F_SETFL, lArg);
       }
-      if ((lArg = fcntl(readpipe[1], F_GETFL, NULL)) >= 0)
+      if ((lArg = fcntl(fdUnique[1], F_GETFL, NULL)) >= 0)
       {
         lArg |= O_NONBLOCK;
-        fcntl(readpipe[1], F_SETFL, lArg);
+        fcntl(fdUnique[1], F_SETFL, lArg);
       }
       m_mutexShare.lock();
       ssUnique << m_strName << "_" << unUnique;
@@ -592,52 +603,40 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
         ssUnique << m_strName << "_" << unUnique;
       }
       ptJson->insert("_unique", ssUnique.str());
-      m_waiting[ssUnique.str()] = readpipe[1];
+      m_waiting[ssUnique.str()] = fdUnique[1];
       m_mutexShare.unlock();
       response(ptJson);
       while (!bExit)
       {
         pollfd fds[1];
-        fds[0].fd = readpipe[0];
+        fds[0].fd = fdUnique[0];
         fds[0].events = POLLIN;
         if ((nReturn = poll(fds, 1, 100)) > 0)
         {
           if (fds[0].revents & (POLLHUP | POLLIN))
           {
-            if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
-            {
-              strJson.append(szBuffer, nReturn);
-            }
-            else
+            if (!m_pUtility->fdRead(fds[0].fd, strBuffer, nReturn))
             {
               bExit = true;
-              if (nReturn == 0)
-              {
-                if (!strJson.empty())
-                {
-                  if ((unPosition = strJson.find("\n")) != string::npos)
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    ssMessage.str("");
-                    ssMessage << "Invalid response. --- " << strJson;
-                    strError = ssMessage.str();
-                  }
-                }
-                else
-                {
-                  ssMessage.str("");
-                  ssMessage << "Failed to receive a response.";
-                  strError = ssMessage.str();
-                }
-              }
-              else if (nReturn < 0)
+              if (nReturn < 0)
               {
                 ssMessage.str("");
-                ssMessage << "read(" << errno << ") " << strerror(errno);
+                ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
                 strError = ssMessage.str();
+              }
+              else if ((unPosition = strBuffer.find("\n")) != string::npos)
+              {
+                bResult = true;
+              }
+              else if (!strBuffer.empty())
+              {
+                ssMessage.str("");
+                ssMessage << "Invalid response. --- " << strBuffer;
+                strError = ssMessage.str();
+              }
+              else
+              {
+                strError = "Failed to receive a response.";
               }
             }
           }
@@ -650,14 +649,14 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
           strError = ssMessage.str();
         }
       }
-      close(readpipe[0]);
+      close(fdUnique[0]);
       m_mutexShare.lock();
       m_waiting.erase(ssUnique.str());
       m_mutexShare.unlock();
       if (bResult)
       {
         ptJson->clear();
-        ptJson->parse(strJson.substr(0, unPosition));
+        ptJson->parse(strBuffer.substr(0, unPosition));
       }
       else
       {
@@ -672,22 +671,7 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       ptJson->insert("Status", "error");
       ptJson->insert("Error", ssMessage.str());
     }
-    for (auto &i : ptJson->m)
-    {
-      if (!i.first.empty() && i.first[0] == '_')
-      {
-        removals.push_back(i.first);
-      }
-    }
-    while (!removals.empty())
-    {
-      if (ptJson->m.find(removals.front()) != ptJson->m.end())
-      {
-        delete ptJson->m[removals.front()];
-        ptJson->m.erase(removals.front());
-      }
-      removals.pop_front();
-    }
+    keyRemovals(ptJson);
   }
   else
   {
