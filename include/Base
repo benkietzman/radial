@@ -53,7 +53,9 @@ class Base
   bool m_bShutdown;
   char **m_argv;
   int m_argc;
+  mutex m_mutexBase;
   size_t m_unMonitor;
+  size_t m_unThreads;
   string m_strApplication;
   string m_strData;
   string m_strNode;
@@ -68,6 +70,8 @@ class Base
 
   size_t monitor(string &strMessage);
   void msleep(const unsigned long ulMilliSec);
+  void threadDecrement();
+  void threadIncrement();
 
   public:
   Base(int argc, char **argv);

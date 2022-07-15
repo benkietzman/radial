@@ -35,6 +35,7 @@ Base::Base(int argc, char **argv)
   m_strNode = tServer.nodename;
   m_ulMaxResident = 40 * 1024;
   m_unMonitor = 0;
+  m_unThreads = 0;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -96,6 +97,18 @@ Base::Base(int argc, char **argv)
 // {{{ ~Base()
 Base::~Base()
 {
+  size_t unThreads;
+
+  do 
+  {
+    m_mutexBase.lock();
+    unThreads = m_unThreads;
+    m_mutexBase.unlock();
+    if (unThreads > 0)
+    {
+      msleep(100);
+    }
+  } while (unThreads > 0);
   delete m_pCentral;
   delete m_pJunction;
   delete m_pUtility;
@@ -155,6 +168,27 @@ bool Base::shutdown()
 {
   return m_bShutdown;
 }
+// }}}
+// {{{ thread
+// {{{ threadDecrement()
+void Base::threadDecrement()
+{
+  m_mutexBase.lock();
+  if (m_unThreads > 0)
+  {
+    m_unThreads--;
+  }
+  m_mutexBase.unlock();
+}
+// }}}
+// {{{ threadIncrement()
+void Base::threadIncrement()
+{
+  m_mutexBase.lock();
+  m_unThreads++;
+  m_mutexBase.unlock();
+}
+// }}}
 // }}}
 }
 }

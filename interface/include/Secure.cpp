@@ -52,6 +52,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError, strValue;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Secure::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
@@ -313,6 +314,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 }

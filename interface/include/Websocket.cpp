@@ -52,6 +52,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Websocket::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
@@ -78,6 +79,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ request()
@@ -86,6 +88,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Websocket::request()";
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
@@ -342,6 +345,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->mutexShare.unlock();
   lws_callback_on_writable(ptConn->wsi);
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ socket()

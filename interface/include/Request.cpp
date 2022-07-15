@@ -164,6 +164,7 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Request::callback()";
   if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
@@ -190,6 +191,7 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ request()
@@ -271,6 +273,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
   SSL *ssl;
   common_socket_type eSocketType = COMMON_SOCKET_UNKNOWN;
 
+  threadIncrement();
   strPrefix += "->Request::socket()";
   while (!bExit)
   {
@@ -385,6 +388,7 @@ void Request::socket(string strPrefix, SSL_CTX *ctx, const int fdSocket)
     SSL_free(ssl);
   }
   close(fdSocket);
+  threadDecrement();
 }
 // }}}
 }

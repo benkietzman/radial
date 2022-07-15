@@ -36,6 +36,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Auth::callback()";
   if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
   {
@@ -118,6 +119,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ init()

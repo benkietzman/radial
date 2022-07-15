@@ -138,6 +138,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse)
   string strError, strJson;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Link::callback()";
   if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
   {
@@ -225,6 +226,7 @@ void Link::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ request()
@@ -233,6 +235,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
   string strError, strJson;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Link::request()";
   // {{{ _function
   if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
@@ -403,6 +406,7 @@ void Link::request(string strPrefix, const int fdSocket, Json *ptJson)
   }
   // }}}
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ socket()

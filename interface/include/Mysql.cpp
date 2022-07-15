@@ -45,6 +45,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
   bool bResult = false;
   string strError;
 
+  threadIncrement();
   strPrefix += "->Mysql::callback()";
   if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
   {
@@ -145,6 +146,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ conn()

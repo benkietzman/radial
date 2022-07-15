@@ -51,6 +51,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   bool bResult = false;
   string strError;
 
+  threadIncrement();
   strPrefix += "->Database::callback()";
   if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
   {
@@ -104,6 +105,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
     response(ptJson);
   }
   delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ mysql()
