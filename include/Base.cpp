@@ -98,6 +98,7 @@ Base::~Base()
 {
   delete m_pCentral;
   delete m_pJunction;
+  delete m_pUtility;
   if (m_pWarden != NULL)
   {
     delete m_pWarden;

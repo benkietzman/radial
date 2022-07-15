@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
     gpWebsocket->process(strPrefix);
     threadSocket.join();
   }
-  delete[] pszCert;
-  delete[] pszKey;
+  free(pszCert);
+  free(pszKey);
   delete gpWebsocket;
   utility.sslDeinit();
   return 0;
