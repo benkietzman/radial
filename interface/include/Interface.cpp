@@ -503,7 +503,6 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
     if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
     {
       ptSubJson->m["Response"]->json(strJson);
-      ptJson->clear();
       ptJson->parse(strJson);
     }
   }
@@ -655,7 +654,6 @@ void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
       m_mutexShare.unlock();
       if (bResult)
       {
-        ptJson->clear();
         ptJson->parse(strBuffer.substr(0, unPosition));
       }
       else

@@ -126,11 +126,11 @@ size_t Base::monitor(string &strMessage)
   time(&m_CMonitor[1]);
   if (m_CMonitor[1] - m_CMonitor[0] > 10)
   {
-    float fCpu, fMem;
+    float fCpu = 0, fMem = 0;
     string strError;
     stringstream ssMessage;
-    time_t CTime;
-    unsigned long ulImage, ulResident;
+    time_t CTime = 0;
+    unsigned long ulImage = 0, ulResident = 0;
     m_CMonitor[0] = m_CMonitor[1];
     m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
     if (ulResident >= m_ulMaxResident)
