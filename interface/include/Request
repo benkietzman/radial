@@ -21,18 +21,24 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ radialRequestConn
+struct radialRequestConn
+{
+  SSL *ssl;
+  list<string> responses;
+  size_t unUnique;
+  string strBuffers[2];
+  common_socket_type eSocketType;
+};
+// }}}
 // {{{ Request
 class Request : public Interface
 {
-  protected:
-  void request(Json *ptJson);
-  void socket(string strPrefix, SSL_CTX *ctx, const int fdSocket);
-
   public:
   Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Request();
-  void accept(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void socket(string strPrefix);
 };
 // }}}
 }

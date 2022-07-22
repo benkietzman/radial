@@ -1027,7 +1027,6 @@ void Link::socket(string strPrefix)
     }
     // {{{ post work
     SSL_CTX_free(ctxS);
-    EVP_cleanup();
     // }}}
   }
   else

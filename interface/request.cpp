@@ -20,10 +20,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "request->main()";
   gpRequest = new Request(strPrefix, argc, argv, &callback);
-  thread threadAccept(&Request::accept, gpRequest, strPrefix);
-  pthread_setname_np(threadAccept.native_handle(), "accept");
-  gpRequest->process(strPrefix);
-  threadAccept.join();
+  gpRequest->socket(strPrefix);
   delete gpRequest;
   return 0;
 }
