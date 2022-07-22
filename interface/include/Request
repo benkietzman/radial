@@ -38,7 +38,7 @@ class Request : public Interface
   Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Request();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void socket(string strPrefix);
+  void process(string strPrefix);
 };
 // }}}
 }

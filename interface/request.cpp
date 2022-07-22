@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "request->main()";
   gpRequest = new Request(strPrefix, argc, argv, &callback);
-  gpRequest->socket(strPrefix);
+  gpRequest->process(strPrefix);
   delete gpRequest;
   return 0;
 }

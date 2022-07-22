@@ -42,41 +42,48 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
     {
-      if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+      if (ptJson->m.find("Request") != ptJson->m.end())
       {
-        Json *ptData = new Json(ptJson);
-        if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
+        if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
         {
-          if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
+          Json *ptData = new Json(ptJson);
+          if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
           {
-            string strAccessFunction = "Function";
-            if (m_accessFunctions.find(ptJson->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Interface"]->v] != "Function")
+            if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {
-              strAccessFunction = m_accessFunctions[ptJson->m["Interface"]->v];
-            }
-            if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == "all")
-            {
-              bResult = true;
-            }
-            else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
-            {
-              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
+              string strAccessFunction = "Function";
+              if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
+              {
+                strAccessFunction = m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v];
+              }
+              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == "all")
               {
                 bResult = true;
               }
-              else
+              else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
               {
-                for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Interface"]->v]->l)
+                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
                 {
-                  if (access->v == ptJson->m[strAccessFunction]->v)
+                  bResult = true;
+                }
+                else
+                {
+                  for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->l)
                   {
-                    bResult = true;
+                    if (access->v == ptJson->m[strAccessFunction]->v)
+                    {
+                      bResult = true;
+                    }
+                  }
+                  if (!bResult)
+                  {
+                    strError = "Authorization denied.";
                   }
                 }
-                if (!bResult)
-                {
-                  strError = "Authorization denied.";
-                }
+              }
+              else
+              {
+                strError = "Authorization denied.";
               }
             }
             else
@@ -84,20 +91,20 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
               strError = "Authorization denied.";
             }
           }
-          else
+          else if (m_pWarden == NULL)
           {
-            strError = "Authorization denied.";
+            strError = "Please initialize Warden.";
           }
+          delete ptData;
         }
-        else if (m_pWarden == NULL)
+        else
         {
-          strError = "Please initialize Warden.";
+          strError = "Please provide the Interface within the Request.";
         }
-        delete ptData;
       }
       else
       {
-        strError = "Please provide the Interface.";
+        strError = "Please provide the Request.";
       }
     }
     else

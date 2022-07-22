@@ -66,8 +66,8 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
   threadDecrement();
 }
 // }}}
-// {{{ socket()
-void Request::socket(string strPrefix)
+// {{{ process()
+void Request::process(string strPrefix)
 {
   // {{{ prep work
   long lArg;
@@ -253,6 +253,12 @@ void Request::socket(string strPrefix)
                                 {
                                   Json *ptAuth = new Json(ptSubJson);
                                   keyRemovals(ptAuth);
+                                  if (ptAuth->m.find("Request") != ptAuth->m.end())
+                                  {
+                                    delete ptAuth->m["Request"];
+                                  }
+                                  ptAuth->m["Request"] = new Json;
+                                  ptAuth->m["Request"]->insert("Interface", ptSubJson->m["Interface"]->v);
                                   ptAuth->insert("_target", "auth");
                                   ptAuth->m["_request"] = new Json(ptSubJson);
                                   ptAuth->insert("_source", m_strName);
@@ -460,6 +466,7 @@ void Request::socket(string strPrefix)
                   {
                     Json *ptJson = new Json(conns[fds[i].fd]->strBuffers[0].substr(0, unPosition));
                     conns[fds[i].fd]->strBuffers[0].erase(0, (unPosition + 1));
+                    keyRemovals(ptJson);
                     if (!shutdown())
                     {
                       if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
@@ -499,6 +506,7 @@ void Request::socket(string strPrefix)
                           stringstream ssUnique;
                           Json *ptInterfaces = new Json;
                           ptJson->insert("_source", m_strName);
+                          ptJson->insert("_target", ptJson->m["Interface"]->v);
                           ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                           ptJson->insert("_unique", ssUnique.str());
                           ptInterfaces->insert("Function", "list");

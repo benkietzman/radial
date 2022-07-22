@@ -53,6 +53,15 @@ bool Interface::auth(Json *ptJson, string &strError)
   Json *ptAuth = new Json(ptJson);
 
   keyRemovals(ptAuth);
+  if (ptAuth->m.find("Interface") != ptAuth->m.end() && !ptAuth->m["Interface"]->v.empty())
+  {
+    if (ptAuth->m.find("Request") != ptAuth->m.end())
+    {
+      delete ptAuth->m["Request"];
+    }
+    ptAuth->m["Request"] = new Json;
+    ptAuth->m["Request"]->insert("Interface", ptAuth->m["Interface"]->v);
+  }
   if (target("auth", ptAuth, strError))
   {
     bResult = true;
