@@ -8,22 +8,21 @@
 # {{{ prep work
 prefix=/usr/local
 all: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-# }}}
-
 install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
-	install --mode=777 bin/auth $(prefix)/radial/interface/
-	install --mode=777 bin/database $(prefix)/radial/interface/
-	install --mode=777 bin/link $(prefix)/radial/interface/
-	install --mode=777 bin/log $(prefix)/radial/interface/
-	install --mode=777 bin/mysql $(prefix)/radial/interface/
-	install --mode=777 bin/request $(prefix)/radial/interface/
-	install --mode=777 bin/secure $(prefix)/radial/interface/
-	install --mode=777 bin/storage $(prefix)/radial/interface/
-	install --mode=777 bin/websocket $(prefix)/radial/interface/
+	install --mode=775 bin/auth $(prefix)/radial/interface/
+	install --mode=775 bin/database $(prefix)/radial/interface/
+	install --mode=775 bin/link $(prefix)/radial/interface/
+	install --mode=775 bin/log $(prefix)/radial/interface/
+	install --mode=775 bin/mysql $(prefix)/radial/interface/
+	install --mode=775 bin/request $(prefix)/radial/interface/
+	install --mode=775 bin/secure $(prefix)/radial/interface/
+	install --mode=775 bin/storage $(prefix)/radial/interface/
+	install --mode=775 bin/websocket $(prefix)/radial/interface/
+# }}}
 
 # {{{ auth
 auth: bin/auth $(prefix)/radial/interface
-	install --mode=777 bin/auth $(prefix)/radial/interface/
+	install --mode=775 bin/auth $(prefix)/radial/interface/
 bin/auth: ../../common/libcommon.a obj/auth.o obj/Base.o obj/Interface.o obj/Auth.o bin
 	g++ -o bin/auth obj/auth.o obj/Base.o obj/Interface.o obj/Auth.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/auth.o: auth.cpp ../../common/Makefile obj
@@ -33,7 +32,7 @@ obj/Auth.o: include/Auth.cpp obj
 # }}}
 # {{{ database
 database: bin/database $(prefix)/radial/interface
-	install --mode=777 bin/database $(prefix)/radial/interface/
+	install --mode=775 bin/database $(prefix)/radial/interface/
 bin/database: ../../common/libcommon.a obj/database.o obj/Base.o obj/Interface.o obj/Database.o bin
 	g++ -o bin/database obj/database.o obj/Base.o obj/Interface.o obj/Database.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/database.o: database.cpp ../../common/Makefile obj
@@ -43,7 +42,7 @@ obj/Database.o: include/Database.cpp obj
 # }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface
-	install --mode=777 bin/link $(prefix)/radial/interface/
+	install --mode=775 bin/link $(prefix)/radial/interface/
 bin/link: ../../common/libcommon.a obj/link.o obj/Base.o obj/Interface.o obj/Link.o bin
 	g++ -o bin/link obj/link.o obj/Base.o obj/Interface.o obj/Link.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/link.o: link.cpp ../../common/Makefile obj
@@ -53,7 +52,7 @@ obj/Link.o: include/Link.cpp obj
 # }}}
 # {{{ log
 log: bin/log $(prefix)/radial/interface
-	install --mode=777 bin/log $(prefix)/radial/interface/
+	install --mode=775 bin/log $(prefix)/radial/interface/
 bin/log: ../../common/libcommon.a obj/log.o obj/Base.o obj/Interface.o obj/Log.o bin
 	g++ -o bin/log obj/log.o obj/Base.o obj/Interface.o obj/Log.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/log.o: log.cpp ../../common/Makefile obj
@@ -63,7 +62,7 @@ obj/Log.o: include/Log.cpp obj
 # }}}
 # {{{ mysql
 mysql: bin/mysql $(prefix)/radial/interface
-	install --mode=777 bin/mysql $(prefix)/radial/interface/
+	install --mode=775 bin/mysql $(prefix)/radial/interface/
 bin/mysql: ../../common/libcommon.a obj/mysql.o obj/Base.o obj/Interface.o obj/Mysql.o bin
 	g++ -o bin/mysql obj/mysql.o obj/Base.o obj/Interface.o obj/Mysql.o $(LDFLAGS) -L/usr/lib64/mysql -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lmysqlclient -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/mysql.o: mysql.cpp ../../common/Makefile obj
@@ -73,7 +72,7 @@ obj/Mysql.o: include/Mysql.cpp obj
 # }}}
 # {{{ request
 request: bin/request $(prefix)/radial/interface
-	install --mode=777 bin/request $(prefix)/radial/interface/
+	install --mode=775 bin/request $(prefix)/radial/interface/
 bin/request: ../../common/libcommon.a obj/request.o obj/Base.o obj/Interface.o obj/Request.o bin
 	g++ -o bin/request obj/request.o obj/Base.o obj/Interface.o obj/Request.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/request.o: request.cpp ../../common/Makefile obj
@@ -83,7 +82,7 @@ obj/Request.o: include/Request.cpp obj
 # }}}
 # {{{ secure
 secure: bin/secure $(prefix)/radial/interface
-	install --mode=777 bin/secure $(prefix)/radial/interface/
+	install --mode=775 bin/secure $(prefix)/radial/interface/
 bin/secure: ../../common/libcommon.a obj/secure.o obj/Base.o obj/Interface.o obj/Secure.o bin
 	g++ -o bin/secure obj/secure.o obj/Base.o obj/Interface.o obj/Secure.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/secure.o: secure.cpp ../../common/Makefile obj
@@ -93,7 +92,7 @@ obj/Secure.o: include/Secure.cpp obj
 # }}}
 # {{{ storage
 storage: bin/storage $(prefix)/radial/interface
-	install --mode=777 bin/storage $(prefix)/radial/interface/
+	install --mode=775 bin/storage $(prefix)/radial/interface/
 bin/storage: ../../common/libcommon.a obj/storage.o obj/Base.o obj/Interface.o obj/Storage.o bin
 	g++ -o bin/storage obj/storage.o obj/Base.o obj/Interface.o obj/Storage.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/storage.o: storage.cpp ../../common/Makefile obj
@@ -103,7 +102,7 @@ obj/Storage.o: include/Storage.cpp obj
 # }}}
 # {{{ websocket
 websocket: bin/websocket $(prefix)/radial/interface
-	install --mode=777 bin/websocket $(prefix)/radial/interface/
+	install --mode=775 bin/websocket $(prefix)/radial/interface/
 bin/websocket: ../../common/libcommon.a obj/websocket.o obj/Base.o obj/Interface.o obj/Websocket.o bin
 	g++ -o bin/websocket obj/websocket.o obj/Base.o obj/Interface.o obj/Websocket.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lwebsockets -lz
 obj/websocket.o: websocket.cpp ../../common/Makefile obj
