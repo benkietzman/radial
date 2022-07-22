@@ -394,7 +394,7 @@ void Interface::process(string strPrefix)
                 }
               }
             }
-            else
+            else if (m_pCallback != NULL)
             {
               m_pCallback(strPrefix, ptJson, true);
             }
