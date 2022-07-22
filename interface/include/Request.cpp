@@ -29,43 +29,6 @@ Request::~Request()
 {
 }
 // }}}
-// {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
-{
-  bool bResult = false;
-  string strError;
-  stringstream ssMessage;
-
-  threadIncrement();
-  strPrefix += "->Request::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
-  {
-    if (ptJson->m["Function"]->v == "ping")
-    {
-      bResult = true;
-    }
-    else
-    {
-      strError = "Please provide a valid Function:  ping.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Function.";
-  }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->insert("Error", strError);
-  }
-  if (bResponse)
-  {
-    response(ptJson);
-  }
-  delete ptJson;
-  threadDecrement();
-}
-// }}}
 // {{{ process()
 void Request::process(string strPrefix)
 {
@@ -369,7 +332,28 @@ void Request::process(string strPrefix)
                   }
                   else
                   {
-                    m_pCallback(strPrefix, ptJson, true);
+                    bool bProcessed = false;
+                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    {
+                      if (ptJson->m["Function"]->v == "ping")
+                      {
+                        bProcessed = true;
+                      }
+                      else
+                      {
+                        strError = "Please provide a valid Function:  ping.";
+                      }
+                    }
+                    else
+                    {
+                      strError = "Please provide the Function.";
+                    }
+                    ptJson->insert("Status", ((bProcessed)?"okay":"error"));
+                    if (!strError.empty())
+                    {
+                      ptJson->insert("Error", strError);
+                    }
+                    response(ptJson);
                   }
                   delete ptJson;
                 }

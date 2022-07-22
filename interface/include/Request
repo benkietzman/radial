@@ -37,7 +37,6 @@ class Request : public Interface
   public:
   Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Request();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
   void process(string strPrefix);
 };
 // }}}
