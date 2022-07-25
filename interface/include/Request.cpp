@@ -67,7 +67,7 @@ void Request::process(string strPrefix)
       for (rp = result; !bBound[2] && rp != NULL; rp = rp->ai_next)
       {
         bBound[1] = false;
-        if ((fdSocket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+        if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
         {
           int nOn = 1;
           bBound[1] = true;
@@ -391,7 +391,7 @@ void Request::process(string strPrefix)
               int fdClient;
               sockaddr_in cli_addr;
               socklen_t clilen = sizeof(cli_addr);
-              if ((fdClient = ::accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
+              if ((fdClient = accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 radialRequestConn *ptConn = new radialRequestConn;
                 ptConn->ssl = NULL;
