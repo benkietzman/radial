@@ -542,23 +542,6 @@ void Link::process(string strPrefix)
                   else
                   {
                     bool bProcessed = false;
-                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
-                    {
-                      if (ptJson->m["Function"]->v == "ping")
-                      {
-                        bProcessed = true;
-                      }
-                      else
-                      {
-                        strError = "Please provide a valid Function:  ping.";
-                      }
-                    }
-                    else
-                    {
-                      strError = "Please provide the Function.";
-                    }
-
-
                     if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
                     {
                       Json *ptSubJson = new Json(ptJson);
