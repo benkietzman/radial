@@ -1145,6 +1145,7 @@ void Link::process(string strPrefix)
             m_unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
           }
           // }}}
+          monitor(strPrefix);
           if (shutdown())
           {
             bExit = true;

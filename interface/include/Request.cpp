@@ -574,6 +574,7 @@ void Request::process(string strPrefix)
             notify(ssMessage.str());
           }
           // {{{ post work
+          monitor(strPrefix);
           if (shutdown())
           {
             if (fdSocket != -1)
