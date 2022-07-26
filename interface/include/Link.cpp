@@ -542,6 +542,7 @@ void Link::process(string strPrefix)
                   else
                   {
                     bool bProcessed = false;
+                    strError.clear();
                     if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
                     {
                       Json *ptSubJson = new Json(ptJson);

@@ -333,6 +333,7 @@ void Request::process(string strPrefix)
                   else
                   {
                     bool bProcessed = false;
+                    strError.clear();
                     if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
                     {
                       if (ptJson->m["Function"]->v == "ping")
