@@ -765,11 +765,11 @@ void Link::process(string strPrefix)
             for (size_t i = 3; i < unIndex; i++)
             {
               list<radialLink *>::iterator linkIter = links.end();
-              for (auto i = links.begin(); linkIter == links.end() && i != links.end(); i++)
+              for (auto j = links.begin(); linkIter == links.end() && j != links.end(); j++)
               {
-                if (link->fdSocket == fds[i].fd)
+                if ((*j)->fdSocket == fds[i].fd)
                 {
-                  linkIter = i;
+                  linkIter = j;
                 }
               }
               if (linkIter != links.end())
