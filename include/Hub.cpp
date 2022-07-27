@@ -148,6 +148,7 @@ bool Hub::load(string strPrefix, string &strError)
   bool bResult = false;
   ifstream inInterfaces;
   stringstream ssInterfaces, ssMessage;
+  Json *ptInterfaces = NULL;
 
   strPrefix += "->Hub::load()";
   ssInterfaces << m_strData << "/interfaces.json";
@@ -156,13 +157,22 @@ bool Hub::load(string strPrefix, string &strError)
   {
     string strLine;
     stringstream ssJson;
-    Json *ptInterfaces;
-    bResult = true;
     while (getline(inInterfaces, strLine))
     {
       ssJson << strLine;
     }
     ptInterfaces = new Json(ssJson.str());
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+    strError = ssMessage.str();
+  }
+  inInterfaces.close();
+  if (ptInterfaces != NULL)
+  {
+    bResult = true;
     if (ptInterfaces->m.find("log") != ptInterfaces->m.end() && ptInterfaces->m["log"]->m.find("Command") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["Command"]->v.empty())
     {
       if (!add(strPrefix, "log", ((ptInterfaces->m["log"]->m.find("AccessFunction") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["AccessFunction"]->v.empty())?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ((ptInterfaces->m["log"]->m.find("Respawn") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m["log"]->m.find("Restricted") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
@@ -197,13 +207,6 @@ bool Hub::load(string strPrefix, string &strError)
       strError = ssMessage.str();
     }
   }
-  else
-  {
-    ssMessage.str("");
-    ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
-    strError = ssMessage.str();
-  }
-  inInterfaces.close();
 
   return bResult;
 }
