@@ -342,7 +342,7 @@ void Link::process(string strPrefix)
                     ssUnique << fdLink << " " << link->unUnique;
                     ptStorage->insert("_unique", ssUnique.str());
                     ptStorage->insert("Function", "retrieve");
-                    response(ptStorage);
+                    hub(ptStorage, false);
                     delete ptStorage;
                   }
                 }
@@ -412,7 +412,7 @@ void Link::process(string strPrefix)
                             {
                               if (ptJson->m["Response"]->m.find(ptSubJson->m["Interface"]->v) != ptJson->m["Response"]->m.end())
                               {
-                                response(ptSubJson);
+                                hub(ptSubJson, false);
                               }
                               else
                               {
@@ -615,7 +615,7 @@ void Link::process(string strPrefix)
                     {
                       ptJson->insert("Error", strError);
                     }
-                    response(ptJson);
+                    hub(ptJson, false);
                   }
                   delete ptJson;
                 }
@@ -900,7 +900,7 @@ void Link::process(string strPrefix)
                           ssUnique << (*linkIter)->fdSocket << " " << (*linkIter)->unUnique;
                           ptJson->insert("_unique", ssUnique.str());
                           ptStorage->insert("Function", "retrieve");
-                          response(ptStorage);
+                          hub(ptStorage, false);
                           delete ptStorage;
                         }
                       }
@@ -919,7 +919,7 @@ void Link::process(string strPrefix)
                           ptInterfaces->insert("Function", "list");
                           ptInterfaces->m["_request"] = new Json(ptJson);
                           ptInterfaces->insert("_source", m_strName);
-                          response(ptInterfaces);
+                          hub(ptInterfaces, false);
                           delete ptInterfaces;
                         }
                         else

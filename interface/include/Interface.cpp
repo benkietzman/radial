@@ -62,7 +62,7 @@ bool Interface::auth(Json *ptJson, string &strError)
     ptAuth->m["Request"] = new Json;
     ptAuth->m["Request"]->insert("Interface", ptAuth->m["Interface"]->v);
   }
-  if (target("auth", ptAuth, strError))
+  if (hub("auth", ptAuth, strError))
   {
     bResult = true;
   }
@@ -98,7 +98,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
   ullRows = 0;
   ptJson->insert("Database", strDatabase);
   ptJson->insert("Query", strQuery);
-  if (target("database", ptJson, strError))
+  if (hub("database", ptJson, strError))
   {
     if (ptJson->m.find("Response") != ptJson->m.end())
     {
@@ -151,7 +151,7 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
   ullID = ullRows = 0;
   ptJson->insert("Database", strDatabase);
   ptJson->insert("Update", strUpdate);
-  if (target("database", ptJson, strError))
+  if (hub("database", ptJson, strError))
   {
     bResult = true;
     if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
@@ -170,6 +170,152 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
   return bResult;
 }
 // }}}
+// }}}
+// {{{ hub()
+void Interface::hub(Json *ptJson, const bool bWait)
+{
+  hub("", ptJson, bWait);
+}
+void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
+{
+  string strJson;
+
+  if (!strTarget.empty())
+  {
+    ptJson->insert("_target", strTarget);
+  }
+  if (bWait)
+  {
+    int fdUnique[2] = {-1, -1}, nReturn;
+    stringstream ssMessage;
+    ptJson->insert("_source", m_strName);
+    if ((nReturn = pipe(fdUnique)) == 0)
+    {
+      bool bExit = false, bResult = false;
+      long lArg;
+      size_t unPosition, unUnique = 0;
+      string strBuffer, strError;
+      stringstream ssUnique;
+      if ((lArg = fcntl(fdUnique[0], F_GETFL, NULL)) >= 0)
+      {
+        lArg |= O_NONBLOCK;
+        fcntl(fdUnique[0], F_SETFL, lArg);
+      }
+      if ((lArg = fcntl(fdUnique[1], F_GETFL, NULL)) >= 0)
+      {
+        lArg |= O_NONBLOCK;
+        fcntl(fdUnique[1], F_SETFL, lArg);
+      }
+      m_mutexShare.lock();
+      ssUnique << m_strName << "_" << unUnique;
+      while (m_waiting.find(ssUnique.str()) != m_waiting.end())
+      {
+        unUnique++;
+        ssUnique.str("");
+        ssUnique << m_strName << "_" << unUnique;
+      }
+      ptJson->insert("_unique", ssUnique.str());
+      m_waiting[ssUnique.str()] = fdUnique[1];
+      m_mutexShare.unlock();
+      hub(ptJson, false);
+      while (!bExit)
+      {
+        pollfd fds[1];
+        fds[0].fd = fdUnique[0];
+        fds[0].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 100)) > 0)
+        {
+          if (fds[0].revents & (POLLHUP | POLLIN))
+          {
+            if (!m_pUtility->fdRead(fds[0].fd, strBuffer, nReturn))
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                ssMessage.str("");
+                ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
+                strError = ssMessage.str();
+              }
+              else if ((unPosition = strBuffer.find("\n")) != string::npos)
+              {
+                bResult = true;
+              }
+              else if (!strBuffer.empty())
+              {
+                ssMessage.str("");
+                ssMessage << "Invalid response. --- " << strBuffer;
+                strError = ssMessage.str();
+              }
+              else
+              {
+                strError = "Failed to receive a response.";
+              }
+            }
+          }
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << "poll(" << errno << ") " << strerror(errno);
+          strError = ssMessage.str();
+        }
+      }
+      close(fdUnique[0]);
+      m_mutexShare.lock();
+      m_waiting.erase(ssUnique.str());
+      m_mutexShare.unlock();
+      if (bResult)
+      {
+        ptJson->parse(strBuffer.substr(0, unPosition));
+      }
+      else
+      {
+        ptJson->insert("Status", "error");
+        ptJson->insert("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << "pipe(" << errno << ") " << strerror(errno);
+      ptJson->insert("Status", "error");
+      ptJson->insert("Error", ssMessage.str());
+    }
+    keyRemovals(ptJson);
+  }
+  else
+  {
+    ptJson->json(strJson);
+    m_mutexShare.lock();
+    m_responses.push_back(strJson);
+    m_mutexShare.unlock();
+  }
+}
+bool Interface::hub(Json *ptJson, string &strError)
+{
+  return hub("", ptJson, strError);
+}
+bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
+{
+  bool bResult = false;
+
+  hub(strTarget, ptJson, true);
+  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+  {
+    bResult = true;
+  }
+  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+  {
+    strError = ptJson->m["Error"]->v;
+  }
+  else
+  {
+    strError = "Encountered an unknown error.";
+  }
+
+  return bResult;
+}
 // }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
@@ -205,7 +351,7 @@ void Interface::log(const string strFunction, const string strMessage)
 
   ptJson->insert("Function", strFunction);
   ptJson->insert("Message", strMessage);
-  target("log", ptJson, false);
+  hub("log", ptJson, false);
 
   delete ptJson;
 }
@@ -242,7 +388,7 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   ptJson->insert("Password", strPassword);
   ptJson->insert("Database", strDatabase);
   ptJson->insert(strType, strQuery);
-  if (target("mysql", ptJson, strError))
+  if (hub("mysql", ptJson, strError))
   {
     bResult = true;
     if (ptJson->m.find("Response") != ptJson->m.end())
@@ -478,17 +624,6 @@ void Interface::process(string strPrefix)
   setShutdown();
 }
 // }}}
-// {{{ response()
-void Interface::response(Json *ptJson)
-{
-  string strJson;
-
-  ptJson->json(strJson);
-  m_mutexShare.lock();
-  m_responses.push_back(strJson);
-  m_mutexShare.unlock();
-}
-// }}}
 // {{{ storage
 // {{{ storage()
 bool Interface::storage(const string strFunction, const list<string> keys, Json *ptJson, string &strError)
@@ -506,7 +641,7 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
   {
     ptSubJson->insert("Request", ptJson);
   }
-  if (target("storage", ptSubJson, strError))
+  if (hub("storage", ptSubJson, strError))
   {
     bResult = true;
     if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
@@ -568,147 +703,6 @@ bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &str
   return storage("update", keys, ptJson, strError);
 }
 // }}}
-// }}}
-// {{{ target()
-void Interface::target(Json *ptJson, const bool bWait)
-{
-  target("", ptJson, bWait);
-}
-void Interface::target(const string strTarget, Json *ptJson, const bool bWait)
-{
-  if (!strTarget.empty())
-  {
-    ptJson->insert("_target", strTarget);
-  }
-  if (bWait)
-  {
-    int fdUnique[2] = {-1, -1}, nReturn;
-    stringstream ssMessage;
-    ptJson->insert("_source", m_strName);
-    if ((nReturn = pipe(fdUnique)) == 0)
-    {
-      bool bExit = false, bResult = false;
-      long lArg;
-      size_t unPosition, unUnique = 0;
-      string strBuffer, strError;
-      stringstream ssUnique;
-      if ((lArg = fcntl(fdUnique[0], F_GETFL, NULL)) >= 0)
-      {
-        lArg |= O_NONBLOCK;
-        fcntl(fdUnique[0], F_SETFL, lArg);
-      }
-      if ((lArg = fcntl(fdUnique[1], F_GETFL, NULL)) >= 0)
-      {
-        lArg |= O_NONBLOCK;
-        fcntl(fdUnique[1], F_SETFL, lArg);
-      }
-      m_mutexShare.lock();
-      ssUnique << m_strName << "_" << unUnique;
-      while (m_waiting.find(ssUnique.str()) != m_waiting.end())
-      {
-        unUnique++;
-        ssUnique.str("");
-        ssUnique << m_strName << "_" << unUnique;
-      }
-      ptJson->insert("_unique", ssUnique.str());
-      m_waiting[ssUnique.str()] = fdUnique[1];
-      m_mutexShare.unlock();
-      response(ptJson);
-      while (!bExit)
-      {
-        pollfd fds[1];
-        fds[0].fd = fdUnique[0];
-        fds[0].events = POLLIN;
-        if ((nReturn = poll(fds, 1, 100)) > 0)
-        {
-          if (fds[0].revents & (POLLHUP | POLLIN))
-          {
-            if (!m_pUtility->fdRead(fds[0].fd, strBuffer, nReturn))
-            {
-              bExit = true;
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
-                strError = ssMessage.str();
-              }
-              else if ((unPosition = strBuffer.find("\n")) != string::npos)
-              {
-                bResult = true;
-              }
-              else if (!strBuffer.empty())
-              {
-                ssMessage.str("");
-                ssMessage << "Invalid response. --- " << strBuffer;
-                strError = ssMessage.str();
-              }
-              else
-              {
-                strError = "Failed to receive a response.";
-              }
-            }
-          }
-        }
-        else if (nReturn < 0 && errno != EINTR)
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << "poll(" << errno << ") " << strerror(errno);
-          strError = ssMessage.str();
-        }
-      }
-      close(fdUnique[0]);
-      m_mutexShare.lock();
-      m_waiting.erase(ssUnique.str());
-      m_mutexShare.unlock();
-      if (bResult)
-      {
-        ptJson->parse(strBuffer.substr(0, unPosition));
-      }
-      else
-      {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
-      }
-    }
-    else
-    {
-      ssMessage.str("");
-      ssMessage << "pipe(" << errno << ") " << strerror(errno);
-      ptJson->insert("Status", "error");
-      ptJson->insert("Error", ssMessage.str());
-    }
-    keyRemovals(ptJson);
-  }
-  else
-  {
-    response(ptJson);
-  }
-}
-bool Interface::target(Json *ptJson, string &strError)
-{
-  return target("", ptJson, strError);
-}
-bool Interface::target(const string strTarget, Json *ptJson, string &strError)
-{
-  bool bResult = false;
-
-  target(strTarget, ptJson, true);
-  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
-  {
-    bResult = true;
-  }
-  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
-  {
-    strError = ptJson->m["Error"]->v;
-  }
-  else
-  {
-    strError = "Encountered an unknown error.";
-  }
-
-  return bResult;
-}
 // }}}
 }
 }

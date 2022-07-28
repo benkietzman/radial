@@ -102,7 +102,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    response(ptJson);
+    hub(ptJson, false);
   }
   delete ptJson;
   threadDecrement();
@@ -128,7 +128,7 @@ bool Database::mysql(const string strType, const string strName, const string st
           Json *ptJson = new Json(m_ptDatabases->m[strName]);
           ptJson->insert("Type", strType);
           ptJson->insert(((strType == "query")?"Query":"Update"), strQuery);
-          if (target("mysql", ptJson, strError))
+          if (hub("mysql", ptJson, strError))
           {
             bResult = true;
             if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())

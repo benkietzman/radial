@@ -311,7 +311,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    response(ptJson);
+    hub(ptJson, false);
   }
   delete ptJson;
   threadDecrement();

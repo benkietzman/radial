@@ -182,7 +182,7 @@ void Request::process(string strPrefix)
                           {
                             if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
                             {
-                              response(ptSubJson);
+                              hub(ptSubJson, false);
                             }
                             else
                             {
@@ -210,7 +210,7 @@ void Request::process(string strPrefix)
                               {
                                 if (ptJson->m["Response"]->m[ptSubJson->m["Interface"]->v]->m.find("Restricted") == ptJson->m["Response"]->m[ptSubJson->m["Interface"]->v]->m.end() || ptJson->m["Response"]->m[ptSubJson->m["Interface"]->v]->m["Restricted"]->v == "0")
                                 {
-                                  response(ptSubJson);
+                                  hub(ptSubJson, false);
                                 }
                                 else
                                 {
@@ -225,7 +225,7 @@ void Request::process(string strPrefix)
                                   ptAuth->insert("_target", "auth");
                                   ptAuth->m["_request"] = new Json(ptSubJson);
                                   ptAuth->insert("_source", m_strName);
-                                  response(ptAuth);
+                                  hub(ptAuth, false);
                                   delete ptAuth;
                                 }
                               }
@@ -354,7 +354,7 @@ void Request::process(string strPrefix)
                     {
                       ptJson->insert("Error", strError);
                     }
-                    response(ptJson);
+                    hub(ptJson, false);
                   }
                   delete ptJson;
                 }
@@ -466,7 +466,7 @@ void Request::process(string strPrefix)
                               ptJson->insert("_source", m_strName);
                               ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                               ptJson->insert("_unique", ssUnique.str());
-                              response(ptJson);
+                              hub(ptJson, false);
                             }
                             else
                             {
@@ -497,7 +497,7 @@ void Request::process(string strPrefix)
                           ptInterfaces->insert("Function", "list");
                           ptInterfaces->m["_request"] = new Json(ptJson);
                           ptInterfaces->insert("_source", m_strName);
-                          response(ptInterfaces);
+                          hub(ptInterfaces, false);
                           delete ptInterfaces;
                         }
                       }

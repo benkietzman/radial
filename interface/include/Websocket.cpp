@@ -76,7 +76,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    response(ptJson);
+    hub(ptJson, false);
   }
   delete ptJson;
   threadDecrement();
@@ -279,7 +279,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       {
         if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
         {
-          target(ptJson);
+          hub(ptJson);
         }
         else
         {
@@ -297,14 +297,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     {
       Json *ptInterfaces = new Json;
       ptInterfaces->insert("Function", "list");
-      target(ptInterfaces);
+      hub(ptInterfaces);
       if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
       {
         if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
         {
           if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0" || auth(ptJson, strError))
           {
-            target(ptJson->m["Interface"]->v, ptJson);
+            hub(ptJson->m["Interface"]->v, ptJson);
           }
           else
           {

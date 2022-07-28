@@ -123,7 +123,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    response(ptJson);
+    hub(ptJson, false);
   }
   delete ptJson;
   threadDecrement();
@@ -137,7 +137,7 @@ bool Auth::init()
   Json *ptJson = new Json;
 
   ptJson->insert("Function", "list");
-  if (target(ptJson, strError))
+  if (hub(ptJson, strError))
   {
     if (ptJson->m.find("Response") != ptJson->m.end())
     {

@@ -94,7 +94,7 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         ptLink->m["Request"] = new Json(ptJson->m["Request"]);
       }
-      target("link", ptLink, false);
+      hub("link", ptLink, false);
       delete ptLink;
     }
   }
@@ -109,7 +109,7 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    response(ptJson);
+    hub(ptJson, false);
   }
   delete ptJson;
   threadDecrement();
