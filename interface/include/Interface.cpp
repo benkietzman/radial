@@ -216,8 +216,9 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
       }
       ptJson->insert("_unique", ssUnique.str());
       m_waiting[ssUnique.str()] = fdUnique[1];
+      ptJson->json(strJson);
+      m_responses.push_back(strJson);
       m_mutexShare.unlock();
-      hub(ptJson, false);
       while (!bExit)
       {
         pollfd fds[1];
@@ -493,10 +494,6 @@ void Interface::process(string strPrefix)
       if (!unique.second.empty())
       {
         fds[unIndex].fd = unique.first;
-      }
-      else
-      {
-        uniqueRemovals.push_back(unique.first);
       }
       fds[unIndex].events = POLLOUT;
       unIndex++;
