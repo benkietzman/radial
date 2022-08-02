@@ -124,7 +124,7 @@ size_t Base::monitor(string &strMessage)
   size_t unResult = 0;
 
   time(&m_CMonitor[1]);
-  if (m_CMonitor[1] - m_CMonitor[0] > 10)
+  if (m_CMonitor[1] - m_CMonitor[0] > 30)
   {
     float fCpu = 0, fMem = 0;
     string strError;
