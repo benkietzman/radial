@@ -218,12 +218,13 @@ void Link::process(string strPrefix)
         pollfd *fds;
         size_t unIndex, unLink = m_unLink, unPosition, unUnique = 0;
         string strLine;
-        time_t CBroadcastTime[2], unBroadcastSleep = 5;
+        time_t CBootstrapTime[2], CBroadcastTime[2], unBootstrapSleep = 0, unBroadcastSleep = 5;
         Json *ptBoot = new Json;
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
-        time(&CBroadcastTime[0]);
+        time(&CBootstrapTime[0]);
+        CBroadcastTime[0] = CBootstrapTime[0];
         // }}}
         while (!bExit)
         {
@@ -1133,64 +1134,72 @@ void Link::process(string strPrefix)
           // {{{ bootstrap links
           if (m_ptLink->m.find("Links") != m_ptLink->m.end())
           {
-            bool bReady = true;
-            for (auto i = links.begin(); bReady && i != links.end(); i++)
+            time(&CBootstrapTime[1]);
+            if ((CBootstrapTime[1] - CBootstrapTime[0]) > unBootstrapSleep)
             {
-              if (!(*i)->bAuthenticated || (*i)->bSslAcceptRetry || (*i)->bSslConnectRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
+              bool bReady = true;
+              unsigned int unSeed = CBootstrapTime[1];
+              srand(unSeed);
+              unBootstrapSleep = (rand_r(&unSeed) % 30) + 1;
+              for (auto i = links.begin(); bReady && i != links.end(); i++)
               {
-                bReady = false;
-              }
-            }
-            if (bReady)
-            {
-              if (ptBoot->l.empty())
-              {
-                for (auto &ptLink : m_ptLink->m["Links"]->l)
+                if (!(*i)->bAuthenticated || (*i)->bSslAcceptRetry || (*i)->bSslConnectRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
                 {
-                  if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+                  bReady = false;
+                }
+              }
+              if (bReady)
+              {
+                if (ptBoot->l.empty())
+                {
+                  for (auto &ptLink : m_ptLink->m["Links"]->l)
                   {
-                    bool bFound = false;
-                    for (auto i = links.begin(); !bFound && i != links.end(); i++)
+                    if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                     {
-                      if ((*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
+                      bool bFound = false;
+                      for (auto i = links.begin(); !bFound && i != links.end(); i++)
                       {
-                        bFound = true;
+                        if ((*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
+                        {
+                          bFound = true;
+                        }
                       }
-                    }
-                    if (!bFound)
-                    {
-                      Json *ptSubLink = new Json;
-                      ptSubLink->insert("Server", ptLink->m["Server"]->v);
-                      ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
-                      ptBoot->push_back(ptSubLink);
-                      delete ptSubLink;
+                      if (!bFound)
+                      {
+                        Json *ptSubLink = new Json;
+                        ptSubLink->insert("Server", ptLink->m["Server"]->v);
+                        ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
+                        ptBoot->push_back(ptSubLink);
+                        delete ptSubLink;
+                      }
                     }
                   }
                 }
               }
-              if (!ptBoot->l.empty())
+              CBootstrapTime[0] = CBootstrapTime[1];
+            }
+            while (!ptBoot->l.empty())
+            {
+              radialLink *ptLink = new radialLink;
+              ptLink->bAuthenticated = true;
+              ptLink->bSslAcceptRetry = false;
+              ptLink->bSslConnectRetry = false;
+              ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
+              ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
+              ptLink->fdConnecting = -1;
+              ptLink->fdSocket = -1;
+              ptLink->rp = NULL;
+              ptLink->ssl = NULL;
+              ptLink->unUnique = unUnique++;
+              if (add(links, ptLink) <= 0)
               {
-                radialLink *ptLink = new radialLink;
-                ptLink->bAuthenticated = true;
-                ptLink->bSslAcceptRetry = false;
-                ptLink->bSslConnectRetry = false;
-                ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
-                ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
-                ptLink->fdConnecting = -1;
-                ptLink->fdSocket = -1;
-                ptLink->rp = NULL;
-                ptLink->ssl = NULL;
-                ptLink->unUnique = unUnique++;
-                if (add(links, ptLink) <= 0)
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
-                  notify(ssMessage.str());
-                }
-                delete ptLink;
-                delete ptBoot->l.front();
-                ptBoot->l.pop_front();
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Link::add() error [" << ptLink->strServer << "]:  Failed to add link.";
+                notify(ssMessage.str());
               }
+              delete ptLink;
+              delete ptBoot->l.front();
+              ptBoot->l.pop_front();
             }
           }
           // }}}
