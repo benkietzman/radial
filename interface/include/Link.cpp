@@ -1131,7 +1131,7 @@ void Link::process(string strPrefix)
               if (removeIter != links.end())
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << " [remove," << (*removeIter)->strServer << "," << (*removeIter)->fdSocket << "]:  Removed link.";
+                ssMessage << strPrefix << " [removals," << (*removeIter)->strNode << "," << (*removeIter)->strServer << "," << (*removeIter)->fdSocket << "]:  Removed link.";
                 log(ssMessage.str());
                 if ((*removeIter)->ssl != NULL)
                 {
