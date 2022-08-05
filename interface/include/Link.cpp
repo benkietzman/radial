@@ -1135,7 +1135,7 @@ void Link::process(string strPrefix)
             bool bReady = true;
             for (auto i = links.begin(); bReady && i != links.end(); i++)
             {
-              if ((*i)->strNode.empty() || (*i)->strServer.empty() || (*i)->strPort.empty() || !(*i)->bAuthenticated)
+              if (!(*i)->bAuthenticated || (*i)->bSslAcceptRetry || (*i)->bSslConnectRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
               {
                 bReady = false;
               }
