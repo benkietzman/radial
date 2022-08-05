@@ -911,13 +911,13 @@ void Link::process(string strPrefix)
                                       if ((unReturn = add(links, ptSubLink)) > 0)
                                       {
                                         ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
                                         log(ssMessage.str());
                                       }
                                       else
                                       {
                                         ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
+                                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
                                         log(ssMessage.str());
                                       }
                                       delete ptSubLink;
@@ -952,7 +952,7 @@ void Link::process(string strPrefix)
                             {
                               (*linkIter)->bAuthenticated = true;
                               ssMessage.str("");
-                              ssMessage << strPrefix << " [" << ptJson->m["_funtion"]->v << "," << (*linkIter)->strNode << "]:  Authenticated link.";
+                              ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << (*linkIter)->strNode << "]:  Authenticated link.";
                               log(ssMessage.str());
                               if (m_unLink == RADIAL_LINK_MASTER)
                               {
