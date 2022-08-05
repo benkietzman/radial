@@ -271,38 +271,41 @@ void Link::process(string strPrefix)
                   removals.push_back(-1);
                 }
               }
-              else if ((link->fdConnecting = socket(link->rp->ai_family, link->rp->ai_socktype, link->rp->ai_protocol)) >= 0)
+              else if ((link->fdConnecting == -1)
               {
-                long lArg;
-                if ((lArg = fcntl(link->fdConnecting, F_GETFL, NULL)) >= 0)
+                if ((link->fdConnecting = socket(link->rp->ai_family, link->rp->ai_socktype, link->rp->ai_protocol)) >= 0)
                 {
-                  lArg |= O_NONBLOCK;
-                  fcntl(link->fdConnecting, F_SETFL, lArg);
-                }
-                if (connect(link->fdConnecting, link->rp->ai_addr, link->rp->ai_addrlen) == 0)
-                {
-                  link->fdSocket = link->fdConnecting;
-                  link->fdConnecting = -1;
-                  if ((link->ssl = m_pUtility->sslConnect(ctxC, link->fdSocket, link->bSslConnectRetry, strError)) == NULL)
+                  long lArg;
+                  if ((lArg = fcntl(link->fdConnecting, F_GETFL, NULL)) >= 0)
                   {
-                    removals.push_back(link->fdSocket);
+                    lArg |= O_NONBLOCK;
+                    fcntl(link->fdConnecting, F_SETFL, lArg);
                   }
                 }
-                else if (errno != EAGAIN && errno != EINPROGRESS)
+                else
                 {
-                  close(link->fdConnecting);
-                  link->fdConnecting = -1;
                   link->rp = link->rp->ai_next;
+                  if (link->rp == NULL)
+                  {
+                    freeaddrinfo(link->result);
+                    removals.push_back(-1);
+                  }
                 }
               }
-              else
+              else if (connect(link->fdConnecting, link->rp->ai_addr, link->rp->ai_addrlen) == 0)
               {
-                link->rp = link->rp->ai_next;
-                if (link->rp == NULL)
+                link->fdSocket = link->fdConnecting;
+                link->fdConnecting = -1;
+                if ((link->ssl = m_pUtility->sslConnect(ctxC, link->fdSocket, link->bSslConnectRetry, strError)) == NULL)
                 {
-                  freeaddrinfo(link->result);
-                  removals.push_back(-1);
+                  removals.push_back(link->fdSocket);
                 }
+              }
+              else if (errno != EAGAIN && errno != EINPROGRESS)
+              {
+                close(link->fdConnecting);
+                link->fdConnecting = -1;
+                link->rp = link->rp->ai_next;
               }
               if (link->fdSocket != -1)
               {
