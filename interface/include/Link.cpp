@@ -884,13 +884,13 @@ void Link::process(string strPrefix)
                                       if ((unReturn = add(links, ptSubLink)) > 0)
                                       {
                                         ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() [handshake," << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
                                         log(ssMessage.str());
                                       }
                                       else
                                       {
                                         ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() error [handshake," << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
+                                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
                                         log(ssMessage.str());
                                       }
                                       delete ptSubLink;
@@ -924,6 +924,9 @@ void Link::process(string strPrefix)
                             if (ptJson->m["Password"]->v == m_strPassword)
                             {
                               (*linkIter)->bAuthenticated = true;
+                              ssMessage.str("");
+                              ssMessage << strPrefix << " [" << ptJson->m["_funtion"]->v << "," << (*linkIter)->strNode << "]:  Authenticated link.";
+                              log(ssMessage.str());
                               if (m_unLink == RADIAL_LINK_MASTER)
                               {
                                 bStorageTransmit = true;
