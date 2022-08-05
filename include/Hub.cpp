@@ -290,7 +290,7 @@ void Hub::process(string strPrefix)
         unIndex++;
       }
       // }}}
-      if ((nReturn = poll(fds, unIndex, 1000)) > 0)
+      if ((nReturn = poll(fds, unIndex, 10)) > 0)
       {
         for (size_t i = 0; i < unIndex; i++)
         {
