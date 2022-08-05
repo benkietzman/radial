@@ -1175,7 +1175,7 @@ void Link::process(string strPrefix)
                 ptLink->bSslAcceptRetry = false;
                 ptLink->bSslConnectRetry = false;
                 ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
-                ptLink->strPort = ptBootLink->l.front()->m["Port"]->v;
+                ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
                 ptLink->fdConnecting = -1;
                 ptLink->fdSocket = -1;
                 ptLink->rp = NULL;
