@@ -418,6 +418,11 @@ void Request::process(string strPrefix)
               if ((fdClient = accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 radialRequestConn *ptConn = new radialRequestConn;
+                if ((lArg = fcntl(fdClient, F_GETFL, NULL)) >= 0)
+                {
+                  lArg |= O_NONBLOCK;
+                  fcntl(fdClient, F_SETFL, lArg);
+                }
                 ptConn->bSslAcceptRetry = false;
                 ptConn->ssl = NULL;
                 ptConn->unUnique = unUnique++;
@@ -436,14 +441,14 @@ void Request::process(string strPrefix)
             for (size_t i = 3; i < unIndex; i++)
             {
               // {{{ prep work
-              bool bGood = true;
+              bool bGood = true, bRetry = false;
               // }}}
               // {{{ read
               if (fds[i].revents & POLLIN)
               {
                 if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNKNOWN)
                 {
-                  if (m_pUtility->socketType(fds[i].fd, conns[fds[i].fd]->eSocketType, strError))
+                  if (m_pUtility->socketType(fds[i].fd, conns[fds[i].fd]->eSocketType, bRetry, strError))
                   {
                     if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED)
                     {
@@ -463,20 +468,33 @@ void Request::process(string strPrefix)
                         log(ssMessage.str());
                       }
                     }
-                    if ((lArg = fcntl(fds[i].fd, F_GETFL, NULL)) >= 0)
-                    {
-                      lArg |= O_NONBLOCK;
-                      fcntl(fds[i].fd, F_SETFL, lArg);
-                    }
                   }
                   else
                   {
                     bGood = false;
-                    removals.push_back(fds[i].fd);
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::socketType() error [read," << fds[i].fd << "]:  " << strError;
-                    log(ssMessage.str());
+                    if (!bRetry)
+                    {
+                      removals.push_back(fds[i].fd);
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Utility::socketType() error [read," << fds[i].fd << "]:  " << strError;
+                      log(ssMessage.str());
+                    }
                   }
+                }
+                else if (conns[fds[i].fd]->bSslAcceptRetry)
+                {
+                  if ((nReturn = SSL_accept(conns[fds[i].fd]->ssl)) <= 0)
+                  {
+                    strError = m_pUtility->sslstrerror(conns[fds[i].fd]->ssl, nReturn, conns[fds[i].fd]->bSslAcceptRetry);
+                    if (!conns[fds[i].fd]->bSslAcceptRetry)
+                    {
+                      bGood = false;
+                      removals.push_back(fds[i].fd);
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->SSL_accept() error [read," << fds[i].fd << "]:  " << strError;
+                      log(ssMessage.str());
+                    }
+                  }     
                 }
                 if (bGood && ((conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(conns[fds[i].fd]->ssl, conns[fds[i].fd]->strBuffers[0], nReturn)) || (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fds[i].fd, conns[fds[i].fd]->strBuffers[0], nReturn))))
                 {
