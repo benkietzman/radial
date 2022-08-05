@@ -219,6 +219,7 @@ void Link::process(string strPrefix)
         size_t unIndex, unLink = m_unLink, unPosition, unUnique = 0;
         string strLine;
         time_t CBroadcastTime[2], unBroadcastSleep = 5;
+        Json *ptBoot = new Json;
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
@@ -1142,37 +1143,39 @@ void Link::process(string strPrefix)
             }
             if (bReady)
             {
-              Json *ptBoot = new Json;
-              for (auto &ptLink : m_ptLink->m["Links"]->l)
+              if (ptBoot->l.empty())
               {
-                if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+                for (auto &ptLink : m_ptLink->m["Links"]->l)
                 {
-                  bool bFound = false;
-                  for (auto i = links.begin(); !bFound && i != links.end(); i++)
+                  if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                   {
-                    if ((*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
+                    bool bFound = false;
+                    for (auto i = links.begin(); !bFound && i != links.end(); i++)
                     {
-                      bFound = true;
+                      if ((*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
+                      {
+                        bFound = true;
+                      }
                     }
-                  }
-                  if (!bFound)
-                  {
-                    Json *ptSubLink = new Json;
-                    ptSubLink->insert("Server", ptLink->m["Server"]->v);
-                    ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
-                    ptBoot->push_back(ptSubLink);
-                    delete ptSubLink;
+                    if (!bFound)
+                    {
+                      Json *ptSubLink = new Json;
+                      ptSubLink->insert("Server", ptLink->m["Server"]->v);
+                      ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
+                      ptBoot->push_back(ptSubLink);
+                      delete ptSubLink;
+                    }
                   }
                 }
               }
-              for (auto &ptBootLink : ptBoot->l)
+              if (!ptBoot->l.empty())
               {
                 radialLink *ptLink = new radialLink;
                 ptLink->bAuthenticated = true;
                 ptLink->bSslAcceptRetry = false;
                 ptLink->bSslConnectRetry = false;
-                ptLink->strServer = ptBootLink->m["Server"]->v;
-                ptLink->strPort = ptBootLink->m["Port"]->v;
+                ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
+                ptLink->strPort = ptBootLink->l.front()->m["Port"]->v;
                 ptLink->fdConnecting = -1;
                 ptLink->fdSocket = -1;
                 ptLink->rp = NULL;
@@ -1181,12 +1184,13 @@ void Link::process(string strPrefix)
                 if (add(links, ptLink) <= 0)
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->Link::add() error [" << ptBootLink->m["Server"]->v << "]:  Failed to add link.";
+                  ssMessage << strPrefix << "->Link::add() error [" << ptBoot->l.front()->m["Server"]->v << "]:  Failed to add link.";
                   notify(ssMessage.str());
                 }
                 delete ptLink;
+                delete ptBoot->l.front();
+                ptBoot->l.pop_front();
               }
-              delete ptBoot;
             }
           }
           // }}}
@@ -1223,6 +1227,7 @@ void Link::process(string strPrefix)
           delete link;
         }
         links.clear();
+        delete ptBoot;
         // }}}
       }
       else
