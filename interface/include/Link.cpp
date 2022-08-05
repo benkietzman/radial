@@ -231,9 +231,12 @@ void Link::process(string strPrefix)
           // {{{ prep work
           fds = new pollfd[links.size() + 3];
           unIndex = 0;
+          // {{{ stdin
           fds[unIndex].fd = 0;
           fds[unIndex].events = POLLIN;
           unIndex++;
+          // }}}
+          // {{{ stdout
           fds[unIndex].fd = -1;
           fds[unIndex].events = POLLOUT;
           if (m_strBuffers[1].empty())
@@ -251,14 +254,19 @@ void Link::process(string strPrefix)
             fds[unIndex].fd = 1;
           }
           unIndex++;
+          // }}}
+          // {{{ accept
           fds[unIndex].fd = fdSocket;
           fds[unIndex].events = POLLIN;
           unIndex++;
+          // }}}
+          // {{{ links
           for (auto &link : links)
           {
             fds[unIndex].events = POLLIN;
             if (link->fdSocket == -1)
             {
+              // {{{ getaddrinfo
               if (link->rp == NULL)
               {
                 memset(&(link->hints), 0, sizeof(addrinfo));
@@ -273,6 +281,8 @@ void Link::process(string strPrefix)
                   removals.push_back(-1);
                 }
               }
+              // }}}
+              // {{{ socket
               else if (link->fdConnecting == -1)
               {
                 if ((link->fdConnecting = socket(link->rp->ai_family, link->rp->ai_socktype, link->rp->ai_protocol)) >= 0)
@@ -294,6 +304,8 @@ void Link::process(string strPrefix)
                   }
                 }
               }
+              // }}}
+              // {{{ connect
               else if (connect(link->fdConnecting, link->rp->ai_addr, link->rp->ai_addrlen) == 0)
               {
                 link->fdSocket = link->fdConnecting;
@@ -303,12 +315,16 @@ void Link::process(string strPrefix)
                   removals.push_back(link->fdSocket);
                 }
               }
+              // }}}
+              // {{{ error
               else if (errno != EAGAIN && errno != EINPROGRESS)
               {
                 close(link->fdConnecting);
                 link->fdConnecting = -1;
                 link->rp = link->rp->ai_next;
               }
+              // }}}
+              // {{{ payload
               if (link->fdSocket != -1)
               {
                 Json *ptWrite = new Json;
@@ -361,7 +377,9 @@ void Link::process(string strPrefix)
                   delete ptStorage;
                 }
               }
+              // }}}
             }
+            // {{{ SSL_accept
             if (link->bSslAcceptRetry)
             {
               if ((nReturn = SSL_accept(link->ssl)) > 0)
@@ -378,6 +396,8 @@ void Link::process(string strPrefix)
                 }
               }
             }
+            // }}}
+            // {{{ SSL_connect
             if (link->bSslConnectRetry)
             {
               if ((nReturn = SSL_connect(link->ssl)) == 1)
@@ -394,6 +414,8 @@ void Link::process(string strPrefix)
                 }
               }
             }
+            // }}}
+            // {{{ fds
             if (!link->bSslAcceptRetry && !link->bSslConnectRetry)
             {
               fds[unIndex].fd = link->fdSocket;
@@ -415,7 +437,9 @@ void Link::process(string strPrefix)
               fds[unIndex].fd = -1;
             }
             unIndex++;
+            // }}}
           }
+          // }}}
           // }}}
           if ((nReturn = poll(fds, unIndex, 10)) > 0)
           {
@@ -819,8 +843,10 @@ void Link::process(string strPrefix)
               }
             }
             // }}}
+            // {{{ links
             for (size_t i = 3; i < unIndex; i++)
             {
+              // {{{ prep work
               list<radialLink *>::iterator linkIter = links.end();
               for (auto j = links.begin(); linkIter == links.end() && j != links.end(); j++)
               {
@@ -829,6 +855,7 @@ void Link::process(string strPrefix)
                   linkIter = j;
                 }
               }
+              // }}}
               if (linkIter != links.end())
               {
                 // {{{ read
@@ -1043,6 +1070,7 @@ void Link::process(string strPrefix)
                 // }}}
               }
             }
+            // }}}
           }
           else if (nReturn < 0 && errno != EINTR)
           {
