@@ -29,7 +29,13 @@ namespace radial
 // {{{ structs
 struct radialLink
 {
+  addrinfo hints;
+  addrinfo *result;
+  addrinfo *rp;
   bool bAuthenticated;
+  bool bSslAcceptRetry;
+  bool bSslConnectRetry;
+  int fdConnecting;
   int fdSocket;
   list<string> responses;
   size_t unUnique;

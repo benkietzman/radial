@@ -135,19 +135,42 @@ void Request::process(string strPrefix)
           unIndex++;
           for (auto &conn : conns)
           {
-            fds[unIndex].fd = conn.first;
             fds[unIndex].events = POLLIN;
-            if (conn.second->strBuffers[1].empty())
+            if (conn.second->bSslAcceptRetry)
             {
-              while (!conn.second->responses.empty())
+              if ((nReturn = SSL_accept(conn.second->ssl)) > 0)
               {
-                conn.second->strBuffers[1].append(conn.second->responses.front() + "\n");
-                conn.second->responses.pop_front();
+                conn.second->bSslAcceptRetry = false;
+              }
+              else
+              {
+                strError = m_pUtility->sslstrerror(conn.second->ssl, nReturn, conn.second->bSslAcceptRetry);
+                if (!conn.second->bSslAcceptRetry)
+                { 
+                  conn.second->bSslAcceptRetry = true;
+                  removals.push_back(conn.first);
+                }
               }
             }
-            if (!conn.second->strBuffers[1].empty())
+            if (!conn.second->bSslAcceptRetry)
             {
-              fds[unIndex].events |= POLLOUT;
+              fds[unIndex].fd = conn.first;
+              if (conn.second->strBuffers[1].empty())
+              {
+                while (!conn.second->responses.empty())
+                {
+                  conn.second->strBuffers[1].append(conn.second->responses.front() + "\n");
+                  conn.second->responses.pop_front();
+                }
+              }
+              if (!conn.second->strBuffers[1].empty())
+              {
+                fds[unIndex].events |= POLLOUT;
+              }
+            }
+            else
+            {
+              fds[unIndex].fd = -1;
             }
             unIndex++;
           }
@@ -395,6 +418,7 @@ void Request::process(string strPrefix)
               if ((fdClient = accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 radialRequestConn *ptConn = new radialRequestConn;
+                ptConn->bSslAcceptRetry = false;
                 ptConn->ssl = NULL;
                 ptConn->unUnique = unUnique++;
                 ptConn->eSocketType = COMMON_SOCKET_UNKNOWN;
@@ -411,17 +435,26 @@ void Request::process(string strPrefix)
             // }}}
             for (size_t i = 3; i < unIndex; i++)
             {
+              // {{{ prep work
+              bool bGood = true;
+              // }}}
               // {{{ read
               if (fds[i].revents & POLLIN)
               {
-                bool bGood = true;
                 if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNKNOWN)
                 {
                   if (m_pUtility->socketType(fds[i].fd, conns[fds[i].fd]->eSocketType, strError))
                   {
                     if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED)
                     {
-                      if ((conns[fds[i].fd]->ssl = m_pUtility->sslAccept(ctx, fds[i].fd, strError)) == NULL)
+                      if ((conns[fds[i].fd]->ssl = m_pUtility->sslAccept(ctx, fds[i].fd, conns[fds[i].fd]->bSslAcceptRetry, strError)) != NULL)
+                      {
+                        if (conns[fds[i].fd]->bSslAcceptRetry)
+                        {
+                          bGood = false;
+                        }
+                      }
+                      else
                       {
                         bGood = false;
                         removals.push_back(fds[i].fd);
@@ -544,7 +577,7 @@ void Request::process(string strPrefix)
               // {{{ write
               if (fds[i].revents & POLLOUT)
               {
-                if ((conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED && !m_pUtility->sslWrite(conns[fds[i].fd]->ssl, conns[fds[i].fd]->strBuffers[1], nReturn)) || (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNENCRYPTED && !m_pUtility->fdWrite(fds[i].fd, conns[fds[i].fd]->strBuffers[1], nReturn)))
+                if (bGood && ((conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED && !m_pUtility->sslWrite(conns[fds[i].fd]->ssl, conns[fds[i].fd]->strBuffers[1], nReturn)) || (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNENCRYPTED && !m_pUtility->fdWrite(fds[i].fd, conns[fds[i].fd]->strBuffers[1], nReturn))))
                 {
                   removals.push_back(fds[i].fd);
                   if (nReturn < 0)
