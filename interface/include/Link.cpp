@@ -730,6 +730,7 @@ void Link::process(string strPrefix)
                   // }}}
                   if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bSslAcceptRetry, strError)) != NULL)
                   {
+                    size_t unReturn;
                     Json *ptWrite = new Json;
                     radialLink *ptLink = new radialLink;
                     ptLink->bAuthenticated = false;
@@ -776,10 +777,17 @@ void Link::process(string strPrefix)
                       ptLink->responses.push_back(ptWrite->json(strJson));
                       delete ptWrite;
                     }
-                    if (add(links, ptLink) <= 0)
+                    if ((unReturn = add(links, ptLink)) > 0)
                     {
                       ssMessage.str("");
-                      ssMessage << strPrefix << "->Link::add() error:  Failed to add link.";
+                      ssMessage << strPrefix << "->Link::add() [sslAccept," << fdLink << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                      log(ssMessage.str());
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Link::add() error [sslAccept," << fdLink << "]:  Failed to add link.";
+                      log(ssMessage.str());
                       SSL_shutdown(ssl);
                       SSL_free(ssl);
                       close(fdLink);
@@ -860,6 +868,7 @@ void Link::process(string strPrefix)
                                   {
                                     if (ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                                     {
+                                      size_t unReturn;
                                       radialLink *ptSubLink = new radialLink;
                                       ptSubLink->bAuthenticated = true;
                                       ptSubLink->bSslAcceptRetry = false;
@@ -872,11 +881,17 @@ void Link::process(string strPrefix)
                                       ptSubLink->rp = NULL;
                                       ptSubLink->ssl = NULL;
                                       ptSubLink->unUnique = unUnique++;
-                                      if (add(links, ptSubLink) <= 0)
+                                      if ((unReturn = add(links, ptSubLink)) > 0)
                                       {
                                         ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
-                                        notify(ssMessage.str());
+                                        ssMessage << strPrefix << "->Link::add() [handshake," << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                        log(ssMessage.str());
+                                      }
+                                      else
+                                      {
+                                        ssMessage.str("");
+                                        ssMessage << strPrefix << "->Link::add() error [handshake," << ptJson->m["_funtion"]->v << "," << ptLink->m["Node"]->v << "]:  Failed to add link.";
+                                        log(ssMessage.str());
                                       }
                                       delete ptSubLink;
                                     }
@@ -1180,6 +1195,7 @@ void Link::process(string strPrefix)
             }
             while (!ptBoot->l.empty())
             {
+              size_t unReturn;
               radialLink *ptLink = new radialLink;
               ptLink->bAuthenticated = true;
               ptLink->bSslAcceptRetry = false;
@@ -1191,11 +1207,17 @@ void Link::process(string strPrefix)
               ptLink->rp = NULL;
               ptLink->ssl = NULL;
               ptLink->unUnique = unUnique++;
-              if (add(links, ptLink) <= 0)
+              if ((unReturn = add(links, ptLink)) > 0)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Link::add() error [" << ptLink->strServer << "]:  Failed to add link.";
-                notify(ssMessage.str());
+                ssMessage << strPrefix << "->Link::add() [bootstrap," << ptLink->strServer << "]:  " << ((unReturn == 1)?"Added":"Update") << " link.";
+                log(ssMessage.str());
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Link::add() error [bootstrap," << ptLink->strServer << "]:  Failed to add link.";
+                log(ssMessage.str());
               }
               delete ptLink;
               delete ptBoot->l.front();
