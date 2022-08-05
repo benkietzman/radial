@@ -288,7 +288,7 @@ void Link::process(string strPrefix)
                     removals.push_back(link->fdSocket);
                   }
                 }
-                else if (errno != EAGAIN)
+                else if (errno != EAGAIN && errno != EINPROGRESS)
                 {
                   close(link->fdConnecting);
                   link->fdConnecting = -1;
