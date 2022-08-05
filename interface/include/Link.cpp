@@ -271,7 +271,7 @@ void Link::process(string strPrefix)
                   removals.push_back(-1);
                 }
               }
-              else if ((link->fdConnecting == -1)
+              else if (link->fdConnecting == -1)
               {
                 if ((link->fdConnecting = socket(link->rp->ai_family, link->rp->ai_socktype, link->rp->ai_protocol)) >= 0)
                 {
