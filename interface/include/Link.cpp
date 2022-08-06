@@ -218,13 +218,13 @@ void Link::process(string strPrefix)
         pollfd *fds;
         size_t unIndex, unLink = m_unLink, unPosition, unUnique = 0;
         string strLine;
-        time_t CBootstrapTime[2], CBroadcastTime[2], unBootstrapSleep = 0, unBroadcastSleep = 5;
+        time_t CBootstrap, CBroadcast, CTime, unBootstrapSleep = 0, unBroadcastSleep = 5;
         Json *ptBoot = new Json;
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
-        time(&CBootstrapTime[0]);
-        CBroadcastTime[0] = CBootstrapTime[0];
+        time(&CTime);
+        CBroadcast = CBootstrap = CTime;
         // }}}
         while (!bExit)
         {
@@ -1081,6 +1081,7 @@ void Link::process(string strPrefix)
           }
           // {{{ post work
           delete[] fds;
+          time(&CTime);
           // {{{ removals
           if (!links.empty())
           {
@@ -1154,10 +1155,9 @@ void Link::process(string strPrefix)
           }
           // }}}
           // {{{ broadcast master
-          time(&CBroadcastTime[1]);
-          if ((CBroadcastTime[1] - CBroadcastTime[0]) > unBroadcastSleep)
+          if ((CTime - CBroadcast) > unBroadcastSleep)
           {
-            unsigned int unSeed = CBroadcastTime[1];
+            unsigned int unSeed = CTime;
             srand(unSeed);
             unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
             if (m_strMaster.empty())
@@ -1177,17 +1177,16 @@ void Link::process(string strPrefix)
                 link->responses.push_back(strJson);
               }
             }
-            CBroadcastTime[0] = CBroadcastTime[1];
+            CBroadcast = CTime;
           }
           // }}}
           // {{{ bootstrap links
           if (m_ptLink->m.find("Links") != m_ptLink->m.end())
           {
-            time(&CBootstrapTime[1]);
-            if ((CBootstrapTime[1] - CBootstrapTime[0]) > unBootstrapSleep)
+            if ((CTime - CBootstrap) > unBootstrapSleep)
             {
               bool bReady = true;
-              unsigned int unSeed = CBootstrapTime[1];
+              unsigned int unSeed = CTime;
               srand(unSeed);
               unBootstrapSleep = (rand_r(&unSeed) % 30) + 1;
               for (auto i = links.begin(); bReady && i != links.end(); i++)
@@ -1225,7 +1224,7 @@ void Link::process(string strPrefix)
                   }
                 }
               }
-              CBootstrapTime[0] = CBootstrapTime[1];
+              CBootstrap = CTime;
             }
             while (!ptBoot->l.empty())
             {
