@@ -199,8 +199,10 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
         radial_mysql *ptMysql = new radial_mysql;
         if ((ptMysql->conn = mysql_init(NULL)) != NULL)
         {
-          unsigned int unTimeout = 2;
-          mysql_options(ptMysql->conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeout);
+          unsigned int unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
+          mysql_options(ptMysql->conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeoutConnect);
+          mysql_options(ptMysql->conn, MYSQL_OPT_READ_TIMEOUT, &unTimeoutRead);
+          mysql_options(ptMysql->conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
           if (mysql_real_connect(ptMysql->conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
           {
             bConnected = true;
