@@ -1107,7 +1107,14 @@ void Link::process(string strPrefix)
               }
               if (duplicates.size() > 1)
               {
-                duplicates.pop_back();
+                if (m_ptLink->m.find("Node") != m_ptLink->m.end() && m_ptLink->m["Node"]->v < (*duplicates.front())->strNode)
+                {
+                  duplicates.pop_front();
+                }
+                else
+                {
+                  duplicates.pop_back();
+                }
                 for (auto &duplicate : duplicates)
                 {
                   removals.push_back((*duplicate)->fdSocket);
