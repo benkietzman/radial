@@ -1147,7 +1147,7 @@ void Link::process(string strPrefix)
                 ssMessage.str("");
                 if (bClient)
                 {
-                  ssMessage << strPrefix << " [removals," << (*duplicates[1].back())->strNode << "," << (*duplicates[1].back())->fdSocket << "]:  Saved back " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                  ssMessage << strPrefix << " [removals," << (*duplicates[1].back())->strNode << "," << (*duplicates[1].back())->fdSocket << "]:  Saved back " << (((*duplicates[1].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
                   duplicates[1].pop_back();
                 }
                 else
