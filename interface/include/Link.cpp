@@ -1152,7 +1152,7 @@ void Link::process(string strPrefix)
                 }
                 else
                 {
-                  ssMessage << strPrefix << " [removals," << (*duplicates[1].front())->strNode << "," << (*duplicates[1].front())->fdSocket << "]:  Saved front " << (((*duplicates[0].front())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                  ssMessage << strPrefix << " [removals," << (*duplicates[1].front())->strNode << "," << (*duplicates[1].front())->fdSocket << "]:  Saved front " << (((*duplicates[1].front())->bClient)?"client":"server") << " link prior to removal of duplicates.";
                   duplicates[1].pop_front();
                 }
                 log(ssMessage.str());
