@@ -1107,17 +1107,18 @@ void Link::process(string strPrefix)
               }
               if (duplicates.size() > 1)
               {
+                ssMessage.str("");
                 if (m_ptLink->m.find("Node") != m_ptLink->m.end() && m_ptLink->m["Node"]->v < (*duplicates.front())->strNode)
                 {
                   duplicates.pop_front();
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved link prior to removal of duplicates.";
-                  log(ssMessage.str());
+                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved front link prior to removal of duplicates.";
                 }
                 else
                 {
                   duplicates.pop_back();
+                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved back link prior to removal of duplicates.";
                 }
+                log(ssMessage.str());
                 for (auto &duplicate : duplicates)
                 {
                   removals.push_back((*duplicate)->fdSocket);
