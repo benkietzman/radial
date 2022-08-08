@@ -33,6 +33,7 @@ struct radialLink
   addrinfo *result;
   addrinfo *rp;
   bool bAuthenticated;
+  bool bClient;
   bool bSslAcceptRetry;
   bool bSslConnectRetry;
   int fdConnecting;

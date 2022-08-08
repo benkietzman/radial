@@ -119,6 +119,7 @@ size_t Link::add(list<radialLink *> &links, radialLink *ptLink)
     {
       radialLink *ptAdd = new radialLink;
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
+      ptAdd->bClient = ptLink->bClient;
       ptAdd->bSslAcceptRetry = ptLink->bSslAcceptRetry;
       ptAdd->bSslConnectRetry = ptLink->bSslConnectRetry;
       ptAdd->fdConnecting = ptLink->fdConnecting;
@@ -758,6 +759,7 @@ void Link::process(string strPrefix)
                     Json *ptWrite = new Json;
                     radialLink *ptLink = new radialLink;
                     ptLink->bAuthenticated = false;
+                    ptLink->bClient = false;
                     ptLink->bSslAcceptRetry = bSslAcceptRetry;
                     ptLink->bSslConnectRetry = false;
                     ptLink->fdConnecting = -1;
@@ -898,6 +900,7 @@ void Link::process(string strPrefix)
                                       size_t unReturn;
                                       radialLink *ptSubLink = new radialLink;
                                       ptSubLink->bAuthenticated = true;
+                                      ptSubLink->bClient = true;
                                       ptSubLink->bSslAcceptRetry = false;
                                       ptSubLink->bSslConnectRetry = false;
                                       ptSubLink->strNode = ptLink->m["Node"]->v;
@@ -1097,31 +1100,48 @@ void Link::process(string strPrefix)
             nodes.unique();
             for (auto &node : nodes)
             {
-              list<list<radialLink *>::iterator> duplicates;
+              list<list<radialLink *>::iterator> clients, servers;
               for (auto linkIter = links.begin(); linkIter != links.end(); linkIter++)
               {
-                if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1 && (*linkIter)->bAuthenticated)
+                if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1)
                 {
-                  duplicates.push_back(linkIter);
+                  if ((*linkIter)->bClient)
+                  {
+                    clients.push_back(linkIter);
+                  }
+                  else
+                  {
+                    servers.push_back(linkIter);
+                  }
                 }
               }
-              if (duplicates.size() > 1)
+              if (!clients.empty())
+              {
+                if (clients.size() > 1)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [removals," << (*clients.back())->strNode << "," << (*clients.back())->fdSocket << "]:  Saved client link prior to removal of duplicates.";
+                  clients.pop_back();
+                  log(ssMessage.str());
+                  for (auto &client : clients)
+                  {
+                    removals.push_back((*client)->fdSocket);
+                  }
+                }
+                for (auto &server : servers)
+                {
+                  removals.push_back((*server)->fdSocket);
+                }
+              }
+              else if (servers.size() > 1)
               {
                 ssMessage.str("");
-                if (m_ptLink->m.find("Node") != m_ptLink->m.end() && m_ptLink->m["Node"]->v < (*duplicates.front())->strNode)
-                {
-                  duplicates.pop_front();
-                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved front link prior to removal of duplicates.";
-                }
-                else
-                {
-                  duplicates.pop_back();
-                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved back link prior to removal of duplicates.";
-                }
+                ssMessage << strPrefix << " [removals," << (*servers.back())->strNode << "," << (*servers.back())->fdSocket << "]:  Saved server link prior to removal of duplicates.";
+                servers.pop_back();
                 log(ssMessage.str());
-                for (auto &duplicate : duplicates)
+                for (auto &server : servers)
                 {
-                  removals.push_back((*duplicate)->fdSocket);
+                  removals.push_back((*server)->fdSocket);
                 }
               }
             }
@@ -1242,6 +1262,7 @@ void Link::process(string strPrefix)
               size_t unReturn;
               radialLink *ptLink = new radialLink;
               ptLink->bAuthenticated = true;
+              ptLink->bClient = true;
               ptLink->bSslAcceptRetry = false;
               ptLink->bSslConnectRetry = false;
               ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
