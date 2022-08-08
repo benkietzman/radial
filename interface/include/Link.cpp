@@ -1098,9 +1098,9 @@ void Link::process(string strPrefix)
             for (auto &node : nodes)
             {
               list<list<radialLink *>::iterator> duplicates;
-              for (auto linkIter = links.begin(); linkIter != links.end(); linkIter++)
+              for (auto linkIter : links)
               {
-                if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1)
+                if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1 && (*linkIter)->bAuthenticated)
                 {
                   duplicates.push_back(linkIter);
                 }
