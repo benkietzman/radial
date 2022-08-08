@@ -1107,7 +1107,7 @@ void Link::process(string strPrefix)
               }
               if (duplicates.size() > 1)
               {
-                duplicates.pop_back();
+                duplicates.pop_front();
                 for (auto &duplicate : duplicates)
                 {
                   removals.push_back((*duplicate)->fdSocket);
