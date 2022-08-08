@@ -1110,6 +1110,9 @@ void Link::process(string strPrefix)
                 if (m_ptLink->m.find("Node") != m_ptLink->m.end() && m_ptLink->m["Node"]->v < (*duplicates.front())->strNode)
                 {
                   duplicates.pop_front();
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [removals," << (*duplicates.front())->strNode << "," << (*duplicates.front())->fdSocket << "]:  Saved link prior to removal of duplicates.";
+                  log(ssMessage.str());
                 }
                 else
                 {
