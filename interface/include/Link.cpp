@@ -1121,8 +1121,16 @@ void Link::process(string strPrefix)
                 if (duplicates[0].size() > 1)
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [removals," << (*duplicates[0].back())->strNode << "," << (*duplicates[0].back())->fdSocket << "]:  Saved " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
-                  duplicates[0].pop_back();
+                  if (bClient)
+                  {
+                    ssMessage << strPrefix << " [removals," << (*duplicates[0].back())->strNode << "," << (*duplicates[0].back())->fdSocket << "]:  Saved back " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                    duplicates[0].pop_back();
+                  }
+                  else
+                  {
+                    ssMessage << strPrefix << " [removals," << (*duplicates[0].front())->strNode << "," << (*duplicates[0].front())->fdSocket << "]:  Saved front " << (((*duplicates[0].front())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                    duplicates[0].pop_front();
+                  }
                   log(ssMessage.str());
                   for (auto &duplicate : duplicates[0])
                   {
@@ -1137,8 +1145,16 @@ void Link::process(string strPrefix)
               else if (duplicates[1].size() > 1)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << " [removals," << (*duplicates[1].back())->strNode << "," << (*duplicates[1].back())->fdSocket << "]:  Saved " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
-                duplicates[1].pop_back();
+                if (bClient)
+                {
+                  ssMessage << strPrefix << " [removals," << (*duplicates[1].back())->strNode << "," << (*duplicates[1].back())->fdSocket << "]:  Saved back " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                  duplicates[1].pop_back();
+                }
+                else
+                {
+                  ssMessage << strPrefix << " [removals," << (*duplicates[1].front())->strNode << "," << (*duplicates[1].front())->fdSocket << "]:  Saved front " << (((*duplicates[0].front())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                  duplicates[1].pop_front();
+                }
                 log(ssMessage.str());
                 for (auto &duplicate : duplicates[1])
                 {
