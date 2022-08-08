@@ -1100,48 +1100,49 @@ void Link::process(string strPrefix)
             nodes.unique();
             for (auto &node : nodes)
             {
-              list<list<radialLink *>::iterator> clients, servers;
+              bool bClient = ((m_ptLink->m["Node"]->v < node)?true:false);
+              list<list<radialLink *>::iterator> duplicates[2];
               for (auto linkIter = links.begin(); linkIter != links.end(); linkIter++)
               {
                 if ((*linkIter)->strNode == node && (*linkIter)->fdSocket != -1)
                 {
                   if ((*linkIter)->bClient)
                   {
-                    clients.push_back(linkIter);
+                    duplicates[((bClient)?0:1)].push_back(linkIter);
                   }
                   else
                   {
-                    servers.push_back(linkIter);
+                    duplicates[((bClient)?1:0)].push_back(linkIter);
                   }
                 }
               }
-              if (!clients.empty())
+              if (!duplicates[0].empty())
               {
-                if (clients.size() > 1)
+                if (duplicates[0].size() > 1)
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [removals," << (*clients.back())->strNode << "," << (*clients.back())->fdSocket << "]:  Saved client link prior to removal of duplicates.";
-                  clients.pop_back();
+                  ssMessage << strPrefix << " [removals," << (*duplicates[0].back())->strNode << "," << (*duplicates[0].back())->fdSocket << "]:  Saved " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                  duplicates[0].pop_back();
                   log(ssMessage.str());
-                  for (auto &client : clients)
+                  for (auto &duplicate : duplicates[0])
                   {
-                    removals.push_back((*client)->fdSocket);
+                    removals.push_back((*duplicate)->fdSocket);
                   }
                 }
-                for (auto &server : servers)
+                for (auto &duplicate : duplicates[1])
                 {
-                  removals.push_back((*server)->fdSocket);
+                  removals.push_back((*duplicate)->fdSocket);
                 }
               }
-              else if (servers.size() > 1)
+              else if (duplicates[1].size() > 1)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << " [removals," << (*servers.back())->strNode << "," << (*servers.back())->fdSocket << "]:  Saved server link prior to removal of duplicates.";
-                servers.pop_back();
+                ssMessage << strPrefix << " [removals," << (*duplicates[1].back())->strNode << "," << (*duplicates[1].back())->fdSocket << "]:  Saved " << (((*duplicates[0].back())->bClient)?"client":"server") << " link prior to removal of duplicates.";
+                duplicates[1].pop_back();
                 log(ssMessage.str());
-                for (auto &server : servers)
+                for (auto &duplicate : duplicates[1])
                 {
-                  removals.push_back((*server)->fdSocket);
+                  removals.push_back((*duplicate)->fdSocket);
                 }
               }
             }
