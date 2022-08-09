@@ -426,11 +426,8 @@ void Link::process(string strPrefix)
                 ptWrite->m["You"]->insert("Server", link->strServer);
                 ptWrite->m["Me"] = new Json;
                 ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
+                ptWrite->m["Me"]->insert("Server", m_ptLink->m["Server"]->v);
                 ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
-                if (!m_strServer.empty())
-                {
-                  ptWrite->m["Me"]->insert("Server", m_strServer);
-                }
                 link->responses.push_back(ptWrite->json(strJson));
                 delete ptWrite;
                 if (!m_strMaster.empty())
@@ -813,109 +810,79 @@ void Link::process(string strPrefix)
               if ((fdLink = accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 // {{{ prep work
-                sockaddr_storage addr;
-                socklen_t len = sizeof(addr);
+                bool bRetry;
+                SSL *ssl;
                 if ((lArg = fcntl(fdLink, F_GETFL, NULL)) >= 0)
                 {
                   lArg |= O_NONBLOCK;
                   fcntl(fdLink, F_SETFL, lArg);
                 }
                 // }}}
-                if (getpeername(fdLink, (sockaddr *)&addr, &len) == 0)
+                if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bRetry, strError)) != NULL)
                 {
-                  // {{{ prep work
-                  bool bRetry;
-                  char szIP[INET6_ADDRSTRLEN];
-                  SSL *ssl;
-                  if (addr.ss_family == AF_INET)
+                  size_t unReturn;
+                  Json *ptWrite = new Json;
+                  radialLink *ptLink = new radialLink;
+                  ptLink->bAuthenticated = false;
+                  ptLink->bRetry = bRetry;
+                  ptLink->fdConnecting = -1;
+                  ptLink->fdSocket = fdLink;
+                  ptLink->rp = NULL;
+                  ptLink->ssl = ssl;
+                  ptLink->unUnique = unUnique++;
+                  ptWrite->insert("_function", "handshake");
+                  if (!links[1].empty())
                   {
-                    sockaddr_in *s = (sockaddr_in *)&addr;
-                    inet_ntop(AF_INET, &s->sin_addr, szIP, sizeof(szIP));
-                  }
-                  else if (addr.ss_family == AF_INET6)
-                  {
-                    sockaddr_in6 *s = (sockaddr_in6 *)&addr;
-                    inet_ntop(AF_INET6, &s->sin6_addr, szIP, sizeof(szIP));
-                  }
-                  // }}}
-                  if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bRetry, strError)) != NULL)
-                  {
-                    size_t unReturn;
-                    Json *ptWrite = new Json;
-                    radialLink *ptLink = new radialLink;
-                    ptLink->bAuthenticated = false;
-                    ptLink->bRetry = bRetry;
-                    ptLink->fdConnecting = -1;
-                    ptLink->fdSocket = fdLink;
-                    ptLink->rp = NULL;
-                    ptLink->ssl = ssl;
-                    ptLink->unUnique = unUnique++;
-                    ptWrite->insert("_function", "handshake");
-                    if (!links[1].empty())
+                    ptWrite->m["Links"] = new Json;
+                    for (auto &link : links[1])
                     {
-                      ptWrite->m["Links"] = new Json;
-                      for (auto &link : links[1])
+                      if (!link->strNode.empty() && !link->strServer.empty() && !link->strPort.empty())
                       {
-                        if (!link->strNode.empty() && !link->strServer.empty() && !link->strPort.empty())
-                        {
-                          Json *ptSubLink = new Json;
-                          ptSubLink->insert("Node", link->strNode);
-                          ptSubLink->insert("Server", link->strServer);
-                          ptSubLink->insert("Port", link->strPort);
-                          ptWrite->m["Links"]->push_back(ptSubLink);
-                          delete ptSubLink;
-                        }
+                        Json *ptSubLink = new Json;
+                        ptSubLink->insert("Node", link->strNode);
+                        ptSubLink->insert("Server", link->strServer);
+                        ptSubLink->insert("Port", link->strPort);
+                        ptWrite->m["Links"]->push_back(ptSubLink);
+                        delete ptSubLink;
                       }
                     }
-                    ptWrite->m["You"] = new Json;
-                    ptWrite->m["You"]->insert("Server", szIP);
-                    ptWrite->m["Me"] = new Json;
-                    ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
-                    ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
-                    if (!m_strServer.empty())
-                    {
-                      ptWrite->m["Me"]->insert("Server", m_strServer);
-                    }
+                  }
+                  ptWrite->m["Me"] = new Json;
+                  ptWrite->m["Me"]->insert("Node", m_ptLink->m["Node"]->v);
+                  ptWrite->m["Me"]->insert("Server", m_ptLink->m["Server"]->v);
+                  ptWrite->m["Me"]->insert("Port", m_ptLink->m["Port"]->v, 'n');
+                  ptLink->responses.push_back(ptWrite->json(strJson));
+                  delete ptWrite;
+                  if (!m_strMaster.empty())
+                  {
+                    ptWrite = new Json;
+                    ptWrite->insert("_function", "master");
+                    ptWrite->insert("Node", m_strMaster);
                     ptLink->responses.push_back(ptWrite->json(strJson));
                     delete ptWrite;
-                    if (!m_strMaster.empty())
-                    {
-                      ptWrite = new Json;
-                      ptWrite->insert("_function", "master");
-                      ptWrite->insert("Node", m_strMaster);
-                      ptLink->responses.push_back(ptWrite->json(strJson));
-                      delete ptWrite;
-                    }
-                    if ((unReturn = add(links[0], ptLink)) > 0)
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() [|:|" << fdLink << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
-                      log(ssMessage.str());
-                    }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() error [|:|" << fdLink << "]:  Failed to add link.";
-                      log(ssMessage.str());
-                      SSL_shutdown(ssl);
-                      SSL_free(ssl);
-                      close(fdLink);
-                    }
-                    delete ptLink;
+                  }
+                  if ((unReturn = add(links[0], ptLink)) > 0)
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() [|:|" << fdLink << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                    log(ssMessage.str());
                   }
                   else
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
+                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() error [|:|" << fdLink << "]:  Failed to add link.";
                     log(ssMessage.str());
+                    SSL_shutdown(ssl);
+                    SSL_free(ssl);
                     close(fdLink);
                   }
+                  delete ptLink;
                 }
                 else
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->getpeername(" << errno << ") error:  " << strerror(errno);
-                  notify(ssMessage.str());
+                  ssMessage << strPrefix << "->Utility::sslAccept() error:  " << strError;
+                  log(ssMessage.str());
                   close(fdLink);
                 }
               }
@@ -984,12 +951,6 @@ void Link::process(string strPrefix)
                             {
                               ptLink->strPort = ptJson->m["Me"]->m["Port"]->v;
                             }
-                          }
-                          // }}}
-                          // {{{ You
-                          if (ptJson->m.find("You") != ptJson->m.end() && ptJson->m["You"]->m.find("Server") != ptJson->m["You"]->m.end() && !ptJson->m["You"]->m["Server"]->v.empty() && m_strServer.empty())
-                          {
-                            m_strServer = ptJson->m["You"]->m["Server"]->v;
                           }
                           // }}}
                           // {{{ Links
@@ -1261,12 +1222,12 @@ void Link::process(string strPrefix)
                 {
                   for (auto &ptLink : m_ptLink->m["Links"]->l)
                   {
-                    if (ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+                    if (ptLink->m.find("Node") != ptLink->m.end() && !ptLink->m["Node"]->v.empty() && ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
                     {
                       bool bFound = false;
                       for (auto i = links[1].begin(); !bFound && i != links[1].end(); i++)
                       {
-                        if ((*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
+                        if ((*i)->strNode == ptLink->m["Node"]->v && (*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
                         {
                           bFound = true;
                         }
@@ -1274,6 +1235,7 @@ void Link::process(string strPrefix)
                       if (!bFound)
                       {
                         Json *ptSubLink = new Json;
+                        ptSubLink->insert("Node", ptLink->m["Node"]->v);
                         ptSubLink->insert("Server", ptLink->m["Server"]->v);
                         ptSubLink->insert("Port", ptLink->m["Port"]->v, 'n');
                         ptBoot->push_back(ptSubLink);
@@ -1291,6 +1253,7 @@ void Link::process(string strPrefix)
               radialLink *ptLink = new radialLink;
               ptLink->bAuthenticated = true;
               ptLink->bRetry = false;
+              ptLink->strNode = ptBoot->l.front()->m["Node"]->v;
               ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
               ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
               ptLink->fdConnecting = -1;

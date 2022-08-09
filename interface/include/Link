@@ -54,7 +54,6 @@ class Link : public Interface
   list<radialLink *> m_links;
   string m_strMaster;
   string m_strPassword;
-  string m_strServer;
   size_t m_unLink;
   Json *m_ptLink;
 
