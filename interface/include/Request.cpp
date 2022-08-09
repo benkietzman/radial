@@ -441,13 +441,14 @@ void Request::process(string strPrefix)
             for (size_t i = 3; i < unIndex; i++)
             {
               // {{{ prep work
-              bool bGood = true, bRetry = false;
+              bool bGood = true;
               // }}}
               // {{{ read
               if (fds[i].revents & POLLIN)
               {
                 if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNKNOWN)
                 {
+                  bool bRetry = false;
                   if (m_pUtility->socketType(fds[i].fd, conns[fds[i].fd]->eSocketType, bRetry, strError))
                   {
                     if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED)
