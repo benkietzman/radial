@@ -270,7 +270,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "|" << link->strServer ":" link->strPort << "|" << link->fdSocket << "]:  Connected link.";
+                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Connected link.";
                 log(ssMessage.str());
               }
               else
