@@ -441,7 +441,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "," << link->fdSocket << "]:  Connected link.";
+                ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "," << link->fdSocket << "]:  Connected link.";
                 log(ssMessage.str());
               }
               else
