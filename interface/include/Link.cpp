@@ -1192,20 +1192,20 @@ void Link::process(string strPrefix)
           {
             if ((CTime - CBootstrap) > unBootstrapSleep)
             {
-              bool bReady = true;
               unsigned int unSeed = CTime;
               srand(unSeed);
               unBootstrapSleep = (rand_r(&unSeed) % 30) + 1;
-              for (auto i = links[1].begin(); bReady && i != links[1].end(); i++)
+              if (ptBoot->l.empty())
               {
-                if (!(*i)->bAuthenticated || (*i)->bRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
+                bool bReady = true;
+                for (auto i = links[1].begin(); bReady && i != links[1].end(); i++)
                 {
-                  bReady = false;
+                  if ((*i)->bRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
+                  {
+                    bReady = false;
+                  }
                 }
-              }
-              if (bReady)
-              {
-                if (ptBoot->l.empty())
+                if (bReady)
                 {
                   for (auto &ptLink : m_ptLink->m["Links"]->l)
                   {
