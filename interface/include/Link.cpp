@@ -270,7 +270,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Connected link.";
+                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Accepted link.";
                 log(ssMessage.str());
               }
               else
@@ -280,6 +280,9 @@ void Link::process(string strPrefix)
                 {
                   link->bRetry = true;
                   removals.push_back(link->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->SSL_accept() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  log(ssMessage.str());
                 }
               }
             }
@@ -327,7 +330,10 @@ void Link::process(string strPrefix)
                 }
                 else
                 {
-                  removals.push_back(-1);
+                  removals.push_back(link->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << gai_strerror(nReturn);
+                  log(ssMessage.str());
                 }
               }
               // }}}
@@ -349,7 +355,10 @@ void Link::process(string strPrefix)
                   if (link->rp == NULL)
                   {
                     freeaddrinfo(link->result);
-                    removals.push_back(-1);
+                    removals.push_back(link->fdSocket);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->socket(" << errno << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strerror(errno);
+                    log(ssMessage.str());
                   }
                 }
               }
@@ -364,13 +373,16 @@ void Link::process(string strPrefix)
                   if (!link->bRetry)
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strServer << "," << link->fdSocket << "]:  Connected link.";
+                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Connected link.";
                     log(ssMessage.str());
                   }
                 }
                 else
                 {
                   removals.push_back(link->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::sslConnect() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  log(ssMessage.str());
                 }
               }
               // }}}
@@ -380,6 +392,14 @@ void Link::process(string strPrefix)
                 close(link->fdConnecting);
                 link->fdConnecting = -1;
                 link->rp = link->rp->ai_next;
+                if (link->rp == NULL)
+                {
+                  freeaddrinfo(link->result);
+                  removals.push_back(link->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->connect(" << errno << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strerror(errno);
+                  log(ssMessage.str());
+                }
               }
               // }}}
               // {{{ payload
@@ -454,6 +474,9 @@ void Link::process(string strPrefix)
                 {
                   link->bRetry = true;
                   removals.push_back(link->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->SSL_connect() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  log(ssMessage.str());
                 }
               }
             }
