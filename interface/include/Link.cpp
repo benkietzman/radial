@@ -270,7 +270,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Accepted link.";
+                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode "]:  Accepted link.";
                 log(ssMessage.str());
               }
               else
@@ -281,7 +281,7 @@ void Link::process(string strPrefix)
                   link->bRetry = true;
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->SSL_accept() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  ssMessage << strPrefix << "->SSL_accept() error [" << link->strNode << "]:  " << strError;
                   log(ssMessage.str());
                 }
               }
@@ -332,7 +332,7 @@ void Link::process(string strPrefix)
                 {
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << gai_strerror(nReturn);
+                  ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error [" << link->strNode << "]:  " << gai_strerror(nReturn);
                   log(ssMessage.str());
                 }
               }
@@ -357,7 +357,7 @@ void Link::process(string strPrefix)
                     freeaddrinfo(link->result);
                     removals.push_back(link->fdSocket);
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->socket(" << errno << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strerror(errno);
+                    ssMessage << strPrefix << "->socket(" << errno << ") error [" << link->strNode << "]:  " << strerror(errno);
                     log(ssMessage.str());
                   }
                 }
@@ -373,7 +373,7 @@ void Link::process(string strPrefix)
                   if (!link->bRetry)
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Connected link.";
+                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "]:  Connected link.";
                     log(ssMessage.str());
                   }
                 }
@@ -381,7 +381,7 @@ void Link::process(string strPrefix)
                 {
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->Utility::sslConnect() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  ssMessage << strPrefix << "->Utility::sslConnect() error [" << link->strNode << "]:  " << strError;
                   log(ssMessage.str());
                 }
               }
@@ -397,7 +397,7 @@ void Link::process(string strPrefix)
                   freeaddrinfo(link->result);
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->connect(" << errno << ") error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strerror(errno);
+                  ssMessage << strPrefix << "->connect(" << errno << ") error [" << link->strNode << "]:  " << strerror(errno);
                   log(ssMessage.str());
                 }
               }
@@ -461,7 +461,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_connect() [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  Connected link.";
+                ssMessage << strPrefix << "->SSL_connect() [" << link->strNode << "]:  Connected link.";
                 log(ssMessage.str());
               }
               else
@@ -472,7 +472,7 @@ void Link::process(string strPrefix)
                   link->bRetry = true;
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->SSL_connect() error [" << link->strNode << "|" << link->strServer << ":" << link->strPort << "|" << link->fdSocket << "]:  " << strError;
+                  ssMessage << strPrefix << "->SSL_connect() error [" << link->strNode << "]:  " << strError;
                   log(ssMessage.str());
                 }
               }
@@ -657,7 +657,7 @@ void Link::process(string strPrefix)
                         else
                         {
                           ssMessage.str("");
-                          ssMessage << strPrefix << " error [stdin," << fdLink << "," << unUnique << "," << ptJson->m["_function"]->v << "]:  Please provide valid _function:  storageTransmit.";
+                          ssMessage << strPrefix << " error [stdin," << ptLink->strNode << "," << ptJson->m["_function"]->v << "]:  Please provide valid _function:  storageTransmit.";
                           log(ssMessage.str());
                         }
                       }
@@ -864,13 +864,13 @@ void Link::process(string strPrefix)
                   if ((unReturn = add(links[0], ptLink)) > 0)
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() [|:|" << fdLink << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add():  " << ((unReturn == 1)?"Added":"Updated") << " link.";
                     log(ssMessage.str());
                   }
                   else
                   {
                     ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() error [|:|" << fdLink << "]:  Failed to add link.";
+                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() error:  Failed to add link.";
                     log(ssMessage.str());
                     SSL_shutdown(ssl);
                     SSL_free(ssl);
@@ -985,13 +985,13 @@ void Link::process(string strPrefix)
                                   if ((unReturn = add(links[1], ptDeepLink)) > 0)
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "," << ptSubLink->m["Node"]->v << "|" << ptSubLink->m["Server"]->v << ":" << ptSubLink->m["Port"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
                                     log(ssMessage.str());
                                   }
                                   else
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "," << ptSubLink->m["Node"]->v << "|" << ptSubLink->m["Server"]->v << ":" << ptSubLink->m["Port"]->v << "]:  Failed to add link.";
+                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
                                     log(ssMessage.str());
                                   }
                                   delete ptDeepLink;
@@ -1007,7 +1007,7 @@ void Link::process(string strPrefix)
                             {
                               ptLink->bAuthenticated = true;
                               ssMessage.str("");
-                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  Authenticated link.";
+                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "]:  Authenticated link.";
                               log(ssMessage.str());
                               if (m_unLink == RADIAL_LINK_MASTER)
                               {
@@ -1096,7 +1096,7 @@ void Link::process(string strPrefix)
                     if (nReturn < 0)
                     {
                       ssMessage.str("");
-                      ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ptLink->ssl, nReturn) << ") error [" << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  " << m_pUtility->sslstrerror(ptLink->ssl, nReturn);
+                      ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ptLink->ssl, nReturn) << ") error [" << ptLink->strNode << "]:  " << m_pUtility->sslstrerror(ptLink->ssl, nReturn);
                       log(ssMessage.str());
                     }
                   }
@@ -1151,7 +1151,7 @@ void Link::process(string strPrefix)
                 if (removeIter != links[j].end())
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [removals," << ((j == 0)?"accepted":"connected") << "," << (*removeIter)->strNode << "|" << (*removeIter)->strServer << ":" << (*removeIter)->strPort << "|" << (*removeIter)->fdSocket << "]:  Removed link.";
+                  ssMessage << strPrefix << " [removals," << ((j == 0)?"accepted":"connected") << "," << (*removeIter)->strNode << "]:  Removed link.";
                   log(ssMessage.str());
                   if ((*removeIter)->ssl != NULL)
                   {
@@ -1264,13 +1264,13 @@ void Link::process(string strPrefix)
               if ((unReturn = add(links[1], ptLink)) > 0)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Link::add() [bootstrap," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  " << ((unReturn == 1)?"Added":"Update") << " link.";
+                ssMessage << strPrefix << "->Link::add() [bootstrap," << ptLink->strNode << "]:  " << ((unReturn == 1)?"Added":"Update") << " link.";
                 log(ssMessage.str());
               }
               else
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Link::add() error [bootstrap," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  Failed to add link.";
+                ssMessage << strPrefix << "->Link::add() error [bootstrap," << ptLink->strNode << "]:  Failed to add link.";
                 log(ssMessage.str());
               }
               delete ptLink;
