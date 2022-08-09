@@ -270,7 +270,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "]:  Accepted link.";
+                ssMessage << strPrefix << "->SSL_accept():  Accepted link.";
                 log(ssMessage.str());
               }
               else
@@ -281,7 +281,7 @@ void Link::process(string strPrefix)
                   link->bRetry = true;
                   removals.push_back(link->fdSocket);
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->SSL_accept() error [" << link->strNode << "]:  " << strError;
+                  ssMessage << strPrefix << "->SSL_accept() error:  " << strError;
                   log(ssMessage.str());
                 }
               }
