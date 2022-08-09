@@ -269,9 +269,6 @@ void Link::process(string strPrefix)
               if ((nReturn = SSL_accept(link->ssl)) > 0)
               {
                 link->bRetry = false;
-                ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept():  Accepted link.";
-                log(ssMessage.str());
               }
               else
               {
@@ -861,17 +858,8 @@ void Link::process(string strPrefix)
                     ptLink->responses.push_back(ptWrite->json(strJson));
                     delete ptWrite;
                   }
-                  if ((unReturn = add(links[0], ptLink)) > 0)
+                  if ((unReturn = add(links[0], ptLink)) == 0)
                   {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add():  " << ((unReturn == 1)?"Added":"Updated") << " link.";
-                    log(ssMessage.str());
-                  }
-                  else
-                  {
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslAccept()->Link::add() error:  Failed to add link.";
-                    log(ssMessage.str());
                     SSL_shutdown(ssl);
                     SSL_free(ssl);
                     close(fdLink);
