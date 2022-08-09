@@ -24,7 +24,7 @@ namespace radial
 // {{{ radialRequestConn
 struct radialRequestConn
 {
-  bool bSslAcceptRetry;
+  bool bRetry;
   SSL *ssl;
   list<string> responses;
   size_t unUnique;

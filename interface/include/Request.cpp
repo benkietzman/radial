@@ -136,23 +136,23 @@ void Request::process(string strPrefix)
           for (auto &conn : conns)
           {
             fds[unIndex].events = POLLIN;
-            if (conn.second->bSslAcceptRetry)
+            if (conn.second->bRetry)
             {
               if ((nReturn = SSL_accept(conn.second->ssl)) > 0)
               {
-                conn.second->bSslAcceptRetry = false;
+                conn.second->bRetry = false;
               }
               else
               {
-                strError = m_pUtility->sslstrerror(conn.second->ssl, nReturn, conn.second->bSslAcceptRetry);
-                if (!conn.second->bSslAcceptRetry)
+                strError = m_pUtility->sslstrerror(conn.second->ssl, nReturn, conn.second->bRetry);
+                if (!conn.second->bRetry)
                 { 
-                  conn.second->bSslAcceptRetry = true;
+                  conn.second->bRetry = true;
                   removals.push_back(conn.first);
                 }
               }
             }
-            if (!conn.second->bSslAcceptRetry)
+            if (!conn.second->bRetry)
             {
               fds[unIndex].fd = conn.first;
               if (conn.second->strBuffers[1].empty())
@@ -423,7 +423,7 @@ void Request::process(string strPrefix)
                   lArg |= O_NONBLOCK;
                   fcntl(fdClient, F_SETFL, lArg);
                 }
-                ptConn->bSslAcceptRetry = false;
+                ptConn->bRetry = false;
                 ptConn->ssl = NULL;
                 ptConn->unUnique = unUnique++;
                 ptConn->eSocketType = COMMON_SOCKET_UNKNOWN;
@@ -452,9 +452,9 @@ void Request::process(string strPrefix)
                   {
                     if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED)
                     {
-                      if ((conns[fds[i].fd]->ssl = m_pUtility->sslAccept(ctx, fds[i].fd, conns[fds[i].fd]->bSslAcceptRetry, strError)) != NULL)
+                      if ((conns[fds[i].fd]->ssl = m_pUtility->sslAccept(ctx, fds[i].fd, conns[fds[i].fd]->bRetry, strError)) != NULL)
                       {
-                        if (conns[fds[i].fd]->bSslAcceptRetry)
+                        if (conns[fds[i].fd]->bRetry)
                         {
                           bGood = false;
                         }
@@ -481,12 +481,12 @@ void Request::process(string strPrefix)
                     }
                   }
                 }
-                else if (conns[fds[i].fd]->bSslAcceptRetry)
+                else if (conns[fds[i].fd]->bRetry)
                 {
                   if ((nReturn = SSL_accept(conns[fds[i].fd]->ssl)) <= 0)
                   {
-                    strError = m_pUtility->sslstrerror(conns[fds[i].fd]->ssl, nReturn, conns[fds[i].fd]->bSslAcceptRetry);
-                    if (!conns[fds[i].fd]->bSslAcceptRetry)
+                    strError = m_pUtility->sslstrerror(conns[fds[i].fd]->ssl, nReturn, conns[fds[i].fd]->bRetry);
+                    if (!conns[fds[i].fd]->bRetry)
                     {
                       bGood = false;
                       removals.push_back(fds[i].fd);
