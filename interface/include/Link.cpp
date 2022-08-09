@@ -488,18 +488,28 @@ void Link::process(string strPrefix)
                     if (ptSubJson->m.find("_source") != ptSubJson->m.end() && ptSubJson->m["_source"]->v == m_strName && ptSubJson->m.find("_unique") != ptSubJson->m.end() && !ptSubJson->m["_unique"]->v.empty())
                     {
                       int fdLink;
-                      list<radialLink *>::iterator linkIter = links[0].end();
                       size_t unUnique;
                       stringstream ssUnique(ptSubJson->m["_unique"]->v);
+                      radialLink *ptLink = NULL;
                       ssUnique >> fdLink >> unUnique;
-                      for (auto i = links[0].begin(); linkIter == links[0].end() && i != links[0].end(); i++)
+                      for (auto i = links[0].begin(); ptLink == NULL && i != links[0].end(); i++)
                       {
                         if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
                         {
-                          linkIter = i;
+                          ptLink = (*i);
                         }
                       }
-                      if (linkIter != links[0].end())
+                      if (ptLink == NULL)
+                      {
+                        for (auto i = links[1].begin(); ptLink == NULL && i != links[1].end(); i++)
+                        {
+                          if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
+                          {
+                            ptLink = (*i);
+                          }
+                        }
+                      }
+                      if (ptLink != NULL)
                       {
                         if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "list")
                         {
@@ -516,7 +526,7 @@ void Link::process(string strPrefix)
                                 keyRemovals(ptSubJson);
                                 ptSubJson->insert("Status", "error");
                                 ptSubJson->insert("Error", "Interface does not exist.");
-                                (*linkIter)->responses.push_back(ptSubJson->json(strJson));
+                                ptLink->responses.push_back(ptSubJson->json(strJson));
                               }
                             }
                             else
@@ -524,7 +534,7 @@ void Link::process(string strPrefix)
                               keyRemovals(ptSubJson);
                               ptSubJson->insert("Status", "error");
                               ptSubJson->insert("Error", "Please provide the Interface.");
-                              (*linkIter)->responses.push_back(ptSubJson->json(strJson));
+                              ptLink->responses.push_back(ptSubJson->json(strJson));
                             }
                           }
                           else
@@ -532,7 +542,7 @@ void Link::process(string strPrefix)
                             keyRemovals(ptSubJson);
                             ptSubJson->insert("Status", "error");
                             ptSubJson->insert("Error", "Failed to retrieve interfaces.");
-                            (*linkIter)->responses.push_back(ptSubJson->json(strJson));
+                            ptLink->responses.push_back(ptSubJson->json(strJson));
                           }
                         }
                         else
@@ -540,7 +550,7 @@ void Link::process(string strPrefix)
                           keyRemovals(ptSubJson);
                           ptSubJson->insert("Status", "error");
                           ptSubJson->insert("Error", "Invalid path of logic.");
-                          (*linkIter)->responses.push_back(ptSubJson->json(strJson));
+                          ptLink->responses.push_back(ptSubJson->json(strJson));
                         }
                       }
                       else
@@ -572,18 +582,28 @@ void Link::process(string strPrefix)
                   else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
                   {
                     int fdLink;
-                    list<radialLink *>::iterator linkIter = links[0].end();
                     size_t unUnique;
                     stringstream ssUnique(ptJson->m["_unique"]->v);
+                    radialLink *ptLink = NULL;
                     ssUnique >> fdLink >> unUnique;
-                    for (auto i = links[0].begin(); linkIter == links[0].end() && i != links[0].end(); i++)
+                    for (auto i = links[0].begin(); ptLink == NULL && i != links[0].end(); i++)
                     {
                       if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
                       {
-                        linkIter = i;
+                        ptLink = (*i);
                       }
                     }
-                    if (linkIter != links[0].end())
+                    if (ptLink == NULL)
+                    {
+                      for (auto i = links[1].begin(); ptLink == NULL && i != links[1].end(); i++)
+                      {
+                        if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
+                        {
+                          ptLink = (*i);
+                        }
+                      }
+                    }
+                    if (ptLink != NULL)
                     {
                       if (ptJson->m.find("_function") != ptJson->m.end())
                       {
@@ -595,7 +615,7 @@ void Link::process(string strPrefix)
                             ptWrite->insert("Interface", "storage");
                             ptWrite->insert("Function", "update");
                             ptWrite->insert("Request", ptJson->m["Response"]);
-                            (*linkIter)->responses.push_back(ptWrite->json(strJson));
+                            ptLink->responses.push_back(ptWrite->json(strJson));
                             delete ptWrite;
                           }
                         }
@@ -609,7 +629,7 @@ void Link::process(string strPrefix)
                       else
                       {
                         keyRemovals(ptJson);
-                        (*linkIter)->responses.push_back(ptJson->json(strJson));
+                        ptLink->responses.push_back(ptJson->json(strJson));
                       }
                     }
                     else
@@ -911,59 +931,6 @@ void Link::process(string strPrefix)
                         // {{{ handshake
                         if (ptJson->m["_function"]->v == "handshake")
                         {
-                          // {{{ Links
-                          if (ptJson->m.find("Links") != ptJson->m.end())
-                          {
-                            for (auto &ptSubLink : ptJson->m["Links"]->l)
-                            {
-                              if (ptSubLink->m.find("Node") != ptSubLink->m.end() && !ptSubLink->m["Node"]->v.empty() && ptSubLink->m.find("Server") != ptSubLink->m.end() && !ptSubLink->m["Server"]->v.empty() && ptSubLink->m.find("Port") != ptSubLink->m.end() && !ptSubLink->m["Port"]->v.empty())
-                              {
-                                bool bFound = false;
-                                for (auto j = links[1].begin(); !bFound && j != links[1].end(); j++)
-                                {
-                                  if (ptSubLink->m["Node"]->v == (*j)->strNode)
-                                  {
-                                    bFound = true;
-                                  }
-                                }
-                                if (!bFound && ptSubLink->m["Node"]->v != m_ptLink->m["Node"]->v)
-                                {
-                                  if (ptSubLink->m.find("Server") != ptSubLink->m.end() && !ptSubLink->m["Server"]->v.empty())
-                                  {
-                                    if (ptSubLink->m.find("Port") != ptSubLink->m.end() && !ptSubLink->m["Port"]->v.empty())
-                                    {
-                                      size_t unReturn;
-                                      radialLink *ptDeepLink = new radialLink;
-                                      ptDeepLink->bAuthenticated = true;
-                                      ptDeepLink->bRetry = false;
-                                      ptDeepLink->strNode = ptSubLink->m["Node"]->v;
-                                      ptDeepLink->strServer = ptSubLink->m["Server"]->v;
-                                      ptDeepLink->strPort = ptSubLink->m["Port"]->v;
-                                      ptDeepLink->fdConnecting = -1;
-                                      ptDeepLink->fdSocket = -1;
-                                      ptDeepLink->rp = NULL;
-                                      ptDeepLink->ssl = NULL;
-                                      ptDeepLink->unUnique = unUnique++;
-                                      if ((unReturn = add(links[1], ptDeepLink)) > 0)
-                                      {
-                                        ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptSubLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
-                                        log(ssMessage.str());
-                                      }
-                                      else
-                                      {
-                                        ssMessage.str("");
-                                        ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_function"]->v << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
-                                        log(ssMessage.str());
-                                      }
-                                      delete ptDeepLink;
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                          // }}}
                           // {{{ Me
                           if (ptJson->m.find("Me") != ptJson->m.end())
                           {
@@ -981,6 +948,59 @@ void Link::process(string strPrefix)
                             }
                           }
                           // }}}
+                          // {{{ You
+                          if (ptJson->m.find("You") != ptJson->m.end() && ptJson->m["You"]->m.find("Server") != ptJson->m["You"]->m.end() && !ptJson->m["You"]->m["Server"]->v.empty() && m_strServer.empty())
+                          {
+                            m_strServer = ptJson->m["You"]->m["Server"]->v;
+                          }
+                          // }}}
+                          // {{{ Links
+                          if (ptJson->m.find("Links") != ptJson->m.end())
+                          {
+                            for (auto &ptSubLink : ptJson->m["Links"]->l)
+                            {
+                              if (ptSubLink->m.find("Node") != ptSubLink->m.end() && !ptSubLink->m["Node"]->v.empty() && ptSubLink->m.find("Server") != ptSubLink->m.end() && !ptSubLink->m["Server"]->v.empty() && ptSubLink->m.find("Port") != ptSubLink->m.end() && !ptSubLink->m["Port"]->v.empty())
+                              {
+                                bool bFound = false;
+                                for (auto j = links[1].begin(); !bFound && j != links[1].end(); j++)
+                                {
+                                  if (ptSubLink->m["Node"]->v == (*j)->strNode)
+                                  {
+                                    bFound = true;
+                                  }
+                                }
+                                if (!bFound && ptSubLink->m["Node"]->v != m_ptLink->m["Node"]->v)
+                                {
+                                  size_t unReturn;
+                                  radialLink *ptDeepLink = new radialLink;
+                                  ptDeepLink->bAuthenticated = true;
+                                  ptDeepLink->bRetry = false;
+                                  ptDeepLink->strNode = ptSubLink->m["Node"]->v;
+                                  ptDeepLink->strServer = ptSubLink->m["Server"]->v;
+                                  ptDeepLink->strPort = ptSubLink->m["Port"]->v;
+                                  ptDeepLink->fdConnecting = -1;
+                                  ptDeepLink->fdSocket = -1;
+                                  ptDeepLink->rp = NULL;
+                                  ptDeepLink->ssl = NULL;
+                                  ptDeepLink->unUnique = unUnique++;
+                                  if ((unReturn = add(links[1], ptDeepLink)) > 0)
+                                  {
+                                    ssMessage.str("");
+                                    ssMessage << strPrefix << "->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                    log(ssMessage.str());
+                                  }
+                                  else
+                                  {
+                                    ssMessage.str("");
+                                    ssMessage << strPrefix << "->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
+                                    log(ssMessage.str());
+                                  }
+                                  delete ptDeepLink;
+                                }
+                              }
+                            }
+                          }
+                          // }}}
                           // {{{ Password
                           if (ptJson->m.find("Password") != ptJson->m.end())
                           {
@@ -995,12 +1015,6 @@ void Link::process(string strPrefix)
                                 bStorageTransmit = true;
                               }
                             }
-                          }
-                          // }}}
-                          // {{{ You
-                          if (ptJson->m.find("You") != ptJson->m.end() && ptJson->m["You"]->m.find("Server") != ptJson->m["You"]->m.end() && !ptJson->m["You"]->m["Server"]->v.empty() && m_strServer.empty())
-                          {
-                            m_strServer = ptJson->m["You"]->m["Server"]->v;
                           }
                           // }}}
                         }
@@ -1138,7 +1152,7 @@ void Link::process(string strPrefix)
                 if (removeIter != links[j].end())
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [removals," << (*removeIter)->strNode << "," << (*removeIter)->fdSocket << "]:  Removed link.";
+                  ssMessage << strPrefix << " [removals," << ((j == 0)?"accepted":"connected") << "," << (*removeIter)->strNode << "," << (*removeIter)->fdSocket << "]:  Removed link.";
                   log(ssMessage.str());
                   if ((*removeIter)->ssl != NULL)
                   {
