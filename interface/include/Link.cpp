@@ -270,7 +270,7 @@ void Link::process(string strPrefix)
               {
                 link->bRetry = false;
                 ssMessage.str("");
-                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode "]:  Accepted link.";
+                ssMessage << strPrefix << "->SSL_accept() [" << link->strNode << "]:  Accepted link.";
                 log(ssMessage.str());
               }
               else
