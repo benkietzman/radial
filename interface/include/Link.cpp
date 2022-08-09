@@ -1008,7 +1008,7 @@ void Link::process(string strPrefix)
                             {
                               ptLink->bAuthenticated = true;
                               ssMessage.str("");
-                              ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "]:  Authenticated link.";
+                              ssMessage << strPrefix << " [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptLink->fdSocket << "]:  Authenticated link.";
                               log(ssMessage.str());
                               if (m_unLink == RADIAL_LINK_MASTER)
                               {
