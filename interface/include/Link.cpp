@@ -970,13 +970,7 @@ void Link::process(string strPrefix)
                                   ptDeepLink->rp = NULL;
                                   ptDeepLink->ssl = NULL;
                                   ptDeepLink->unUnique = unUnique++;
-                                  if ((unReturn = add(links[1], ptDeepLink)) > 0)
-                                  {
-                                    ssMessage.str("");
-                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
-                                    log(ssMessage.str());
-                                  }
-                                  else
+                                  if ((unReturn = add(links[1], ptDeepLink)) == 0)
                                   {
                                     ssMessage.str("");
                                     ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
@@ -1249,13 +1243,7 @@ void Link::process(string strPrefix)
               ptLink->rp = NULL;
               ptLink->ssl = NULL;
               ptLink->unUnique = unUnique++;
-              if ((unReturn = add(links[1], ptLink)) > 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Link::add() [bootstrap," << ptLink->strNode << "]:  " << ((unReturn == 1)?"Added":"Update") << " link.";
-                log(ssMessage.str());
-              }
-              else
+              if ((unReturn = add(links[1], ptLink)) == 0)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->Link::add() error [bootstrap," << ptLink->strNode << "]:  Failed to add link.";
