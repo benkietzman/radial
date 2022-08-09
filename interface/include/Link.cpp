@@ -387,7 +387,7 @@ void Link::process(string strPrefix)
               }
               // }}}
               // {{{ error
-              else if (errno != EAGAIN && errno != EINPROGRESS)
+              else if (errno != EAGAIN && errno != EALREADY && errno != EINPROGRESS)
               {
                 close(link->fdConnecting);
                 link->fdConnecting = -1;
