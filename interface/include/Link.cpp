@@ -1001,7 +1001,7 @@ void Link::process(string strPrefix)
                                   if ((unReturn = add(links[1], ptDeepLink)) > 0)
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "," << ptSubLink->m["Node"]->v << << "|" << ptSubLink->m["Server"]->v << ":" << ptSubLink->m["Port"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
+                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "," << ptSubLink->m["Node"]->v << "|" << ptSubLink->m["Server"]->v << ":" << ptSubLink->m["Port"]->v << "]:  " << ((unReturn == 1)?"Added":"Updated") << " link.";
                                     log(ssMessage.str());
                                   }
                                   else
