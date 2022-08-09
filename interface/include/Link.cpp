@@ -356,7 +356,16 @@ void Link::process(string strPrefix)
               {
                 link->fdSocket = link->fdConnecting;
                 link->fdConnecting = -1;
-                if ((link->ssl = m_pUtility->sslConnect(ctxC, link->fdSocket, link->bRetry, strError)) == NULL)
+                if ((link->ssl = m_pUtility->sslConnect(ctxC, link->fdSocket, link->bRetry, strError)) != NULL)
+                {
+                  if (!link->bRetry)
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "," << link->fdSocket << "]:  Connected link.";
+                    log(ssMessage.str());
+                  }
+                }
+                else
                 {
                   removals.push_back(link->fdSocket);
                 }
@@ -431,6 +440,9 @@ void Link::process(string strPrefix)
               if ((nReturn = SSL_connect(link->ssl)) == 1)
               {
                 link->bRetry = false;
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::sslConnect() [" << link->strNode << "," << link->fdSocket << "]:  Connected link.";
+                log(ssMessage.str());
               }
               else
               {
