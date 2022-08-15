@@ -23,13 +23,13 @@ namespace radial
 Interface::Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Base(argc, argv)
 {
   strPrefix += "->Interface::Interface()";
-  sigignore(SIGBUS);
-  sigignore(SIGCHLD);
-  sigignore(SIGCONT);
-  sigignore(SIGPIPE);
-  sigignore(SIGSEGV);
-  sigignore(SIGTERM);
-  sigignore(SIGWINCH);
+  signal(SIGBUS, SIG_IGN);
+  signal(SIGCHLD, SIG_IGN);
+  signal(SIGCONT, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);
+  signal(SIGSEGV, SIG_IGN);
+  signal(SIGTERM, SIG_IGN);
+  signal(SIGWINCH, SIG_IGN);
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
