@@ -528,13 +528,121 @@ void Interface::process(string strPrefix)
             {
               if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
               {
-                if (ptJson->m["Function"]->v == "shutdown")
+                // {{{ interfaces
+                if (ptJson->m["Function"]->v == "interfaces")
+                {
+                  for (auto &i : m_interfaces)
+                  {
+                    delete i.second;
+                  }
+                  m_interfaces.clear();
+                  if (ptJson->m.find("Interfaces") != ptJson->m.end())
+                  {
+                    for (auto &i : ptJson->m["Interfaces"]->m)
+                    {
+                      m_interfaces[i.first] = new radialInterface;
+                      if (i.second->m.find("AccessFunction") != i.second->m.end() && !i.second->m["AccessFunction"]->v.empty())
+                      {
+                        m_interfaces[i.first]->strAccessFunction = i.second->m["AccessFunction"]->v;
+                      }
+                      if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
+                      {
+                        m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
+                      }
+                      if (i.second->m.find("PID") != i.second->m.end() && !i.second->m["PID"]->v.empty())
+                      {
+                        stringstream ssPid(i.second->m["PID"]->v);
+                        ssPid >> m_interfaces[i.first]->nPid;
+                      }
+                      if (i.second->m.find("Respawn") != i.second->m.end() && !i.second->m["Respawn"]->v.empty())
+                      {
+                        m_interfaces[i.first]->bRespawn = ((i.second->m["Respawn"]->v == "1")?true:false);
+                      }
+                      if (i.second->m.find("Restricted") != i.second->m.end() && !i.second->m["Restricted"]->v.empty())
+                      {
+                        m_interfaces[i.first]->bRestricted = ((i.second->m["Restricted"]->v == "1")?true:false);
+                      }
+                    }
+                    if (m_strNode == "link")
+                    {
+                      Json *ptLink = new Json(ptJson);
+                      keyRemovals(ptLink);
+                      ptLink->insert("_source", "hub");
+                      hub("link", ptLink, false);
+                      delete ptLink;
+                    }
+                  }
+                }
+                // }}}
+                // {{{ links
+                else if (ptJson->m["Function"]->v == "links")
+                {
+                  for (auto &i : m_links)
+                  {
+                    for (auto &j : i->interfaces)
+                    {
+                      delete j.second;
+                    }
+                    i->interfaces.clear();
+                    delete i;
+                  }
+                  m_links.clear();
+                  if (ptJson->m.find("Links") != ptJson->m.end())
+                  {
+                    for (auto &i : ptJson->m["Links"]->m)
+                    {
+                      radialLink *ptLink = new radialLink;
+                      ptLink->strNode = i.first;
+                      if (i.second->m.find("Server") != i.second->m.end() && !i.second->m["Server"]->v.empty())
+                      {
+                        ptLink->strServer = i.second->m["Server"]->v;
+                      }
+                      if (i.second->m.find("Port") != i.second->m.end() && !i.second->m["Port"]->v.empty())
+                      {
+                        ptLink->strPort = i.second->m["Port"]->v;
+                      }
+                      if (i.second->m.find("Interfaces") != i.second->m.end())
+                      {
+                        for (auto &j : i.second->m["Interfaces"]->m)
+                        {
+                          ptLink->interfaces[j.first] = new radialInterface;
+                          if (j.second->m.find("AccessFunction") != j.second->m.end() && !j.second->m["AccessFunction"]->v.empty())
+                          {
+                            ptLink->interfaces[j.first]->strAccessFunction = j.second->m["AccessFunction"]->v;
+                          }
+                          if (j.second->m.find("Command") != j.second->m.end() && !j.second->m["Command"]->v.empty())
+                          {
+                            ptLink->interfaces[j.first]->strCommand = j.second->m["Command"]->v;
+                          }
+                          if (j.second->m.find("PID") != j.second->m.end() && !j.second->m["PID"]->v.empty())
+                          {
+                            stringstream ssPid(j.second->m["PID"]->v);
+                            ssPid >> ptLink->interfaces[j.first]->nPid;
+                          }
+                          if (j.second->m.find("Respawn") != j.second->m.end() && !j.second->m["Respawn"]->v.empty())
+                          {
+                            ptLink->interfaces[j.first]->bRespawn = ((j.second->m["Respawn"]->v == "1")?true:false);
+                          }
+                          if (j.second->m.find("Restricted") != j.second->m.end() && !j.second->m["Restricted"]->v.empty())
+                          {
+                            ptLink->interfaces[j.first]->bRestricted = ((j.second->m["Restricted"]->v == "1")?true:false);
+                          }
+                        }
+                      }
+                      m_links.push_back(ptLink);
+                    }
+                  }
+                }
+                // }}}
+                // {{{ shutdown
+                else if (ptJson->m["Function"]->v == "shutdown")
                 {
                   ssMessage.str("");
                   ssMessage << strPrefix << ":  Shutting down.";
                   log(ssMessage.str());
                   setShutdown();
                 }
+                // }}}
               }
             }
             else if (m_pCallback != NULL)

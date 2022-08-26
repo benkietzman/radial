@@ -21,26 +21,11 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ radialHubInterface
-struct radialHubInterface
-{
-  bool bRespawn;
-  bool bRestricted;
-  bool bShutdown;
-  int fdRead;
-  int fdWrite;
-  pid_t nPid;
-  string strAccessFunction;
-  string strBuffers[2];
-  string strCommand;
-};
-// }}}
 // {{{ Hub
 class Hub : public Base
 {
   private:
   char **m_env;
-  map<string, radialHubInterface *> m_interfaces;
 
   bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted);
   bool load(string strPrefix, string &strError);
@@ -53,6 +38,8 @@ class Hub : public Base
   Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(const int));
   ~Hub();
   void alert(const string strMessage);
+  void interfaces();
+  void links();
   void log(const string strMessage);
   void notify(const string strMessage);
   void process(string strPrefix);

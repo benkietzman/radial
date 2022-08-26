@@ -38,8 +38,6 @@ Hub::~Hub()
 {
   for (auto &i : m_interfaces)
   {
-    close(i.second->fdRead);
-    close(i.second->fdWrite);
     delete (i.second);
   }
 }
@@ -101,7 +99,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           }
           if (m_interfaces.find(strName) == m_interfaces.end())
           {
-            m_interfaces[strName] = new radialHubInterface;
+            m_interfaces[strName] = new radialInterface;
           }
           m_interfaces[strName]->bRespawn = bRespawn;
           m_interfaces[strName]->bRestricted = bRestricted;
@@ -111,6 +109,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->nPid = nPid;
           m_interfaces[strName]->strAccessFunction = strAccessFunction;
           m_interfaces[strName]->strCommand = strCommand;
+          interfaces();
         }
         else
         {
@@ -140,6 +139,68 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
 void Hub::alert(const string strMessage)
 {
   log("alert", strMessage);
+}
+// }}}
+// {{{ interfaces()
+void Hub::interfaces()
+{
+  Json *ptJson = new Json;
+
+  ptJson->insert("_source", "hub");
+  ptJson->insert("Function", "interfaces");
+  ptJson->m["Interfaces"] = new Json;
+  for (auto &i : m_interfaces)
+  {
+    stringstream ssPid;
+    ssPid << i.second->nPid;
+    ptJson->m["Interfaces"]->m[i.first] = new Json;
+    ptJson->m["Interfaces"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
+    ptJson->m["Interfaces"]->m[i.first]->insert("Command", i.second->strCommand);
+    ptJson->m["Interfaces"]->m[i.first]->insert("PID", ssPid.str(), 'n');
+    ptJson->m["Interfaces"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
+    ptJson->m["Interfaces"]->m[i.first]->insert("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+  }
+  for (auto &i : m_interfaces)
+  {
+    target(i.first, ptJson);
+  }
+  delete ptJson;
+}
+// }}}
+// {{{ links()
+void Hub::links()
+{
+  Json *ptJson = new Json;
+
+  ptJson->insert("_source", "hub");
+  ptJson->insert("Function", "links");
+  ptJson->m["Links"] = new Json;
+  for (auto &i : m_links)
+  {
+    ptJson->m["Links"]->m[i->strNode] = new Json;
+    ptJson->m["Links"]->m[i->strNode]->insert("Server", i->strServer);
+    ptJson->m["Links"]->m[i->strNode]->insert("Port", i->strPort);
+    ptJson->m["Links"]->m[i->strNode]->m["Interfaces"] = new Json;
+    for (auto &j : m_interfaces)
+    {
+      stringstream ssPid;
+      ssPid << j.second->nPid;
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first] = new Json;
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first]->insert("AccessFunction", j.second->strAccessFunction);
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first]->insert("Command", j.second->strCommand);
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first]->insert("PID", ssPid.str(), 'n');
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first]->insert("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
+      ptJson->m["Links"]->m[i->strNode]->m["Interfaces"]->m[j.first]->insert("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
+    }
+  }
+  for (auto &i : m_interfaces)
+  {
+    if (i.first != "link")
+    {
+      target(i.first, ptJson);
+    }
+  }
+  delete ptJson;
 }
 // }}}
 // {{{ load()
@@ -364,21 +425,83 @@ void Hub::process(string strPrefix)
                       }
                     }
                     // }}}
+                    // {{{ links
+                    else if (ptJson->m["Function"]->v == "links")
+                    {
+                      bResult = true;
+                      for (auto &j : m_links)
+                      {
+                        for (auto &k : j->interfaces)
+                        {
+                          delete k.second;
+                        }
+                        j->interfaces.clear();
+                        delete j;
+                      }
+                      m_links.clear();
+                      if (ptJson->m.find("Links") != ptJson->m.end())
+                      {
+                        for (auto &j : ptJson->m["Links"]->m)
+                        {
+                          radialLink *ptLink = new radialLink;
+                          ptLink->strNode = j.first;
+                          if (j.second->m.find("Server") != j.second->m.end() && !j.second->m["Server"]->v.empty())
+                          {
+                            ptLink->strServer = j.second->m["Server"]->v;
+                          }
+                          if (j.second->m.find("Port") != j.second->m.end() && !j.second->m["Port"]->v.empty())
+                          {
+                            ptLink->strPort = j.second->m["Port"]->v;
+                          }
+                          if (j.second->m.find("Interfaces") != j.second->m.end())
+                          {
+                            for (auto &k : j.second->m["Interfaces"]->m)
+                            {
+                              ptLink->interfaces[k.first] = new radialInterface;
+                              if (k.second->m.find("AccessFunction") != k.second->m.end() && !k.second->m["AccessFunction"]->v.empty())
+                              {
+                                ptLink->interfaces[k.first]->strAccessFunction = k.second->m["AccessFunction"]->v;
+                              }
+                              if (k.second->m.find("Command") != k.second->m.end() && !k.second->m["Command"]->v.empty())
+                              {
+                                ptLink->interfaces[k.first]->strCommand = k.second->m["Command"]->v;
+                              }
+                              if (k.second->m.find("PID") != k.second->m.end() && !k.second->m["PID"]->v.empty())
+                              {
+                                stringstream ssPid(k.second->m["PID"]->v);
+                                ssPid >> ptLink->interfaces[k.first]->nPid;
+                              }
+                              if (k.second->m.find("Respawn") != k.second->m.end() && !k.second->m["Respawn"]->v.empty())
+                              {
+                                ptLink->interfaces[k.first]->bRespawn = ((k.second->m["Respawn"]->v == "1")?true:false);
+                              }
+                              if (k.second->m.find("Restricted") != k.second->m.end() && !k.second->m["Restricted"]->v.empty())
+                              {
+                                ptLink->interfaces[k.first]->bRestricted = ((k.second->m["Restricted"]->v == "1")?true:false);
+                              }
+                            }
+                          }
+                          m_links.push_back(ptLink);
+                        }
+                      }
+                      links();
+                    }
+                    // }}}
                     // {{{ list
                     else if (ptJson->m["Function"]->v == "list")
                     {
                       bResult = true;
                       ptJson->m["Response"] = new Json;
-                      for (auto &i : m_interfaces)
+                      for (auto &j : m_interfaces)
                       {
                         stringstream ssPid;
-                        ssPid << i.second->nPid;
-                        ptJson->m["Response"]->m[i.first] = new Json;
-                        ptJson->m["Response"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
-                        ptJson->m["Response"]->m[i.first]->insert("Command", i.second->strCommand);
-                        ptJson->m["Response"]->m[i.first]->insert("PID", ssPid.str(), 'n');
-                        ptJson->m["Response"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
-                        ptJson->m["Response"]->m[i.first]->insert("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+                        ssPid << j.second->nPid;
+                        ptJson->m["Response"]->m[j.first] = new Json;
+                        ptJson->m["Response"]->m[j.first]->insert("AccessFunction", j.second->strAccessFunction);
+                        ptJson->m["Response"]->m[j.first]->insert("Command", j.second->strCommand);
+                        ptJson->m["Response"]->m[j.first]->insert("PID", ssPid.str(), 'n');
+                        ptJson->m["Response"]->m[j.first]->insert("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
+                        ptJson->m["Response"]->m[j.first]->insert("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
                       }
                     }
                     // }}}
@@ -423,7 +546,7 @@ void Hub::process(string strPrefix)
                     // {{{ invalid
                     else
                     {
-                      strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
+                      strError = "Please provide a valid Function:  add, links, list, ping, remove, shutdown.";
                     }
                     // }}}
                   }
@@ -555,6 +678,7 @@ void Hub::remove(string strPrefix, const string strName)
     {
       delete m_interfaces[strName];
       m_interfaces.erase(strName);
+      interfaces();
     }
   }
 }

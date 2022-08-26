@@ -46,6 +46,42 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ structs
+// {{{ radialInterface
+struct radialInterface
+{
+  bool bRespawn;
+  bool bRestricted;
+  bool bShutdown;
+  int fdRead;
+  int fdWrite;
+  pid_t nPid;
+  string strAccessFunction;
+  string strBuffers[2];
+  string strCommand;
+};
+// }}}
+// {{{ radialLink
+struct radialLink
+{
+  addrinfo hints;
+  addrinfo *result;
+  addrinfo *rp;
+  bool bAuthenticated;
+  bool bRetry;
+  int fdConnecting;
+  int fdSocket;
+  list<string> responses;
+  map<string, radialInterface *> interfaces;
+  size_t unUnique;
+  SSL *ssl;
+  string strBuffers[2];
+  string strNode;
+  string strPort;
+  string strServer;
+};
+// }}}
+// }}}
 // {{{ Base
 class Base
 {
@@ -53,6 +89,8 @@ class Base
   bool m_bShutdown;
   char **m_argv;
   int m_argc;
+  list<radialLink *> m_links;
+  map<string, radialInterface *> m_interfaces;
   mutex m_mutexBase;
   size_t m_unMonitor;
   size_t m_unThreads;

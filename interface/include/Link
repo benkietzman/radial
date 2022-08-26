@@ -26,32 +26,12 @@ namespace radial
 #define RADIAL_LINK_SLAVE 1
 #define RADIAL_LINK_MASTER 2
 // }}}
-// {{{ structs
-struct radialLink
-{
-  addrinfo hints;
-  addrinfo *result;
-  addrinfo *rp;
-  bool bAuthenticated;
-  bool bRetry;
-  int fdConnecting;
-  int fdSocket;
-  list<string> responses;
-  size_t unUnique;
-  SSL *ssl;
-  string strBuffers[2];
-  string strNode;
-  string strPort;
-  string strServer;
-};
-// }}}
 // {{{ Link
 class Link : public Interface
 {
   protected:
   bool m_bAllowMaster;
   bool m_bUpdate;
-  list<radialLink *> m_links;
   string m_strMaster;
   string m_strPassword;
   size_t m_unLink;

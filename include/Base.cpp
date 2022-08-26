@@ -99,6 +99,16 @@ Base::~Base()
 {
   size_t unThreads;
 
+  for (auto &i : m_interfaces)
+  {
+    delete (i.second);
+  }
+  m_interfaces.clear();
+  for (auto &i : m_links)
+  {
+    delete i;
+  }
+  m_links.clear();
   do 
   {
     m_mutexBase.lock();
