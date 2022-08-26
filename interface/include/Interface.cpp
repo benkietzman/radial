@@ -531,6 +531,7 @@ void Interface::process(string strPrefix)
                 // {{{ interfaces
                 if (ptJson->m["Function"]->v == "interfaces")
                 {
+                  m_mutexShare.lock();
                   for (auto &i : m_interfaces)
                   {
                     delete i.second;
@@ -572,6 +573,7 @@ void Interface::process(string strPrefix)
                       delete ptLink;
                     }
                   }
+                  m_mutexShare.unlock();
                 }
                 // }}}
                 // {{{ links

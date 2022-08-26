@@ -374,13 +374,28 @@ void Hub::process(string strPrefix)
                       ptJson->json(strLine);
                       m_interfaces[ptJson->m["_target"]->v]->strBuffers[1].append(strLine + "\n");
                     }
-                    else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
+                    else
                     {
-                      ptJson->insert("_destination", "source");
-                      ptJson->insert("Status", "error");
-                      ptJson->insert("Error", "Interface does not exist.");
-                      ptJson->json(strLine);
-                      m_interfaces[ptJson->m["_source"]->v]->strBuffers[1].append(strLine + "\n");
+                      list<radialLink *>::iterator linkIter = m_links.end();
+                      for (auto i = m_links.begin(); linkIter == m_links.end() && linkIter != m_links.end(); linkIter++)
+                      {
+                        if ((*i)->interfaces.find(ptJson->m["_target"]->v) != m_interfaces.end())
+                        {
+                          linkIter = i;
+                        }
+                      }
+                      if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
+                      {
+                        m_interfaces["link"]->strBuffers[1].append(strLine + "\n");
+                      }
+                      else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
+                      {
+                        ptJson->insert("_destination", "source");
+                        ptJson->insert("Status", "error");
+                        ptJson->insert("Error", "Interface does not exist.");
+                        ptJson->json(strLine);
+                        m_interfaces[ptJson->m["_source"]->v]->strBuffers[1].append(strLine + "\n");
+                      }
                     }
                   }
                   else if (ptJson->m["_destination"]->v == "target" && ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())

@@ -295,35 +295,31 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     }
     else
     {
-      Json *ptInterfaces = new Json;
-      ptInterfaces->insert("Function", "list");
-      hub(ptInterfaces);
-      if (ptInterfaces->m.find("Response") != ptInterfaces->m.end())
+      bool bFound = false, bRestricted = false;
+      m_mutexShare.lock();
+      if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
       {
-        if (ptInterfaces->m["Response"]->m.find(ptJson->m["Interface"]->v) != ptInterfaces->m["Response"]->m.end())
+        bFound = true;
+        bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
+      }
+      m_mutexShare.unlock();
+      if (bFound)
+      {
+        if (!bRestricted || auth(ptJson, strError))
         {
-          if (ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.find("Restricted") == ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m.end() || ptInterfaces->m["Response"]->m[ptJson->m["Interface"]->v]->m["Restricted"]->v == "0" || auth(ptJson, strError))
-          {
-            hub(ptJson->m["Interface"]->v, ptJson);
-          }
-          else
-          {
-            ptJson->insert("Status", "error");
-            ptJson->insert("Error", strError);
-          }
+          hub(ptJson->m["Interface"]->v, ptJson);
         }
         else
         {
           ptJson->insert("Status", "error");
-          ptJson->insert("Error", "Interface does not exist.");
+          ptJson->insert("Error", strError);
         }
       }
       else
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Failed to retrieve interfaces.");
+        ptJson->insert("Error", "Interface does not exist.");
       }
-      delete ptInterfaces;
     }
   }
   else
