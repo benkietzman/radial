@@ -25,6 +25,17 @@ Link::Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Js
   ifstream inLink((m_strData + "/link.json").c_str());
   string strError;
 
+  m_bAllowMaster = false;
+  // {{{ command line arguments
+  for (int i = 1; i < argc; i++)
+  {
+    string strArg = argv[i];
+    if (strArg == "--allow-master")
+    {
+      m_bAllowMaster = true;
+    }
+  }
+  // }}}
   m_bUpdate = true;
   m_ptLink = NULL;
   if (inLink)
@@ -1162,7 +1173,7 @@ void Link::process(string strPrefix)
             unsigned int unSeed = CTime;
             srand(unSeed);
             unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
-            if (m_strMaster.empty())
+            if (m_bAllowMaster && m_strMaster.empty())
             {
               m_bUpdate = true;
               m_strMaster = m_ptLink->m["Node"]->v;

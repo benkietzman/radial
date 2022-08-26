@@ -49,7 +49,7 @@ struct radialLink
 class Link : public Interface
 {
   protected:
-  bool m_bOnline;
+  bool m_bAllowMaster;
   bool m_bUpdate;
   list<radialLink *> m_links;
   string m_strMaster;
