@@ -308,7 +308,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         list<radialLink *>::iterator linkIter = m_links.end();
         for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
         {
-          if ((*i)->interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+          if ((*i)->interfaces.find(ptJson->m["Interface"]->v) != (*i)->interfaces.end())
           { 
             linkIter = i;
           }

@@ -507,7 +507,7 @@ void Request::process(string strPrefix)
                             list<radialLink *>::iterator linkIter = m_links.end();
                             for (auto j = m_links.begin(); linkIter == m_links.end() && j != m_links.end(); j++)
                             {
-                              if ((*j)->interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                              if ((*j)->interfaces.find(ptJson->m["Interface"]->v) != (*j)->interfaces.end())
                               { 
                                 linkIter = j;
                               }
