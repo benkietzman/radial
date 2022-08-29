@@ -471,11 +471,10 @@ void Link::process(string strPrefix)
                   Json *ptStorage = new Json;
                   ptStorage->insert("_function", "storageTransmit");
                   ptStorage->insert("_source", m_strName);
-                  ptStorage->insert("_target", "storage");
-                  ssUnique << link->fdSocket << " " << link->unUnique;
+                  ssUnique << link->fdSocket << " " << link->unUnique++;
                   ptStorage->insert("_unique", ssUnique.str());
                   ptStorage->insert("Function", "retrieve");
-                  hub(ptStorage, false);
+                  hub("storage", ptStorage, false);
                   delete ptStorage;
                 }
               }
@@ -544,104 +543,7 @@ void Link::process(string strPrefix)
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   ptJson = new Json(strLine);
-                  if (ptJson->m.find("_request") != ptJson->m.end())
-                  {
-                    Json *ptSubJson = ptJson->m["_request"];
-                    if (ptSubJson->m.find("_source") != ptSubJson->m.end() && ptSubJson->m["_source"]->v == m_strName && ptSubJson->m.find("_unique") != ptSubJson->m.end() && !ptSubJson->m["_unique"]->v.empty())
-                    {
-                      int fdLink;
-                      size_t unUnique;
-                      stringstream ssUnique(ptSubJson->m["_unique"]->v);
-                      radialLink *ptLink = NULL;
-                      ssUnique >> fdLink >> unUnique;
-                      for (auto i = links.begin(); ptLink == NULL && i != links.end(); i++)
-                      {
-                        if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
-                        {
-                          ptLink = (*i);
-                        }
-                      }
-                      if (ptLink == NULL)
-                      {
-                        for (auto i = m_links.begin(); ptLink == NULL && i != m_links.end(); i++)
-                        {
-                          if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
-                          {
-                            ptLink = (*i);
-                          }
-                        }
-                      }
-                      if (ptLink != NULL)
-                      {
-                        if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "list")
-                        {
-                          if (ptJson->m.find("Response") != ptJson->m.end())
-                          {
-                            if (ptSubJson->m.find("Interface") != ptSubJson->m.end() && !ptSubJson->m["Interface"]->v.empty())
-                            {
-                              if (ptJson->m["Response"]->m.find(ptSubJson->m["Interface"]->v) != ptJson->m["Response"]->m.end())
-                              {
-                                hub(ptSubJson, false);
-                              }
-                              else
-                              {
-                                keyRemovals(ptSubJson);
-                                ptSubJson->insert("Status", "error");
-                                ptSubJson->insert("Error", "Interface does not exist.");
-                                ptLink->responses.push_back(ptSubJson->json(strJson));
-                              }
-                            }
-                            else
-                            {
-                              keyRemovals(ptSubJson);
-                              ptSubJson->insert("Status", "error");
-                              ptSubJson->insert("Error", "Please provide the Interface.");
-                              ptLink->responses.push_back(ptSubJson->json(strJson));
-                            }
-                          }
-                          else
-                          {
-                            keyRemovals(ptSubJson);
-                            ptSubJson->insert("Status", "error");
-                            ptSubJson->insert("Error", "Failed to retrieve interfaces.");
-                            ptLink->responses.push_back(ptSubJson->json(strJson));
-                          }
-                        }
-                        else
-                        {
-                          keyRemovals(ptSubJson);
-                          ptSubJson->insert("Status", "error");
-                          ptSubJson->insert("Error", "Invalid path of logic.");
-                          ptLink->responses.push_back(ptSubJson->json(strJson));
-                        }
-                      }
-                      else
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << " error [stdin," << fdLink << "," << unUnique << "]:  Link no longer exists.";
-                        log(ssMessage.str());
-                      }
-                    }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << " error [stdin]:  ";
-                      if (ptSubJson->m.find("_source") == ptSubJson->m.end())
-                      {
-                        ssMessage << "Internal source does not exist.";
-                      }
-                      else if (ptSubJson->m["_source"]->v != m_strName)
-                      {
-                        ssMessage << "Internal source does not match.";
-                      }
-                      else
-                      {
-                        ssMessage << "Internal unique does not exist.";
-                      }
-                      log(ssMessage.str());
-                    }
-                  }
-                  else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
+                  if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
                   {
                     int fdLink;
                     size_t unUnique;
@@ -1157,11 +1059,10 @@ void Link::process(string strPrefix)
                           Json *ptStorage = new Json;
                           ptStorage->insert("_function", "storageTransmit");
                           ptStorage->insert("_source", m_strName);
-                          ptStorage->insert("_target", "storage");
-                          ssUnique << ptLink->fdSocket << " " << ptLink->unUnique;
+                          ssUnique << ptLink->fdSocket << " " << ptLink->unUnique++;
                           ptJson->insert("_unique", ssUnique.str());
                           ptStorage->insert("Function", "retrieve");
-                          hub(ptStorage, false);
+                          hub("storage", ptStorage, false);
                           delete ptStorage;
                         }
                       }
@@ -1171,24 +1072,26 @@ void Link::process(string strPrefix)
                       {
                         if (ptLink->bAuthenticated)
                         {
-                          stringstream ssUnique;
-                          Json *ptInterfaces = new Json;
-                          ptJson->insert("_source", m_strName);
-                          ptJson->insert("_target", ptJson->m["Interface"]->v);
-                          ssUnique << fds[i].fd << " " << ptLink->unUnique;
-                          ptJson->insert("_unique", ssUnique.str());
-                          ptInterfaces->insert("Function", "list");
-                          ptInterfaces->m["_request"] = new Json(ptJson);
-                          ptInterfaces->insert("_source", m_strName);
-                          hub(ptInterfaces, false);
-                          delete ptInterfaces;
+                          if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                          {
+                            stringstream ssUnique;
+                            ptJson->insert("_source", m_strName);
+                            ssUnique << ptLink->fdSocket << " " << ptLink->unUnique++;
+                            ptJson->insert("_unique", ssUnique.str());
+                            hub(ptJson->m["Interface"]->v, ptJson, false);
+                          }
+                          else
+                          {
+                            ptJson->insert("Status", "error");
+                            ptJson->insert("Error", "Interface does not exist.");
+                            ptLink->responses.push_back(ptJson->json(strJson));
+                          }
                         }
                         else
                         {
                           ptJson->insert("Status", "error");
                           ptJson->insert("Error", "Failed authentication.");
-                          ptJson->json(strJson);
-                          ptLink->responses.push_back(strJson);
+                          ptLink->responses.push_back(ptJson->json(strJson));
                         }
                       }
                       // }}}
@@ -1197,8 +1100,7 @@ void Link::process(string strPrefix)
                       {
                         ptJson->insert("Status", "error");
                         ptJson->insert("Error", "Please provide the _function or Interface.");
-                        ptJson->json(strJson);
-                        ptLink->responses.push_back(strJson);
+                        ptLink->responses.push_back(ptJson->json(strJson));
                       }
                       // }}}
                       delete ptJson;

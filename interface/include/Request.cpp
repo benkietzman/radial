@@ -485,43 +485,40 @@ void Request::process(string strPrefix)
                             conns[fds[i].fd]->responses.push_back(strJson);
                           }
                         }
-                        else
+                        else if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                         {
-                          if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                          stringstream ssUnique;
+                          ptJson->insert("_source", m_strName);
+                          ptJson->insert("_target", ptJson->m["Interface"]->v);
+                          ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
+                          ptJson->insert("_unique", ssUnique.str());
+                          if (!m_interfaces[ptJson->m["Interface"]->v]->bRestricted)
                           {
-                            stringstream ssUnique;
-                            ptJson->insert("_source", m_strName);
-                            ptJson->insert("_target", ptJson->m["Interface"]->v);
-                            ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
-                            ptJson->insert("_unique", ssUnique.str());
-                            if (!m_interfaces[ptJson->m["Interface"]->v]->bRestricted)
-                            {
-                              hub(ptJson, false);
-                            }
-                            else
-                            {
-                              Json *ptAuth = new Json(ptJson);
-                              keyRemovals(ptAuth);
-                              if (ptAuth->m.find("Request") != ptAuth->m.end())
-                              {
-                                delete ptAuth->m["Request"];
-                              }
-                              ptAuth->m["Request"] = new Json;
-                              ptAuth->m["Request"]->insert("Interface", ptJson->m["Interface"]->v);
-                              ptAuth->insert("_target", "auth");
-                              ptAuth->m["_request"] = new Json(ptJson);
-                              ptAuth->insert("_source", m_strName);
-                              hub(ptAuth, false);
-                              delete ptAuth;
-                            }
+                            hub(ptJson, false);
                           }
                           else
                           {
-                            ptJson->insert("Node", m_strNode);
-                            ptJson->insert("Status", "error");
-                            ptJson->insert("Error", "Interface does not exist.");
-                            conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
+                            Json *ptAuth = new Json(ptJson);
+                            keyRemovals(ptAuth);
+                            if (ptAuth->m.find("Request") != ptAuth->m.end())
+                            {
+                              delete ptAuth->m["Request"];
+                            }
+                            ptAuth->m["Request"] = new Json;
+                            ptAuth->m["Request"]->insert("Interface", ptJson->m["Interface"]->v);
+                            ptAuth->insert("_target", "auth");
+                            ptAuth->m["_request"] = new Json(ptJson);
+                            ptAuth->insert("_source", m_strName);
+                            hub(ptAuth, false);
+                            delete ptAuth;
                           }
+                        }
+                        else
+                        {
+                          ptJson->insert("Node", m_strNode);
+                          ptJson->insert("Status", "error");
+                          ptJson->insert("Error", "Interface does not exist.");
+                          conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
                         }
                       }
                       else
