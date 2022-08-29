@@ -382,7 +382,7 @@ void Hub::process(string strPrefix)
                     else
                     {
                       list<radialLink *>::iterator linkIter = m_links.end();
-                      for (auto i = m_links.begin(); linkIter == m_links.end() && linkIter != m_links.end(); linkIter++)
+                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
                       {
                         if ((*i)->interfaces.find(ptJson->m["_target"]->v) != m_interfaces.end())
                         {
