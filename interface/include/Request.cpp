@@ -283,7 +283,7 @@ void Request::process(string strPrefix)
                       {
                         interfaces(ptJson);
                       }
-                      if (ptJson->m["Function"]->v == "links")
+                      else if (ptJson->m["Function"]->v == "links")
                       {
                         links(ptJson);
                       }
