@@ -342,19 +342,14 @@ void Interface::interfaces(Json *ptJson)
         {
           m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
         }
+        m_interfaces[i.first]->nPid = -1;
         if (i.second->m.find("PID") != i.second->m.end() && !i.second->m["PID"]->v.empty())
         {
           stringstream ssPid(i.second->m["PID"]->v);
           ssPid >> m_interfaces[i.first]->nPid;
         }
-        if (i.second->m.find("Respawn") != i.second->m.end() && !i.second->m["Respawn"]->v.empty())
-        {
-          m_interfaces[i.first]->bRespawn = ((i.second->m["Respawn"]->v == "1")?true:false);
-        }
-        if (i.second->m.find("Restricted") != i.second->m.end() && !i.second->m["Restricted"]->v.empty())
-        {
-          m_interfaces[i.first]->bRestricted = ((i.second->m["Restricted"]->v == "1")?true:false);
-        }
+        m_interfaces[i.first]->bRespawn = ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false);
+        m_interfaces[i.first]->bRestricted = ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false);
       }
       if (m_strNode == "link")
       {
@@ -435,19 +430,14 @@ void Interface::links(Json *ptJson)
             {
               ptLink->interfaces[j.first]->strCommand = j.second->m["Command"]->v;
             }
+            ptLink->interfaces[j.first]->nPid = -1;
             if (j.second->m.find("PID") != j.second->m.end() && !j.second->m["PID"]->v.empty())
             {
               stringstream ssPid(j.second->m["PID"]->v);
               ssPid >> ptLink->interfaces[j.first]->nPid;
             }
-            if (j.second->m.find("Respawn") != j.second->m.end() && !j.second->m["Respawn"]->v.empty())
-            {
-              ptLink->interfaces[j.first]->bRespawn = ((j.second->m["Respawn"]->v == "1")?true:false);
-            }
-            if (j.second->m.find("Restricted") != j.second->m.end() && !j.second->m["Restricted"]->v.empty())
-            {
-              ptLink->interfaces[j.first]->bRestricted = ((j.second->m["Restricted"]->v == "1")?true:false);
-            }
+            ptLink->interfaces[j.first]->bRespawn = ((j.second->m.find("Respawn") != j.second->m.end() && j.second->m["Respawn"]->v == "1")?true:false);
+            ptLink->interfaces[j.first]->bRestricted = ((j.second->m.find("Restricted") != j.second->m.end() && j.second->m["Restricted"]->v == "1")?true:false);
           }
         }
         m_links.push_back(ptLink);
@@ -666,19 +656,14 @@ void Interface::process(string strPrefix)
                       {
                         m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
                       }
+                      m_interfaces[i.first]->nPid = -1;
                       if (i.second->m.find("PID") != i.second->m.end() && !i.second->m["PID"]->v.empty())
                       {
                         stringstream ssPid(i.second->m["PID"]->v);
                         ssPid >> m_interfaces[i.first]->nPid;
                       }
-                      if (i.second->m.find("Respawn") != i.second->m.end() && !i.second->m["Respawn"]->v.empty())
-                      {
-                        m_interfaces[i.first]->bRespawn = ((i.second->m["Respawn"]->v == "1")?true:false);
-                      }
-                      if (i.second->m.find("Restricted") != i.second->m.end() && !i.second->m["Restricted"]->v.empty())
-                      {
-                        m_interfaces[i.first]->bRestricted = ((i.second->m["Restricted"]->v == "1")?true:false);
-                      }
+                      m_interfaces[i.first]->bRespawn = ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false);
+                      m_interfaces[i.first]->bRestricted = ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false);
                     }
                     if (m_strNode == "link")
                     {

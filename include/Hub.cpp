@@ -486,19 +486,14 @@ void Hub::process(string strPrefix)
                               {
                                 ptLink->interfaces[k.first]->strCommand = k.second->m["Command"]->v;
                               }
+                              ptLink->interfaces[k.first]->nPid = -1;
                               if (k.second->m.find("PID") != k.second->m.end() && !k.second->m["PID"]->v.empty())
                               {
                                 stringstream ssPid(k.second->m["PID"]->v);
                                 ssPid >> ptLink->interfaces[k.first]->nPid;
                               }
-                              if (k.second->m.find("Respawn") != k.second->m.end() && !k.second->m["Respawn"]->v.empty())
-                              {
-                                ptLink->interfaces[k.first]->bRespawn = ((k.second->m["Respawn"]->v == "1")?true:false);
-                              }
-                              if (k.second->m.find("Restricted") != k.second->m.end() && !k.second->m["Restricted"]->v.empty())
-                              {
-                                ptLink->interfaces[k.first]->bRestricted = ((k.second->m["Restricted"]->v == "1")?true:false);
-                              }
+                              ptLink->interfaces[k.first]->bRespawn = ((k.second->m.find("Respawn") != k.second->m.end() && k.second->m["Respawn"]->v == "1")?true:false);
+                              ptLink->interfaces[k.first]->bRestricted = ((k.second->m.find("Restricted") != k.second->m.end() && k.second->m["Restricted"]->v == "1")?true:false);
                             }
                           }
                           m_links.push_back(ptLink);
