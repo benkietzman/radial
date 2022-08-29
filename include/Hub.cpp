@@ -52,26 +52,26 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
   ssMessage << strPrefix;
   if (m_interfaces.find(strName) == m_interfaces.end() || bRespawn)
   {
-    char *args[100], *pszArgument;
-    int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
-    long lArg;
-    size_t unIndex = 0;
-    pid_t nPid;
-    string strArgument;
-    stringstream ssCommand(strCommand);
-    while (ssCommand >> strArgument)
-    {
-      pszArgument = new char[strArgument.size() + 1];
-      strcpy(pszArgument, strArgument.c_str());
-      args[unIndex++] = pszArgument;
-    }
-    args[unIndex] = NULL;
+    int readpipe[2] = {-1, -1};
     if (pipe(readpipe) == 0)
     {
+      int writepipe[2] = {-1, -1};
       if (pipe(writepipe) == 0)
       {
+        pid_t nPid;
         if ((nPid = fork()) == 0)
         {
+          char *args[100], *pszArgument;
+          size_t unIndex = 0;
+          string strArgument;
+          stringstream ssCommand(strCommand);
+          while (ssCommand >> strArgument)
+          {
+            pszArgument = new char[strArgument.size() + 1];
+            strcpy(pszArgument, strArgument.c_str());
+            args[unIndex++] = pszArgument;
+          }
+          args[unIndex] = NULL;
           close(writepipe[1]);
           close(readpipe[0]);
           dup2(writepipe[0], 0);
@@ -79,10 +79,15 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           dup2(readpipe[1], 1);
           close(readpipe[1]);
           execve(args[0], args, m_env);
+          for (size_t i = 0; i < unIndex; i++)
+          {
+            delete[] args[i];
+          }
           _exit(1);
         }
         else if (nPid > 0)
         {
+          long lArg;
           bResult = true;
           ssMessage << " [" << strName << "]:  Interface added." << endl;
           close(writepipe[0]);
@@ -124,10 +129,6 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
     else
     {
       ssMessage << "->pipe(read," << errno << ") error [" << strName << "]  " << strerror(errno);
-    }
-    for (size_t i = 0; i < unIndex; i++)
-    {
-      delete[] args[i];
     }
   }
   else
