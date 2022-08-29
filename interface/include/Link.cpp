@@ -655,11 +655,45 @@ void Link::process(string strPrefix)
                   }
                   else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
                   {
-                    for (auto &link : m_links)
+                    if (ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty())
                     {
-                      if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
+                      list<radialLink *>::iterator linkIter = m_links.end();
+                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
                       {
-                        link->responses.push_back(strLine);
+                        if ((*i)->strNode == ptJson->m["Node"]->v)
+                        {
+                          linkIter = i;
+                        }
+                      }
+                      if (linkIter != m_links.end())
+                      {
+                        Json *ptLink = new Json;
+                        for (auto &i : ptJson->m)
+                        {
+                          if (!i.first.empty() && i.first[0] == '_' && !i.second->v.empty())
+                          {
+                            ptLink->insert(i.first, i.second->v);
+                          }
+                        }
+                        keyRemovals(ptJson);
+                        ptJson->m["_link"] = ptLink;
+                        (*linkIter)->responses.push_back(ptJson->json(strJson));
+                      }
+                      else
+                      {
+                        ptJson->insert("Status", "error");
+                        ptJson->insert("Error", "Linked Node does not exist.");
+                        hub(ptJson, false);
+                      }
+                    }
+                    else
+                    {
+                      for (auto &link : m_links)
+                      {
+                        if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
+                        {
+                          link->responses.push_back(strLine);
+                        }
                       }
                     }
                   }
@@ -1055,6 +1089,22 @@ void Link::process(string strPrefix)
                           hub("storage", ptStorage, false);
                           delete ptStorage;
                         }
+                      }
+                      // }}}
+                      // {{{ _link
+                      else if (ptJson->m.find("_link") != ptJson->m.end())
+                      {
+                        Json *ptLink = ptJson->m["_link"];
+                        ptJson->m.erase("_link");
+                        keyRemovals(ptJson);
+                        for (auto &j : ptLink->m)
+                        {
+                          if (!j.second->v.empty())
+                          {
+                            ptJson->insert(j.first, j.second->v);
+                          }
+                        }
+                        delete ptLink;
                       }
                       // }}}
                       // {{{ Interface
