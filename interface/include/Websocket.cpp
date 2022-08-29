@@ -343,7 +343,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         ssMessage.str("");
         ssMessage << "Interface does not exist within the local interfaces (";
         m_mutexShare.lock();
-        for (auto i : m_interfaces)
+        for (auto i = m_interfaces.begin(); i != m_interfaces.end(); i++)
         {
           if (i != m_interfaces.begin())
           {
@@ -352,14 +352,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
           ssMessage << i.first;
         }
         ssMessage << ") or the interfaces within the linked instances [";
-        for (auto i : m_links)
+        for (auto i = m_links.begin(); i != m_links.end(); i++)
         {
           if (i != m_links.begin())
           {
             ssMessage << ";";
           }
           ssMessage << (*i)->strNode << "(";
-          for (auto j : (*i)->interfaces)
+          for (auto j = (*i)->interfaces.begin(); j != (*i)->interfaces.end(); j++)
           {
             if (j != (*i)->interfaces.begin())
             {

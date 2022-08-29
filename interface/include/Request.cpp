@@ -556,7 +556,7 @@ void Request::process(string strPrefix)
                             ptJson->insert("Status", "error");
                             ssMessage.str("");
                             ssMessage << "Interface does not exist within the local interfaces (";
-                            for (auto j : m_interfaces)
+                            for (auto j = m_interfaces.begin(); j != m_interfaces.end(); j++)
                             {
                               if (j != m_interfaces.begin())
                               {
@@ -565,14 +565,14 @@ void Request::process(string strPrefix)
                               ssMessage << j.first;
                             }
                             ssMessage << ") or the interfaces within the linked instances [";
-                            for (auto j : m_links)
+                            for (auto j = m_links.begin(); j != m_links.end(); j++)
                             {
                               if (j != m_links.begin())
                               {
                                 ssMessage << ";";
                               }
                               ssMessage << (*j)->strNode << "(";
-                              for (auto k : (*j)->interfaces)
+                              for (auto k = (*j)->interfaces.begin(); k != (*j)->interfaces.end(); k++)
                               {
                                 if (k != (*j)->interfaces.begin())
                                 {
