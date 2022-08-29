@@ -340,7 +340,38 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       else
       {
         ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Interface does not exist.");
+        ssMessage.str("");
+        ssMessage << "Interface does not exist within the local interfaces (";
+        m_mutexShare.lock();
+        for (auto i : m_interfaces)
+        {
+          if (i != m_interfaces.begin())
+          {
+            ssMessage << ",";
+          }
+          ssMessage << i.first;
+        }
+        ssMessage << ") or the interfaces within the linked instances [";
+        for (auto i : m_links)
+        {
+          if (i != m_links.begin())
+          {
+            ssMessage << ";";
+          }
+          ssMessage << (*i)->strNode << "(";
+          for (auto j : (*i)->interfaces)
+          {
+            if (j != (*i)->interfaces.begin())
+            {
+              ssMessage << ",";
+            }
+            ssMessage << j.first;
+          }
+          ssMessage << ")";
+        }
+        m_mutexShare.unlock();
+        ssMessage << "].";
+        ptJson->insert("Error", ssMessage.str());
       }
     }
   }
