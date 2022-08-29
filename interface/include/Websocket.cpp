@@ -349,7 +349,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
           {
             ssMessage << ",";
           }
-          ssMessage << i.first;
+          ssMessage << i->first;
         }
         ssMessage << ") or the interfaces within the linked instances [";
         for (auto i = m_links.begin(); i != m_links.end(); i++)
@@ -365,7 +365,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             {
               ssMessage << ",";
             }
-            ssMessage << j.first;
+            ssMessage << j->first;
           }
           ssMessage << ")";
         }

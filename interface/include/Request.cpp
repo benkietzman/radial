@@ -562,7 +562,7 @@ void Request::process(string strPrefix)
                               {
                                 ssMessage << ",";
                               }
-                              ssMessage << j.first;
+                              ssMessage << j->first;
                             }
                             ssMessage << ") or the interfaces within the linked instances [";
                             for (auto j = m_links.begin(); j != m_links.end(); j++)
@@ -578,7 +578,7 @@ void Request::process(string strPrefix)
                                 {
                                   ssMessage << ",";
                                 }
-                                ssMessage << k.first;
+                                ssMessage << k->first;
                               }
                               ssMessage << ")";
                             }
