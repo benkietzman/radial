@@ -318,6 +318,57 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
+// {{{ interfaces()
+void Interface::interfaces(Json *ptJson)
+{
+  if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "interfaces")
+  {
+    m_mutexShare.lock();
+    for (auto &i : m_interfaces)
+    {
+      delete i.second;
+    }
+    m_interfaces.clear();
+    if (ptJson->m.find("Interfaces") != ptJson->m.end())
+    {
+      for (auto &i : ptJson->m["Interfaces"]->m)
+      {
+        m_interfaces[i.first] = new radialInterface;
+        if (i.second->m.find("AccessFunction") != i.second->m.end() && !i.second->m["AccessFunction"]->v.empty())
+        {
+          m_interfaces[i.first]->strAccessFunction = i.second->m["AccessFunction"]->v;
+        }
+        if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
+        {
+          m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
+        }
+        if (i.second->m.find("PID") != i.second->m.end() && !i.second->m["PID"]->v.empty())
+        {
+          stringstream ssPid(i.second->m["PID"]->v);
+          ssPid >> m_interfaces[i.first]->nPid;
+        }
+        if (i.second->m.find("Respawn") != i.second->m.end() && !i.second->m["Respawn"]->v.empty())
+        {
+          m_interfaces[i.first]->bRespawn = ((i.second->m["Respawn"]->v == "1")?true:false);
+        }
+        if (i.second->m.find("Restricted") != i.second->m.end() && !i.second->m["Restricted"]->v.empty())
+        {
+          m_interfaces[i.first]->bRestricted = ((i.second->m["Restricted"]->v == "1")?true:false);
+        }
+      }
+      if (m_strNode == "link")
+      {
+        Json *ptLink = new Json(ptJson);
+        keyRemovals(ptLink);
+        ptLink->insert("_source", "hub");
+        hub("link", ptLink, false);
+        delete ptLink;
+      }
+    }
+    m_mutexShare.unlock();
+  }
+}
+// }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
 {
@@ -344,8 +395,9 @@ void Interface::keyRemovals(Json *ptJson)
 // {{{ links()
 void Interface::links(Json *ptJson)
 {
-  if (ptJson->m["Function"]->v == "links")
+  if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
   {
+    m_mutexShare.lock();
     for (auto &i : m_links)
     {
       for (auto &j : i->interfaces)
@@ -401,6 +453,7 @@ void Interface::links(Json *ptJson)
         m_links.push_back(ptLink);
       }
     }
+    m_mutexShare.unlock();
   }
 }
 // }}}

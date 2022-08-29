@@ -44,6 +44,7 @@ class Interface : public Base
   void hub(const string strTarget, Json *ptJson, const bool bWait = true);
   bool hub(Json *ptJson, string &strError);
   bool hub(const string strTarget, Json *ptJson, string &strError);
+  void interfaces(Json *ptJson);
   void keyRemovals(Json *ptJson);
   void links(Json *ptJson);
   void log(const string strFunction, const string strMessage);
