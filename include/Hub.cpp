@@ -125,6 +125,10 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
     {
       ssMessage << "->pipe(read," << errno << ") error [" << strName << "]  " << strerror(errno);
     }
+    for (size_t i = 0; i < unIndex; i++)
+    {
+      delete[] args[i];
+    }
   }
   else
   {
