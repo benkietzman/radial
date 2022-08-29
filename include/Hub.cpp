@@ -391,6 +391,8 @@ void Hub::process(string strPrefix)
                       }
                       if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
                       {
+                        ptJson->insert("Node", (*linkIter)->strNode);
+                        ptJson->json(strLine);
                         m_interfaces["link"]->strBuffers[1].append(strLine + "\n");
                       }
                       else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())

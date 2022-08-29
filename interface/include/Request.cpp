@@ -496,11 +496,11 @@ void Request::process(string strPrefix)
                         else
                         {
                           bool bRestricted;
-                          string strTarget;
+                          string strNode, strTarget;
                           if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                           {
-                            strTarget = ptJson->m["Interface"]->v;
                             bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
+                            strTarget = ptJson->m["Interface"]->v;
                           }
                           else
                           {
@@ -514,8 +514,9 @@ void Request::process(string strPrefix)
                             }
                             if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
                             {
-                              strTarget = "link";
                               bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
+                              strNode = (*linkIter)->strNode;
+                              strTarget = "link";
                             }
                           }
                           if (!strTarget.empty())
@@ -523,8 +524,12 @@ void Request::process(string strPrefix)
                             stringstream ssUnique;
                             ptJson->insert("_source", m_strName);
                             ptJson->insert("_target", strTarget);
-                            ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
+                            ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique++;
                             ptJson->insert("_unique", ssUnique.str());
+                            if (!strNode.empty())
+                            {
+                              ptJson->insert("Node", strNode);
+                            }
                             if (!bRestricted)
                             {
                               hub(ptJson, false);
@@ -549,7 +554,36 @@ void Request::process(string strPrefix)
                           {
                             ptJson->insert("Node", m_strNode);
                             ptJson->insert("Status", "error");
-                            ptJson->insert("Error", "Interface does not exist.");
+                            ssMessage.str("");
+                            ssMessage << "Interface does not exist within the local interfaces (";
+                            for (auto j : m_interfaces)
+                            {
+                              if (j != m_interfaces.begin())
+                              {
+                                ssMessage << ",";
+                              }
+                              ssMessage << j.first;
+                            }
+                            ssMessage << ") or the interfaces within the linked instances [";
+                            for (auto j : m_links)
+                            {
+                              if (j != m_links.begin())
+                              {
+                                ssMessage << ";";
+                              }
+                              ssMessage << (*j)->strNode << "(";
+                              for (auto k : (*j)->interfaces)
+                              {
+                                if (k != (*j)->interfaces.begin())
+                                {
+                                  ssMessage << ",";
+                                }
+                                ssMessage << k.first;
+                              }
+                              ssMessage << ")";
+                            }
+                            ssMessage << "].";
+                            ptJson->insert("Error", ssMessage.str());
                             conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
                           }
                         }

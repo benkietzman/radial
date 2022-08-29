@@ -653,26 +653,21 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
+                  else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
+                  {
+                    for (auto &link : m_links)
+                    {
+                      if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
+                      {
+                        link->responses.push_back(strLine);
+                      }
+                    }
+                  }
                   else
                   {
                     bool bProcessed = false;
                     strError.clear();
-                    if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
-                    {
-                      Json *ptSubJson = new Json(ptJson);
-                      bProcessed = true;
-                      keyRemovals(ptSubJson);
-                      ptSubJson->json(strJson);
-                      delete ptSubJson;
-                      for (auto &link : m_links)
-                      {
-                        if (link->bAuthenticated)
-                        {
-                          link->responses.push_back(strJson);
-                        }
-                      }
-                    }
-                    else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
                     {
                       if (ptJson->m["Function"]->v == "ping")
                       {
