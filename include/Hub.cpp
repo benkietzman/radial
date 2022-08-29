@@ -186,7 +186,7 @@ void Hub::links()
     ptJson->m["Links"]->m[i->strNode]->insert("Server", i->strServer);
     ptJson->m["Links"]->m[i->strNode]->insert("Port", i->strPort);
     ptJson->m["Links"]->m[i->strNode]->m["Interfaces"] = new Json;
-    for (auto &j : m_interfaces)
+    for (auto &j : i->interfaces)
     {
       stringstream ssPid;
       ssPid << j.second->nPid;
