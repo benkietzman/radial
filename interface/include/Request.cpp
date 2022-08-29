@@ -279,7 +279,11 @@ void Request::process(string strPrefix)
                   {
                     if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
                     {
-                      if (ptJson->m["Function"]->v == "shutdown")
+                      if (ptJson->m["Function"]->v == "links")
+                      {
+                        links(ptJson);
+                      }
+                      else if (ptJson->m["Function"]->v == "shutdown")
                       {
                         ssMessage.str("");
                         ssMessage << strPrefix << " [stdin,hub," << ptJson->m["Function"]->v << "]:  Shutting down.";
@@ -289,7 +293,7 @@ void Request::process(string strPrefix)
                       else
                       {
                         ssMessage.str("");
-                        ssMessage << strPrefix << " error [stdin,hub," << ptJson->m["Function"]->v << "]:  Please provide a valid Function:  shutdown.";
+                        ssMessage << strPrefix << " error [stdin,hub," << ptJson->m["Function"]->v << "]:  Please provide a valid Function:  links, shutdown.";
                         log(ssMessage.str());
                       }
                     }

@@ -341,6 +341,69 @@ void Interface::keyRemovals(Json *ptJson)
   }
 }
 // }}}
+// {{{ links()
+void Interface::links(Json *ptJson)
+{
+  if (ptJson->m["Function"]->v == "links")
+  {
+    for (auto &i : m_links)
+    {
+      for (auto &j : i->interfaces)
+      {
+        delete j.second;
+      }
+      i->interfaces.clear();
+      delete i;
+    }
+    m_links.clear();
+    if (ptJson->m.find("Links") != ptJson->m.end())
+    {
+      for (auto &i : ptJson->m["Links"]->m)
+      {
+        radialLink *ptLink = new radialLink;
+        ptLink->strNode = i.first;
+        if (i.second->m.find("Server") != i.second->m.end() && !i.second->m["Server"]->v.empty())
+        {
+          ptLink->strServer = i.second->m["Server"]->v;
+        }
+        if (i.second->m.find("Port") != i.second->m.end() && !i.second->m["Port"]->v.empty())
+        {
+          ptLink->strPort = i.second->m["Port"]->v;
+        }
+        if (i.second->m.find("Interfaces") != i.second->m.end())
+        {
+          for (auto &j : i.second->m["Interfaces"]->m)
+          {
+            ptLink->interfaces[j.first] = new radialInterface;
+            if (j.second->m.find("AccessFunction") != j.second->m.end() && !j.second->m["AccessFunction"]->v.empty())
+            {
+              ptLink->interfaces[j.first]->strAccessFunction = j.second->m["AccessFunction"]->v;
+            }
+            if (j.second->m.find("Command") != j.second->m.end() && !j.second->m["Command"]->v.empty())
+            {
+              ptLink->interfaces[j.first]->strCommand = j.second->m["Command"]->v;
+            }
+            if (j.second->m.find("PID") != j.second->m.end() && !j.second->m["PID"]->v.empty())
+            {
+              stringstream ssPid(j.second->m["PID"]->v);
+              ssPid >> ptLink->interfaces[j.first]->nPid;
+            }
+            if (j.second->m.find("Respawn") != j.second->m.end() && !j.second->m["Respawn"]->v.empty())
+            {
+              ptLink->interfaces[j.first]->bRespawn = ((j.second->m["Respawn"]->v == "1")?true:false);
+            }
+            if (j.second->m.find("Restricted") != j.second->m.end() && !j.second->m["Restricted"]->v.empty())
+            {
+              ptLink->interfaces[j.first]->bRestricted = ((j.second->m["Restricted"]->v == "1")?true:false);
+            }
+          }
+        }
+        m_links.push_back(ptLink);
+      }
+    }
+  }
+}
+// }}}
 // {{{ log()
 void Interface::log(const string strMessage)
 {
@@ -579,61 +642,7 @@ void Interface::process(string strPrefix)
                 // {{{ links
                 else if (ptJson->m["Function"]->v == "links")
                 {
-                  for (auto &i : m_links)
-                  {
-                    for (auto &j : i->interfaces)
-                    {
-                      delete j.second;
-                    }
-                    i->interfaces.clear();
-                    delete i;
-                  }
-                  m_links.clear();
-                  if (ptJson->m.find("Links") != ptJson->m.end())
-                  {
-                    for (auto &i : ptJson->m["Links"]->m)
-                    {
-                      radialLink *ptLink = new radialLink;
-                      ptLink->strNode = i.first;
-                      if (i.second->m.find("Server") != i.second->m.end() && !i.second->m["Server"]->v.empty())
-                      {
-                        ptLink->strServer = i.second->m["Server"]->v;
-                      }
-                      if (i.second->m.find("Port") != i.second->m.end() && !i.second->m["Port"]->v.empty())
-                      {
-                        ptLink->strPort = i.second->m["Port"]->v;
-                      }
-                      if (i.second->m.find("Interfaces") != i.second->m.end())
-                      {
-                        for (auto &j : i.second->m["Interfaces"]->m)
-                        {
-                          ptLink->interfaces[j.first] = new radialInterface;
-                          if (j.second->m.find("AccessFunction") != j.second->m.end() && !j.second->m["AccessFunction"]->v.empty())
-                          {
-                            ptLink->interfaces[j.first]->strAccessFunction = j.second->m["AccessFunction"]->v;
-                          }
-                          if (j.second->m.find("Command") != j.second->m.end() && !j.second->m["Command"]->v.empty())
-                          {
-                            ptLink->interfaces[j.first]->strCommand = j.second->m["Command"]->v;
-                          }
-                          if (j.second->m.find("PID") != j.second->m.end() && !j.second->m["PID"]->v.empty())
-                          {
-                            stringstream ssPid(j.second->m["PID"]->v);
-                            ssPid >> ptLink->interfaces[j.first]->nPid;
-                          }
-                          if (j.second->m.find("Respawn") != j.second->m.end() && !j.second->m["Respawn"]->v.empty())
-                          {
-                            ptLink->interfaces[j.first]->bRespawn = ((j.second->m["Respawn"]->v == "1")?true:false);
-                          }
-                          if (j.second->m.find("Restricted") != j.second->m.end() && !j.second->m["Restricted"]->v.empty())
-                          {
-                            ptLink->interfaces[j.first]->bRestricted = ((j.second->m["Restricted"]->v == "1")?true:false);
-                          }
-                        }
-                      }
-                      m_links.push_back(ptLink);
-                    }
-                  }
+                  links(ptJson);
                 }
                 // }}}
                 // {{{ shutdown
