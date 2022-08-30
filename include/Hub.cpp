@@ -472,7 +472,7 @@ void Hub::process(string strPrefix)
                           {
                             ssMessage << ", ";
                           }
-                          ssMessage << linkIter->first << " (";
+                          ssMessage << linkIter->first << "(";
                           ptLink->strNode = linkIter->first;
                           if (linkIter->second->m.find("Server") != linkIter->second->m.end() && !linkIter->second->m["Server"]->v.empty())
                           {

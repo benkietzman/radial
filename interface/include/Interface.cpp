@@ -416,7 +416,7 @@ void Interface::links(string strPrefix, Json *ptJson)
         {
           ssMessage << ", ";
         }
-        ssMessage << linkIter->first << " (";
+        ssMessage << linkIter->first << "(";
         ptLink->strNode = linkIter->first;
         if (linkIter->second->m.find("Server") != linkIter->second->m.end() && !linkIter->second->m["Server"]->v.empty())
         {
@@ -687,6 +687,7 @@ void Interface::process(string strPrefix)
                       Json *ptLink = new Json(ptJson);
                       keyRemovals(ptLink);
                       ptLink->insert("_source", "hub");
+                      ptLink->insert("Function", "interfaces");
                       hub("link", ptLink, false);
                       delete ptLink;
                     }
