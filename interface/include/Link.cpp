@@ -642,7 +642,7 @@ void Link::process(string strPrefix)
                       else
                       {
                         ssMessage.str("");
-                        ssMessage << strPrefix << " error [stdin,hub," << ptJson->m["Function"]->v << "]:  Please provide a valid Function:  shutdown.";
+                        ssMessage << strPrefix << " error [stdin,hub," << ptJson->m["Function"]->v << "]:  Please provide a valid Function:  interfaces, shutdown.";
                         log(ssMessage.str());
                       }
                       // }}}

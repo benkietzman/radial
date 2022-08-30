@@ -412,6 +412,75 @@ void Hub::process(string strPrefix)
                     m_interfaces[ptJson->m["_source"]->v]->strBuffers[1].append(strLine + "\n");
                   }
                 }
+                else if (sockets[fds[i].fd] == "link" && ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
+                {
+                  for (auto &link : m_links)
+                  {
+                    for (auto &interface : link->interfaces)
+                    {
+                      delete interface.second;
+                    }
+                    link->interfaces.clear();
+                    delete link;
+                  }
+                  m_links.clear();
+                  if (ptJson->m.find("Links") != ptJson->m.end())
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::fdRead() [" << sockets[fds[i].fd] << ",links]:  Received the following links:  ";
+                    for (auto linkIter = ptJson->m["Links"]->m.begin(); linkIter != ptJson->m["Links"]->m.end(); linkIter++)
+                    {
+                      radialLink *ptLink = new radialLink;
+                      if (linkIter != ptJson->m["Links"]->m.begin())
+                      {
+                        ssMessage << ", ";
+                      }
+                      ssMessage << linkIter->first << "(";
+                      ptLink->strNode = linkIter->first;
+                      if (linkIter->second->m.find("Server") != linkIter->second->m.end() && !linkIter->second->m["Server"]->v.empty())
+                      {
+                        ptLink->strServer = linkIter->second->m["Server"]->v;
+                      }
+                      if (linkIter->second->m.find("Port") != linkIter->second->m.end() && !linkIter->second->m["Port"]->v.empty())
+                      {
+                        ptLink->strPort = linkIter->second->m["Port"]->v;
+                      }
+                      if (linkIter->second->m.find("Interfaces") != linkIter->second->m.end())
+                      {
+                        for (auto interfaceIter = linkIter->second->m["Interfaces"]->m.begin(); interfaceIter != linkIter->second->m["Interfaces"]->m.end(); interfaceIter++)
+                        {
+                          if (interfaceIter != linkIter->second->m["Interfaces"]->m.begin())
+                          {
+                            ssMessage << ",";
+                          }
+                          ssMessage << interfaceIter->first;
+                          ptLink->interfaces[interfaceIter->first] = new radialInterface;
+                          if (interfaceIter->second->m.find("AccessFunction") != interfaceIter->second->m.end() && !interfaceIter->second->m["AccessFunction"]->v.empty())
+                          {
+                            ptLink->interfaces[interfaceIter->first]->strAccessFunction = interfaceIter->second->m["AccessFunction"]->v;
+                          }
+                          if (interfaceIter->second->m.find("Command") != interfaceIter->second->m.end() && !interfaceIter->second->m["Command"]->v.empty())
+                          {
+                            ptLink->interfaces[interfaceIter->first]->strCommand = interfaceIter->second->m["Command"]->v;
+                          }
+                          ptLink->interfaces[interfaceIter->first]->nPid = -1;
+                          if (interfaceIter->second->m.find("PID") != interfaceIter->second->m.end() && !interfaceIter->second->m["PID"]->v.empty())
+                          {
+                            stringstream ssPid(interfaceIter->second->m["PID"]->v);
+                            ssPid >> ptLink->interfaces[interfaceIter->first]->nPid;
+                          }
+                          ptLink->interfaces[interfaceIter->first]->bRespawn = ((interfaceIter->second->m.find("Respawn") != interfaceIter->second->m.end() && interfaceIter->second->m["Respawn"]->v == "1")?true:false);
+                          ptLink->interfaces[interfaceIter->first]->bRestricted = ((interfaceIter->second->m.find("Restricted") != interfaceIter->second->m.end() && interfaceIter->second->m["Restricted"]->v == "1")?true:false);
+                        }
+                      }
+                      ssMessage << ")";
+                      m_links.push_back(ptLink);
+                    }
+                    ssMessage << ".";
+                    log(ssMessage.str());
+                  }
+                  links();
+                }
                 else
                 {
                   // {{{ prep work
@@ -446,78 +515,6 @@ void Hub::process(string strPrefix)
                         ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
                         log(ssMessage.str());
                       }
-                    }
-                    // }}}
-                    // {{{ links
-                    else if (ptJson->m["Function"]->v == "links")
-                    {
-                      bResult = true;
-                      for (auto &link : m_links)
-                      {
-                        for (auto &interface : link->interfaces)
-                        {
-                          delete interface.second;
-                        }
-                        link->interfaces.clear();
-                        delete link;
-                      }
-                      m_links.clear();
-                      if (ptJson->m.find("Links") != ptJson->m.end())
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << "->Utility::fdRead() [" << sockets[fds[i].fd] << ",links]:  Received the following links:  ";
-                        for (auto linkIter = ptJson->m["Links"]->m.begin(); linkIter != ptJson->m["Links"]->m.end(); linkIter++)
-                        {
-                          radialLink *ptLink = new radialLink;
-                          if (linkIter != ptJson->m["Links"]->m.begin())
-                          {
-                            ssMessage << ", ";
-                          }
-                          ssMessage << linkIter->first << "(";
-                          ptLink->strNode = linkIter->first;
-                          if (linkIter->second->m.find("Server") != linkIter->second->m.end() && !linkIter->second->m["Server"]->v.empty())
-                          {
-                            ptLink->strServer = linkIter->second->m["Server"]->v;
-                          }
-                          if (linkIter->second->m.find("Port") != linkIter->second->m.end() && !linkIter->second->m["Port"]->v.empty())
-                          {
-                            ptLink->strPort = linkIter->second->m["Port"]->v;
-                          }
-                          if (linkIter->second->m.find("Interfaces") != linkIter->second->m.end())
-                          {
-                            for (auto interfaceIter = linkIter->second->m["Interfaces"]->m.begin(); interfaceIter != linkIter->second->m["Interfaces"]->m.end(); interfaceIter++)
-                            {
-                              if (interfaceIter != linkIter->second->m["Interfaces"]->m.begin())
-                              {
-                                ssMessage << ",";
-                              }
-                              ssMessage << interfaceIter->first;
-                              ptLink->interfaces[interfaceIter->first] = new radialInterface;
-                              if (interfaceIter->second->m.find("AccessFunction") != interfaceIter->second->m.end() && !interfaceIter->second->m["AccessFunction"]->v.empty())
-                              {
-                                ptLink->interfaces[interfaceIter->first]->strAccessFunction = interfaceIter->second->m["AccessFunction"]->v;
-                              }
-                              if (interfaceIter->second->m.find("Command") != interfaceIter->second->m.end() && !interfaceIter->second->m["Command"]->v.empty())
-                              {
-                                ptLink->interfaces[interfaceIter->first]->strCommand = interfaceIter->second->m["Command"]->v;
-                              }
-                              ptLink->interfaces[interfaceIter->first]->nPid = -1;
-                              if (interfaceIter->second->m.find("PID") != interfaceIter->second->m.end() && !interfaceIter->second->m["PID"]->v.empty())
-                              {
-                                stringstream ssPid(interfaceIter->second->m["PID"]->v);
-                                ssPid >> ptLink->interfaces[interfaceIter->first]->nPid;
-                              }
-                              ptLink->interfaces[interfaceIter->first]->bRespawn = ((interfaceIter->second->m.find("Respawn") != interfaceIter->second->m.end() && interfaceIter->second->m["Respawn"]->v == "1")?true:false);
-                              ptLink->interfaces[interfaceIter->first]->bRestricted = ((interfaceIter->second->m.find("Restricted") != interfaceIter->second->m.end() && interfaceIter->second->m["Restricted"]->v == "1")?true:false);
-                            }
-                          }
-                          ssMessage << ")";
-                          m_links.push_back(ptLink);
-                        }
-                        ssMessage << ".";
-                        log(ssMessage.str());
-                      }
-                      links();
                     }
                     // }}}
                     // {{{ list
@@ -579,7 +576,7 @@ void Hub::process(string strPrefix)
                     // {{{ invalid
                     else
                     {
-                      strError = "Please provide a valid Function:  add, links, list, ping, remove, shutdown.";
+                      strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
                     }
                     // }}}
                   }
