@@ -610,6 +610,7 @@ void Link::process(string strPrefix)
                       // {{{ interfaces
                       if (ptJson->m["Function"]->v == "interfaces")
                       {
+                        interfaces(ptJson);
                         if (ptJson->m.find("Interfaces") != ptJson->m.end())
                         {
                           Json *ptWrite = new Json;
@@ -1014,7 +1015,7 @@ void Link::process(string strPrefix)
                           if (ptJson->m.find("Interfaces") != ptJson->m.end())
                           {
                             ssMessage.str("");
-                            ssMessage << strPrefix << "->Utility::sslRead() [" << ptLink->strNode << ",interfaces]:  Received the following interfaces:  ";
+                            ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "]:  Received the following interfaces:  ";
                             for (auto interfaceIter = ptJson->m["Interfaces"]->m.begin(); interfaceIter != ptJson->m["Interfaces"]->m.end(); interfaceIter++)
                             {
                               if (interfaceIter != ptJson->m["Interfaces"]->m.begin())
