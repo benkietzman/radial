@@ -285,7 +285,7 @@ void Request::process(string strPrefix)
                       }
                       else if (ptJson->m["Function"]->v == "links")
                       {
-                        links(ptJson);
+                        links(strPrefix, ptJson);
                       }
                       else if (ptJson->m["Function"]->v == "shutdown")
                       {

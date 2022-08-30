@@ -452,16 +452,16 @@ void Link::process(string strPrefix)
                 ptWrite = new Json;
                 ptWrite->insert("_function", "interfaces");
                 ptWrite->m["Interfaces"] = new Json;
-                for (auto &i : m_interfaces)
+                for (auto &interface : m_interfaces)
                 {
                   stringstream ssPid;
-                  ssPid << i.second->nPid;
-                  ptWrite->m["Interfaces"]->m[i.first] = new Json;
-                  ptWrite->m["Interfaces"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
-                  ptWrite->m["Interfaces"]->m[i.first]->insert("Command", i.second->strCommand);
-                  ptWrite->m["Interfaces"]->m[i.first]->insert("PID", ssPid.str(), 'n');
-                  ptWrite->m["Interfaces"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
-                  ptWrite->m["Interfaces"]->m[i.first]->insert("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+                  ssPid << interface.second->nPid;
+                  ptWrite->m["Interfaces"]->m[interface.first] = new Json;
+                  ptWrite->m["Interfaces"]->m[interface.first]->insert("AccessFunction", interface.second->strAccessFunction);
+                  ptWrite->m["Interfaces"]->m[interface.first]->insert("Command", interface.second->strCommand);
+                  ptWrite->m["Interfaces"]->m[interface.first]->insert("PID", ssPid.str(), 'n');
+                  ptWrite->m["Interfaces"]->m[interface.first]->insert("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
+                  ptWrite->m["Interfaces"]->m[interface.first]->insert("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                 }
                 link->responses.push_back(ptWrite->json(strJson));
                 delete ptWrite;
@@ -847,16 +847,16 @@ void Link::process(string strPrefix)
                   ptWrite = new Json;
                   ptWrite->insert("_function", "interfaces");
                   ptWrite->m["Interfaces"] = new Json;
-                  for (auto &i : m_interfaces)
+                  for (auto &interface : m_interfaces)
                   {
                     stringstream ssPid;
-                    ssPid << i.second->nPid;
-                    ptWrite->m["Interfaces"]->m[i.first] = new Json;
-                    ptWrite->m["Interfaces"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
-                    ptWrite->m["Interfaces"]->m[i.first]->insert("Command", i.second->strCommand);
-                    ptWrite->m["Interfaces"]->m[i.first]->insert("PID", ssPid.str(), 'n');
-                    ptWrite->m["Interfaces"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
-                    ptWrite->m["Interfaces"]->m[i.first]->insert("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+                    ssPid << interface.second->nPid;
+                    ptWrite->m["Interfaces"]->m[interface.first] = new Json;
+                    ptWrite->m["Interfaces"]->m[interface.first]->insert("AccessFunction", interface.second->strAccessFunction);
+                    ptWrite->m["Interfaces"]->m[interface.first]->insert("Command", interface.second->strCommand);
+                    ptWrite->m["Interfaces"]->m[interface.first]->insert("PID", ssPid.str(), 'n');
+                    ptWrite->m["Interfaces"]->m[interface.first]->insert("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
+                    ptWrite->m["Interfaces"]->m[interface.first]->insert("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                   }
                   ptLink->responses.push_back(ptWrite->json(strJson));
                   delete ptWrite;
@@ -1006,52 +1006,61 @@ void Link::process(string strPrefix)
                         else if (ptJson->m["_function"]->v == "interfaces")
                         {
                           Json *ptLinks = new Json;
-                          for (auto &j : ptLink->interfaces)
+                          for (auto &interface : ptLink->interfaces)
                           {
-                            delete j.second;
+                            delete interface.second;
                           }
                           ptLink->interfaces.clear();
                           if (ptJson->m.find("Interfaces") != ptJson->m.end())
                           {
-                            for (auto &j : ptJson->m["Interfaces"]->m)
+                            ssMessage.str("");
+                            ssMessage << strPrefix << "->Utility::sslRead() [" << ptLink->strNode << ",interfaces]:  Received the following interfaces:  ";
+                            for (auto interfaceIter = ptJson->m["Interfaces"]->m.begin(); interfaceIter != ptJson->m["Interfaces"]->m.end(); interfaceIter++)
                             {
-                              ptLink->interfaces[j.first] = new radialInterface;
-                              if (j.second->m.find("AccessFunction") != j.second->m.end() && !j.second->m["AccessFunction"]->v.empty())
+                              if (interfaceIter != ptJson->m["Interfaces"]->m.begin())
                               {
-                                ptLink->interfaces[j.first]->strAccessFunction = j.second->m["AccessFunction"]->v;
+                                ssMessage << ", ";
                               }
-                              if (j.second->m.find("Command") != j.second->m.end() && !j.second->m["Command"]->v.empty())
+                              ssMessage << interfaceIter->first;
+                              ptLink->interfaces[interfaceIter->first] = new radialInterface;
+                              if (interfaceIter->second->m.find("AccessFunction") != interfaceIter->second->m.end() && !interfaceIter->second->m["AccessFunction"]->v.empty())
                               {
-                                ptLink->interfaces[j.first]->strCommand = j.second->m["Command"]->v;
+                                ptLink->interfaces[interfaceIter->first]->strAccessFunction = interfaceIter->second->m["AccessFunction"]->v;
                               }
-                              ptLink->interfaces[j.first]->nPid = -1;
-                              if (j.second->m.find("PID") != j.second->m.end() && !j.second->m["PID"]->v.empty())
+                              if (interfaceIter->second->m.find("Command") != interfaceIter->second->m.end() && !interfaceIter->second->m["Command"]->v.empty())
+                              {
+                                ptLink->interfaces[interfaceIter->first]->strCommand = interfaceIter->second->m["Command"]->v;
+                              }
+                              ptLink->interfaces[interfaceIter->first]->nPid = -1;
+                              if (interfaceIter->second->m.find("PID") != interfaceIter->second->m.end() && !interfaceIter->second->m["PID"]->v.empty())
                               { 
-                                stringstream ssPid(j.second->m["PID"]->v);
-                                ssPid >> ptLink->interfaces[j.first]->nPid;
+                                stringstream ssPid(interfaceIter->second->m["PID"]->v);
+                                ssPid >> ptLink->interfaces[interfaceIter->first]->nPid;
                               }
-                              ptLink->interfaces[j.first]->bRespawn = ((j.second->m.find("Respawn") != j.second->m.end() && j.second->m["Respawn"]->v == "1")?true:false);
-                              ptLink->interfaces[j.first]->bRestricted = ((j.second->m.find("Restricted") != j.second->m.end() && j.second->m["Restricted"]->v == "1")?true:false);
+                              ptLink->interfaces[interfaceIter->first]->bRespawn = ((interfaceIter->second->m.find("Respawn") != interfaceIter->second->m.end() && interfaceIter->second->m["Respawn"]->v == "1")?true:false);
+                              ptLink->interfaces[interfaceIter->first]->bRestricted = ((interfaceIter->second->m.find("Restricted") != interfaceIter->second->m.end() && interfaceIter->second->m["Restricted"]->v == "1")?true:false);
                             }
+                            ssMessage << ".";
+                            log(ssMessage.str());
                           }
                           ptLinks->insert("Function", "links");
                           ptLinks->m["Links"] = new Json;
-                          for (auto &j : m_links)
+                          for (auto &link : m_links)
                           {
-                            ptLinks->m["Links"]->m[j->strNode] = new Json;
-                            ptLinks->m["Links"]->m[j->strNode]->insert("Server", j->strServer);
-                            ptLinks->m["Links"]->m[j->strNode]->insert("Port", j->strPort);
-                            ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"] = new Json;
-                            for (auto &k : j->interfaces)
+                            ptLinks->m["Links"]->m[link->strNode] = new Json;
+                            ptLinks->m["Links"]->m[link->strNode]->insert("Server", link->strServer);
+                            ptLinks->m["Links"]->m[link->strNode]->insert("Port", link->strPort);
+                            ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"] = new Json;
+                            for (auto &interface : link->interfaces)
                             {
                               stringstream ssPid;
-                              ssPid << k.second->nPid;
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first] = new Json;
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first]->insert("AccessFunction", k.second->strAccessFunction);
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first]->insert("Command", k.second->strCommand);
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first]->insert("PID", ssPid.str(), 'n');
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first]->insert("Respawn", ((k.second->bRespawn)?"1":"0"), ((k.second->bRespawn)?'1':'0'));
-                              ptLinks->m["Links"]->m[j->strNode]->m["Interfaces"]->m[k.first]->insert("Restricted", ((k.second->bRestricted)?"1":"0"), ((k.second->bRestricted)?'1':'0'));
+                              ssPid << interface.second->nPid;
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first] = new Json;
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("AccessFunction", interface.second->strAccessFunction);
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Command", interface.second->strCommand);
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("PID", ssPid.str(), 'n');
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                             }
                           }
                           hub(ptLinks, false);
@@ -1072,7 +1081,7 @@ void Link::process(string strPrefix)
                         else
                         {
                           ptJson->insert("Status", "error");
-                          ptJson->insert("Error", "Please provide a valid _function:  handshake, master.");
+                          ptJson->insert("Error", "Please provide a valid _function:  handshake, interfaces, master.");
                           ptJson->json(strJson);
                           ptLink->responses.push_back(strJson);
                         }
