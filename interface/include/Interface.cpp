@@ -319,8 +319,11 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
 }
 // }}}
 // {{{ interfaces()
-void Interface::interfaces(Json *ptJson)
+void Interface::interfaces(string strPrefix, Json *ptJson)
 {
+  stringstream ssMessage;
+
+  strPrefix += "->Interface::interfaces()";
   m_mutexShare.lock();
   for (auto &i : m_interfaces)
   {
@@ -329,26 +332,35 @@ void Interface::interfaces(Json *ptJson)
   m_interfaces.clear();
   if (ptJson->m.find("Interfaces") != ptJson->m.end())
   {
-    for (auto &i : ptJson->m["Interfaces"]->m)
+    ssMessage.str("");
+    ssMessage << strPrefix << ":  Received the following interfaces:  ";
+    for (auto interfaceIter = ptJson->m["Interfaces"]->m.begin(); interfaceIter != ptJson->m["Interfaces"]->m.end(); interfaceIter++)
     {
-      m_interfaces[i.first] = new radialInterface;
-      if (i.second->m.find("AccessFunction") != i.second->m.end() && !i.second->m["AccessFunction"]->v.empty())
+      if (interfaceIter != ptJson->m["Interfaces"]->m.begin())
       {
-        m_interfaces[i.first]->strAccessFunction = i.second->m["AccessFunction"]->v;
+        ssMessage << ", ";
       }
-      if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
+      ssMessage << interfaceIter->first;
+      m_interfaces[interfaceIter->first] = new radialInterface;
+      if (interfaceIter->second->m.find("AccessFunction") != interfaceIter->second->m.end() && !interfaceIter->second->m["AccessFunction"]->v.empty())
       {
-        m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
+        m_interfaces[interfaceIter->first]->strAccessFunction = interfaceIter->second->m["AccessFunction"]->v;
       }
-      m_interfaces[i.first]->nPid = -1;
-      if (i.second->m.find("PID") != i.second->m.end() && !i.second->m["PID"]->v.empty())
+      if (interfaceIter->second->m.find("Command") != interfaceIter->second->m.end() && !interfaceIter->second->m["Command"]->v.empty())
       {
-        stringstream ssPid(i.second->m["PID"]->v);
-        ssPid >> m_interfaces[i.first]->nPid;
+        m_interfaces[interfaceIter->first]->strCommand = interfaceIter->second->m["Command"]->v;
       }
-      m_interfaces[i.first]->bRespawn = ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false);
-      m_interfaces[i.first]->bRestricted = ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false);
+      m_interfaces[interfaceIter->first]->nPid = -1;
+      if (interfaceIter->second->m.find("PID") != interfaceIter->second->m.end() && !interfaceIter->second->m["PID"]->v.empty())
+      {
+        stringstream ssPid(interfaceIter->second->m["PID"]->v);
+        ssPid >> m_interfaces[interfaceIter->first]->nPid;
+      }
+      m_interfaces[interfaceIter->first]->bRespawn = ((interfaceIter->second->m.find("Respawn") != interfaceIter->second->m.end() && interfaceIter->second->m["Respawn"]->v == "1")?true:false);
+      m_interfaces[interfaceIter->first]->bRestricted = ((interfaceIter->second->m.find("Restricted") != interfaceIter->second->m.end() && interfaceIter->second->m["Restricted"]->v == "1")?true:false);
     }
+    ssMessage << ".";
+    log(ssMessage.str());
   }
   m_mutexShare.unlock();
 }
@@ -381,6 +393,7 @@ void Interface::links(string strPrefix, Json *ptJson)
 {
   stringstream ssMessage;
 
+  strPrefix += "->Interface::links()";
   m_mutexShare.lock();
   for (auto &link : m_links)
   {
