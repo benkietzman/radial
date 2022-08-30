@@ -114,7 +114,6 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->nPid = nPid;
           m_interfaces[strName]->strAccessFunction = strAccessFunction;
           m_interfaces[strName]->strCommand = strCommand;
-          interfaces();
         }
         else
         {
@@ -272,6 +271,7 @@ bool Hub::load(string strPrefix, string &strError)
       ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
       strError = ssMessage.str();
     }
+    interfaces();
   }
 
   return bResult;
@@ -430,6 +430,7 @@ void Hub::process(string strPrefix)
                           if (add(strPrefix, ptJson->m["Name"]->v, ((ptJson->m.find("AccessFunction") != ptJson->m.end() && !ptJson->m["AccessFunction"]->v.empty())?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
                           {
                             bResult = true;
+                            interfaces();
                           }
                         }
                         else
@@ -640,9 +641,13 @@ void Hub::process(string strPrefix)
       delete[] fds;
       removals.sort();
       removals.unique();
-      for (auto &i : removals)
+      if (!removals.empty())
       {
-        remove(strPrefix, i);
+        for (auto &i : removals)
+        {
+          remove(strPrefix, i);
+        }
+        interfaces();
       }
       monitor(strPrefix);
       if (shutdown())
@@ -710,7 +715,6 @@ void Hub::remove(string strPrefix, const string strName)
     {
       delete m_interfaces[strName];
       m_interfaces.erase(strName);
-      interfaces();
     }
   }
 }
