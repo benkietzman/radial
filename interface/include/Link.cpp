@@ -610,7 +610,7 @@ void Link::process(string strPrefix)
                       // {{{ interfaces
                       if (ptJson->m["Function"]->v == "interfaces")
                       {
-                        interfaces(ptJson);
+                        interfaces(strPrefix, ptJson);
                         if (ptJson->m.find("Interfaces") != ptJson->m.end())
                         {
                           Json *ptWrite = new Json;

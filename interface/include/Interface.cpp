@@ -653,7 +653,7 @@ void Interface::process(string strPrefix)
                 // {{{ interfaces
                 if (ptJson->m["Function"]->v == "interfaces")
                 {
-                  interfaces(ptJson);
+                  interfaces(strPrefix, ptJson);
                 }
                 // }}}
                 // {{{ links

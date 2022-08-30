@@ -281,7 +281,7 @@ void Request::process(string strPrefix)
                     {
                       if (ptJson->m["Function"]->v == "interfaces")
                       {
-                        interfaces(ptJson);
+                        interfaces(strPrefix, ptJson);
                       }
                       else if (ptJson->m["Function"]->v == "links")
                       {
