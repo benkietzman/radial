@@ -524,7 +524,7 @@ void Request::process(string strPrefix)
                             stringstream ssUnique;
                             ptJson->insert("_source", m_strName);
                             ptJson->insert("_target", strTarget);
-                            ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique++;
+                            ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                             ptJson->insert("_unique", ssUnique.str());
                             if (!strNode.empty())
                             {
