@@ -324,6 +324,7 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
   stringstream ssMessage;
 
   strPrefix += "->Interface::interfaces()";
+  ssMessage << strPrefix << ":  Received the following interfaces:  ";
   m_mutexShare.lock();
   for (auto &i : m_interfaces)
   {
@@ -332,8 +333,6 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
   m_interfaces.clear();
   if (ptJson->m.find("Interfaces") != ptJson->m.end())
   {
-    ssMessage.str("");
-    ssMessage << strPrefix << ":  Received the following interfaces:  ";
     for (auto interfaceIter = ptJson->m["Interfaces"]->m.begin(); interfaceIter != ptJson->m["Interfaces"]->m.end(); interfaceIter++)
     {
       if (interfaceIter != ptJson->m["Interfaces"]->m.begin())
@@ -359,10 +358,10 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
       m_interfaces[interfaceIter->first]->bRespawn = ((interfaceIter->second->m.find("Respawn") != interfaceIter->second->m.end() && interfaceIter->second->m["Respawn"]->v == "1")?true:false);
       m_interfaces[interfaceIter->first]->bRestricted = ((interfaceIter->second->m.find("Restricted") != interfaceIter->second->m.end() && interfaceIter->second->m["Restricted"]->v == "1")?true:false);
     }
-    ssMessage << ".";
-    log(ssMessage.str());
   }
   m_mutexShare.unlock();
+  ssMessage << ".";
+  log(ssMessage.str());
 }
 // }}}
 // {{{ keyRemovals()
@@ -394,6 +393,7 @@ void Interface::links(string strPrefix, Json *ptJson)
   stringstream ssMessage;
 
   strPrefix += "->Interface::links()";
+  ssMessage << strPrefix << ":  Received the following links:  ";
   m_mutexShare.lock();
   for (auto &link : m_links)
   {
@@ -407,8 +407,6 @@ void Interface::links(string strPrefix, Json *ptJson)
   m_links.clear();
   if (ptJson->m.find("Links") != ptJson->m.end())
   {
-    ssMessage.str("");
-    ssMessage << strPrefix << ":  Received the following links:  ";
     for (auto linkIter = ptJson->m["Links"]->m.begin(); linkIter != ptJson->m["Links"]->m.end(); linkIter++)
     {
       radialLink *ptLink = new radialLink;
@@ -457,10 +455,10 @@ void Interface::links(string strPrefix, Json *ptJson)
       ssMessage << ")";
       m_links.push_back(ptLink);
     }
-    ssMessage << ".";
-    log(ssMessage.str());
   }
   m_mutexShare.unlock();
+  ssMessage << ".";
+  log(ssMessage.str());
 }
 // }}}
 // {{{ log()
