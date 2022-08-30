@@ -166,7 +166,7 @@ void Link::process(string strPrefix)
   SSL_CTX *ctxC = NULL, *ctxS = NULL;
   string strError, strJson;
   stringstream ssMessage;
-  strPrefix += "->Link::socket()";
+  strPrefix += "->Link::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
   {   
     lArg |= O_NONBLOCK;
@@ -1076,15 +1076,6 @@ void Link::process(string strPrefix)
                             m_bUpdate = true;
                           }
                           m_strMaster = ptJson->m["Node"]->v;
-                        }
-                        // }}}
-                        // {{{ invalid
-                        else
-                        {
-                          ptJson->insert("Status", "error");
-                          ptJson->insert("Error", "Please provide a valid _function:  handshake, interfaces, master.");
-                          ptJson->json(strJson);
-                          ptLink->responses.push_back(strJson);
                         }
                         // }}}
                         if (bStorageTransmit)
