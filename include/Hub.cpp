@@ -150,7 +150,7 @@ void Hub::interfaces()
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("_source", "hub");
+  ptJson->insert("_s", "hub");
   ptJson->insert("Function", "interfaces");
   ptJson->m["Interfaces"] = new Json;
   for (auto &i : m_interfaces)
@@ -176,7 +176,7 @@ void Hub::links()
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("_source", "hub");
+  ptJson->insert("_s", "hub");
   ptJson->insert("Function", "links");
   ptJson->m["Links"] = new Json;
   for (auto &link : m_links)
@@ -369,22 +369,22 @@ void Hub::process(string strPrefix)
               {
                 ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
                 m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
-                if (ptJson->m.find("_target") != ptJson->m.end() && !ptJson->m["_target"]->v.empty())
+                if (ptJson->m.find("_t") != ptJson->m.end() && !ptJson->m["_t"]->v.empty())
                 {
-                  if (ptJson->m.find("_destination") == ptJson->m.end())
+                  if (ptJson->m.find("_d") == ptJson->m.end())
                   {
-                    if (m_interfaces.find(ptJson->m["_target"]->v) != m_interfaces.end())
+                    if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
                     {
-                      ptJson->insert("_destination", "target");
+                      ptJson->insert("_d", "t");
                       ptJson->json(strLine);
-                      m_interfaces[ptJson->m["_target"]->v]->strBuffers[1].append(strLine + "\n");
+                      m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(strLine + "\n");
                     }
                     else
                     {
                       list<radialLink *>::iterator linkIter = m_links.end();
                       for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
                       {
-                        if ((*i)->interfaces.find(ptJson->m["_target"]->v) != (*i)->interfaces.end())
+                        if ((*i)->interfaces.find(ptJson->m["_t"]->v) != (*i)->interfaces.end())
                         {
                           linkIter = i;
                         }
@@ -395,21 +395,21 @@ void Hub::process(string strPrefix)
                         ptJson->json(strLine);
                         m_interfaces["link"]->strBuffers[1].append(strLine + "\n");
                       }
-                      else if (ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
+                      else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                       {
-                        ptJson->insert("_destination", "source");
+                        ptJson->insert("_d", "s");
                         ptJson->insert("Status", "error");
                         ptJson->insert("Error", "Interface does not exist.");
                         ptJson->json(strLine);
-                        m_interfaces[ptJson->m["_source"]->v]->strBuffers[1].append(strLine + "\n");
+                        m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(strLine + "\n");
                       }
                     }
                   }
-                  else if (ptJson->m["_destination"]->v == "target" && ptJson->m.find("_source") != ptJson->m.end() && !ptJson->m["_source"]->v.empty() && m_interfaces.find(ptJson->m["_source"]->v) != m_interfaces.end())
+                  else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                   {
-                    ptJson->insert("_destination", "source");
+                    ptJson->insert("_d", "s");
                     ptJson->json(strLine);
-                    m_interfaces[ptJson->m["_source"]->v]->strBuffers[1].append(strLine + "\n");
+                    m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(strLine + "\n");
                   }
                 }
                 else if (sockets[fds[i].fd] == "link" && ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
@@ -566,7 +566,7 @@ void Hub::process(string strPrefix)
                     // }}}
                   }
                   // {{{ post work
-                  ptJson->insert("_destination", "source");
+                  ptJson->insert("_d", "s");
                   ptJson->insert("Status", ((bResult)?"okay":"error"));
                   if (!strError.empty())
                   {
@@ -709,7 +709,7 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
   Json *ptJson = new Json;
 
   strPrefix += "->shutdown()";
-  ptJson->insert("_source", "hub");
+  ptJson->insert("_s", "hub");
   ptJson->insert("Function", "shutdown");
   ptJson->json(strJson);
   delete ptJson;
@@ -741,8 +741,8 @@ void Hub::target(const string strTarget, Json *ptJson)
 
   if (m_interfaces.find(strTarget) != m_interfaces.end())
   {
-    ptJson->insert("_target", strTarget);
-    ptJson->insert("_destination", "target");
+    ptJson->insert("_t", strTarget);
+    ptJson->insert("_d", "t");
     m_interfaces[strTarget]->strBuffers[1].append(ptJson->json(strJson) + "\n");
   }
 }

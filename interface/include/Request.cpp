@@ -188,20 +188,20 @@ void Request::process(string strPrefix)
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   ptJson = new Json(strLine);
-                  if (ptJson->m.find("_request") != ptJson->m.end())
+                  if (ptJson->m.find("_r") != ptJson->m.end())
                   {
-                    Json *ptSubJson = ptJson->m["_request"];
-                    if (ptSubJson->m.find("_source") != ptSubJson->m.end() && ptSubJson->m["_source"]->v == m_strName && ptSubJson->m.find("_unique") != ptSubJson->m.end() && !ptSubJson->m["_unique"]->v.empty())
+                    Json *ptSubJson = ptJson->m["_r"];
+                    if (ptSubJson->m.find("_s") != ptSubJson->m.end() && ptSubJson->m["_s"]->v == m_strName && ptSubJson->m.find("_u") != ptSubJson->m.end() && !ptSubJson->m["_u"]->v.empty())
                     {
                       int fdClient;
                       size_t unUnique;
-                      stringstream ssUnique(ptSubJson->m["_unique"]->v);
+                      stringstream ssUnique(ptSubJson->m["_u"]->v);
                       ssUnique >> fdClient >> unUnique;
                       if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                       {
-                        if (ptJson->m.find("_target") != ptJson->m.end())
+                        if (ptJson->m.find("_t") != ptJson->m.end())
                         {
-                          if (ptJson->m["_target"]->v == "auth")
+                          if (ptJson->m["_t"]->v == "auth")
                           {
                             if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
                             {
@@ -242,11 +242,11 @@ void Request::process(string strPrefix)
                     {
                       ssMessage.str("");
                       ssMessage << strPrefix << " error [stdin]:  ";
-                      if (ptSubJson->m.find("_source") == ptSubJson->m.end())
+                      if (ptSubJson->m.find("_s") == ptSubJson->m.end())
                       {
                         ssMessage << "Internal source does not exist.";
                       }
-                      else if (ptSubJson->m["_source"]->v != m_strName)
+                      else if (ptSubJson->m["_s"]->v != m_strName)
                       {
                         ssMessage << "Internal source does not match.";
                       }
@@ -257,11 +257,11 @@ void Request::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
+                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
                   {
                     int fdClient;
                     size_t unUnique;
-                    stringstream ssUnique(ptJson->m["_unique"]->v);
+                    stringstream ssUnique(ptJson->m["_u"]->v);
                     ssUnique >> fdClient >> unUnique;
                     if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                     {
@@ -275,7 +275,7 @@ void Request::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "hub")
+                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
                   {
                     if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
                     {
@@ -470,9 +470,9 @@ void Request::process(string strPrefix)
                             if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
                             {
                               stringstream ssUnique;
-                              ptJson->insert("_source", m_strName);
+                              ptJson->insert("_s", m_strName);
                               ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
-                              ptJson->insert("_unique", ssUnique.str());
+                              ptJson->insert("_u", ssUnique.str());
                               hub(ptJson, false);
                             }
                             else
@@ -521,10 +521,10 @@ void Request::process(string strPrefix)
                           if (!strTarget.empty())
                           {
                             stringstream ssUnique;
-                            ptJson->insert("_source", m_strName);
-                            ptJson->insert("_target", strTarget);
+                            ptJson->insert("_s", m_strName);
+                            ptJson->insert("_t", strTarget);
                             ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
-                            ptJson->insert("_unique", ssUnique.str());
+                            ptJson->insert("_u", ssUnique.str());
                             if (!strNode.empty())
                             {
                               ptJson->insert("Node", strNode);
@@ -544,8 +544,8 @@ void Request::process(string strPrefix)
                               }
                               ptAuth->m["Request"] = new Json;
                               ptAuth->m["Request"]->insert("Interface", ptJson->m["Interface"]->v);
-                              ptAuth->m["_request"] = new Json(ptJson);
-                              ptAuth->insert("_source", m_strName);
+                              ptAuth->m["_r"] = new Json(ptJson);
+                              ptAuth->insert("_s", m_strName);
                               hub("auth", ptAuth, false);
                               delete ptAuth;
                             }

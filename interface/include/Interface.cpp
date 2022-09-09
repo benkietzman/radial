@@ -182,13 +182,13 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
 
   if (!strTarget.empty())
   {
-    ptJson->insert("_target", strTarget);
+    ptJson->insert("_t", strTarget);
   }
   if (bWait)
   {
     int fdUnique[2] = {-1, -1}, nReturn;
     stringstream ssMessage;
-    ptJson->insert("_source", m_strName);
+    ptJson->insert("_s", m_strName);
     if ((nReturn = pipe(fdUnique)) == 0)
     {
       bool bExit = false, bResult = false;
@@ -214,7 +214,7 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
         ssUnique.str("");
         ssUnique << m_strName << "_" << unUnique;
       }
-      ptJson->insert("_unique", ssUnique.str());
+      ptJson->insert("_u", ssUnique.str());
       m_waiting[ssUnique.str()] = fdUnique[1];
       ptJson->json(strJson);
       m_responses.push_back(strJson);
@@ -605,12 +605,12 @@ void Interface::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-            if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
+            if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
             {
               m_mutexShare.lock();
-              if (m_waiting.find(ptJson->m["_unique"]->v) != m_waiting.end())
+              if (m_waiting.find(ptJson->m["_u"]->v) != m_waiting.end())
               {
-                fdUnique = m_waiting[ptJson->m["_unique"]->v];
+                fdUnique = m_waiting[ptJson->m["_u"]->v];
               }
               m_mutexShare.unlock();
             }
@@ -618,7 +618,7 @@ void Interface::process(string strPrefix)
             {
               uniques[fdUnique] = strLine + "\n";
             }
-            else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "hub")
+            else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
             {
               if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
               {

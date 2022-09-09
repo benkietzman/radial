@@ -418,7 +418,7 @@ void Link::process(string strPrefix)
               {
                 Json *ptWrite = new Json;
                 freeaddrinfo(link->result);
-                ptWrite->insert("_function", "handshake");
+                ptWrite->insert("_f", "handshake");
                 ptWrite->insert("Password", m_strPassword);
                 ptWrite->m["Links"] = new Json;
                 for (auto &subLink : m_links)
@@ -444,13 +444,13 @@ void Link::process(string strPrefix)
                 if (!m_strMaster.empty())
                 {
                   ptWrite = new Json;
-                  ptWrite->insert("_function", "master");
+                  ptWrite->insert("_f", "master");
                   ptWrite->insert("Node", m_strMaster);
                   link->responses.push_back(ptWrite->json(strJson));
                   delete ptWrite;
                 }
                 ptWrite = new Json;
-                ptWrite->insert("_function", "interfaces");
+                ptWrite->insert("_f", "interfaces");
                 ptWrite->m["Interfaces"] = new Json;
                 for (auto &interface : m_interfaces)
                 {
@@ -469,10 +469,10 @@ void Link::process(string strPrefix)
                 {
                   stringstream ssUnique;
                   Json *ptStorage = new Json;
-                  ptStorage->insert("_function", "storageTransmit");
-                  ptStorage->insert("_source", m_strName);
+                  ptStorage->insert("_f", "storageTransmit");
+                  ptStorage->insert("_s", m_strName);
                   ssUnique << link->fdSocket << " " << link->unUnique++;
-                  ptStorage->insert("_unique", ssUnique.str());
+                  ptStorage->insert("_u", ssUnique.str());
                   ptStorage->insert("Function", "retrieve");
                   hub("storage", ptStorage, false);
                   delete ptStorage;
@@ -543,11 +543,11 @@ void Link::process(string strPrefix)
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   ptJson = new Json(strLine);
-                  if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == m_strName && ptJson->m.find("_unique") != ptJson->m.end() && !ptJson->m["_unique"]->v.empty())
+                  if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
                   {
                     int fdLink;
                     size_t unUnique;
-                    stringstream ssUnique(ptJson->m["_unique"]->v);
+                    stringstream ssUnique(ptJson->m["_u"]->v);
                     radialLink *ptLink = NULL;
                     ssUnique >> fdLink >> unUnique;
                     for (auto i = links.begin(); ptLink == NULL && i != links.end(); i++)
@@ -569,9 +569,9 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink != NULL)
                     {
-                      if (ptJson->m.find("_function") != ptJson->m.end())
+                      if (ptJson->m.find("_f") != ptJson->m.end())
                       {
-                        if (ptJson->m["_function"]->v == "storageTransmit")
+                        if (ptJson->m["_f"]->v == "storageTransmit")
                         {
                           if (ptJson->m.find("Response") != ptJson->m.end())
                           {
@@ -586,7 +586,7 @@ void Link::process(string strPrefix)
                         else
                         {
                           ssMessage.str("");
-                          ssMessage << strPrefix << " error [stdin," << ptLink->strNode << "," << ptJson->m["_function"]->v << "]:  Please provide valid _function:  storageTransmit.";
+                          ssMessage << strPrefix << " error [stdin," << ptLink->strNode << "," << ptJson->m["_f"]->v << "]:  Please provide valid _f:  storageTransmit.";
                           log(ssMessage.str());
                         }
                       }
@@ -603,7 +603,7 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_source") != ptJson->m.end() && ptJson->m["_source"]->v == "hub")
+                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
                   {
                     if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
                     {
@@ -614,7 +614,7 @@ void Link::process(string strPrefix)
                         if (ptJson->m.find("Interfaces") != ptJson->m.end())
                         {
                           Json *ptWrite = new Json;
-                          ptWrite->insert("_function", "interfaces");
+                          ptWrite->insert("_f", "interfaces");
                           ptWrite->m["Interfaces"] = new Json(ptJson->m["Interfaces"]);
                           ptWrite->json(strJson);
                           delete ptWrite;
@@ -677,7 +677,7 @@ void Link::process(string strPrefix)
                           }
                         }
                         keyRemovals(ptJson);
-                        ptJson->m["_link"] = ptLink;
+                        ptJson->m["_l"] = ptLink;
                         (*linkIter)->responses.push_back(ptJson->json(strJson));
                       }
                       else
@@ -814,7 +814,7 @@ void Link::process(string strPrefix)
                   ptLink->rp = NULL;
                   ptLink->ssl = ssl;
                   ptLink->unUnique = unUnique++;
-                  ptWrite->insert("_function", "handshake");
+                  ptWrite->insert("_f", "handshake");
                   if (!m_links.empty())
                   {
                     ptWrite->m["Links"] = new Json;
@@ -840,13 +840,13 @@ void Link::process(string strPrefix)
                   if (!m_strMaster.empty())
                   {
                     ptWrite = new Json;
-                    ptWrite->insert("_function", "master");
+                    ptWrite->insert("_f", "master");
                     ptWrite->insert("Node", m_strMaster);
                     ptLink->responses.push_back(ptWrite->json(strJson));
                     delete ptWrite;
                   }
                   ptWrite = new Json;
-                  ptWrite->insert("_function", "interfaces");
+                  ptWrite->insert("_f", "interfaces");
                   ptWrite->m["Interfaces"] = new Json;
                   for (auto &interface : m_interfaces)
                   {
@@ -920,12 +920,12 @@ void Link::process(string strPrefix)
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
-                      // {{{ _function
-                      if (ptJson->m.find("_function") != ptJson->m.end() && !ptJson->m["_function"]->v.empty())
+                      // {{{ _f
+                      if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
                       {
                         bool bStorageTransmit = false;
                         // {{{ handshake
-                        if (ptJson->m["_function"]->v == "handshake")
+                        if (ptJson->m["_f"]->v == "handshake")
                         {
                           // {{{ Me
                           if (ptJson->m.find("Me") != ptJson->m.end())
@@ -976,7 +976,7 @@ void Link::process(string strPrefix)
                                   if ((unReturn = add(m_links, ptDeepLink)) == 0)
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
+                                    ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_f"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
                                     log(ssMessage.str());
                                   }
                                   delete ptDeepLink;
@@ -992,7 +992,7 @@ void Link::process(string strPrefix)
                             {
                               ptLink->bAuthenticated = true;
                               ssMessage.str("");
-                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_function"]->v << "," << ptLink->strNode << "]:  Authenticated link.";
+                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_f"]->v << "," << ptLink->strNode << "]:  Authenticated link.";
                               log(ssMessage.str());
                               if (m_unLink == RADIAL_LINK_MASTER)
                               {
@@ -1004,7 +1004,7 @@ void Link::process(string strPrefix)
                         }
                         // }}}
                         // {{{ interfaces
-                        else if (ptJson->m["_function"]->v == "interfaces")
+                        else if (ptJson->m["_f"]->v == "interfaces")
                         {
                           Json *ptLinks = new Json;
                           for (auto &interface : ptLink->interfaces)
@@ -1060,7 +1060,7 @@ void Link::process(string strPrefix)
                         }
                         // }}}
                         // {{{ master
-                        else if (ptJson->m["_function"]->v == "master" && ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty() && ptJson->m["Node"]->v != m_strMaster)
+                        else if (ptJson->m["_f"]->v == "master" && ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty() && ptJson->m["Node"]->v != m_strMaster)
                         {
                           if (m_strMaster == m_ptLink->m["Node"]->v || ptJson->m["Node"]->v == m_ptLink->m["Node"]->v)
                           {
@@ -1073,10 +1073,10 @@ void Link::process(string strPrefix)
                         {
                           stringstream ssUnique;
                           Json *ptStorage = new Json;
-                          ptStorage->insert("_function", "storageTransmit");
-                          ptStorage->insert("_source", m_strName);
+                          ptStorage->insert("_f", "storageTransmit");
+                          ptStorage->insert("_s", m_strName);
                           ssUnique << ptLink->fdSocket << " " << ptLink->unUnique++;
-                          ptJson->insert("_unique", ssUnique.str());
+                          ptJson->insert("_u", ssUnique.str());
                           ptStorage->insert("Function", "retrieve");
                           hub("storage", ptStorage, false);
                           delete ptStorage;
@@ -1084,10 +1084,10 @@ void Link::process(string strPrefix)
                       }
                       // }}}
                       // {{{ _link
-                      else if (ptJson->m.find("_link") != ptJson->m.end())
+                      else if (ptJson->m.find("_l") != ptJson->m.end())
                       {
-                        Json *ptLink = ptJson->m["_link"];
-                        ptJson->m.erase("_link");
+                        Json *ptLink = ptJson->m["_l"];
+                        ptJson->m.erase("_l");
                         keyRemovals(ptJson);
                         for (auto &j : ptLink->m)
                         {
@@ -1107,9 +1107,9 @@ void Link::process(string strPrefix)
                           if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                           {
                             stringstream ssUnique;
-                            ptJson->insert("_source", m_strName);
+                            ptJson->insert("_s", m_strName);
                             ssUnique << ptLink->fdSocket << " " << ptLink->unUnique++;
-                            ptJson->insert("_unique", ssUnique.str());
+                            ptJson->insert("_u", ssUnique.str());
                             hub(ptJson->m["Interface"]->v, ptJson, false);
                           }
                           else
@@ -1131,7 +1131,7 @@ void Link::process(string strPrefix)
                       else
                       {
                         ptJson->insert("Status", "error");
-                        ptJson->insert("Error", "Please provide the _function or Interface.");
+                        ptJson->insert("Error", "Please provide the _f or Interface.");
                         ptLink->responses.push_back(ptJson->json(strJson));
                       }
                       // }}}
@@ -1262,7 +1262,7 @@ void Link::process(string strPrefix)
             if (!m_strMaster.empty())
             {
               Json *ptWrite = new Json;
-              ptWrite->insert("_function", "master");
+              ptWrite->insert("_f", "master");
               ptWrite->insert("Node", m_strMaster);
               ptWrite->json(strJson);
               delete ptWrite;
