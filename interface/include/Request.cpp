@@ -541,7 +541,7 @@ void Request::process(string strPrefix)
                             ptAuth->insert("_source", m_strName);
                             if (!strNode.empty())
                             {
-                              ptAuth->insert("_target", strTarget);
+                              ptAuth->insert("Interface", strTarget);
                               strTarget = "link";
                             }
                             hub(strTarget, ptAuth, false);
