@@ -201,7 +201,7 @@ void Request::process(string strPrefix)
                       {
                         if (ptJson->m.find("_t") != ptJson->m.end())
                         {
-                          if (ptJson->m["_t"]->v == "auth")
+                          if (ptJson->m["_t"]->v == "auth" || ptJson->m["_t"]->v == "link")
                           {
                             if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
                             {
@@ -496,11 +496,10 @@ void Request::process(string strPrefix)
                         else
                         {
                           bool bRestricted;
-                          string strNode, strTarget;
+                          string strNode, strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
                           if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                           {
                             bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
-                            strTarget = ptJson->m["Interface"]->v;
                           }
                           else
                           {
@@ -515,7 +514,7 @@ void Request::process(string strPrefix)
                             if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
                             {
                               strNode = (*linkIter)->strNode;
-                              strTarget = "link";
+                              strTarget = strTargetAuth = "link";
                             }
                           }
                           if (!strTarget.empty())
@@ -535,9 +534,9 @@ void Request::process(string strPrefix)
                             }
                             else
                             {
-                              // TODO
                               Json *ptAuth = new Json(ptJson);
                               keyRemovals(ptAuth);
+                              ptAuth->insert("Interface", "auth");
                               if (ptAuth->m.find("Request") != ptAuth->m.end())
                               {
                                 delete ptAuth->m["Request"];
@@ -546,7 +545,8 @@ void Request::process(string strPrefix)
                               ptAuth->m["Request"]->insert("Interface", ptJson->m["Interface"]->v);
                               ptAuth->m["_r"] = new Json(ptJson);
                               ptAuth->insert("_s", m_strName);
-                              hub("auth", ptAuth, false);
+                              ptAuth->insert("_t", strTargetAuth);
+                              hub(ptAuth, false);
                               delete ptAuth;
                             }
                           }
