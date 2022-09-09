@@ -176,6 +176,10 @@ void Interface::hub(Json *ptJson, const bool bWait)
 {
   hub("", ptJson, bWait);
 }
+void Interface::hub(Json *ptJson, const bool bWait)
+{
+  hub("", ptJson, bWait);
+}
 void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
 {
   string strJson;
