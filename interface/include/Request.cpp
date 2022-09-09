@@ -512,9 +512,8 @@ void Request::process(string strPrefix)
                                 linkIter = j;
                               }
                             }
-                            if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
+                            if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
                             {
-                              bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
                               strNode = (*linkIter)->strNode;
                               strTarget = "link";
                             }
@@ -536,6 +535,7 @@ void Request::process(string strPrefix)
                             }
                             else
                             {
+                              // TODO
                               Json *ptAuth = new Json(ptJson);
                               keyRemovals(ptAuth);
                               if (ptAuth->m.find("Request") != ptAuth->m.end())
