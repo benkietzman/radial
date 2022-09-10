@@ -81,11 +81,11 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     stringstream ssRows;
                     bResult = true;
                     ssRows << ullRows;
-                    ptJson->insert("Rows", ssRows.str(), 'n');
+                    ptJson->i("Rows", ssRows.str(), 'n');
                     ptJson->m["Response"] = new Json;
                     while ((row = fetch(result, subFields)) != NULL)
                     {
-                      ptJson->m["Response"]->push_back(*row);
+                      ptJson->m["Response"]->pb(*row);
                       row->clear();
                       delete row;
                     }
@@ -105,7 +105,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 {
                   stringstream ssID;
                   ssID << ullRows;
-                  ptJson->insert("ID", ssID.str(), 'n');
+                  ptJson->i("ID", ssID.str(), 'n');
                 }
               }
               (*mysqlIter)->secure.unlock();
@@ -136,10 +136,10 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the Server.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {

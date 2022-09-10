@@ -60,7 +60,7 @@ bool Interface::auth(Json *ptJson, string &strError)
       delete ptAuth->m["Request"];
     }
     ptAuth->m["Request"] = new Json;
-    ptAuth->m["Request"]->insert("Interface", ptAuth->m["Interface"]->v);
+    ptAuth->m["Request"]->i("Interface", ptAuth->m["Interface"]->v);
   }
   if (hub("auth", ptAuth, strError))
   {
@@ -96,8 +96,8 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
   Json *ptJson = new Json;
 
   ullRows = 0;
-  ptJson->insert("Database", strDatabase);
-  ptJson->insert("Query", strQuery);
+  ptJson->i("Database", strDatabase);
+  ptJson->i("Query", strQuery);
   if (hub("database", ptJson, strError))
   {
     if (ptJson->m.find("Response") != ptJson->m.end())
@@ -149,8 +149,8 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
   Json *ptJson = new Json;
 
   ullID = ullRows = 0;
-  ptJson->insert("Database", strDatabase);
-  ptJson->insert("Update", strUpdate);
+  ptJson->i("Database", strDatabase);
+  ptJson->i("Update", strUpdate);
   if (hub("database", ptJson, strError))
   {
     bResult = true;
@@ -182,13 +182,13 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
 
   if (!strTarget.empty())
   {
-    ptJson->insert("_t", strTarget);
+    ptJson->i("_t", strTarget);
   }
   if (bWait)
   {
     int fdUnique[2] = {-1, -1}, nReturn;
     stringstream ssMessage;
-    ptJson->insert("_s", m_strName);
+    ptJson->i("_s", m_strName);
     if ((nReturn = pipe(fdUnique)) == 0)
     {
       bool bExit = false, bResult = false;
@@ -214,9 +214,9 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
         ssUnique.str("");
         ssUnique << m_strName << "_" << unUnique;
       }
-      ptJson->insert("_u", ssUnique.str());
+      ptJson->i("_u", ssUnique.str());
       m_waiting[ssUnique.str()] = fdUnique[1];
-      ptJson->json(strJson);
+      ptJson->j(strJson);
       m_responses.push_back(strJson);
       m_mutexShare.unlock();
       while (!bExit)
@@ -272,22 +272,22 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
       }
       else
       {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
+        ptJson->i("Status", "error");
+        ptJson->i("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
       }
     }
     else
     {
       ssMessage.str("");
       ssMessage << "pipe(" << errno << ") " << strerror(errno);
-      ptJson->insert("Status", "error");
-      ptJson->insert("Error", ssMessage.str());
+      ptJson->i("Status", "error");
+      ptJson->i("Error", ssMessage.str());
     }
     keyRemovals(ptJson);
   }
   else
   {
-    ptJson->json(strJson);
+    ptJson->j(strJson);
     m_mutexShare.lock();
     m_responses.push_back(strJson);
     m_mutexShare.unlock();
@@ -444,8 +444,8 @@ void Interface::log(const string strFunction, const string strMessage)
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("Function", strFunction);
-  ptJson->insert("Message", strMessage);
+  ptJson->i("Function", strFunction);
+  ptJson->i("Message", strMessage);
   hub("log", ptJson, false);
 
   delete ptJson;
@@ -476,13 +476,13 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   stringstream ssPort;
   Json *ptJson = new Json;
 
-  ptJson->insert("Server", strServer);
+  ptJson->i("Server", strServer);
   ssPort << unPort;
-  ptJson->insert("Port", ssPort.str(), 'n');
-  ptJson->insert("User", strUser);
-  ptJson->insert("Password", strPassword);
-  ptJson->insert("Database", strDatabase);
-  ptJson->insert(strType, strQuery);
+  ptJson->i("Port", ssPort.str(), 'n');
+  ptJson->i("User", strUser);
+  ptJson->i("Password", strPassword);
+  ptJson->i("Database", strDatabase);
+  ptJson->i(strType, strQuery);
   if (hub("mysql", ptJson, strError))
   {
     bResult = true;
@@ -737,21 +737,21 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
   string strJson;
   Json *ptSubJson = new Json;
 
-  ptSubJson->insert("Function", strFunction);
+  ptSubJson->i("Function", strFunction);
   if (!keys.empty())
   {
-    ptSubJson->insert("Keys", keys);
+    ptSubJson->i("Keys", keys);
   }
   if ((strFunction == "add" || strFunction == "update") && ptJson != NULL)
   {
-    ptSubJson->insert("Request", ptJson);
+    ptSubJson->i("Request", ptJson);
   }
   if (hub("storage", ptSubJson, strError))
   {
     bResult = true;
     if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
     {
-      ptSubJson->m["Response"]->json(strJson);
+      ptSubJson->m["Response"]->j(strJson);
       ptJson->parse(strJson);
     }
   }

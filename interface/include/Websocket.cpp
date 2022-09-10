@@ -69,10 +69,10 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the Function.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {
@@ -259,12 +259,12 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   // }}}
   if (!strUser.empty() && !strPassword.empty())
   {
-    ptJson->insert("User", strUser);
-    ptJson->insert("Password", strPassword);
+    ptJson->i("User", strUser);
+    ptJson->i("Password", strPassword);
   }
   if (!strUserID.empty())
   {
-    ptJson->insert("UserID", strUserID);
+    ptJson->i("UserID", strUserID);
   }
   else if (ptJson->m.find("UserID") != ptJson->m.end())
   {
@@ -283,14 +283,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         }
         else
         {
-          ptJson->insert("Status", "error");
-          ptJson->insert("Error", "Please provide a valid Function:  list, ping.");
+          ptJson->i("Status", "error");
+          ptJson->i("Error", "Please provide a valid Function:  list, ping.");
         }
       }
       else
       {
-        ptJson->insert("Status", "error");
-        ptJson->insert("Error", "Please provide the Function.");
+        ptJson->i("Status", "error");
+        ptJson->i("Error", "Please provide the Function.");
       }
     }
     else
@@ -325,7 +325,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       {
         if (!strNode.empty())
         {
-          ptJson->insert("Node", strNode);
+          ptJson->i("Node", strNode);
         }
         if (!bRestricted || auth(ptJson, strError))
         {
@@ -333,13 +333,13 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         }
         else
         {
-          ptJson->insert("Status", "error");
-          ptJson->insert("Error", strError);
+          ptJson->i("Status", "error");
+          ptJson->i("Error", strError);
         }
       }
       else
       {
-        ptJson->insert("Status", "error");
+        ptJson->i("Status", "error");
         ssMessage.str("");
         ssMessage << "Interface does not exist within the local interfaces (";
         m_mutexShare.lock();
@@ -371,14 +371,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         }
         m_mutexShare.unlock();
         ssMessage << "].";
-        ptJson->insert("Error", ssMessage.str());
+        ptJson->i("Error", ssMessage.str());
       }
     }
   }
   else
   {
-    ptJson->insert("Status", "error");
-    ptJson->insert("Error", "Please provide the Interface.");
+    ptJson->i("Status", "error");
+    ptJson->i("Error", "Please provide the Interface.");
   }
   if (ptJson->m.find("Password") != ptJson->m.end())
   {
@@ -386,7 +386,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     ptJson->m.erase("Password");
   }
   ptConn->mutexShare.lock();
-  ptConn->buffers.push_back(ptJson->json(strJson));
+  ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->unThreads > 0)
   {
     ptConn->unThreads--;

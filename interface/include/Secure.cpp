@@ -124,8 +124,8 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               strModule[0] = tolower(strModule[0]);
             }
             ptJson->m["Response"] = new Json;
-            ptJson->m["Response"]->insert("Module", strModule);
-            ptJson->m["Response"]->insert("Type", getLoginType->front()["type"]);
+            ptJson->m["Response"]->i("Module", strModule);
+            ptJson->m["Response"]->i("Type", getLoginType->front()["type"]);
           }
           else
           {
@@ -185,7 +185,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             {
               bResult = true;
               ptJson->m["Response"] = new Json;
-              ptJson->m["Response"]->insert("Redirect", ptJson->m["Request"]->m["Return"]->v);
+              ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
             }
             else
             {
@@ -217,7 +217,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       bResult = true;
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
-      ptJson->m["Response"]->m["auth"]->insert("login_title", "Login");
+      ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
       if (ptJson->m.find("Request") != ptJson->m.end())
       {
         if (ptJson->m["Request"]->m.size() > 1)
@@ -230,7 +230,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           }
           if (ptData->m.find("password") == ptData->m.end() && ptData->m.find("Password") == ptData->m.end())
           {
-            ptData->insert("Password", "");
+            ptData->i("Password", "");
           }
           if (m_pWarden->authz(ptData, strError))
           {
@@ -242,20 +242,20 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               time_t CTime;
               Json *ptJwt = new Json;
               ptData->m["central"]->flatten(getPersonRow, true, false);
-              ptJwt->insert("sl_email", getPersonRow["email"]);
-              ptJson->m["Response"]->m["auth"]->insert("email", getPersonRow["email"]);
-              ptJwt->insert("sl_first_name", getPersonRow["first_name"]);
-              ptJson->m["Response"]->m["auth"]->insert("first_name", getPersonRow["first_name"]);
-              ptJwt->insert("sl_last_name", getPersonRow["last_name"]);
-              ptJson->m["Response"]->m["auth"]->insert("last_name", getPersonRow["last_name"]);
-              ptJwt->insert("sl_login", getPersonRow["userid"]);
-              ptJson->m["Response"]->m["auth"]->insert("userid", getPersonRow["userid"]);
+              ptJwt->i("sl_email", getPersonRow["email"]);
+              ptJson->m["Response"]->m["auth"]->i("email", getPersonRow["email"]);
+              ptJwt->i("sl_first_name", getPersonRow["first_name"]);
+              ptJson->m["Response"]->m["auth"]->i("first_name", getPersonRow["first_name"]);
+              ptJwt->i("sl_last_name", getPersonRow["last_name"]);
+              ptJson->m["Response"]->m["auth"]->i("last_name", getPersonRow["last_name"]);
+              ptJwt->i("sl_login", getPersonRow["userid"]);
+              ptJson->m["Response"]->m["auth"]->i("userid", getPersonRow["userid"]);
               time(&CTime);
               CTime += 1209600;
               ssTime << CTime;
-              ptJwt->insert("exp", ssTime.str(), 'n');
-              ptJwt->insert("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
-              ptJson->m["Response"]->m["auth"]->insert("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
+              ptJwt->i("exp", ssTime.str(), 'n');
+              ptJwt->i("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
+              ptJson->m["Response"]->m["auth"]->i("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ssQuery << "select a.name, b.user_id, b.password from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
               auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
               if (getApplicationAccount != NULL)
@@ -267,8 +267,8 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                   {
                     ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
                   }
-                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->insert("User", getApplicationAccountRow["user_id"]);
-                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->insert("Password", getApplicationAccountRow["password"]);
+                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("User", getApplicationAccountRow["user_id"]);
+                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("Password", getApplicationAccountRow["password"]);
                 }
               }
               dbfree(getApplicationAccount);
@@ -279,7 +279,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               }
               if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
               {
-                ptJson->m["Response"]->insert("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strSecret, strValue, strError), strValue));
+                ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strSecret, strValue, strError), strValue));
               }
               delete ptJwt;
             }
@@ -304,10 +304,10 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the Function.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {

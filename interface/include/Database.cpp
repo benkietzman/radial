@@ -64,11 +64,11 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
         stringstream ssRows;
         bResult = true;
         ssRows << ullRows;
-        ptJson->insert("Rows", ssRows.str(), 'n');
+        ptJson->i("Rows", ssRows.str(), 'n');
         ptJson->m["Response"] = new Json;
         for (auto &row : *rows)
         {
-          ptJson->m["Response"]->push_back(row);
+          ptJson->m["Response"]->pb(row);
         }
       }
       m_pCentral->free(rows);
@@ -81,9 +81,9 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
         stringstream ssID, ssRows;
         bResult = true;
         ssID << ullID;
-        ptJson->insert("ID", ssID.str());
+        ptJson->i("ID", ssID.str());
         ssRows << ullRows;
-        ptJson->insert("Rows", ssRows.str());
+        ptJson->i("Rows", ssRows.str());
       }
     }
     else
@@ -95,10 +95,10 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the Database.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {
@@ -126,8 +126,8 @@ bool Database::mysql(const string strType, const string strName, const string st
         if (strType == "update" || rows != NULL)
         {
           Json *ptJson = new Json(m_ptDatabases->m[strName]);
-          ptJson->insert("Type", strType);
-          ptJson->insert(((strType == "query")?"Query":"Update"), strQuery);
+          ptJson->i("Type", strType);
+          ptJson->i(((strType == "query")?"Query":"Update"), strQuery);
           if (hub("mysql", ptJson, strError))
           {
             bResult = true;

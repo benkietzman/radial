@@ -150,19 +150,19 @@ void Hub::interfaces()
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("_s", "hub");
-  ptJson->insert("Function", "interfaces");
+  ptJson->i("_s", "hub");
+  ptJson->i("Function", "interfaces");
   ptJson->m["Interfaces"] = new Json;
   for (auto &i : m_interfaces)
   {
     stringstream ssPid;
     ssPid << i.second->nPid;
     ptJson->m["Interfaces"]->m[i.first] = new Json;
-    ptJson->m["Interfaces"]->m[i.first]->insert("AccessFunction", i.second->strAccessFunction);
-    ptJson->m["Interfaces"]->m[i.first]->insert("Command", i.second->strCommand);
-    ptJson->m["Interfaces"]->m[i.first]->insert("PID", ssPid.str(), 'n');
-    ptJson->m["Interfaces"]->m[i.first]->insert("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
-    ptJson->m["Interfaces"]->m[i.first]->insert("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+    ptJson->m["Interfaces"]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
+    ptJson->m["Interfaces"]->m[i.first]->i("Command", i.second->strCommand);
+    ptJson->m["Interfaces"]->m[i.first]->i("PID", ssPid.str(), 'n');
+    ptJson->m["Interfaces"]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
+    ptJson->m["Interfaces"]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
   }
   for (auto &i : m_interfaces)
   {
@@ -176,25 +176,25 @@ void Hub::links()
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("_s", "hub");
-  ptJson->insert("Function", "links");
+  ptJson->i("_s", "hub");
+  ptJson->i("Function", "links");
   ptJson->m["Links"] = new Json;
   for (auto &link : m_links)
   {
     ptJson->m["Links"]->m[link->strNode] = new Json;
-    ptJson->m["Links"]->m[link->strNode]->insert("Server", link->strServer);
-    ptJson->m["Links"]->m[link->strNode]->insert("Port", link->strPort);
+    ptJson->m["Links"]->m[link->strNode]->i("Server", link->strServer);
+    ptJson->m["Links"]->m[link->strNode]->i("Port", link->strPort);
     ptJson->m["Links"]->m[link->strNode]->m["Interfaces"] = new Json;
     for (auto &interface : link->interfaces)
     {
       stringstream ssPid;
       ssPid << interface.second->nPid;
       ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first] = new Json;
-      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("AccessFunction", interface.second->strAccessFunction);
-      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Command", interface.second->strCommand);
-      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("PID", ssPid.str(), 'n');
-      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
-      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->insert("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("AccessFunction", interface.second->strAccessFunction);
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Command", interface.second->strCommand);
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("PID", ssPid.str(), 'n');
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
     }
   }
   for (auto &interface : m_interfaces)
@@ -286,8 +286,8 @@ void Hub::log(const string strFunction, const string strMessage)
 {
   Json *ptJson = new Json;
 
-  ptJson->insert("Function", strFunction);
-  ptJson->insert("Message", strMessage);
+  ptJson->i("Function", strFunction);
+  ptJson->i("Message", strMessage);
   target("log", ptJson);
   delete ptJson;
 }
@@ -375,8 +375,8 @@ void Hub::process(string strPrefix)
                   {
                     if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
                     {
-                      ptJson->insert("_d", "t");
-                      ptJson->json(strLine);
+                      ptJson->i("_d", "t");
+                      ptJson->j(strLine);
                       m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(strLine + "\n");
                     }
                     else
@@ -391,24 +391,24 @@ void Hub::process(string strPrefix)
                       }
                       if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
                       {
-                        ptJson->insert("Node", (*linkIter)->strNode);
-                        ptJson->json(strLine);
+                        ptJson->i("Node", (*linkIter)->strNode);
+                        ptJson->j(strLine);
                         m_interfaces["link"]->strBuffers[1].append(strLine + "\n");
                       }
                       else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                       {
-                        ptJson->insert("_d", "s");
-                        ptJson->insert("Status", "error");
-                        ptJson->insert("Error", "Interface does not exist.");
-                        ptJson->json(strLine);
+                        ptJson->i("_d", "s");
+                        ptJson->i("Status", "error");
+                        ptJson->i("Error", "Interface does not exist.");
+                        ptJson->j(strLine);
                         m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(strLine + "\n");
                       }
                     }
                   }
                   else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                   {
-                    ptJson->insert("_d", "s");
-                    ptJson->json(strLine);
+                    ptJson->i("_d", "s");
+                    ptJson->j(strLine);
                     m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(strLine + "\n");
                   }
                 }
@@ -512,11 +512,11 @@ void Hub::process(string strPrefix)
                         stringstream ssPid;
                         ssPid << j.second->nPid;
                         ptJson->m["Response"]->m[j.first] = new Json;
-                        ptJson->m["Response"]->m[j.first]->insert("AccessFunction", j.second->strAccessFunction);
-                        ptJson->m["Response"]->m[j.first]->insert("Command", j.second->strCommand);
-                        ptJson->m["Response"]->m[j.first]->insert("PID", ssPid.str(), 'n');
-                        ptJson->m["Response"]->m[j.first]->insert("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
-                        ptJson->m["Response"]->m[j.first]->insert("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
+                        ptJson->m["Response"]->m[j.first]->i("AccessFunction", j.second->strAccessFunction);
+                        ptJson->m["Response"]->m[j.first]->i("Command", j.second->strCommand);
+                        ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
+                        ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
+                        ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
                       }
                     }
                     // }}}
@@ -566,13 +566,13 @@ void Hub::process(string strPrefix)
                     // }}}
                   }
                   // {{{ post work
-                  ptJson->insert("_d", "s");
-                  ptJson->insert("Status", ((bResult)?"okay":"error"));
+                  ptJson->i("_d", "s");
+                  ptJson->i("Status", ((bResult)?"okay":"error"));
                   if (!strError.empty())
                   {
-                    ptJson->insert("Error", strError);
+                    ptJson->i("Error", strError);
                   }
-                  ptJson->json(strLine);
+                  ptJson->j(strLine);
                   m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(strLine + "\n");
                   // }}}
                 }
@@ -709,9 +709,9 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
   Json *ptJson = new Json;
 
   strPrefix += "->shutdown()";
-  ptJson->insert("_s", "hub");
-  ptJson->insert("Function", "shutdown");
-  ptJson->json(strJson);
+  ptJson->i("_s", "hub");
+  ptJson->i("Function", "shutdown");
+  ptJson->j(strJson);
   delete ptJson;
   if (strTarget.empty())
   {
@@ -741,9 +741,9 @@ void Hub::target(const string strTarget, Json *ptJson)
 
   if (m_interfaces.find(strTarget) != m_interfaces.end())
   {
-    ptJson->insert("_t", strTarget);
-    ptJson->insert("_d", "t");
-    m_interfaces[strTarget]->strBuffers[1].append(ptJson->json(strJson) + "\n");
+    ptJson->i("_t", strTarget);
+    ptJson->i("_d", "t");
+    m_interfaces[strTarget]->strBuffers[1].append(ptJson->j(strJson) + "\n");
   }
 }
 // }}}

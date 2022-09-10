@@ -210,25 +210,25 @@ void Request::process(string strPrefix)
                             else
                             {
                               keyRemovals(ptSubJson);
-                              ptSubJson->insert("Status", "error");
-                              ptSubJson->insert("Error", ((ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())?ptJson->m["Error"]->v:"Encountered an unknown error."));
-                              conns[fdClient]->responses.push_back(ptSubJson->json(strJson));
+                              ptSubJson->i("Status", "error");
+                              ptSubJson->i("Error", ((ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())?ptJson->m["Error"]->v:"Encountered an unknown error."));
+                              conns[fdClient]->responses.push_back(ptSubJson->j(strJson));
                             }
                           }
                           else
                           {
                             keyRemovals(ptSubJson);
-                            ptSubJson->insert("Status", "error");
-                            ptSubJson->insert("Error", "Invalid internal target.");
-                            conns[fdClient]->responses.push_back(ptSubJson->json(strJson));
+                            ptSubJson->i("Status", "error");
+                            ptSubJson->i("Error", "Invalid internal target.");
+                            conns[fdClient]->responses.push_back(ptSubJson->j(strJson));
                           }
                         }
                         else
                         {
                           keyRemovals(ptSubJson);
-                          ptSubJson->insert("Status", "error");
-                          ptSubJson->insert("Error", "Invalid path of logic.");
-                          conns[fdClient]->responses.push_back(ptSubJson->json(strJson));
+                          ptSubJson->i("Status", "error");
+                          ptSubJson->i("Error", "Invalid path of logic.");
+                          conns[fdClient]->responses.push_back(ptSubJson->j(strJson));
                         }
                       }
                       else
@@ -266,7 +266,7 @@ void Request::process(string strPrefix)
                     if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                     {
                       keyRemovals(ptJson);
-                      conns[fdClient]->responses.push_back(ptJson->json(strJson));
+                      conns[fdClient]->responses.push_back(ptJson->j(strJson));
                     }
                     else
                     {
@@ -327,10 +327,10 @@ void Request::process(string strPrefix)
                     {
                       strError = "Please provide the Function.";
                     }
-                    ptJson->insert("Status", ((bProcessed)?"okay":"error"));
+                    ptJson->i("Status", ((bProcessed)?"okay":"error"));
                     if (!strError.empty())
                     {
-                      ptJson->insert("Error", strError);
+                      ptJson->i("Error", strError);
                     }
                     hub(ptJson, false);
                   }
@@ -401,6 +401,7 @@ void Request::process(string strPrefix)
               // {{{ read
               if (fds[i].revents & POLLIN)
               {
+                // {{{ accept
                 if (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNKNOWN)
                 {
                   bool bRetry = false;
@@ -452,6 +453,7 @@ void Request::process(string strPrefix)
                     }
                   }     
                 }
+                // }}}
                 if (bGood && ((conns[fds[i].fd]->eSocketType == COMMON_SOCKET_ENCRYPTED && m_pUtility->sslRead(conns[fds[i].fd]->ssl, conns[fds[i].fd]->strBuffers[0], nReturn)) || (conns[fds[i].fd]->eSocketType == COMMON_SOCKET_UNENCRYPTED && m_pUtility->fdRead(fds[i].fd, conns[fds[i].fd]->strBuffers[0], nReturn))))
                 {
                   if ((unPosition = conns[fds[i].fd]->strBuffers[0].find("\n")) != string::npos)
@@ -470,26 +472,26 @@ void Request::process(string strPrefix)
                             if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
                             {
                               stringstream ssUnique;
-                              ptJson->insert("_s", m_strName);
+                              ptJson->i("_s", m_strName);
                               ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
-                              ptJson->insert("_u", ssUnique.str());
+                              ptJson->i("_u", ssUnique.str());
                               hub(ptJson, false);
                             }
                             else
                             {
-                              ptJson->insert("Node", m_strNode);
-                              ptJson->insert("Status", "error");
-                              ptJson->insert("Error", "Please provide a valid Function:  list, ping.");
-                              ptJson->json(strJson);
+                              ptJson->i("Node", m_strNode);
+                              ptJson->i("Status", "error");
+                              ptJson->i("Error", "Please provide a valid Function:  list, ping.");
+                              ptJson->j(strJson);
                               conns[fds[i].fd]->responses.push_back(strJson);
                             }
                           }
                           else
                           {
-                            ptJson->insert("Node", m_strNode);
-                            ptJson->insert("Status", "error");
-                            ptJson->insert("Error", "Please provide the Function.");
-                            ptJson->json(strJson);
+                            ptJson->i("Node", m_strNode);
+                            ptJson->i("Status", "error");
+                            ptJson->i("Error", "Please provide the Function.");
+                            ptJson->j(strJson);
                             conns[fds[i].fd]->responses.push_back(strJson);
                           }
                         }
@@ -520,13 +522,13 @@ void Request::process(string strPrefix)
                           if (!strTarget.empty())
                           {
                             stringstream ssUnique;
-                            ptJson->insert("_s", m_strName);
-                            ptJson->insert("_t", strTarget);
+                            ptJson->i("_s", m_strName);
+                            ptJson->i("_t", strTarget);
                             ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
-                            ptJson->insert("_u", ssUnique.str());
+                            ptJson->i("_u", ssUnique.str());
                             if (!strNode.empty())
                             {
-                              ptJson->insert("Node", strNode);
+                              ptJson->i("Node", strNode);
                             }
                             if (!bRestricted)
                             {
@@ -536,24 +538,24 @@ void Request::process(string strPrefix)
                             {
                               Json *ptAuth = new Json(ptJson);
                               keyRemovals(ptAuth);
-                              ptAuth->insert("Interface", "auth");
+                              ptAuth->i("Interface", "auth");
                               if (ptAuth->m.find("Request") != ptAuth->m.end())
                               {
                                 delete ptAuth->m["Request"];
                               }
                               ptAuth->m["Request"] = new Json;
-                              ptAuth->m["Request"]->insert("Interface", ptJson->m["Interface"]->v);
+                              ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
                               ptAuth->m["_r"] = new Json(ptJson);
-                              ptAuth->insert("_s", m_strName);
-                              ptAuth->insert("_t", strTargetAuth);
+                              ptAuth->i("_s", m_strName);
+                              ptAuth->i("_t", strTargetAuth);
                               hub(ptAuth, false);
                               delete ptAuth;
                             }
                           }
                           else
                           {
-                            ptJson->insert("Node", m_strNode);
-                            ptJson->insert("Status", "error");
+                            ptJson->i("Node", m_strNode);
+                            ptJson->i("Status", "error");
                             ssMessage.str("");
                             ssMessage << "Interface does not exist within the local interfaces (";
                             for (auto j = m_interfaces.begin(); j != m_interfaces.end(); j++)
@@ -583,25 +585,25 @@ void Request::process(string strPrefix)
                               ssMessage << ")";
                             }
                             ssMessage << "].";
-                            ptJson->insert("Error", ssMessage.str());
-                            conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
+                            ptJson->i("Error", ssMessage.str());
+                            conns[fds[i].fd]->responses.push_back(ptJson->j(strJson));
                           }
                         }
                       }
                       else
                       {
-                        ptJson->insert("Node", m_strNode);
-                        ptJson->insert("Status", "error");
-                        ptJson->insert("Error", "Please provide the Interface.");
-                        conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
+                        ptJson->i("Node", m_strNode);
+                        ptJson->i("Status", "error");
+                        ptJson->i("Error", "Please provide the Interface.");
+                        conns[fds[i].fd]->responses.push_back(ptJson->j(strJson));
                       }
                     }
                     else
                     {
-                      ptJson->insert("Status", "error");
-                      ptJson->insert("Error", "Radial is shutting down.");
-                      ptJson->insert("Node", m_strNode);
-                      conns[fds[i].fd]->responses.push_back(ptJson->json(strJson));
+                      ptJson->i("Status", "error");
+                      ptJson->i("Error", "Radial is shutting down.");
+                      ptJson->i("Node", m_strNode);
+                      conns[fds[i].fd]->responses.push_back(ptJson->j(strJson));
                     }
                     delete ptJson;
                   }

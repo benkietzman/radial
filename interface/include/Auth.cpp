@@ -116,10 +116,10 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the User.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {
@@ -136,7 +136,7 @@ bool Auth::init()
   string strError;
   Json *ptJson = new Json;
 
-  ptJson->insert("Function", "list");
+  ptJson->i("Function", "list");
   if (hub(ptJson, strError))
   {
     if (ptJson->m.find("Response") != ptJson->m.end())

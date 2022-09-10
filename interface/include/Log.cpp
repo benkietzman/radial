@@ -98,10 +98,10 @@ void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     strError = "Please provide the Function.";
   }
-  ptJson->insert("Status", ((bResult)?"okay":"error"));
+  ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
-    ptJson->insert("Error", strError);
+    ptJson->i("Error", strError);
   }
   if (bResponse)
   {
