@@ -392,8 +392,7 @@ void Hub::process(string strPrefix)
                       if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
                       {
                         ptJson->i("Node", (*linkIter)->strNode);
-                        ptJson->j(strLine);
-                        m_interfaces["link"]->strBuffers[1].append(strLine + "\n");
+                        m_interfaces["link"]->strBuffers[1].append(ptJson->j(strLine) + "\n");
                       }
                       else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                       {
