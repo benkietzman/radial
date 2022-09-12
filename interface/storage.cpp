@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
   thread threadAutoModeCallback(&radial::Storage::autoModeCallback, gpStorage, strPrefix, strOldMaster, strNewMaster);
-  pthread_setname_np(threadAutoModeCallback.native_handle(), "autoModeCallbac");
+  pthread_setname_np(threadAutoModeCallback.native_handle(), "autoMode");
   threadAutoModeCallback.detach();
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
