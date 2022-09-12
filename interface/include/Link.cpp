@@ -683,8 +683,6 @@ log(ssMessage.str());
                       if (linkIter != m_links.end())
                       {
                         Json *ptLink = new Json;
-                        delete ptJson->m["Node"];
-                        ptJson->m.erase("Node");
                         for (auto &i : ptJson->m)
                         {
                           if (!i.first.empty() && i.first[0] == '_')
@@ -694,6 +692,9 @@ log(ssMessage.str());
                         }
                         keyRemovals(ptJson);
                         ptJson->m["_l"] = ptLink;
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->LINK]:  " << ptJson;
+log(ssMessage.str());
                         (*linkIter)->responses.push_back(ptJson->j(strJson));
                       }
                       else
