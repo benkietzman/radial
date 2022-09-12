@@ -1113,6 +1113,7 @@ log(ssMessage.str());
                             ptJson->i(j.first, j.second);
                           }
                           ptJson->m["_l"] = ptLink;
+                          ptJson->i("_s", "link");
 ssMessage.str("");
 ssMessage << strPrefix << " [LINK->HUB]:  " << ptJson;
 log(ssMessage.str());
