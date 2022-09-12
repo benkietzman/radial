@@ -605,7 +605,7 @@ void Link::process(string strPrefix)
                           ptJson->m["_l"] = ptSubLink;
                         }
 ssMessage.str("");
-ssMessage << strPrefix << " [LINK->LINK]:  " << ptJson;
+ssMessage << strPrefix << " [LINK->LINK,a]:  " << ptJson;
 log(ssMessage.str());
                         ptLink->responses.push_back(ptJson->j(strJson));
                       }
@@ -683,6 +683,8 @@ log(ssMessage.str());
                       if (linkIter != m_links.end())
                       {
                         Json *ptLink = new Json;
+                        delete ptJson->m["Node"];
+                        ptJson->m.erase("Node");
                         for (auto &i : ptJson->m)
                         {
                           if (!i.first.empty() && i.first[0] == '_')
@@ -693,7 +695,7 @@ log(ssMessage.str());
                         keyRemovals(ptJson);
                         ptJson->m["_l"] = ptLink;
 ssMessage.str("");
-ssMessage << strPrefix << " [LINK->LINK]:  " << ptJson;
+ssMessage << strPrefix << " [LINK->LINK,b]:  " << ptJson;
 log(ssMessage.str());
                         (*linkIter)->responses.push_back(ptJson->j(strJson));
                       }
@@ -1100,7 +1102,7 @@ log(ssMessage.str());
                         }
                       }
                       // }}}
-                      // {{{ _link
+                      // {{{ _l
                       else if (ptJson->m.find("_l") != ptJson->m.end())
                       {
                         if (ptJson->m.find("Status") == ptJson->m.end())
@@ -1118,6 +1120,9 @@ log(ssMessage.str());
                           ptJson->i("_s", m_strName);
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->HUB]:  " << ptJson;
+log(ssMessage.str());
                           hub(ptJson, false);
                         }
                         else
@@ -1130,6 +1135,9 @@ log(ssMessage.str());
                             ptJson->i(j.first, j.second);
                           }
                           delete ptSubLink;
+ssMessage.str("");
+ssMessage << strPrefix << " [HUB<-LINK]:  " << ptJson;
+log(ssMessage.str());
                           hub(ptJson, false);
                         }
                       }
