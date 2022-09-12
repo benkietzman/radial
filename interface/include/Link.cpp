@@ -1107,13 +1107,15 @@ log(ssMessage.str());
                         if (ptJson->m.find("Status") == ptJson->m.end())
                         {
                           stringstream ssUnique;
-                          Json *ptSubLink = ptJson->m["_l"];
-                          ptJson->m.erase("_l");
-                          for (auto &j : ptSubLink->m)
+                          for (auto &j : ptJson->m["_l"]->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
-                          ptJson->m["_l"] = ptSubLink;
+                          if (ptJson->m.find("_d") != ptJson->m.end())
+                          {
+                            delete ptJson->m["_d"];
+                            ptJson->m.erase("_d");
+                          }
                           ptJson->i("_s", m_strName);
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
