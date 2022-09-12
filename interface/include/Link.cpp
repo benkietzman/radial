@@ -471,7 +471,7 @@ void Link::process(string strPrefix)
                   Json *ptStorage = new Json;
                   ptStorage->i("_f", "storageTransmit");
                   ptStorage->i("_s", m_strName);
-                  ssUnique << m_strName << " " << link->fdSocket << " " << link->unUnique++;
+                  ssUnique << m_strName << " " << link->fdSocket << " " << link->unUnique;
                   ptStorage->i("_u", ssUnique.str());
                   ptStorage->i("Function", "retrieve");
                   hub("storage", ptStorage, false);
@@ -1093,7 +1093,7 @@ log(ssMessage.str());
                           Json *ptStorage = new Json;
                           ptStorage->i("_f", "storageTransmit");
                           ptStorage->i("_s", m_strName);
-                          ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique++;
+                          ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
                           ptStorage->i("Function", "retrieve");
                           hub("storage", ptStorage, false);
@@ -1107,15 +1107,15 @@ log(ssMessage.str());
                         if (ptJson->m.find("Status") == ptJson->m.end())
                         {
                           stringstream ssUnique;
-                          Json *ptLink = ptJson->m["_l"];
+                          Json *ptSubLink = ptJson->m["_l"];
                           ptJson->m.erase("_l");
-                          for (auto &j : ptLink->m)
+                          for (auto &j : ptSubLink->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
-                          ptJson->m["_l"] = ptLink;
+                          ptJson->m["_l"] = ptSubLink;
                           ptJson->i("_s", m_strName);
-                          ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique++;
+                          ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
 ssMessage.str("");
 ssMessage << strPrefix << " [LINK->HUB]:  " << ptJson;
@@ -1124,14 +1124,14 @@ log(ssMessage.str());
                         }
                         else
                         {
-                          Json *ptLink = ptJson->m["_l"];
+                          Json *ptSubLink = ptJson->m["_l"];
                           ptJson->m.erase("_l");
                           keyRemovals(ptJson);
-                          for (auto &j : ptLink->m)
+                          for (auto &j : ptSubLink->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
-                          delete ptLink;
+                          delete ptSubLink;
 ssMessage.str("");
 ssMessage << strPrefix << " [HUB<-LINK]:  " << ptJson;
 log(ssMessage.str());
@@ -1148,7 +1148,7 @@ log(ssMessage.str());
                           {
                             stringstream ssUnique;
                             ptJson->i("_s", m_strName);
-                            ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique++;
+                            ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                             ptJson->i("_u", ssUnique.str());
                             hub(ptJson->m["Interface"]->v, ptJson, false);
                           }
