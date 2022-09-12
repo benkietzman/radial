@@ -604,6 +604,9 @@ void Link::process(string strPrefix)
                         {
                           ptJson->m["_l"] = ptSubLink;
                         }
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->LINK]:  " << ptJson;
+log(ssMessage.str());
                         ptLink->responses.push_back(ptJson->j(strJson));
                       }
                     }
@@ -1143,6 +1146,9 @@ void Link::process(string strPrefix)
                               ptJson->i("_s", m_strName);
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                               ptJson->i("_u", ssUnique.str());
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->HUB]:  " << ptJson;
+log(ssMessage.str());
                               hub(ptJson->m["Interface"]->v, ptJson, false);
                             }
                             else
