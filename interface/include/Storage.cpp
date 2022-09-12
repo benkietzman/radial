@@ -22,11 +22,71 @@ namespace radial
 // {{{ Storage()
 Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
 {
+  m_bInitialized = false;
 }
 // }}}
 // {{{ ~Storage()
 Storage::~Storage()
 {
+}
+// }}}
+// {{{ autoModeCallback()
+void Storage::autoModeCallback(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  threadIncrement();
+  strPrefix += "->Storage::autoModeCallback()";
+  if (!m_bInitialized)
+  {
+    mutexInitialize.lock();
+    if (!m_bInitialized && !strNewMaster.empty() && m_strNode != strNewMaster)
+    {
+      string strError;
+      stringstream ssMessage;
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "storage");
+      ptJson->i("Function", "retrieve");
+      ptJson->i("Node", strNewMaster);
+      ptJson->m["Keys"] = new Json;
+      if (hub("link", ptJson, strError))
+      {
+        Json *ptSubJson = new Json;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
+        log(ssMessage.str());
+        ptSubJson->i("Interface", "storage");
+        ptSubJson->i("Function", "add");
+        ptSubJson->m["Keys"] = new Json;
+        if (ptJson->m.find("Response") != ptJson->m.end())
+        {
+          ptSubJson->m["Request"] = ptJson->m["Response"];
+          ptJson->m.erase("Response");
+        }
+        if (hub("storage", ptSubJson, strError))
+        {
+          m_bInitialized = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << "->hub(storage,add):  Initialized storage.";
+          log(ssMessage.str());
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->hub(storage,add):  " << strError;
+          log(ssMessage.str());
+        }
+        delete ptSubJson;
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->hub(link,storage,retrieve) error [" << strNewMaster << "]:  " << strError;
+        log(ssMessage.str());
+      }
+      delete ptJson;
+    }
+    mutexInitialize.unlock();
+  }
+  threadDecrement();
 }
 // }}}
 // {{{ callback()

@@ -30,6 +30,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   signal(SIGSEGV, SIG_IGN);
   signal(SIGTERM, SIG_IGN);
   signal(SIGWINCH, SIG_IGN);
+  m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
@@ -75,6 +76,12 @@ bool Interface::auth(Json *ptJson, string &strError)
   delete ptAuth;
 
   return bResult;
+}
+// }}}
+// {{{ autoMode()
+void Interface::autoMode(void (*pCallback)(string, const string, const string))
+{
+  m_pAutoModeCallback = pCallback;
 }
 // }}}
 // {{{ db
@@ -550,8 +557,9 @@ void Interface::process(string strPrefix)
   long lArg;
   pollfd *fds;
   size_t unIndex, unPosition;
-  string strError, strLine;
+  string strError, strJson, strLine;
   stringstream ssMessage;
+  time_t CBroadcast, CTime, unBroadcastSleep = 5;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -564,6 +572,8 @@ void Interface::process(string strPrefix)
     lArg |= O_NONBLOCK;
     fcntl(1, F_SETFL, lArg);
   }
+  time(&CTime);
+  CBroadcast = CTime;
   while (!bExit)
   {
     fds = new pollfd[uniques.size() + 2];
@@ -651,6 +661,15 @@ void Interface::process(string strPrefix)
                 // }}}
               }
             }
+            else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
+            {
+              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
+              {
+                string strMaster = m_strMaster;
+                m_strMaster = ptJson->m["Master"]->v;
+                m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+              }
+            }
             else if (m_pCallback != NULL)
             {
               m_pCallback(strPrefix, ptJson, true);
@@ -722,6 +741,52 @@ void Interface::process(string strPrefix)
       uniqueRemovals.pop_front();
     }
     monitor(strPrefix);
+    if (m_pAutoModeCallback != NULL)
+    {
+      time(&CTime);
+      if ((CTime - CBroadcast) > unBroadcastSleep)
+      {
+        string strMaster = m_strMaster;
+        unsigned int unSeed = CTime;
+        srand(unSeed);
+        unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
+        if (!m_strMaster.empty())
+        {
+          bool bFound = false;
+          m_mutexShare.lock();
+          for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
+          {
+            if ((*linkIter)->strNode == m_strMaster)
+            {
+              bFound = true;
+            }
+          }
+          m_mutexShare.unlock();
+          if (!bFound)
+          {
+            m_strMaster.clear();
+          }
+        }
+        if (m_strMaster.empty())
+        {
+          m_strMaster = m_strNode;
+        }
+        if (!m_strMaster.empty())
+        {
+          Json *ptJson = new Json;
+          ptJson->i("Interface", m_strName);
+          ptJson->i("Function", "master");
+          ptJson->i("Master", m_strMaster);
+          hub("link", ptJson, false);
+          delete ptJson;
+        }
+        if (strMaster != m_strMaster)
+        {
+          m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+        }
+        CBroadcast = CTime;
+      }
+    }
     if (shutdown())
     {
       m_mutexShare.lock();

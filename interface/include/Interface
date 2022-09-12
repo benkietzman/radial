@@ -25,11 +25,13 @@ namespace radial
 class Interface : public Base
 {
   protected:
+  void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, Json *, const bool);
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutexShare;
   string m_strBuffers[2];
+  string m_strMaster;
   string m_strName;
 
   void alert(const string strMessage);
@@ -65,6 +67,7 @@ class Interface : public Base
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Interface();
+  void autoMode(void (*pCallback)(string, const string, const string));
   void process(string strPrefix);
 };
 // }}}

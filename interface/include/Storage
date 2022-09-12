@@ -26,12 +26,15 @@ namespace radial
 class Storage : public Interface
 {
   protected:
+  bool m_bInitialized;
+  mutex mutexInitialize;
   string m_strEmail;
   common::Storage m_storage;
 
   public:
   Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Storage();
+  void autoModeCallback(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
 // }}}
