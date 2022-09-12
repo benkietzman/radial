@@ -25,18 +25,6 @@ Link::Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Js
   ifstream inLink((m_strData + "/link.json").c_str());
   string strError;
 
-  m_bAllowMaster = false;
-  // {{{ command line arguments
-  for (int i = 1; i < argc; i++)
-  {
-    string strArg = argv[i];
-    if (strArg == "--allow-master")
-    {
-      m_bAllowMaster = true;
-    }
-  }
-  // }}}
-  m_bUpdate = true;
   m_ptLink = NULL;
   if (inLink)
   {
@@ -53,7 +41,6 @@ Link::Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Js
   {
     m_pWarden->vaultRetrieve({"link", "Password"}, m_strPassword, strError);
   }
-  m_unLink = RADIAL_LINK_UNKNOWN;
 }
 // }}}
 // {{{ ~Link()
@@ -229,15 +216,15 @@ void Link::process(string strPrefix)
         list<radialLink *> links;
         list<int> removals;
         pollfd *fds;
-        size_t unIndex, unLink = m_unLink, unPosition, unUnique = 0;
+        size_t unIndex, unPosition, unUnique = 0;
         string strLine;
-        time_t CBootstrap, CBroadcast, CTime, unBootstrapSleep = 0, unBroadcastSleep = 5;
+        time_t CBootstrap, CTime, unBootstrapSleep = 0;
         Json *ptBoot = new Json;
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
         time(&CTime);
-        CBroadcast = CBootstrap = CTime;
+        CBootstrap = CTime;
         // }}}
         while (!bExit)
         {
@@ -441,14 +428,6 @@ void Link::process(string strPrefix)
                 ptWrite->m["Me"]->i("Port", m_ptLink->m["Port"]->v, 'n');
                 link->responses.push_back(ptWrite->j(strJson));
                 delete ptWrite;
-                if (!m_strMaster.empty())
-                {
-                  ptWrite = new Json;
-                  ptWrite->i("_f", "master");
-                  ptWrite->i("Node", m_strMaster);
-                  link->responses.push_back(ptWrite->j(strJson));
-                  delete ptWrite;
-                }
                 ptWrite = new Json;
                 ptWrite->i("_f", "interfaces");
                 ptWrite->m["Interfaces"] = new Json;
@@ -465,18 +444,6 @@ void Link::process(string strPrefix)
                 }
                 link->responses.push_back(ptWrite->j(strJson));
                 delete ptWrite;
-                if (m_unLink == RADIAL_LINK_MASTER)
-                {
-                  stringstream ssUnique;
-                  Json *ptStorage = new Json;
-                  ptStorage->i("_f", "storageTransmit");
-                  ptStorage->i("_s", m_strName);
-                  ssUnique << m_strName << " " << link->fdSocket << " " << link->unUnique;
-                  ptStorage->i("_u", ssUnique.str());
-                  ptStorage->i("Function", "retrieve");
-                  hub("storage", ptStorage, false);
-                  delete ptStorage;
-                }
               }
               // }}}
             }
@@ -570,42 +537,18 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink != NULL)
                     {
-                      if (ptJson->m.find("_f") != ptJson->m.end())
+                      Json *ptSubLink = NULL;
+                      if (ptJson->m.find("_l") != ptJson->m.end())
                       {
-                        if (ptJson->m["_f"]->v == "storageTransmit")
-                        {
-                          if (ptJson->m.find("Response") != ptJson->m.end())
-                          {
-                            Json *ptWrite = new Json;
-                            ptWrite->i("Interface", "storage");
-                            ptWrite->i("Function", "update");
-                            ptWrite->i("Request", ptJson->m["Response"]);
-                            ptLink->responses.push_back(ptWrite->j(strJson));
-                            delete ptWrite;
-                          }
-                        }
-                        else
-                        {
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " error [stdin," << ptLink->strNode << "," << ptJson->m["_f"]->v << "]:  Please provide valid _f:  storageTransmit.";
-                          log(ssMessage.str());
-                        }
+                        ptSubLink = ptJson->m["_l"];
+                        ptJson->m.erase("_l");
                       }
-                      else
+                      keyRemovals(ptJson);
+                      if (ptSubLink != NULL)
                       {
-                        Json *ptSubLink = NULL;
-                        if (ptJson->m.find("_l") != ptJson->m.end())
-                        {
-                          ptSubLink = ptJson->m["_l"];
-                          ptJson->m.erase("_l");
-                        }
-                        keyRemovals(ptJson);
-                        if (ptSubLink != NULL)
-                        {
-                          ptJson->m["_l"] = ptSubLink;
-                        }
-                        ptLink->responses.push_back(ptJson->j(strJson));
+                        ptJson->m["_l"] = ptSubLink;
                       }
+                      ptLink->responses.push_back(ptJson->j(strJson));
                     }
                     else
                     {
@@ -726,10 +669,6 @@ void Link::process(string strPrefix)
                         list<string> subLinks;
                         Json *ptStatus = new Json;
                         bProcessed = true;
-                        if (!m_strMaster.empty())
-                        {
-                          ptStatus->i("Master", m_strMaster);
-                        }
                         if (m_ptLink->m.find("Node") != m_ptLink->m.end() && !m_ptLink->m["Node"]->v.empty())
                         {
                           ptStatus->i("Node", m_ptLink->m["Node"]->v);
@@ -850,14 +789,6 @@ void Link::process(string strPrefix)
                   ptWrite->m["Me"]->i("Port", m_ptLink->m["Port"]->v, 'n');
                   ptLink->responses.push_back(ptWrite->j(strJson));
                   delete ptWrite;
-                  if (!m_strMaster.empty())
-                  {
-                    ptWrite = new Json;
-                    ptWrite->i("_f", "master");
-                    ptWrite->i("Node", m_strMaster);
-                    ptLink->responses.push_back(ptWrite->j(strJson));
-                    delete ptWrite;
-                  }
                   ptWrite = new Json;
                   ptWrite->i("_f", "interfaces");
                   ptWrite->m["Interfaces"] = new Json;
@@ -936,7 +867,6 @@ void Link::process(string strPrefix)
                       // {{{ _f
                       if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
                       {
-                        bool bStorageTransmit = false;
                         // {{{ handshake
                         if (ptJson->m["_f"]->v == "handshake")
                         {
@@ -1007,10 +937,6 @@ void Link::process(string strPrefix)
                               ssMessage.str("");
                               ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_f"]->v << "," << ptLink->strNode << "]:  Authenticated link.";
                               log(ssMessage.str());
-                              if (m_unLink == RADIAL_LINK_MASTER)
-                              {
-                                bStorageTransmit = true;
-                              }
                             }
                           }
                           // }}}
@@ -1072,28 +998,6 @@ void Link::process(string strPrefix)
                           delete ptLinks;
                         }
                         // }}}
-                        // {{{ master
-                        else if (ptJson->m["_f"]->v == "master" && ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty() && ptJson->m["Node"]->v != m_strMaster)
-                        {
-                          if (m_strMaster == m_ptLink->m["Node"]->v || ptJson->m["Node"]->v == m_ptLink->m["Node"]->v)
-                          {
-                            m_bUpdate = true;
-                          }
-                          m_strMaster = ptJson->m["Node"]->v;
-                        }
-                        // }}}
-                        if (bStorageTransmit)
-                        {
-                          stringstream ssUnique;
-                          Json *ptStorage = new Json;
-                          ptStorage->i("_f", "storageTransmit");
-                          ptStorage->i("_s", m_strName);
-                          ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
-                          ptJson->i("_u", ssUnique.str());
-                          ptStorage->i("Function", "retrieve");
-                          hub("storage", ptStorage, false);
-                          delete ptStorage;
-                        }
                       }
                       // }}}
                       // {{{ _l
@@ -1246,10 +1150,6 @@ void Link::process(string strPrefix)
                 {
                   close((*removeIter)->fdSocket);
                 }
-                if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
-                {
-                  m_strMaster.clear();
-                }
                 delete (*removeIter);
                 links.erase(removeIter);
               }
@@ -1275,41 +1175,11 @@ void Link::process(string strPrefix)
                 {
                   close((*removeIter)->fdSocket);
                 }
-                if (!m_strMaster.empty() && (*removeIter)->strNode == m_strMaster)
-                {
-                  m_strMaster.clear();
-                }
                 delete (*removeIter);
                 m_links.erase(removeIter);
               }
             }
             removals.clear();
-          }
-          // }}}
-          // {{{ broadcast master
-          if ((CTime - CBroadcast) > unBroadcastSleep)
-          {
-            unsigned int unSeed = CTime;
-            srand(unSeed);
-            unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
-            if (m_bAllowMaster && m_strMaster.empty())
-            {
-              m_bUpdate = true;
-              m_strMaster = m_ptLink->m["Node"]->v;
-            }
-            if (!m_strMaster.empty())
-            {
-              Json *ptWrite = new Json;
-              ptWrite->i("_f", "master");
-              ptWrite->i("Node", m_strMaster);
-              ptWrite->j(strJson);
-              delete ptWrite;
-              for (auto &link : m_links)
-              {
-                link->responses.push_back(strJson);
-              }
-            }
-            CBroadcast = CTime;
           }
           // }}}
           // {{{ bootstrap links
@@ -1383,17 +1253,6 @@ void Link::process(string strPrefix)
               delete ptBoot->l.front();
               ptBoot->l.pop_front();
             }
-          }
-          // }}}
-          // {{{ update
-          if (m_bUpdate)
-          {
-            m_bUpdate = false;
-            unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
-          }
-          if (m_unLink != unLink)
-          {
-            m_unLink = ((m_strMaster == m_ptLink->m["Node"]->v)?RADIAL_LINK_MASTER:RADIAL_LINK_SLAVE);
           }
           // }}}
           monitor(strPrefix);

@@ -21,20 +21,11 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ defines
-#define RADIAL_LINK_UNKNOWN 0
-#define RADIAL_LINK_SLAVE 1
-#define RADIAL_LINK_MASTER 2
-// }}}
 // {{{ Link
 class Link : public Interface
 {
   protected:
-  bool m_bAllowMaster;
-  bool m_bUpdate;
-  string m_strMaster;
   string m_strPassword;
-  size_t m_unLink;
   Json *m_ptLink;
 
   size_t add(list<radialLink *> &links, radialLink *ptLink);
