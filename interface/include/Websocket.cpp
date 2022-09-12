@@ -296,7 +296,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     else
     {
       bool bRestricted = false;
-      string strNode, strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
+      string strTarget = ptJson->m["Interface"]->v;
       m_mutexShare.lock();
       if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
       {
@@ -314,15 +314,11 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         }
         if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
         {
-          strNode = (*linkIter)->strNode;
-          strTarget = strTargetAuto = "link";
+          ptJson->i("Node", (*linkIter)->strNode);
+          strTarget = "link";
         }
       }
       m_mutexShare.unlock();
-      if (!strNode.empty())
-      {
-        ptJson->i("Node", strNode);
-      }
       if (!bRestricted || auth(ptJson, strError))
       {
         hub(strTarget, ptJson);
