@@ -481,7 +481,6 @@ void Request::process(string strPrefix)
                             }
                             else
                             {
-                              ptJson->i("Node", m_strNode);
                               ptJson->i("Status", "error");
                               ptJson->i("Error", "Please provide a valid Function:  list, ping.");
                               ptJson->j(strJson);
@@ -490,7 +489,6 @@ void Request::process(string strPrefix)
                           }
                           else
                           {
-                            ptJson->i("Node", m_strNode);
                             ptJson->i("Status", "error");
                             ptJson->i("Error", "Please provide the Function.");
                             ptJson->j(strJson);
@@ -500,7 +498,7 @@ void Request::process(string strPrefix)
                         else
                         {
                           bool bRestricted = false;
-                          string strNode, strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
+                          string strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
                           stringstream ssUnique;
                           if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                           {
@@ -518,7 +516,7 @@ void Request::process(string strPrefix)
                             }
                             if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
                             {
-                              strNode = (*linkIter)->strNode;
+                              ptJson->i("Node", (*linkIter)->strNode);
                               strTarget = strTargetAuth = "link";
                             }
                           }
@@ -526,10 +524,6 @@ void Request::process(string strPrefix)
                           ptJson->i("_t", strTarget);
                           ssUnique << m_strName << " " << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                           ptJson->i("_u", ssUnique.str());
-                          if (!strNode.empty())
-                          {
-                            ptJson->i("Node", strNode);
-                          }
                           if (!bRestricted)
                           {
                             hub(ptJson, false);
@@ -553,7 +547,6 @@ void Request::process(string strPrefix)
                       }
                       else
                       {
-                        ptJson->i("Node", m_strNode);
                         ptJson->i("Status", "error");
                         ptJson->i("Error", "Please provide the Interface.");
                         conns[fds[i].fd]->responses.push_back(ptJson->j(strJson));
@@ -563,7 +556,6 @@ void Request::process(string strPrefix)
                     {
                       ptJson->i("Status", "error");
                       ptJson->i("Error", "Radial is shutting down.");
-                      ptJson->i("Node", m_strNode);
                       conns[fds[i].fd]->responses.push_back(ptJson->j(strJson));
                     }
                     delete ptJson;

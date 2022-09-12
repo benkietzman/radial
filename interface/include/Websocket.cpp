@@ -295,12 +295,11 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     }
     else
     {
-      bool bRestricted;
-      string strNode, strTarget;
+      bool bRestricted = false;
+      string strNode, strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
       m_mutexShare.lock();
       if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
       {
-        strTarget = ptJson->m["Interface"]->v;
         bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
       }
       else
@@ -313,65 +312,25 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             linkIter = i;
           }
         }
-        if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
+        if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
         {
-          bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
           strNode = (*linkIter)->strNode;
-          strTarget = "link";
+          strTarget = strTargetAuto = "link";
         }
       }
       m_mutexShare.unlock();
-      if (!strTarget.empty())
+      if (!strNode.empty())
       {
-        if (!strNode.empty())
-        {
-          ptJson->i("Node", strNode);
-        }
-        if (!bRestricted || auth(ptJson, strError))
-        {
-          hub(strTarget, ptJson);
-        }
-        else
-        {
-          ptJson->i("Status", "error");
-          ptJson->i("Error", strError);
-        }
+        ptJson->i("Node", strNode);
+      }
+      if (!bRestricted || auth(ptJson, strError))
+      {
+        hub(strTarget, ptJson);
       }
       else
       {
         ptJson->i("Status", "error");
-        ssMessage.str("");
-        ssMessage << "Interface does not exist within the local interfaces (";
-        m_mutexShare.lock();
-        for (auto i = m_interfaces.begin(); i != m_interfaces.end(); i++)
-        {
-          if (i != m_interfaces.begin())
-          {
-            ssMessage << ",";
-          }
-          ssMessage << i->first;
-        }
-        ssMessage << ") or the interfaces within the linked instances [";
-        for (auto i = m_links.begin(); i != m_links.end(); i++)
-        {
-          if (i != m_links.begin())
-          {
-            ssMessage << ";";
-          }
-          ssMessage << (*i)->strNode << "(";
-          for (auto j = (*i)->interfaces.begin(); j != (*i)->interfaces.end(); j++)
-          {
-            if (j != (*i)->interfaces.begin())
-            {
-              ssMessage << ",";
-            }
-            ssMessage << j->first;
-          }
-          ssMessage << ")";
-        }
-        m_mutexShare.unlock();
-        ssMessage << "].";
-        ptJson->i("Error", ssMessage.str());
+        ptJson->i("Error", strError);
       }
     }
   }

@@ -50,6 +50,7 @@ void Interface::alert(const string strMessage)
 bool Interface::auth(Json *ptJson, string &strError)
 {
   bool bResult = false;
+  string strTarget = "auth";
   Json *ptAuth = new Json(ptJson);
 
   keyRemovals(ptAuth);
@@ -61,8 +62,13 @@ bool Interface::auth(Json *ptJson, string &strError)
     }
     ptAuth->m["Request"] = new Json;
     ptAuth->m["Request"]->i("Interface", ptAuth->m["Interface"]->v);
+    ptAuth->i("Interface", "auth");
   }
-  if (hub("auth", ptAuth, strError))
+  if (ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty())
+  {
+    strTarget = "link";
+  }
+  if (hub(strTarget, ptAuth, strError))
   {
     bResult = true;
   }
