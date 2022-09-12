@@ -1145,28 +1145,31 @@ log(ssMessage.str());
                       // {{{ Interface
                       else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
                       {
-                        if (ptLink->bAuthenticated)
+                        if (ptJson->m.find("Status") == ptJson->m.end())
                         {
-                          if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                          if (ptLink->bAuthenticated)
                           {
-                            stringstream ssUnique;
-                            ptJson->i("_s", m_strName);
-                            ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
-                            ptJson->i("_u", ssUnique.str());
-                            hub(ptJson->m["Interface"]->v, ptJson, false);
+                            if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                            {
+                              stringstream ssUnique;
+                              ptJson->i("_s", m_strName);
+                              ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
+                              ptJson->i("_u", ssUnique.str());
+                              hub(ptJson->m["Interface"]->v, ptJson, false);
+                            }
+                            else
+                            {
+                              ptJson->i("Status", "error");
+                              ptJson->i("Error", "Interface does not exist.");
+                              ptLink->responses.push_back(ptJson->j(strJson));
+                            }
                           }
                           else
                           {
                             ptJson->i("Status", "error");
-                            ptJson->i("Error", "Interface does not exist.");
+                            ptJson->i("Error", "Failed authentication.");
                             ptLink->responses.push_back(ptJson->j(strJson));
                           }
-                        }
-                        else
-                        {
-                          ptJson->i("Status", "error");
-                          ptJson->i("Error", "Failed authentication.");
-                          ptLink->responses.push_back(ptJson->j(strJson));
                         }
                       }
                       // }}}
