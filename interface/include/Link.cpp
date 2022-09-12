@@ -1118,6 +1118,10 @@ log(ssMessage.str());
                             ptJson->m.erase("_d");
                           }
                           ptJson->i("_s", m_strName);
+                          if (ptJson->m.find("_t") != ptJson->m.end() && ptJson->m["_t"]->v == "link" && ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                          {
+                            ptJson->i("_t", ptJson->m["Interface"]->v);
+                          }
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
 ssMessage.str("");
