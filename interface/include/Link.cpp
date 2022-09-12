@@ -603,6 +603,9 @@ void Link::process(string strPrefix)
                         {
                           ptJson->m["_l"] = ptSubLink;
                         }
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK<-LINK]:  " << ptJson;
+log(ssMessage.str());
                         ptLink->responses.push_back(ptJson->j(strJson));
                       }
                     }
@@ -679,6 +682,8 @@ void Link::process(string strPrefix)
                       if (linkIter != m_links.end())
                       {
                         Json *ptLink = new Json;
+                        delete ptJson->m["Node"];
+                        ptJson->m.erase("Node");
                         for (auto &i : ptJson->m)
                         {
                           if (!i.first.empty() && i.first[0] == '_')
@@ -688,6 +693,9 @@ void Link::process(string strPrefix)
                         }
                         keyRemovals(ptJson);
                         ptJson->m["_l"] = ptLink;
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->LINK]:  " << ptJson;
+log(ssMessage.str());
                         (*linkIter)->responses.push_back(ptJson->j(strJson));
                       }
                       else
@@ -1096,15 +1104,35 @@ void Link::process(string strPrefix)
                       // {{{ _link
                       else if (ptJson->m.find("_l") != ptJson->m.end())
                       {
-                        Json *ptLink = ptJson->m["_l"];
-                        ptJson->m.erase("_l");
-                        keyRemovals(ptJson);
-                        for (auto &j : ptLink->m)
+                        if (ptJson->m.find("Status") == ptJson->m.end())
                         {
-                          ptJson->i(j.first, j.second);
+                          Json *ptLink = ptJson->m["_l"];
+                          ptJson->m.erase("_l");
+                          for (auto &j : ptLink->m)
+                          {
+                            ptJson->i(j.first, j.second);
+                          }
+                          ptJson->m["_l"] = ptLink;
+ssMessage.str("");
+ssMessage << strPrefix << " [LINK->HUB]:  " << ptJson;
+log(ssMessage.str());
+                          hub(ptJson, false);
                         }
-                        delete ptLink;
-                        hub(ptJson, false);
+                        else
+                        {
+                          Json *ptLink = ptJson->m["_l"];
+                          ptJson->m.erase("_l");
+                          keyRemovals(ptJson);
+                          for (auto &j : ptLink->m)
+                          {
+                            ptJson->i(j.first, j.second);
+                          }
+                          delete ptLink;
+ssMessage.str("");
+ssMessage << strPrefix << " [HUB<-LINK]:  " << ptJson;
+log(ssMessage.str());
+                          hub(ptJson, false);
+                        }
                       }
                       // }}}
                       // {{{ Interface
