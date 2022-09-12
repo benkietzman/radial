@@ -540,7 +540,6 @@ log(ssMessage.str());
                           else
                           {
                             Json *ptAuth = new Json(ptJson);
-                            keyRemovals(ptAuth);
                             ptAuth->i("Interface", "auth");
                             if (ptAuth->m.find("Request") != ptAuth->m.end())
                             {
@@ -549,7 +548,6 @@ log(ssMessage.str());
                             ptAuth->m["Request"] = new Json;
                             ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
                             ptAuth->m["_r"] = new Json(ptJson);
-                            ptAuth->i("_s", m_strName);
                             ptAuth->i("_t", strTargetAuth);
 ssMessage.str("");
 ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptAuth;
