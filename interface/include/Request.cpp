@@ -206,6 +206,9 @@ void Request::process(string strPrefix)
                           {
                             if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
                             {
+ssMessage.str("");
+ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptSubJson;
+log(ssMessage.str());
                               hub(ptSubJson, false);
                             }
                             else
@@ -532,9 +535,6 @@ void Request::process(string strPrefix)
                           }
                           if (!bRestricted)
                           {
-ssMessage.str("");
-ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptJson;
-log(ssMessage.str());
                             hub(ptJson, false);
                           }
                           else
@@ -551,6 +551,9 @@ log(ssMessage.str());
                             ptAuth->m["_r"] = new Json(ptJson);
                             ptAuth->i("_s", m_strName);
                             ptAuth->i("_t", strTargetAuth);
+ssMessage.str("");
+ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptAuth;
+log(ssMessage.str());
                             hub(ptAuth, false);
                             delete ptAuth;
                           }
