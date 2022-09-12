@@ -532,9 +532,6 @@ void Request::process(string strPrefix)
                           }
                           if (!bRestricted)
                           {
-ssMessage.str("");
-ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptJson;
-log(ssMessage.str());
                             hub(ptJson, false);
                           }
                           else

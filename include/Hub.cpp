@@ -392,9 +392,6 @@ void Hub::process(string strPrefix)
                       {
                         ptJson->i("_d", "t");
                         ptJson->i("Node", (*linkIter)->strNode);
-ssMessage.str("");
-ssMessage << strPrefix << " [HUB->LINK]:  " << ptJson;
-log(ssMessage.str());
                         m_interfaces["link"]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                       }
                       else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
@@ -409,9 +406,6 @@ log(ssMessage.str());
                   else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                   {
                     ptJson->i("_d", "s");
-ssMessage.str("");
-ssMessage << strPrefix << " [" << ptJson->m["_s"]->v << "<-HUB]:  " << ptJson;
-log(ssMessage.str());
                     m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                   }
                 }
