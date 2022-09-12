@@ -667,7 +667,10 @@ void Interface::process(string strPrefix)
               {
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
-                m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                if (m_pAutoModeCallback != NULL)
+                {
+                  m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                }
               }
             }
             else if (m_pCallback != NULL)
