@@ -206,9 +206,6 @@ void Request::process(string strPrefix)
                           {
                             if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
                             {
-ssMessage.str("");
-ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptSubJson;
-log(ssMessage.str());
                               hub(ptSubJson, false);
                             }
                             else
@@ -549,9 +546,6 @@ log(ssMessage.str());
                             ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
                             ptAuth->m["_r"] = new Json(ptJson);
                             ptAuth->i("_t", strTargetAuth);
-ssMessage.str("");
-ssMessage << strPrefix << " [REQUEST->HUB]:  " << ptAuth;
-log(ssMessage.str());
                             hub(ptAuth, false);
                             delete ptAuth;
                           }
