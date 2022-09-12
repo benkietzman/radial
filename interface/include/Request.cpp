@@ -195,8 +195,9 @@ void Request::process(string strPrefix)
                     {
                       int fdClient;
                       size_t unUnique;
+                      string strValue;
                       stringstream ssUnique(ptSubJson->m["_u"]->v);
-                      ssUnique >> fdClient >> unUnique;
+                      ssUnique >> strValue >> fdClient >> unUnique;
                       if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                       {
                         if (ptJson->m.find("_t") != ptJson->m.end())
@@ -261,8 +262,9 @@ void Request::process(string strPrefix)
                   {
                     int fdClient;
                     size_t unUnique;
+                    string strValue;
                     stringstream ssUnique(ptJson->m["_u"]->v);
-                    ssUnique >> fdClient >> unUnique;
+                    ssUnique >> strValue >> fdClient >> unUnique;
                     if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                     {
                       keyRemovals(ptJson);
@@ -473,7 +475,7 @@ void Request::process(string strPrefix)
                             {
                               stringstream ssUnique;
                               ptJson->i("_s", m_strName);
-                              ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
+                              ssUnique << m_strName << " " << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                               ptJson->i("_u", ssUnique.str());
                               hub(ptJson, false);
                             }
@@ -522,7 +524,7 @@ void Request::process(string strPrefix)
                           }
                           ptJson->i("_s", m_strName);
                           ptJson->i("_t", strTarget);
-                          ssUnique << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
+                          ssUnique << m_strName << " " << fds[i].fd << " " << conns[fds[i].fd]->unUnique;
                           ptJson->i("_u", ssUnique.str());
                           if (!strNode.empty())
                           {
