@@ -653,7 +653,7 @@ if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v 
 {
 ssMessage.str("");
 ssMessage << strPrefix << " [" << link->strNode << "]:  " << strLine;
-log(ssMessage);
+log(ssMessage.str());
 }
                           link->responses.push_back(strLine);
                         }
