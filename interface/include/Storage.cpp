@@ -49,7 +49,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
       ptJson->m["Keys"] = new Json;
       if (hub("link", ptJson, strError))
       {
-        Json *ptSubJson = new Json;
+        Json *ptData;
         ssMessage.str("");
         ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
         log(ssMessage.str());
@@ -58,23 +58,27 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         ptSubJson->m["Keys"] = new Json;
         if (ptJson->m.find("Response") != ptJson->m.end())
         {
-          ptSubJson->m["Request"] = ptJson->m["Response"];
+          ptData = ptJson->m["Response"];
           ptJson->m.erase("Response");
         }
-        if (hub("storage", ptSubJson, strError))
+        else
+        {
+          ptData = new Json;
+        }
+        if (m_storage.add([], ptData, strError))
         {
           m_bInitialized = true;
           ssMessage.str("");
-          ssMessage << strPrefix << "->hub(storage,add):  Initialized storage.";
+          ssMessage << strPrefix << "->Storage::add():  Initialized storage.";
           log(ssMessage.str());
         }
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->hub(storage,add):  " << strError << " --- " << ptSubJson;
+          ssMessage << strPrefix << "->Storage::add():  " << strError << " --- " << ptSubJson;
           log(ssMessage.str());
         }
-        delete ptSubJson;
+        delete ptData;
       }
       else
       {
