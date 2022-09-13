@@ -623,9 +623,6 @@ void Interface::process(string strPrefix)
               }
               m_mutexShare.unlock();
             }
-ssMessage.str("");
-ssMessage << strPrefix << " [0]:  " << ptJson;
-log(ssMessage.str());
             if (fdUnique != -1)
             {
               uniques[fdUnique] = strLine + "\n";
@@ -659,14 +656,8 @@ log(ssMessage.str());
             }
             else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
             {
-ssMessage.str("");
-ssMessage << strPrefix << " [1]:  " << ptJson;
-log(ssMessage.str());
               if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
               {
-ssMessage.str("");
-ssMessage << strPrefix << " [2]:  " << ptJson;
-log(ssMessage.str());
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
                 if (m_pAutoModeCallback != NULL)
