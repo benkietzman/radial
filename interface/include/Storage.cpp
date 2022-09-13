@@ -35,11 +35,24 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
 {
   threadIncrement();
   strPrefix += "->Storage::autoMode()";
+stringstream ssMessage;
+ssMessage.str("");
+ssMessage << strPrefix << ":  0";
+log(ssMessage.str());
   if (!m_bInitialized)
   {
+ssMessage.str("");
+ssMessage << strPrefix << ":  0-0";
+log(ssMessage.str());
     mutexInitialize.lock();
+ssMessage.str("");
+ssMessage << strPrefix << ":  0-1";
+log(ssMessage.str());
     if (!m_bInitialized && !strNewMaster.empty() && m_strNode != strNewMaster)
     {
+ssMessage.str("");
+ssMessage << strPrefix << ":  0-1-0";
+log(ssMessage.str());
       string strError;
       stringstream ssMessage;
       Json *ptJson = new Json;
