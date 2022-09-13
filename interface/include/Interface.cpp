@@ -776,9 +776,6 @@ log(ssMessage.str());
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
-ssMessage.str("");
-ssMessage << strPrefix << " [" << m_strMaster << "]:  " << ptJson;
-log(ssMessage.str());
           hub("link", ptJson, false);
           delete ptJson;
         }

@@ -376,12 +376,6 @@ void Hub::process(string strPrefix)
                     if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
                     {
                       ptJson->i("_d", "t");
-if (ptJson->m["_t"]->v == "link")
-{
-  ssMessage.str("");
-  ssMessage << strPrefix << ":  " << ptJson;
-  log(ssMessage.str());
-}
                       m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                     }
                     else
