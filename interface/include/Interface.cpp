@@ -778,6 +778,9 @@ void Interface::process(string strPrefix)
         }
         if (strMaster != m_strMaster)
         {
+          ssMessage.str("");
+          ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated.";
+          log(ssMessage.str());
           m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
         }
         CBroadcast = CTime;
