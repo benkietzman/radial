@@ -645,6 +645,7 @@ void Link::process(string strPrefix)
                     }
                     else
                     {
+                      keyRemovals(ptJson);
                       for (auto &link : m_links)
                       {
                         if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
@@ -864,12 +865,6 @@ void Link::process(string strPrefix)
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
-if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
-{
-ssMessage.str("");
-ssMessage << strPrefix << ":  " << ptJson;
-log(ssMessage.str());
-}
                       // {{{ _f
                       if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
                       {
