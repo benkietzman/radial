@@ -623,22 +623,7 @@ void Interface::process(string strPrefix)
               }
               m_mutexShare.unlock();
             }
-            if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
-            {
-              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
-              {
-                string strMaster = m_strMaster;
-                m_strMaster = ptJson->m["Master"]->v;
-                if (m_pAutoModeCallback != NULL)
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by request.";
-                  log(ssMessage.str());
-                  m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
-                }
-              }
-            }
-            else if (fdUnique != -1)
+            if (fdUnique != -1)
             {
               uniques[fdUnique] = strLine + "\n";
             }
@@ -667,6 +652,21 @@ void Interface::process(string strPrefix)
                   setShutdown();
                 }
                 // }}}
+              }
+            }
+            else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
+            {
+              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
+              {
+                string strMaster = m_strMaster;
+                m_strMaster = ptJson->m["Master"]->v;
+                if (m_pAutoModeCallback != NULL)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by request.";
+                  log(ssMessage.str());
+                  m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                }
               }
             }
             else if (m_pCallback != NULL)
