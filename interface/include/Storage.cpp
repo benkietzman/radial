@@ -46,7 +46,7 @@ ssMessage << strPrefix << ":  0-0";
 log(ssMessage.str());
     mutexInitialize.lock();
 ssMessage.str("");
-ssMessage << strPrefix << ":  0-1";
+ssMessage << strPrefix << ":  0-1 " << m_bInitialized << " " << m_strNode << " " << strNewMaster;
 log(ssMessage.str());
     if (!m_bInitialized && !strNewMaster.empty() && m_strNode != strNewMaster)
     {
