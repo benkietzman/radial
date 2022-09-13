@@ -51,12 +51,11 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
       {
         Json *ptData;
         ssMessage.str("");
-        ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage. --- " << ptJson;
+        ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
         log(ssMessage.str());
         if (ptJson->m.find("Response") != ptJson->m.end())
         {
-          ptData = ptJson->m["Response"];
-          ptJson->m.erase("Response");
+          ptData = new Json(ptJson->m["Response"]);
         }
         else
         {
@@ -112,19 +111,14 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
     {
-stringstream ssMessage;
-ssMessage << strPrefix << ": ";
       if (ptJson->m.find("Request") != ptJson->m.end())
       {
-ssMessage << " REQUEST " << ptJson;
         ptData = new Json(ptJson->m["Request"]);
       }
       else
       {
         ptData = new Json;
       }
-ssMessage << " DATA " << ptData;
-log(ssMessage.str());
     }
     else if (ptJson->m["Function"]->v == "retrieve" || ptJson->m["Function"]->v == "retrieveKeys")
     {
