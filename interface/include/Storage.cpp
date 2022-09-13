@@ -51,7 +51,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
       {
         Json *ptData;
         ssMessage.str("");
-        ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
+        ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage. --- " << ptJson;
         log(ssMessage.str());
         if (ptJson->m.find("Response") != ptJson->m.end())
         {
