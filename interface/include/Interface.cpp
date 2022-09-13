@@ -631,6 +631,9 @@ void Interface::process(string strPrefix)
                 m_strMaster = ptJson->m["Master"]->v;
                 if (m_pAutoModeCallback != NULL)
                 {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by request.";
+                  log(ssMessage.str());
                   m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
                 }
               }
