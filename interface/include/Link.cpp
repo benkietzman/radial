@@ -865,6 +865,12 @@ void Link::process(string strPrefix)
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [0]:  " << ptJson;
+log(ssMessage.str());
+}
                       // {{{ _f
                       if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
                       {
@@ -1042,16 +1048,40 @@ void Link::process(string strPrefix)
                       // {{{ Interface
                       else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
                       {
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [1]:  " << ptJson;
+log(ssMessage.str());
+}
                         if (ptJson->m.find("Status") == ptJson->m.end())
                         {
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [2]:  " << ptJson;
+log(ssMessage.str());
+}
                           if (ptLink->bAuthenticated)
                           {
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [3]:  " << ptJson;
+log(ssMessage.str());
+}
                             if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                             {
                               stringstream ssUnique;
                               ptJson->i("_s", m_strName);
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                               ptJson->i("_u", ssUnique.str());
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [4]:  " << ptJson;
+log(ssMessage.str());
+}
                               hub(ptJson->m["Interface"]->v, ptJson, false);
                             }
                             else
