@@ -170,6 +170,9 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
+stringstream ssMessage;
+ssMessage << strPrefix << ":  " << ptJson;
+log(ssMessage.str());
     hub(ptJson, false);
   }
   delete ptJson;
