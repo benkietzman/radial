@@ -65,7 +65,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         {
           ptData = new Json;
         }
-        if (m_storage.add([], ptData, strError))
+        if (m_storage.add({}, ptData, strError))
         {
           m_bInitialized = true;
           ssMessage.str("");
@@ -75,7 +75,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->Storage::add():  " << strError << " --- " << ptSubJson;
+          ssMessage << strPrefix << "->Storage::add():  " << strError;
           log(ssMessage.str());
         }
         delete ptData;
