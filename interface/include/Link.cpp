@@ -645,7 +645,6 @@ void Link::process(string strPrefix)
                     }
                     else
                     {
-                      keyRemovals(ptJson);
                       for (auto &link : m_links)
                       {
                         if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
@@ -1073,6 +1072,7 @@ log(ssMessage.str());
                             if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
                             {
                               stringstream ssUnique;
+                              keyRemovals(ptJson);
                               ptJson->i("_s", m_strName);
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                               ptJson->i("_u", ssUnique.str());
