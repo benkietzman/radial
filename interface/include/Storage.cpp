@@ -30,11 +30,11 @@ Storage::~Storage()
 {
 }
 // }}}
-// {{{ autoModeCallback()
-void Storage::autoModeCallback(string strPrefix, const string strOldMaster, const string strNewMaster)
+// {{{ autoMode()
+void Storage::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
   threadIncrement();
-  strPrefix += "->Storage::autoModeCallback()";
+  strPrefix += "->Storage::autoMode()";
   if (!m_bInitialized)
   {
     mutexInitialize.lock();

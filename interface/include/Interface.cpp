@@ -78,12 +78,6 @@ bool Interface::auth(Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
-// {{{ autoMode()
-void Interface::autoMode(void (*pCallback)(string, const string, const string))
-{
-  m_pAutoModeCallback = pCallback;
-}
-// }}}
 // {{{ db
 // {{{ dbfree()
 void Interface::dbfree(list<map<string, string> > *rows)
@@ -559,7 +553,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CTime, unBroadcastSleep = 5;
+  time_t CBroadcast, CTime, unBroadcastSleep = 30;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -572,8 +566,7 @@ void Interface::process(string strPrefix)
     lArg |= O_NONBLOCK;
     fcntl(1, F_SETFL, lArg);
   }
-  time(&CTime);
-  CBroadcast = CTime;
+  time(&CBroadcast);
   while (!bExit)
   {
     fds = new pollfd[uniques.size() + 2];
@@ -801,6 +794,12 @@ void Interface::process(string strPrefix)
     }
   }
   setShutdown();
+}
+// }}}
+// {{{ setAutoMode()
+void Interface::setAutoMode(void (*pCallback)(string, const string, const string))
+{
+  m_pAutoModeCallback = pCallback;
 }
 // }}}
 // {{{ storage

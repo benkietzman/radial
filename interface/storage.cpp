@@ -20,16 +20,16 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "storage->main()";
   gpStorage = new radial::Storage(strPrefix, argc, argv, &callback);
-  gpStorage->autoMode(&autoMode);
+  gpStorage->setAutoMode(&autoMode);
   gpStorage->process(strPrefix);
   delete gpStorage;
   return 0;
 }
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
-  thread threadAutoModeCallback(&radial::Storage::autoModeCallback, gpStorage, strPrefix, strOldMaster, strNewMaster);
-  pthread_setname_np(threadAutoModeCallback.native_handle(), "autoMode");
-  threadAutoModeCallback.detach();
+  thread threadAutoMode(&radial::Storage::autoMode, gpStorage, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {

@@ -67,8 +67,8 @@ class Interface : public Base
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Interface();
-  void autoMode(void (*pCallback)(string, const string, const string));
   void process(string strPrefix);
+  void setAutoMode(void (*pCallback)(string, const string, const string));
 };
 // }}}
 }
