@@ -295,8 +295,9 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
   else
   {
     ptJson->j(strJson);
+stringstream ssMessage;
 ssMessage.str("");
-ssMessage << strPrefix << ":  " << strJson;
+ssMessage << "Interface::hub():  " << strJson;
 log(ssMessage.str());
     m_mutexShare.lock();
     m_responses.push_back(strJson);
