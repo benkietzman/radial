@@ -662,6 +662,9 @@ void Interface::process(string strPrefix)
                 m_strMaster = ptJson->m["Master"]->v;
                 if (m_pAutoModeCallback != NULL)
                 {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by request.";
+                  log(ssMessage.str());
                   m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
                 }
               }
@@ -773,13 +776,16 @@ void Interface::process(string strPrefix)
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
+          ssMessage.str("");
+          ssMessage << strPrefix << ":  " << ptJson;
+          log(ssMessage.str());
           hub("link", ptJson, false);
           delete ptJson;
         }
         if (strMaster != m_strMaster)
         {
           ssMessage.str("");
-          ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated.";
+          ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by broadcast.";
           log(ssMessage.str());
           m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
         }
