@@ -645,6 +645,12 @@ void Link::process(string strPrefix)
                     }
                     else
                     {
+if (ptJson->m["Interface"]->v == "storage")
+{
+  ssMessage.str("");
+  ssMessage << strPrefix << ":  " << ptJson;
+  log(ssMessage.str());
+}
                       for (auto &link : m_links)
                       {
                         if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)

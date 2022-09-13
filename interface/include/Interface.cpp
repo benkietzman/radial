@@ -295,6 +295,9 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
   else
   {
     ptJson->j(strJson);
+ssMessage.str("");
+ssMessage << strPrefix << ":  " << strJson;
+log(ssMessage.str());
     m_mutexShare.lock();
     m_responses.push_back(strJson);
     m_mutexShare.unlock();
@@ -776,6 +779,9 @@ log(ssMessage.str());
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
+ssMessage.str("");
+ssMessage << strPrefix << " [" << m_strMaster << "]:  " << ptJson;
+log(ssMessage.str());
           hub("link", ptJson, false);
           delete ptJson;
         }
