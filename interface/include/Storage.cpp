@@ -112,14 +112,19 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
     {
+stringstream ssMessage;
+ssMessage << strPrefix << ": ";
       if (ptJson->m.find("Request") != ptJson->m.end())
       {
+ssMessage << " REQUEST " << ptJson;
         ptData = new Json(ptJson->m["Request"]);
       }
       else
       {
         ptData = new Json;
       }
+ssMessage << " DATA " << ptData;
+log(ssMessage.str());
     }
     else if (ptJson->m["Function"]->v == "retrieve" || ptJson->m["Function"]->v == "retrieveKeys")
     {
@@ -170,9 +175,6 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-stringstream ssMessage;
-ssMessage << strPrefix << ":  " << ptJson;
-log(ssMessage.str());
     hub(ptJson, false);
   }
   delete ptJson;
