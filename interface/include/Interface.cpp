@@ -623,6 +623,9 @@ void Interface::process(string strPrefix)
               }
               m_mutexShare.unlock();
             }
+ssMessage.str("");
+ssMessage << strPrefix << " [0]:  " << ptJson;
+log(ssMessage.str());
             if (fdUnique != -1)
             {
               uniques[fdUnique] = strLine + "\n";
@@ -656,15 +659,18 @@ void Interface::process(string strPrefix)
             }
             else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
             {
+ssMessage.str("");
+ssMessage << strPrefix << " [1]:  " << ptJson;
+log(ssMessage.str());
               if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
               {
+ssMessage.str("");
+ssMessage << strPrefix << " [2]:  " << ptJson;
+log(ssMessage.str());
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
                 if (m_pAutoModeCallback != NULL)
                 {
-ssMessage.str("");
-ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by request.";
-log(ssMessage.str());
                   m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
                 }
               }
@@ -781,9 +787,6 @@ log(ssMessage.str());
         }
         if (strMaster != m_strMaster)
         {
-ssMessage.str("");
-ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master has been updated by broadcast.";
-log(ssMessage.str());
           m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
         }
         CBroadcast = CTime;

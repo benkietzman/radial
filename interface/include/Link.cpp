@@ -1051,12 +1051,6 @@ void Link::process(string strPrefix)
                               ptJson->i("_s", m_strName);
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                               ptJson->i("_u", ssUnique.str());
-if (ptJson->m["Interface"]->v == "storage")
-{
-  ssMessage.str("");
-  ssMessage << strPrefix << ":  " << ptJson;
-  log(ssMessage.str());
-}
                               hub(ptJson->m["Interface"]->v, ptJson, false);
                             }
                             else
