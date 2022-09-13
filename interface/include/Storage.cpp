@@ -71,7 +71,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->hub(storage,add):  " << strError;
+          ssMessage << strPrefix << "->hub(storage,add):  " << strError << " --- " << ptSubJson;
           log(ssMessage.str());
         }
         delete ptSubJson;
