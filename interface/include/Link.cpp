@@ -867,7 +867,7 @@ void Link::process(string strPrefix)
 if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
 {
 ssMessage.str("");
-ssMessage << strPrefix << " [" << link->strNode << "]:  " << strLine;
+ssMessage << strPrefix << ":  " << ptJson;
 log(ssMessage.str());
 }
                       // {{{ _f
