@@ -776,9 +776,6 @@ void Interface::process(string strPrefix)
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
-          ssMessage.str("");
-          ssMessage << strPrefix << ":  " << ptJson;
-          log(ssMessage.str());
           hub("link", ptJson, false);
           delete ptJson;
         }
