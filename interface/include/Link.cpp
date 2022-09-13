@@ -649,12 +649,6 @@ void Link::process(string strPrefix)
                       {
                         if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
                         {
-if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
-{
-ssMessage.str("");
-ssMessage << strPrefix << " [" << link->strNode << "]:  " << strLine;
-log(ssMessage.str());
-}
                           link->responses.push_back(strLine);
                         }
                       }
@@ -870,6 +864,12 @@ log(ssMessage.str());
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
+if (ptJson->m.find("Interface") != ptJson->m.end() && ptJson->m["Interface"]->v == "storage")
+{
+ssMessage.str("");
+ssMessage << strPrefix << " [" << link->strNode << "]:  " << strLine;
+log(ssMessage.str());
+}
                       // {{{ _f
                       if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
                       {
