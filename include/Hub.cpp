@@ -318,354 +318,649 @@ void Hub::notify(const string strMessage)
 // {{{ process()
 void Hub::process(string strPrefix)
 {
+  // {{{ prep work
+  int fdUnix;
   string strError;
-  stringstream ssMessage;
+  stringstream ssUnix, ssMessage;
   Json *ptJson;
-
   strPrefix += "->Hub::process()";
-  if (load(strPrefix, strError))
+  ssUnix << m_strData << "/manager.sock";
+  ::remove(ssUnix.str().c_str());
+  // }}}
+  if ((fdUnix = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0)
   {
     // {{{ prep work
-    bool bExit = false;
-    int nReturn;
-    pollfd *fds;
-    size_t unIndex, unPosition;
-    string strJson;
-    time_t CShutdownTime[2] = {0, 0};
+    sockaddr_un addr;
+    ssMessage.str("");
+    ssMessage << strPrefix << "->socket():  Created manager socket.";
+    log(ssMessage.str());
+    memset(&addr, 0, sizeof(sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, ssUnix.str().c_str(), sizeof(addr.sun_path) - 1);
     // }}}
-    while (!bExit)
+    if (bind(fdUnix, (sockaddr *)&addr, sizeof(sockaddr_un)) == 0)
     {
       // {{{ prep work
-      list<string> removals;
-      map<int, string> sockets;
-      fds = new pollfd[m_interfaces.size()*2];
-      unIndex = 0;
-      for (auto &i : m_interfaces)
-      {
-        sockets[i.second->fdRead] = i.first;
-        fds[unIndex].fd = i.second->fdRead;
-        fds[unIndex].events = POLLIN;
-        unIndex++;
-        sockets[i.second->fdWrite] = i.first;
-        fds[unIndex].fd = -1;
-        fds[unIndex].events = POLLOUT;
-        if (!i.second->strBuffers[1].empty())
-        {
-          fds[unIndex].fd = i.second->fdWrite;
-        }
-        unIndex++;
-      }
+      ssMessage.str("");
+      ssMessage << strPrefix << "->bind():  Bound manager socket.";
+      log(ssMessage.str());
       // }}}
-      if ((nReturn = poll(fds, unIndex, 10)) > 0)
+      if (listen(fdUnix, 5) == 0)
       {
-        for (size_t i = 0; i < unIndex; i++)
+        // {{{ prep work
+        ssMessage.str("");
+        ssMessage << strPrefix << "->listen():  Listening to manager socket.";
+        log(ssMessage.str());
+        // }}}
+        if (load(strPrefix, strError))
         {
-          // {{{ read
-          if (fds[i].revents & (POLLHUP | POLLIN))
+          // {{{ prep work
+          bool bExit = false;
+          int nReturn;
+          map<int, vector<string> > managers;
+          pollfd *fds;
+          size_t unIndex, unPosition;
+          string strJson;
+          time_t CShutdownTime[2] = {0, 0};
+          // }}}
+          while (!bExit)
           {
-            if (m_pUtility->fdRead(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[0], nReturn))
+            // {{{ prep work
+            list<int> managerRemovals;
+            list<string> removals;
+            map<int, string> sockets;
+            fds = new pollfd[(1+managers.size()+m_interfaces.size()*2)];
+            unIndex = 0;
+            fds[unIndex].fd = fdUnix;
+            fds[unIndex].events = POLLIN;
+            unIndex++;
+            for (auto &manager : managers)
             {
-              while ((unPosition = m_interfaces[sockets[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
+              fds[unIndex].fd = manager.first;
+              fds[unIndex].events = POLLIN;
+              if (!manager.second[1].empty())
               {
-                ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
-                m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
-                if (ptJson->m.find("_t") != ptJson->m.end() && !ptJson->m["_t"]->v.empty())
+                fds[unIndex].events |= POLLOUT;
+              }
+            }
+            for (auto &interface : m_interfaces)
+            {
+              sockets[interface.second->fdRead] = interface.first;
+              fds[unIndex].fd = interface.second->fdRead;
+              fds[unIndex].events = POLLIN;
+              unIndex++;
+              sockets[interface.second->fdWrite] = interface.first;
+              fds[unIndex].fd = -1;
+              fds[unIndex].events = POLLOUT;
+              if (!interface.second->strBuffers[1].empty())
+              {
+                fds[unIndex].fd = interface.second->fdWrite;
+              }
+              unIndex++;
+            }
+            // }}}
+            if ((nReturn = poll(fds, unIndex, 10)) > 0)
+            {
+              // {{{ accept
+              if (fds[0].revents & POLLIN)
+              {
+                int fdClient;
+                sockaddr_un cli_addr;
+                socklen_t clilen = sizeof(cli_addr);
+                if ((fdClient = accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
                 {
-                  if (ptJson->m.find("_d") == ptJson->m.end())
-                  {
-                    if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
-                    {
-                      ptJson->i("_d", "t");
-                      m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
-                    }
-                    else
-                    {
-                      list<radialLink *>::iterator linkIter = m_links.end();
-                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
-                      {
-                        if ((*i)->interfaces.find(ptJson->m["_t"]->v) != (*i)->interfaces.end())
-                        {
-                          linkIter = i;
-                        }
-                      }
-                      if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
-                      {
-                        ptJson->i("_d", "t");
-                        ptJson->i("Node", (*linkIter)->strNode);
-                        m_interfaces["link"]->strBuffers[1].append(ptJson->j(strJson) + "\n");
-                      }
-                      else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
-                      {
-                        ptJson->i("_d", "s");
-                        ptJson->i("Status", "error");
-                        ptJson->i("Error", "Interface does not exist.");
-                        m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
-                      }
-                    }
-                  }
-                  else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
-                  {
-                    ptJson->i("_d", "s");
-                    m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
-                  }
-                }
-                else if (sockets[fds[i].fd] == "link" && ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
-                {
-                  for (auto &link : m_links)
-                  {
-                    for (auto &interface : link->interfaces)
-                    {
-                      delete interface.second;
-                    }
-                    link->interfaces.clear();
-                    delete link;
-                  }
-                  m_links.clear();
-                  if (ptJson->m.find("Links") != ptJson->m.end())
-                  {
-                    for (auto &link : ptJson->m["Links"]->m)
-                    {
-                      radialLink *ptLink = new radialLink;
-                      ptLink->strNode = link.first;
-                      if (link.second->m.find("Server") != link.second->m.end() && !link.second->m["Server"]->v.empty())
-                      {
-                        ptLink->strServer = link.second->m["Server"]->v;
-                      }
-                      if (link.second->m.find("Port") != link.second->m.end() && !link.second->m["Port"]->v.empty())
-                      {
-                        ptLink->strPort = link.second->m["Port"]->v;
-                      }
-                      if (link.second->m.find("Interfaces") != link.second->m.end())
-                      {
-                        for (auto &interface : link.second->m["Interfaces"]->m)
-                        {
-                          ptLink->interfaces[interface.first] = new radialInterface;
-                          if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
-                          {
-                            ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
-                          }
-                          if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
-                          {
-                            ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
-                          }
-                          ptLink->interfaces[interface.first]->nPid = -1;
-                          if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
-                          {
-                            stringstream ssPid(interface.second->m["PID"]->v);
-                            ssPid >> ptLink->interfaces[interface.first]->nPid;
-                          }
-                          ptLink->interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
-                          ptLink->interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
-                        }
-                      }
-                      m_links.push_back(ptLink);
-                    }
-                  }
-                  links();
+                  managers[fdClient] = {"", ""};
                 }
                 else
                 {
-                  // {{{ prep work
-                  bool bResult = false;
-                  strError.clear();
-                  // }}}
-                  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                  bExit = true;
+                  cerr << strPrefix << "->accept(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+                }
+              }
+              // }}}
+              for (size_t i = 1; i < unIndex; i++)
+              {
+                // {{{ interfaces
+                if (sockets.find(fds[i].fd) != sockets.end())
+                {
+                  // {{{ read
+                  if (fds[i].revents & (POLLHUP | POLLIN))
                   {
-                    // {{{ add
-                    if (ptJson->m["Function"]->v == "add")
+                    if (m_pUtility->fdRead(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[0], nReturn))
                     {
-                      if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
+                      while ((unPosition = m_interfaces[sockets[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
                       {
-                        if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
+                        ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
+                        m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
+                        if (ptJson->m.find("_t") != ptJson->m.end() && !ptJson->m["_t"]->v.empty())
                         {
-                          if (add(strPrefix, ptJson->m["Name"]->v, ((ptJson->m.find("AccessFunction") != ptJson->m.end() && !ptJson->m["AccessFunction"]->v.empty())?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
+                          if (ptJson->m.find("_d") == ptJson->m.end())
                           {
-                            bResult = true;
-                            interfaces();
+                            if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
+                            {
+                              ptJson->i("_d", "t");
+                              m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                            }
+                            else
+                            {
+                              list<radialLink *>::iterator linkIter = m_links.end();
+                              for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+                              {
+                                if ((*i)->interfaces.find(ptJson->m["_t"]->v) != (*i)->interfaces.end())
+                                {
+                                  linkIter = i;
+                                }
+                              }
+                              if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
+                              {
+                                ptJson->i("_d", "t");
+                                ptJson->i("Node", (*linkIter)->strNode);
+                                m_interfaces["link"]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                              }
+                              else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                              {
+                                ptJson->i("_d", "s");
+                                ptJson->i("Status", "error");
+                                ptJson->i("Error", "Interface does not exist.");
+                                m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                              }
+                            }
+                          }
+                          else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                          {
+                            ptJson->i("_d", "s");
+                            m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                          }
+                        }
+                        else if (sockets[fds[i].fd] == "link" && ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
+                        {
+                          for (auto &link : m_links)
+                          {
+                            for (auto &interface : link->interfaces)
+                            {
+                              delete interface.second;
+                            }
+                            link->interfaces.clear();
+                            delete link;
+                          }
+                          m_links.clear();
+                          if (ptJson->m.find("Links") != ptJson->m.end())
+                          {
+                            for (auto &link : ptJson->m["Links"]->m)
+                            {
+                              radialLink *ptLink = new radialLink;
+                              ptLink->strNode = link.first;
+                              if (link.second->m.find("Server") != link.second->m.end() && !link.second->m["Server"]->v.empty())
+                              {
+                                ptLink->strServer = link.second->m["Server"]->v;
+                              }
+                              if (link.second->m.find("Port") != link.second->m.end() && !link.second->m["Port"]->v.empty())
+                              {
+                                ptLink->strPort = link.second->m["Port"]->v;
+                              }
+                              if (link.second->m.find("Interfaces") != link.second->m.end())
+                              {
+                                for (auto &interface : link.second->m["Interfaces"]->m)
+                                {
+                                  ptLink->interfaces[interface.first] = new radialInterface;
+                                  if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
+                                  {
+                                    ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
+                                  }
+                                  if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
+                                  {
+                                    ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
+                                  }
+                                  ptLink->interfaces[interface.first]->nPid = -1;
+                                  if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
+                                  {
+                                    stringstream ssPid(interface.second->m["PID"]->v);
+                                    ssPid >> ptLink->interfaces[interface.first]->nPid;
+                                  }
+                                  ptLink->interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
+                                  ptLink->interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
+                                }
+                              }
+                              m_links.push_back(ptLink);
+                            }
+                          }
+                          links();
+                        }
+                        else
+                        {
+                          // {{{ prep work
+                          bool bResult = false;
+                          strError.clear();
+                          // }}}
+                          if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                          {
+                            // {{{ add
+                            if (ptJson->m["Function"]->v == "add")
+                            {
+                              if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
+                              {
+                                if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
+                                {
+                                  if (add(strPrefix, ptJson->m["Name"]->v, ((ptJson->m.find("AccessFunction") != ptJson->m.end() && !ptJson->m["AccessFunction"]->v.empty())?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
+                                  {
+                                    bResult = true;
+                                    interfaces();
+                                  }
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add," << ptJson->m["Name"]->v << "]:  Please provide the Command.";
+                                  log(ssMessage.str());
+                                }
+                              }
+                              else
+                              {
+                                ssMessage.str("");
+                                ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
+                                log(ssMessage.str());
+                              }
+                            }
+                            // }}}
+                            // {{{ list
+                            else if (ptJson->m["Function"]->v == "list")
+                            {
+                              bResult = true;
+                              ptJson->m["Response"] = new Json;
+                              for (auto &j : m_interfaces)
+                              {
+                                stringstream ssPid;
+                                ssPid << j.second->nPid;
+                                ptJson->m["Response"]->m[j.first] = new Json;
+                                ptJson->m["Response"]->m[j.first]->i("AccessFunction", j.second->strAccessFunction);
+                                ptJson->m["Response"]->m[j.first]->i("Command", j.second->strCommand);
+                                ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
+                                ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
+                                ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
+                              }
+                            }
+                            // }}}
+                            // {{{ ping
+                            else if (ptJson->m["Function"]->v == "ping")
+                            {
+                              bResult = true;
+                            }
+                            // }}}
+                            // {{{ remove
+                            else if (ptJson->m["Function"]->v == "remove")
+                            {
+                              if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
+                              {
+                                if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
+                                {
+                                  bResult = true;
+                                  setShutdown(strPrefix, ptJson->m["Name"]->v, true);
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
+                                  log(ssMessage.str());
+                                }
+                              }
+                              else
+                              {
+                                ssMessage.str("");
+                                ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
+                                log(ssMessage.str());
+                              }
+                            }
+                            // }}}
+                            // {{{ shutdown
+                            else if (ptJson->m["Function"]->v == "shutdown")
+                            {
+                              bResult = true;
+                              setShutdown(strPrefix, ((ptJson->m.find("Target") != ptJson->m.end())?ptJson->m["Target"]->v:""));
+                            }
+                            // }}}
+                            // {{{ invalid
+                            else
+                            {
+                              strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
+                            }
+                            // }}}
+                          }
+                          // {{{ post work
+                          ptJson->i("_d", "s");
+                          ptJson->i("Status", ((bResult)?"okay":"error"));
+                          if (!strError.empty())
+                          {
+                            ptJson->i("Error", strError);
+                          }
+                          m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                          // }}}
+                        }
+                        delete ptJson;
+                      }
+                    }
+                    else
+                    {
+                      removals.push_back(sockets[fds[i].fd]);
+                      if (nReturn < 0 || errno == EINVAL)
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                        if (errno == EINVAL)
+                        {
+                          ssMessage << " --- POSSIBLE CORE DUMP";
+                        }
+                        log(ssMessage.str());
+                      }
+                    }
+                  }
+                  // }}}
+                  // {{{ write
+                  if (fds[i].revents & POLLOUT)
+                  {
+                    if (!m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
+                    {
+                      removals.push_back(sockets[fds[i].fd]);
+                      if (nReturn < 0)
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                        log(ssMessage.str());
+                      }
+                    }
+                  }
+                  // }}}
+                }
+                // }}}
+                // {{{ managers
+                else if (managers.find(fds[i].fd) != managers.end())
+                {
+                  // {{{ read
+                  if (fds[i].revents & POLLIN)
+                  {
+                    if (m_pUtility->fdRead(fds[i].fd, managers[fds[i].fd][0], nReturn))
+                    {
+                      while ((unPosition = managers[fds[i].fd][0].find("\n")) != string::npos)
+                      {
+                        bool bProcessed = false;
+                        ptJson = new Json(managers[fds[i].fd][0].substr(0, unPosition));
+                        managers[fds[i].fd][0].erase(0, (unPosition + 1));
+                        strError.clear();
+                        if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                        {
+                          ifstream inInterfaces;
+                          string strInterface;
+                          stringstream ssInterfaces;
+                          Json *ptInterfaces = NULL;
+                          if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                          {
+                            strInterface = ptJson->m["Interface"]->v;
+                          }
+                          ssInterfaces << m_strData << "/interfaces.json";
+                          inInterfaces.open(ssInterfaces.str().c_str());
+                          if (inInterfaces)
+                          {
+                            string strLine;
+                            stringstream ssJson;
+                            while (getline(inInterfaces, strLine))
+                            {
+                              ssJson << strLine;
+                            }
+                            ptInterfaces = new Json(ssJson.str());
+                          }
+                          else
+                          {
+                            ssMessage.str("");
+                            ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+                            strError = ssMessage.str();
+                          }
+                          inInterfaces.close();
+                          if (ptInterfaces != NULL)
+                          {
+                            ssInterfaces.str("");
+                            for (auto interfaceIter = ptInterfaces->m.begin(); interfaceIter != ptInterfaces->m.end(); interfaceIter++)
+                            {
+                              if (interfaceIter != ptInterfaces->m.begin())
+                              {
+                                ssInterfaces << ", ";
+                              }
+                              ssInterfaces << interfaceIter->first;
+                            }
+                            if (ptJson->m["Function"]->v == "list")
+                            {
+                              bProcessed = true;
+                              ptJson->i("Response", ssInterfaces.str());
+                            }
+                            else if (ptJson->m["Function"]->v == "start")
+                            {
+                              if (!strInterface.empty())
+                              {
+                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                {
+                                  if (m_interfaces.find(strInterface) == m_interfaces.end())
+                                  {
+                                    if (add(strPrefix, strInterface, ((ptInterfaces->m[strInterface]->m.find("AccessFunction") != ptInterfaces->m[strInterface]->m.end() && !ptInterfaces->m[strInterface]->m["AccessFunction"]->v.empty())?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ((ptInterfaces->m[strInterface]->m.find("Respawn") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m[strInterface]->m.find("Restricted") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
+                                    {
+                                      bProcessed = true;
+                                    }
+                                    else
+                                    {
+                                      strError = "Failed to start interface.";
+                                    }
+                                  }
+                                  else
+                                  {
+                                    bProcessed = true;
+                                    strError = "Interface is already started.";
+                                  }
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << "Please provide a valid Interface:  " << ssInterfaces.str() << ".";
+                                  strError = ssMessage.str();
+                                }
+                              }
+                              else
+                              {
+                                strError = "Please provide the Interface.";
+                              }
+                            }
+                            else if (ptJson->m["Function"]->v == "status")
+                            {
+                              if (!strInterface.empty())
+                              {
+                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                {
+                                  bProcessed = true;
+                                  ptJson->i("Response", ((m_interfaces.find(strInterface) != m_interfaces.end())?"online":"offline"));
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << "Please provide a valid Interface:  " << ssInterfaces.str() << ".";
+                                  strError = ssMessage.str();
+                                }
+                              }
+                              else
+                              {
+                                strError = "Please provide the Interface.";
+                              }
+                            }
+                            else if (ptJson->m["Function"]->v == "stop")
+                            {
+                              if (!strInterface.empty())
+                              {
+                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                {
+                                  bProcessed = true;
+                                  if (m_interfaces.find(strInterface) != m_interfaces.end())
+                                  {
+                                    setShutdown(strPrefix, strInterface, true);
+                                  }
+                                  else
+                                  {
+                                    strError = "Interface is already stopped.";
+                                  }
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << "Please provide a valid Interface:  " << ssInterfaces.str() << ".";
+                                  strError = ssMessage.str();
+                                }
+                              }
+                              else
+                              {
+                                strError = "Please provide the Interface.";
+                              }
+                            }
+                            else
+                            {
+                              strError = "Please provide a valid Function:  list, start, status, stop.";
+                            }
                           }
                         }
                         else
                         {
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add," << ptJson->m["Name"]->v << "]:  Please provide the Command.";
-                          log(ssMessage.str());
+                          strError = "Please provide the Function.";
                         }
-                      }
-                      else
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
-                        log(ssMessage.str());
-                      }
-                    }
-                    // }}}
-                    // {{{ list
-                    else if (ptJson->m["Function"]->v == "list")
-                    {
-                      bResult = true;
-                      ptJson->m["Response"] = new Json;
-                      for (auto &j : m_interfaces)
-                      {
-                        stringstream ssPid;
-                        ssPid << j.second->nPid;
-                        ptJson->m["Response"]->m[j.first] = new Json;
-                        ptJson->m["Response"]->m[j.first]->i("AccessFunction", j.second->strAccessFunction);
-                        ptJson->m["Response"]->m[j.first]->i("Command", j.second->strCommand);
-                        ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
-                        ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
-                        ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
-                      }
-                    }
-                    // }}}
-                    // {{{ ping
-                    else if (ptJson->m["Function"]->v == "ping")
-                    {
-                      bResult = true;
-                    }
-                    // }}}
-                    // {{{ remove
-                    else if (ptJson->m["Function"]->v == "remove")
-                    {
-                      if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
-                      {
-                        if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
+                        ptJson->i("Status", ((bProcessed)?"okay":"error"));
+                        if (!strError.empty())
                         {
-                          bResult = true;
-                          setShutdown(strPrefix, ptJson->m["Name"]->v, true);
+                          ptJson->i("Error", strError);
                         }
-                        else
-                        {
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
-                          log(ssMessage.str());
-                        }
-                      }
-                      else
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
-                        log(ssMessage.str());
+                        managers[fds[i].fd][1] = ptJson->j(strJson) + "\n";
+                        delete ptJson;
                       }
                     }
-                    // }}}
-                    // {{{ shutdown
-                    else if (ptJson->m["Function"]->v == "shutdown")
-                    {
-                      bResult = true;
-                      setShutdown(strPrefix, ((ptJson->m.find("Target") != ptJson->m.end())?ptJson->m["Target"]->v:""));
-                    }
-                    // }}}
-                    // {{{ invalid
                     else
                     {
-                      strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
+                      managerRemovals.push_back(fds[i].fd);
+                      if (nReturn < 0)
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [manager," << fds[i].fd << "]:  " << strerror(errno);
+                        log(ssMessage.str());
+                      }
                     }
-                    // }}}
                   }
-                  // {{{ post work
-                  ptJson->i("_d", "s");
-                  ptJson->i("Status", ((bResult)?"okay":"error"));
-                  if (!strError.empty())
+                  // }}}
+                  // {{{ write
+                  if (fds[i].revents & POLLOUT)
                   {
-                    ptJson->i("Error", strError);
+                    if (m_pUtility->fdWrite(fds[i].fd, managers[fds[i].fd][1], nReturn))
+                    {
+                      if (managers[fds[i].fd][1].empty())
+                      {
+                        managerRemovals.push_back(fds[i].fd);
+                      }
+                    }
+                    else
+                    {
+                      managerRemovals.push_back(fds[i].fd);
+                      if (nReturn < 0)
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [manager," << fds[i].fd << "]:  " << strerror(errno);
+                        log(ssMessage.str());
+                      }
+                    }
                   }
-                  m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                   // }}}
                 }
-                delete ptJson;
+                // }}}
               }
             }
-            else
+            else if (nReturn < 0 && errno != EINTR)
             {
-              removals.push_back(sockets[fds[i].fd]);
-              if (nReturn < 0 || errno == EINVAL)
+              bExit = true;
+              cerr << strPrefix << "->poll(" << errno << ") " << strerror(errno) << endl;
+            }
+            // {{{ post work
+            delete[] fds;
+            managerRemovals.sort();
+            managerRemovals.unique();
+            while (!managerRemovals.empty())
+            {
+              managers.erase(managerRemovals.front());
+              close(managerRemovals.front());
+              managerRemovals.pop_front();
+            }
+            removals.sort();
+            removals.unique();
+            if (!removals.empty())
+            {
+              for (auto &i : removals)
               {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
-                if (errno == EINVAL)
+                remove(strPrefix, i);
+              }
+              interfaces();
+            }
+            monitor(strPrefix);
+            if (shutdown())
+            {
+              if (m_interfaces.empty())
+              {
+                bExit = true;
+              }
+              else if (m_interfaces.size() == 1)
+              {
+                if (m_interfaces.find("log") != m_interfaces.end())
                 {
-                  ssMessage << " --- POSSIBLE CORE DUMP";
+                  time(&CShutdownTime[1]);
+                  if (CShutdownTime[0] == 0)
+                  {
+                    CShutdownTime[0] = CShutdownTime[1];
+                    ssMessage.str("");
+                    ssMessage << strPrefix << " [log]:  Interface shutdown.";
+                    log(ssMessage.str());
+                  }
+                  if (CShutdownTime[1] - CShutdownTime[0] > 2)
+                  {
+                    setShutdown(strPrefix, "log", true);
+                  }
                 }
-                log(ssMessage.str());
+                else
+                {
+                  bExit = true;
+                }
               }
             }
+            // }}}
           }
-          // }}}
-          // {{{ write
-          if (fds[i].revents & POLLOUT)
+          // {{{ post work
+          for (auto &manager : managers)
           {
-            if (!m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
-            {
-              removals.push_back(sockets[fds[i].fd]);
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
-                log(ssMessage.str());
-              }
-            }
+            close(manager.first);
           }
+          managers.clear();
           // }}}
         }
-      }
-      else if (nReturn < 0 && errno != EINTR)
-      {
-        bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << "->poll(" << errno << ") " << strerror(errno);
-        notify(ssMessage.str());
-      }
-      // {{{ post work
-      delete[] fds;
-      removals.sort();
-      removals.unique();
-      if (!removals.empty())
-      {
-        for (auto &i : removals)
+        else
         {
-          remove(strPrefix, i);
-        }
-        interfaces();
-      }
-      monitor(strPrefix);
-      if (shutdown())
-      {
-        if (m_interfaces.empty())
-        {
-          bExit = true;
-        }
-        else if (m_interfaces.size() == 1)
-        {
-          if (m_interfaces.find("log") != m_interfaces.end())
-          {
-            time(&CShutdownTime[1]);
-            if (CShutdownTime[0] == 0)
-            {
-              CShutdownTime[0] = CShutdownTime[1];
-              ssMessage.str("");
-              ssMessage << strPrefix << " [log]:  Interface shutdown.";
-              log(ssMessage.str());
-            }
-            if (CShutdownTime[1] - CShutdownTime[0] > 2)
-            {
-              setShutdown(strPrefix, "log", true);
-            }
-          }
-          else
-          {
-            bExit = true;
-          }
+          cerr << strPrefix << "->Hub::load() error:  " << strError << endl;
         }
       }
-      // }}}
+      else
+      {
+        cerr << strPrefix << "->listen(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+      }
     }
+    else
+    {
+      cerr << strPrefix << "->bound(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+    }
+    // {{{ post work
+    close(fdUnix);
+    // }}}
   }
   else
   {
-    ssMessage.str("");
-    ssMessage << strPrefix << "->Hub::load() error:  " << strError;
-    notify(ssMessage.str());
+    cerr << strPrefix << "->socket(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno);
   }
+  // {{{ post work
+  ::remove(ssUnix.str().c_str());
+  // }}}
 }
 // }}}
 // {{{ remove()
