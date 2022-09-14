@@ -344,7 +344,7 @@ void Hub::process(string strPrefix)
       ssMessage.str("");
       ssMessage << strPrefix << "->bind():  Bound manager socket.";
       log(ssMessage.str());
-      chmod(ssUnix.str().c_str(), 00777);
+      chmod(ssUnix.str().c_str(), 00770);
       // }}}
       if (listen(fdUnix, 5) == 0)
       {
