@@ -26,7 +26,7 @@ using namespace std;
 #include <Json>
 using namespace common;
 
-#define UNIX_SOCKET "/data/radial/manager.sock"
+#define UNIX_SOCKET "/tmp/rdl_mgr"
 
 bool request(const string strFunction, const string strInterface, string &strResponse, string &strError);
 

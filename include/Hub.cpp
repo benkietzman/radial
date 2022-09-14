@@ -324,7 +324,7 @@ void Hub::process(string strPrefix)
   stringstream ssUnix, ssMessage;
   Json *ptJson;
   strPrefix += "->Hub::process()";
-  ssUnix << m_strData << "/manager.sock";
+  ssUnix << "/tmp/rdl_mgr";
   ::remove(ssUnix.str().c_str());
   // }}}
   if ((fdUnix = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0)
