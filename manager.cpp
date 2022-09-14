@@ -118,7 +118,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
 
   strError.clear();
   strResponse.clear();
-  if (stat(UNIX_SOCKET, &tStat) != 0)
+  if (stat(UNIX_SOCKET, &tStat) == 0)
   {
     int fdUnix;
     if ((fdUnix = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0)
