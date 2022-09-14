@@ -383,6 +383,7 @@ void Hub::process(string strPrefix)
               {
                 fds[unIndex].events |= POLLOUT;
               }
+              unIndex++;
             }
             for (auto &interface : m_interfaces)
             {

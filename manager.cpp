@@ -141,6 +141,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
           ptJson->i("Interface", strInterface);
         }
         strBuffers[1] = ptJson->j(strJson) + "\n";
+        delete ptJson;
         while (!bExit)
         {
           pollfd fds[1];
