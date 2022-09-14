@@ -73,7 +73,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
               stringstream ssPort(ptJson->m["Port"]->v);
               ssPort >> unPort;
             }
-            if (connect(ptJson->m["Server"]->v, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
+            if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
             {
               (*mysqlIter)->secure.lock();
               if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
