@@ -647,7 +647,7 @@ void Link::process(string strPrefix)
                     {
                       for (auto &link : m_links)
                       {
-                        if (ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v)
+                        if ((ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
                         {
                           link->responses.push_back(strLine);
                         }
