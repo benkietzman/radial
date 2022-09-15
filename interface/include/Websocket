@@ -22,6 +22,8 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ structs
+// {{{ data
 struct data
 { 
   bool bRemove;
@@ -35,6 +37,8 @@ struct data
   string strUser;
   string strUserID;
 };
+// }}}
+// }}}
 // {{{ Websocket
 class Websocket : public Interface
 {
