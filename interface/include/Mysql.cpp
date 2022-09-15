@@ -59,16 +59,12 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             list<radial_mysql *>::iterator mysqlIter;
             string strPort, strServer;
-            stringstream ssError;
+            stringstream ssError, ssServer(ptJson->m["Server"]->v);;
             unsigned int unPort = 0;
             unsigned long long ullRows = 0;
-            m_manip.getToken(strServer, ptJson->m["Server"]->v, 1, ":", false);
-            m_manip.getToken(strPort, ptJson->m["Server"]->v, 2, ":", false);
+            getline(ssServer, strServer, ':');
+            getline(ssServer, strPort, ':');
             if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
-            {
-              strPort = ptJson->m["Port"]->v;
-            }
-            if (!strPort.empty())
             {
               stringstream ssPort(ptJson->m["Port"]->v);
               ssPort >> unPort;
