@@ -26,12 +26,17 @@ class Auth : public Interface
 {
   protected:
   map<string, string> m_accessFunctions;
+  bool (*m_pAnalyzeCallback)(string, Json *, Json *, string &);
+
+  bool analyze(string strPrefix, Json *ptJson, Json *ptData, string &strError);
+  bool request(string strPrefix, Json *ptJson, string &strError);
 
   public:
   Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Auth();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
   bool init();
+  void setAnalyze(bool (*pCallback)(string, Json *, Json *, string &));
 };
 // }}}
 }
