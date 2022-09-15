@@ -87,12 +87,24 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
 {
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage;
+  Json *ptLive;
 
   threadIncrement();
   strPrefix += "->Websocket::request()";
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
   ptConn->mutexShare.unlock();
+  ptLive = new Json;
+  ptLive->i("radialProcess", m_strName);
+  ptLive->i("radialFunction", "request");
+  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+  {
+    ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+  }
+  ptLive->i("radialPrefix", strPrefix);
+  ptLive->i("radialPurpose", "status");
+  ptConn->buffers.push_back(ptLive->j(strJson));
+  delete ptLive;
   if (!ptConn->strApplication.empty())
   {
     strApplication = ptConn->strApplication;
