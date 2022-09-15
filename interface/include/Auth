@@ -28,9 +28,6 @@ class Auth : public Interface
   map<string, string> m_accessFunctions;
   bool (*m_pAnalyzeCallback)(string, Json *, Json *, string &);
 
-  bool analyze(string strPrefix, Json *ptJson, Json *ptData, string &strError);
-  bool request(string strPrefix, Json *ptJson, string &strError);
-
   public:
   Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Auth();

@@ -30,55 +30,6 @@ Auth::~Auth()
 {
 }
 // }}}
-// {{{ analyze()
-bool Auth::analyze(string strPrefix, Json *ptJson, Json *ptData, string &strError)
-{
-  bool bResult = false;
-
-  if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
-  {
-    string strAccessFunction = "Function";
-    if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
-    {
-      strAccessFunction = m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v];
-    }
-    if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == "all")
-    {
-      bResult = true;
-    }
-    else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
-    {
-      if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
-      {
-        bResult = true;
-      }
-      else
-      {
-        for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->l)
-        {
-          if (access->v == ptJson->m[strAccessFunction]->v)
-          {
-            bResult = true;
-          }
-        }
-      }
-    }
-  }
-  if (!bResult)
-  {
-    if (m_pAnalyzeCallback != NULL)
-    {
-      bResult = m_pAnalyzeCallback(strPrefix, ptJson, ptData, strError);
-    }
-    else
-    {
-      strError = "Authorization denied.";
-    }
-  }
-
-  return bResult;
-}
-// }}}
 // {{{ callback()
 void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
@@ -87,7 +38,83 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Auth::callback()";
-  bResult = request(strPrefix, ptJson, strError);
+  if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+  {
+    if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+    {
+      if (ptJson->m.find("Request") != ptJson->m.end())
+      {
+        if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
+        {
+          Json *ptData = new Json(ptJson);
+          if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
+          {
+            if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
+            {
+              string strAccessFunction = "Function";
+              if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
+              {
+                strAccessFunction = m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v];
+              }
+              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == "all")
+              {
+                bResult = true;
+              }
+              else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
+              {
+                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->l)
+                  {
+                    if (access->v == ptJson->m[strAccessFunction]->v)
+                    {
+                      bResult = true;
+                    }
+                  }
+                }
+              }
+            }
+            if (!bResult)
+            {
+              if (m_pAnalyzeCallback != NULL)
+              {
+                bResult = m_pAnalyzeCallback(strPrefix, ptJson, ptData, strError);
+              }
+              else
+              {
+                strError = "Authorization denied.";
+              }
+            }
+          }
+          else if (m_pWarden == NULL)
+          {
+            strError = "Please initialize Warden.";
+          }
+          delete ptData;
+        }
+        else
+        {
+          strError = "Please provide the Interface within the Request.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Request.";
+      }
+    }
+    else
+    {
+      strError = "Please provide the Password.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the User.";
+  }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
@@ -121,57 +148,6 @@ bool Auth::init()
     }
   }
   delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ request()
-bool Auth::request(string strPrefix, Json *ptJson, string &strError)
-{
-  bool bResult = false;
-
-  strPrefix += "->Auth::request()";
-  if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
-  {
-    if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
-    {
-      if (ptJson->m.find("Request") != ptJson->m.end())
-      {
-        if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
-        {
-          Json *ptData = new Json(ptJson);
-          if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
-          {
-            if (analyze(strPrefix, ptJson, ptData, strError))
-            {
-              bResult = true;
-            }
-          }
-          else if (m_pWarden == NULL)
-          {
-            strError = "Please initialize Warden.";
-          }
-          delete ptData;
-        }
-        else
-        {
-          strError = "Please provide the Interface within the Request.";
-        }
-      }
-      else
-      {
-        strError = "Please provide the Request.";
-      }
-    }
-    else
-    {
-      strError = "Please provide the Password.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the User.";
-  }
 
   return bResult;
 }
