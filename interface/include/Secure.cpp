@@ -153,10 +153,22 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             bResult = true;
           } 
           // }}}
+          // {{{ windows
+          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
+          {
+            bResult = true;
+          } 
+          // }}}
+          // {{{ callback
+          else if (m_pLoginCallback != NULL)
+          {
+            bResult = m_pLoginCallback(strPrefix, ptJson, strError);
+          }
+          // }}}
           // {{{ invalid
           else
           {
-            strError = "Please provide a valid Type within the Request:  password.";
+            strError = "Please provide a valid Type within the Request:  password, windows.";
           }
           // }}}
         }
@@ -193,10 +205,31 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             }
           }
           // }}}
+          // {{{ windows
+          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
+          {
+            if (ptJson->m["Request"]->m.find("Return") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Return"]->v.empty())
+            {
+              bResult = true;
+              ptJson->m["Response"] = new Json;
+              ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
+            }
+            else
+            {
+              strError = "Please provide the Return.";
+            }
+          }
+          // }}}
+          // {{{ callback
+          else if (m_pLogoutCallback != NULL)
+          {
+            bResult = m_pLogoutCallback(strPrefix, ptJson, strError);
+          }
+          // }}}
           // {{{ invalid
           else
           {
-            strError = "Please provide a valid Type within the Request:  password.";
+            strError = "Please provide a valid Type within the Request:  password, windows.";
           }
           // }}}
         }
@@ -218,6 +251,21 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
       ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
+      if (ptJson->m["Request"]->m.find("Type") != ptJson->m["Request"]->m.end())
+      {
+        if (ptJson->m["Request"]->m["Type"]->v == "password")
+        {
+          ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
+        }
+        else if (ptJson->m["Request"]->m["Type"]->v == "windows")
+        {
+          ptJson->m["Response"]->m["auth"]->i("login_title", "Windows Login");
+        }
+        else if (m_pLoginTitleCallback != NULL)
+        {
+          ptJson->m["Response"]->m["auth"]->i("login_title", m_pLoginTitleCallback(ptJson->m["Request"]->m["Type"]->v));
+        }
+      }
       if (ptJson->m.find("Request") != ptJson->m.end())
       {
         if (ptJson->m["Request"]->m.size() > 1)
@@ -232,8 +280,16 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             ptData->i("Password", "");
           }
+          if (m_pProcessPreAuthzCallback != NULL)
+          {
+            m_pProcessPreAuthzCallback(strPrefix, ptJson, ptData);
+          }
           if (m_pWarden->authz(ptData, strError))
           {
+            if (m_pProcessPostAuthzCallback != NULL)
+            {
+              m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
+            }
             if (ptData->m.find("central") != ptData->m.end())
             {
               map<string, string> getPersonRow;
@@ -315,6 +371,36 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ setLogin()
+void Secure::setLogin(bool (*pCallback)(string, Json *, string &))
+{
+  m_pLoginCallback = pCallback;
+}
+// }}}
+// {{{ setLoginTitle()
+void Secure::setLoginTitle(string (*pCallback)(const string))
+{
+  m_pLoginTitleCallback = pCallback;
+}
+// }}}
+// {{{ setLogout()
+void Secure::setLogout(bool (*pCallback)(string, Json *, string &))
+{
+  m_pLogoutCallback = pCallback;
+}
+// }}}
+// {{{ setProcessPostAuthz()
+void Secure::setProcessPostAuthz(void (*pCallback)(string, Json *, Json *))
+{
+  m_pProcessPostAuthzCallback = pCallback;
+}
+// }}}
+// {{{ setProcessPreAuthz()
+void Secure::setProcessPreAuthz(void (*pCallback)(string, Json *, Json *))
+{
+  m_pProcessPreAuthzCallback = pCallback;
 }
 // }}}
 }
