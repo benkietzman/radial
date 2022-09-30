@@ -49,12 +49,57 @@ Websocket::~Websocket()
 void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
-  string strError;
+  string strError, strJson;
   stringstream ssMessage;
 
   threadIncrement();
   strPrefix += "->Websocket::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
+  {
+    string strNode, strWsi;
+    stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
+    ssRequestID >> strNode >> strWsi;
+    if (!strNode.empty() && !strWsi.empty())
+    {
+      if (strNode == m_strNode)
+      {
+        list<data *>::iterator connIter = m_conns.end();
+        for (auto i = m_conns.begin(); connIter == m_conns.end() && i != m_conns.end(); i++)
+        {
+          stringstream ssWsi;
+          ssWsi << (*i)->wsi;
+          if (strWsi == ssWsi.str())
+          {
+            connIter = i;
+          }
+        }
+        if (connIter != m_conns.end())
+        {
+          bResult = true;
+          (*connIter)->buffers.push_back(ptJson->j(strJson));
+        }
+        else
+        {
+          strError = "Failed to find the upstream connection.";
+        }
+      }
+      else
+      {
+        Json *ptSubJson = new Json(ptJson);
+        ptSubJson->insert("Node", strNode);
+        if (hub("link", ptSubJson, strError))
+        {
+          bResult = true;
+        }
+        delete ptSubJson;
+      }
+    }
+    else
+    {
+      strError = "Please provide a valid wsRequestID.";
+    }
+  }
+  else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     if (ptJson->m["Function"]->v == "ping")
     {
@@ -62,12 +107,12 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else
     {
-      strError = "Please provide a valid Function:  ping.";
+      strError = "Please provide a valid Function:  live, ping.";
     }
   }
   else
   {
-    strError = "Please provide the Function.";
+    strError = "Please provide the Function or wsRequestID.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
@@ -86,7 +131,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
 void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
 {
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
-  stringstream ssMessage;
+  stringstream ssMessage, ssRequestID;
   Json *ptLive;
 
   threadIncrement();
@@ -94,6 +139,8 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
   ptConn->mutexShare.unlock();
+  ssRequestID << m_strNode << " " << ptConn->wsi;
+  ptJson->insert("wsRequestID", ssRequestID.str());
   ptLive = new Json;
   ptLive->i("radialProcess", m_strName);
   ptLive->i("radialFunction", "request");
