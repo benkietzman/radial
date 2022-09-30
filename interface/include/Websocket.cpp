@@ -56,19 +56,19 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   strPrefix += "->Websocket::callback()";
   if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
   {
-    string strNode, strWsi;
+    string strIdentity, strName, strNode;
     stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
-    ssRequestID >> strNode >> strWsi;
-    if (!strNode.empty() && !strWsi.empty())
+    ssRequestID >> strNode >> strName >> strIdentity;
+    if (!strNode.empty() && strName == m_strName && !strIdentity.empty())
     {
       if (strNode == m_strNode)
       {
         list<data *>::iterator connIter = m_conns.end();
         for (auto i = m_conns.begin(); connIter == m_conns.end() && i != m_conns.end(); i++)
         {
-          stringstream ssWsi;
-          ssWsi << (*i)->wsi;
-          if (strWsi == ssWsi.str())
+          stringstream ssIdentity;
+          ssIdentity << (*i)->wsi;
+          if (strIdentity == ssIdentity.str())
           {
             connIter = i;
           }
@@ -86,7 +86,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
       else
       {
         Json *ptSubJson = new Json(ptJson);
-        ptSubJson->insert("Node", strNode);
+        ptSubJson->i("Node", strNode);
         if (hub("link", ptSubJson, strError))
         {
           bResult = true;
@@ -139,8 +139,8 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
   ptConn->mutexShare.unlock();
-  ssRequestID << m_strNode << " " << ptConn->wsi;
-  ptJson->insert("wsRequestID", ssRequestID.str());
+  ssRequestID << m_strNode << " " << m_strName << " " << ptConn->wsi;
+  ptJson->i("wsRequestID", ssRequestID.str());
   ptLive = new Json;
   ptLive->i("radialProcess", m_strName);
   ptLive->i("radialFunction", "request");

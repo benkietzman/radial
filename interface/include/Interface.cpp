@@ -668,6 +668,29 @@ void Interface::process(string strPrefix)
             }
             else if (m_pCallback != NULL)
             {
+              if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
+              {
+                string strIdentity, strName, strNode;
+                stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
+                ssRequestID >> strNode >> strName >> strIdentity;
+                if (strName != m_strName)
+                {
+                  Json *ptLive = new Json;
+                  ptLive->i("radialProcess", m_strName);
+                  ptLive->i("radialPrefix", strPrefix);
+                  ptLive->i("radialPurpose", "status");
+                  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                  {
+                    ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+                  }
+                  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                  {
+                    ptLive->i("radialFunction", ptJson->m["Function"]->v);
+                  }
+                  hub(strName, ptLive, false);
+                  delete ptLive;
+                }
+              }
               m_pCallback(strPrefix, ptJson, true);
             }
             delete ptJson;
