@@ -107,7 +107,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else
     {
-      strError = "Please provide a valid Function:  live, ping.";
+      strError = "Please provide a valid Function:  ping.";
     }
   }
   else
@@ -388,14 +388,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     ptJson->m.erase("Password");
   }
   ptConn->mutexShare.lock();
-  ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->unThreads > 0)
   {
     ptConn->unThreads--;
   }
+  ptConn->buffers.push_back(ptJson->j(strJson));
   ptConn->mutexShare.unlock();
-  lws_callback_on_writable(ptConn->wsi);
   delete ptJson;
+  lws_callback_on_writable(ptConn->wsi);
   threadDecrement();
 }
 // }}}
