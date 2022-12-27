@@ -7,10 +7,11 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/database bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/database bin/irc bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/database bin/irc bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
+	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/link $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
@@ -39,6 +40,16 @@ obj/database.o: database.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c database.cpp -o obj/database.o $(CPPFLAGS) -I../../common
 obj/Database.o: include/Database.cpp obj
 	g++ -ggdb -Wall -c include/Database.cpp -o obj/Database.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ irc
+irc: bin/irc $(prefix)/radial/interface
+	install --mode=775 bin/irc $(prefix)/radial/interface/
+bin/irc: ../../common/libcommon.a obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o bin
+	g++ -o bin/irc obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/irc.o: irc.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c irc.cpp -o obj/irc.o $(CPPFLAGS) -I../../common
+obj/Irc.o: include/Irc.cpp obj
+	g++ -ggdb -Wall -c include/Irc.cpp -o obj/Irc.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface

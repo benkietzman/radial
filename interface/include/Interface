@@ -25,14 +25,15 @@ namespace radial
 class Interface : public Base
 {
   protected:
-  void (*m_pAutoModeCallback)(string, const string, const string);
-  void (*m_pCallback)(string, Json *, const bool);
+  bool m_bMaster;
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutexShare;
   string m_strBuffers[2];
   string m_strMaster;
   string m_strName;
+  void (*m_pAutoModeCallback)(string, const string, const string);
+  void (*m_pCallback)(string, Json *, const bool);
 
   void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
@@ -51,6 +52,7 @@ class Interface : public Base
   void links(string strPrefix, Json *ptJson);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
+  bool master();
   void monitor(string strPrefix);
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);

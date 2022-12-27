@@ -458,6 +458,12 @@ void Interface::log(const string strFunction, const string strMessage)
   delete ptJson;
 }
 // }}}
+// {{{ master()
+bool Interface::master()
+{
+  return m_bMaster;
+}
+// }}}
 // {{{ monitor()
 void Interface::monitor(string strPrefix)
 {
@@ -660,6 +666,7 @@ void Interface::process(string strPrefix)
               {
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
+                m_bMaster = ((m_strMaster == m_strNode)?true:false);
                 if (m_pAutoModeCallback != NULL)
                 {
                   m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
@@ -788,6 +795,7 @@ void Interface::process(string strPrefix)
         }
         if (m_strMaster.empty())
         {
+          m_bMaster = true;
           m_strMaster = m_strNode;
         }
         if (!m_strMaster.empty())
