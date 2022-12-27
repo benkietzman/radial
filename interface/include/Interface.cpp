@@ -361,6 +361,24 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
   m_mutexShare.unlock();
 }
 // }}}
+// {{{ chat()
+bool Interface::chat(const string strTarget, const string strMessage, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "chat");
+  ptJson->i("Target", strTarget);
+  ptJson->i("Message", strMessage);
+  if (hub("irc", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
 {

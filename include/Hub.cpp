@@ -89,7 +89,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
         {
           long lArg;
           bResult = true;
-          ssMessage << " [" << strName << "]:  Interface added." << endl;
+          ssMessage << " [" << strName << "]:  Interface added.";
           close(writepipe[0]);
           close(readpipe[1]);
           if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
