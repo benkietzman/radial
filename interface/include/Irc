@@ -47,7 +47,7 @@ class Irc : public Interface
   void lock();
   bool message(string &strMessage);
   Json *monitor();
-  void monitorChannels();
+  void monitorChannels(string strPrefix);
   void part(const string strChannel);
   void push(const string strMessage);
   void unlock();

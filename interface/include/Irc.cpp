@@ -268,7 +268,7 @@ void Irc::bot(string strPrefix)
     while (!shutdown())
     {
       // {{{ prep work
-      bool bExit = false, bRegistered = false, bRegistering = false;
+      bool bExit = false, bRegistering = false;
       int fdSocket = -1, nReturn;
       pollfd *fds;
       size_t unIndex = 0, unPosition;
@@ -279,12 +279,12 @@ void Irc::bot(string strPrefix)
       while (!shutdown() && master() && !bExit)
       {
         // {{{ prep work
-        if (bRegistered)
+        if (m_bEnabled)
         {
           time(&(CTime[1]));
           if ((CTime[1] - CTime[0]) > 120)
           {
-            monitorChannels();
+            monitorChannels(strPrefix);
             CTime[0] = CTime[1];
           }
         }
@@ -355,7 +355,7 @@ void Irc::bot(string strPrefix)
         fds = new pollfd[1];
         fds[0].fd = fdSocket;
         fds[0].events = POLLIN;
-        if (fdSocket != -1 && !bRegistered && !bRegistering)
+        if (fdSocket != -1 && !m_bEnabled && !bRegistering)
         {
           stringstream ssBuffer;
           bRegistering = true;
@@ -443,7 +443,6 @@ void Irc::bot(string strPrefix)
                         case 1:
                         {
                           stringstream ssBuffer;
-                          bRegistered = true;
                           bRegistering = false;
                           strNick = strNickBase;
                           if (unIndex > 0)
@@ -574,6 +573,9 @@ void Irc::bot(string strPrefix)
         close(fdSocket);
         fdSocket = -1;
         disable();
+        ssMessage.str("");
+        ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Exited IRC server.";
+        log(ssMessage.str());
       }
       if (!shutdown())
       {
@@ -790,17 +792,19 @@ Json *Irc::monitor()
 }
 // }}}
 // {{{ monitorChannels()
-void Irc::monitorChannels()
+void Irc::monitorChannels(string strPrefix)
 {
   struct stat tStat;
-  stringstream ssFile;
+  stringstream ssFile, ssMessage;
 
+  strPrefix += "->Irc::monitorChannels()";
   ssFile << m_strData << "/irc/monitor.channels";
   if (stat(ssFile.str().c_str(), &tStat) == 0)
   {
     if (tStat.st_mtime > m_CMonitorChannelsModify)
     {
-      ifstream inMonitor(ssFile.str().c_str());
+      ifstream inMonitor;
+      inMonitor.open(ssFile.str().c_str());
       if (inMonitor)
       {
         string strLine;
@@ -825,23 +829,50 @@ void Irc::monitorChannels()
           }
           m_ptMonitor = new Json(ssJson.str());
           m_channels.clear();
-          for (auto &i : m_ptMonitor->m)
+          if (!m_ptMonitor->m.empty())
           {
-            m_channels.push_back(i.first);
-            m_channels.sort();
-            m_channels.unique();
-          }
-          if (m_bEnabled)
-          {
-            for (auto &i : m_ptMonitor->m)
+            if (m_bEnabled)
             {
-              join(i.first);
+              for (auto &i : m_ptMonitor->m)
+              {
+                m_channels.push_back(i.first);
+                m_channels.sort();
+                m_channels.unique();
+              }
+              for (auto &i : m_ptMonitor->m)
+              {
+                join(i.first);
+              }
             }
           }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
+            log(ssMessage.str());
+          }
         }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
+          log(ssMessage.str());
+        }
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
+        log(ssMessage.str());
       }
       inMonitor.close();
     }
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->stat(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
+    log(ssMessage.str());
   }
 }
 // }}}
