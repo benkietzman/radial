@@ -313,7 +313,13 @@ void Irc::bot(string strPrefix)
               }
             }
             freeaddrinfo(result);
-            if (!bConnected[1])
+            if (bConnected[2])
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->Utility::sslConnect() [" << m_strServer << ":" << m_strPort << "]:  Connected to IRC server.";
+              log(ssMessage.str());
+            }
+            else if (!bConnected[1])
             {
               ssMessage.str("");
               ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error:  " << strerror(errno);
@@ -435,6 +441,9 @@ void Irc::bot(string strPrefix)
                             strNick += ssIndex.str();
                           }
                           enable(strNick);
+                          ssMessage.str("");
+                          ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
+                          log(ssMessage.str());
                           break;
                         }
                         case 433:
