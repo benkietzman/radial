@@ -68,39 +68,17 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 {
   if (m_ptMonitor != NULL && strNick != m_strNick)
   {
-    string strChannel;
-    for (auto i = m_ptMonitor->m.begin(); strChannel.empty() && i != m_ptMonitor->m.end(); i++)
+    stringstream ssText;
+    ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
+    for (auto &i : m_ptMonitor->m)
     {
-      if (i->first == strTarget)
+      if (i.first != strTarget && i.second->m.find("Alerts") != i.second->m.end())
       {
-        strChannel = i->first;
-      }
-    }
-    if (!strChannel.empty())
-    {
-      bool bFound = false;
-      for (auto channelIter = m_channels.begin(); !bFound && channelIter != m_channels.end(); channelIter++)
-      {
-        if ((*channelIter) == strChannel)
+        for (auto &j : i.second->m["Alerts"]->l)
         {
-          bFound = true;
-        }
-      }
-      if (bFound)
-      {
-        stringstream ssText;
-        ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
-        for (auto &i : m_ptMonitor->m)
-        {
-          if (i.first != strChannel && i.second->m.find("Alerts") != i.second->m.end())
+          if (strMessage.size() >= (j->v.size() + 1) && strMessage.substr(0, (j->v.size() + 1)) == (j->v + (string)" "))
           {
-            for (auto &j : i.second->m["Alerts"]->l)
-            {
-              if (strMessage.size() >= (j->v.size() + 1) && strMessage.substr(0, (j->v.size() + 1)) == (j->v + (string)" "))
-              {
-                chat(i.first, ssText.str());
-              }
-            }
+            chat(i.first, ssText.str());
           }
         }
       }
@@ -494,26 +472,7 @@ void Irc::bot(string strPrefix)
                           string strValue;
                           ssData >> strValue;
                         }
-                        if (bChannel)
-                        {
-                          Json *ptMonitor = monitor();
-                          if (ptMonitor != NULL)
-                          {
-                            for (auto i = ptMonitor->m.begin(); strChannel.empty() && i != ptMonitor->m.end(); i++)
-                            {
-                              strChannel = i->first;
-                            }
-                            delete ptMonitor;
-                          }
-                        }
-                        if (!strChannel.empty())
-                        {
-                          analyze(strPrefix, strChannel, strID, strIdent, ssData);
-                        }
-                        else
-                        {
-                          analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
-                        }
+                        analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
                       }
                       // }}}
                     }
@@ -828,17 +787,10 @@ void Irc::monitorChannels(string strPrefix)
             delete m_ptMonitor;
           }
           m_ptMonitor = new Json(ssJson.str());
-          m_channels.clear();
           if (!m_ptMonitor->m.empty())
           {
             if (m_bEnabled)
             {
-              for (auto &i : m_ptMonitor->m)
-              {
-                m_channels.push_back(i.first);
-                m_channels.sort();
-                m_channels.unique();
-              }
               for (auto &i : m_ptMonitor->m)
               {
                 join(i.first);
