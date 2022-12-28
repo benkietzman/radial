@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
 }
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
+  thread threadAutoMode(&radial::Irc::autoMode, gpIrc, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {

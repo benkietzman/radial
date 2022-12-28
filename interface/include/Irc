@@ -56,6 +56,7 @@ class Irc : public Interface
   public:
   Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Irc();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
