@@ -502,10 +502,7 @@ void Irc::bot(string strPrefix)
                           {
                             for (auto i = ptMonitor->m.begin(); strChannel.empty() && i != ptMonitor->m.end(); i++)
                             {
-                              if (i->second->m.find("Remotes") != i->second->m.end() && i->second->m["Remotes"]->m.find("IRC") != i->second->m["Remotes"]->m.end() && i->second->m["Remotes"]->m["IRC"]->v == strTarget)
-                              {
-                                strChannel = i->first;
-                              }
+                              strChannel = i->first;
                             }
                             delete ptMonitor;
                           }
@@ -712,10 +709,7 @@ void Irc::disable()
     {
       for (auto &i : m_ptMonitor->m)
       {
-        if (i.second->m.find("Remotes") != i.second->m.end() && i.second->m["Remotes"]->m.find("IRC") != i.second->m["Remotes"]->m.end() && !i.second->m["Remotes"]->m["IRC"]->v.empty())
-        {
-          part(i.second->m["Remotes"]->m["IRC"]->v);
-        }
+        part(i.first);
       }
     }
     m_strNick.clear();
@@ -738,10 +732,7 @@ void Irc::enable(const string strNick)
     {
       for (auto &i : m_ptMonitor->m)
       {
-        if (i.second->m.find("Remotes") != i.second->m.end() && i.second->m["Remotes"]->m.find("IRC") != i.second->m["Remotes"]->m.end() && !i.second->m["Remotes"]->m["IRC"]->v.empty())
-        {
-          join(i.second->m["Remotes"]->m["IRC"]->v);
-        }
+        join(i.first);
       }
     }
   }
@@ -827,10 +818,7 @@ void Irc::monitorChannels()
             {
               for (auto &i : m_ptMonitor->m)
               {
-                if (i.second->m.find("Remotes") != i.second->m.end() && i.second->m["Remotes"]->m.find("IRC") != i.second->m["Remotes"]->m.end() && !i.second->m["Remotes"]->m["IRC"]->v.empty())
-                {
-                  part(i.second->m["Remotes"]->m["IRC"]->v);
-                }
+                part(i.first);
               }
             }
             delete m_ptMonitor;
@@ -847,10 +835,7 @@ void Irc::monitorChannels()
           {
             for (auto &i : m_ptMonitor->m)
             {
-              if (i.second->m.find("Remotes") != i.second->m.end() && i.second->m["Remotes"]->m.find("IRC") != i.second->m["Remotes"]->m.end() && !i.second->m["Remotes"]->m["IRC"]->v.empty())
-              {
-                join(i.second->m["Remotes"]->m["IRC"]->v);
-              }
+              join(i.first);
             }
           }
         }
