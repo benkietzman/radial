@@ -705,6 +705,9 @@ void Interface::process(string strPrefix)
               {
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << m_strMaster << "]:  Received master.";
+                log(ssMessage.str());
                 m_bMaster = ((m_strMaster == m_strNode)?true:false);
                 m_bMasterSettled = false;
                 time(&CMaster);
@@ -821,7 +824,7 @@ void Interface::process(string strPrefix)
         unsigned int unSeed = CTime;
         srand(unSeed);
         unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
-        if (!m_strMaster.empty())
+        if (!m_strMaster.empty() && m_strMaster != m_strNode)
         {
           bool bFound = false;
           m_mutexShare.lock();
@@ -845,6 +848,9 @@ void Interface::process(string strPrefix)
         if (!m_strMaster.empty())
         {
           Json *ptJson = new Json;
+          ssMessage.str("");
+          ssMessage << strPrefix << " [" << m_strMaster << "]:  Broacast master.";
+          log(ssMessage.str());
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
