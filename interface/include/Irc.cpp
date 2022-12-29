@@ -448,6 +448,49 @@ void Irc::bot(string strPrefix)
                       }
                     }
                     // }}}
+                    // {{{ JOIN
+                    else if (strCommand == "JOIN")
+                    {
+                      string strChannel;
+                      ssSubMessage >> strChannel;
+                      if (!strChannel.empty() && strChannel[0] == ':')
+                      {
+                        strChannel.erase(0, 1);
+                      }
+                      if (strID == strNick)
+                      {
+                        m_channels.push_back(strChannel);
+                        m_channels.sort();
+                        m_channels.unique();
+                      } 
+                    } 
+                    // }}}
+                    // {{{ PART
+                    else if (strCommand == "PART")
+                    {
+                      string strChannel;
+                      ssSubMessage >> strChannel;
+                      if (!strChannel.empty() && strChannel[0] == ':')
+                      {
+                        strChannel.erase(0, 1);
+                      }
+                      if (strID == strNick)
+                      {
+                        auto channelIter = m_channels.end();
+                        for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+                        {
+                          if ((*i) == strChannel)
+                          {
+                            channelIter = i;
+                          }
+                        }
+                        if (channelIter != m_channels.end())
+                        {
+                          m_channels.erase(channelIter);
+                        }
+                      }
+                    }
+                    // }}}
                     // {{{ PRIVMSG
                     else if (strCommand == "PRIVMSG")
                     {
@@ -478,6 +521,16 @@ void Irc::bot(string strPrefix)
                         analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
                       }
                       // }}}
+                    }
+                    // }}}
+                    // {{{ QUIT
+                    else if (strCommand == "QUIT")
+                    {
+                      if (strID == strNick)
+                      {
+                        bExit = true;
+                        m_channels.clear();
+                      }
                     }
                     // }}}
                   }
@@ -654,10 +707,24 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
 // {{{ chat()
 void Irc::chat(const string strTarget, const string strMessage)
 {
+  auto channelIter = m_channels.end();
+  bool bPart = false;
   size_t unMaxLength = 450;
   string strLine;
   stringstream ssLines(strMessage), ssMessage, ssPrefix;
 
+  for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+  {
+    if ((*i) == strTarget)
+    {
+      channelIter = i;
+    }
+  }
+  if (channelIter == m_channels.end())
+  {
+    bPart = true;
+    join(strTarget);
+  }
   ssPrefix << ":" << m_strNick << " PRIVMSG " << strTarget << " :";
   while (getline(ssLines, strLine))
   {
@@ -674,6 +741,10 @@ void Irc::chat(const string strTarget, const string strMessage)
       ssMessage << ssPrefix.str() << strLine << "\r\n";
       push(ssMessage.str());
     }
+  }
+  if (bPart)
+  {
+    part(strTarget);
   }
 }
 // }}}
@@ -732,9 +803,6 @@ void Irc::join(const string strChannel)
 {
   stringstream ssMessage;
 
-  m_channels.push_back(strChannel);
-  m_channels.sort();
-  m_channels.unique();
   ssMessage << ":" << m_strNick << " JOIN :" << strChannel << "\r\n";
   push(ssMessage.str());
 }
@@ -857,20 +925,8 @@ void Irc::monitorChannels(string strPrefix)
 // {{{ part()
 void Irc::part(const string strChannel)
 {
-  auto channelIter = m_channels.end();
   stringstream ssMessage;
 
-  for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
-  {
-    if ((*i) == strChannel)
-    {
-      channelIter = i;
-    }
-  }
-  if (channelIter != m_channels.end())
-  {
-    m_channels.erase(channelIter);
-  }
   ssMessage << ":" << m_strNick << " PART :" << strChannel << "\r\n";
   push(ssMessage.str());
 }
