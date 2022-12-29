@@ -51,6 +51,7 @@ class Irc : public Interface
   void monitorChannels(string strPrefix);
   void part(const string strChannel);
   void push(const string strMessage);
+  void quit();
   void unlock();
   string var(const string strName, Json *ptData);
 
