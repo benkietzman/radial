@@ -597,7 +597,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CMaster, CTime, unBroadcastSleep = 5;
+  time_t CBroadcast, CMaster, CTime, unBroadcastSleep = 10;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -811,7 +811,7 @@ void Interface::process(string strPrefix)
     if (m_pAutoModeCallback != NULL)
     {
       time(&CTime);
-      if (!m_bMasterSettled && (CTime - CMaster) > 10)
+      if (!m_bMasterSettled && (CTime - CMaster) > 30)
       {
         m_bMasterSettled = true;
       }

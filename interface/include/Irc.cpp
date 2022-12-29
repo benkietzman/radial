@@ -55,6 +55,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json
   }
   // }}}
   m_bEnabled = false;
+  m_bQuit = false;
   m_CMonitorChannelsModify = 0;
 }
 // }}}
@@ -461,9 +462,6 @@ void Irc::bot(string strPrefix)
                         }
                         if (strID == strNick)
                         {
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " [" << strChannel << "]:  Joined channel.";
-                          log(ssMessage.str());
                           m_channels.push_back(strChannel);
                           m_channels.sort();
                           m_channels.unique();
@@ -482,9 +480,6 @@ void Irc::bot(string strPrefix)
                         if (strID == strNick)
                         {
                           auto channelIter = m_channels.end();
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " [" << strChannel << "]:  Parted channel.";
-                          log(ssMessage.str());
                           for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
                           {
                             if ((*i) == strChannel)
@@ -574,7 +569,7 @@ void Irc::bot(string strPrefix)
           }
           else if (nReturn < 0)
           {
-            //bExit = true;
+            bExit = true;
             ssMessage.str("");
             ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
             log(ssMessage.str());
@@ -583,9 +578,6 @@ void Irc::bot(string strPrefix)
           delete[] fds;
           if (shutdown() || !isMasterSettled() || !isMaster())
           {
-            ssMessage.str("");
-            ssMessage << strPrefix << ":  Quitting IRC.";
-            log(ssMessage.str());
             quit();
           }
           // }}}
