@@ -657,6 +657,9 @@ void Interface::process(string strPrefix)
             int fdUnique = -1;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
+ssMessage.str("");
+ssMessage << strPrefix << " [LINE]:  " << strLine;
+log(ssMessage.str());
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
             if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
@@ -701,16 +704,10 @@ void Interface::process(string strPrefix)
             }
             else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
             {
-              ssMessage.str("");
-              ssMessage << strPrefix << " [" << m_strMaster << "]:  Received master. --- " << ptJson;
-              log(ssMessage.str());
               if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
               {
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
-                ssMessage.str("");
-                ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master changed.";
-                log(ssMessage.str());
                 m_bMaster = ((m_strMaster == m_strNode)?true:false);
                 m_bMasterSettled = false;
                 time(&CMaster);
