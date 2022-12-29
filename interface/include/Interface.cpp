@@ -701,12 +701,15 @@ void Interface::process(string strPrefix)
             }
             else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
             {
+              ssMessage.str("");
+              ssMessage << strPrefix << " [" << m_strMaster << "]:  Received master. --- " << ptJson;
+              log(ssMessage.str());
               if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
               {
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
                 ssMessage.str("");
-                ssMessage << strPrefix << " [" << m_strMaster << "]:  Received master.";
+                ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Master changed.";
                 log(ssMessage.str());
                 m_bMaster = ((m_strMaster == m_strNode)?true:false);
                 m_bMasterSettled = false;
@@ -848,9 +851,6 @@ void Interface::process(string strPrefix)
         if (!m_strMaster.empty())
         {
           Json *ptJson = new Json;
-          ssMessage.str("");
-          ssMessage << strPrefix << " [" << m_strMaster << "]:  Broacast master.";
-          log(ssMessage.str());
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
