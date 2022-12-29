@@ -254,7 +254,7 @@ void Irc::bot(string strPrefix)
       SSL *ssl = NULL;
       time_t CTime[2] = {0, 0};
       // }}}
-      while (!shutdown() && isMasterSettled() && isMaster() && !bExit)
+      while (!bExit)
       {
         // {{{ prep work
         if (enabled())
@@ -529,7 +529,6 @@ void Irc::bot(string strPrefix)
                       if (strID == strNick)
                       {
                         bExit = true;
-                        m_channels.clear();
                       }
                     }
                     // }}}
@@ -574,6 +573,10 @@ void Irc::bot(string strPrefix)
         }
         // {{{ post work
         delete[] fds;
+        if (shutdown() || !isMasterSettled() || !isMaster())
+        {
+          quit();
+        }
         // }}}
       }
       // {{{ post work
@@ -937,6 +940,19 @@ void Irc::push(const string strMessage)
   lock();
   m_messages.push_back(strMessage);
   unlock();
+}
+// }}}
+// {{{ quit()
+void Irc::quit()
+{
+  stringstream ssMessage;
+
+  for (auto &channel : m_channels)
+  {
+    part(channel);
+  }
+  ssMessage << ":" << m_strNick << " QUIT :Quitting.\r\n";
+  push(ssMessage.str());
 }
 // }}}
 // {{{ unlock()
