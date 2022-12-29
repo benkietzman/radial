@@ -28,7 +28,6 @@ class Hub : public Base
   char **m_env;
 
   bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted);
-  void chat(const string strMessage);
   bool load(string strPrefix, string &strError);
   void log(const string strFunction, const string strMessage);
   void monitor(string strPrefix);

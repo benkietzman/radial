@@ -385,11 +385,13 @@ bool Interface::chat(const string strTarget, const string strMessage)
 bool Interface::chat(const string strTarget, const string strMessage, string &strError)
 {
   bool bResult = false;
+  stringstream ssMessage;
   Json *ptJson = new Json;
 
+  ssMessage << char(3) << "11,10 " << m_strServer << " " << char(3) << " " << strMessage;
   ptJson->i("Function", "chat");
   ptJson->i("Target", strTarget);
-  ptJson->i("Message", strMessage);
+  ptJson->i("Message", strMessage.str());
   if (hub("irc", ptJson, strError))
   {
     bResult = true;
@@ -514,7 +516,6 @@ void Interface::monitor(string strPrefix)
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
       notify(ssMessage.str());
-      chat("#radial", ssMessage.str());
       setShutdown();
     }
   }

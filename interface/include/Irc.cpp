@@ -257,7 +257,7 @@ void Irc::bot(string strPrefix)
       while (!shutdown() && isMasterSettled() && isMaster() && !bExit)
       {
         // {{{ prep work
-        if (m_bEnabled)
+        if (enabled())
         {
           time(&(CTime[1]));
           if ((CTime[1] - CTime[0]) > 120)
@@ -333,7 +333,7 @@ void Irc::bot(string strPrefix)
         fds = new pollfd[1];
         fds[0].fd = fdSocket;
         fds[0].events = POLLIN;
-        if (fdSocket != -1 && !m_bEnabled && !bRegistering)
+        if (fdSocket != -1 && !enabled() && !bRegistering)
         {
           stringstream ssBuffer;
           bRegistering = true;
@@ -576,27 +576,42 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         if (ptJson->m.find("Target") != ptJson->m.end() && !ptJson->m["Target"]->v.empty())
         {
-          if (isMaster())
+          size_t unCount = 0;
+          while (unCount++ < 40 && !isMasterSettled())
           {
-            if (m_bEnabled)
+            msleep(250);
+          }
+          if (isMasterSettled())
+          {
+            if (isMaster())
             {
-              bResult = true;
-              chat(ptJson->m["Target"]->v, ptJson->m["Message"]->v);
+              unCount = 0;
+              while (unCount++ < 40 && !enabled())
+              {
+                msleep(250);
+              }
+              if (enabled())
+              {
+                if (chat(ptJson->m["Target"]->v, ptJson->m["Message"]->v, strError))
+                {
+                  bResult = true;
+                }
+              }
+              else
+              {
+                strError = "IRC disabled.";
+              }
             }
             else
             {
-              strError = "IRC is disabled.";
+              Json *ptLink = new Json(ptJson);
+              ptLink->i("Node", master());
+              if (hub("link", ptLink, strError))
+              {
+                bResult = true;
+              }
+              delete ptLink;
             }
-          }
-          else if (!m_strMaster.empty())
-          {
-            Json *ptLink = new Json(ptJson);
-            ptLink->i("Node", m_strMaster);
-            if (hub("link", ptLink, strError))
-            {
-              bResult = true;
-            }
-            delete ptLink;
           }
           else
           {
@@ -664,7 +679,7 @@ void Irc::chat(const string strTarget, const string strMessage)
 // {{{ disable()
 void Irc::disable()
 {
-  if (m_bEnabled)
+  if (enabled())
   {
     if (m_ptMonitor != NULL)
     {
@@ -681,7 +696,7 @@ void Irc::disable()
 // {{{ enable()
 void Irc::enable(const string strNick)
 {
-  if (!m_bEnabled)
+  if (!enabled())
   {
     m_bEnabled = true;
     if (!m_messages.empty())
@@ -697,6 +712,12 @@ void Irc::enable(const string strNick)
       }
     }
   }
+}
+// }}}
+// {{{ enabled()
+bool Irc::enabled()
+{
+  return m_bEnabled;
 }
 // }}}
 // {{{ isLocalAdmin()
@@ -777,7 +798,7 @@ void Irc::monitorChannels(string strPrefix)
         {
           if (m_ptMonitor != NULL)
           {
-            if (m_bEnabled)
+            if (enabled())
             {
               for (auto &i : m_ptMonitor->m)
               {
@@ -789,7 +810,7 @@ void Irc::monitorChannels(string strPrefix)
           m_ptMonitor = new Json(ssJson.str());
           if (!m_ptMonitor->m.empty())
           {
-            if (m_bEnabled)
+            if (enabled())
             {
               for (auto &i : m_ptMonitor->m)
               {

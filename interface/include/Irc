@@ -40,6 +40,7 @@ class Irc : public Interface
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData);
   void chat(const string strTarget, const string strMessage);
   void enable(const string strNick);
+  bool enabled();
   void disable();
   bool isLocalAdmin(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
   void join(const string strChannel);
