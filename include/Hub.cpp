@@ -90,6 +90,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           long lArg;
           bResult = true;
           ssMessage << " [" << strName << "]:  Interface added.";
+          chat(ssMessage.str());
           close(writepipe[0]);
           close(readpipe[1]);
           if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
@@ -143,6 +144,18 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
 void Hub::alert(const string strMessage)
 {
   log("alert", strMessage);
+}
+// }}}
+// {{{ chat()
+void Hub::chat(const string strMessage)
+{
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "chat");
+  ptJson->i("Target", "#radial");
+  ptJson->i("Message", strMessage);
+  target("irc", ptJson);
+  delete ptJson;
 }
 // }}}
 // {{{ interfaces()
@@ -304,6 +317,7 @@ void Hub::monitor(string strPrefix)
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
       notify(ssMessage.str());
+      chat(ssMessage.str());
       setShutdown(strPrefix);
     }
   }
@@ -982,6 +996,7 @@ void Hub::remove(string strPrefix, const string strName)
     ssMessage.str("");
     ssMessage << strPrefix << " [" << strName << "]:  Interface removed.";
     log(ssMessage.str());
+    chat(ssMessage.str());
     if (!shutdown() && m_interfaces[strName]->bRespawn)
     {
       add(strPrefix, strName, m_interfaces[strName]->strAccessFunction, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted);

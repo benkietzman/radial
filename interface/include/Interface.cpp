@@ -30,6 +30,8 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   signal(SIGSEGV, SIG_IGN);
   signal(SIGTERM, SIG_IGN);
   signal(SIGWINCH, SIG_IGN);
+  m_bMaster = false;
+  m_bMasterSettled = false;
   m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
@@ -361,6 +363,18 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
   m_mutexShare.unlock();
 }
 // }}}
+// {{{ isMaster()
+bool Interface::isMaster()
+{
+  return m_bMaster;
+}
+// }}}
+// {{{ isMasterSettled()
+bool Interface::isMasterSettled()
+{
+  return m_bMasterSettled;
+}
+// }}}
 // {{{ chat()
 bool Interface::chat(const string strTarget, const string strMessage, string &strError)
 {
@@ -477,9 +491,9 @@ void Interface::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ master()
-bool Interface::master()
+string Interface::master()
 {
-  return m_bMaster;
+  return m_strMaster;
 }
 // }}}
 // {{{ monitor()
@@ -494,6 +508,7 @@ void Interface::monitor(string strPrefix)
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
       notify(ssMessage.str());
+      chat("#radial", ssMessage.str());
       setShutdown();
     }
   }
@@ -577,7 +592,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CTime, unBroadcastSleep = 30;
+  time_t CBroadcast, CMaster, CTime, unBroadcastSleep = 30;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -591,6 +606,7 @@ void Interface::process(string strPrefix)
     fcntl(1, F_SETFL, lArg);
   }
   time(&CBroadcast);
+  CMaster = CBroadcast;
   while (!bExit)
   {
     fds = new pollfd[uniques.size() + 2];
@@ -685,6 +701,8 @@ void Interface::process(string strPrefix)
                 string strMaster = m_strMaster;
                 m_strMaster = ptJson->m["Master"]->v;
                 m_bMaster = ((m_strMaster == m_strNode)?true:false);
+                m_bMasterSettled = false;
+                time(&CMaster);
                 if (m_pAutoModeCallback != NULL)
                 {
                   m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
@@ -813,7 +831,6 @@ void Interface::process(string strPrefix)
         }
         if (m_strMaster.empty())
         {
-          m_bMaster = true;
           m_strMaster = m_strNode;
         }
         if (!m_strMaster.empty())
@@ -827,9 +844,20 @@ void Interface::process(string strPrefix)
         }
         if (strMaster != m_strMaster)
         {
+          m_bMaster = ((m_strMaster == m_strNode)?true:false);
+          m_bMasterSettled = false;
+          time(&CMaster);
           m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
         }
         CBroadcast = CTime;
+      }
+    }
+    if (!m_bMasterSettled)
+    {
+      time(&CTime);
+      if ((CTime - CMaster) > 10)
+      {
+        m_bMasterSettled = true;
       }
     }
     if (shutdown())

@@ -26,6 +26,7 @@ class Interface : public Base
 {
   protected:
   bool m_bMaster;
+  bool m_bMasterSettled;
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutexShare;
@@ -49,11 +50,13 @@ class Interface : public Base
   bool hub(const string strTarget, Json *ptJson, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
   bool chat(const string strTarget, const string strMessage, string &strError);
+  bool isMaster();
+  bool isMasterSettled();
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
-  bool master();
+  string master();
   void monitor(string strPrefix);
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);

@@ -254,7 +254,7 @@ void Irc::bot(string strPrefix)
       SSL *ssl = NULL;
       time_t CTime[2] = {0, 0};
       // }}}
-      while (!shutdown() && master() && !bExit)
+      while (!shutdown() && isMasterSettled() && isMaster() && !bExit)
       {
         // {{{ prep work
         if (m_bEnabled)
@@ -576,7 +576,7 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         if (ptJson->m.find("Target") != ptJson->m.end() && !ptJson->m["Target"]->v.empty())
         {
-          if (master())
+          if (isMaster())
           {
             if (m_bEnabled)
             {
