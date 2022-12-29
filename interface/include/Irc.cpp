@@ -574,7 +574,7 @@ void Irc::bot(string strPrefix)
           }
           else if (nReturn < 0)
           {
-            bExit = true;
+            //bExit = true;
             ssMessage.str("");
             ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
             log(ssMessage.str());
