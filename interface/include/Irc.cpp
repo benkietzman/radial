@@ -377,9 +377,6 @@ void Irc::bot(string strPrefix)
                   // {{{ prep work
                   strMessage = strBuffer[0].substr(0, unPosition);
                   strBuffer[0].erase(0, (unPosition + 1));
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [MESSAGE]:  " << strMessage;
-                  log(ssMessage.str());
                   // }}}
                   // {{{ PING
                   if (strMessage.size() >= 4 && strMessage.substr(0, 4) == "PING")
