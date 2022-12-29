@@ -38,6 +38,8 @@ class Interface : public Base
 
   void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
+  bool chat(const string strTarget, const string strMessage);
+  bool chat(const string strTarget, const string strMessage, string &strError);
   void dbfree(list<map<string, string> > *rows);
   list<map<string, string> > *dbquery(const string strDatabase, const string strQuery, string &strError);
   list<map<string, string> > *dbquery(const string strDatabase, const string strQuery, unsigned long long &ullRows, string &strError);
@@ -49,8 +51,6 @@ class Interface : public Base
   bool hub(Json *ptJson, string &strError);
   bool hub(const string strTarget, Json *ptJson, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
-  bool chat(const string strTarget, const string strMessage);
-  bool chat(const string strTarget, const string strMessage, string &strError);
   bool isMaster();
   bool isMasterSettled();
   void keyRemovals(Json *ptJson);

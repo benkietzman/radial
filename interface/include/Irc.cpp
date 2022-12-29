@@ -592,10 +592,8 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
               }
               if (enabled())
               {
-                if (chat(ptJson->m["Target"]->v, ptJson->m["Message"]->v, strError))
-                {
-                  bResult = true;
-                }
+                bResult = true;
+                chat(ptJson->m["Target"]->v, ptJson->m["Message"]->v);
               }
               else
               {
