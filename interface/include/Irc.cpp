@@ -245,49 +245,57 @@ void Irc::bot(string strPrefix)
     // }}}
     while (!shutdown())
     {
-      // {{{ prep work
-      bool bExit = false, bRegistering = false;
-      int fdSocket = -1, nReturn;
-      pollfd *fds;
-      size_t unIndex = 0, unPosition;
-      string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = "radial_bot", strUser = "radial_bot";
-      SSL *ssl = NULL;
-      time_t CTime[2] = {0, 0};
-      // }}}
-      while (!bExit)
+      if (!shutdown() && isMasterSettled() && isMaster())
       {
         // {{{ prep work
-        if (enabled())
+        bool bExit = false, bRegistering = false;
+        int fdSocket = -1, nReturn;
+        pollfd *fds;
+        size_t unIndex = 0, unPosition;
+        string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = "radial_bot", strUser = "radial_bot";
+        SSL *ssl = NULL;
+        time_t CTime[2] = {0, 0};
+        // }}}
+        while (!bExit)
         {
-          time(&(CTime[1]));
-          if ((CTime[1] - CTime[0]) > 120)
+          // {{{ prep work
+          if (enabled())
           {
-            monitorChannels(strPrefix);
-            CTime[0] = CTime[1];
-          }
-        }
-        // {{{ connect
-        if (fdSocket == -1)
-        {
-          addrinfo hints, *result;
-          memset(&hints, 0, sizeof(addrinfo));
-          hints.ai_family = AF_UNSPEC;
-          hints.ai_socktype = SOCK_STREAM;
-          if ((nReturn = getaddrinfo(m_strServer.c_str(), m_strPort.c_str(), &hints, &result)) == 0)
-          {
-            bool bConnected[3] = {false, false, false};
-            for (addrinfo *rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
+            time(&(CTime[1]));
+            if ((CTime[1] - CTime[0]) > 120)
             {
-              bConnected[0] = bConnected[1] = false;
-              if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+              monitorChannels(strPrefix);
+              CTime[0] = CTime[1];
+            }
+          }
+          // {{{ connect
+          if (fdSocket == -1)
+          {
+            addrinfo hints, *result;
+            memset(&hints, 0, sizeof(addrinfo));
+            hints.ai_family = AF_UNSPEC;
+            hints.ai_socktype = SOCK_STREAM;
+            if ((nReturn = getaddrinfo(m_strServer.c_str(), m_strPort.c_str(), &hints, &result)) == 0)
+            {
+              bool bConnected[3] = {false, false, false};
+              for (addrinfo *rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
               {
-                bConnected[0] = true;
-                if (connect(fdSocket, rp->ai_addr, rp->ai_addrlen) == 0)
+                bConnected[0] = bConnected[1] = false;
+                if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
                 {
-                  bConnected[1] = true;
-                  if ((ssl = m_pUtility->sslConnect(ctx, fdSocket, strError)) != NULL)
+                  bConnected[0] = true;
+                  if (connect(fdSocket, rp->ai_addr, rp->ai_addrlen) == 0)
                   {
-                    bConnected[2] = true;
+                    bConnected[1] = true;
+                    if ((ssl = m_pUtility->sslConnect(ctx, fdSocket, strError)) != NULL)
+                    {
+                      bConnected[2] = true;
+                    }
+                    else
+                    {
+                      close(fdSocket);
+                      fdSocket = -1;
+                    }
                   }
                   else
                   {
@@ -295,305 +303,301 @@ void Irc::bot(string strPrefix)
                     fdSocket = -1;
                   }
                 }
-                else
-                {
-                  close(fdSocket);
-                  fdSocket = -1;
-                }
               }
-            }
-            freeaddrinfo(result);
-            if (bConnected[2])
-            {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Utility::sslConnect() [" << m_strServer << ":" << m_strPort << "]:  Connected to IRC server.";
-              log(ssMessage.str());
-            }
-            else if (!bConnected[1])
-            {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error:  " << strerror(errno);
-              log(ssMessage.str());
-            }
-            else if (!bConnected[2])
-            {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Utility::sslConnect() error:  " << strError;
-              log(ssMessage.str());
-            }
-          }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error:  " << gai_strerror(nReturn);
-            log(ssMessage.str());
-          }
-        }
-        // }}}
-        fds = new pollfd[1];
-        fds[0].fd = fdSocket;
-        fds[0].events = POLLIN;
-        if (fdSocket != -1 && !enabled() && !bRegistering)
-        {
-          stringstream ssBuffer;
-          bRegistering = true;
-          strNick = strNickBase;
-          if (unIndex > 0)
-          {
-            stringstream ssIndex;
-            ssIndex << unIndex;
-            strNick += ssIndex.str();
-          }
-          ssBuffer << "NICK " << strNick << "\r\n";
-          ssBuffer << "USER " << strUser << " 0 * :" << strName << "\r\n";
-          strBuffer[1] = ssBuffer.str();
-        }
-        while (message(strMessage))
-        {
-          strBuffer[1].append(strMessage);
-        }
-        if (!strBuffer[1].empty())
-        {
-          fds[0].events |= POLLOUT;
-        }
-        // }}}
-        if ((nReturn = poll(fds, 1, 250)) > 0)
-        {
-          // {{{ read
-          if (fds[0].revents & POLLIN)
-          {
-            if (m_pUtility->sslRead(ssl, strBuffer[0], nReturn))
-            {
-              // {{{ prep work
-              while ((unPosition = strBuffer[0].find("\r")) != string::npos)
+              freeaddrinfo(result);
+              if (bConnected[2])
               {
-                strBuffer[0].erase(unPosition, 1);
-              }
-              // }}}
-              while ((unPosition = strBuffer[0].find("\n")) != string::npos)
-              {
-                // {{{ prep work
-                strMessage = strBuffer[0].substr(0, unPosition);
-                strBuffer[0].erase(0, (unPosition + 1));
                 ssMessage.str("");
-                ssMessage << strPrefix << " [MESSAGE]:  " << strMessage;
+                ssMessage << strPrefix << "->Utility::sslConnect() [" << m_strServer << ":" << m_strPort << "]:  Connected to IRC server.";
                 log(ssMessage.str());
-                // }}}
-                // {{{ PING
-                if (strMessage.size() >= 4 && strMessage.substr(0, 4) == "PING")
-                {
-                  string strPong = strMessage;
-                  strPong[1] = 'O';
-                  strBuffer[1].append(strPong + "\r\n");
-                }
-                // }}}
-                else
-                {
-                  // {{{ prep work
-                  string strCommand, strID, strIdent, strLine;
-                  stringstream ssCommand, ssSubMessage(strMessage);
-                  ssSubMessage >> strID >> strCommand;
-                  if (!strID.empty() && strID[0] == ':')
-                  {
-                    strID.erase(0, 1);
-                  }
-                  if ((unPosition = strID.find("@")) != string::npos)
-                  {
-                    strID.erase(unPosition, (strID.size() - unPosition));
-                  }
-                  if ((unPosition = strID.find("!")) != string::npos && (unPosition + 1) < strID.size())
-                  {
-                    strIdent = strID.substr((unPosition + 1), strID.size() - (unPosition + 1));
-                    strID.erase(unPosition, (strID.size() - unPosition));
-                  }
-                  else
-                  {
-                    strIdent = strID;
-                  }
-                  // }}}
-                  if (!strCommand.empty())
-                  {
-                    // {{{ numeric
-                    if (m_manip.isNumeric(strCommand))
-                    {
-                      size_t unCommand;
-                      ssCommand.str(strCommand);
-                      ssCommand >> unCommand;
-                      switch (unCommand)
-                      {
-                        case 1:
-                        {
-                          stringstream ssBuffer;
-                          bRegistering = false;
-                          strNick = strNickBase;
-                          if (unIndex > 0)
-                          {
-                            stringstream ssIndex;
-                            ssIndex << unIndex;
-                            strNick += ssIndex.str();
-                          }
-                          enable(strNick);
-                          ssMessage.str("");
-                          ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
-                          log(ssMessage.str());
-                          break;
-                        }
-                        case 433:
-                        case 436:
-                        {
-                          bRegistering = false;
-                          unIndex++;
-                          break;
-                        }
-                      }
-                    }
-                    // }}}
-                    // {{{ JOIN
-                    else if (strCommand == "JOIN")
-                    {
-                      string strChannel;
-                      ssSubMessage >> strChannel;
-                      if (!strChannel.empty() && strChannel[0] == ':')
-                      {
-                        strChannel.erase(0, 1);
-                      }
-                      if (strID == strNick)
-                      {
-                        m_channels.push_back(strChannel);
-                        m_channels.sort();
-                        m_channels.unique();
-                      } 
-                    } 
-                    // }}}
-                    // {{{ PART
-                    else if (strCommand == "PART")
-                    {
-                      string strChannel;
-                      ssSubMessage >> strChannel;
-                      if (!strChannel.empty() && strChannel[0] == ':')
-                      {
-                        strChannel.erase(0, 1);
-                      }
-                      if (strID == strNick)
-                      {
-                        auto channelIter = m_channels.end();
-                        for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
-                        {
-                          if ((*i) == strChannel)
-                          {
-                            channelIter = i;
-                          }
-                        }
-                        if (channelIter != m_channels.end())
-                        {
-                          m_channels.erase(channelIter);
-                        }
-                      }
-                    }
-                    // }}}
-                    // {{{ PRIVMSG
-                    else if (strCommand == "PRIVMSG")
-                    {
-                      bool bChannel = false;
-                      string strMessage, strTarget;
-                      stringstream ssBuffer;
-                      ssSubMessage >> strTarget;
-                      getline(ssSubMessage, strMessage);
-                      if (strMessage.substr(0, 2) == " :")
-                      {
-                        strMessage.erase(0, 2);
-                      }
-                      if (!strTarget.empty() && strTarget[0] == '#')
-                      {
-                        bChannel = true;
-                        analyze(strID, strTarget, strMessage);
-                      }
-                      // {{{ !r || !radial
-                      if (!bChannel || strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
-                      {
-                        string strChannel;
-                        stringstream ssData(strMessage), ssPrefix;
-                        if (strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
-                        {
-                          string strValue;
-                          ssData >> strValue;
-                        }
-                        analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
-                      }
-                      // }}}
-                    }
-                    // }}}
-                    // {{{ QUIT
-                    else if (strCommand == "QUIT")
-                    {
-                      if (strID == strNick)
-                      {
-                        bExit = true;
-                      }
-                    }
-                    // }}}
-                  }
-                }
+              }
+              else if (!bConnected[1])
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error:  " << strerror(errno);
+                log(ssMessage.str());
+              }
+              else if (!bConnected[2])
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::sslConnect() error:  " << strError;
+                log(ssMessage.str());
               }
             }
             else
             {
-              bExit = true;
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
-                log(ssMessage.str());
-              }
+              ssMessage.str("");
+              ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error:  " << gai_strerror(nReturn);
+              log(ssMessage.str());
             }
           }
           // }}}
-          // {{{ write
-          if (fds[0].revents & POLLOUT)
+          fds = new pollfd[1];
+          fds[0].fd = fdSocket;
+          fds[0].events = POLLIN;
+          if (fdSocket != -1 && !enabled() && !bRegistering)
           {
-            if (!m_pUtility->sslWrite(ssl, strBuffer[1], nReturn))
+            stringstream ssBuffer;
+            bRegistering = true;
+            strNick = strNickBase;
+            if (unIndex > 0)
             {
-              bExit = true;
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
-                log(ssMessage.str());
-              }
+              stringstream ssIndex;
+              ssIndex << unIndex;
+              strNick += ssIndex.str();
             }
+            ssBuffer << "NICK " << strNick << "\r\n";
+            ssBuffer << "USER " << strUser << " 0 * :" << strName << "\r\n";
+            strBuffer[1] = ssBuffer.str();
+          }
+          while (message(strMessage))
+          {
+            strBuffer[1].append(strMessage);
+          }
+          if (!strBuffer[1].empty())
+          {
+            fds[0].events |= POLLOUT;
           }
           // }}}
-        }
-        else if (nReturn < 0)
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-          log(ssMessage.str());
+          if ((nReturn = poll(fds, 1, 250)) > 0)
+          {
+            // {{{ read
+            if (fds[0].revents & POLLIN)
+            {
+              if (m_pUtility->sslRead(ssl, strBuffer[0], nReturn))
+              {
+                // {{{ prep work
+                while ((unPosition = strBuffer[0].find("\r")) != string::npos)
+                {
+                  strBuffer[0].erase(unPosition, 1);
+                }
+                // }}}
+                while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+                {
+                  // {{{ prep work
+                  strMessage = strBuffer[0].substr(0, unPosition);
+                  strBuffer[0].erase(0, (unPosition + 1));
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [MESSAGE]:  " << strMessage;
+                  log(ssMessage.str());
+                  // }}}
+                  // {{{ PING
+                  if (strMessage.size() >= 4 && strMessage.substr(0, 4) == "PING")
+                  {
+                    string strPong = strMessage;
+                    strPong[1] = 'O';
+                    strBuffer[1].append(strPong + "\r\n");
+                  }
+                  // }}}
+                  else
+                  {
+                    // {{{ prep work
+                    string strCommand, strID, strIdent, strLine;
+                    stringstream ssCommand, ssSubMessage(strMessage);
+                    ssSubMessage >> strID >> strCommand;
+                    if (!strID.empty() && strID[0] == ':')
+                    {
+                      strID.erase(0, 1);
+                    }
+                    if ((unPosition = strID.find("@")) != string::npos)
+                    {
+                      strID.erase(unPosition, (strID.size() - unPosition));
+                    }
+                    if ((unPosition = strID.find("!")) != string::npos && (unPosition + 1) < strID.size())
+                    {
+                      strIdent = strID.substr((unPosition + 1), strID.size() - (unPosition + 1));
+                      strID.erase(unPosition, (strID.size() - unPosition));
+                    }
+                    else
+                    {
+                      strIdent = strID;
+                    }
+                    // }}}
+                    if (!strCommand.empty())
+                    {
+                      // {{{ numeric
+                      if (m_manip.isNumeric(strCommand))
+                      {
+                        size_t unCommand;
+                        ssCommand.str(strCommand);
+                        ssCommand >> unCommand;
+                        switch (unCommand)
+                        {
+                          case 1:
+                          {
+                            stringstream ssBuffer;
+                            bRegistering = false;
+                            strNick = strNickBase;
+                            if (unIndex > 0)
+                            {
+                              stringstream ssIndex;
+                              ssIndex << unIndex;
+                              strNick += ssIndex.str();
+                            }
+                            enable(strNick);
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
+                            log(ssMessage.str());
+                            break;
+                          }
+                          case 433:
+                          case 436:
+                          {
+                            bRegistering = false;
+                            unIndex++;
+                            break;
+                          }
+                        }
+                      }
+                      // }}}
+                      // {{{ JOIN
+                      else if (strCommand == "JOIN")
+                      {
+                        string strChannel;
+                        ssSubMessage >> strChannel;
+                        if (!strChannel.empty() && strChannel[0] == ':')
+                        {
+                          strChannel.erase(0, 1);
+                        }
+                        if (strID == strNick)
+                        {
+                          m_channels.push_back(strChannel);
+                          m_channels.sort();
+                          m_channels.unique();
+                        } 
+                      } 
+                      // }}}
+                      // {{{ PART
+                      else if (strCommand == "PART")
+                      {
+                        string strChannel;
+                        ssSubMessage >> strChannel;
+                        if (!strChannel.empty() && strChannel[0] == ':')
+                        {
+                          strChannel.erase(0, 1);
+                        }
+                        if (strID == strNick)
+                        {
+                          auto channelIter = m_channels.end();
+                          for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+                          {
+                            if ((*i) == strChannel)
+                            {
+                              channelIter = i;
+                            }
+                          }
+                          if (channelIter != m_channels.end())
+                          {
+                            m_channels.erase(channelIter);
+                          }
+                        }
+                      }
+                      // }}}
+                      // {{{ PRIVMSG
+                      else if (strCommand == "PRIVMSG")
+                      {
+                        bool bChannel = false;
+                        string strMessage, strTarget;
+                        stringstream ssBuffer;
+                        ssSubMessage >> strTarget;
+                        getline(ssSubMessage, strMessage);
+                        if (strMessage.substr(0, 2) == " :")
+                        {
+                          strMessage.erase(0, 2);
+                        }
+                        if (!strTarget.empty() && strTarget[0] == '#')
+                        {
+                          bChannel = true;
+                          analyze(strID, strTarget, strMessage);
+                        }
+                        // {{{ !r || !radial
+                        if (!bChannel || strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
+                        {
+                          string strChannel;
+                          stringstream ssData(strMessage), ssPrefix;
+                          if (strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
+                          {
+                            string strValue;
+                            ssData >> strValue;
+                          }
+                          analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
+                        }
+                        // }}}
+                      }
+                      // }}}
+                      // {{{ QUIT
+                      else if (strCommand == "QUIT")
+                      {
+                        if (strID == strNick)
+                        {
+                          bExit = true;
+                        }
+                      }
+                      // }}}
+                    }
+                  }
+                }
+              }
+              else
+              {
+                bExit = true;
+                if (nReturn < 0)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
+                  log(ssMessage.str());
+                }
+              }
+            }
+            // }}}
+            // {{{ write
+            if (fds[0].revents & POLLOUT)
+            {
+              if (!m_pUtility->sslWrite(ssl, strBuffer[1], nReturn))
+              {
+                bExit = true;
+                if (nReturn < 0)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror();
+                  log(ssMessage.str());
+                }
+              }
+            }
+            // }}}
+          }
+          else if (nReturn < 0)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+            log(ssMessage.str());
+          }
+          // {{{ post work
+          delete[] fds;
+          if (shutdown() || !isMasterSettled() || !isMaster())
+          {
+            quit();
+          }
+          // }}}
         }
         // {{{ post work
-        delete[] fds;
-        if (shutdown() || !isMasterSettled() || !isMaster())
+        if (ssl != NULL)
         {
-          quit();
+          SSL_shutdown(ssl);
+          SSL_free(ssl);
+          ssl = NULL;
+        }
+        if (fdSocket != -1)
+        {
+          close(fdSocket);
+          fdSocket = -1;
+          disable();
+          ssMessage.str("");
+          ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Exited IRC server.";
+          log(ssMessage.str());
         }
         // }}}
-      }
-      // {{{ post work
-      if (ssl != NULL)
-      {
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
-        ssl = NULL;
-      }
-      if (fdSocket != -1)
-      {
-        close(fdSocket);
-        fdSocket = -1;
-        disable();
-        ssMessage.str("");
-        ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Exited IRC server.";
-        log(ssMessage.str());
       }
       if (!shutdown())
       {
@@ -602,7 +606,6 @@ void Irc::bot(string strPrefix)
           msleep(250);
         }
       }
-      // }}}
     }
     // {{{ post work
     SSL_CTX_free(ctx);
