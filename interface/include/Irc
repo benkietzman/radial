@@ -39,6 +39,7 @@ class Irc : public Interface
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData);
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData);
   void chat(const string strTarget, const string strMessage);
+  void chat(const string strTarget, const string strMessage, string &strError);
   void enable(const string strNick);
   bool enabled();
   void disable();
