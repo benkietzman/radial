@@ -862,7 +862,7 @@ void Irc::part(const string strChannel)
 
   for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
   {
-    if (i == strChannel)
+    if ((*i) == strChannel)
     {
       channelIter = i;
     }
