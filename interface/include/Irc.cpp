@@ -583,6 +583,9 @@ void Irc::bot(string strPrefix)
           delete[] fds;
           if (shutdown() || !isMasterSettled() || !isMaster())
           {
+            ssMessage.str("");
+            ssMessage << strPrefix << ":  Quitting IRC.";
+            log(ssMessage.str());
             quit();
           }
           // }}}
