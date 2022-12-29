@@ -376,6 +376,12 @@ bool Interface::isMasterSettled()
 }
 // }}}
 // {{{ chat()
+bool Interface::chat(const string strTarget, const string strMessage)
+{
+  string strError;
+
+  return chat(strTarget, strMessage, strError);
+}
 bool Interface::chat(const string strTarget, const string strMessage, string &strError)
 {
   bool bResult = false;
