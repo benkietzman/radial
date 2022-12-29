@@ -55,7 +55,6 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json
   }
   // }}}
   m_bEnabled = false;
-  m_bQuit = false;
   m_CMonitorChannelsModify = 0;
 }
 // }}}
