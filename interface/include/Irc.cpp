@@ -375,6 +375,9 @@ void Irc::bot(string strPrefix)
                 // {{{ prep work
                 strMessage = strBuffer[0].substr(0, unPosition);
                 strBuffer[0].erase(0, (unPosition + 1));
+                ssMessage.str("");
+                ssMessage << strPrefix << " [MESSAGE]:  " << strMessage;
+                log(ssMessage.str());
                 // }}}
                 // {{{ PING
                 if (strMessage.size() >= 4 && strMessage.substr(0, 4) == "PING")
@@ -729,6 +732,9 @@ void Irc::join(const string strChannel)
 {
   stringstream ssMessage;
 
+  m_channels.push_back(strChannel);
+  m_channels.sort();
+  m_channels.unique();
   ssMessage << ":" << m_strNick << " JOIN :" << strChannel << "\r\n";
   push(ssMessage.str());
 }
@@ -798,9 +804,10 @@ void Irc::monitorChannels(string strPrefix)
           {
             if (enabled())
             {
-              for (auto &i : m_ptMonitor->m)
+              list<string> subChannels = m_channels;
+              for (auto &channel : subChannels)
               {
-                part(i.first);
+                part(channel);
               }
             }
             delete m_ptMonitor;
@@ -850,8 +857,20 @@ void Irc::monitorChannels(string strPrefix)
 // {{{ part()
 void Irc::part(const string strChannel)
 {
+  auto channelIter = m_channels.end();
   stringstream ssMessage;
 
+  for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+  {
+    if (i == strChannel)
+    {
+      channelIter = i;
+    }
+  }
+  if (channelIter != m_channels.end())
+  {
+    m_channels.erase(channelIter);
+  }
   ssMessage << ":" << m_strNick << " PART :" << strChannel << "\r\n";
   push(ssMessage.str());
 }

@@ -26,6 +26,7 @@ class Irc : public Interface
 {
   protected:
   bool m_bEnabled;
+  list<string> m_channels;
   list<string> m_messages;
   mutex m_mutex;
   string m_strNick;
