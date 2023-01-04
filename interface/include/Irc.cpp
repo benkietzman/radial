@@ -222,10 +222,10 @@ void Irc::autoMode(string strPrefix, const string strOldMaster, const string str
 {
   threadIncrement();
   strPrefix += "->Irc::autoMode()";
-  if (strOldMaster == m_strNode || strNewMaster == m_strNode)
+  if (strOldMaster != strNewMaster)
   {
     stringstream ssMessage;
-    ssMessage << strPrefix << " [" << strOldMaster << "," << strNewMaster << "]:  " << ((strNewMaster == m_strNode)?"Set":"Unset") << " master mode.";
+    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
     log(ssMessage.str());
   }
   threadDecrement();
