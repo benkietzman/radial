@@ -37,7 +37,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
   strPrefix += "->Storage::autoMode()";
   if (strOldMaster == m_strNode || strNewMaster == m_strNode)
   {
-    string ssMessage;
+    stringstream ssMessage;
     ssMessage << strPrefix << " [" << strOldMaster << "," << strNewMaster << "]:  " << ((strNewMaster == m_strNode)?"Set":"Unset") << " master mode.";
     log(ssMessage.str());
   }
