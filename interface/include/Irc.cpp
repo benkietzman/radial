@@ -271,54 +271,18 @@ void Irc::bot(string strPrefix)
           // {{{ connect
           if (fdSocket == -1)
           {
-            addrinfo hints, *result;
-            memset(&hints, 0, sizeof(addrinfo));
-            hints.ai_family = AF_UNSPEC;
-            hints.ai_socktype = SOCK_STREAM;
-            if ((nReturn = getaddrinfo(m_strServer.c_str(), m_strPort.c_str(), &hints, &result)) == 0)
+            if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, strError, true))
             {
-              bool bConnected[3] = {false, false, false};
-              for (addrinfo *rp = result; !bConnected[2] && rp != NULL; rp = rp->ai_next)
-              {
-                bConnected[0] = bConnected[1] = false;
-                if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
-                {
-                  bConnected[0] = true;
-                  if (connect(fdSocket, rp->ai_addr, rp->ai_addrlen) == 0)
-                  {
-                    bConnected[1] = true;
-                    if ((ssl = m_pUtility->sslConnect(ctx, fdSocket, strError)) != NULL)
-                    {
-                      bConnected[2] = true;
-                    }
-                    else
-                    {
-                      close(fdSocket);
-                      fdSocket = -1;
-                    }
-                  }
-                  else
-                  {
-                    close(fdSocket);
-                    fdSocket = -1;
-                  }
-                }
-              }
-              freeaddrinfo(result);
-              if (bConnected[2])
+              if ((ssl = m_pUtility->sslConnect(ctx, fdSocket, strError)) != NULL)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->Utility::sslConnect() [" << m_strServer << ":" << m_strPort << "]:  Connected to IRC server.";
                 log(ssMessage.str());
               }
-              else if (!bConnected[1])
+              else
               {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->" << ((!bConnected[0])?"socket":"connect") << "(" << errno << ") error:  " << strerror(errno);
-                log(ssMessage.str());
-              }
-              else if (!bConnected[2])
-              {
+                close(fdSocket);
+                fdSocket = -1;
                 ssMessage.str("");
                 ssMessage << strPrefix << "->Utility::sslConnect() error:  " << strError;
                 log(ssMessage.str());
@@ -326,8 +290,9 @@ void Irc::bot(string strPrefix)
             }
             else
             {
+              fdSocket = -1;
               ssMessage.str("");
-              ssMessage << strPrefix << "->getaddrinfo(" << nReturn << ") error:  " << gai_strerror(nReturn);
+              ssMessage << strPrefix << "->Utility::connect() error:  " << strError;
               log(ssMessage.str());
             }
           }

@@ -22,7 +22,7 @@ namespace radial
 // {{{ Base()
 Base::Base(int argc, char **argv)
 {
-  string strError;
+  string strError, strProxyPort, strProxyServer;
   utsname tServer;
 
   setlocale(LC_ALL, "");
@@ -67,6 +67,18 @@ Base::Base(int argc, char **argv)
       ssMaxResident >> m_ulMaxResident;
       m_ulMaxResident *= 1024;
     }
+    else if ((strArg.size() > 12 && strArg.substr(0, 12) == "--proxyport="))
+    {
+      strProxyPort = strArg.substr(12, strArg.size() - 12);
+      m_manip.purgeChar(strProxyPort, strProxyPort, "'");
+      m_manip.purgeChar(strProxyPort, strProxyPort, "\"");
+    }
+    else if ((strArg.size() > 14 && strArg.substr(0, 14) == "--proxyserver="))
+    {
+      strProxyServer = strArg.substr(14, strArg.size() - 14);
+      m_manip.purgeChar(strProxyServer, strProxyServer, "'");
+      m_manip.purgeChar(strProxyServer, strProxyServer, "\"");
+    }
     else if (strArg == "-w" || (strArg.size() > 9 && strArg.substr(0, 9) == "--warden="))
     {
       if (strArg == "-w" && i + 1 < argc && argv[i+1][0] != '-')
@@ -87,6 +99,10 @@ Base::Base(int argc, char **argv)
   m_pJunction = new ServiceJunction(strError);
   m_pJunction->setApplication(m_strApplication);
   m_pUtility = new Utility(strError);
+  if (!strProxyServer.empty() && !strProxyPort.empty())
+  {
+    m_pUtility->setProxy(strProxyServer, strProxyPort);
+  }
   m_pWarden = NULL;
   if (!m_strWarden.empty())
   {
