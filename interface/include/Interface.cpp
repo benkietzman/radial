@@ -842,7 +842,7 @@ void Interface::process(string strPrefix)
         {
           m_strMaster = m_strNode;
         }
-        if (!m_strMaster.empty())
+        if (!m_strMaster.empty() && m_strMaster == m_strNode)
         {
           Json *ptJson = new Json;
           ptJson->i("Interface", m_strName);
