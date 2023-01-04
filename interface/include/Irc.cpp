@@ -220,12 +220,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
 // {{{ autoMode()
 void Irc::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
-  stringstream ssMessage;
-
   threadIncrement();
   strPrefix += "->Irc::autoMode()";
-  ssMessage << strPrefix << " [" << strOldMaster << "," << strNewMaster << "]:  " << ((strNewMaster == m_strNode)?"Set":"Unset") << " master mode.";
-  log(ssMessage.str());
+  if (strOldMaster == m_strNode || strNewMaster == m_strNode)
+  {
+    stringstream ssMessage;
+    ssMessage << strPrefix << " [" << strOldMaster << "," << strNewMaster << "]:  " << ((strNewMaster == m_strNode)?"Set":"Unset") << " master mode.";
+    log(ssMessage.str());
+  }
   threadDecrement();
 }
 // }}}
