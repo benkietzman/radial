@@ -19,6 +19,7 @@
 #include <cerrno>
 #include <cstring>
 #include <fstream>
+#include <libssh/libssh.h>
 #include <list>
 #include <map>
 #include <mutex>
@@ -38,6 +39,7 @@ using namespace std;
 #include <Json>
 #include <ServiceJunction>
 #include <StringManip>
+#include <Terminal>
 #include <Utility>
 #include <Warden>
 using namespace common;

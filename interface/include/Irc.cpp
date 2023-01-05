@@ -146,6 +146,43 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     // }}}
+    // {{{ terminal
+    else if (strAction == "terminal" || strAction == "term")
+    {
+      string strFunction;
+      ssData >> strFunction;
+      if (!strFunction.empty())
+      {
+        ptRequest->i("Function", strFunction);
+        if (strFunction == "connect")
+        {
+          string strPort, strServer;
+          ssData >> strServer >> strPort;
+          ptRequest->i("Server", strServer);
+          ptRequest->insert("Port", strPort);
+        }
+        else
+        {
+          lock();
+          if (m_terminalClients.find(strIdent) != m_terminalClients.end())
+          {
+            string strCommand;
+            getline(ssData, strCommand);
+            if (!strCommand.empty())
+            {
+              strCommand = strFunction + (string)" " + strCommand;
+            }
+            else
+            {
+              strCommand = strFunction;
+            }
+            ptRequest->i("Command", strCommand);
+          }
+          unlock();
+        }
+      }
+    }
+    // }}}
   }
   analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ptRequest);
   delete ptRequest;
@@ -240,10 +277,56 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
+  // {{{ terminal
+  else if (strAction == "terminal" || strAction == "term")
+  {
+    string strFunction = var("Function", ptData);
+    if (!strFunction.empty())
+    {
+      string strCommand = var("Command", ptData);
+      if (strFunction == "connect")
+      {
+        string strPort = var("Port", ptData), strServer = var("Server", ptData);
+        if (!strPort.empty() || !strServer.empty())
+        {
+          lock();
+          if (m_terminalClients.find(strIdent) == m_terminalClients.end())
+          {
+            thread threadTerminal(&Irc::terminal, this, strPrefix, strTarget, strIdent, strServer, strPort);
+            pthread_setname_np(threadTerminal.native_handle(), "terminal");
+            threadTerminal.detach();
+          }
+          else
+          {
+            ssText << " error:  You already have a session open.  Use the following action to close the session:  exit.";
+          }
+          unlock();
+        }
+      }
+      else if (!strCommand.empty())
+      {
+        lock();
+        if (m_terminalClients.find(strIdent) != m_terminalClients.end())
+        {
+          m_terminalClients[strIdent].push_back(strCommand);
+        }
+        else
+        {
+          ssText << " error:  Please provide a valid function following the action:  connect.";
+        }
+        unlock();
+      }
+    }
+    else
+    {
+      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect [server] [port].";
+    }
+  }
+  // }}}
   // {{{ invalid
   else
   {
-    vector<string> actions = {"ssh", "storage"};
+    vector<string> actions = {"ssh", "storage", "terminal"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
@@ -1231,6 +1314,337 @@ int Irc::sshAuthenticateKbdint(ssh_session session, const string strPassword)
   }
 
   return nReturn;
+}
+// }}}
+// {{{ terminal()
+void Irc::terminal(string strPrefix, const string strTarget, const string strUserID, string strServer, string strPort)
+{
+  bool bConnected = false;
+  string strError;
+  Terminal *pTerminal = new Terminal;
+
+  strPrefix += "->terminal()";
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
+  // {{{ initialize
+  if (pTerminal->connect(strServer, strPort))
+  {
+    bConnected = true;
+  }
+  else
+  {
+    strError = (string)"Terminal::connect() " + pTerminal->error();
+  }
+  // }}}
+  if (bConnected)
+  {
+    bool bExit = false, bProcess = false;
+    string strData;
+    stringstream ssTexts;
+    time_t CTime[2] = {0, 0};
+    vector<string> vecScreen;
+    pTerminal->screen(vecScreen);
+    for (size_t i = 0; i < vecScreen.size(); i++)
+    {
+      ssTexts << vecScreen[i] << endl;
+    }
+    vecScreen.clear();
+    chat(strTarget, ssTexts.str());
+    time(&(CTime[0]));
+    while (!bExit)
+    {
+      bProcess = false;
+      strError.clear();
+      lock();
+      if (!m_terminalClients[strUserID].empty())
+      {
+        bProcess = true;
+        strData = m_terminalClients[strUserID].front();
+        m_terminalClients[strUserID].pop_front();
+      }
+      unlock();
+      if (bProcess)
+      {
+        string strFunction;
+        stringstream ssData(strData);
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          size_t unCount = 1;
+          string strData, strWait, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter, escape, function, home, key, keypadEnter, left, right, send, shiftFunction, tab, up, wait.";
+          // {{{ ctrl
+          if (strFunction == "ctrl")
+          {
+            ssData >> strData;
+            if (strData.size() == 1)
+            {
+              if (!pTerminal->sendCtrl(strData[0], true))
+              {
+                strError = pTerminal->error();
+              }
+            }
+            else
+            {
+              strError = "Data should contain a single character for this Function.";
+            } 
+          }   
+          // }}}
+          // {{{ disconnect
+          else if (strFunction == "disconnect" || strFunction == "exit")
+          {   
+            bExit = true;
+          }
+          // }}}
+          // {{{ down
+          else if (strFunction == "down")
+          {
+            string strCount;
+            ssData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (!pTerminal->sendDown(unCount, true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ enter
+          else if (strFunction == "enter")
+          {
+            if (!pTerminal->sendEnter(true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ escape
+          else if (strFunction == "escape")
+          {
+            if (!pTerminal->sendEscape(true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ function
+          else if (strFunction == "function" || strFunction == "f")
+          {
+            int nKey = 0;
+            ssData >> nKey;
+            if (nKey >= 1 && nKey <= 12)
+            {
+              if (!pTerminal->sendFunction(nKey))
+              {
+                strError = pTerminal->error();
+              }
+            }
+            else
+            {
+              strError = "Please provide a Data value between 1 and 12.";
+            }
+          }
+          // }}}
+          // {{{ home
+          else if (strFunction == "home")
+          {
+            if (!pTerminal->sendHome(true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ key
+          else if (strFunction == "key")
+          {
+            string strCount;
+            ssData >> strData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (strData.size() == 1)
+            {
+              if (!pTerminal->sendKey(strData[0], unCount, true))
+              {
+                strError = pTerminal->error();
+              }
+            }
+            else
+            {
+              strError = "Data should contain a single character for this Function.";
+            }
+          }
+          // }}}
+          // {{{ keypadEnter
+          else if (strFunction == "keypadEnter")
+          {
+            if (!pTerminal->sendKeypadEnter(true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ left
+          else if (strFunction == "left")
+          {
+            string strCount;
+            ssData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (!pTerminal->sendLeft(unCount, true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ right
+          else if (strFunction == "right")
+          {
+            string strCount;
+            ssData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (!pTerminal->sendRight(unCount, true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ send
+          else if (strFunction == "send")
+          {
+            string strTrimmed;
+            getline(ssData, strData);
+            m_manip.ltrim(strTrimmed, strData);
+            if (!pTerminal->sendWait(strTrimmed, unCount))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ shiftFunction
+          else if (strFunction == "shiftFunction" || strFunction == "sf")
+          {
+            int nKey = 0;
+            ssData >> nKey;
+            if (nKey >= 1 && nKey <= 12)
+            {
+              if (!pTerminal->sendShiftFunction(nKey))
+              {
+                strError = pTerminal->error();
+              }
+            }
+            else
+            {
+              strError = "Please provide a Data value between 1 and 12.";
+            }
+          }
+          // }}}
+          // {{{ tab
+          else if (strFunction == "tab")
+          {
+            string strCount;
+            ssData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (!pTerminal->sendTab(unCount, true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ up
+          else if (strFunction == "up")
+          {
+            string strCount;
+            ssData >> strCount;
+            if (!strCount.empty())
+            {
+              stringstream ssCount(strCount);
+              ssCount >> unCount;
+            }
+            if (!pTerminal->sendUp(unCount, true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ wait
+          else if (strFunction == "wait")
+          {
+            if (!pTerminal->wait(true))
+            {
+              strError = pTerminal->error();
+            }
+          }
+          // }}}
+          // {{{ invalid
+          else
+          {
+            strError = strInvalid;
+          }
+          // }}}
+          if (!bExit)
+          {
+            pTerminal->screen(vecScreen);
+            ssTexts.str("");
+            for (size_t i = 0; i < vecScreen.size(); i++)
+            {
+              ssTexts << vecScreen[i] << endl;
+            }
+            vecScreen.clear();
+            chat(strTarget, ssTexts.str());
+          }
+        }
+        else
+        {
+          strError = "Please provide the Function.";
+        }
+        if (!strError.empty())
+        {
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)));
+        }
+        time(&(CTime[0]));
+      }
+      else
+      {
+        msleep(250);
+      }
+      time(&(CTime[1]));
+      if ((CTime[1] - CTime[0]) > 3600)
+      {
+        bExit = true;
+        chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  The session timed out due to inactivity." + string(1, char(3)));
+      }
+    }
+    pTerminal->disconnect();
+  }
+  else if (!strError.empty())
+  {
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)));
+  }
+  else
+  {
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Encountered an unknown error." + string(1, char(3)));
+  }
+  delete pTerminal;
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
+  lock();
+  m_terminalClients[strUserID].clear();
+  m_terminalClients.erase(strUserID);
+  unlock();
 }
 // }}}
 // {{{ unlock()
