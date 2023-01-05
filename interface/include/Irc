@@ -16,6 +16,7 @@
 #define _RADIAL_IRC_
 // {{{ includes
 #include "Interface"
+#include <libssh/libssh.h>
 // }}}
 extern "C++"
 {
@@ -28,6 +29,7 @@ class Irc : public Interface
   bool m_bEnabled;
   list<string> m_channels;
   list<string> m_messages;
+  map<string, list<string> > m_sshClients;
   mutex m_mutex;
   string m_strNick;
   string m_strPort;
@@ -52,6 +54,10 @@ class Irc : public Interface
   void part(const string strChannel);
   void push(const string strMessage);
   void quit();
+  void ssh(string strPrefix, const string strTarget, const string strUserID, const string strServer, const string strPort, const string strUser, const string strPassword);
+  int sshAuthenticateNone(ssh_session session);
+  int sshAuthenticatePassword(ssh_session session, const string strPassword);
+  int sshAuthenticateKbdint(ssh_session session, const string strPassword);
   void unlock();
   string var(const string strName, Json *ptData);
 

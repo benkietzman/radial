@@ -45,7 +45,7 @@ obj/Database.o: include/Database.cpp obj
 irc: bin/irc $(prefix)/radial/interface
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 bin/irc: ../../common/libcommon.a obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o bin
-	g++ -o bin/irc obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/irc obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
 obj/irc.o: irc.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c irc.cpp -o obj/irc.o $(CPPFLAGS) -I../../common
 obj/Irc.o: include/Irc.cpp obj
