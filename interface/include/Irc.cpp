@@ -487,6 +487,7 @@ void Irc::bot(string strPrefix)
                             ssData >> strValue;
                           }
                           getline(ssData, strData);
+                          m_manip.trim(strData, strData);
                           thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, strData);
                           pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
                           threadAnalyzer.detach();
