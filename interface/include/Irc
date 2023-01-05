@@ -36,9 +36,9 @@ class Irc : public Interface
   Json *m_ptMonitor;
 
   void analyze(const string strNick, const string strTarget, const string strMessage);
-  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, stringstream &ssData);
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData);
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData);
+  void analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData);
   void chat(const string strTarget, const string strMessage);
   void enable(const string strNick);
   bool enabled();

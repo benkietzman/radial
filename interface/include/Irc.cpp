@@ -85,50 +85,6 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
     }
   }
 }
-void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, stringstream &ssData)
-{
-  bool bAdmin = false;
-  map<string, bool> auth;
-  string strError, strFirstName, strLastName;
-  stringstream ssQuery;
-
-  strPrefix += "->analyze()";
-  ssQuery.str("");
-  ssQuery << "select id, admin, first_name, last_name from person where userid = '" << strIdent << "' and active = 1 and locked = 0";
-  auto getPerson = dbquery("central_r", ssQuery.str(), strError);
-  if (getPerson != NULL)
-  {
-    if (!getPerson->empty())
-    {
-      map<string, string> getPersonRow = getPerson->front();
-      strFirstName = getPersonRow["first_name"];
-      strLastName = getPersonRow["last_name"];
-      if (getPersonRow["admin"] == "1")
-      {
-        bAdmin = true;
-      }
-      else
-      {
-        ssQuery.str("");
-        ssQuery << "select a.name, b.admin from application a, application_contact b where a.id = b.application_id and b.contact_id = " << getPersonRow["id"] << " and b.locked = 0";
-        auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
-        if (getApplicationContact != NULL)
-        {
-          if (!getApplicationContact->empty())
-          {
-            for (auto &getApplicationContactRow : *getApplicationContact)
-            {
-              auth[getApplicationContactRow["name"]] = ((getApplicationContactRow["admin"] == "1")?true:false);
-            }
-          }
-        }
-        m_pCentral->free(getApplicationContact);
-      }
-    }
-  }
-  m_pCentral->free(getPerson);
-  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ssData);
-}
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
   string strAction;
@@ -215,6 +171,52 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ post work
   chat(strTarget, ssText.str());
   // }}}
+}
+// }}}
+// {{{ analyzer()
+void Irc::analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData)
+{
+  bool bAdmin = false;
+  map<string, bool> auth;
+  string strError, strFirstName, strLastName;
+  stringstream ssData(strData), ssQuery;
+
+  strPrefix += "->analyze()";
+  ssQuery.str("");
+  ssQuery << "select id, admin, first_name, last_name from person where userid = '" << strIdent << "' and active = 1 and locked = 0";
+  auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+  if (getPerson != NULL)
+  {
+    if (!getPerson->empty())
+    {
+      map<string, string> getPersonRow = getPerson->front();
+      strFirstName = getPersonRow["first_name"];
+      strLastName = getPersonRow["last_name"];
+      if (getPersonRow["admin"] == "1")
+      {
+        bAdmin = true;
+      }
+      else
+      {
+        ssQuery.str("");
+        ssQuery << "select a.name, b.admin from application a, application_contact b where a.id = b.application_id and b.contact_id = " << getPersonRow["id"] << " and b.locked = 0";
+        auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
+        if (getApplicationContact != NULL)
+        {
+          if (!getApplicationContact->empty())
+          {
+            for (auto &getApplicationContactRow : *getApplicationContact)
+            {
+              auth[getApplicationContactRow["name"]] = ((getApplicationContactRow["admin"] == "1")?true:false);
+            }
+          }
+        }
+        m_pCentral->free(getApplicationContact);
+      }
+    }
+  }
+  m_pCentral->free(getPerson);
+  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ssData);
 }
 // }}}
 // {{{ autoMode()
@@ -484,7 +486,9 @@ void Irc::bot(string strPrefix)
                             string strValue;
                             ssData >> strValue;
                           }
-                          analyze(strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData);
+                          thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData.str());
+                          pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
+                          threadAnalyzer.detach();
                         }
                         // }}}
                       }
