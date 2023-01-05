@@ -479,14 +479,15 @@ void Irc::bot(string strPrefix)
                         // {{{ !r || !radial
                         if (!bChannel || strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
                         {
-                          string strChannel;
+                          string strChannel, strData;
                           stringstream ssData(strMessage), ssPrefix;
                           if (strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
                           {
                             string strValue;
                             ssData >> strValue;
                           }
-                          thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, ssData.str());
+                          getline(ssData, strData);
+                          thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, strData);
                           pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
                           threadAnalyzer.detach();
                         }
