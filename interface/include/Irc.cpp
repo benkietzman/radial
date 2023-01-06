@@ -98,12 +98,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     // {{{ irc
     if (strAction == "irc")
     {
-      string strTarget;
-      ssData >> strTarget;
-      if (!strTarget.empty())
+      string strSubTarget;
+      ssData >> strSubTarget;
+      if (!strSubTarget.empty())
       {
         string strMessage;
-        ptRequest->i("Target", strTarget);
+        ptRequest->i("Target", strSubTarget);
         getline(ssData, strMessage);
         m_manip.trim(strMessage, strMessage);
         if (!strMessage.empty())
