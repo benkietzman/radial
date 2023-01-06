@@ -95,8 +95,26 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
+    // {{{ irc
+    if (strAction == "irc")
+    {
+      string strTarget;
+      ssData >> strTarget;
+      if (!strTarget.empty())
+      {
+        string strMessage;
+        ptRequest->i("Target", strTarget);
+        getline(ssData, strMessage);
+        m_manip.trim(strMessage, strMessage);
+        if (!strMessage.empty())
+        {
+          ptRequest->i("Message", strMessage);
+        }
+      }
+    }
+    // }}}
     // {{{ radial
-    if (strAction == "radial")
+    else if (strAction == "radial")
     {
       string strInterface;
       ssData >> strInterface;
@@ -216,13 +234,43 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
-  // {{{ radial
-  if (strAction == "radial")
+  // {{{ irc
+  if (strAction == "irc")
   {
-    string strInterface = var("Interface", ptData), strJson = var("Json", ptData);
-    if (!strJson.empty())
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
-      if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+      string strTarget = var("Interface", ptData);
+      if (!strTarget.empty())
+      {
+        string strMessage = var("Message", ptData);
+        if (!strMessage.empty())
+        {
+            chat(strTarget, strMessage);
+            ssText << ":  Message sent.";
+        }
+        else
+        {
+          ssText << ":  Please provide a Message immediately following the Target.";
+        }
+      }
+      else
+      {
+        ssText << ":  The irc action is used to send IRC messages.  Please provide a Target immediately following the action.";
+      }
+    }
+    else
+    {
+      ssText << " error:  You are not authorized to access irc.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
+  // {{{ radial
+  else if (strAction == "radial")
+  {
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    {
+      string strInterface = var("Interface", ptData), strJson = var("Json", ptData);
+      if (!strJson.empty())
       {
         Json *ptJson = new Json(strJson);
         if (hub(strInterface, ptJson, strError))
@@ -237,12 +285,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << " error:  You are not authorized to access Radial.  You must be registered as a local administrator for Radial.";
+        ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
       }
     }
     else
     {
-      ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
+      ssText << " error:  You are not authorized to access radial.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
@@ -325,7 +373,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << " error:  You are not authorized to access common storage.  You must be registered as a local administrator for Radial.";
+      ssText << " error:  You are not authorized to access storage.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
@@ -378,7 +426,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"radial", "ssh", "storage", "terminal"};
+    vector<string> actions = {"irc", "radial", "ssh", "storage", "terminal"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
