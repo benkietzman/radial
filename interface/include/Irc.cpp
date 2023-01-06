@@ -237,30 +237,25 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ irc
   if (strAction == "irc")
   {
-    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    string strTarget = var("Target", ptData);
+    if (!strTarget.empty())
     {
-      string strTarget = var("Target", ptData);
-      if (!strTarget.empty())
+      string strMessage = var("Message", ptData);
+      if (!strMessage.empty())
       {
-        string strMessage = var("Message", ptData);
-        if (!strMessage.empty())
-        {
-            chat(strTarget, strMessage);
-            ssText << ":  Message sent.";
-        }
-        else
-        {
-          ssText << ":  Please provide a Message immediately following the Target.";
-        }
+        stringstream ssMessage;
+        ssMessage << char(3) << "08,03 " << strIdent << " @ " << strTarget << " " << char(3) << " " << strMessage;
+        chat(strTarget, ssMessage.str());
+        ssText << ":  Message sent.";
       }
       else
       {
-        ssText << ":  The irc action is used to send IRC messages.  Please provide a Target immediately following the action.";
+        ssText << ":  Please provide a Message immediately following the Target.";
       }
     }
     else
     {
-      ssText << " error:  You are not authorized to access irc.  You must be registered as a local administrator for Radial.";
+      ssText << ":  The irc action is used to send IRC messages.  Please provide a Target immediately following the action.";
     }
   }
   // }}}
