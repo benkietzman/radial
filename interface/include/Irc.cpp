@@ -154,7 +154,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     // }}}
     // {{{ ssh
-    else if (strAction == "ssh")
+    else if (strAction == "ssh" || strAction == "s")
     {
       string strFunction;
       ssData >> strFunction;
@@ -204,8 +204,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     // }}}
-    // {{{ terminal || term
-    else if (strAction == "terminal" || strAction == "term")
+    // {{{ terminal || t
+    else if (strAction == "terminal" || strAction == "t")
     {
       string strFunction;
       ssData >> strFunction;
@@ -355,8 +355,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ ssh
-  else if (strAction == "ssh")
+  // {{{ ssh || s
+  else if (strAction == "ssh" || strAction == "s")
   {
     string strFunction = var("Function", ptData);
     if (!strFunction.empty())
@@ -438,8 +438,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ terminal || term
-  else if (strAction == "terminal" || strAction == "term")
+  // {{{ terminal || t
+  else if (strAction == "terminal" || strAction == "t")
   {
     string strFunction = var("Function", ptData);
     if (!strFunction.empty())
@@ -487,7 +487,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"database", "irc", "radial", "ssh", "storage", "terminal (term)"};
+    vector<string> actions = {"database", "irc", "radial", "ssh (s)", "storage", "terminal (t)"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
