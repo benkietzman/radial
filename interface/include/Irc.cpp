@@ -239,7 +239,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
-      string strTarget = var("Interface", ptData);
+      string strTarget = var("Target", ptData);
       if (!strTarget.empty())
       {
         string strMessage = var("Message", ptData);
