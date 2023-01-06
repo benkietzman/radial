@@ -103,6 +103,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (!strInterface.empty())
       {
         string strJson, strRequest;
+        if (strInterface == "hub")
+        {
+          strInterface.clear();
+        }
         ptRequest->i("Interface", strInterface);
         getline(ssData, strRequest);
         m_manip.trim(strJson, strRequest);
@@ -215,38 +219,30 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ radial
   if (strAction == "radial")
   {
-    string strInterface = var("Interface", ptData);
-    if (!strInterface.empty())
+    string strInterface = var("Interface", ptData), strJson = var("Json", ptData);
+    if (!strJson.empty())
     {
-      string strJson = var("Json", ptData);
-      if (!strJson.empty())
+      if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
       {
-        if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+        Json *ptJson = new Json(strJson);
+        if (hub(strInterface, ptJson, strError))
         {
-          Json *ptJson = new Json(strJson);
-          if (hub(strInterface, ptJson, strError))
-          {
-            ssText << ":  " << ptJson;
-          }
-          else
-          {
-            ssText << " error:  " << strError;
-          }
-          delete ptJson;
+          ssText << ":  " << ptJson;
         }
         else
         {
-          ssText << " error:  You are not authorized to access Radial.  You must be registered as a local administrator for Radial.";
+          ssText << " error:  " << strError;
         }
+        delete ptJson;
       }
       else
       {
-        ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
+        ssText << " error:  You are not authorized to access Radial.  You must be registered as a local administrator for Radial.";
       }
     }
     else
     {
-      ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide an Interface immediately following the action.";
+      ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
     }
   }
   // }}}
