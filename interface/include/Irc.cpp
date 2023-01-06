@@ -244,7 +244,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (!strMessage.empty())
       {
         stringstream ssMessage;
-        ssMessage << char(3) << "08,03 " << strUserID << " @ " << strTarget << " " << char(3) << " " << strMessage;
+        ssMessage << char(3) << "08,03 " << strUserID;
+        if (strUserID != strTarget)
+        {
+          ssMessage << " @ " << strTarget;
+        }
+        ssMessage << " " << char(3) << " " << strMessage;
         chat(strSubTarget, ssMessage.str());
         ssText << ":  Message sent.";
       }
