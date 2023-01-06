@@ -95,13 +95,31 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
+    // {{{ radial
+    if (strAction == "radial")
+    {
+      string strInterface;
+      ssData >> strInterface;
+      if (!strInterface.empty())
+      {
+        string strJson, strRequest;
+        ptRequest->i("Interface", strInterface);
+        getline(ssData, strRequest);
+        m_manip.trim(strJson, strRequest);
+        if (!strJson.empty())
+        {
+          ptRequest->i("Json", strJson);
+        }
+      }
+    }
+    // }}}
     // {{{ ssh
-    if (strAction == "ssh")
-    { 
+    else if (strAction == "ssh")
+    {
       string strFunction;
       ssData >> strFunction;
       if (!strFunction.empty())
-      { 
+      {
         ptRequest->i("Function", strFunction);
         if (strFunction == "connect")
         {
@@ -194,8 +212,46 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
+  // {{{ radial
+  if (strAction == "radial")
+  {
+    string strInterface = var("Interface", ptData);
+    if (!strInterface.empty())
+    {
+      string strJson = var("Json", ptData);
+      if (!strJson.empty())
+      {
+        if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+        {
+          Json *ptJson = new Json(strJson);
+          if (hub(strInterface, ptJson, strError))
+          {
+            ssText << ":  " << ptJson;
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          delete ptJson;
+        }
+        else
+        {
+          ssText << " error:  You are not authorized to access Radial.  You must be registered as a local administrator for Radial.";
+        }
+      }
+      else
+      {
+        ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
+      }
+    }
+    else
+    {
+      ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide an Interface immediately following the action.";
+    }
+  }
+  // }}}
   // {{{ ssh
-  if (strAction == "ssh")
+  else if (strAction == "ssh")
   {
     string strFunction = var("Function", ptData);
     if (!strFunction.empty())
@@ -268,12 +324,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  The storage action is used to send a JSON formatted request to common storage within the Bridge.  Please provide a JSON formatted request immediately following the action.";
+        ssText << ":  The storage action is used to send a JSON formatted request to common storage within Radial.  Please provide a JSON formatted request immediately following the action.";
       }
     }
     else
     {
-      ssText << " error:  You are not authorized to access common storage.  You must be registered as a local administrator for the Bridge.";
+      ssText << " error:  You are not authorized to access common storage.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
@@ -326,7 +382,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"ssh", "storage", "terminal"};
+    vector<string> actions = {"radial", "ssh", "storage", "terminal"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
@@ -598,8 +654,8 @@ void Irc::bot(string strPrefix)
                           m_channels.push_back(strChannel);
                           m_channels.sort();
                           m_channels.unique();
-                        } 
-                      } 
+                        }
+                      }
                       // }}}
                       // {{{ PART
                       else if (strCommand == "PART")
@@ -1286,21 +1342,21 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
 int Irc::sshAuthenticateNone(ssh_session session)
 {
   return ssh_userauth_none(session, NULL);
-} 
+}
 // }}}
 // {{{ sshAuthenticatePassword()
 int Irc::sshAuthenticatePassword(ssh_session session, const string strPassword)
 {
   return ssh_userauth_password(session, NULL, strPassword.c_str());
-} 
+}
 // }}}
 // {{{ sshAuthenticateKbdint()
 int Irc::sshAuthenticateKbdint(ssh_session session, const string strPassword)
 {
-  int nReturn; 
-    
+  int nReturn;
+
   while ((nReturn = ssh_userauth_kbdint(session, NULL, NULL)) == SSH_AUTH_INFO)
-  {   
+  {
     int nPrompts = ssh_userauth_kbdint_getnprompts(session);
     for (int i = 0; i < nPrompts; i++)
     {
@@ -1385,12 +1441,12 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strUse
             else
             {
               strError = "Data should contain a single character for this Function.";
-            } 
-          }   
+            }
+          }
           // }}}
           // {{{ disconnect
           else if (strFunction == "disconnect" || strFunction == "exit")
-          {   
+          {
             bExit = true;
           }
           // }}}
