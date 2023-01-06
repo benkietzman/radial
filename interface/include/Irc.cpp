@@ -95,8 +95,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
-    // {{{ database || db
-    if (strAction == "database" || strAction == "db")
+    // {{{ database
+    if (strAction == "database")
     {
       string strDatabase;
       ssData >> strDatabase;
@@ -252,8 +252,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
-  // {{{ database || db
-  if (strAction == "database" || strAction == "db")
+  // {{{ database
+  if (strAction == "database")
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
@@ -487,7 +487,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"database", "db", "irc", "radial", "ssh", "storage", "terminal", "term"};
+    vector<string> actions = {"database", "irc", "radial", "ssh", "storage", "terminal (term)"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
