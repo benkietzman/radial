@@ -95,8 +95,26 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
+    // {{{ database
+    if (strAction == "database")
+    {
+      string strDatabase;
+      ssData >> strDatabase;
+      if (!strDatabase.empty())
+      {
+        string strQuery;
+        ptRequest->i("Database", strDatabase);
+        getline(ssData, strQuery);
+        m_manip.trim(strQuery, strQuery);
+        if (!strQuery.empty())
+        {
+          ptRequest->i("Query", strQuery);
+        }
+      }
+    }
+    // }}}
     // {{{ irc
-    if (strAction == "irc")
+    else if (strAction == "irc")
     {
       string strSubTarget;
       ssData >> strSubTarget;
@@ -234,8 +252,51 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
+  // {{{ database
+  if (strAction == "database")
+  {
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    {
+      string strDatabase = var("Database", ptData);
+      if (!strDatabase.empty())
+      {
+        string strQuery = var("Query", ptData);
+        if (!strQuery.empty())
+        {
+          auto get = dbquery(strDatabase, strQuery, strError);
+          if (get != NULL)
+          {
+            ssText << ":  Query sent.";
+            for (auto &row : (*get))
+            {
+              Json *ptRow = new Json(row);
+              ssText << endl << ptRow;
+              delete ptRow;
+            }
+          }
+          else
+          {
+            ssText << ":  " << strError;
+          }
+        }
+        else
+        {
+          ssText << ":  Please provide a Query immediately following the Database.";
+        }
+      }
+      else
+      {
+        ssText << ":  The database action is used to send a Query to a Database.  Please provide a Database immediately following the action.";
+      }
+    }
+    else
+    {
+      ssText << " error:  You are not authorized to access database.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
   // {{{ irc
-  if (strAction == "irc")
+  else if (strAction == "irc")
   {
     string strSubTarget = var("Target", ptData);
     if (!strSubTarget.empty())
