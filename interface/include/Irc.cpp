@@ -95,8 +95,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
-    // {{{ database
-    if (strAction == "database")
+    // {{{ database || db
+    if (strAction == "database" || strAction == "db")
     {
       string strDatabase;
       ssData >> strDatabase;
@@ -204,7 +204,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     // }}}
-    // {{{ terminal
+    // {{{ terminal || term
     else if (strAction == "terminal" || strAction == "term")
     {
       string strFunction;
@@ -252,8 +252,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
-  // {{{ database
-  if (strAction == "database")
+  // {{{ database || db
+  if (strAction == "database" || strAction == "db")
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
@@ -438,7 +438,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ terminal
+  // {{{ terminal || term
   else if (strAction == "terminal" || strAction == "term")
   {
     string strFunction = var("Function", ptData);
@@ -487,7 +487,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"irc", "radial", "ssh", "storage", "terminal"};
+    vector<string> actions = {"database", "db", "irc", "radial", "ssh", "storage", "terminal", "term"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
