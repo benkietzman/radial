@@ -821,6 +821,7 @@ void Interface::process(string strPrefix)
       }
       if ((CTime - CBroadcast) > unBroadcastSleep)
       {
+        string strMaster = m_strMaster;
         unsigned int unSeed = CTime + getpid();
         srand(unSeed);
         unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
