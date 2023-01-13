@@ -597,7 +597,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CMaster, CTime, unBroadcastSleep = 10;
+  time_t CBroadcast, CMaster[2], CTime, unBroadcastSleep = 10;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -611,7 +611,7 @@ void Interface::process(string strPrefix)
     fcntl(1, F_SETFL, lArg);
   }
   time(&CBroadcast);
-  CMaster = CBroadcast;
+  CMaster[0] = CMaster[1] = CBroadcast;
   while (!bExit)
   {
     fds = new pollfd[uniques.size() + 2];
@@ -701,19 +701,23 @@ void Interface::process(string strPrefix)
             }
             else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
             {
-              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty() && m_strMaster != ptJson->m["Master"]->v)
+              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty())
               {
-                string strMaster = m_strMaster;
-                m_strMaster = ptJson->m["Master"]->v;
-                m_bMaster = ((m_strMaster == m_strNode)?true:false);
-                m_bMasterSettled = false;
-                time(&CMaster);
-                ssMessage.str("");
-                ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Received master.";
-                log(ssMessage.str());
-                if (m_pAutoModeCallback != NULL)
+                time(&CMaster[0]);
+                if (m_strMaster != ptJson->m["Master"]->v)
                 {
-                  m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                  string strMaster = m_strMaster;
+                  m_strMaster = ptJson->m["Master"]->v;
+                  m_bMaster = ((m_strMaster == m_strNode)?true:false);
+                  m_bMasterSettled = false;
+                  time(&CMaster[1]);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Received master.";
+                  log(ssMessage.str());
+                  if (m_pAutoModeCallback != NULL)
+                  {
+                    m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                  }
                 }
               }
             }
@@ -814,7 +818,7 @@ void Interface::process(string strPrefix)
     if (m_pAutoModeCallback != NULL)
     {
       time(&CTime);
-      if (!m_bMasterSettled && (CTime - CMaster) > 30)
+      if (!m_bMasterSettled && (CTime - CMaster[1]) > 30)
       {
         m_bMasterSettled = true;
       }
@@ -845,9 +849,10 @@ void Interface::process(string strPrefix)
         {
           m_strMaster = m_strNode;
         }
-        if (!m_strMaster.empty() && m_strMaster == m_strNode)
+        if ((!m_strMaster.empty() && m_strMaster == m_strNode) || (CMaster[0] - CTime) > 15)
         {
           Json *ptJson = new Json;
+          CMaster[0] = CTime;
           ssMessage.str("");
           ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Broadcast master.";
           log(ssMessage.str());
@@ -861,7 +866,7 @@ void Interface::process(string strPrefix)
         {
           m_bMaster = ((m_strMaster == m_strNode)?true:false);
           m_bMasterSettled = false;
-          time(&CMaster);
+          time(&CMaster[1]);
           m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
         }
         CBroadcast = CTime;
