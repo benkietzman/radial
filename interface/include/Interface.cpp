@@ -821,16 +821,9 @@ void Interface::process(string strPrefix)
       }
       if ((CTime - CBroadcast) > unBroadcastSleep)
       {
-        string strMaster = m_strMaster;
-        stringstream ssSeed[2];
-        unsigned int *punSeed = new unsigned int;;
-        ssSeed[0] << punSeed;
-        ssSeed[1].str(ssSeed[0].str());
-        ssSeed[1] >> *punSeed;
-        *punSeed += CTime;
-        srand(*punSeed);
-        unBroadcastSleep = (rand_r(punSeed) % 5) + 1;
-        delete punSeed;
+        unsigned int unSeed = CTime + getpid();
+        srand(unSeed);
+        unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
         if (!m_strMaster.empty() && m_strMaster != m_strNode)
         {
           bool bFound = false;
