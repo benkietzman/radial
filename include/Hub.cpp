@@ -743,6 +743,7 @@ void Hub::process(string strPrefix)
                                     if (add(strPrefix, strInterface, ((ptInterfaces->m[strInterface]->m.find("AccessFunction") != ptInterfaces->m[strInterface]->m.end() && !ptInterfaces->m[strInterface]->m["AccessFunction"]->v.empty())?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ((ptInterfaces->m[strInterface]->m.find("Respawn") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m[strInterface]->m.find("Restricted") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
                                     {
                                       bProcessed = true;
+                                      interfaces();
                                     }
                                     else
                                     {
