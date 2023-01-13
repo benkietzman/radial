@@ -1188,7 +1188,12 @@ void Link::process(string strPrefix)
           {
             if ((CTime - CBootstrap) > unBootstrapSleep)
             {
-              unsigned int unSeed = CTime;
+              stringstream ssSeed[2];
+              unsigned int unSeed;
+              ssSeed[0] << &unSeed;
+              ssSeed[1].str(ssSeed[0].str());
+              ssSeed[1] >> unSeed;
+              unSeed += CTime;
               srand(unSeed);
               unBootstrapSleep = (rand_r(&unSeed) % 30) + 1;
               if (ptBoot->l.empty())

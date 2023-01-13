@@ -822,7 +822,12 @@ void Interface::process(string strPrefix)
       if ((CTime - CBroadcast) > unBroadcastSleep)
       {
         string strMaster = m_strMaster;
-        unsigned int unSeed = CTime;
+        stringstream ssSeed[2];
+        unsigned int unSeed;
+        ssSeed[0] << &unSeed;
+        ssSeed[1].str(ssSeed[0].str());
+        ssSeed[1] >> unSeed;
+        unSeed += CTime;
         srand(unSeed);
         unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
         if (!m_strMaster.empty() && m_strMaster != m_strNode)
