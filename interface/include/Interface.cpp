@@ -711,9 +711,6 @@ void Interface::process(string strPrefix)
                   m_bMaster = ((m_strMaster == m_strNode)?true:false);
                   m_bMasterSettled = false;
                   time(&CMaster[1]);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Received master.";
-                  log(ssMessage.str());
                   if (m_pAutoModeCallback != NULL)
                   {
                     m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
@@ -857,9 +854,6 @@ void Interface::process(string strPrefix)
         {
           Json *ptJson = new Json;
           CMaster[0] = CTime;
-          ssMessage.str("");
-          ssMessage << strPrefix << " [" << strMaster << "," << m_strMaster << "]:  Broadcast master.";
-          log(ssMessage.str());
           ptJson->i("Interface", m_strName);
           ptJson->i("Function", "master");
           ptJson->i("Master", m_strMaster);
