@@ -845,11 +845,15 @@ void Interface::process(string strPrefix)
             m_strMaster.clear();
           }
         }
+        if ((CTime - CMaster[0]) > 15)
+        {
+          m_strMaster.clear();
+        }
         if (m_strMaster.empty())
         {
           m_strMaster = m_strNode;
         }
-        if ((!m_strMaster.empty() && m_strMaster == m_strNode) || (CTime - CMaster[0]) > 15)
+        if (!m_strMaster.empty() && m_strMaster == m_strNode)
         {
           Json *ptJson = new Json;
           CMaster[0] = CTime;
