@@ -597,7 +597,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CMaster[2], CTime, unBroadcastSleep = 10;
+  time_t CBroadcast, CMaster[2], CTime, unBroadcastSleep = 15;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
