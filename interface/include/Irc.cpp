@@ -255,6 +255,18 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     // }}}
+    // {{{ message
+    else if (strAction == "message")
+    {
+      string strJson, strRequest;
+      getline(ssData, strRequest);
+      m_manip.trim(strJson, strRequest);
+      if (!strJson.empty())
+      {
+        ptRequest->i("Json", strJson);
+      }
+    }
+    // }}}
     // {{{ radial
     else if (strAction == "radial")
     {
@@ -896,7 +908,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The centralmon or sysInfo action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+      ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
     }
   }
   // }}}
@@ -970,6 +982,70 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << ":  The irc action is used to send IRC messages.  Please provide a Target immediately following the action.";
+    }
+  }
+  // }}}
+  // {{{ message
+  else if (strAction == "message")
+  {
+    string strApplication, strClass, strJson = var("Json", ptData), strMessage, strTitle, strUser;
+    if (!strJson.empty())
+    {
+      Json *ptJson = new Json(strJson);
+      if (ptJson->m.find("Application") != ptJson->m.end() && !ptJson->m["Application"]->v.empty())
+      {
+        strApplication = ptJson->m["Application"]->v;
+      }
+      if (ptJson->m.find("Class") != ptJson->m.end() && !ptJson->m["Class"]->v.empty())
+      {
+        strClass = ptJson->m["Class"]->v;
+      }
+      if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())
+      {
+        strMessage = ptJson->m["Message"]->v;
+      }
+      if (ptJson->m.find("Title") != ptJson->m.end() && !ptJson->m["Title"]->v.empty())
+      {
+        strTitle = ptJson->m["Title"]->v;
+      }
+      if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+      {
+        strUser = ptJson->m["User"]->v;
+      }
+      delete ptJson;
+    }
+    if (!strApplication.empty())
+    {
+      if (isLocalAdmin(strIdent, strApplication, bAdmin, auth))
+      {
+        Json *ptJson = new Json;
+        ptJson->i("Function", "message");
+        ptJson->m["Request"] = new Json;
+        if (!strApplication.empty())
+        {
+          ptJson->m["Request"]->i("Application", strApplication);
+        }
+        if (!strUser.empty())
+        {
+          ptJson->m["Request"]->i("User", strUser);
+        }
+        ptJson->m["Request"]->m["Message"] = new Json;
+        ptJson->m["Request"]->m["Message"]->i("Action", "message");
+        ptJson->m["Request"]->m["Message"]->i("Class", ((!strClass.empty())?strClass:"info"));
+        ptJson->m["Request"]->m["Message"]->i("Title", ((!strTitle.empty())?strTitle:strApplication));
+        ptJson->m["Request"]->m["Message"]->i("Body", strMessage);
+        hub("websocket", ptJson, false);
+        ssText << ":  The message has been sent.";
+        delete ptJson;
+      }
+      else
+      {
+        ssText << " error:  You are not authorized to send a message to the Application.  You must be a registered as a local administrator for the Application.";
+      }
+    }
+    else
+    {
+      ssText << ":  The message action is used to send a JSON formatted request to Radial Live.  Please provide a JSON formatted request immediately following the action.";
     }
   }
   // }}}

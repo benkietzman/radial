@@ -101,13 +101,65 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   else if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
-    if (ptJson->m["Function"]->v == "ping")
+    if (ptJson->m["Function"]->v == "list")
+    {
+      bResult = true;
+      ptJson->m["Response"] = new Json;
+      for (auto &conn : m_conns)
+      {
+        stringstream ssIdentity;
+        Json *ptConn = new Json;
+        ssIdentity << conn->wsi;
+        ptConn->i("Application", conn->strApplication);
+        ptConn->i("UserID", conn->strUserID);
+        ptConn->i("wsRequestID", ssIdentity.str());
+        ptJson->m["Response"]->pb(ptConn);
+        delete ptConn;
+      }
+    }
+    else if (ptJson->m["Function"]->v == "message")
+    {
+      if (ptJson->m.find("Request") != ptJson->m.end())
+      {
+        if (ptJson->m["Request"]->m.find("Message") != ptJson->m["Request"]->m.end())
+        {
+          string strApplication = ((ptJson->m["Request"]->m.find("Application") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Application"]->v.empty())?ptJson->m["Request"]->m["Application"]->v:""), strUser = ((ptJson->m["Request"]->m.find("User") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["User"]->v.empty())?ptJson->m["Request"]->m["User"]->v:"");
+          bResult = true;
+          for (auto &conn : m_conns)
+          {
+            if ((strApplication.empty() || strApplication == conn->strApplication) && (strUser.empty() || strUser == conn->strUserID))
+            {
+              conn->buffers.push_back(ptJson->m["Request"]->m["Message"]->j(strJson));
+            }
+          }
+          for (auto &link : m_links)
+          {
+            if (link->interfaces.find("websocket") != link->interfaces.end())
+            {
+              Json *ptSubJson = new Json(ptJson);
+              ptSubJson->i("Node", link->strNode);
+              hub("link", ptSubJson, false);
+              delete ptSubJson;
+            }
+          }
+        }
+        else
+        {
+          strError = "Please provide the Message within the Request.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Request.";
+      }
+    }
+    else if (ptJson->m["Function"]->v == "ping")
     {
       bResult = true;
     }
     else
     {
-      strError = "Please provide a valid Function:  ping.";
+      strError = "Please provide a valid Function:  list, message, ping.";
     }
   }
   else
