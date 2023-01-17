@@ -95,8 +95,132 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
+    // {{{ central
+    if (strAction == "central")
+    {
+      string strFunction;
+      ssData >> strFunction;
+      if (!strFunction.empty())
+      {
+        ptRequest->i("Function", strFunction);
+        // {{{ application
+        if (strFunction == "application")
+        {
+          string strSubData;
+          getline(ssData, strSubData);
+          m_manip.trim(strSubData, strSubData);
+          if (!strSubData.empty())
+          {
+            string strApplicationID;
+            stringstream ssSubData(strSubData);
+            ssSubData >> strApplicationID;
+            if (!strApplicationID.empty())
+            {
+              ptRequest->i("ApplicationID", strApplicationID);
+              if (strApplicationID == "account")
+              {
+                string strMechID;
+                ssSubData >> strMechID;
+                if (!strMechID.empty())
+                {
+                  ptRequest->i("MechID", strMechID);
+                }
+              }
+              else if (m_manip.isNumeric(strApplicationID))
+              {
+                string strForm;
+                ssSubData >> strForm;
+                if (!strForm.empty())
+                {
+                  ptRequest->i("Form", strForm);
+                }
+              }
+              else
+              {
+                ptRequest->i("ApplicationID", strSubData);
+              }
+            }
+          }
+        }
+        // }}}
+        // {{{ server
+        else if (strFunction == "server")
+        {
+          string strSubData;
+          getline(ssData, strSubData);
+          m_manip.trim(strSubData, strSubData);
+          if (!strSubData.empty())
+          {
+            string strServerID;
+            stringstream ssSubData(strSubData);
+            ssSubData >> strServerID;
+            if (!strServerID.empty())
+            {
+              ptRequest->i("ServerID", strServerID);
+              if (m_manip.isNumeric(strServerID))
+              {
+                string strForm;
+                ssSubData >> strForm;
+                if (!strForm.empty())
+                {
+                  ptRequest->i("Form", strForm);
+                }
+              }
+              else
+              {
+                ptRequest->i("ServerID", strSubData);
+              }
+            }
+          }
+        }
+        // }}}
+        // {{{ user
+        else if (strFunction == "user")
+        {
+          string strUser;
+          ssData >> strUser;
+          if (!strUser.empty())
+          {
+            string strForm;
+            ptRequest->i("User", strUser);
+            ssData >> strForm;
+            if (!strForm.empty())
+            {
+              string strType;
+              ptRequest->i("Form", strForm);
+              getline(ssData, strType);
+              m_manip.trim(strType, strType);
+              if (strType.empty())
+              {
+                strType = "all";
+              }
+              ptRequest->i("Type", strType);
+            }
+          }
+        }
+        // }}}
+      }
+    }
+    // }}}
+    // {{{ centralmon
+    else if (strAction == "centralmon")
+    {
+      string strServer;
+      ssData >> strServer;
+      if (!strServer.empty())
+      {
+        string strProcess;
+        ssData >> strProcess;
+        ptRequest->i("Server", strServer);
+        if (!strProcess.empty())
+        {
+          ptRequest->i("Process", strProcess);
+        }
+      }
+    }
+    // }}}
     // {{{ database
-    if (strAction == "database")
+    else if (strAction == "database")
     {
       string strDatabase;
       ssData >> strDatabase;
@@ -217,7 +341,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           string strPort, strServer;
           ssData >> strServer >> strPort;
           ptRequest->i("Server", strServer);
-          ptRequest->insert("Port", strPort);
+          ptRequest->i("Port", strPort);
         }
         else
         {
@@ -248,12 +372,536 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData)
 {
   // {{{ prep work
-  string strAction = var("Action", ptData), strError;
-  stringstream ssText;
+  string strAction = var("Action", ptData), strError, strValue;
+  stringstream ssQuery, ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
+  // {{{ central
+  if (strAction == "central")
+  {
+    string strFunction = var("Function", ptData);
+    // {{{ application
+    if (strFunction == "application")
+    {
+      string strApplicationID = var("ApplicationID", ptData);
+      ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
+      // {{{ account
+      if (strApplicationID == "account")
+      {
+        string strMechID = var("MechID", ptData);
+        ssText << " " << char(3) << "00,14 " << strApplicationID << " " << char(3);
+        if (!strMechID.empty())
+        {
+          ssText << " " << char(3) << "00,14 " << strMechID << " " << char(3);
+          ssQuery.str("");
+          ssQuery << "select a.id, a.name, b.description from application a, application_account b where a.id = b.application_id and lower(b.user_id) = lower('" << m_manip.escape(strMechID, strValue) << "') order by a.name";
+          auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
+          if (getApplicationAccount != NULL)
+          {
+            for (auto &getApplicationAccountRow : *getApplicationAccount)
+            {
+              ssText << endl << "Application:  " << getApplicationAccountRow["name"] << " [" << getApplicationAccountRow["id"] << "], Description:  " << getApplicationAccountRow["description"];
+            }
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          dbfree(getApplicationAccount);
+        }
+        else
+        {
+          ssText << ":  Please provide the MechID immediately following the account.";
+        }
+      }
+      // }}}
+      // {{{ application
+      else if (!strApplicationID.empty())
+      {
+        // {{{ id
+        if (m_manip.isNumeric(strApplicationID))
+        {
+          string strForm = var("Form", ptData);
+          ssText << " " << char(3) << "00,14 " << strApplicationID << " " << char(3);
+          // {{{ general
+          if (strForm == "general")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, website, wiki, date_format(retirement_date, '%Y-%m-%d') retirement_date, description from application where id = " << strApplicationID;
+            list<map<string, string> > *getApplication = dbquery("central_r", ssQuery.str(), strError);
+            if (getApplication != NULL)
+            {
+              if (!getApplication->empty())
+              {
+                map<string, string> getApplicationRow = getApplication->front();
+                ssText << " Application:  " << getApplicationRow["name"];
+                ssText << ", Website:  " << getApplicationRow["website"];
+                if (getApplicationRow["wiki"] == "1")
+                {
+                  ssText << ", WIKI:  https://kietzman.org/wiki/index.php/" << getApplicationRow["name"];
+                }
+                if (!getApplicationRow["retirement_date"].empty())
+                {
+                  ssText << ", Retired:  " << getApplicationRow["retirement_date"];
+                }
+                ssText << ", Description:  " << getApplicationRow["description"];
+                getApplicationRow.clear();
+              }
+              else
+              {
+                ssText << " error:  The application does not exist.";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getApplication);
+          }
+          // }}}
+          // {{{ developers
+          else if (strForm == "developers")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select b.type, c.id, c.last_name, c.first_name, c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and (b.type = 'Primary Developer' or b.type = 'Backup Developer') and a.application_id = " << strApplicationID << " order by b.id, c.last_name, c.first_name, c.userid";
+            auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
+            if (getApplicationContact != NULL)
+            {
+              for (auto &getApplicationContactRow : *getApplicationContact)
+              {
+                ssText << endl << "Type:  " << getApplicationContactRow["type"] << ", Name:  " << getApplicationContactRow["last_name"] << ", " << getApplicationContactRow["first_name"] << " (" << getApplicationContactRow["userid"] << ")";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getApplicationContact);
+          }
+          // }}}
+          // {{{ invalid
+          else
+          {
+            ssText << ":  Please provide the Form immediately following the ApplicationID.";
+          }
+          // }}}
+        }
+        // }}}
+        // {{{ name
+        else
+        {
+          ssQuery.str("");
+          ssQuery << "select id from application where name = '" << m_manip.escape(strApplicationID, strValue) << "'";
+          list<map<string, string> > *getApplication = dbquery("central_r", ssQuery.str(), strError);
+          if (getApplication != NULL)
+          {
+            if (!getApplication->empty())
+            {
+              map<string, string> getApplicationRow = getApplication->front();
+              ssText << ":  The ApplicationID is " << getApplicationRow["id"] << ".";
+              getApplicationRow.clear();
+            }
+            else
+            {
+              ssText << " error:  The application does not exist.";
+            }
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          dbfree(getApplication);
+        }
+        // }}}
+      }
+      // }}}
+      // {{{ invalid
+      else
+      {
+        ssText << ":  Please provide the ApplicationID immediately following the application.";
+      }
+      // }}}
+    }
+    // }}}
+    // {{{ server
+    else if (strFunction == "server")
+    {
+      string strServerID = var("ServerID", ptData);
+      ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
+      // {{{ server
+      if (!strServerID.empty())
+      {
+        if (m_manip.isNumeric(strServerID))
+        {
+          string strForm = var("Form", ptData);
+          ssText << " " << char(3) << "00,14 " << strServerID << " " << char(3);
+          // {{{ general
+          if (strForm == "general")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select name, description from server where id = " << strServerID;
+            list<map<string, string> > *getServer = dbquery("central_r", ssQuery.str(), strError);
+            if (getServer != NULL)
+            {
+              if (!getServer->empty())
+              {
+                map<string, string> getServerRow = getServer->front();
+                ssText << " Server:  " << getServerRow["name"] << ", Description:  " << getServerRow["description"];
+                getServerRow.clear();
+              }
+              else
+              {
+                ssText << " error:  The server does not exist.";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getServer);
+          }
+          // }}}
+          // {{{ admins
+          else if (strForm == "admins")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select b.type, c.id, c.last_name, c.first_name, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and (b.type = 'Primary Admin' or b.type = 'Backup Admin') and a.server_id = " << strServerID << " order by b.id, c.last_name, c.first_name, c.userid";
+            auto getServerContact = dbquery("central_r", ssQuery.str(), strError);
+            if (getServerContact != NULL)
+            {
+              for (auto &getServerContactRow : *getServerContact)
+              {
+                ssText << endl << " Type:  " << getServerContactRow["type"] << ", Name:  " << getServerContactRow["last_name"] << ", " << getServerContactRow["first_name"] << "(" << getServerContactRow["userid"] << ")";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getServerContact);
+          }
+          // }}}
+          // {{{ invalid
+          else
+          {
+            ssText << ":  Please provide the Form immediately following the ServerID.";
+          }
+          // }}}
+        }
+        else
+        {
+          ssQuery.str("");
+          ssQuery << "select id from server where name = '" << m_manip.escape(strServerID, strValue) << "'";
+          list<map<string, string> > *getServer = dbquery("central_r", ssQuery.str(), strError);
+          if (getServer != NULL)
+          {
+            if (!getServer->empty())
+            {
+              map<string, string> getServerRow = getServer->front();
+              ssText << ":  The ServerID is " << getServerRow["id"] << ".";
+              getServerRow.clear();
+            }
+            else
+            {
+              ssText << " error:  The server does not exist.";
+            }
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          dbfree(getServer);
+        }
+      }
+      // }}}
+      // {{{ invalid
+      else
+      {
+        ssText << ":  Please provide the ServerID immediately following the server.";
+      }
+      // }}}
+    }
+    // }}}
+    // {{{ user
+    else if (strFunction == "user")
+    {
+      string strUser = var("User", ptData);
+      ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
+      if (!strUser.empty())
+      {
+        string strForm = var("Form", ptData);
+        ssText << " " << char(3) << "00,14 " << strUser << " " << char(3);
+        // {{{ general
+        if (strForm == "general")
+        {
+          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+          ssQuery.str("");
+          ssQuery << "select id, last_name, first_name, email, pager, active, admin, locked from person where userid = '" << strUser << "'";
+          list<map<string, string> > *getPerson = dbquery("central_r", ssQuery.str(), strError);
+          if (getPerson != NULL)
+          {
+            if (!getPerson->empty())
+            {
+              map<string, string> getPersonRow = getPerson->front();
+              ssText << "Name:  " << getPersonRow["last_name"] << ", " << getPersonRow["first_name"] << "(" << strUser << "), Email:  " << getPersonRow["email"] << ", Pager:  " << getPersonRow["pager"] << ", Active:  " << ((getPersonRow["active"] == "1")?"Yes":"No") << ", Admin:  " << ((getPersonRow["admin"] == "1")?"Yes":"No") << ", Locked:  " << ((getPersonRow["locked"] == "1")?"Yes":"No");
+              getPersonRow.clear();
+            }
+            else
+            {
+              ssText << " error:  The user does not exist.";
+            }
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          dbfree(getPerson);
+        }
+        // }}}
+        // {{{ applications
+        else if (strForm == "applications")
+        {
+          bool bFound = false;
+          list<string> types = {"all", "primary developer", "backup developer", "primary contact", "contact"};
+          string strType = var("Type", ptData);
+          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+          for (auto i = types.begin(); !bFound && i != types.end(); i++)
+          {
+            if (strType == (*i))
+            {
+              bFound = true;
+            }
+          }
+          if (bFound)
+          {
+            ssText << " " << char(3) << "00,14 " << strType << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select a.id, a.name, c.type from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and d.userid = '" << strUser << "'";
+            if (strType != "all")
+            {
+              ssQuery << " and c.type = '" << strType << "'";
+            }
+            ssQuery << " order by a.name";
+            auto getApplication = dbquery("central_r", ssQuery.str(), strError);
+            if (getApplication != NULL)
+            {
+              for (auto &getApplicationRow : *getApplication)
+              {
+                ssText << endl << "Application:  " << getApplicationRow["name"] << ", Contact Type:  " << getApplicationRow["type"];
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getApplication);
+          }
+          else
+          {
+            ssText << ":  Please provide the Contact Type immediately following applications.";
+          }
+          types.clear();
+        }
+        // }}}
+        // {{{ servers
+        else if (strForm == "servers")
+        {
+          bool bFound = false;
+          list<string> types = {"all", "primary admin", "backup admin", "primary contact", "contact"};
+          string strType = var("Type", ptData);
+          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+          for (auto i = types.begin(); !bFound && i != types.end(); i++)
+          {
+            if (strType == (*i))
+            {
+              bFound = true;
+            }
+          }
+          if (bFound)
+          {
+            ssText << " " << char(3) << "00,14 " << strType << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select a.id, a.name, c.type from server a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id and d.userid = '" << strUser << "'";
+            if (strType != "all")
+            {
+              ssQuery << " and c.type = '" << strType << "'";
+            }
+            ssQuery << " order by a.name";
+            list<map<string, string> > *getServer = dbquery("central_r", ssQuery.str(), strError);
+            if (getServer != NULL)
+            {
+              for (auto &getServerRow : *getServer)
+              {
+                ssText << endl << "Server:  " << getServerRow["name"] << ", Contact Type:  " << getServerRow["type"];
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getServer);
+          }
+          else
+          {
+            ssText << ":  Please provide the Contact Type immediately following servers.";
+          }
+          types.clear();
+        }
+        // }}}
+        // {{{ invalid
+        else
+        {
+          ssText << ":  Please provide the Form immediately following the User:  general, applications, servers.";
+        }
+        // }}}
+      }
+      else
+      {
+        ssText << ":  Please provide the User immediately following the user.";
+      }
+    }
+    // }}}
+    // {{{ invalid
+    else
+    {
+      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, server, user." << endl;
+    }
+    // }}}
+  }
+  // }}}
+  // {{{ centralmon
+  else if (strAction == "centralmon")
+  {
+    string strServer = var("Server", ptData);
+    if (!strServer.empty())
+    {
+      string strProcess = var("Process", ptData);
+      Json *ptResponse = new Json;
+      ssText << " " << char(3) << "00,14 " << strServer << " " << char(3);
+      if (!strProcess.empty())
+      {
+        ssText << " " << char(3) << "00,14 " << strProcess << " " << char(3);
+      }
+      if (m_pJunction->sysInfo(strServer, strProcess, ptResponse, strError))
+      {
+        if (!strProcess.empty())
+        {
+          if (ptResponse->m.find("StartTime") != ptResponse->m.end() && !ptResponse->m["StartTime"]->v.empty())
+          {
+            ssText << endl << "Start Time:  " << ptResponse->m["StartTime"]->v;
+          }
+          if (ptResponse->m.find("NumberOfProcesses") != ptResponse->m.end() && !ptResponse->m["NumberOfProcesses"]->v.empty())
+          {
+            ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
+          }
+          if (ptResponse->m.find("ImageSize") != ptResponse->m.end() && !ptResponse->m["ImageSize"]->v.empty())
+          {
+            ssText << endl << "Image Size:  " << ptResponse->m["ImageSize"]->v << " KB";
+          }
+          if (ptResponse->m.find("ResidentSize") != ptResponse->m.end() && !ptResponse->m["ResidentSize"]->v.empty())
+          {
+            ssText << endl << "Resident Size:  " << ptResponse->m["ResidentSize"]->v << " KB";
+          }
+          if (ptResponse->m.find("Owners") != ptResponse->m.end() && !ptResponse->m["Owners"]->m.empty())
+          {
+            bool bFirst = true;
+            ssText << endl << "Process Owners:  (";
+            for (auto &i : ptResponse->m["Owners"]->m)
+            {
+              ssText << ((bFirst)?"":", ") << i.first << ":  " << i.second->v << " processes";
+              bFirst = false;
+            }
+            ssText << ")";
+          }
+        }
+        else
+        {
+          if (ptResponse->m.find("OperatingSystem") != ptResponse->m.end() && !ptResponse->m["OperatingSystem"]->v.empty())
+          {
+            ssText << endl << "Operating System:  " << ptResponse->m["OperatingSystem"]->v;
+          }
+          if (ptResponse->m.find("SystemRelease") != ptResponse->m.end() && !ptResponse->m["SystemRelease"]->v.empty())
+          {
+            ssText << endl << "System Release:  " << ptResponse->m["SystemRelease"]->v;
+          }
+          if (ptResponse->m.find("UpTime") != ptResponse->m.end() && !ptResponse->m["UpTime"]->v.empty())
+          {
+            ssText << endl << "Uptime:  " << ptResponse->m["UpTime"]->v << " days";
+          }
+          if (ptResponse->m.find("MainUsed") != ptResponse->m.end() && !ptResponse->m["MainUsed"]->v.empty() && ptResponse->m.find("MainTotal") != ptResponse->m.end() && !ptResponse->m["MainTotal"]->v.empty())
+          {
+            ssText << endl << "Memory Used:  " << ptResponse->m["MainUsed"]->v << " of " << ptResponse->m["MainTotal"]->v << " MB";
+          }
+          if (ptResponse->m.find("SwapUsed") != ptResponse->m.end() && !ptResponse->m["SwapUsed"]->v.empty() && ptResponse->m.find("SwapTotal") != ptResponse->m.end() && !ptResponse->m["SwapTotal"]->v.empty())
+          {
+            ssText << endl << "Swap Used:  " << ptResponse->m["SwapUsed"]->v << " of " << ptResponse->m["SwapTotal"]->v << " MB";
+          }
+          if (ptResponse->m.find("NumberOfProcessors") != ptResponse->m.end() && !ptResponse->m["NumberOfProcessors"]->v.empty())
+          {
+            ssText << endl << "# Processors:  " << ptResponse->m["NumberOfProcessors"]->v;
+          }
+          if (ptResponse->m.find("CpuSpeed") != ptResponse->m.end() && !ptResponse->m["CpuSpeed"]->v.empty())
+          {
+            ssText << endl << "CPU Speed:  " << ptResponse->m["CpuSpeed"]->v << " MHz";
+          }
+          if (ptResponse->m.find("CpuUsage") != ptResponse->m.end() && !ptResponse->m["CpuUsage"]->v.empty())
+          {
+            ssText << endl << "CPU Usage:  " << ptResponse->m["CpuUsage"]->v << "%";
+          }
+          if (ptResponse->m.find("NumberOfProcesses") != ptResponse->m.end() && !ptResponse->m["NumberOfProcesses"]->v.empty())
+          {
+            ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
+          }
+          if (ptResponse->m.find("Partitions") != ptResponse->m.end() && !ptResponse->m["Partitions"]->m.empty())
+          {
+            bool bFirst = true;
+            ssText << endl << "Partitions:  (";
+            for (auto &i : ptResponse->m["Partitions"]->m)
+            {
+              ssText << ((bFirst)?"":", ") << i.first << ":  " << i.second->v << "% full";
+              bFirst = false;
+            }
+            ssText << ")";
+          }
+        }
+        if (ptResponse->m.find("Alarms") != ptResponse->m.end() && (!ptResponse->m["Alarms"]->l.empty() || !ptResponse->m["Alarms"]->v.empty()))
+        {
+          ssText << endl << "Alarms:  (";
+          if (!ptResponse->m["Alarms"]->l.empty())
+          {
+            bool bFirst = true;
+            for (auto &i : ptResponse->m["Alarms"]->l)
+            {
+              ssText << char(3) << "04" << ((bFirst)?"":", ") << i->v << char(3);
+              bFirst = false;
+            }
+            ssText << ")";
+          }
+          else
+          {
+            ssText << char(3) << "04" << ptResponse->m["Alarms"]->v << char(3);
+          }
+          ssText << ")";
+        }
+      }
+      else
+      {
+        ssText << " error:  " << strError;
+      }
+      delete ptResponse;
+    }
+    else
+    {
+      ssText << ":  The centralmon or sysInfo action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+    }
+  }
+  // }}}
   // {{{ database
-  if (strAction == "database")
+  else if (strAction == "database")
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
@@ -487,7 +1135,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"database", "irc", "radial", "ssh (s)", "storage", "terminal (t)"};
+    vector<string> actions = {"central", "centralmon", "database", "irc", "radial", "ssh (s)", "storage", "terminal (t)"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {
