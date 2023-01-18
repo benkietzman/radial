@@ -225,7 +225,7 @@ bool Live::retrieve(const string strWsRequestID, string &strApplication, string 
   {
     Json *ptJson = new Json;
     ptJson->i("Function", "list");
-    if (hub("websocket", ptJson, strError) && ptJson->m.find("Response") != ptJson->m.end() && ptJson->m["Resposne"]->m.find(strWsRequestID) != ptJson->m["Resposne"]->m.end())
+    if (hub("websocket", ptJson, strError) && ptJson->m.find("Response") != ptJson->m.end() && ptJson->m["Response"]->m.find(strWsRequestID) != ptJson->m["Response"]->m.end())
     {
       bResult = true;
       if (ptJson->m["Response"]->m[strWsRequestID]->m.find("Application") != ptJson->m["Response"]->m[strWsRequestID]->m.end() && !ptJson->m["Response"]->m[strWsRequestID]->m["Application"]->v.empty())
