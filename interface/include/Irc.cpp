@@ -1381,7 +1381,7 @@ void Irc::bot(string strPrefix)
             fds[0].events |= POLLOUT;
           }
           // }}}
-          if ((nReturn = poll(fds, 1, 250)) > 0)
+          if ((nReturn = poll(fds, 1, 100)) > 0)
           {
             // {{{ read
             if (fds[0].revents & POLLIN)
@@ -2041,7 +2041,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
                       fds[0].events |= POLLOUT;
                     }
                     bReading = false;
-                    if ((nReturn = poll(fds, 1, 250)) > 0)
+                    if ((nReturn = poll(fds, 1, 100)) > 0)
                     {
                       if (fds[0].revents & POLLIN)
                       {

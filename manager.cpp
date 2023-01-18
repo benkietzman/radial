@@ -151,7 +151,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
           {
             fds[0].events |= POLLOUT;
           }
-          if ((nReturn = poll(fds, 1, 250)) > 0)
+          if ((nReturn = poll(fds, 1, 100)) > 0)
           {
             if (fds[0].revents & POLLIN)
             {

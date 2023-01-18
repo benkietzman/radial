@@ -233,7 +233,7 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
         pollfd fds[1];
         fds[0].fd = fdUnique[0];
         fds[0].events = POLLIN;
-        if ((nReturn = poll(fds, 1, 250)) > 0)
+        if ((nReturn = poll(fds, 1, 100)) > 0)
         {
           if (fds[0].revents & (POLLHUP | POLLIN))
           {
@@ -646,7 +646,7 @@ void Interface::process(string strPrefix)
       fds[unIndex].events = POLLOUT;
       unIndex++;
     }
-    if ((nReturn = poll(fds, unIndex, 250)) > 0)
+    if ((nReturn = poll(fds, unIndex, 100)) > 0)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {

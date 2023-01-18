@@ -175,7 +175,7 @@ void Request::process(string strPrefix)
             unIndex++;
           }
           // }}}
-          if ((nReturn = poll(fds, unIndex, 250)) > 0)
+          if ((nReturn = poll(fds, unIndex, 100)) > 0)
           {
             // {{{ stdin
             if (fds[0].revents & (POLLHUP | POLLIN))
