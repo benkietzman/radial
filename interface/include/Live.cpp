@@ -157,7 +157,7 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
           }
           for (auto &link : m_links)
           {
-            if (link->interfaces.find("live") != link->interfaces.end())
+            if (link->interfaces.find("live") != link->interfaces.end() && link->interfaces.find("websocket") != link->interfaces.end())
             {
               string strSubError;
               Json *ptSubJson = new Json;
