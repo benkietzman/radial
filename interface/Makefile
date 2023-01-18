@@ -8,11 +8,12 @@
 # {{{ prep work
 prefix=/usr/local
 all: bin/auth bin/database bin/irc bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/database bin/irc bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+install: bin/auth bin/database bin/irc bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/link $(prefix)/radial/interface/
+	install --mode=775 bin/live $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
 	install --mode=775 bin/request $(prefix)/radial/interface/
@@ -60,6 +61,16 @@ obj/link.o: link.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c link.cpp -o obj/link.o $(CPPFLAGS) -I../../common
 obj/Link.o: include/Link.cpp obj
 	g++ -ggdb -Wall -c include/Link.cpp -o obj/Link.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ live
+live: bin/live $(prefix)/radial/interface
+	install --mode=775 bin/live $(prefix)/radial/interface/
+bin/live: ../../common/libcommon.a obj/live.o obj/Base.o obj/Interface.o obj/Live.o bin
+	g++ -o bin/live obj/live.o obj/Base.o obj/Interface.o obj/Live.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/live.o: live.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c live.cpp -o obj/live.o $(CPPFLAGS) -I../../common
+obj/Live.o: include/Live.cpp obj
+	g++ -ggdb -Wall -c include/Live.cpp -o obj/Live.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ log
 log: bin/log $(prefix)/radial/interface

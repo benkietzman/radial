@@ -1034,7 +1034,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ptJson->m["Request"]->m["Message"]->i("Class", ((!strClass.empty())?strClass:"info"));
         ptJson->m["Request"]->m["Message"]->i("Title", ((!strTitle.empty())?strTitle:strApplication));
         ptJson->m["Request"]->m["Message"]->i("Body", strMessage);
-        hub("websocket", ptJson, false);
+        hub("live", ptJson, false);
         ssText << ":  The message has been sent.";
         delete ptJson;
       }
