@@ -160,7 +160,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   }
   else if (ptJson->m.find("reqApp") != ptJson->m.end() && !ptJson->m["reqApp"]->v.empty())
   {
-    strApplication = ptJson->m["reqApp"]->v;
+    strApplication = ptConn->strApplication = ptJson->m["reqApp"]->v;
   }
   // {{{ existing
   if (!ptConn->strUser.empty() && !ptConn->strPassword.empty() && !ptConn->strUserID.empty())
