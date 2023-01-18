@@ -1045,7 +1045,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The message action is used to send a JSON formatted request to Radial Live.  Please provide a JSON formatted request immediately following the action.";
+      ssText << ":  The message action is used to send a JSON formatted request to Radial Live.  Please provide the Application within the JSON request.";
     }
   }
   // }}}
