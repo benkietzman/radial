@@ -75,8 +75,16 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
         }
         if (connIter != m_conns.end())
         {
+          Json *ptSubJson = new Json(ptJson);
           bResult = true;
-          (*connIter)->buffers.push_back(ptJson->j(strJson));
+          keyRemovals(ptSubJson);
+          if (ptSubJson->m.find("Interface") != ptSubJson->m.end())
+          {
+            delete ptSubJson->m["Interface"];
+            ptSubJson->m.erase("Interface");
+          }
+          (*connIter)->buffers.push_back(ptSubJson->j(strJson));
+          delete ptSubJson;
         }
         else
         {
