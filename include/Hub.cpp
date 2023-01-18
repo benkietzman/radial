@@ -401,7 +401,7 @@ void Hub::process(string strPrefix)
               unIndex++;
             }
             // }}}
-            if ((nReturn = poll(fds, unIndex, 10)) > 0)
+            if ((nReturn = poll(fds, unIndex, 250)) > 0)
             {
               // {{{ accept
               if (fds[0].revents & POLLIN)
