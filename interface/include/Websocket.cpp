@@ -84,6 +84,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
             ptSubJson->m.erase("Interface");
           }
           (*connIter)->buffers.push_back(ptSubJson->j(strJson));
+          lws_callback_on_writable((*connIter)->wsi);
           delete ptSubJson;
         }
         else
