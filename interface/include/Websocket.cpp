@@ -109,7 +109,7 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         stringstream ssIdentity;
         Json *ptConn = new Json;
-        ssIdentity << conn->wsi;
+        ssIdentity << m_strNode << " " << m_strName << " " << conn->wsi;
         ptConn->i("Application", conn->strApplication);
         ptConn->i("User", conn->strUserID);
         ptJson->m["Response"]->m[ssIdentity.str()] = ptConn;
