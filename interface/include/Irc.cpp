@@ -255,8 +255,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     // }}}
-    // {{{ message
-    else if (strAction == "message")
+    // {{{ live
+    else if (strAction == "live")
     {
       string strJson, strRequest;
       getline(ssData, strRequest);
@@ -985,8 +985,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ message
-  else if (strAction == "message")
+  // {{{ live
+  else if (strAction == "live")
   {
     string strApplication, strClass, strJson = var("Json", ptData), strMessage, strTitle, strUser;
     if (!strJson.empty())
@@ -1018,25 +1018,20 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       if (isLocalAdmin(strIdent, strApplication, bAdmin, auth))
       {
-        Json *ptJson = new Json;
-        ptJson->i("Function", "message");
-        ptJson->m["Request"] = new Json;
-        if (!strApplication.empty())
+        Json *ptMessage = new Json;
+        ptMessage->i("Action", "message");
+        ptMessage->i("Class", ((!strClass.empty())?strClass:"info"));
+        ptMessage->i("Title", ((!strTitle.empty())?strTitle:strApplication));
+        ptMessage->i("Body", strMessage);
+        if (live(strApplication, strUser, ptMessage, strError))
         {
-          ptJson->m["Request"]->i("Application", strApplication);
+          ssText << ":  The message has been sent.";
         }
-        if (!strUser.empty())
+        else
         {
-          ptJson->m["Request"]->i("User", strUser);
+          ssText << " error:  " << strError;
         }
-        ptJson->m["Request"]->m["Message"] = new Json;
-        ptJson->m["Request"]->m["Message"]->i("Action", "message");
-        ptJson->m["Request"]->m["Message"]->i("Class", ((!strClass.empty())?strClass:"info"));
-        ptJson->m["Request"]->m["Message"]->i("Title", ((!strTitle.empty())?strTitle:strApplication));
-        ptJson->m["Request"]->m["Message"]->i("Body", strMessage);
-        hub("live", ptJson, false);
-        ssText << ":  The message has been sent.";
-        delete ptJson;
+        delete ptMessage;
       }
       else
       {
@@ -1045,7 +1040,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The message action is used to send a JSON formatted request to Radial Live.  Please provide the Application within the JSON request.";
+      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  Please provide the Application within the JSON request.";
     }
   }
   // }}}
@@ -1211,7 +1206,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"central", "centralmon", "database", "irc", "radial", "ssh (s)", "storage", "terminal (t)"};
+    vector<string> actions = {"central", "centralmon", "database", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
     ssText << ":  Please provide an Action:  ";
     for (size_t i = 0; i < actions.size(); i++)
     {

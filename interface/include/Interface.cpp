@@ -480,6 +480,32 @@ void Interface::links(string strPrefix, Json *ptJson)
   m_mutexShare.unlock();
 }
 // }}}
+// {{{ live()
+bool Interface::live(const string strApplication, const string strUser, Json *ptMessage, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "message");
+  ptJson->m["Request"] = new Json;
+  if (!strApplication.empty())
+  {
+    ptJson->m["Request"]->i("Application", strApplication);
+  }
+  if (!strUser.empty())
+  {
+    ptJson->m["Request"]->i("User", strUser);
+  }
+  ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
+  if (hub("live", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ log()
 void Interface::log(const string strMessage)
 {

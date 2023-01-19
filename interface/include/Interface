@@ -55,6 +55,7 @@ class Interface : public Base
   bool isMasterSettled();
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
+  bool live(const string strApplication, const string strUser, Json *ptMessage, string &strError);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
   string master();
