@@ -481,6 +481,19 @@ void Interface::links(string strPrefix, Json *ptJson)
 }
 // }}}
 // {{{ live()
+bool Interface::live(const string strApplication, const string strUser, map<string, string> message, string &strError)
+{
+  bool bResult = false;
+  Json *ptMessage = new Json(message);
+
+  if (live(strApplication, strUser, ptMessage, strError))
+  {
+    bResult = true;
+  }
+  delete ptMessage;
+
+  return bResult;
+}
 bool Interface::live(const string strApplication, const string strUser, Json *ptMessage, string &strError)
 {
   bool bResult = false;

@@ -1018,12 +1018,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       if (isLocalAdmin(strIdent, strApplication, bAdmin, auth))
       {
-        Json *ptMessage = new Json;
-        ptMessage->i("Action", "message");
-        ptMessage->i("Class", ((!strClass.empty())?strClass:"info"));
-        ptMessage->i("Title", ((!strTitle.empty())?strTitle:strApplication));
-        ptMessage->i("Body", strMessage);
-        if (live(strApplication, strUser, ptMessage, strError))
+        if (live(strApplication, strUser, {{"Action", "message"}, {"Class", ((!strClass.empty())?strClass:"info")}, {"Title", ((!strTitle.empty())?strTitle:strApplication)}, {"Body", strMessage}}, strError))
         {
           ssText << ":  The message has been sent.";
         }
@@ -1031,7 +1026,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           ssText << " error:  " << strError;
         }
-        delete ptMessage;
       }
       else
       {
