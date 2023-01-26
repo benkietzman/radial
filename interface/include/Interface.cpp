@@ -636,7 +636,7 @@ void Interface::process(string strPrefix)
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
   stringstream ssMessage;
-  time_t CBroadcast, CMaster[2], CTime, unBroadcastSleep = 15;
+  time_t CBroadcast, CMaster[2], CShutdown = 0, CTime, unBroadcastSleep = 15;
 
   strPrefix += "->Interface::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
@@ -911,8 +911,13 @@ void Interface::process(string strPrefix)
     }
     if (shutdown())
     {
+      time(&CTime);
+      if (CShutdown == 0)
+      {
+        CShutdown = CTime;
+      }
       m_mutexShare.lock();
-      if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
+      if ((CTime - CShutdown) > 30 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
       {
         bExit = true;
       }
