@@ -502,9 +502,6 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     }
   }
   m_mutex.unlock();
-  stringstream ssMessage;
-  ssMessage << strPrefix << " [" << reason << "]:  Processing reason.";
-  log(ssMessage.str());
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED
