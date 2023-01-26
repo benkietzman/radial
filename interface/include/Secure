@@ -30,6 +30,7 @@ class Secure : public Interface
   bool (*m_pLoginCallback)(string, Json *, string &);
   string (*m_pLoginTitleCallback)(const string);
   bool (*m_pLogoutCallback)(string, Json *, string &);
+  void (*m_pProcessJwtCallback)(string, Json *, Json *, Json *);
   void (*m_pProcessPostAuthzCallback)(string, Json *, Json *);
   void (*m_pProcessPreAuthzCallback)(string, Json *, Json *);
 
@@ -40,6 +41,7 @@ class Secure : public Interface
   void setLogin(bool (*pCallback)(string, Json *, string &));
   void setLoginTitle(string (*pCallback)(const string));
   void setLogout(bool (*pCallback)(string, Json *, string &));
+  void setProcessJwt(void (*pCallback)(string, Json *, Json *, Json *));
   void setProcessPostAuthz(void (*pCallback)(string, Json *, Json *));
   void setProcessPreAuthz(void (*pCallback)(string, Json *, Json *));
 };

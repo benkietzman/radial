@@ -25,6 +25,12 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   string strError;
   Json *ptJwt = new Json;
 
+  m_pLoginCallback = NULL;
+  m_pLoginTitleCallback = NULL;
+  m_pLogoutCallback = NULL;
+  m_pProcessJwtCallback = NULL;
+  m_pProcessPostAuthzCallback = NULL;
+  m_pProcessPreAuthzCallback = NULL;
   m_pJunction->useSingleSocket(true);
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
   {
@@ -333,6 +339,10 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
                 ptJson->m["Response"]->m["auth"]->m["apps"] = new Json(ptData->m["central"]->m["apps"]);
               }
+              if (m_pProcessJwtCallback != NULL)
+              {
+                m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
+              }
               if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
               {
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strSecret, strValue, strError), strValue));
@@ -389,6 +399,12 @@ void Secure::setLoginTitle(string (*pCallback)(const string))
 void Secure::setLogout(bool (*pCallback)(string, Json *, string &))
 {
   m_pLogoutCallback = pCallback;
+}
+// }}}
+// {{{ setProcessJwt()
+void Secure::setProcessJwt(void (*pCallback)(string, Json *, Json *, Json *))
+{
+  m_pProcessJwtCallback = pCallback;
 }
 // }}}
 // {{{ setProcessPostAuthz()
