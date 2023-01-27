@@ -351,13 +351,9 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             }
             else
             {
-              strError = "Failed to parse central authz data.";
+              string strJson;
+              strError = (string)"Failed to parse central authz data. --- " + ptData->j(strJson);
             }
-          }
-          else
-          {
-            string strJson;
-            strError += (string)" --- " + ptData->j(strJson);
           }
           delete ptData;
         }
