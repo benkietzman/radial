@@ -137,7 +137,7 @@ log(ssMessage.str());
     ptJson->i("Error", strError);
   }
 ssMessage.str("");
-ssMessage << strPrefix << " [5]:  " << ptJson << " " << ptData;
+ssMessage << strPrefix << " [5]:  " << ptJson;
 log(ssMessage.str());
   if (bResponse)
   {
