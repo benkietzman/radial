@@ -318,7 +318,12 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               ptJwt->i("exp", ssTime.str(), 'n');
               ptJwt->i("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ptJson->m["Response"]->m["auth"]->i("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
-              ssQuery << "select a.name, b.user_id, b.password from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
+              ssQuery << "select a.name, b.aes, b.user_id, b.password";
+              if (!m_strSecret.empty() && !m_strSigner.empty())
+              {
+                ssQuery << ", aes_decrypt(from_base64(b.password), sha2('" << m_manip.escape(m_strSecret, strValue) << "', " << m_strSigner << ")) decrypted_password";
+              }
+              ssQuery << " from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
               auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
               if (getApplicationAccount != NULL)
               {
@@ -330,7 +335,17 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
                   }
                   ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("User", getApplicationAccountRow["user_id"]);
-                  ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("Password", getApplicationAccountRow["password"]);
+                  if (getApplicationAccountRow["aes"] == "1")
+                  {
+                    if (getApplicationAccountRow.find("decrypted_password") != getApplicationAccountRow.end() && !getApplicationAccountRow["decrypted_password"].empty())
+                    {
+                      ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("Password", getApplicationAccountRow["decrypted_password"]);
+                    }
+                  }
+                  else
+                  {
+                    ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]]->i("Password", getApplicationAccountRow["password"]);
+                  }
                 }
               }
               dbfree(getApplicationAccount);
