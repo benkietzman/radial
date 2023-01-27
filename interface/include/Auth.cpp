@@ -94,6 +94,11 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             strError = "Please initialize Warden.";
           }
+          else
+          {
+            string strJson;
+            strError += (string)" --- " + ptData->j(strJson);
+          }
           delete ptData;
         }
         else
