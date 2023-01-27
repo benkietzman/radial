@@ -34,10 +34,14 @@ Auth::~Auth()
 void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
-  string strError;
+  string strError, strJson;
+  stringstream ssMessage;
 
   threadIncrement();
   strPrefix += "->Auth::callback()";
+ssMessage.str("");
+ssMessage << strPrefix << " [0]:  " << ptJson;
+log(ssMessage.str());
   if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
   {
     if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
@@ -47,8 +51,14 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
+ssMessage.str("");
+ssMessage << strPrefix << " [1]:  " << ptJson << " | " << ptData;
+log(ssMessage.str());
           if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
           {
+ssMessage.str("");
+ssMessage << strPrefix << " [2]:  " << ptJson << " | " << ptData;
+log(ssMessage.str());
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
             {
               string strAccessFunction = "Function";
@@ -82,7 +92,13 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
             {
               if (m_pAnalyzeCallback != NULL)
               {
+ssMessage.str("");
+ssMessage << strPrefix << " [3]:  " << ptJson << " " << ptData;
+log(ssMessage.str());
                 bResult = m_pAnalyzeCallback(strPrefix, ptJson, ptData, strError);
+ssMessage.str("");
+ssMessage << strPrefix << " [4]:  " << ptJson << " " << ptData;
+log(ssMessage.str());
               }
               else
               {
@@ -120,6 +136,9 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   {
     ptJson->i("Error", strError);
   }
+ssMessage.str("");
+ssMessage << strPrefix << " [5]:  " << ptJson << " " << ptData;
+log(ssMessage.str());
   if (bResponse)
   {
     hub(ptJson, false);
