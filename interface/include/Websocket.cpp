@@ -411,14 +411,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     ptJson->m.erase("Password");
   }
   ptConn->mutexShare.lock();
+  ptConn->buffers.push_back(ptJson->j(strJson));
+  lws_callback_on_writable(ptConn->wsi);
   if (ptConn->unThreads > 0)
   {
     ptConn->unThreads--;
   }
-  ptConn->buffers.push_back(ptJson->j(strJson));
   ptConn->mutexShare.unlock();
   delete ptJson;
-  lws_callback_on_writable(ptConn->wsi);
   threadDecrement();
 }
 // }}}
