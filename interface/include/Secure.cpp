@@ -23,7 +23,7 @@ namespace radial
 Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "secure", argc, argv, pCallback)
 {
   string strError;
-  Json *ptJwt = new Json;
+  Json *ptAes = new Json, *ptJwt = new Json;
 
   m_pLoginCallback = NULL;
   m_pLoginTitleCallback = NULL;
@@ -32,15 +32,23 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   m_pProcessPostAuthzCallback = NULL;
   m_pProcessPreAuthzCallback = NULL;
   m_pJunction->useSingleSocket(true);
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
+  { 
+    if (ptAes->m.find("Secret") != ptAes->m.end() && !ptAes->m["Secret"]->v.empty())
+    {
+      m_strAesSecret = ptAes->m["Secret"]->v;
+    }
+  }
+  delete ptAes; 
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
   {
     if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
     {
-      m_strSecret = ptJwt->m["Secret"]->v;
+      m_strJwtSecret = ptJwt->m["Secret"]->v;
     }
     if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
     {
-      m_strSigner = ptJwt->m["Signer"]->v;
+      m_strJwtSigner = ptJwt->m["Signer"]->v;
     }
   }
   delete ptJwt;
@@ -69,12 +77,12 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         string strBase64 = ptJson->m["wsJwt"]->v, strPayload;
         Json *ptJwt = new Json;
-        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strSecret, strPayload, strError);
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
         if (strPayload.empty())
         {
           strPayload = strBase64;
         }
-        if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
+        if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
           bResult = true;
           ptJson->m["Response"] = new Json;
@@ -319,9 +327,9 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               ptJwt->i("sl_admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ptJson->m["Response"]->m["auth"]->i("admin", getPersonRow["admin"], ((getPersonRow["admin"] == "1")?'1':'0'));
               ssQuery << "select a.name, b.aes, b.user_id, b.password";
-              if (!m_strSecret.empty() && !m_strSigner.empty())
+              if (!m_strAesSecret.empty())
               {
-                ssQuery << ", aes_decrypt(from_base64(b.password), sha2('" << m_manip.escape(m_strSecret, strValue) << "', " << m_strSigner << ")) decrypted_password";
+                ssQuery << ", aes_decrypt(from_base64(b.password), sha2('" << m_manip.escape(m_strJwtSecret, strValue) << "', 512)) decrypted_password";
               }
               ssQuery << " from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
               auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
@@ -358,9 +366,9 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               {
                 m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
               }
-              if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
+              if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
-                ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strSecret, strValue, strError), strValue));
+                ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               }
               delete ptJwt;
             }

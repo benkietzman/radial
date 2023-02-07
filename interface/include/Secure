@@ -25,8 +25,9 @@ namespace radial
 class Secure : public Interface
 {
   protected:
-  string m_strSecret;
-  string m_strSigner;
+  string m_strAesSecret;
+  string m_strJwtSecret;
+  string m_strJwtSigner;
   bool (*m_pLoginCallback)(string, Json *, string &);
   string (*m_pLoginTitleCallback)(const string);
   bool (*m_pLogoutCallback)(string, Json *, string &);
