@@ -70,7 +70,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
   {
     string strMessageLower;
     stringstream ssText;
-    m_manip.toLower(m_manip.trim(strMessageLower, strMessage));
+    m_manip.toLower(strMessageLower, m_manip.trim(strMessageLower, strMessage));
     ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
     for (auto &i : m_ptMonitor->m)
     {
@@ -79,7 +79,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
         for (auto &j : i.second->m["Alerts"]->l)
         {
           string strAlertLower;
-          m_manip.toLower(m_manip.trim(strAlertLower, j->v));
+          m_manip.toLower(strAlertLower, m_manip.trim(strAlertLower, j->v));
           if (strMessageLower.size() >= (strAlertLower.size() + 1) && strMessageLower.substr(0, (strAlertLower.size() + 1)) == (strAlertLower + (string)" "))
           {
             chat(i.first, ssText.str());
