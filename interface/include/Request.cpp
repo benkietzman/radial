@@ -37,7 +37,7 @@ void Request::process(string strPrefix)
   SSL_CTX *ctx = NULL;
   string strError, strJson;
   stringstream ssMessage;
-  strPrefix += "->Request::socket()";
+  strPrefix += "->Request::process()";
   if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
   {
     lArg |= O_NONBLOCK;
