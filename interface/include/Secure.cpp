@@ -341,7 +341,7 @@ ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-0"; log(ssMessage.str()
               ssQuery << "select a.name, b.aes, b.user_id, b.password";
               if (!m_strAesSecret.empty())
               {
-                ssQuery << ", aes_decrypt(from_base64(b.password), sha2('" << m_manip.escape(m_strJwtSecret, strValue) << "', 512)) decrypted_password";
+                ssQuery << ", aes_decrypt(from_base64(b.password), sha2('" << m_manip.escape(m_strAesSecret, strValue) << "', 512)) decrypted_password";
               }
               ssQuery << " from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and c.type = 'Radial - WebSocket'";
               auto getApplicationAccount = dbquery("central_r", ssQuery.str(), strError);
