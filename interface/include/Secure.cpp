@@ -304,15 +304,15 @@ ssMessage.str(""); ssMessage << strPrefix << ":  1-0-0-0"; log(ssMessage.str());
             m_pProcessPreAuthzCallback(strPrefix, ptJson, ptData);
 ssMessage.str(""); ssMessage << strPrefix << ":  1-0-0-1"; log(ssMessage.str());
           }
-ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1 DATA " << ptData; log(ssMessage.str());
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1"; log(ssMessage.str());
           if (m_pWarden->authz(ptData, strError))
           {
-ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0 DATA " << ptData; log(ssMessage.str());
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0"; log(ssMessage.str());
             if (m_pProcessPostAuthzCallback != NULL)
             {
 ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0-0"; log(ssMessage.str());
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
-ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0-1 DATA " << ptData; log(ssMessage.str());
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0-1"; log(ssMessage.str());
             }
 ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1"; log(ssMessage.str());
             if (ptData->m.find("central") != ptData->m.end())
@@ -381,7 +381,7 @@ ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-1-0"; log(ssMessage.str
                 m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
 ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-1-1"; log(ssMessage.str());
               }
-ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-2 JWT " << ptJwt; log(ssMessage.str());
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-2"; log(ssMessage.str());
               if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
