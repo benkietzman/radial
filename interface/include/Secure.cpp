@@ -261,6 +261,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     // {{{ process
     else if (ptJson->m["Function"]->v == "process")
     {
+ssMessage.str(""); ssMessage << strPrefix << ":  0"; log(ssMessage.str());
       bResult = true;
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
@@ -280,10 +281,13 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           ptJson->m["Response"]->m["auth"]->i("login_title", m_pLoginTitleCallback(ptJson->m["Request"]->m["Type"]->v));
         }
       }
+ssMessage.str(""); ssMessage << strPrefix << ":  1"; log(ssMessage.str());
       if (ptJson->m.find("Request") != ptJson->m.end())
       {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0"; log(ssMessage.str());
         if (ptJson->m["Request"]->m.size() > 1)
         {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-0"; log(ssMessage.str());
           Json *ptData = new Json(ptJson->m["Request"]);
           if (ptJson->m["Request"]->m.find("password") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["password"]->v.empty())
           {
@@ -296,16 +300,24 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           }
           if (m_pProcessPreAuthzCallback != NULL)
           {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-0-0"; log(ssMessage.str());
             m_pProcessPreAuthzCallback(strPrefix, ptJson, ptData);
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-0-1"; log(ssMessage.str());
           }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1 DATA " << ptData; log(ssMessage.str());
           if (m_pWarden->authz(ptData, strError))
           {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0 DATA " << ptData; log(ssMessage.str());
             if (m_pProcessPostAuthzCallback != NULL)
             {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0-0"; log(ssMessage.str());
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-0-1 DATA " << ptData; log(ssMessage.str());
             }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1"; log(ssMessage.str());
             if (ptData->m.find("central") != ptData->m.end())
             {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-0"; log(ssMessage.str());
               map<string, string> getPersonRow;
               string strPayload, strValue;
               stringstream ssQuery, ssTime;
@@ -362,24 +374,33 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
                 ptJson->m["Response"]->m["auth"]->m["apps"] = new Json(ptData->m["central"]->m["apps"]);
               }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-1"; log(ssMessage.str());
               if (m_pProcessJwtCallback != NULL)
               {
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-1-0"; log(ssMessage.str());
                 m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-1-1"; log(ssMessage.str());
               }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-2 JWT " << ptJwt; log(ssMessage.str());
               if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               }
               delete ptJwt;
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-1-3"; log(ssMessage.str());
             }
             else
             {
               strError = "Failed to parse central authz data.";
             }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-1-2"; log(ssMessage.str());
           }
           delete ptData;
+ssMessage.str(""); ssMessage << strPrefix << ":  1-0-2"; log(ssMessage.str());
         }
+ssMessage.str(""); ssMessage << strPrefix << ":  1-1"; log(ssMessage.str());
       }
+ssMessage.str(""); ssMessage << strPrefix << ":  2"; log(ssMessage.str());
     }
     // }}}
     // {{{ invalid
