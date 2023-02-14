@@ -36,6 +36,7 @@
 #include <vector>
 using namespace std;
 #include <Central>
+#include <File>
 #include <Json>
 #include <ServiceJunction>
 #include <StringManip>
@@ -103,6 +104,7 @@ class Base
   time_t m_CMonitor[2];
   unsigned long m_ulMaxResident;
   Central *m_pCentral;
+  File *m_pFile;
   ServiceJunction *m_pJunction;
   StringManip m_manip;
   Utility *m_pUtility;
