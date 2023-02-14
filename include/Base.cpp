@@ -96,7 +96,6 @@ Base::Base(int argc, char **argv)
   // }}}
   m_pCentral = new Central(strError);
   m_pCentral->setApplication(m_strApplication);
-  m_pFile = new File;
   m_pJunction = new ServiceJunction(strError);
   m_pJunction->setApplication(m_strApplication);
   m_pUtility = new Utility(strError);
@@ -137,7 +136,6 @@ Base::~Base()
     }
   } while (unThreads > 0);
   delete m_pCentral;
-  delete m_pFile;
   delete m_pJunction;
   delete m_pUtility;
   if (m_pWarden != NULL)
