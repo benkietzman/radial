@@ -1459,13 +1459,6 @@ void Irc::bot(string strPrefix)
                             unIndex++;
                             break;
                           }
-                          default:
-                          {
-                            ssMessage.str("");
-                            ssMessage << strPrefix << "[" << m_strServer << ":" << m_strPort << "," << strNick << ",uncaught]:  " << strMessage;
-                            log(ssMessage.str());
-                            break;
-                          }
                         }
                       }
                       // }}}
@@ -1557,13 +1550,6 @@ void Irc::bot(string strPrefix)
                         }
                       }
                       // }}}
-                      // {{{ ignored
-                      else
-                      {
-                        ssMessage.str("");
-                        ssMessage << strPrefix << "[" << m_strServer << ":" << m_strPort << "," << strNick << ",uncaught]:  " << strMessage;
-                        log(ssMessage.str());
-                      }
                     }
                   }
                 }
