@@ -399,6 +399,70 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
   return bResult;
 }
 // }}}
+// {{{ jwt()
+bool Interface::jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError)
+{
+  bool bDecode = false, bResult = false;
+  Json *ptJson = new Json;
+
+  if (!strPayload.empty())
+  {
+    bDecode = true;
+    ptJson->i("Function", "decode");
+  }
+  else
+  {
+    ptJson->i("Function", "encode");
+  }
+  ptJson->insert("Signer", strSigner);
+  if (!strSecret.empty())
+  {
+    ptJson->insert("Secret", strSecret);
+  }
+  if (bDecode)
+  {
+    ptJson->insert("Payload", strPayload);
+  }
+  else
+  {
+    ptJson->m["Payload"] = new Json(ptPayload);
+  }
+  if (hub("jwt", ptJson, strError))
+  {
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      if (ptJson->m["Response"]->m.find("Payload") != ptJson->m["Response"]->m.end())
+      {
+        if (bDecode)
+        {
+          bResult = true;
+          ptPayload->merge(ptJson->m["Payload"], true, false);
+        }
+        else if (!ptJson->m["Payload"]->v.empty())
+        {
+          bResult = true;
+          strPayload = ptJson->m["Payload"]->v;
+        }
+        else
+        {
+          strError = "The Payload was empty within the Response.";
+        }
+      }
+      else
+      {
+        strError = "Failed to find the Payload within the Response.";
+      }
+    }
+    else
+    {
+      strError = "Failed to receive the Response.";
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
 {

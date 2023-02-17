@@ -194,7 +194,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         {
           strPayload = strBase64;
         }
-        if (m_pJunction->jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
+        if (jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
         {
           if (ptJwt->m.find("RadialCredentials") != ptJwt->m.end())
           {
@@ -242,7 +242,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         else if (strError != "Failed: exp")
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->ServiceJunction::jwt(decode) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
+          ssMessage << strPrefix << "->Interface::jwt(decode) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
           log(ssMessage.str());
         }
         delete ptJwt;

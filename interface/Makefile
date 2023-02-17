@@ -7,11 +7,12 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/database bin/irc bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/database bin/irc bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/database bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/database bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
+	install --mode=775 bin/jwt $(prefix)/radial/interface/
 	install --mode=775 bin/link $(prefix)/radial/interface/
 	install --mode=775 bin/live $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
@@ -51,6 +52,16 @@ obj/irc.o: irc.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c irc.cpp -o obj/irc.o $(CPPFLAGS) -I../../common
 obj/Irc.o: include/Irc.cpp obj
 	g++ -ggdb -Wall -c include/Irc.cpp -o obj/Irc.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ jwt
+jwt: bin/jwt $(prefix)/radial/interface
+	install --mode=775 bin/jwt $(prefix)/radial/interface/
+bin/jwt: ../../common/libcommon.a obj/jwt.o obj/Base.o obj/Interface.o obj/Jwt.o bin
+	g++ -o bin/jwt obj/jwt.o obj/Base.o obj/Interface.o obj/Jwt.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -ljwt -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+obj/jwt.o: jwt.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c jwt.cpp -o obj/jwt.o $(CPPFLAGS) -I../../common
+obj/Jwt.o: include/Jwt.cpp obj
+	g++ -ggdb -Wall -c include/Jwt.cpp -o obj/Jwt.o $(CPPFLAGS) -I/usr/local/include -I../../common
 # }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface

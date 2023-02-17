@@ -82,7 +82,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
         {
           strPayload = strBase64;
         }
-        if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+        if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
           bResult = true;
           ptJson->m["Response"] = new Json;
@@ -366,7 +366,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               {
                 m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
               }
-              if (m_pJunction->jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+              if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               }

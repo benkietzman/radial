@@ -53,6 +53,7 @@ class Interface : public Base
   void interfaces(string strPrefix, Json *ptJson);
   bool isMaster();
   bool isMasterSettled();
+  bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
   bool live(const string strApplication, const string strUser, map<string, string> message, string &strError);
