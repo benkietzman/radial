@@ -47,6 +47,9 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
         {
           Json *ptData = new Json(ptJson);
+stringstream ssMessage;
+ssMessage << strPrefix << "->Warden::authz():  " << ptData;
+log(ssMessage.str());
           if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
           {
             if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
