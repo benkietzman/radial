@@ -132,10 +132,10 @@ void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
           try
           {
             string strValue;
-            stringstream ssJson(ptJson->m["Payload"]->json(strValue));
+            stringstream ssJson(ptJson->m["Payload"]->j(strValue));
             ptJson->m["Response"] = new Json;
             ssJson >> data;
-            ptJson->m["Response"]->insert("Payload", JWT::Encode((*pSigner), data));
+            ptJson->m["Response"]->i("Payload", JWT::Encode((*pSigner), data));
             bResult = true;
           }
           catch (exception &e)

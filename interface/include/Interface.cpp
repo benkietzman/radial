@@ -414,14 +414,14 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   {
     ptJson->i("Function", "encode");
   }
-  ptJson->insert("Signer", strSigner);
+  ptJson->i("Signer", strSigner);
   if (!strSecret.empty())
   {
-    ptJson->insert("Secret", strSecret);
+    ptJson->i("Secret", strSecret);
   }
   if (bDecode)
   {
-    ptJson->insert("Payload", strPayload);
+    ptJson->i("Payload", strPayload);
   }
   else
   {
@@ -436,12 +436,12 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
         if (bDecode)
         {
           bResult = true;
-          ptPayload->merge(ptJson->m["Payload"], true, false);
+          ptPayload->merge(ptJson->m["Response"]->m["Payload"], true, false);
         }
-        else if (!ptJson->m["Payload"]->v.empty())
+        else if (!ptJson->m["Response"]->m["Payload"]->v.empty())
         {
           bResult = true;
-          strPayload = ptJson->m["Payload"]->v;
+          strPayload = ptJson->m["Response"]->m["Payload"]->v;
         }
         else
         {
