@@ -77,7 +77,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         string strBase64 = ptJson->m["wsJwt"]->v, strPayload;
         Json *ptJwt = new Json;
-        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strAesSecret, strPayload, strError);
         if (strPayload.empty())
         {
           strPayload = strBase64;
@@ -368,7 +368,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               }
               if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
-                ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+                ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strAesSecret, strValue, strError), strValue));
               }
               delete ptJwt;
             }
