@@ -304,9 +304,6 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             {
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
             }
-ssMessage.str("");
-ssMessage << strPrefix << "->Warden::authz():  " << ptData;
-log(ssMessage.str());
             if (ptData->m.find("central") != ptData->m.end())
             {
               map<string, string> getPersonRow;
@@ -373,6 +370,9 @@ log(ssMessage.str());
               {
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               }
+ssMessage.str("");
+ssMessage << strPrefix << "->jwt():  " << strPayload;
+log(ssMessage.str());
               delete ptJwt;
             }
             else
