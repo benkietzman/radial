@@ -298,6 +298,9 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             m_pProcessPreAuthzCallback(strPrefix, ptJson, ptData);
           }
+ssMessage.str("");
+ssMessage << strPrefix << "->Warden::authz():  " << ptData;
+log(ssMessage.str());
           if (m_pWarden->authz(ptData, strError))
           {
             if (m_pProcessPostAuthzCallback != NULL)
