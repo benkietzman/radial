@@ -23,17 +23,25 @@ namespace radial
 Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
   string strError;
-  Json *ptJwt = new Json;
+  Json *ptAes = new Json, *ptJwt = new Json;
 
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
+  {
+    if (ptAes->m.find("Secret") != ptAes->m.end() && !ptAes->m["Secret"]->v.empty())
+    {
+      m_strAesSecret = ptAes->m["Secret"]->v;
+    }
+  }
+  delete ptAes;
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
   {
     if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
     {
-      m_strSecret = ptJwt->m["Secret"]->v;
+      m_strJwtSecret = ptJwt->m["Secret"]->v;
     }
     if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
     {
-      m_strSigner = ptJwt->m["Signer"]->v;
+      m_strJwtSigner = ptJwt->m["Signer"]->v;
     }
   }
   delete ptJwt;
@@ -183,18 +191,18 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   if ((strUser.empty() || strPassword.empty()) && ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
   {
     string strBase64 = ptJson->m["wsJwt"]->v;
-    if (!m_strSecret.empty())
+    if (!m_strJwtSecret.empty())
     {
-      if (!m_strSigner.empty())
+      if (!m_strJwtSigner.empty())
       {
         string strPayload, strValue;
         Json *ptJwt = new Json;
-        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strSecret, strPayload, strError);
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strAesSecret, strPayload, strError);
         if (strPayload.empty())
         {
           strPayload = strBase64;
         }
-        if (jwt(m_strSigner, m_strSecret, strPayload, ptJwt, strError))
+        if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
           if (ptJwt->m.find("RadialCredentials") != ptJwt->m.end())
           {
