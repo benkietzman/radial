@@ -197,7 +197,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       {
         string strPayload, strValue;
         Json *ptJwt = new Json;
-        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strAesSecret, strPayload, strError);
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
         if (strPayload.empty())
         {
           strPayload = strBase64;
