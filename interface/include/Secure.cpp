@@ -368,17 +368,8 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
               }
               if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
-ssMessage.str("");
-ssMessage << strPrefix << "->jwt():  " << strPayload;
-log(ssMessage.str());
                 ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               }
-else
-{
-ssMessage.str("");
-ssMessage << strPrefix << "->jwt() error:  " << strError << " --- " << ptJwt;
-log(ssMessage.str());
-}
               delete ptJwt;
             }
             else
