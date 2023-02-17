@@ -232,7 +232,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             else
             {
               ssMessage.str("");
-              ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in jwt. --- " << ptJwt;
+              ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in jwt.";
               log(ssMessage.str());
             }
           }
