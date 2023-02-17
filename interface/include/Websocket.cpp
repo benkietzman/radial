@@ -218,28 +218,28 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
                 else
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Password in RadialCredentials in jwt.";
+                  ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Password in RadialCredentials in jwt.";
                   log(ssMessage.str());
                 }
               }
               else
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find User in RadialCredentials in jwt.";
+                ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find User in RadialCredentials in jwt.";
                 log(ssMessage.str());
               }
             }
             else
             {
               ssMessage.str("");
-              ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in jwt.";
+              ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find Application in RadialCredentials in jwt. --- " << ptJwt;
               log(ssMessage.str());
             }
           }
           else
           {
             ssMessage.str("");
-            ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find RadialCredentials in jwt.";
+            ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find RadialCredentials in jwt.";
             log(ssMessage.str());
           }
           if (ptJwt->m.find("sl_login") != ptJwt->m.end() && !ptJwt->m["sl_login"]->v.empty())
@@ -250,7 +250,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         else if (strError != "Failed: exp")
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->Interface::jwt(decode) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
+          ssMessage << strPrefix << "->Interface::jwt(decode) error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
           log(ssMessage.str());
         }
         delete ptJwt;
@@ -258,14 +258,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       else
       {
         ssMessage.str("");
-        ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Signer.";
+        ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Signer.";
         log(ssMessage.str());
       }
     }
     else
     {
       ssMessage.str("");
-      ssMessage << strPrefix << " error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Secret.";
+      ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to locate the JWT Secret.";
       log(ssMessage.str());
     }
   }
