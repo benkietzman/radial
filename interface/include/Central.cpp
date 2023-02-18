@@ -60,7 +60,7 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strSessionID = ptJson->m["wsSessionID"]->v;
       }
       ptJson->m["Response"] = new Json;
-      if (m_pCentral->request("radial", m_ptCred->m["Password"]->v, "central", ptJson->m["Function"]->v, strJwt, strSessionID, ptSubRequest, ptJson->m["Response"], strError))
+      if (m_pCentral->request("radial", m_ptCred->m["Password"]->v, "radial", "central", ptJson->m["Function"]->v, strJwt, strSessionID, ptSubRequest, ptJson->m["Response"], strError))
       {
         bResult = true;
       }
