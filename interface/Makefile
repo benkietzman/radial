@@ -7,9 +7,10 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/database bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/database bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/database bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/database bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
+	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
@@ -32,6 +33,16 @@ obj/auth.o: auth.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c auth.cpp -o obj/auth.o $(CPPFLAGS) -I../../common
 obj/Auth.o: include/Auth.cpp obj
 	g++ -ggdb -Wall -c include/Auth.cpp -o obj/Auth.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ central
+central: bin/central $(prefix)/radial/interface
+	install --mode=775 bin/central $(prefix)/radial/interface/
+bin/central: ../../common/libcommon.a obj/central.o obj/Base.o obj/Interface.o obj/Central.o bin
+	g++ -o bin/central obj/central.o obj/Base.o obj/Interface.o obj/Central.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/central.o: central.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c central.cpp -o obj/central.o $(CPPFLAGS) -I../../common
+obj/Central.o: include/Central.cpp obj
+	g++ -ggdb -Wall -c include/Central.cpp -o obj/Central.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ database
 database: bin/database $(prefix)/radial/interface
