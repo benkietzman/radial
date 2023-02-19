@@ -50,7 +50,6 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
     if (m_ptCred->m.find("Password") != m_ptCred->m.end() && !m_ptCred->m["Password"]->v.empty())
     {
       string strJwt, strSessionID;
-      Json *ptSubRequest = new Json(ptJson);
       if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
       {
         strJwt = ptJson->m["wsJwt"]->v;
@@ -60,11 +59,10 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strSessionID = ptJson->m["wsSessionID"]->v;
       }
       ptJson->m["Response"] = new Json;
-      if (m_pCentral->request("radial", m_ptCred->m["Password"]->v, "radial", "central", ptJson->m["Function"]->v, strJwt, strSessionID, ptSubRequest, ptJson->m["Response"], strError))
+      if (m_pCentral->request("radial", m_ptCred->m["Password"]->v, "radial", "central", ptJson->m["Function"]->v, strJwt, strSessionID, ptJson, ptJson->m["Response"], strError))
       {
         bResult = true;
       }
-      delete ptSubRequest;
     }
     else
     {
