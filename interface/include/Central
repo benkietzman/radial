@@ -25,7 +25,11 @@ namespace radial
 class Central : public Interface
 {
   protected:
+  map<string, bool (Central::*)(string, Json *, Json *, string &)> m_functions;
   Json *m_ptCred;
+
+  bool accountType(string strPrefix, Json *ptRequest, Json *ptResponse, string &strError);
+  bool accountTypes(string strPrefix, Json *ptRequest, Json *ptResponse, string &strError);
 
   public:
   Central(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));

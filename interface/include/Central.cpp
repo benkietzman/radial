@@ -24,6 +24,8 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   string strError;
 
+  m_functions["accountType"] = &Central::accountType;
+  m_functions["accountTypes"] = &Central::accountTypes;
   m_ptCred = new Json;
   if (m_pWarden != NULL)
   {
@@ -37,41 +39,98 @@ Central::~Central()
   delete m_ptCred;
 }
 // }}}
+// {{{ accountType()
+bool Central::accountType(string strPrefix, Json *ptRequest, Json *ptResponse, string &strError)
+{
+  bool bResult = false;
+  stringstream ssQuery;
+
+  strPrefix += "->Central::accountType()";
+  if (ptRequest->m.find("id") != ptRequest->m.end() && !ptRequest->m["id"]->v.empty())
+  {
+    ssQuery << "select id, type, description from account_type where id = " << ptRequest->m["id"]->v;
+    auto getAccountType = dbquery("central_r", ssQuery.str(), strError);
+    if (getAccountType != NULL)
+    {
+      if (!getAccountType->empty())
+      {
+        Json *ptGetAccountType = new Json(getAccountType->front());
+        bResult = true;
+        ptResponse->merge(ptGetAccountType, true, false);
+        delete ptGetAccountType;
+      }
+    }
+    dbfree(getAccountType);
+  }
+  else
+  {
+    strError = "Please provide the id.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ accountTypes()
+bool Central::accountTypes(string strPrefix, Json *ptRequest, Json *ptResponse, string &strError)
+{
+  bool bResult = false;
+  stringstream ssQuery;
+
+  strPrefix += "->Central::accountTypes()";
+  ssQuery << "select id, type, description from account_type order by type";
+  auto getAccountType = dbquery("central_r", ssQuery.str(), strError);
+  if (getAccountType != NULL)
+  {
+    bResult = true;
+    for (auto &getAccountTypeRow : *getAccountType)
+    {
+      ptResponse->pb(getAccountTypeRow);
+    }
+  }
+  dbfree(getAccountType);
+
+  return bResult;
+}
+// }}}
 // {{{ callback()
 void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  stringstream ssQuery;
 
   threadIncrement();
   strPrefix += "->Central::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (ptJson->m.find("Request") != ptJson->m.end())
   {
-    if (m_ptCred->m.find("Password") != m_ptCred->m.end() && !m_ptCred->m["Password"]->v.empty())
+    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
     {
-      string strJwt, strSessionID;
-      if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
+      string strFunction = ptJson->m["Function"]->v;
+      if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
       {
-        strJwt = ptJson->m["wsJwt"]->v;
+        if (ptJson->m.find("Response") != ptJson->m.end())
+        {
+          delete ptJson->m["Response"];
+        }
+        ptJson->m["Response"] = new Json;
+        if ((this->*m_functions[ptJson->m["Function"]->v])(strPrefix, ptJson->m["Request"], ptJson->m["Response"], strError))
+        {
+          bResult = true;
+        }
       }
-      else if (ptJson->m.find("wsSessionID") != ptJson->m.end() && !ptJson->m["wsSessionID"]->v.empty())
+      else
       {
-        strSessionID = ptJson->m["wsSessionID"]->v;
-      }
-      ptJson->m["Response"] = new Json;
-      if (m_pCentral->request("radial", m_ptCred->m["Password"]->v, "radial", "central", ptJson->m["Function"]->v, strJwt, strSessionID, ptJson, ptJson->m["Response"], strError))
-      {
-        bResult = true;
+        strError = "Please provide a valid Function.";
       }
     }
     else
     {
-      strError = "Missing credentials.";
+      strError = "Please provide the Function.";
     }
   }
   else
   {
-    strError = "Please provide the Function.";
+    strError = "Please provide the Request.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
