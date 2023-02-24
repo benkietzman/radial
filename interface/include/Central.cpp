@@ -20,10 +20,36 @@ extern "C++"
 namespace radial
 {
 // {{{ Central()
-Central::Central(string strP, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strP, "central", argc, argv, pCallback)
+Central::Central(int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "central", argc, argv, pCallback)
 {
-  string strE;
+  string e;
 
+  m_ptCred = new Json;
+  if (m_pWarden != NULL)
+  {
+    Json *ptAes = new Json, *ptJwt = new Json;
+    m_pWarden->vaultRetrieve({"radial", "radial"}, m_ptCred, e);
+    if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
+    {
+      if (ptAes->m.find("Secret") != ptAes->m.end() && !ptAes->m["Secret"]->v.empty())
+      {
+        m_strAesSecret = ptAes->m["Secret"]->v;
+      }
+    }
+    delete ptAes;
+    if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
+    {
+      if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
+      {
+        m_strJwtSecret = ptJwt->m["Secret"]->v;
+      }
+      if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
+      {
+        m_strJwtSigner = ptJwt->m["Signer"]->v;
+      }
+    }
+    delete ptJwt;
+  }
   m_functions["accountType"] = &Central::accountType;
   m_functions["accountTypes"] = &Central::accountTypes;
   m_functions["application"] = &Central::application;
@@ -81,7 +107,7 @@ Central::Central(string strP, int argc, char **argv, void (*pCallback)(string, J
   m_functions["menuAccesses"] = &Central::menuAccesses;
   m_functions["notifyPriorities"] = &Central::notifyPriorities;
   m_functions["notifyPriority"] = &Central::notifyPriority;
-  m_functions["noyes"] = &Central::noyes;
+  m_functions["ny"] = &Central::ny;
   m_functions["packageType"] = &Central::packageType;
   m_functions["packageTypes"] = &Central::packageTypes;
   m_functions["server"] = &Central::server;
@@ -103,11 +129,6 @@ Central::Central(string strP, int argc, char **argv, void (*pCallback)(string, J
   m_functions["userEdit"] = &Central::userEdit;
   m_functions["userRemove"] = &Central::userRemove;
   m_functions["users"] = &Central::users;
-  m_ptCred = new Json;
-  if (m_pWarden != NULL)
-  {
-    m_pWarden->vaultRetrieve({"radial", "radial"}, m_ptCred, strE);
-  }
 }
 // }}}
 // {{{ ~Central()
@@ -117,909 +138,1693 @@ Central::~Central()
 }
 // }}}
 // {{{ accountType()
-bool Central::accountType(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::accountType(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::accountType()";
-  if (ptI->m.find("id") != ptI->m.end() && !ptI->m["id"]->v.empty())
+  if (!empty(i, "id"))
   {
-    ssQuery << "select id, type, description from account_type where id = " << ptI->m["id"]->v;
-    auto get = dbquery("central_r", ssQuery.str(), strE);
-    if (get != NULL)
+    q << "select id, type, description from account_type where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
     {
-      if (!get->empty())
+      if (!g->empty())
       {
-        Json *ptGet = new Json(get->front());
-        bResult = true;
-        ptO->merge(ptGet, true, false);
-        delete ptGet;
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
       }
       else
       {
-        strError = "No results returned.";
+        e = "No results returned.";
       }
     }
-    dbfree(get);
+    dbf(g);
   }
   else
   {
-    strE = "Please provide the id.";
+    e = "Please provide the id.";
   }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ accountTypes()
-bool Central::accountTypes(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::accountTypes(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::accountTypes()";
-  ssQuery << "select id, type, description from account_type order by type";
-  auto get = dbquery("central_r", ssQuery.str(), strE);
-  if (get != NULL)
+  q << "select id, type, description from account_type order by type";
+  auto g = dbq(q, e);
+  if (g != NULL)
   {
-    bResult = true;
-    for (auto &row : *get)
+    b = true;
+    for (auto &r : *g)
     {
-      ptO->pb(row);
+      o->pb(r);
     }
   }
-  dbfree(get);
+  dbf(g);
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ application()
-bool Central::application(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::application(data &d, string &e)
 {
-  bool bResult = false;
-  string strValue;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::application()";
-  if ((ptI->m.find("id") != ptI->m.end() && !ptI->m["id"]->v.empty()) || (ptI->m.find("name") != ptI->m.end() && !ptI->m["name"]->v.empty()))
+  if (!empty(i, "id") || !empty(i, "name"))
   {
-    ssQuery << "select id, name, date_format(creation_date, '%Y-%m-%d') creation_date, notify_priority_id, website, login_type_id, secure_port, auto_register, account_check, dependable, date_format(retirement_date, '%Y-%m-%d') retirement_date, menu_id, package_type_id, wiki, highlight, description from application where ";
-    if (ptI->m.find("id") != ptI->m.end() && !ptI->m["id"]->v.empty())
+    q << "select id, name, date_format(creation_date, '%Y-%m-%d') creation_date, notify_priority_id, website, login_type_id, secure_port, auto_register, account_check, dependable, date_format(retirement_date, '%Y-%m-%d') retirement_date, menu_id, package_type_id, wiki, highlight, description from application where ";
+    if (!empty(i, "id"))
     {
-      ssQuery << "id = " << ptI->m["id"]->v;
+      q << "id = " << i->m["id"]->v;
     }
     else
     {
-      ssQuery << "name = '" << m_manip.escape(ptI->m["name"]->v, strValue) << "'";
+      q << "name = '" << esc(i->m["name"]->v) << "'";
     }
-    auto get = dbquery("central_r", ssQuery.str(), strE);
-    if (get != NULL)
+    auto g = dbq(q, e);
+    if (g != NULL)
     {
-      if (!get->empty())
+      if (!g->empty())
       {
-        Json *ptGet = new Json(get->front());
-        bResult = true;
-        noyes(ptGet, "account_check");
-        noyes(ptGet, "auto_register");
-        noyes(ptGet, "dependable");
-        if (!ptGet->m["login_type_id"]->v.empty())
+        Json *j = new Json(g->front());
+        b = true;
+        ny(j, "account_check");
+        ny(j, "auto_register");
+        ny(j, "dependable");
+        if (!empty(j, "login_type_id"))
         {
           size_t unValue;
-          stringstream ssValue(ptGet->m["login_type_id"]->v);
+          stringstream ssValue(j->m["login_type_id"]->v);
           ssValue >> unValue;
           if (unValue > 0)
           {
-            Json *ptSubI = new Json;, *ptSubO = new Json;
-            ptSubI->i("id", ptGet->m["login_type_id"]->v);
-            if (loginType(strP, ptSubI, ptSubO, strE))
+            data l;
+            init(d, l);
+            l.p->m["i"]->i("id", j->m["login_type_id"]->v);
+            if (loginType(l, e))
             {
-              ptGet->insert("login_type", ptSubO);
+              j->i("login_type", l.p->m["o"]);
             }
-            delete ptSubI;
-            delete ptSubO;
+            deinit(l);
           }
         }
-        if (!ptGet->m["menu_id"]->v.empty())
+        if (!empty(j, "menu_id"))
         {
           size_t unValue;
-          stringstream ssValue(ptGet->m["menu_id"]->v);
+          stringstream ssValue(j->m["menu_id"]->v);
           ssValue >> unValue;
           if (unValue > 0)
           {
-            Json *ptSubI = new Json;, *ptSubO = new Json;
-            ptSubI->i("id", ptGet->m["menu_id"]->v);
-            if (menuAccess(strP, ptSubI, ptSubO, strE))
+            data m;
+            init(d, m);
+            m.p->m["i"]->i("id", j->m["menu_id"]->v);
+            if (menuAccess(m, e))
             {
-              ptGet->insert("menu_access", ptSubO);
+              j->i("menu_access", m.p->m["o"]);
             }
-            delete ptSubI;
-            delete ptSubO;
+            deinit(m);
           }
         }
-        if (!ptGet->m["notify_priority_id"]->v.empty())
+        if (!empty(j, "notify_priority_id"))
         {
           size_t unValue;
-          stringstream ssValue(ptGet->m["notify_priority_id"]->v);
+          stringstream ssValue(j->m["notify_priority_id"]->v);
           ssValue >> unValue;
           if (unValue > 0)
           {
-            Json *ptSubI = new Json;, *ptSubO = new Json;
-            ptSubI->i("id", ptGet->m["notify_priority_id"]->v);
-            if (notifyPriority(strP, ptSubI, ptSubO, strE))
+            data n;
+            init(d, n);
+            n.p->m["i"]->i("id", j->m["notify_priority_id"]->v);
+            if (notifyPriority(n, e))
             {
-              ptGet->insert("notify_priority", ptSubO);
+              j->i("notify_priority", n.p->m["o"]);
             }
-            delete ptSubI;
-            delete ptSubO;
+            deinit(n);
           }
         }
-        if (!ptGet->m["package_type_id"]->v.empty())
+        if (!empty(j, "package_type_id"))
         {
           size_t unValue;
-          stringstream ssValue(ptGet->m["package_type_id"]->v);
+          stringstream ssValue(d->m["package_type_id"]->v);
           ssValue >> unValue;
           if (unValue > 0)
           {
-            Json *ptSubI = new Json;, *ptSubO = new Json;
-            ptSubI->i("id", ptGet->m["package_type_id"]->v);
-            if (packageType(strP, ptSubI, ptSubO, strE))
+            data p;
+            init(d, n);
+            p.p->m["i"]->i("id", j->m["package_type_id"]->v);
+            if (packageType(p, e))
             {
-              ptGet->insert("package_type", ptSubO);
+              j->i("package_type", p.p->m["o"]);
             }
-            delete ptSubI;
-            delete ptSubO;
+            deinit(p);
           }
         }
-        noyes(ptGet, "secure_port");
-        noyes(ptGet, "wiki");
-        ptO->merge(ptGet, true, false);
-        delete ptGet;
+        ny(d, "secure_port");
+        ny(d, "wiki");
+        d.p->i("o", j);
+        o = d.p->m["o"];
+        delete j;
       }
       else
       {
-        strError = "No results returned.";
+        e = "No results returned.";
       }
     }
-    dbfree(get);
+    dbf(g);
   }
   else
   {
-    strE = "Please provide the id.";
+    e = "Please provide the id.";
   }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAccount()
-bool Central::applicationAccount(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAccount(data &d, string &e)
 {
-  bool bResult = false;
-  string strValue;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAccount()";
-  if (ptI->m.find("id") != ptI->m.end() && !ptI->m["id"]->v.empty())
+  if (!empty(i, "id"))
   {
-    ssQuery << "select id, application_id, user_id, encrypt, aes, password, ";
-    if (ptI->m.find("aes") != ptI->m.end() && !ptI->m["aes"]->v.empty() && ptI->m["aes"]->v != "0")
+    q << "select id, application_id, user_id, encrypt, aes, password, ";
+    if (!empty(i, "aes") && i->m["aes"]->v != "0")
     {
-      ssQuery << "aes_decrypt(from_base64(password), sha2('" << m_manip.escape(ptI->m["aes"]->v, strValue) << "', 512)) decrypted_password, ";
+      q << "aes_decrypt(from_base64(password), sha2('" << esc(i->m["aes"]->v) << "', 512)) decrypted_password, ";
     }
-    ssQuery << "type_id, description from application_account where id = " << ptI->m["id"]->v;
-    auto get = dbquery("central_r", ssQuery.str(), strE);
-    if (get != NULL)
+    q << "type_id, description from application_account where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
     {
-      if (!get->empty())
+      if (!g->empty())
       {
-        Json *ptGet = new Json(get->front()), *ptSubI = new Json, *ptSubO = new Json;
-        ptSubI->i("id", ptGet->m["application_id"]->v);
-        if (isGlobalAdmin() || isApplicationDeveloper(strP, ptSubI, ptSubO, strError))
+        data a;
+        Json *j = new Json(g->front());
+        init(d, a);
+        a.p->m["i"]->i("id", j->m["application_id"]->v);
+        if (d.g || isApplicationDeveloper(a, e))
         {
-          bResult = true;
-          if (ptGet->m["encrypt"]->v == "1")
+          b = true;
+          if (j->m["encrypt"]->v == "1")
           {
-            delete ptGet->m["password"];
-            ptGet->m.erase("password");
+            rm(j, "password");
           }
-          else if (ptGet->m["aes"]->v == "1")
+          else if (j->m["aes"]->v == "1")
           {
-            if (ptGet->m.find("decrypted_password") != ptGet->m.end() && !ptGet->m["decrypted_password"]->v.empty())
+            if (!empty(j, "decrypted_password"))
             {
-              ptGet->i("password", ptGet->m["decrypted_password"]->v);
+              j->i("password", j->m["decrypted_password"]->v);
             }
             else
             {
-              delete ptGet->m["password"];
-              ptGet->m.erase("password");
+              rm(j, "password");
             }
           }
-          if (ptGet->m.find("decrypted_password") != ptGet->m.end())
+          if (exist(j, "decrypted_password"))
           {
-            delete ptGet->m["decrypted_password"];
-            ptGet->m.erase("decrypted_password");
+            rm(j, "decrypted_password");
           }
-          ptO->merge(ptGet, true, false);
+          d.p->i("o", j);
+          o = d.p->m["o"];
         }
         else
         {
-          strE = "You are not authorized to perform this action.";
+          e = "You are not authorized to perform this action.";
         }
-        delete ptGet;
-        delete ptSubI;
-        delete ptSubO;
+        deinit(a);
+        delete j;
       }
       else
       {
-        strError = "No results returned.";
+        e = "No results returned.";
       }
     }
-    dbfree(get);
+    dbf(g);
   }
   else
   {
-    strE = "Please provide the id.";
+    e = "Please provide the id.";
   }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAccountAdd()
-bool Central::applicationAccountAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAccountAdd(data &d, string &e)
 {
-  bool bResult = false;
-  string strValue;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAccountAdd()";
-  if (ptI->m.find("application_id") != ptI->m.end() && !ptI->m["application_id"]->v.empty())
+  if (!empty(i, "application_id"))
   {
-    Json *ptSubI = new Json, *ptSubO = new Json;
-    ptSubI->i("id", ptI->m["application_id"]->v);
-    if (isGlobalAdmin() || isApplicationDeveloper(strP, ptSubI, ptSubO, strError))
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
     {
-      if (ptI->m.find("user_id") != ptI->m.end() && !ptI->m["user_id"]->v.empty())
+      if (!empty(i, "user_id"))
       {
-        if (ptI->m.find("description") != ptI->m.end())
+        if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
         {
-          if (ptI->m.find("encrypt") != ptI->m.end() && ptI->m["encrypt"]->m.find("value") != ptI->m["encrypt"]->m.end() && !ptI->m["encrypt"]->m["value"]->v.empty())
+          if (!empty(i, "password"))
           {
-            if (ptI->m.find("password") != ptI->m.end() && !ptI->m["password"]->v.empty())
+            if (exist(i, "type") && !empty(i->m["type"], "id"))
             {
-              if (ptI->m.find("type") != ptI->m.end() && ptI->m["type"]->m.find("id") != ptI->m["type"]->m.end() && !ptI->m["type"]->m["id"]->v.empty())
+              q << "insert into application_account (application_id, user_id, encrypt, aes, `password`, type_id";
+              if (!empty(i, "description"))
               {
-                ssQuery << "insert into application_account (application_id, user_id, encrypt, aes, `password`, type_id, description) values (" << ptI->m["application_id"]->v << ", '" << ptI->m["user_id"]->v << "', " << ptI->m["encrypt"]->m["value"]->v << ", ";
-                if (ptI->m["encrypt"]->m["value"]->v == "1")
-                {
-                  ssQuery << "0, concat('*',upper(sha1(unhex(sha1('" << m_manip.escape(ptI->m["password"]->v, strValue) << "')))))";
-                }
-                else if (ptI->m.find("aes") != ptI->m.end() && !ptI->m["aes"]->v.empty() && ptI->m["aes"]->v != "0")
-                {
-                  ssQuery << "1, to_base64(aes_encrypt('" << m_manip.escape(ptI->m["password"]->v, strValue) << "', sha2('" << m_manip.escape(ptI->m["aes"]->v, strValue) << "', 512)))";
-                }
-                else
-                {
-                  ssQuery << "0, '" << m_manip.escape(ptI->m["password"]->v, strValue) << "'";
-                }
-                ssQuery << ", " << ptI->m["type"]->m["id"]->v << ", '" << m_manip.escape(ptI->m["description"]->v, strValue) << "')";
-                if (dbUpdate("central_r", ssQuery.str(), strE))
-                {
-                  bResult = true;
-                }
+                q << ", description";
+              }
+              q << ") values (" << i->m["application_id"]->v << ", '" << i->m["user_id"]->v << "', " << i->m["encrypt"]->m["value"]->v << ", ";
+              if (i->m["encrypt"]->m["value"]->v == "1")
+              {
+                q << "0, concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
+              }
+              else if (!empty(i, "aes") && i->m["aes"]->v != "0")
+              {
+                q << "1, to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(i->m["aes"]->v) << "', 512)))";
               }
               else
               {
-                strE = "Please provide the type.";
+                q << "0, '" << esc(i->m["password"]->v) << "'";
+              }
+              q << ", " << i->m["type"]->m["id"]->v;
+              if (!empty(i, "description"))
+              {
+                q << ", '" << esc(i->m["description"]->v) << "'";
+              }
+              q << ")";
+              if (dbu(q, e))
+              {
+                b = true;
               }
             }
             else
             {
-              strE = "Please provide the password.";
+              e = "Please provide the type.";
             }
           }
           else
           {
-            strE = "Please provide the encrypt.";
+            e = "Please provide the password.";
           }
         }
         else
         {
-          strE = "Please provide the description.";
+          e = "Please provide the encrypt.";
         }
       }
       else
       {
-        strE = "Please provide the user_id.";
+        e = "Please provide the user_id.";
       }
     }
     else
     {
-      strE = "You are not authorized to perform this action.";
+      e = "You are not authorized to perform this action.";
     }
-    delete ptSubI;
-    delete ptSubO;
+    deinit(a);
   }
   else
   {
-    strE = "Please provide the id.";
+    e = "Please provide the application_id.";
   }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAccountEdit()
-bool Central::applicationAccountEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAccountEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAccountEdit()";
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (applicationAccount(a, e))
+    {
+      if (!empty(i, "user_id"))
+      {
+        if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
+        {
+          if (!empty(i, "password"))
+          {
+            if (exist(i, "type") && !empty(i->m["type"], "id"))
+            {
+              q << "update application_account set user_id = '" << i->m["user_id"]->v << "', encrypt = " << i->m["encrypt"]->m["value"]->v << ", aes = ";
+              if (i->m["encrypt"]->m["value"]->v == "1")
+              {
+                q << "0, `password` = concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
+              }
+              else if (!empty(i, "aes") && i->m["aes"]->v != "0")
+              {
+                q << "1, `password` = to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(i->m["aes"]->v) << "', 512)))";
+              }
+              else
+              {
+                q << "0, `password` = '" << esc(i->m["password"]->v) << "'";
+              }
+              q << ", type_id = " << i->m["type"]->m["id"]->v;
+              if (exist(i, "description"))
+              {
+                q << ", description = ";
+                if (!empty(i, "description"))
+                {
+                  q << "'" << esc(i->m["description"]->v) << "'";
+                }
+                else
+                {
+                  q << "null";
+                }
+              }
+              q << ") where id = " << i->m["id"]->v;
+              if (dbu(q, e))
+              {
+                b = true;
+              }
+            }
+            else
+            {
+              e = "Please provide the type.";
+            }
+          }
+          else
+          {
+            e = "Please provide the password.";
+          }
+        }
+        else
+        {
+          e = "Please provide the encrypt.";
+        }
+      }
+      else
+      {
+        e = "Please provide the user_id.";
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAccountRemove()
-bool Central::applicationAccountRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAccountRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAccountRemove()";
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (applicationAccount(a, e))
+    {
+      q << "delete from application_account where id = " << i->m["id"]->v;
+      if (dbu(q, e))
+      {
+        b = true;
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAccountsByApplicationID()
-bool Central::applicationAccountsByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAccountsByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAccountsByApplicationID()";
+  if (!empty(i, "application_id"))
+  {
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      q << "select id, application_id, user_id, encrypt, aes, password, ";
+      if (!empty(i, "aes") && i->m["aes"]->v != "0")
+      {
+        q << "aes_decrypt(from_base64(password), sha2('" << esc(i->m["aes"]->v) << "', 512)) decrypted_password, ";
+      }
+      q << "type_id, description from application_account where application_id = " << i->m["application_id"]->v << " order by user_id";
+      if (exist(i, "page"))
+      {
+        size_t unNumPerPage, unOffset, unPage;
+        stringstring ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+        ssNumPerPage >> unNumPerPage;
+        ssPage >> unPage;
+        unOffset = unPage * unNumPerPage;
+        q << " limit " << unNumPerPage << " offset " << unOffset;
+      }
+      auto g = dbq(q, e);
+      if (g != NULL)
+      {
+        b = true;
+        for (auto &r : *g)
+        {
+          Json *j = new Json(r);
+          if (!empty(j, "encrypt") && j->m["encrypt"]->v == 1 && exist(j, "password"))
+          {
+            rm(j, "password");
+          }
+          else if (!empty(j, "aes") && j->m["aes"]->v == 1)
+          {
+            if (!empty(j, "decrypted_password"))
+            {
+              j->i("password", j->m["decrypted_password"]->v);
+            }
+            else
+            {
+              rm(j, "password");
+            }
+          }
+          if (exist(j, "decrypted_password"))
+          {
+            rm(j, "decrypted_password");
+          }
+          ny(j, "encrypt");
+          if (!empty(j, "type_id"))
+          {
+            data t;
+            init(d, t);
+            t.p->m["i"]->i("id", j->m["type_id"]->v);
+            if (accountType(t, e))
+            {
+              j->i("type", t.p->m["o"]);
+            }
+            deinit(t);
+          }
+          o->pb(j);
+          delete j;
+        }
+        else
+        {
+          e = "No results returned.";
+        }
+      }
+      dbf(g);
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationAdd()
-bool Central::applicationAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationAdd()";
+  if (!d.u.empty() && (d.g || d.auth.find("Central") != d.auth.end()))
+  {
+    if (!empty(i, "name"))
+    {
+      data a;
+      init(d, a);
+      a.p->m["i"]->i("name", i->m["name"]->v);
+      if (!application(a, e) && e == "No results returned.")
+      {
+        q << "insert into application (name, creation_date) values ('" << esc(i->m["name"]->v) << "', now())";
+        if (dbu(q, e))
+        {
+          data n;
+          init(d, n);
+          n.p->m["i"]->i("name", i->m["name"]->v);
+          if (application(n, e) && !empty(n.p->m["o"], "id"))
+          {
+            data u;
+            init(d, u);
+            u.p->m["i"]->i("userid", d.u);
+            if (user(u, e) && !empty(u.p->m["o"], "id"))
+            {
+              data c;
+              init(d, c);
+              c.p->m["i"]->i("type", "Primary Developer");
+              if (contactType(c, e) && !empty(c.p->m["o"], "id"))
+              {
+                q.str("");
+                q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify) values (" << n.p->m["o"]->m["id"]->v << ", " << u.p->m["o"]->m["id"]->v << ", " << c.p->m["o"]->m["id"]->v << ", 1, 0, 1)";
+                if (dbu(q, e))
+                {
+                  b = true;
+                }
+              }
+              deinit(c);
+            }
+            deinit(u);
+          }
+          deinit(n);
+        }
+      }
+      else
+      {
+        e = "Application already exists.";
+      }
+      deinit(a);
+    }
+    else
+    {
+      e = "Please provide the name.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
-}
-// }}}
-// {{{ applicationBotLink()
-bool Central::applicationBotLink(string strP, Json *ptI, Json *ptO, string &strE)
-{
-  bool bResult = false;
-  stringstream ssQuery;
-
-  strP += "->Central::applicationBotLink()";
-
-  return bResult;
-}
-// }}}
-// {{{ applicationBotLinkAdd()
-bool Central::applicationBotLinkAdd(string strP, Json *ptI, Json *ptO, string &strE)
-{
-  bool bResult = false;
-  stringstream ssQuery;
-
-  strP += "->Central::applicationBotLinkAdd()";
-
-  return bResult;
-}
-// }}}
-// {{{ applicationBotLinkRemove()
-bool Central::applicationBotLinkRemove(string strP, Json *ptI, Json *ptO, string &strE)
-{
-  bool bResult = false;
-  stringstream ssQuery;
-
-  strP += "->Central::applicationBotLinkRemove()";
-
-  return bResult;
-}
-// }}}
-// {{{ applicationBotLinksByApplicationID()
-bool Central::applicationBotLinksByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
-{
-  bool bResult = false;
-  stringstream ssQuery;
-
-  strP += "->Central::applicationBotLinksByApplicationID()";
-
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationDepend()
-bool Central::applicationDepend(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationDepend(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationDepend()";
+  if (!empty(i, "id"))
+  {
+    q << "select id, application_id, dependant_id from application_dependant where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationDependAdd()
-bool Central::applicationDependAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationDependAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationDependAdd()";
+  if (!empty(i, "application_id"))
+  {
+    if (!empty(i, "dependant_id"))
+    {
+      data a;
+      init(d, a);
+      a.p->m["i"]->i("id", i->m["id"]->v);
+      if (d.g || isApplicationDeveloper(a, e))
+      {
+        q << "insert into application_dependant (application_id, dependant_id) values (" << i->m["application_id"]->v << ", " << i->m["dependant_id"]->v << ")";
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      deinit(a);
+    }
+    else
+    {
+      e = "Please provide the dependant_id.";
+    }
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationDependRemove()
-bool Central::applicationDependRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationDependRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationDependRemove()";
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (applicationDepend(a, e) && !empty(a.p->m["o"], "application_id"))
+    {
+      data c;
+      init(d, c);
+      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (d.g || isApplicationDeveloper(c, e))
+      {
+        q << "delete from application_dependant where id = " << i->m["id"]->v;
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationEdit()
-bool Central::applicationEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationEdit()";
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      if (!empty(i, "name"))
+      {
+        q << "update application set name = '" << esc(i->m["name"]->v) << "'";
+        q << ", notify_priority_id = ";
+        if (exist(i, "notify_priority") && !empty(i->m["notify_priority"], "id"))
+        {
+          q << i->m["notify_priority"]->m["id"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", website = ";
+        if (!empty(i, "website"))
+        {
+          q << "'" << esc(i->m["website"]->v) << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", login_type_id = ";
+        if (exist(i, "login_type") && !empty(i->m["login_type"], "id"))
+        {
+          q << i->m["login_type"]->m["id"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        if (exist(i, "secure_port") && !empty(i->m["secure_port"], "value"))
+        {
+          q << ", secure_port = " << i->m["secure_port"]->m["value"]->v;
+        }
+        if (exist(i, "auto_register") && !empty(i->m["auto_register"], "value"))
+        {
+          q << ", auto_register = " << i->m["auto_register"]->m["value"]->v;
+        }
+        if (exist(i, "account_check") && !empty(i->m["account_check"], "value"))
+        {
+          q << ", account_check = " << i->m["account_check"]->m["value"]->v;
+        }
+        if (exist(i, "dependable") && !empty(i->m["dependable"], "value"))
+        {
+          q << ", dependable = " << i->m["dependable"]->m["value"]->v;
+        }
+        q << ", menu_id = ";
+        if (exist(i, "menu_access") && !empty(i->m["menu_access"], "id"))
+        {
+          q << i->m["menu_access"]->m["id"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        if (exist(i, "wiki") && !empty(i->m["wiki"], "value"))
+        {
+          q << ", wiki = " << i->m["wiki"]->m["value"]->v;
+        }
+        q << ", highlight = ";
+        if (!empty(i, "highlight"))
+        {
+          q << "'" << esc(i->m["highlight"]->v) << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", description = ";
+        if (!empty(i, "description"))
+        {
+          q << "'" << esc(i->m["description"]->v) << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", retirement_date = ";
+        if (!empty(i, "retirement_date"))
+        {
+          q << "'" << esc(i->m["retirement_date"]->v) << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << " where id = " << i->m["id"]->v;
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "Please provide the name";
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssue()
-bool Central::applicationIssue(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssue(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false, bComments = (exist(i, "comments") && i->m["comments"]->v == "1");
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssue()";
+  if (!empty(i, "id"))
+  {
+    q << "select id, application_id, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        Json *j = new Json(g->front());
+        b = true;
+        if (bComments && !empty(j, "id"))
+        {
+          data a;
+          init(d, a);
+          a.p->m["i"]->i("issue_id", j->m["id"]->v);
+          if (applicationIssueComments(a, e))
+          {
+            j->i("comments", a.p->m["o"]);
+          }
+          deinit(a);
+        }
+        d.p->i("o", j);
+        delete j;
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueAdd()
-bool Central::applicationIssueAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueAdd()";
+  if (!d.u.empty())
+  {
+    if (!empty(i, "application_id"))
+    {
+      q << "insert into application_issue (application_id, open_date";
+      if (!empty(i, "due_date"))
+      {
+        q << ", due_date";
+      }
+      if (!empty(i, "priority"))
+      {
+        q << ", priority";
+      }
+      q << ") values (" << i->m["application_id"]->v << ", now()";
+      if (!empty(i, "due_date"))
+      {
+        q << ", '" << esc(i->m["due_date"]->v) << "'";
+      }
+      if (!empty(i, "priority"))
+      {
+        q << ", '" << esc(i->m["priority"]->v) << "'";
+      }
+      q << ")";
+      if (dbu(q, e))
+      {
+        data a;
+        init(d, a);
+        a.p->m["i"]->i("application_id", i->m["application_id"]->v);
+        a.p->m["i"]->i("open", "1", 'n');
+        if (applicationIssuesByApplicationID(a, e) && !a.p->m["o"]->l.empty())
+        {
+          b = true;
+          d.p->i("o", a.p->m["o"]->l.back());
+          o = d.p->m["o"];
+        }
+        deinit(a);
+      }
+    }
+    else
+    {
+      e = "Please provide the application_id.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueClose()
-bool Central::applicationIssueClose(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueClose(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueClose()";
+  if (!d.u.empty())
+  {
+    if (!empty(i, "id"))
+    {
+      q << "update application_issue set close_date = now() where id = " << i->m["id"]->v;
+      if (dbu(q, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the id.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueCommentAdd()
-bool Central::applicationIssueCommentAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueCommentAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueCommentAdd()";
+  if (!d.u.empty())
+  {
+    if (!empty(i, "issue_id"))
+    {
+      if (!empty(i, "comments"))
+      {
+        q << "select id from person where userid = '" << d.u << "'";
+        auto g = dbq(q, e);
+        if (g != NULL)
+        {
+          if (!g->empty())
+          {
+            auto r = g->front();
+            q.str("");
+            q << "insert issue_comment (issue_id, entry_date, user_id, comments) values (" << i->m["issue_id"]->v << ", now(), " << r["id"] << ", '" << esc(i->m["comments"]->v) << "')";
+            if (dbu(q, e))
+            {
+              b = true;
+            }
+          }
+          else
+          {
+            e = "No results returned.";
+          }
+        }
+        dbf(g);
+      }
+      else
+      {
+        e = "Please provide the comments.";
+      }
+    }
+    else
+    {
+      e = "Please provide the issue_id.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueCommentEdit()
-bool Central::applicationIssueCommentEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueCommentEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueCommentEdit()";
+  if (!d.u.empty())
+  {
+    if (!empty(i, "id"))
+    {
+      if (!empty(i, "comments"))
+      {
+        q << "select id from person where userid = '" << d.u << "'";
+        auto g = dbq(q, e);
+        if (g != NULL)
+        {
+          if (!g->empty())
+          {
+            auto r = g->front();
+            q.str("");
+            q << "select user_id from issue_comment where id = " << i->m["id"]->v;
+            auto h = dbq(q, e);
+            if (h != NULL)
+            {
+              if (!h->empty())
+              {
+                auto s = h->front();
+                if (r["id"] == s["user_id"])
+                {
+                  q.str("");
+                  q << "update issue_comment set comments = '" << esc(i->m["comments"]->v) << "' where id = " << i->m["id"]->v;
+                  if (dbu(q, e))
+                  {
+                    b = true;
+                  }
+                }
+                else
+                {
+                  e = "You are not authorized to perform this action.";
+                }
+              }
+              else
+              {
+                e = "No results returned.";
+              }
+            }
+            dbf(h);
+          }
+          else
+          {
+            e = "No results returned.";
+          }
+        }
+        dbf(g);
+      }
+      else
+      {
+        e = "Please provide the comments.";
+      }
+    }
+    else
+    {
+      e = "Please provide the id.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueComments()
-bool Central::applicationIssueComments(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueComments(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueComments()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueEdit()
-bool Central::applicationIssueEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssueEmail()
-bool Central::applicationIssueEmail(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssueEmail(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssueEmail()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssues()
-bool Central::applicationIssues(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssues(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssues()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationIssuesByApplicationID()
-bool Central::applicationIssuesByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationIssuesByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationIssuesByApplicationID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationNotify()
-bool Central::applicationNotify(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationNotify(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationNotify()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationRemove()
-bool Central::applicationRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applications()
-bool Central::applications(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applications(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applications()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationsByServerID()
-bool Central::applicationsByServerID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationsByServerID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationsByServerID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationsByUserID()
-bool Central::applicationsByUserID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationsByUserID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationsByUserID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServer()
-bool Central::applicationServer(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServer(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServer()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerAdd()
-bool Central::applicationServerAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerDetail()
-bool Central::applicationServerDetail(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerDetail(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerDetail()";
 
-  return bResult;
+  return b;
 }
 // }}}
-// {{{ applciationServerDetailAdd()
-bool Central::applciationServerDetailAdd(string strP, Json *ptI, Json *ptO, string &strE)
+// {{{ applicationServerDetailAdd()
+bool Central::applicationServerDetailAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applciationServerDetailAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerDetailEdit()
-bool Central::applicationServerDetailEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerDetailEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerDetailEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerDetailRemove()
-bool Central::applicationServerDetailRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerDetailRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerDetailRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerDetails()
-bool Central::applicationServerDetails(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerDetails(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerDetails()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationServerRemove()
-bool Central::applicationServerRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationServerRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationServerRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationUser()
-bool Central::applicationUser(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationUser(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationUser()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationUserAdd()
-bool Central::applicationUserAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationUserAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationUserAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationUserEdit()
-bool Central::applicationUserEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationUserEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationUserEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationUserRemove()
-bool Central::applicationUserRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationUserRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationUserRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ applicationUsersByApplicationID()
-bool Central::applicationUsersByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::applicationUsersByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::applicationUsersByApplicationID()";
 
-  return bResult;
+  return b;
 }
 // }}}
-// {{{ botLinkRemoteSystem()
-bool Central::botLinkRemoteSystem(string strP, Json *ptI, Json *ptO, string &strE)
+// {{{ callback()
+void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  string strPrefix  bool bResult = false;
+  string strError;
 
-  strP += "->Central::botLinkRemoteSystem()";
-
-  return bResult;
-}
-// }}}
-// {{{ botLinkRemoteSystems()
-bool Central::botLinkRemoteSystems(string strP, Json *ptI, Json *ptO, string &strE)
-{
-  bool bResult = false;
-  stringstream ssQuery;
-
-  strP += "->Central::botLinkRemoteSystems()";
-
-  return bResult;
+  threadIncrement();
+  strPrefix += "->Central::callback()";
+  if (ptJson->m.find("Request") != ptJson->m.end())
+  {
+    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+    {
+      string strFunction = ptJson->m["Function"]->v;
+      if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
+      {
+        string strJwt;
+        data tData;
+        tData.g = false;
+        tData.p = new Json;
+        tData.p->m["i"] = new Json;
+        tData.p->m["o"] = new Json;
+        if (ptJson->m.find("Jwt") != ptJson->m.end() && !ptJson->m["Jwt"]->v.empty())
+        {
+          strJwt = ptJson->m["Jwt"]->v;
+        }
+        else if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
+        {
+          strJwt = ptJson->m["wsJwt"]->v;
+        }
+        if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
+        {
+          string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
+          Json *ptJwt = new Json;
+          m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
+          if (strPayload.empty())
+          {
+            strPayload = strBase64;
+          }
+          if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+          {
+            if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
+            {
+              tData.g = true;
+            }
+            if (exist(ptJwt, "sl_auth"))
+            {
+              for (auto &auth : ptJwt->m["sl_auth"]->m)
+              {
+                d.auth[auth.first] = (auth.second->v == "1");
+              }
+            }
+            if (!empty(ptJwt, "sl_login"))
+            {
+              d.u = ptJwt->m["sl_login"]->v;
+            }
+          }
+          delete ptJwt;
+        }
+        if ((this->*m_functions[ptJson->m["Function"]->v])(tData, strError))
+        {
+          bResult = true;
+          if (ptJson->m.find("Response") != ptJson->m.end())
+          {
+            delete ptJson->m["Response"];
+          }
+          ptJson->m["Response"] = new Json(tData.p->m["o"]);
+        }
+        deinit(tData);
+      }
+      else
+      {
+        strError = "Please provide a valid Function.";
+      }
+    }
+    else
+    {
+      strError = "Please provide the Function.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the Request.";
+  }
+  ptJson->i("Status", ((bResult)?"okay":"error"));
+  if (!e.empty())
+  {
+    ptJson->i("Error", strError);
+  }
+  if (bResponse)
+  {
+    hub(ptJson, false);
+  }
+  delete ptJson;
+  threadDecrement();
 }
 // }}}
 // {{{ contactType()
-bool Central::contactType(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::contactType(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::contactType()";
 
-  return bResult;
+  return b;
+}
+// }}}
+// {{{ dbf()
+void Central::dbf(list<map<string, string> > *g)
+{
+  dbfree(g);
+}
+// }}}
+// {{{ dbq()
+list<map<string, string> > *Central::dbq(const string strQuery, string &e)
+{
+  return dbquery("central_r", strQuery, e);
+}
+list<map<string, string> > *Central::dbq(const stringstream ssQuery, string &e)
+{
+  return dbq(ssQuery.str(), e);
+}
+// }}}
+// {{{ dbu()
+bool Central::dbu(const string strQuery, string &e)
+{
+  return dbupdate("central", strQuery, e);
+}
+bool Central::dbu(const stringstream ssQuery, string &e)
+{
+  return dbu(ssQuery.str(), e);
+}
+// }}}
+// {{{ deinit()
+void Central::deinit(data &d)
+{
+  delete d.p;
 }
 // }}}
 // {{{ dependentsByApplicationID()
-bool Central::dependentsByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::dependentsByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::dependentsByApplicationID()";
 
-  return bResult;
+  return b;
+}
+// }}}
+// {{{ empty()
+bool Central::empty(Json *ptJson, const string strField)
+{
+  return (!exist(ptJson, strField) || ptJson->m[strField]->v.empty());
+}
+// }}}
+// {{{ esc()
+string Central::esc(const string strValue)
+{
+  string strEscaped;
+
+  return m_manip.esc(strValue, strEscaped);
+}
+// }}}
+// {{{ exist()
+bool Central::exist(Json *ptJson, const string strField)
+{
+  return (ptJson->m.find(strField) != ptJson->m.end());
+}
+// }}}
+// {{{ init()
+void Central::init(data &i, data &o)
+{
+  o.auth = i.auth;
+  o.g = i.g;
+  o.u = i.u;
+  o.p = new Json;
+  o.p->m["i"] = new Json;
+  o.p->m["o"] = new Json;
 }
 // }}}
 // {{{ isApplicationDeveloper()
-bool Central::isApplicationDeveloper(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::isApplicationDeveloper(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::isApplicationDeveloper()";
+  if (!empty(i, "id"))
+  {
+    if (!d.u.empty())
+    {
+      q << "select a.id from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["id"]->v << " and b.type in ('Primary Developer', 'Backup Developer') and c.userid = '" << d.u << "'";
+      auto g = dbq(q, e);
+      if (g != NULL)
+      {
+        if (!g->empty())
+        {
+          b = true;
+        }
+        else
+        {
+          e = "You are not a developer for this application.";
+        }
+      }
+      dbf(g);
+    }
+    else
+    {
+      e = "You are not authorized to run this request.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ isServerAdmin()
-bool Central::isServerAdmin(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::isServerAdmin(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::isServerAdmin()";
+  if (!empty(i, "id"))
+  {
+    if (!d.u.empty())
+    {
+      q << "select a.id from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.server_id = " << i->m["id"]->v << " and b.type in ('Primary Admin', 'Backup Admin') and c.userid = '" << d.u << "'";
+      auto g = dbq(q, e);
+      if (g != NULL)
+      {
+        if (!g->empty())
+        {
+          b = true;
+        }
+        else
+        {
+          e = "You are not an admin for this server.";
+        }
+      }
+      dbf(g);
+    }
+    else
+    {
+      e = "You are not authorized to run this request.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ loginType()
-bool Central::loginType(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::loginType(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::loginType()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ loginTypes()
-bool Central::loginTypes(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::loginTypes(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::loginTypes()";
 
-  return bResult;
+  return b;
+}
+// }}}
+// {{{ merge()
+void Central::merge(Json *ptOuter, Json *ptInner)
+{
+  ptOuter->merge(ptInner, true, false);
 }
 // }}}
 // {{{ menuAccess()
-bool Central::menuAccess(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::menuAccess(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::menuAccess()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ menuAccesses()
-bool Central::menuAccesses(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::menuAccesses(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::menuAccesses()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ notifyPriorities()
-bool Central::notifyPriorities(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::notifyPriorities(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::notifyPriorities()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ notifyPriority()
-bool Central::notifyPriority(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::notifyPriority(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::notifyPriority()";
 
-  return bResult;
+  return b;
 }
 // }}}
-// {{{ noyes()
-void Central::noyes(Json *ptJson, const string strField)
+// {{{ ny()
+void Central::ny(Json *ptJson, const string strField)
 {
   if (ptJson != NULL)
   {
@@ -1046,287 +1851,244 @@ void Central::noyes(Json *ptJson, const string strField)
 }
 // }}}
 // {{{ packageType()
-bool Central::packageType(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::packageType(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::packageType()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ packageTypes()
-bool Central::packageTypes(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::packageTypes(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::packageTypes()";
 
-  return bResult;
+  return b;
+}
+// }}}
+// {{{ rm()
+void Central::rm(Json *ptJson, const string strField)
+{
+  if (exist(ptJson, strField)
+  {
+    delete ptJson->m[strField];
+    ptJson->m.erase(strField);
+  }
 }
 // }}}
 // {{{ server()
-bool Central::server(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::server(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::server()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverAdd()
-bool Central::serverAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverDetailsByApplicationID()
-bool Central::serverDetailsByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverDetailsByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverDetailsByApplicationID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverEdit()
-bool Central::serverEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverNotify()
-bool Central::serverNotify(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverNotify(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverNotify()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverRemove()
-bool Central::serverRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ servers()
-bool Central::servers(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::servers(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::servers()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serversByApplicationID()
-bool Central::serversByApplicationID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serversByApplicationID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serversByApplicationID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serversByUserID()
-bool Central::serversByUserID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serversByUserID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serversByUserID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverUser()
-bool Central::serverUser(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverUser(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverUser()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverUserAdd()
-bool Central::serverUserAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverUserAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverUserAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverUserEdit()
-bool Central::serverUserEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverUserEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverUserEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverUserRemove()
-bool Central::serverUserRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverUserRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverUserRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ serverUsersByServerID()
-bool Central::serverUsersByServerID(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::serverUsersByServerID(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::serverUsersByServerID()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ user()
-bool Central::user(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::user(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::user()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ userAdd()
-bool Central::userAdd(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::userAdd(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::userAdd()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ userEdit()
-bool Central::userEdit(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::userEdit(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::userEdit()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ userRemove()
-bool Central::userRemove(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::userRemove(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::userRemove()";
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ users()
-bool Central::users(string strP, Json *ptI, Json *ptO, string &strE)
+bool Central::users(data &d, string &e)
 {
-  bool bResult = false;
-  stringstream ssQuery;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  strP += "->Central::users()";
 
-  return bResult;
-}
-// }}}
-// {{{ callback()
-void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
-{
-refix  bool bResult = false;
-  string strError;
-  stringstream ssQuery;
-
-  threadIncrement();
-  strPrefix += "->Central::callback()";
-  if (ptJson->m.find("Request") != ptJson->m.end())
-  {
-    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
-    {
-      string strFunction = ptJson->m["Function"]->v;
-      if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
-      {
-        if (ptJson->m.find("Response") != ptJson->m.end())
-        {
-          delete ptJson->m["Response"];
-        }
-        ptJson->m["Response"] = new Json;
-        if ((this->*m_functions[ptJson->m["Function"]->v])(strPrefix, ptJson->m["Request"], ptJson->m["Response"], strError))
-        {
-          bResult = true;
-        }
-      }
-      else
-      {
-        strError = "Please provide a valid Function.";
-      }
-    }
-    else
-    {
-      strError = "Please provide the Function.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Request.";
-  }
-  ptJson->i("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->i("Error", strError);
-  }
-  if (bResponse)
-  {
-    hub(ptJson, false);
-  }
-  delete ptJson;
-  threadDecrement();
+  return b;
 }
 // }}}
 }
