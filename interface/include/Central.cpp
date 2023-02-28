@@ -2891,7 +2891,7 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Central::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
     if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
@@ -2899,11 +2899,15 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
       string strJwt;
       data tData;
       init(tData);
-      if (ptJson->m.find("Jwt") != ptJson->m.end() && !ptJson->m["Jwt"]->v.empty())
+      if (exist(ptJson, "Request"))
+      {
+        tData.p->insert("i", ptJson->m["Request"]);
+      }
+      if (!empty(ptJson, "Jwt"))
       {
         strJwt = ptJson->m["Jwt"]->v;
       }
-      else if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
+      else if (!empty(ptJson, "wsJwt"))
       {
         strJwt = ptJson->m["wsJwt"]->v;
       }
