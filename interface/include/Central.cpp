@@ -678,7 +678,7 @@ bool Central::applicationAdd(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!d.u.empty() && (d.g || d.auth.find("Central") != d.auth.end()))
+  if (d.g || d.auth.find("Central") != d.auth.end())
   {
     if (!empty(i, "name"))
     {
@@ -687,6 +687,7 @@ bool Central::applicationAdd(data &d, string &e)
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!application(a, e) && e == "No results returned.")
       {
+        e.clear();
         q << "insert into application (name, creation_date) values ('" << esc(i->m["name"]->v) << "', now())";
         if (dbu(q, e))
         {
@@ -719,7 +720,7 @@ bool Central::applicationAdd(data &d, string &e)
           deinit(n);
         }
       }
-      else
+      else if (e.empty())
       {
         e = "Application already exists.";
       }
@@ -1246,6 +1247,28 @@ bool Central::applicationIssueComments(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "issue_id"))
+  {
+    q << "select a.id, date_format(a.entry_date, '%Y-%m-%d %H:%i:%s') entry_date, a.user_id, a.comments, b.last_name, b.first_name, b.userid, b.email from issue_comment a, person b where a.user_id = b.id and a.issue_id = " << i->m["issue_id"]->v << " order by entry_date, id";
+    if (!empty(i, "limit"))
+    {
+      q << " limit " << i->m["limit"]->v;
+    }
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the issue_id.";
+  }
 
   return b;
 }
@@ -1257,6 +1280,69 @@ bool Central::applicationIssueEdit(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("application_id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      if (!empty(i, "id"))
+      {
+        q << "update application_issue set ";
+        q << "application_id = ";
+        if (exist(i, "transfer") && !empty(i->m["transfer"], "id") && i->m["transfer"]->m["id"]->v == i->m["application_id"]->v)
+        {
+          q << i->m["transfer"]->m["id"]->v;
+        }
+        else
+        {
+          q << i->m["application_id"]->v;
+        }
+        q << ", close_date = ";
+        if (!empty(i, "close_date"))
+        {
+          q << "'" << i->m["close_date"]->v << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", due_date = ";
+        if (!empty(i, "due_date"))
+        {
+          q << "'" << i->m["due_date"]->v << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", priority = ";
+        if (!empty(i, "priority"))
+        {
+          q << i->m["priority"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        q << " where id = " << i->m["id"]->v;
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "Please provide the id.";
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1268,6 +1354,176 @@ bool Central::applicationIssueEmail(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!d.u.empty())
+  {
+    if (!empty(i, "action"))
+    {
+      if (i->m["action"]->v == "add" || i->m["action"]->v == "close" || i->m["action"]->v == "transfer" || i->m["action"]->v == "update")
+      {
+        if (!empty(i, "server"))
+        {
+          if (!empty(i, "id")
+          {
+            data a;
+            init(d, a);
+            a->m["i"]->i("id", i->m["id"]->v);
+            a->m["i"]->i("comments", "1", 'n');
+            if (applicationIssue(a, e) && !empty(a->m["o"], "application_id"))
+            {
+              data c;
+              init(d, b);
+              b->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+              if (application(b, e) && !empty(c->m["o"], "id") && !empty(c->m["o"], "name"))
+              {
+                data f;
+                init(d, f);
+                f->m["i"]->i("application_id", c->m["o"]->m["id"]->v);
+                f->m["i"]->i("Primary Developer", "1", 'n');
+                f->m["i"]->i("Backup Developer", "1", 'n');
+                if (applicationUsersByApplicationID(f, e))
+                {
+                  list<string> to;
+                  string strApplication, strName;
+                  stringstream m[2], s;
+                  s << c->m["o"]->m["name"]->v << " [" << i->m["action"]->v << "]:  Issue #" << i->m["id"]->v;
+                  for (auto &contact : f->m["o"]->l)
+                  {
+                    if (!empty(contact, "email"))
+                    {
+                      to.push_back(contact->m["email"]->v);
+                    }
+                  }
+                  if (i->m["action"]->v == "transfer" && !empty(i, "application_id"))
+                  {
+                    data h;
+                    init(d, h);
+                    h->m["i"]->i("id", i->m["application_id"]->v);
+                    if (application(h, e) && !empty(h->m["o"], "name"))
+                    {
+                      data k;
+                      strApplication = h->m["o"]->m["name"]->v;
+                      init(d, k);
+                      k->m["i"]->i("application_id", i->m["application_id"]->v);
+                      k->m["i"]->i("Primary Developer", "1", 'n');
+                      k->m["i"]->i("Backup Developer", "1", 'n');
+                      if (applicationUsersByApplicationID(k, e))
+                      {
+                        for (auto &contact : k->m["o"]->l)
+                        {
+                          if (!empty(contact, "email"))
+                          {
+                            to.push_back(contact->m["email"]->v);
+                          }
+                        }
+                      }
+                      deinit(k);
+                    }
+                    deinit(h);
+                  }
+                  if (exist(a->m["o"], "comments"))
+                  {
+                    for (auto &contact : a->m["o"]->m["comments"]->l)
+                    {
+                      if (!empty(contact, "email"))
+                      {
+                        to.push_back(contact->m["email"]->v);
+                      }
+                    }
+                  }
+                  strName = getUserName();
+                  m[0] << "<html><body style=\"background:#f3f3f3:padding:10px;\">";
+                  if (i->m["action"]->v == "add")
+                  {
+                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
+                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>created</b> by " << strName << "." << endl << endl "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                  }
+                  else if (i->m["action"]->v == "close")
+                  {
+                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>closed</b> by " << strName << ".";
+                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>closed</b> by " << strName << "." << endl << endl "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                  }
+                  else if (i->m["action"]->v == "transfer")
+                  {
+                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>transferred</b> from " << strApplication << " to " << c->m["o"]->m["name"]->v << " by " << strName << ".";
+                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>transferred</b> from " << strApplication << " to " << c->m["o"]->m["name"]->v << " by " << strName << "." << endl << endl "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                  }
+                  else if (i->m["action"]->v == "update")
+                  {
+                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
+                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                  }
+                  if (exist(a->m["o"], "comments") && !a->m["o"]->m["comments"]->l.empty())
+                  {
+                    m[0] << "<div style=\"margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;\">";
+                    m[0] << "<small style=\"float:right;color:#999999;\"><i>";
+                    if (!empty(a->m["o"]->m["comments"]->l.back(), "entry_date"))
+                    {
+                      m[0] << a->m["o"]->m["comments"]->l.back()->m["entry_date"]->v;
+                    }
+                    if (!empty(a->m["o"]->m["comments"]->l.back(), "first_name") && !empty(a->m["o"]->m["comments"]->l.back(), "last_name"))
+                    {
+                      m[0] << " by " << a->m["o"]->m["comments"]->l.back()->m["first_name"]->v << " " a->m["o"]->m["comments"]->l.back()->m["last_name"]->v;
+                    }
+                    m[0] << "</i></small>";
+                    if (!empty(a->m["o"]->m["comments"]->l.back(), "comments"))
+                    {
+                      size_t unPosition;
+                      string strComments = a->m["o"]->m["comments"]->l.back()->m["comments"]->v;
+                      while ((unPosition = strComments.find("<")) != string::npos)
+                      {
+                        strComments.replace(unPosition, 1, "&lt;");
+                      }
+                      while ((unPosition = strComments.find(">")) != string::npos)
+                      {
+                        strComments.replace(unPosition, 1, "&gt;");
+                      }
+                      while ((unPosition = strComments.find("\n")) != string::npos)
+                      {
+                        strComments.replace(unPosition, 1, "<br>");
+                      }
+                      m[0] << "<pre style=\"white-space:pre-wrap;\">" << strComments << "</pre>";
+                    }
+                    m[0] << "</div>';
+                  }
+                  m[0] << "This message was sent by <a href=\"https://" << i->m["server"]->v << "/central\" style=\"text-decoration:none;\">Central</a>.";
+                  m[0] << "</body></html>";
+                  to.sort();
+                  to.unique();
+                  if (m_pJunction->email(getUserEmail(), to, {}, {}, s.str(), m[1], m[0], {}, e))
+                  {
+                    b = true;
+                  }
+                }
+                deinit(f);
+              }
+              deinit(c);
+            }
+            deinit(a);
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+        }
+        else
+        {
+          e = "Please provide the server.";
+        }
+      }
+      else
+      {
+        e = "Please provide a valid action:  add, close, transfer, update.";
+      }
+    }
+    else
+    {
+      e = "Please provide the action.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
   return b;
 }
@@ -1275,10 +1531,137 @@ bool Central::applicationIssueEmail(data &d, string &e)
 // {{{ applicationIssues()
 bool Central::applicationIssues(data &d, string &e)
 {
-  bool b = false;
+  bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact;
+  string strCloseDateEnd, strCloseDateStart, strDisplay, strOpenDateEnd, strOpenDateStart;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  bApplication = (!empty(i, "application") && i->m["application"]->v == "1");
+  bBackupDeveloper = (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1");
+  bComments = (!empty(i, "comments") && i->m["comments"]->v == "1");
+  bContact = (!empty(i, "Contact") && i->m["Contact"]->v == "1");
+  bOpen = (!empty(i, "open") && i->m["open"]->v == "1");
+  bOwner = (!empty(i, "owner") && i->m["owner"]->v == "1");
+  bPrimaryContact = (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1");
+  bPrimaryDeveloper = (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1");
+  strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
+  strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
+  strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
+  strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
+  strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
+  q << "select id, application_id, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue";
+  if (bOpen || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
+  {
+    bool bFirst = true;
+    if (bOpen && strDisplay != "all")
+    {
+      bFirst = false;
+      q << ((bFirst)?" where":" and") << " close_date is null";
+    }
+    if (!strOpenDateStart.empty())
+    {
+      bFirst = false;
+      q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') >= '" << strOpenDateStart << "'";
+    }
+    if (!strOpenDateEnd.empty())
+    {
+      bFirst = false;
+      q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') < '" << strOpenDateEnd << "'";
+    }
+    if (!strCloseDateStart.empty())
+    {
+      bFirst = false;
+      q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') >= '" << strCloseDateStart << "'";
+    }
+    if (!strCloseDateEnd.empty())
+    {
+      bFirst = false;
+      q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
+    }
+    q << " order by due_date is null, due_date, priority desc, id";
+  }
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      bool bUse = !bOwner;
+      Json *j = new Json(r);
+      if (bApplication)
+      {
+        data a;
+        init(d, a);
+        a->m["i"]->i("id", r["application_id"]);
+        if (application(a, e))
+        {
+          data c;
+          j->i("application", a->m["o"]);
+          init(d, c);
+          c->m["i"]->i("application_id", r["application_id"]);
+          if (bPrimaryDeveloper)
+          {
+            c->m["i"]->i("Primary Developer", "1", 'n');
+          }
+          if (bBackupDeveloper)
+          {
+            c->m["i"]->i("Backup Developer", "1", 'n');
+          }
+          if (bPrimaryContact)
+          {
+            c->m["i"]->i("Primary Contact", "1", 'n');
+          }
+          if (bContact)
+          {
+            c->m["i"]->i("Contact", "1", 'n');
+          }
+          if (applicationUsersByApplicationID(c, e))
+          {
+            j->m["application"]->i("contacts", c->m["o"]);
+            if (bOwner)
+            {
+              for (auto contactIter = j->m["application"]->m["contacts"]->l.begin(); !bUse && contactIter != j->m["application"]->m["contacts"]->l.end(); contactIter++)
+              {
+                if (!empty((*contactIter), "userid") && (*contactIter)->m["userid"]->v == d.u)
+                {
+                  bUse = true;
+                }
+              }
+            }
+          }
+          deinit(c);
+        }
+        deinit(a);
+      }
+      if (bComments)
+      {
+        data a;
+        init(d, a);
+        a->m["i"]->i("issue_id", r["id"]);
+        if (applicationIssueComments(a, e))
+        {
+          j->i("comments", a);
+          if (bOwner)
+          {
+            for (auto commentIter = j->m["comments"]->l.begin(); !bUse && commentIter != j->m["comments"]->l.end(); commentIter++)
+            {
+              if (!empty((*commentIter), "userid") && (*commentIter)->m["userid"]->v == d.u)
+              {
+                bUse = true;
+              }
+            }
+          }
+        }
+        deinit(a);
+      }
+      if (bUse)
+      {
+        o->pb(j);
+      }
+      delete j;
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1290,6 +1673,42 @@ bool Central::applicationIssuesByApplicationID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    q << "select id, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority from application_issue where application_id = " << i->m["application_id"]->v;
+    if (!empty(i, "open") && i->m["open"]->v == "1")
+    {
+      q << " and close_date is null";
+    }
+    q << " order by close_date, open_date, id";
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        Json *j = new Json(r);
+        if (!empty(i, "comments") && i->m["comments"]->v == "1")
+        {
+          data a;
+          init(d, a);
+          a->m["i"]->i("issue_id", r["id"]);
+          if (applicationIssueComments(a, e))
+          {
+            j->i("comments", a->m["o"]);
+          }
+          deinit(a);
+        }
+        o->pb(j);
+        delete j;
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1301,6 +1720,218 @@ bool Central::applicationNotify(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    if (!empty(i, "notification"))
+    {
+      string strNotification = i->m["notification"]->v;
+      size_t unPosition;
+      while ((unPosition = strNotification.find("<")) != string::npos)
+      {
+        strNotification.replace(unPosition, 1, "&lt;");
+      }
+      while ((unPosition = strNotification.find(">")) != string::npos)
+      {
+        strNotification.replace(unPosition, 1, "&gt;");
+      }
+      while ((unPosition = strNotification.find("\n")) != string::npos)
+      {
+        strNotification.replace(unPosition, 1, "<br>");
+      }
+      if (!empty(i, "server"))
+      {
+        data a;
+        init(d, a);
+        a->m["i"]->i("id", i->m["id"]->v);
+        if (d.g || isApplicationDeveloper(a, e))
+        {
+          data c;
+          init(d, c);
+          c->m["i"]->i("id", i->m["id"]->v);
+          if (application(c, e) && !empty(c->m["o"], "name"))
+          {
+            data f;
+            init(d, f);
+            f->m["i"]->i("application_id", i->m["id"]->v);
+            f->m["i"]->i("Primary Developer", "1", 'n');
+            f->m["i"]->i("Backup Developer", "1", 'n');
+            f->m["i"]->i("Contact", "1", 'n');
+            if (applicationUsersByApplicationID(f, e))
+            {
+              map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
+              b = true;
+              for (auto &contact : f->m["o"]->l)
+              {
+                stringstream s;
+                data h;
+                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                {
+                  if (!exist(o, contact->m["userid"]->v))
+                  {
+                    o->m[contact->m["userid"]->v] = new Json;
+                  }
+                  o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                  o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
+                  o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
+                  {
+                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    {
+                      o->m[contacts->m["userid"]->v]->i("primary", "1", 1);
+                    }
+                    developer["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                  }
+                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
+                  {
+                    developer["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                  }
+                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  {
+                    o->m[contacts->m["userid"]->v]->i("contact", "1", 1);
+                  }
+                }
+                init(d, h);
+                h->m["i"]->i("application_id", i->m["id"]->v);
+                h->m["i"]->i("contacts", "1", 'n');
+                if (dependentsByApplicationID(h, e) && exist(h->m["o"], "dependents"))
+                {
+                  for (auto &dependent : h->m["o"]->m["dependents"]->l)
+                  {
+                    if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                    {
+                      for (auto &contact : dependent->m["contacts"]->l)
+                      {
+                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                        {
+                          if (!exist(o, contact->m["userid"]->v))
+                          {
+                            o->m[contact->m["userid"]->v] = new Json;
+                          }
+                          o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                          o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
+                          o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                          if (!empty(dependent, "name"))
+                          {
+                            if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                            {
+                              o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                            }
+                            o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                deinit(h);
+                s << "Application Notification:  " << c->m["o"]->m["name"]->v;
+                for (auto &k : o->m)
+                {
+                  stringstream m;
+                  m << "<html><body>";
+                  m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
+                  m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c->m["o"]->m["name"]->v << "</a></b></h3>";
+                  m << strNotification;
+                  m << "<br><br>";
+                  m << "<b>You are receiving this application notification for the following reason(s):</b>";
+                  m << "<br><br>";
+                  m << "<ul>";
+                  if (exist(k.second, "primary"))
+                  {
+                    m << "<li>You are a Primary Developer for this application.</li>";
+                  }
+                  else if (exist(k.second, "backup"))
+                  {
+                    m << "<li>You are a Backup Developer for this application.</li>";
+                  }
+                  else if (exist(k.second, "contact"))
+                  {
+                    m << "<li>You are a Contact for this application.</li>";
+                  }
+                  if (exist(k.second, "depend"))
+                  {
+                    m << "<li>";
+                    m << "You are a developer for the following application(s) which depend on the " << c->m["o"]->m["name"]->v << ":";
+                    m << "<ul>";
+                    for (auto &depend : k.second->m["depend"]->l)
+                    {
+                      m << "<li>" << depend->v << "</li>";
+                    }
+                    m << "</ul>";
+                    m << "</li>";
+                  }
+                  m << "</ul>";
+                  if (!developer["primary"].empty())
+                  {
+                    bool bFirst = true;
+                    m << "<br><br>";
+                    m << "<b>Primary Developer(s):</b><br>";
+                    for (auto &dev : developer["primary"])
+                    {
+                      if (bFirst)
+                      {
+                        bFirst = false;
+                      }
+                      else
+                      {
+                        m << ", ";
+                      }
+                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                    }
+                  }
+                  if (!developer["backup"].empty())
+                  {
+                    bool bFirst = true;
+                    m << "<br><br>";
+                    m << "<b>Backup Developer(s):</b><br>";
+                    for (auto &dev : developer["backup"])
+                    {
+                      if (bFirst)
+                      {
+                        bFirst = false;
+                      }
+                      else
+                      {
+                        m << ", ";
+                      }
+                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                    }
+                  }
+                  m << "<br><br>";
+                  m << "If you have any questions or concerns, please contact your application contacts.";
+                  m << "</div>";
+                  m << "</body></html>";
+                  if (m_pJunction->email(getUserEmail(), k.second->m["email"]->v, {}, {}, s.str(), "", m, {}, e))
+                  {
+                    k.second->i("sent", "1", 'n');
+                  }
+                }
+              }
+            }
+            deinit(f);
+          }
+          deinit(c);
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        deinit(a);
+      }
+      else
+      {
+        e = "Please provide the server.";
+      }
+    }
+    else
+    {
+      e = "Please provide the notification.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1312,6 +1943,25 @@ bool Central::applicationRemove(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      q << "delete from application where id = " << i->m["id"]->v;
+      if (dbu(q, e))
+      {
+        b = true;
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1323,6 +1973,70 @@ bool Central::applications(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  q << "select id, highlight, menu_id, name, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, website from application where 1";
+  if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
+  {
+    q << " and dependable = 1";
+  }
+  if (!empty(i, "letter"))
+  {
+    q << " and";
+    if (i->m["letter"]->v == "#")
+    {
+      q << " name regexp '^[ -@[-`{-~]'";
+    }
+    else
+    {
+      q << " upper(name) like '" << i->m["letter"]->v << "'%'";
+    }
+  }
+  q << " order by name";
+  if (!empty(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstring ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    q << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      Json *j = new Json(r);
+      if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
+      {
+        data a;
+        init(d, a);
+        a->m["i"]->i("application_id", r["id"]);
+        a->m["i"]->i("Primary Developer", "1", 'n');
+        a->m["i"]->i("Backup Developer", "1", 'n');
+        a->m["i"]->i("Primary Contact", "1", 'n');
+        if (applicationUsersByApplicationID(a, e))
+        {
+          j->i("contacts", a->m["o"]);
+        }
+        deinit(a);
+      }
+      if (!empty(i, "servers") && i->m["servers"]->v == "1")
+      {
+        data a;
+        init(d, a);
+        a->m["i"]->i("application_id", r["id"]);
+        if (serversByApplicationID(a, e))
+        {
+          j->i("servers", a->m["o"]);
+        }
+        deinit(a);
+      }
+      o->pb(j);
+      delete j;
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1334,6 +2048,29 @@ bool Central::applicationsByServerID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "server_id"))
+  {
+    q << "select a.id, b.id application_id, b.name from application_server a, application b where a.application_id = b.id and a.server_id = " << i->m["server_id"]->v;
+    if (!empty(i, "retired") && i->m["retired"]->v == "1")
+    {
+      q << " and b.retirement_date is null";
+    }
+    q << " order by b.name";
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the server_id.";
+  }
 
   return b;
 }
@@ -1345,6 +2082,24 @@ bool Central::applicationsByUserID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "contact_id"))
+  {
+    q << "select distinct a.id, b.id application_id, b.name, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << i->m["contact_id"]->v << " order by b.name";
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the contact_id.";
+  }
 
   return b;
 }
@@ -1356,6 +2111,29 @@ bool Central::applicationServer(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, application_id, server_id from application_server where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1367,6 +2145,32 @@ bool Central::applicationServerAdd(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      if (!empty(i, "server_id"))
+      {
+        q << "insert into application_server (application_id, server_id) values (" << i->m["application_id"]->v << ", " << i->m["server_id"]->v << ")";
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "Please provide the server_id.";
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1378,6 +2182,29 @@ bool Central::applicationServerDetail(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, application_server_id, version, daemon, owner, script, delay, min_processes max_processes, min_image, max_image, min_resident, max_resident from application_server_detail where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1389,6 +2216,65 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_server_id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["application_server_id"]->v);
+    if (d.g || applicationServer(a, e))
+    {
+      q << "insert into application_server_detail (application_server_id, version, daemon, owner, script, delay, min_processes, max_processes, min_image, max_image, min_resident, max_resident) values (" << i->m["application_server_id"]->v;
+      if (!empty(i, "version"))
+      {
+        q << ", '" << esc(i->m["version"]->v) << "'";
+      }
+      else
+      {
+        q << ", null";
+      }
+      if (!empty(i, "daemon"))
+      {
+        q << ", '" << esc(i->m["daemon"]->v) << "'";
+      }
+      else
+      {
+        q << ", null";
+      }
+      if (!empty(i, "owner"))
+      {
+        q << ", '" << esc(i->m["owner"]->v) << "'";
+      }
+      else
+      {
+        q << ", null";
+      }
+      if (!empty(i, "script"))
+      {
+        q << ", '" << esc(i->m["script"]->v) << "'";
+      }
+      else
+      {
+        q << ", null";
+      }
+      q << ", " << ((!empty(i, "delay"))?i->m["delay"]->v:"0");
+      q << ", " << ((!empty(i, "min_processes"))?i->m["min_processes"]->v:"0");
+      q << ", " << ((!empty(i, "max_processes"))?i->m["max_processes"]->v:"0");
+      q << ", " << ((!empty(i, "min_image"))?i->m["min_image"]->v:"0");
+      q << ", " << ((!empty(i, "max_image"))?i->m["max_image"]->v:"0");
+      q << ", " << ((!empty(i, "min_resident"))?i->m["min_resident"]->v:"0");
+      q << ", " << ((!empty(i, "max_resident"))?i->m["max_resident"]->v:"0");
+      q << ")";
+      if (dbu(q, e))
+      {
+        b = true;
+      }
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the application_server_id.";
+  }
 
   return b;
 }
@@ -1400,6 +2286,87 @@ bool Central::applicationServerDetailEdit(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationServerDetail(a, e) && !empty(a->m["o"], "application_server_id")))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", a->m["o"]->m["application_server_id"]->v);
+      if (d.g || (applicationServer(c, e) && !empty(c->m["o"], "id")))
+      {
+        data f;
+        init(d, f);
+        f->m["i"]->i("id", c->m["o"]->m["id"]->v);
+        if (d.g || isApplicationDeveloper(f, e))
+        {
+          q << "update application_server_detail set";
+          q << " version = ";
+          if (!empty(i, "verson"))
+          {
+            q << "'" << esc(i->m["version"]->v) << "'";
+          }
+          else
+          {
+            q << "null";
+          }
+          q << ", daemon = ";
+          if (!empty(i, "daemon"))
+          {
+            q << "'" << esc(i->m["daemon"]->v) << "'";
+          }
+          else
+          {
+            q << "null";
+          }
+          q << ", owner = ";
+          if (!empty(i, "owner"))
+          {
+            q << "'" << esc(i->m["owner"]->v) << "'";
+          }
+          else
+          {
+            q << "null";
+          }
+          q << ", script = ";
+          if (!empty(i, "script"))
+          {
+            q << "'" << esc(i->m["script"]->v) << "'";
+          }
+          else
+          {
+            q << "null";
+          }
+          q << ", delay = " << ((!empty(i, "delay"))?i->m["delay"]->v:"null");
+          q << ", min_processes = " << ((!empty(i, "min_processes"))?i->m["min_processes"]->v:"null");
+          q << ", max_processes = " << ((!empty(i, "max_processes"))?i->m["max_processes"]->v:"null");
+          q << ", min_image = " << ((!empty(i, "min_image"))?i->m["min_image"]->v:"null");
+          q << ", max_image = " << ((!empty(i, "max_image"))?i->m["max_image"]->v:"null");
+          q << ", min_resident = " << ((!empty(i, "min_resident"))?i->m["min_resident"]->v:"null");
+          q << ", max_resident = " << ((!empty(i, "max_resident"))?i->m["max_resident"]->v:"null");
+          q << " where id = " << i->m["id"]->v;
+          if (dbu(q, e))
+          {
+            b = true;
+          }
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        deinit(f);
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1411,6 +2378,43 @@ bool Central::applicationServerDetailRemove(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationServerDetail(a, e) && !empty(a->m["o"], "application_server_id")))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", a->m["o"]->m["application_server_id"]->v);
+      if (d.g || (applicationServer(c, e) && !empty(c->m["o"], "id")))
+      {
+        data f;
+        init(d, f);
+        f->m["i"]->i("id", c->m["o"]->m["id"]->v);
+        if (d.g || isApplicationDeveloper(f, e))
+        {
+          q << "delete from application_server_detail where id = " << i->m["id"]->v;
+          if (dbu(q, e))
+          {
+            b = true;
+          }
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        deinit(f);
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1422,6 +2426,24 @@ bool Central::applicationServerDetails(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_server_id"))
+  {
+    q << "select id, application_server_id, version, daemon, owner, script, delay, min_processes, max_processes, min_image, max_image, min_resident, max_resident from application_server_detail where application_server_id = " << i->m["application_server_id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the application_server_id.";
+  }
 
   return b;
 }
@@ -1433,6 +2455,36 @@ bool Central::applicationServerRemove(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || applicationServer(a, e) && !empty(a->m["o"], "application_id"))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+      if (d.g || isApplicationDeveloper(c, e))
+      {
+        q << "delete from application_server where id = " << i->m["id"]->v;
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      dinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1444,6 +2496,34 @@ bool Central::applicationUser(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select a.id, a.application_id, a.admin, a.locked, a.notify, a.description, b.type, c.last_name, c.first_name, c.userid, c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        Json *j = new Json(g->front());
+        b = true;
+        ny(j, "admin");
+        ny(j, "locked");
+        ny(j, "notify");
+        d.p->i("o", j);
+        o = d.p->m["o"];
+        delete j;
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1455,6 +2535,110 @@ bool Central::applicationUserAdd(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || (application(a, e) && !empty(a->m["o"], "name")))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", i->m["application_id"]->v);
+      if (d.g || (d.auth.find(a->m["o"]->m["name"]->v) != d.auth.end() && d.auth[a->m["o"]->m["name"]->v]) || isApplicationDeveloper(c, e))
+      {
+        if (!empty(i, "userid"))
+        {
+          bool bReady = false;
+          data c;
+          init(d, c);
+          c->m["i"]->i("userid", i->m["userid"]->v);
+          if (user(c, e) && !empty(c->m["o"], "id"))
+          {
+            bReady = true;
+          }
+          else if (e == "No results returned.")
+          {
+            deinit(f);
+            init(d, f);
+            f->m["i"]->i("userid", i->m["userid"]->v);
+            if (userAdd(f, e))
+            {
+              deinit(f);
+              init(d, f);
+              f->m["i"]->i("userid", i->m["userid"]->v);
+              if (user(f, e) && !empty(f->m["o"], "id"))
+              {
+                bReady = true;
+              }
+            }
+          }
+          if (bReady)
+          {
+            if (exist(i, "type") && !empty(i->m["type"], "type"))
+            {
+              data h;
+              init(d, h);
+              h->m["i"]->i("type", i->m["type"]->m["type"]->v);
+              if (contactType(h, e) && !empty(h->m["o"], "id"))
+              {
+                if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+                {
+                  if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+                  {
+                    if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                    {
+                      if (!exist(i, "description"))
+                      {
+                        i->m["description"] = new Json;
+                      }
+                      q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify, description) values (" << i->m["application_id"]->v << ", " << f->m["o"]->m["id"]->v << ", " << h->m["o"]->m["id"]->v << ", " << i->m["admin"]->m["value"]->v << ", " << i->m["locked"]->m["value"]->v << ", " << i->m["notify"]->m["value"]->v << ", '" << esc(i->m["description"]->v) << "')";
+                      if (dbu(q, e))
+                      {
+                        b = true;
+                      }
+                    }
+                    else
+                    {
+                      e = "Please provide the notify.";
+                    }
+                  }
+                  else
+                  {
+                    e = "Please provide the locked.";
+                  }
+                }
+                else
+                {
+                  e = "Please provide the admin.";
+                }
+              }
+              deinit(h);
+            }
+            else
+            {
+              e = "Please provide the type.";
+            }
+          }
+          deinit(f);
+        }
+        else
+        {
+          e = "Please provide the userid.";
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1466,6 +2650,117 @@ bool Central::applicationUserEdit(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationUser(a, e) && !empty(a->m["o"], "application_id"))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+      if (d.g || (application(c, e) && !empty(c->m["o"], "name"))
+      {
+        data f;
+        init(d, f);
+        f->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+        if (d.g || (d.auth.find(c->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
+        {
+          if (!empty(i, "userid"))
+          {
+            bool bReady = false;
+            data h;
+            init(d, h);
+            h->m["i"]->i("userid", i->m["userid"]->v);
+            if (user(h, e) && !empty(h->m["o"], "id"))
+            {
+              bReady = true;
+            }
+            else if (e == "No results returned.")
+            {
+              deinit(h);
+              init(d, h);
+              h->m["i"]->i("userid", i->m["userid"]->v);
+              if (userAdd(h, e))
+              {
+                deinit(h);
+                init(d, h);
+                h->m["i"]->i("userid", i->m["userid"]->v);
+                if (user(h, e) && !empty(h->m["o"], "id"))
+                {
+                  bReady = true;
+                }
+              }
+            }
+            if (bReady)
+            {
+              if (exist(i, "type") && !empty(i->m["type"], "type"))
+              {
+                data k;
+                init(d, k);
+                k->m["i"]->i("type", i->m["type"]->m["type"]->v);
+                if (contactType(k, e) && !empty(k->m["o"], "id"))
+                {
+                  if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+                  {
+                    if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+                    {
+                      if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                      {
+                        if (!exist(i, "description"))
+                        {
+                          i->m["description"] = new Json;
+                        }
+                        q << "update application_contact set contact_id = " << h->m["o"]->m["id"]->v << ", type_id = " << k->m["o"]->m["id"]->v << ", admin = " << i->m["admin"]->m["value"]->v << ", locked = " << i->m["locked"]->m["value"]->v << ", notify = " << i->m["notify"]->m["value"]->v << ", description = '" << esc(i->m["description"]->v) << "' where id = " << i->m["id"]->v;
+                        if (dbu(q, e))
+                        {
+                          b = true;
+                        }
+                      }
+                      else
+                      {
+                        e = "Please provide the notify.";
+                      }
+                    }
+                    else
+                    {
+                      e = "Please provide the locked.";
+                    }
+                  }
+                  else
+                  {
+                    e = "Please provide the admin.";
+                  }
+                }
+                deinit(k);
+              }
+              else
+              {
+                e = "Please provide the type.";
+              }
+            }
+            deinit(h);
+          }
+          else
+          {
+            e = "Please provide the userid.";
+          }
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        deinit(f);
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1477,6 +2772,43 @@ bool Central::applicationUserRemove(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    data a;
+    init(d, a);
+    a->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationUser(a, e) && !empty(a->m["o"], "application_id"))
+    {
+      data c;
+      init(d, c);
+      c->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+      if (d.g || (application(c, e) && !empty(c->m["o"], "name"))
+      {
+        data f;
+        init(d, f);
+        f->m["i"]->i("id", a->m["o"]->m["application_id"]->v);
+        if (d.g || (d.auth.find(c->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
+        {
+          q << "delete from application_contact where id = " << i->m["id"]->v;
+          if (dbu(q, e))
+          {
+            b = true;
+          }
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        deinit(f);
+      }
+      deinit(c);
+    }
+    deinit(a);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1488,6 +2820,72 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    q << "select a.id, a.application_id, a.admin, a.locked, a.notify, a.description, a.type_id, c.id user_id, c.last_name, c.first_name, c.userid, c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["application_id"]->v;
+    if ((!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1") || (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+    {
+      bool bFirst = true;
+      q << " and b.type in (";
+      if (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1")
+      {
+        bFirst = false;
+        q << ((!bFirst)?", ":"") << "'Primary Developer'";
+      }
+      if (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1")
+      {
+        bFirst = false;
+        q << ((!bFirst)?", ":"") << "'Backup Developer'";
+      }
+      if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+      {
+        bFirst = false;
+        q << ((!bFirst)?", ":"") << "'Primary Contact'";
+      }
+      if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+      {
+        bFirst = false;
+        q << ((!bFirst)?", ":"") << "'Contact'";
+      }
+      q << ")";
+    }
+    q << " order by c.last_name, c.first_name, c.userid";
+    if (exist(i, "page"))
+    {
+      size_t unNumPerPage, unOffset, unPage;
+      stringstring ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      ssNumPerPage >> unNumPerPage;
+      ssPage >> unPage;
+      unOffset = unPage * unNumPerPage;
+      q << " limit " << unNumPerPage << " offset " << unOffset;
+    }
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        data a;
+        Json *j = new Json(r);
+        ny(j, "admin");
+        ny(j, "locked");
+        ny(j, "notify");
+        init(d, a);
+        a->m["i"]->i("id", r["type_id"]);
+        if (contactType(a, e))
+        {
+          j->i("type", a->m["o"]);
+        }
+        o->pb(j);
+        delete j;
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1509,10 +2907,7 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         string strJwt;
         data tData;
-        tData.g = false;
-        tData.p = new Json;
-        tData.p->m["i"] = new Json;
-        tData.p->m["o"] = new Json;
+        init(tData);
         if (ptJson->m.find("Jwt") != ptJson->m.end() && !ptJson->m["Jwt"]->v.empty())
         {
           strJwt = ptJson->m["Jwt"]->v;
@@ -1595,6 +2990,37 @@ bool Central::contactType(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id") || !empty(i, "type"))
+  {
+    q << "select id, type from contact_type where ";
+    if (!empty(i, "id"))
+    {
+      q << "id = " << i->m["id"]->v;
+    }
+    else
+    {
+      q << "type = '" << esc(i->m["type"]->v << "'";
+    }
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g); 
+  }
+  else
+  {
+    e = "Please provide the id or type.";
+  }
 
   return b;
 }
@@ -1638,6 +3064,91 @@ bool Central::dependentsByApplicationID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.dependant_id = b.id and a.application_id = " << i->m["application_id"]->v << " ourder by b.name";
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      o->m["depends"] = new Json;
+      for (auto &r : *g)
+      {
+        Json *j = new Json(r);
+        if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
+        {
+          data a;
+          init(d, a);
+          a->m["i"]->i("application_id", r["application_id"]);
+          a->m["i"]->i("Primary Developer", "1", 'n');
+          a->m["i"]->i("Backup Developer", "1", 'n');
+          a->m["i"]->i("Primary Contact", "1", 'n');
+          if (applicationUsersByApplicationID(a, e))
+          {
+            j->i("contacts", a->m["o"]);
+          }
+          deinit(a);
+        }
+        if (!empty(i, "servers") && i->m["servers"]->v == "1")
+        {
+          data a;
+          init(d, a);
+          a->m["i"]->i("application_id", r["application_id"]);
+          if (serversByApplicationID(a, e))
+          {
+            j->i("servers", a->m["o"]);
+          }
+          deinit(a);
+        }
+        o->m["depends"]->pb(j);
+        delete j;
+      }
+      q.str("");
+      q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.application_id = b.id and a.dependant_id = " << i->m["application_id"]->v << " order by b.name";
+      auto h = dbq(q, e);
+      if (h != NULL)
+      {
+        bResult = true;
+        o->m["dependents"] = new Json;
+        for (auto &r : *h)
+        {
+          Json *j = new Json(r);
+          if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
+          {
+            data a;
+            init(d, a);
+            a->m["i"]->i("application_id", r["application_id"]);
+            a->m["i"]->i("Primary Developer", "1", 'n');
+            a->m["i"]->i("Backup Developer", "1", 'n');
+            a->m["i"]->i("Primary Contact", "1", 'n');
+            if (applicationUsersByApplicationID(a, e))
+            {
+              j->i("contacts", a->m["o"]);
+            }
+            deinit(a);
+          }
+          if (!empty(i, "servers") && i->m["servers"]->v == "1")
+          {
+            data a;
+            init(d, a);
+            a->m["i"]->i("application_id", r["application_id"]);
+            if (serversByApplicationID(a, e))
+            {
+              j->i("servers", a->m["o"]);
+            }
+            deinit(a);
+          }
+          o->m["dependents"]->pb(j);
+          delete j;
+        }
+      }
+      dbf(h);
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }
@@ -1662,15 +3173,89 @@ bool Central::exist(Json *ptJson, const string strField)
   return (ptJson->m.find(strField) != ptJson->m.end());
 }
 // }}}
-// {{{ init()
-void Central::init(data &i, data &o)
+// {{{ getUserEmail()
+string Central::getUserEmail(data &d)
 {
-  o.auth = i.auth;
-  o.g = i.g;
-  o.u = i.u;
+  string e, v;
+  data a;
+
+  init(d, a);
+  a->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a->["o"], "email"))
+  {
+    v = a->["o"]->m["email"]->v;
+  }
+  deinit(a);
+
+  return v;
+}
+// }}}
+// {{{ getUserFirstName()
+string Central::getUserFirstName(data &d)
+{
+  string e, v;
+  data a;
+
+  init(d, a);
+  a->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a->["o"], "first_name"))
+  {
+    v = a->["o"]->m["first_name"]->v;
+  }
+  deinit(a);
+
+  return v;
+}
+// }}}
+// {{{ getUserLastName()
+string Central::getUserLastName(data &d)
+{
+  string e, v;
+  data a;
+
+  init(d, a);
+  a->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a->["o"], "last_name"))
+  {
+    v = a->["o"]->m["last_name"]->v;
+  }
+  deinit(a);
+
+  return v;
+}
+// }}}
+// {{{ getUserName()
+string Central::getUserName(data &d)
+{
+  string e;
+  stringstream v;
+  data a;
+
+  init(d, a);
+  a->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a->["o"], "first_name") && !empty(a->["o"], "last_name"))
+  {
+    v << a->["o"]->m["first_name"]->v << " " << a->["o"]->m["last_name"]->v;
+  }
+  deinit(a);
+
+  return v.str();
+}
+// }}}
+// {{{ init()
+void Central::init(data &d)
+{
+  o.g = false;
   o.p = new Json;
   o.p->m["i"] = new Json;
   o.p->m["o"] = new Json;
+}
+void Central::init(data &i, data &o)
+{
+  init(o);
+  o.auth = i.auth;
+  o.g = i.g;
+  o.u = i.u;
 }
 // }}}
 // {{{ isApplicationDeveloper()
@@ -1758,6 +3343,29 @@ bool Central::loginType(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, type from login_type where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1769,6 +3377,16 @@ bool Central::loginTypes(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  q << "select id, type from login_type order by type";
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1786,6 +3404,29 @@ bool Central::menuAccess(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, type from menu_access where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1797,6 +3438,16 @@ bool Central::menuAccesses(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  q << "select id, type from menu_access order by type";
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1808,6 +3459,16 @@ bool Central::notifyPriorities(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  q << "select id, priority from notify_priority order by priority";
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1819,6 +3480,29 @@ bool Central::notifyPriority(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, priority from notify_priority where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1857,6 +3541,29 @@ bool Central::packageType(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id"))
+  {
+    q << "select id, type from package_type where id = " << i->m["id"]->v;
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
 
   return b;
 }
@@ -1868,6 +3575,16 @@ bool Central::packageTypes(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  q << "select id, type from package_type order by type";
+  auto g = dbq(q, e);
+  if (g != NULL)
+  {
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -1889,6 +3606,37 @@ bool Central::server(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "id") || !empty(i, "name"))
+  {
+    q << "select id, name, description, processes, cpu_usage, main_memory, swap_memory, disk_size from server where ";
+    if (!empty(i, "id"))
+    {
+      q << "id = " << i->m["id"]->v;
+    }
+    else
+    {
+      q << "name = '" << esc(i->m["name"]->v) << "'";
+    }
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+        o = d.p->m["o"];
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the id or name.";
+  }
 
   return b;
 }
@@ -1900,6 +3648,36 @@ bool Central::serverAdd(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (d.g || d.auth.find("Central") != d.auth.end())
+  {
+    if (!empty(i, "name"))
+    {
+      data a;
+      init(d, a);
+      a->m["i"]->i("name", i->m["name"]->v);
+      if (!server(a, e) && e == "No results returned.")
+      {
+        e.clear();
+        q << "insert into server (name) values ('" << esc(i->m["name"]->v) << "')";
+        if (dbu(q, e))
+        {
+          b = true;
+        }
+      }
+      else if (e.empty())
+      {
+        e = "Server already exists.";
+      }
+    }
+    else
+    {
+      e = "Please provide the name.";
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
   return b;
 }
@@ -1911,6 +3689,24 @@ bool Central::serverDetailsByApplicationID(data &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+  if (!empty(i, "application_id"))
+  {
+    q << "select a.id application_server_id, b.id server_id, b.name, c.id application_server_detail_id, c.daemon from application_server a, server b, application_server_detail c where a.server_id = b.id and a.id = c.application_server_id and a.application_id = " << i->m["application_id"]->v << " order by b.name, c.daemon";
+    auto g = dbq(q, e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbf(g);
+  }
+  else
+  {
+    e = "Please provide the application_id.";
+  }
 
   return b;
 }

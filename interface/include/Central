@@ -94,6 +94,11 @@ class Central : public Interface
   bool empty(Json *ptJson, const string strField);
   string esc(const string strValue);
   bool exist(Json *ptJson, const string strField);
+  string getUserEmail(data &d);
+  string getUserFirstName(data &d);
+  string getUserLastName(data &d);
+  string getUserName(data &d);
+  void init(data &d);
   void init(data &i, data &o);
   bool isApplicationDeveloper(data &d, string &e);
   bool isServerAdmin(data &d, string &e);
