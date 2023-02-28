@@ -36,7 +36,7 @@ struct data
 class Central : public Interface
 {
   protected:
-  map<string, bool (Central::*)(Json *, Json *, string &)> m_functions;
+  map<string, bool (Central::*)(data &, string &)> m_functions;
   string m_strAesSecret;
   string m_strJwtSecret;
   string m_strJwtSigner;
@@ -86,9 +86,7 @@ class Central : public Interface
   bool contactType(data &d, string &e);
   void dbf(list<map<string, string> > *get);
   list<map<string, string> > *dbq(const string strQuery, string &e);
-  list<map<string, string> > *dbq(const stringstring ssQuery, string &e);
   bool dbu(const string strQuery, string &e);
-  bool dbu(const stringstream strQuery, string &e);
   void deinit(data &d);
   bool dependentsByApplicationID(data &d, string &e);
   bool empty(Json *ptJson, const string strField);
@@ -134,7 +132,7 @@ class Central : public Interface
   bool users(data &d, string &e);
 
   public:
-  Central(int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Central(string, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Central();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
 };
