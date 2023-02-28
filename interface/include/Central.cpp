@@ -2891,77 +2891,70 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Central::callback()";
-  if (ptJson->m.find("Request") != ptJson->m.end())
+  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
-    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+    string strFunction = ptJson->m["Function"]->v;
+    if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
     {
-      string strFunction = ptJson->m["Function"]->v;
-      if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
+      string strJwt;
+      data tData;
+      init(tData);
+      if (ptJson->m.find("Jwt") != ptJson->m.end() && !ptJson->m["Jwt"]->v.empty())
       {
-        string strJwt;
-        data tData;
-        init(tData);
-        if (ptJson->m.find("Jwt") != ptJson->m.end() && !ptJson->m["Jwt"]->v.empty())
-        {
-          strJwt = ptJson->m["Jwt"]->v;
-        }
-        else if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
-        {
-          strJwt = ptJson->m["wsJwt"]->v;
-        }
-        if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
-        {
-          string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
-          Json *ptJwt = new Json;
-          m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
-          if (strPayload.empty())
-          {
-            strPayload = strBase64;
-          }
-          if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
-          {
-            if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
-            {
-              tData.g = true;
-            }
-            if (exist(ptJwt, "sl_auth"))
-            {
-              for (auto &auth : ptJwt->m["sl_auth"]->m)
-              {
-                tData.auth[auth.first] = (auth.second->v == "1");
-              }
-            }
-            if (!empty(ptJwt, "sl_login"))
-            {
-              tData.u = ptJwt->m["sl_login"]->v;
-            }
-          }
-          delete ptJwt;
-        }
-        if ((this->*m_functions[ptJson->m["Function"]->v])(tData, strError))
-        {
-          bResult = true;
-          if (ptJson->m.find("Response") != ptJson->m.end())
-          {
-            delete ptJson->m["Response"];
-          }
-          ptJson->m["Response"] = new Json(tData.p->m["o"]);
-        }
-        deinit(tData);
+        strJwt = ptJson->m["Jwt"]->v;
       }
-      else
+      else if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
       {
-        strError = "Please provide a valid Function.";
+        strJwt = ptJson->m["wsJwt"]->v;
       }
+      if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
+      {
+        string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
+        Json *ptJwt = new Json;
+        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
+        if (strPayload.empty())
+        {
+          strPayload = strBase64;
+        }
+        if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+        {
+          if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
+          {
+            tData.g = true;
+          }
+          if (exist(ptJwt, "sl_auth"))
+          {
+            for (auto &auth : ptJwt->m["sl_auth"]->m)
+            {
+              tData.auth[auth.first] = (auth.second->v == "1");
+            }
+          }
+          if (!empty(ptJwt, "sl_login"))
+          {
+            tData.u = ptJwt->m["sl_login"]->v;
+          }
+        }
+        delete ptJwt;
+      }
+      if ((this->*m_functions[ptJson->m["Function"]->v])(tData, strError))
+      {
+        bResult = true;
+        if (ptJson->m.find("Response") != ptJson->m.end())
+        {
+          delete ptJson->m["Response"];
+        }
+        ptJson->m["Response"] = new Json(tData.p->m["o"]);
+      }
+      deinit(tData);
     }
     else
     {
-      strError = "Please provide the Function.";
+      strError = "Please provide a valid Function.";
     }
   }
   else
   {
-    strError = "Please provide the Request.";
+    strError = "Please provide the Function.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
