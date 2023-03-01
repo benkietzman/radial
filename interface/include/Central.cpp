@@ -1981,7 +1981,7 @@ bool Central::applications(data &d, string &e)
     }
     else
     {
-      q << " upper(name) like '" << i->m["letter"]->v << "'%'";
+      q << " upper(name) like '" << i->m["letter"]->v << "%'";
     }
   }
   q << " order by name";
@@ -4152,7 +4152,7 @@ bool Central::servers(data &d, string &e)
     }
     else
     {
-      q << " upper(name) like '" << i->m["letter"]->v << "'%'";
+      q << " upper(name) like '" << i->m["letter"]->v << "%'";
     }
   }
   q << " order by name";
@@ -4876,7 +4876,7 @@ bool Central::users(data &d, string &e)
     }
     else
     {
-      q << " upper(name) like '" << i->m["letter"]->v << "'%'";
+      q << " upper(name) like '" << i->m["letter"]->v << "%'";
     }
   }
   q << " order by last_name, first_name, userid";
