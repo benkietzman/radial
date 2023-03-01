@@ -1562,7 +1562,7 @@ bool Central::applicationIssues(data &d, string &e)
       bFirst = false;
       q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
     }
-    q << " order by due_date is null, due_date, priority desc, id";
+    q << " order by due_date, priority desc, id";
   }
   auto g = dbq(q.str(), e);
   if (g != NULL)
