@@ -1539,28 +1539,28 @@ bool Central::applicationIssues(data &d, string &e)
     bool bFirst = true;
     if (bOpen && strDisplay != "all")
     {
-      bFirst = false;
       q << ((bFirst)?" where":" and") << " close_date is null";
+      bFirst = false;
     }
     if (!strOpenDateStart.empty())
     {
-      bFirst = false;
       q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') >= '" << strOpenDateStart << "'";
+      bFirst = false;
     }
     if (!strOpenDateEnd.empty())
     {
-      bFirst = false;
       q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') < '" << strOpenDateEnd << "'";
+      bFirst = false;
     }
     if (!strCloseDateStart.empty())
     {
-      bFirst = false;
       q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') >= '" << strCloseDateStart << "'";
+      bFirst = false;
     }
     if (!strCloseDateEnd.empty())
     {
-      bFirst = false;
       q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
+      bFirst = false;
     }
     q << " order by due_date, priority desc, id";
   }
@@ -2822,23 +2822,23 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
       q << " and b.type in (";
       if (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Primary Developer'";
+        bFirst = false;
       }
       if (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Backup Developer'";
+        bFirst = false;
       }
       if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Primary Contact'";
+        bFirst = false;
       }
       if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Contact'";
+        bFirst = false;
       }
       q << ")";
     }
@@ -4535,23 +4535,23 @@ bool Central::serverUsersByServerID(data &d, string &e)
       q << " and b.type in (";
       if (!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Primary Admin'";
+        bFirst = false;
       }
       if (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Backup Admin'";
+        bFirst = false;
       }
       if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Primary Contact'";
+        bFirst = false;
       }
       if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
       {
-        bFirst = false;
         q << ((!bFirst)?", ":"") << "'Contact'";
+        bFirst = false;
       }
       q << ")";
     }
