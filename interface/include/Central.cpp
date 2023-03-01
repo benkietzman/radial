@@ -4876,11 +4876,11 @@ bool Central::users(data &d, string &e)
     q << " where";
     if (i->m["letter"]->v == "#")
     {
-      q << " name regexp '^[ -@[-`{-~]'";
+      q << " last_name regexp '^[ -@[-`{-~]'";
     }
     else
     {
-      q << " upper(name) like '" << i->m["letter"]->v << "%'";
+      q << " upper(last_name) like '" << i->m["letter"]->v << "%'";
     }
   }
   q << " order by last_name, first_name, userid";
