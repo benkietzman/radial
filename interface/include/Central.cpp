@@ -3361,6 +3361,7 @@ bool Central::loginTypes(data &d, string &e)
   auto g = dbq(q.str(), e);
   if (g != NULL)
   {
+    b = true;
     for (auto &r : *g)
     {
       o->pb(r);
@@ -3421,6 +3422,7 @@ bool Central::menuAccesses(data &d, string &e)
   auto g = dbq(q.str(), e);
   if (g != NULL)
   {
+    b = true;
     for (auto &r : *g)
     {
       o->pb(r);
@@ -3442,6 +3444,7 @@ bool Central::notifyPriorities(data &d, string &e)
   auto g = dbq(q.str(), e);
   if (g != NULL)
   {
+    b = true;
     for (auto &r : *g)
     {
       o->pb(r);
@@ -3556,6 +3559,7 @@ bool Central::packageTypes(data &d, string &e)
   auto g = dbq(q.str(), e);
   if (g != NULL)
   {
+    b = true;
     for (auto &r : *g)
     {
       o->pb(r);
