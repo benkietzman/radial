@@ -2887,7 +2887,7 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
 // {{{ callback()
 void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  bool bInvalid = false, bResult = false;
+  bool bInvalid = true, bResult = false;
   string strError;
 
   threadIncrement();
