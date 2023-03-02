@@ -3047,7 +3047,7 @@ bool Central::dependentsByApplicationID(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.dependant_id = b.id and a.application_id = " << i->m["application_id"]->v << " ourder by b.name";
+    q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.dependant_id = b.id and a.application_id = " << i->m["application_id"]->v << " order by b.name";
     auto g = dbq(q.str(), e);
     if (g != NULL)
     {
