@@ -24,6 +24,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   string strError;
 
+  m_pCallbackAddon = NULL;
   m_ptCred = new Json;
   if (m_pWarden != NULL)
   {
@@ -2886,75 +2887,84 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
 // {{{ callback()
 void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  bool bResult = false;
+  bool bInvalid = false, bResult = false;
   string strError;
 
   threadIncrement();
   strPrefix += "->Central::callback()";
   if (!empty(ptJson, "Function"))
   {
-    string strFunction = ptJson->m["Function"]->v;
-    if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
+    string strFunction = ptJson->m["Function"]->v, strJwt;
+    data tData;
+    init(tData);
+    if (exist(ptJson, "Request"))
     {
-      string strJwt;
-      data tData;
-      init(tData);
-      if (exist(ptJson, "Request"))
-      {
-        tData.p->insert("i", ptJson->m["Request"]);
-      }
-      if (!empty(ptJson, "Jwt"))
-      {
-        strJwt = ptJson->m["Jwt"]->v;
-      }
-      else if (!empty(ptJson, "wsJwt"))
-      {
-        strJwt = ptJson->m["wsJwt"]->v;
-      }
-      if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
-      {
-        string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
-        Json *ptJwt = new Json;
-        m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
-        if (strPayload.empty())
-        {
-          strPayload = strBase64;
-        }
-        if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
-        {
-          if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
-          {
-            tData.g = true;
-          }
-          if (exist(ptJwt, "sl_auth"))
-          {
-            for (auto &auth : ptJwt->m["sl_auth"]->m)
-            {
-              tData.auth[auth.first] = (auth.second->v == "1");
-            }
-          }
-          if (!empty(ptJwt, "sl_login"))
-          {
-            tData.u = ptJwt->m["sl_login"]->v;
-          }
-        }
-        delete ptJwt;
-      }
-      if ((this->*m_functions[ptJson->m["Function"]->v])(tData, strError))
-      {
-        bResult = true;
-        if (ptJson->m.find("Response") != ptJson->m.end())
-        {
-          delete ptJson->m["Response"];
-        }
-        ptJson->m["Response"] = new Json(tData.p->m["o"]);
-      }
-      deinit(tData);
+      tData.p->insert("i", ptJson->m["Request"]);
     }
-    else
+    if (!empty(ptJson, "Jwt"))
     {
-      strError = "Please provide a valid Function.";
+      strJwt = ptJson->m["Jwt"]->v;
     }
+    else if (!empty(ptJson, "wsJwt"))
+    {
+      strJwt = ptJson->m["wsJwt"]->v;
+    }
+    if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
+    {
+      string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
+      Json *ptJwt = new Json;
+      m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
+      if (strPayload.empty())
+      {
+        strPayload = strBase64;
+      }
+      if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+      {
+        if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
+        {
+          tData.g = true;
+        }
+        if (exist(ptJwt, "sl_auth"))
+        {
+          for (auto &auth : ptJwt->m["sl_auth"]->m)
+          {
+            tData.auth[auth.first] = (auth.second->v == "1");
+          }
+        }
+        if (!empty(ptJwt, "sl_login"))
+        {
+          tData.u = ptJwt->m["sl_login"]->v;
+        }
+      }
+      delete ptJwt;
+    }
+    if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, tData, strError, bInvalid))
+    {
+      bResult = true;
+    }
+    else if (bInvalid)
+    {
+      if (m_functions.find(strFunction) != m_functions.end())
+      {
+        if ((this->*m_functions[strFunction])(tData, strError))
+        {
+          bResult = true;
+        }
+      }
+      else
+      {
+        strError = "Please provide a valid Function.";
+      }
+    }
+    if (bResult)
+    {
+      if (ptJson->m.find("Response") != ptJson->m.end())
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json(tData.p->m["o"]);
+    }
+    deinit(tData);
   }
   else
   {
@@ -4596,6 +4606,12 @@ bool Central::serverUsersByServerID(data &d, string &e)
   }
 
   return b;
+}
+// }}}
+// {{{ setFunction()
+void Central::setCallback(bool (*pCallback)(const string, data &, string &, bool &))
+{
+  m_pCallbackAddon = pCallback;
 }
 // }}}
 // {{{ user()

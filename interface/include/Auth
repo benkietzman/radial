@@ -33,7 +33,7 @@ class Auth : public Interface
   ~Auth();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
   bool init();
-  void setAnalyze(bool (*pCallback)(string, Json *, Json *, string &));
+  void setAnalyze(bool (*)(string, Json *, Json *, string &));
 };
 // }}}
 }

@@ -36,6 +36,7 @@ struct data
 class Central : public Interface
 {
   protected:
+  bool (*m_pCallbackAddon)(const string, data &, string &, bool &);
   map<string, bool (Central::*)(data &, string &)> m_functions;
   string m_strAesSecret;
   string m_strJwtSecret;
@@ -135,6 +136,7 @@ class Central : public Interface
   Central(string, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Central();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void setCallback(bool (*pCallback)(const string, data &, string &, bool &));
 };
 // }}}
 }
