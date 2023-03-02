@@ -4608,8 +4608,8 @@ bool Central::serverUsersByServerID(data &d, string &e)
   return b;
 }
 // }}}
-// {{{ setCallback()
-void Central::setCallback(bool (*pCallback)(const string, data &, string &, bool &))
+// {{{ setCallbackAddon()
+void Central::setCallbackAddon(bool (*pCallback)(const string, data &, string &, bool &))
 {
   m_pCallbackAddon = pCallback;
 }

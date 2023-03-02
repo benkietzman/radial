@@ -136,7 +136,7 @@ class Central : public Interface
   Central(string, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Central();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void setCallback(bool (*pCallback)(const string, data &, string &, bool &));
+  void setCallbackAddon(bool (*pCallback)(const string, data &, string &, bool &));
 };
 // }}}
 }
