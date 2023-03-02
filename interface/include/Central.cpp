@@ -73,7 +73,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationIssueEmail"] = &Central::applicationIssueEmail;
   m_functions["applicationIssues"] = &Central::applicationIssues;
   m_functions["applicationIssuesByApplicationID"] = &Central::applicationIssuesByApplicationID;
-  m_functions["appplicationNotify"] = &Central::applicationNotify;
+  m_functions["applicationNotify"] = &Central::applicationNotify;
   m_functions["applicationRemove"] = &Central::applicationRemove;
   m_functions["applications"] = &Central::applications;
   m_functions["applicationsByServerID"] = &Central::applicationsByServerID;
