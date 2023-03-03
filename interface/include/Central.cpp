@@ -1063,6 +1063,16 @@ bool Central::applicationIssueAdd(data &d, string &e)
           applicationIssueCommentAdd(a, e);
           deinit(a);
         }
+        if (!empty(i, "server"))
+        {
+          init(d, a);
+          a.p->m["i"]->i("id", strID);
+          a.p->m["i"]->i("action", "add");
+          a.p->m["i"]->i("application_id", i->m["application_id"]->v);
+          a.p->m["i"]->i("server", i->m["server"]->v);
+          applicationIssueEmail(a, e);
+          deinit(a);
+        }
       }
     }
     else
@@ -1135,6 +1145,24 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
             {
               b = true;
               o->i("id", strID);
+              if (!empty(i, "server"))
+              {
+                data a;
+                init(d, a);
+                a.p->m["i"]->i("id", i->m["issue_id"]->v);
+                if (applicationIssue(a, e) && !empty(a->m["o"], "application_id"))
+                {
+                  data c;
+                  init(d, c);
+                  c.p->m["i"]->i("id", i->m["issue_id"]->v);
+                  c.p->m["i"]->i("action", "update");
+                  c.p->m["i"]->i("application_id", i->m["application_id"]->v);
+                  c.p->m["i"]->i("server", i->m["server"]->v);
+                  applicationIssueEmail(c, e);
+                  deinit(c);
+                }
+                deinit(a);
+              }
             }
           }
           else
