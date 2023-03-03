@@ -22,6 +22,8 @@ namespace radial
 // {{{ CentralMon()
 CentralMon::CentralMon(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "centralmon", argc, argv, pCallback)
 {
+  m_strPort = "4636";
+  m_strServer = "localhost";
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
