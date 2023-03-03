@@ -1586,7 +1586,7 @@ bool Central::applicationIssues(data &d, string &e)
   strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
   strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
   strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
-  q << "select id, application_id, summary date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue";
+  q << "select id, application_id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue";
   if (bOpen || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
   {
     bool bFirst = true;
@@ -1712,7 +1712,7 @@ bool Central::applicationIssuesByApplicationID(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    q << "select id, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority from application_issue where application_id = " << i->m["application_id"]->v;
+    q << "select id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority from application_issue where application_id = " << i->m["application_id"]->v;
     if (!empty(i, "open") && i->m["open"]->v == "1")
     {
       q << " and close_date is null";
