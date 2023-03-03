@@ -72,12 +72,12 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->CentralMon::callback()";
-  if (ptJson->m.find("Action") != ptJson->m.end() && !ptJson->m["Action"]->v.empty())
+  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
   {
     bool bValid = false;
     stringstream ssRequest;
-    ssRequest << ptJson->m["Action"]->v;
-    if (ptJson->m["Action"]->v == "process")
+    ssRequest << ptJson->m["Function"]->v;
+    if (ptJson->m["Function"]->v == "process")
     {
       if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
       {
@@ -97,7 +97,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strError = "Please provide the Server.";
       }
     }
-    else if (ptJson->m["Action"]->v == "system")
+    else if (ptJson->m["Function"]->v == "system")
     {
       if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
       {
@@ -109,13 +109,13 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strError = "Please provide the Server.";
       }
     }
-    else if (ptJson->m["Action"]->v == "update")
+    else if (ptJson->m["Function"]->v == "update")
     {
       bValid = true;
     }
     else
     {
-      strError = "Please provide a valid Action:  process, system, update.";
+      strError = "Please provide a valid Function:  process, system, update.";
     }
     if (bValid)
     {
@@ -145,7 +145,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 if ((unPosition = strBuffers[0].find("\n")) != string::npos)
                 {
                   bExit = true;
-                  if (ptJson->m["Action"]->v == "process")
+                  if (ptJson->m["Function"]->v == "process")
                   {
                     string strItem;
                     stringstream ssLine(strBuffers[0].substr(0, unPosition));
@@ -181,7 +181,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                       strError = "Invalid number of fields returned.";
                     }
                   }
-                  else if (ptJson->m["Action"]->v == "system")
+                  else if (ptJson->m["Function"]->v == "system")
                   {
                     string strItem;
                     stringstream ssLine(strBuffers[0].substr(0, unPosition));
@@ -274,7 +274,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   else
   {
-    strError = "Please provide the Action.";
+    strError = "Please provide the Function.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
