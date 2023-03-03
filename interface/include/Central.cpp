@@ -507,7 +507,7 @@ bool Central::applicationAccountEdit(data &d, string &e)
                   q << "null";
                 }
               }
-              q << ") where id = " << i->m["id"]->v;
+              q << " where id = " << i->m["id"]->v;
               if (dbu(q.str(), e))
               {
                 b = true;
