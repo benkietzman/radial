@@ -1065,6 +1065,7 @@ bool Central::applicationIssueAdd(data &d, string &e)
         }
         if (!empty(i, "server"))
         {
+          data a;
           init(d, a);
           a.p->m["i"]->i("id", strID);
           a.p->m["i"]->i("action", "add");
@@ -1150,7 +1151,7 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
                 data a;
                 init(d, a);
                 a.p->m["i"]->i("id", i->m["issue_id"]->v);
-                if (applicationIssue(a, e) && !empty(a->m["o"], "application_id"))
+                if (applicationIssue(a, e) && !empty(a.p->m["o"], "application_id"))
                 {
                   data c;
                   init(d, c);
