@@ -49,7 +49,6 @@ class Interface : public Base
   void hub(Json *ptJson, const bool bWait = true);
   void hub(const string strTarget, Json *ptJson, const bool bWait = true);
   bool hub(Json *ptJson, string &strError);
-  bool hub(const string strTarget, Json *ptJson, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
   bool isMaster();
   bool isMasterSettled();
@@ -77,6 +76,7 @@ class Interface : public Base
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Interface();
+  bool hub(const string strTarget, Json *ptJson, string &strError);
   void process(string strPrefix);
   void setAutoMode(void (*pCallback)(string, const string, const string));
 };
