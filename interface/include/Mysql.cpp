@@ -107,7 +107,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
                 {
                   stringstream ssID;
-                  ssID << ullRows;
+                  ssID << ullID;
                   ptJson->i("ID", ssID.str(), 'n');
                 }
               }
