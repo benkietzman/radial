@@ -74,6 +74,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
   strPrefix += "->CentralMon::callback()";
   if (ptJson->m.find("Action") != ptJson->m.end() && !ptJson->m["Action"]->v.empty())
   {
+    bool bValid = false;
     stringstream ssRequest;
     ssRequest << ptJson->m["Action"]->v;
     if (ptJson->m["Action"]->v == "process")
@@ -83,103 +84,8 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         ssRequest << " " << ptJson->m["Server"]->v;
         if (ptJson->m.find("Process") != ptJson->m.end() && !ptJson->m["Process"]->v.empty())
         {
-          int fdSocket = -1;
+          bValid = true;
           ssRequest << " " << ptJson->m["Process"]->v << endl;
-          if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, strError))
-          {
-            bool bExit = false;
-            int nReturn;
-            size_t unPosition;
-            string strBuffers[2];
-            strBuffers[1] = ssRequest.str();
-            while (!bExit && !shutdown())
-            {
-              pollfd fds[1];
-              fds[0].fd = fdSocket;
-              fds[0].events = POLLIN;
-              if (!strBuffers[1].empty())
-              {
-                fds[0].events |= POLLOUT;
-              }
-              if ((nReturn = poll(fds, 1, 250)) > 0)
-              {
-                if (fds[0].revents & POLLIN)
-                {
-                  if (m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))
-                  {
-                    if ((unPosition = strBuffers[0].find("\n")) != string::npos)
-                    {
-                      string strItem;
-                      stringstream ssLine(strBuffers[0].substr(0, unPosition));
-                      vector<string> items;
-                      bExit = true;
-                      while (getline(ssLine, strItem, ';'))
-                      {
-                        items.push_back(strItem);
-                      }
-                      if (items.size() == 10)
-                      {
-                        size_t unIndex = 0;
-                        stringstream ssSubLine;
-                        bResult = true;
-                        ptJson->m["Response"] = new Json;
-                        ptJson->m["Response"]->i("StartTime", items[unIndex++]);
-                        ptJson->m["Response"]->m["Owners"] = new Json;
-                        ssSubLine.str(items[unIndex++]);
-                        while (getline(ssSubLine, strItem, ','))
-                        {
-                          ptJson->m["Response"]->m["Owners"]->pb(strItem);
-                        }
-                        ptJson->m["Response"]->i("NumberOfProcesses", items[unIndex++]);
-                        ptJson->m["Response"]->i("ImageSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("MinImageSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("MaxImageSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("ResidentSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("MinResidentSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("MaxResidentSize", items[unIndex++]);
-                        ptJson->m["Response"]->i("Alarms", items[unIndex++]);
-                      }
-                      else
-                      {
-                        strError = "Invalid number of fields returned.";
-                      }
-                    }
-                  }
-                  else
-                  {
-                    bExit = true;
-                    if (nReturn < 0)
-                    {
-                      ssMessage.str("");
-                      ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
-                      strError = ssMessage.str();
-                    }
-                  }
-                }
-                if (fds[0].revents & POLLOUT)
-                {
-                  if (!m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn))
-                  {
-                    bExit = true;
-                    if (nReturn < 0)
-                    {
-                      ssMessage.str("");
-                      ssMessage << "Utility::fdWrite(" << errno << ") " << strerror(errno);
-                      strError = ssMessage.str();
-                    }
-                  }
-                }
-              }
-              else
-              {
-                bExit = true;
-                ssMessage.str("");
-                ssMessage << "poll(" << errno << ") " << strerror(errno);
-                strError = ssMessage.str();
-              }
-            }
-            close(fdSocket);
-          }
         }
         else
         {
@@ -195,36 +101,91 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
     {
       if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
       {
-        int fdSocket = -1;
+        bValid = true;
         ssRequest << " " << ptJson->m["Server"]->v;
-        if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, strError))
+      }
+      else
+      {
+        strError = "Please provide the Server.";
+      }
+    }
+    else if (ptJson->m["Action"]->v == "update")
+    {
+      bValid = true;
+    }
+    else
+    {
+      strError = "Please provide a valid Action:  process, system, update.";
+    }
+    if (bValid)
+    {
+      int fdSocket = -1;
+      if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, strError))
+      {
+        bool bExit = false;
+        int nReturn;
+        size_t unPosition;
+        string strBuffers[2];
+        strBuffers[1] = ssRequest.str();
+        while (!bExit && !shutdown())
         {
-          bool bExit = false;
-          int nReturn;
-          size_t unPosition;
-          string strBuffers[2];
-          strBuffers[1] = ssRequest.str();
-          while (!bExit && !shutdown())
+          pollfd fds[1];
+          fds[0].fd = fdSocket;
+          fds[0].events = POLLIN;
+          if (!strBuffers[1].empty())
           {
-            pollfd fds[1];
-            fds[0].fd = fdSocket;
-            fds[0].events = POLLIN;
-            if (!strBuffers[1].empty())
+            fds[0].events |= POLLOUT;
+          }
+          if ((nReturn = poll(fds, 1, 250)) > 0)
+          {
+            if (fds[0].revents & POLLIN)
             {
-              fds[0].events |= POLLOUT;
-            }
-            if ((nReturn = poll(fds, 1, 250)) > 0)
-            {
-              if (fds[0].revents & POLLIN)
+              if (m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))
               {
-                if (m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))
+                if ((unPosition = strBuffers[0].find("\n")) != string::npos)
                 {
-                  if ((unPosition = strBuffers[0].find("\n")) != string::npos)
+                  bExit = true;
+                  if (ptJson->m["Action"]->v == "process")
                   {
                     string strItem;
                     stringstream ssLine(strBuffers[0].substr(0, unPosition));
                     vector<string> items;
-                    bExit = true;
+                    while (getline(ssLine, strItem, ';'))
+                    {
+                      items.push_back(strItem);
+                    }
+                    if (items.size() == 10)
+                    {
+                      size_t unIndex = 0;
+                      stringstream ssSubLine;
+                      bResult = true;
+                      ptJson->m["Response"] = new Json;
+                      ptJson->m["Response"]->i("StartTime", items[unIndex++]);
+                      ptJson->m["Response"]->m["Owners"] = new Json;
+                      ssSubLine.str(items[unIndex++]);
+                      while (getline(ssSubLine, strItem, ','))
+                      {
+                        ptJson->m["Response"]->m["Owners"]->pb(strItem);
+                      }
+                      ptJson->m["Response"]->i("NumberOfProcesses", items[unIndex++]);
+                      ptJson->m["Response"]->i("ImageSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("MinImageSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("MaxImageSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("ResidentSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("MinResidentSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("MaxResidentSize", items[unIndex++]);
+                      ptJson->m["Response"]->i("Alarms", items[unIndex++]);
+                    }
+                    else
+                    {
+                      strError = "Invalid number of fields returned.";
+                    }
+                  }
+                  else if (ptJson->m["Action"]->v == "system")
+                  {
+                    string strItem;
+                    stringstream ssLine(strBuffers[0].substr(0, unPosition));
+                    vector<string> items;
                     while (getline(ssLine, strItem, ';'))
                     {
                       items.push_back(strItem);
@@ -264,51 +225,51 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                       strError = "Invalid number of fields returned.";
                     }
                   }
-                }
-                else
-                {
-                  bExit = true;
-                  if (nReturn < 0)
+                  else if (strBuffers[0].substr(0, unPosition) == "okay")
                   {
-                    ssMessage.str("");
-                    ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
-                    strError = ssMessage.str();
+                    bResult = true;
+                  }
+                  else
+                  {
+                    strError = "Failed to update.";
                   }
                 }
               }
-              if (fds[0].revents & POLLOUT)
+              else
               {
-                if (!m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn))
+                bExit = true;
+                if (nReturn < 0)
                 {
-                  bExit = true;
-                  if (nReturn < 0)
-                  {
-                    ssMessage.str("");
-                    ssMessage << "Utility::fdWrite(" << errno << ") " << strerror(errno);
-                    strError = ssMessage.str();
-                  }
+                  ssMessage.str("");
+                  ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
+                  strError = ssMessage.str();
                 }
               }
             }
-            else
+            if (fds[0].revents & POLLOUT)
             {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << "poll(" << errno << ") " << strerror(errno);
-              strError = ssMessage.str();
+              if (!m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn))
+              {
+                bExit = true;
+                if (nReturn < 0)
+                {
+                  ssMessage.str("");
+                  ssMessage << "Utility::fdWrite(" << errno << ") " << strerror(errno);
+                  strError = ssMessage.str();
+                }
+              }
             }
           }
-          close(fdSocket);
+          else
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << "poll(" << errno << ") " << strerror(errno);
+            strError = ssMessage.str();
+          }
         }
+        close(fdSocket);
       }
-      else
-      {
-        strError = "Please provide the Server.";
-      }
-    }
-    else
-    {
-      strError = "Please provide a valid Action:  process, system.";
     }
   }
   else
