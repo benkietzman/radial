@@ -974,7 +974,7 @@ bool Central::applicationIssue(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    q << "select id, application_id, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue where id = " << i->m["id"]->v;
+    q << "select id, application_id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue where id = " << i->m["id"]->v;
     auto g = dbq(q.str(), e);
     if (g != NULL)
     {
@@ -1024,6 +1024,10 @@ bool Central::applicationIssueAdd(data &d, string &e)
     {
       string strID;
       q << "insert into application_issue (application_id, open_date";
+      if (!empty(i, "summary"))
+      {
+        q << ", summary";
+      }
       if (!empty(i, "due_date"))
       {
         q << ", due_date";
@@ -1033,6 +1037,10 @@ bool Central::applicationIssueAdd(data &d, string &e)
         q << ", priority";
       }
       q << ") values (" << i->m["application_id"]->v << ", now()";
+      if (!empty(i, "summary"))
+      {
+        q << ", '" << esc(i->m["summary"]->v) << "'";
+      }
       if (!empty(i, "due_date"))
       {
         q << ", '" << esc(i->m["due_date"]->v) << "'";
@@ -1296,6 +1304,15 @@ bool Central::applicationIssueEdit(data &d, string &e)
         {
           q << "null";
         }
+        q << ", summary = ";
+        if (!empty(i, "summary"))
+        {
+          q << "'" << i->m["summary"]->v << "'";
+        }
+        else
+        {
+          q << "null";
+        }
         q << ", due_date = ";
         if (!empty(i, "due_date"))
         {
@@ -1473,6 +1490,8 @@ bool Central::applicationIssueEmail(data &d, string &e)
                     }
                     m[0] << "</div>";
                   }
+                  m[0] << "<p>Viewing your <a href=\"http://" << i->m["server"]->v << "/central/#/Applications/Workload\">Workload</a> provides you with your personalized list of open application issues.  The issues provided on the Workload are pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>";
+                  m[0] << "<p>Please use the <a href=\"http://" << i->m["server"]->v << "/central/#/Home/FrontDoor\">Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.</p>";
                   m[0] << "This message was sent by <a href=\"https://" << i->m["server"]->v << "/central\" style=\"text-decoration:none;\">Central</a>.";
                   m[0] << "</body></html>";
                   to.sort();
@@ -1520,7 +1539,7 @@ bool Central::applicationIssueEmail(data &d, string &e)
 bool Central::applicationIssues(data &d, string &e)
 {
   bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact;
-  string strCloseDateEnd, strCloseDateStart, strDisplay, strOpenDateEnd, strOpenDateStart;
+  string strCloseDateEnd, strCloseDateStart, strCommenter, strDisplay, strOpenDateEnd, strOpenDateStart;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
@@ -1534,10 +1553,11 @@ bool Central::applicationIssues(data &d, string &e)
   bPrimaryDeveloper = (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1");
   strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
   strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
+  strCommenter = ((!empty(i, "commenter"))?i->m["commenter"]->v:"");
   strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
   strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
   strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
-  q << "select id, application_id, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue";
+  q << "select id, application_id, summary date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority from application_issue";
   if (bOpen || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
   {
     bool bFirst = true;
@@ -1574,7 +1594,7 @@ bool Central::applicationIssues(data &d, string &e)
     b = true;
     for (auto &r : *g)
     {
-      bool bUse = !bOwner;
+      bool bUse = ((bOwner || !strCommenter.empty())?false:true);
       Json *j = new Json(r);
       if (bApplication)
       {
@@ -1629,7 +1649,7 @@ bool Central::applicationIssues(data &d, string &e)
         if (applicationIssueComments(a, e))
         {
           j->i("comments", a.p->m["o"]);
-          if (bOwner)
+          if (!strCommenter.empty())
           {
             for (auto commentIter = j->m["comments"]->l.begin(); !bUse && commentIter != j->m["comments"]->l.end(); commentIter++)
             {
