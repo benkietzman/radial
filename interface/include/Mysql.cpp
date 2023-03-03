@@ -106,9 +106,11 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 unsigned long long ullID = 0;
                 if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
                 {
-                  stringstream ssID;
+                  stringstream ssID, ssRows;
                   ssID << ullID;
                   ptJson->i("ID", ssID.str(), 'n');
+                  ssRows << ullRows;
+                  ptJson->i("Rows", ssRows.str(), 'n');
                 }
               }
               (*mysqlIter)->secure.unlock();
