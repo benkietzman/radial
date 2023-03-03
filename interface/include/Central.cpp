@@ -377,7 +377,7 @@ bool Central::applicationAccountAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
   {
@@ -394,6 +394,7 @@ bool Central::applicationAccountAdd(data &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "id"))
             {
+              string strID;
               q << "insert into application_account (application_id, user_id, encrypt, aes, `password`, type_id";
               if (!empty(i, "description"))
               {
@@ -418,9 +419,10 @@ bool Central::applicationAccountAdd(data &d, string &e)
                 q << ", '" << esc(i->m["description"]->v) << "'";
               }
               q << ")";
-              if (dbu(q.str(), e))
+              if (dbu(q.str(), strID, e))
               {
                 b = true;
+                o->i("id", strID);
               }
             }
             else
@@ -663,7 +665,7 @@ bool Central::applicationAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (d.g || d.auth.find("Central") != d.auth.end())
   {
@@ -674,37 +676,32 @@ bool Central::applicationAdd(data &d, string &e)
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!application(a, e) && e == "No results returned.")
       {
+        string strID;
         e.clear();
         q << "insert into application (name, creation_date) values ('" << esc(i->m["name"]->v) << "', now())";
-        if (dbu(q.str(), e))
+        if (dbu(q.str(), strID, e))
         {
-          data n;
-          init(d, n);
-          n.p->m["i"]->i("name", i->m["name"]->v);
-          if (application(n, e) && !empty(n.p->m["o"], "id"))
+          data u;
+          o->i("id", strID);
+          init(d, u);
+          u.p->m["i"]->i("userid", d.u);
+          if (user(u, e) && !empty(u.p->m["o"], "id"))
           {
-            data u;
-            init(d, u);
-            u.p->m["i"]->i("userid", d.u);
-            if (user(u, e) && !empty(u.p->m["o"], "id"))
+            data c;
+            init(d, c);
+            c.p->m["i"]->i("type", "Primary Developer");
+            if (contactType(c, e) && !empty(c.p->m["o"], "id"))
             {
-              data c;
-              init(d, c);
-              c.p->m["i"]->i("type", "Primary Developer");
-              if (contactType(c, e) && !empty(c.p->m["o"], "id"))
+              q.str("");
+              q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify) values (" << strID << ", " << u.p->m["o"]->m["id"]->v << ", " << c.p->m["o"]->m["id"]->v << ", 1, 0, 1)";
+              if (dbu(q.str(), e))
               {
-                q.str("");
-                q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify) values (" << n.p->m["o"]->m["id"]->v << ", " << u.p->m["o"]->m["id"]->v << ", " << c.p->m["o"]->m["id"]->v << ", 1, 0, 1)";
-                if (dbu(q.str(), e))
-                {
-                  b = true;
-                }
+                b = true;
               }
-              deinit(c);
             }
-            deinit(u);
+            deinit(c);
           }
-          deinit(n);
+          deinit(u);
         }
       }
       else if (e.empty())
@@ -764,7 +761,7 @@ bool Central::applicationDependAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
   {
@@ -775,10 +772,12 @@ bool Central::applicationDependAdd(data &d, string &e)
       a.p->m["i"]->i("id", i->m["id"]->v);
       if (d.g || isApplicationDeveloper(a, e))
       {
+        string strID;
         q << "insert into application_dependant (application_id, dependant_id) values (" << i->m["application_id"]->v << ", " << i->m["dependant_id"]->v << ")";
-        if (dbu(q.str(), e))
+        if (dbu(q.str(), strID, e))
         {
           b = true;
+          o->i("id", strID);
         }
       }
       else
@@ -1017,12 +1016,13 @@ bool Central::applicationIssueAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!d.u.empty())
   {
     if (!empty(i, "application_id"))
     {
+      string strID;
       q << "insert into application_issue (application_id, open_date";
       if (!empty(i, "due_date"))
       {
@@ -1042,18 +1042,19 @@ bool Central::applicationIssueAdd(data &d, string &e)
         q << ", '" << esc(i->m["priority"]->v) << "'";
       }
       q << ")";
-      if (dbu(q.str(), e))
+      if (dbu(q.str(), strID, e))
       {
-        data a;
-        init(d, a);
-        a.p->m["i"]->i("application_id", i->m["application_id"]->v);
-        a.p->m["i"]->i("open", "1", 'n');
-        if (applicationIssuesByApplicationID(a, e) && !a.p->m["o"]->l.empty())
+        b = true;
+        o->i("id", strID);
+        if (!empty(i, "comments"))
         {
-          b = true;
-          d.p->i("o", a.p->m["o"]->l.back());
+          data a;
+          init(d, a);
+          a.p->m["i"]->i("issue_id", strID);
+          a.p->m["i"]->i("comments", i->m["comments"]->v);
+          applicationIssueCommentAdd(a, e);
+          deinit(a);
         }
-        deinit(a);
       }
     }
     else
@@ -1104,7 +1105,7 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["i"];
 
   if (!d.u.empty())
   {
@@ -1119,11 +1120,13 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
           if (!g->empty())
           {
             auto r = g->front();
+            string strID;
             q.str("");
             q << "insert issue_comment (issue_id, entry_date, user_id, comments) values (" << i->m["issue_id"]->v << ", now(), " << r["id"] << ", '" << esc(i->m["comments"]->v) << "')";
-            if (dbu(q.str(), e))
+            if (dbu(q.str(), strID, e))
             {
               b = true;
+              o->i("id", strID);
             }
           }
           else
@@ -2137,7 +2140,7 @@ bool Central::applicationServerAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
   {
@@ -2148,10 +2151,12 @@ bool Central::applicationServerAdd(data &d, string &e)
     {
       if (!empty(i, "server_id"))
       {
+        string strID;
         q << "insert into application_server (application_id, server_id) values (" << i->m["application_id"]->v << ", " << i->m["server_id"]->v << ")";
-        if (dbu(q.str(), e))
+        if (dbu(q.str(), strID, e))
         {
           b = true;
+          o->i("id", strID);
         }
       }
       else
@@ -2207,7 +2212,7 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_server_id"))
   {
@@ -2216,6 +2221,7 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
     a.p->m["i"]->i("id", i->m["application_server_id"]->v);
     if (d.g || applicationServer(a, e))
     {
+      string strID;
       q << "insert into application_server_detail (application_server_id, version, daemon, owner, script, delay, min_processes, max_processes, min_image, max_image, min_resident, max_resident) values (" << i->m["application_server_id"]->v;
       if (!empty(i, "version"))
       {
@@ -2257,9 +2263,10 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
       q << ", " << ((!empty(i, "min_resident"))?i->m["min_resident"]->v:"0");
       q << ", " << ((!empty(i, "max_resident"))?i->m["max_resident"]->v:"0");
       q << ")";
-      if (dbu(q.str(), e))
+      if (dbu(q.str(), strID, e))
       {
         b = true;
+        o->i("id", strID);
       }
     }
     deinit(a);
@@ -2525,7 +2532,7 @@ bool Central::applicationUserAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
   {
@@ -2581,14 +2588,16 @@ bool Central::applicationUserAdd(data &d, string &e)
                   {
                     if (exist(i, "notify") && !empty(i->m["notify"], "value"))
                     {
+                      string strID;
                       if (!exist(i, "description"))
                       {
                         i->m["description"] = new Json;
                       }
                       q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify, description) values (" << i->m["application_id"]->v << ", " << f.p->m["o"]->m["id"]->v << ", " << h.p->m["o"]->m["id"]->v << ", " << i->m["admin"]->m["value"]->v << ", " << i->m["locked"]->m["value"]->v << ", " << i->m["notify"]->m["value"]->v << ", '" << esc(i->m["description"]->v) << "')";
-                      if (dbu(q.str(), e))
+                      if (dbu(q.str(), strID, e))
                       {
                         b = true;
+                        o->i("id", strID);
                       }
                     }
                     else
@@ -3040,6 +3049,10 @@ list<map<string, string> > *Central::dbq(const string strQuery, string &e)
 bool Central::dbu(const string strQuery, string &e)
 {
   return dbupdate("central", strQuery, e);
+}
+bool Central::dbu(const string strQuery, string &strID, string &e)
+{
+  return dbupdate("central", strQuery, strID, e);
 }
 // }}}
 // {{{ deinit()
@@ -3636,7 +3649,7 @@ bool Central::serverAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (d.g || d.auth.find("Central") != d.auth.end())
   {
@@ -3647,11 +3660,13 @@ bool Central::serverAdd(data &d, string &e)
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!server(a, e) && e == "No results returned.")
       {
+        string strID;
         e.clear();
         q << "insert into server (name) values ('" << esc(i->m["name"]->v) << "')";
-        if (dbu(q.str(), e))
+        if (dbu(q.str(), strID, e))
         {
           b = true;
+          o->i("id", strID);
         }
       }
       else if (e.empty())
@@ -4308,7 +4323,7 @@ bool Central::serverUserAdd(data &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "server_id"))
   {
@@ -4355,10 +4370,12 @@ bool Central::serverUserAdd(data &d, string &e)
             {
               if (exist(i, "notify") && !empty(i->m["notify"], "value"))
               {
+                string strID;
                 q << "insert into server_contact (server_id, contact_id, type_id, notify) values (" << i->m["server_id"]->v << ", " << c.p->m["o"]->m["id"]->v << ", " << f.p->m["o"]->m["id"]->v << ", " << i->m["notify"]->m["value"]->v << ")";
-                if (dbu(q.str(), e))
+                if (dbu(q.str(), strID, e))
                 {
                   b = true;
+                  o->i("id", strID);
                 }
               }
               else
@@ -4665,7 +4682,7 @@ bool Central::userAdd(data &d, string &e)
 {
   bool b = false, bApplication = false, bCentral = false, bServer = false;
   stringstream q;
-  Json *i = d.p->m["i"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (d.auth.find("Central") != d.auth.end())
   {
@@ -4709,10 +4726,12 @@ bool Central::userAdd(data &d, string &e)
       a.p->m["i"]->i("userid", i->m["userid"]->v);
       if (!user(a, e) && e == "No results returned.")
       {
+        string strID;
         q << "insert into person (userid, active, admin, locked) values ('" << i->m["userid"]->v << "', 1, 0, 0)";
-        if (dbu(q.str(), e))
+        if (dbu(q.str(), strID, e))
         {
           b = true;
+          o->i("id", strID);
         }
       }
       deinit(a);

@@ -88,6 +88,7 @@ class Central : public Interface
   void dbf(list<map<string, string> > *get);
   list<map<string, string> > *dbq(const string strQuery, string &e);
   bool dbu(const string strQuery, string &e);
+  bool dbu(const string strQuery, string &strID, string &e);
   void deinit(data &d);
   bool dependentsByApplicationID(data &d, string &e);
   bool empty(Json *ptJson, const string strField);
