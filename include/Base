@@ -119,6 +119,9 @@ class Base
   public:
   Base(int argc, char **argv);
   ~Base();
+  bool empty(Json *ptJson, const string strField);
+  string esc(const string strValue);
+  bool exist(Json *ptJson, const string strField);
   void setShutdown();
   bool shutdown();
 };

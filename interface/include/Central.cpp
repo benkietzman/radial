@@ -3206,26 +3206,6 @@ bool Central::dependentsByApplicationID(data &d, string &e)
   return b;
 }
 // }}}
-// {{{ empty()
-bool Central::empty(Json *ptJson, const string strField)
-{
-  return (!exist(ptJson, strField) || ptJson->m[strField]->v.empty());
-}
-// }}}
-// {{{ esc()
-string Central::esc(const string strValue)
-{
-  string strEscaped;
-
-  return m_manip.escape(strValue, strEscaped);
-}
-// }}}
-// {{{ exist()
-bool Central::exist(Json *ptJson, const string strField)
-{
-  return (ptJson->m.find(strField) != ptJson->m.end());
-}
-// }}}
 // {{{ getUserEmail()
 string Central::getUserEmail(data &d)
 {

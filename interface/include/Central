@@ -91,9 +91,6 @@ class Central : public Interface
   bool dbu(const string strQuery, string &strID, string &e);
   void deinit(data &d);
   bool dependentsByApplicationID(data &d, string &e);
-  bool empty(Json *ptJson, const string strField);
-  string esc(const string strValue);
-  bool exist(Json *ptJson, const string strField);
   string getUserEmail(data &d);
   string getUserFirstName(data &d);
   string getUserLastName(data &d);

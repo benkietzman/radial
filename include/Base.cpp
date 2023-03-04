@@ -144,6 +144,26 @@ Base::~Base()
   }
 }
 // }}}
+// {{{ empty()
+bool Base::empty(Json *ptJson, const string strField)
+{
+  return (!exist(ptJson, strField) || ptJson->m[strField]->v.empty());
+} 
+// }}}
+// {{{ esc()
+string Base::esc(const string strValue)
+{
+  string strEscaped;
+
+  return m_manip.escape(strValue, strEscaped);
+}
+// }}}
+// {{{ exist()
+bool Base::exist(Json *ptJson, const string strField)
+{
+  return (ptJson->m.find(strField) != ptJson->m.end());
+}
+// }}}
 // {{{ monitor()
 size_t Base::monitor(string &strMessage)
 {
