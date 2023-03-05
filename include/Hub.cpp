@@ -238,9 +238,9 @@ bool Hub::load(string strPrefix, string &strError)
   if (ptInterfaces != NULL)
   {
     bResult = true;
-    if (ptInterfaces->m.find("log") != ptInterfaces->m.end() && ptInterfaces->m["log"]->m.find("Command") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["Command"]->v.empty())
+    if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command"))
     {
-      if (!add(strPrefix, "log", ((ptInterfaces->m["log"]->m.find("AccessFunction") != ptInterfaces->m["log"]->m.end() && !ptInterfaces->m["log"]->m["AccessFunction"]->v.empty())?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ((ptInterfaces->m["log"]->m.find("Respawn") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m["log"]->m.find("Restricted") != ptInterfaces->m["log"]->m.end() && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+      if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
       {
         bResult = false;
       }
@@ -249,9 +249,9 @@ bool Hub::load(string strPrefix, string &strError)
     }
     for (auto &i : ptInterfaces->m)
     {
-      if (i.second->m.find("Command") != i.second->m.end() && !i.second->m["Command"]->v.empty())
+      if (!empty(i.second, "Command"))
       {
-        if (!add(strPrefix, i.first, ((i.second->m.find("AccessFunction") != i.second->m.end() && !i.second->m["AccessFunction"]->v.empty())?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ((i.second->m.find("Respawn") != i.second->m.end() && i.second->m["Respawn"]->v == "1")?true:false), ((i.second->m.find("Restricted") != i.second->m.end() && i.second->m["Restricted"]->v == "1")?true:false)))
+        if (!add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
         {
           bResult = false;
         }
@@ -434,9 +434,9 @@ void Hub::process(string strPrefix)
                       {
                         ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
                         m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
-                        if (ptJson->m.find("_t") != ptJson->m.end() && !ptJson->m["_t"]->v.empty())
+                        if (!empty(ptJson, "_t"))
                         {
-                          if (ptJson->m.find("_d") == ptJson->m.end())
+                          if (!exist(ptJson, "_d"))
                           {
                             if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
                             {
@@ -459,7 +459,7 @@ void Hub::process(string strPrefix)
                                 ptJson->i("Node", (*linkIter)->strNode);
                                 m_interfaces["link"]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                               }
-                              else if (ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                              else if (!empty(ptJson, "_s") && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                               {
                                 ptJson->i("_d", "s");
                                 ptJson->i("Status", "error");
@@ -468,13 +468,13 @@ void Hub::process(string strPrefix)
                               }
                             }
                           }
-                          else if (ptJson->m["_d"]->v == "t" && ptJson->m.find("_s") != ptJson->m.end() && !ptJson->m["_s"]->v.empty() && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                          else if (ptJson->m["_d"]->v == "t" && !empty(ptJson, "_s") && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
                           {
                             ptJson->i("_d", "s");
                             m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
                           }
                         }
-                        else if (sockets[fds[i].fd] == "link" && ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "links")
+                        else if (sockets[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
                         {
                           for (auto &link : m_links)
                           {
@@ -486,17 +486,17 @@ void Hub::process(string strPrefix)
                             delete link;
                           }
                           m_links.clear();
-                          if (ptJson->m.find("Links") != ptJson->m.end())
+                          if (exist(ptJson, "Links"))
                           {
                             for (auto &link : ptJson->m["Links"]->m)
                             {
                               radialLink *ptLink = new radialLink;
                               ptLink->strNode = link.first;
-                              if (link.second->m.find("Server") != link.second->m.end() && !link.second->m["Server"]->v.empty())
+                              if (!empty(link.second, "Server"))
                               {
                                 ptLink->strServer = link.second->m["Server"]->v;
                               }
-                              if (link.second->m.find("Port") != link.second->m.end() && !link.second->m["Port"]->v.empty())
+                              if (!empty(link.second, "Port"))
                               {
                                 ptLink->strPort = link.second->m["Port"]->v;
                               }
