@@ -75,9 +75,10 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
   if (!empty(ptJson, "Function"))
   {
     bool bValid = false;
+    string strFunction = ptJson->m["Function"]->v;
     stringstream ssRequest;
     ssRequest << ptJson->m["Function"]->v;
-    if (ptJson->m["Function"]->v == "process")
+    if (strFunction == "process")
     {
       if (!empty(ptJson, "Server"))
       {
@@ -97,7 +98,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strError = "Please provide the Server.";
       }
     }
-    else if (ptJson->m["Function"]->v == "system")
+    else if (strFunction == "system")
     {
       if (!empty(ptJson, "Server"))
       {
@@ -109,7 +110,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strError = "Please provide the Server.";
       }
     }
-    else if (ptJson->m["Function"]->v == "update")
+    else if (strFunction == "update")
     {
       bValid = true;
     }
@@ -136,7 +137,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
           {
             fds[0].events |= POLLOUT;
           }
-          if ((nReturn = poll(fds, 1, 250)) > 0)
+          if ((nReturn = poll(fds, 1, 500)) > 0)
           {
             if (fds[0].revents & POLLIN)
             {
@@ -145,7 +146,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 if ((unPosition = strBuffers[0].find("\n")) != string::npos)
                 {
                   bExit = true;
-                  if (ptJson->m["Function"]->v == "process")
+                  if (strFunction == "process")
                   {
                     string strItem;
                     stringstream ssLine(strBuffers[0].substr(0, unPosition));
@@ -181,7 +182,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                       strError = "Invalid number of fields returned.";
                     }
                   }
-                  else if (ptJson->m["Function"]->v == "system")
+                  else if (strFunction == "system")
                   {
                     string strItem;
                     stringstream ssLine(strBuffers[0].substr(0, unPosition));

@@ -497,7 +497,7 @@ void Link::process(string strPrefix)
           }
           // }}}
           // }}}
-          if ((nReturn = poll(fds, unIndex, 100)) > 0)
+          if ((nReturn = poll(fds, unIndex, 500)) > 0)
           {
             // {{{ stdin
             if (fds[0].revents & (POLLHUP | POLLIN))
