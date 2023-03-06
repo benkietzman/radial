@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   string strError, strPrefix = "irc->main()";
   gpIrc = new Irc(strPrefix, argc, argv, &callback);
   gpIrc->setAutoMode(&autoMode);
-  thread threadBot(&radial::Irc::bot, gpIrc, strPrefix);
+  thread threadBot(&Irc::bot, gpIrc, strPrefix);
   pthread_setname_np(threadBot.native_handle(), "bot");
   gpIrc->process(strPrefix);
   threadBot.join();
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 }
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
-  thread threadAutoMode(&radial::Irc::autoMode, gpIrc, strPrefix, strOldMaster, strNewMaster);
+  thread threadAutoMode(&Irc::autoMode, gpIrc, strPrefix, strOldMaster, strNewMaster);
   pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
   threadAutoMode.detach();
 }

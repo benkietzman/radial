@@ -22,6 +22,8 @@ namespace radial
 // {{{ Irc()
 Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
+  m_pAnalyzeCallback1 = NULL;
+  m_pAnalyzeCallback2 = NULL;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -99,191 +101,172 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
-    // {{{ central
-    if (strAction == "central")
+    if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ssData, ptRequest))
     {
-      string strFunction;
-      ssData >> strFunction;
-      if (!strFunction.empty())
+      // {{{ central
+      if (strAction == "central")
       {
-        ptRequest->i("Function", strFunction);
-        // {{{ application
-        if (strFunction == "application")
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
         {
-          string strSubData;
-          getline(ssData, strSubData);
-          m_manip.trim(strSubData, strSubData);
-          if (!strSubData.empty())
+          ptRequest->i("Function", strFunction);
+          // {{{ application
+          if (strFunction == "application")
           {
-            string strApplicationID;
-            stringstream ssSubData(strSubData);
-            ssSubData >> strApplicationID;
-            if (!strApplicationID.empty())
+            string strSubData;
+            getline(ssData, strSubData);
+            m_manip.trim(strSubData, strSubData);
+            if (!strSubData.empty())
             {
-              ptRequest->i("ApplicationID", strApplicationID);
-              if (strApplicationID == "account")
+              string strApplicationID;
+              stringstream ssSubData(strSubData);
+              ssSubData >> strApplicationID;
+              if (!strApplicationID.empty())
               {
-                string strMechID;
-                ssSubData >> strMechID;
-                if (!strMechID.empty())
+                ptRequest->i("ApplicationID", strApplicationID);
+                if (strApplicationID == "account")
                 {
-                  ptRequest->i("MechID", strMechID);
+                  string strMechID;
+                  ssSubData >> strMechID;
+                  if (!strMechID.empty())
+                  {
+                    ptRequest->i("MechID", strMechID);
+                  }
                 }
-              }
-              else if (m_manip.isNumeric(strApplicationID))
-              {
-                string strForm;
-                ssSubData >> strForm;
-                if (!strForm.empty())
+                else if (m_manip.isNumeric(strApplicationID))
                 {
-                  ptRequest->i("Form", strForm);
+                  string strForm;
+                  ssSubData >> strForm;
+                  if (!strForm.empty())
+                  {
+                    ptRequest->i("Form", strForm);
+                  }
                 }
-              }
-              else
-              {
-                ptRequest->i("ApplicationID", strSubData);
+                else
+                {
+                  ptRequest->i("ApplicationID", strSubData);
+                }
               }
             }
           }
-        }
-        // }}}
-        // {{{ server
-        else if (strFunction == "server")
-        {
-          string strSubData;
-          getline(ssData, strSubData);
-          m_manip.trim(strSubData, strSubData);
-          if (!strSubData.empty())
+          // }}}
+          // {{{ server
+          else if (strFunction == "server")
           {
-            string strServerID;
-            stringstream ssSubData(strSubData);
-            ssSubData >> strServerID;
-            if (!strServerID.empty())
+            string strSubData;
+            getline(ssData, strSubData);
+            m_manip.trim(strSubData, strSubData);
+            if (!strSubData.empty())
             {
-              ptRequest->i("ServerID", strServerID);
-              if (m_manip.isNumeric(strServerID))
+              string strServerID;
+              stringstream ssSubData(strSubData);
+              ssSubData >> strServerID;
+              if (!strServerID.empty())
               {
-                string strForm;
-                ssSubData >> strForm;
-                if (!strForm.empty())
+                ptRequest->i("ServerID", strServerID);
+                if (m_manip.isNumeric(strServerID))
                 {
-                  ptRequest->i("Form", strForm);
+                  string strForm;
+                  ssSubData >> strForm;
+                  if (!strForm.empty())
+                  {
+                    ptRequest->i("Form", strForm);
+                  }
+                }
+                else
+                {
+                  ptRequest->i("ServerID", strSubData);
                 }
               }
-              else
-              {
-                ptRequest->i("ServerID", strSubData);
-              }
             }
           }
-        }
-        // }}}
-        // {{{ user
-        else if (strFunction == "user")
-        {
-          string strUser;
-          ssData >> strUser;
-          if (!strUser.empty())
+          // }}}
+          // {{{ user
+          else if (strFunction == "user")
           {
-            string strForm;
-            ptRequest->i("User", strUser);
-            ssData >> strForm;
-            if (!strForm.empty())
+            string strUser;
+            ssData >> strUser;
+            if (!strUser.empty())
             {
-              string strType;
-              ptRequest->i("Form", strForm);
-              getline(ssData, strType);
-              m_manip.trim(strType, strType);
-              if (strType.empty())
+              string strForm;
+              ptRequest->i("User", strUser);
+              ssData >> strForm;
+              if (!strForm.empty())
               {
-                strType = "all";
+                string strType;
+                ptRequest->i("Form", strForm);
+                getline(ssData, strType);
+                m_manip.trim(strType, strType);
+                if (strType.empty())
+                {
+                  strType = "all";
+                }
+                ptRequest->i("Type", strType);
               }
-              ptRequest->i("Type", strType);
             }
           }
+          // }}}
         }
-        // }}}
       }
-    }
-    // }}}
-    // {{{ centralmon
-    else if (strAction == "centralmon")
-    {
-      string strServer;
-      ssData >> strServer;
-      if (!strServer.empty())
+      // }}}
+      // {{{ centralmon
+      else if (strAction == "centralmon")
       {
-        string strProcess;
-        ssData >> strProcess;
-        ptRequest->i("Server", strServer);
-        if (!strProcess.empty())
+        string strServer;
+        ssData >> strServer;
+        if (!strServer.empty())
         {
-          ptRequest->i("Process", strProcess);
+          string strProcess;
+          ssData >> strProcess;
+          ptRequest->i("Server", strServer);
+          if (!strProcess.empty())
+          {
+            ptRequest->i("Process", strProcess);
+          }
         }
       }
-    }
-    // }}}
-    // {{{ database
-    else if (strAction == "database")
-    {
-      string strDatabase;
-      ssData >> strDatabase;
-      if (!strDatabase.empty())
+      // }}}
+      // {{{ database
+      else if (strAction == "database")
       {
-        string strQuery;
-        ptRequest->i("Database", strDatabase);
-        getline(ssData, strQuery);
-        m_manip.trim(strQuery, strQuery);
-        if (!strQuery.empty())
+        string strDatabase;
+        ssData >> strDatabase;
+        if (!strDatabase.empty())
         {
-          ptRequest->i("Query", strQuery);
+          string strQuery;
+          ptRequest->i("Database", strDatabase);
+          getline(ssData, strQuery);
+          m_manip.trim(strQuery, strQuery);
+          if (!strQuery.empty())
+          {
+            ptRequest->i("Query", strQuery);
+          }
         }
       }
-    }
-    // }}}
-    // {{{ irc
-    else if (strAction == "irc")
-    {
-      string strSubTarget;
-      ssData >> strSubTarget;
-      if (!strSubTarget.empty())
+      // }}}
+      // {{{ irc
+      else if (strAction == "irc")
       {
-        string strMessage;
-        ptRequest->i("Target", strSubTarget);
-        getline(ssData, strMessage);
-        m_manip.trim(strMessage, strMessage);
-        if (!strMessage.empty())
+        string strSubTarget;
+        ssData >> strSubTarget;
+        if (!strSubTarget.empty())
         {
-          ptRequest->i("Message", strMessage);
+          string strMessage;
+          ptRequest->i("Target", strSubTarget);
+          getline(ssData, strMessage);
+          m_manip.trim(strMessage, strMessage);
+          if (!strMessage.empty())
+          {
+            ptRequest->i("Message", strMessage);
+          }
         }
       }
-    }
-    // }}}
-    // {{{ live
-    else if (strAction == "live")
-    {
-      string strJson, strRequest;
-      getline(ssData, strRequest);
-      m_manip.trim(strJson, strRequest);
-      if (!strJson.empty())
-      {
-        ptRequest->i("Json", strJson);
-      }
-    }
-    // }}}
-    // {{{ radial
-    else if (strAction == "radial")
-    {
-      string strInterface;
-      ssData >> strInterface;
-      if (!strInterface.empty())
+      // }}}
+      // {{{ live
+      else if (strAction == "live")
       {
         string strJson, strRequest;
-        if (strInterface == "hub")
-        {
-          strInterface.clear();
-        }
-        ptRequest->i("Interface", strInterface);
         getline(ssData, strRequest);
         m_manip.trim(strJson, strRequest);
         if (!strJson.empty())
@@ -291,96 +274,118 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           ptRequest->i("Json", strJson);
         }
       }
-    }
-    // }}}
-    // {{{ ssh
-    else if (strAction == "ssh" || strAction == "s")
-    {
-      string strFunction;
-      ssData >> strFunction;
-      if (!strFunction.empty())
+      // }}}
+      // {{{ radial
+      else if (strAction == "radial")
       {
-        ptRequest->i("Function", strFunction);
-        if (strFunction == "connect")
+        string strInterface;
+        ssData >> strInterface;
+        if (!strInterface.empty())
         {
-          string strPassword, strPort, strServer, strUser;
-          ssData >> strServer >> strPort >> strUser >> strPassword;
-          ptRequest->i("Server", strServer);
-          ptRequest->i("Port", strPort);
-          ptRequest->i("User", strUser);
-          ptRequest->i("Password", strPassword);
-        }
-        else
-        {
-          lock();
-          if (m_sshClients.find(strIdent) != m_sshClients.end())
+          string strJson, strRequest;
+          if (strInterface == "hub")
           {
-            string strCommand;
-            getline(ssData, strCommand);
-            if (!strCommand.empty())
-            {
-              strCommand = strFunction + (string)" " + strCommand;
-            }
-            else
-            {
-              strCommand = strFunction;
-            }
-            ptRequest->i("Command", strCommand);
+            strInterface.clear();
           }
-          unlock();
-        }
-      }
-    }
-    // }}}
-    // {{{ storage
-    else if (strAction == "storage")
-    {
-      string strJson, strRequest;
-      getline(ssData, strRequest);
-      m_manip.trim(strJson, strRequest);
-      if (!strJson.empty())
-      {
-        ptRequest->i("Json", strJson);
-      }
-    }
-    // }}}
-    // {{{ terminal || t
-    else if (strAction == "terminal" || strAction == "t")
-    {
-      string strFunction;
-      ssData >> strFunction;
-      if (!strFunction.empty())
-      {
-        ptRequest->i("Function", strFunction);
-        if (strFunction == "connect")
-        {
-          string strPort, strServer;
-          ssData >> strServer >> strPort;
-          ptRequest->i("Server", strServer);
-          ptRequest->i("Port", strPort);
-        }
-        else
-        {
-          lock();
-          if (m_terminalClients.find(strIdent) != m_terminalClients.end())
+          ptRequest->i("Interface", strInterface);
+          getline(ssData, strRequest);
+          m_manip.trim(strJson, strRequest);
+          if (!strJson.empty())
           {
-            string strCommand;
-            getline(ssData, strCommand);
-            if (!strCommand.empty())
-            {
-              strCommand = strFunction + (string)" " + strCommand;
-            }
-            else
-            {
-              strCommand = strFunction;
-            }
-            ptRequest->i("Command", strCommand);
+            ptRequest->i("Json", strJson);
           }
-          unlock();
         }
       }
+      // }}}
+      // {{{ ssh
+      else if (strAction == "ssh" || strAction == "s")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          ptRequest->i("Function", strFunction);
+          if (strFunction == "connect")
+          {
+            string strPassword, strPort, strServer, strUser;
+            ssData >> strServer >> strPort >> strUser >> strPassword;
+            ptRequest->i("Server", strServer);
+            ptRequest->i("Port", strPort);
+            ptRequest->i("User", strUser);
+            ptRequest->i("Password", strPassword);
+          }
+          else
+          {
+            lock();
+            if (m_sshClients.find(strIdent) != m_sshClients.end())
+            {
+              string strCommand;
+              getline(ssData, strCommand);
+              if (!strCommand.empty())
+              {
+                strCommand = strFunction + (string)" " + strCommand;
+              }
+              else
+              {
+                strCommand = strFunction;
+              }
+              ptRequest->i("Command", strCommand);
+            }
+            unlock();
+          }
+        }
+      }
+      // }}}
+      // {{{ storage
+      else if (strAction == "storage")
+      {
+        string strJson, strRequest;
+        getline(ssData, strRequest);
+        m_manip.trim(strJson, strRequest);
+        if (!strJson.empty())
+        {
+          ptRequest->i("Json", strJson);
+        }
+      }
+      // }}}
+      // {{{ terminal || t
+      else if (strAction == "terminal" || strAction == "t")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          ptRequest->i("Function", strFunction);
+          if (strFunction == "connect")
+          {
+            string strPort, strServer;
+            ssData >> strServer >> strPort;
+            ptRequest->i("Server", strServer);
+            ptRequest->i("Port", strPort);
+          }
+          else
+          {
+            lock();
+            if (m_terminalClients.find(strIdent) != m_terminalClients.end())
+            {
+              string strCommand;
+              getline(ssData, strCommand);
+              if (!strCommand.empty())
+              {
+                strCommand = strFunction + (string)" " + strCommand;
+              }
+              else
+              {
+                strCommand = strFunction;
+              }
+              ptRequest->i("Command", strCommand);
+            }
+            unlock();
+          }
+        }
+      }
+      // }}}
     }
-    // }}}
   }
   analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ptRequest);
   delete ptRequest;
@@ -392,8 +397,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   stringstream ssQuery, ssText;
   ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
+  // {{{ callback
+  if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText))
+  {
+  }
+  // }}}
   // {{{ central
-  if (strAction == "central")
+  else if (strAction == "central")
   {
     string strFunction = var("Function", ptData);
     // {{{ application
@@ -1972,6 +1982,13 @@ void Irc::quit()
   }
   ssMessage << ":" << m_strNick << " QUIT :Quitting.\r\n";
   push(ssMessage.str());
+}
+// }}}
+// {{{ setAnalyze()
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &))
+{
+  m_pAnalyzeCallback1 = pCallback1;
+  m_pAnalyzeCallback2 = pCallback2;
 }
 // }}}
 // {{{ sshClient()
