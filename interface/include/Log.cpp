@@ -59,9 +59,9 @@ void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Log::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
-    if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())
+    if (!empty(ptJson, "Message"))
     {
       if (ptJson->m["Function"]->v == "alert")
       {

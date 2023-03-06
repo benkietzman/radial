@@ -64,11 +64,11 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
   }
   m_mutex.unlock();
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     if (ptJson->m["Function"]->v == "connect")
     {
-      if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
+      if (!empty(ptJson, "wsRequestID"))
       {
         if (m_conns.find(ptJson->m["wsRequestID"]->v) == m_conns.end())
         {
@@ -99,7 +99,7 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m["Function"]->v == "disconnect")
     {
-      if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
+      if (!empty(ptJson, "wsRequestID"))
       {
         bResult = true;
         if (m_conns.find(ptJson->m["wsRequestID"]->v) != m_conns.end())
@@ -131,17 +131,17 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m["Function"]->v == "message")
     {
-      if (ptJson->m.find("Request") != ptJson->m.end())
+      if (exist(ptJson, "Request"))
       {
-        if (ptJson->m["Request"]->m.find("Message") != ptJson->m["Request"]->m.end())
+        if (exist(ptJson->m["Request"], "Message"))
         {
           string strApplication, strUser;
           bResult = true;
-          if (ptJson->m["Request"]->m.find("Application") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Application"]->v.empty())
+          if (!empty(ptJson->m["Request"], "Application"))
           {
             strApplication = ptJson->m["Request"]->m["Application"]->v;
           }
-          if (ptJson->m["Request"]->m.find("User") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["User"]->v.empty())
+          if (!empty(ptJson->m["Request"], "User"))
           {
             strUser = ptJson->m["Request"]->m["User"]->v;
           }
@@ -164,11 +164,11 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
               ptSubJson->i("Interface", "live");
               ptSubJson->i("Node", link->strNode);
               ptSubJson->i("Function", "list");
-              if (hub("link", ptSubJson, strSubError) && ptSubJson->m.find("Response") != ptSubJson->m.end())
+              if (hub("link", ptSubJson, strSubError) && exist(ptSubJson, "Response"))
               {
                 for (auto &conn : ptSubJson->m["Response"]->m)
                 {
-                  if ((strApplication.empty() || (conn.second->m.find("Application") != conn.second->m.end() && conn.second->m["Application"]->v == strApplication)) && (strUser.empty() || (conn.second->m.find("User") != conn.second->m.end() && conn.second->m["User"]->v == strUser)))
+                  if ((strApplication.empty() || (exist(conn.second, "Application") && conn.second->m["Application"]->v == strApplication)) && (strUser.empty() || (exist(conn.second, "User") && conn.second->m["User"]->v == strUser)))
                   {
                     Json *ptDeepJson = new Json(ptJson->m["Request"]->m["Message"]);
                     ptDeepJson->i("Interface", "websocket");
@@ -225,14 +225,14 @@ bool Live::retrieve(const string strWsRequestID, string &strApplication, string 
   {
     Json *ptJson = new Json;
     ptJson->i("Function", "list");
-    if (hub("websocket", ptJson, strError) && ptJson->m.find("Response") != ptJson->m.end() && ptJson->m["Response"]->m.find(strWsRequestID) != ptJson->m["Response"]->m.end())
+    if (hub("websocket", ptJson, strError) && exist(ptJson, "Response") && exist(ptJson->m["Response"], strWsRequestID))
     {
       bResult = true;
-      if (ptJson->m["Response"]->m[strWsRequestID]->m.find("Application") != ptJson->m["Response"]->m[strWsRequestID]->m.end() && !ptJson->m["Response"]->m[strWsRequestID]->m["Application"]->v.empty())
+      if (!empty(ptJson->m["Response"]->m[strWsRequestID], "Application"))
       {
         strApplication = ptJson->m["Response"]->m[strWsRequestID]->m["Application"]->v;
       }
-      if (ptJson->m["Response"]->m[strWsRequestID]->m.find("User") != ptJson->m["Response"]->m[strWsRequestID]->m.end() && !ptJson->m["Response"]->m[strWsRequestID]->m["User"]->v.empty())
+      if (!empty(ptJson->m["Response"]->m[strWsRequestID], "User"))
       {
         strUser = ptJson->m["Response"]->m[strWsRequestID]->m["User"]->v;
       }

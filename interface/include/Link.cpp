@@ -510,7 +510,7 @@ void Link::process(string strPrefix)
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   ptJson = new Json(strLine);
-                  if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
+                  if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdLink;
                     size_t unUnique;
@@ -538,7 +538,7 @@ void Link::process(string strPrefix)
                     if (ptLink != NULL)
                     {
                       Json *ptSubLink = NULL;
-                      if (ptJson->m.find("_l") != ptJson->m.end())
+                      if (exist(ptJson, "_l"))
                       {
                         ptSubLink = ptJson->m["_l"];
                         ptJson->m.erase("_l");
@@ -557,15 +557,15 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
+                  else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
                   {
-                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    if (!empty(ptJson, "Function"))
                     {
                       // {{{ interfaces
                       if (ptJson->m["Function"]->v == "interfaces")
                       {
                         interfaces(strPrefix, ptJson);
-                        if (ptJson->m.find("Interfaces") != ptJson->m.end())
+                        if (exist(ptJson, "Interfaces"))
                         {
                           Json *ptWrite = new Json;
                           ptWrite->i("_f", "interfaces");
@@ -608,9 +608,9 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty() && ptJson->m["Interface"]->v != "link")
+                  else if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v != "link")
                   {
-                    if (ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty())
+                    if (!empty(ptJson, "Node"))
                     {
                       list<radialLink *>::iterator linkIter = m_links.end();
                       for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
@@ -647,7 +647,7 @@ void Link::process(string strPrefix)
                     {
                       for (auto &link : m_links)
                       {
-                        if ((ptJson->m.find("Node") == ptJson->m.end() || ptJson->m["Node"]->v.empty() || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
+                        if ((!exist(ptJson, "Node") || empty(ptJson, "Node"]) || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
                         {
                           link->responses.push_back(strLine);
                         }
@@ -658,7 +658,7 @@ void Link::process(string strPrefix)
                   {
                     bool bProcessed = false;
                     strError.clear();
-                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    if (!empty(ptJson, "Function"))
                     {
                       if (ptJson->m["Function"]->v == "ping")
                       {
@@ -669,7 +669,7 @@ void Link::process(string strPrefix)
                         list<string> subLinks;
                         Json *ptStatus = new Json;
                         bProcessed = true;
-                        if (m_ptLink->m.find("Node") != m_ptLink->m.end() && !m_ptLink->m["Node"]->v.empty())
+                        if (!empty(m_ptLink, "Node"))
                         {
                           ptStatus->i("Node", m_ptLink->m["Node"]->v);
                         }
@@ -865,34 +865,34 @@ void Link::process(string strPrefix)
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
                       // {{{ _f
-                      if (ptJson->m.find("_f") != ptJson->m.end() && !ptJson->m["_f"]->v.empty())
+                      if (!empty(ptJson, "_f"))
                       {
                         // {{{ handshake
                         if (ptJson->m["_f"]->v == "handshake")
                         {
                           // {{{ Me
-                          if (ptJson->m.find("Me") != ptJson->m.end())
+                          if (exist(ptJson, "Me")
                           {
-                            if (ptJson->m["Me"]->m.find("Node") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Node"]->v.empty())
+                            if (!empty(ptJson->m["Me"], "Node"))
                             {
                               ptLink->strNode = ptJson->m["Me"]->m["Node"]->v;
                             }
-                            if (ptJson->m["Me"]->m.find("Server") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Server"]->v.empty())
+                            if (!empty(ptJson->m["Me"], "Server"))
                             {
                               ptLink->strServer = ptJson->m["Me"]->m["Server"]->v;
                             }
-                            if (ptJson->m["Me"]->m.find("Port") != ptJson->m["Me"]->m.end() && !ptJson->m["Me"]->m["Port"]->v.empty())
+                            if (!empty(ptJson->m["Me"], "Port"))
                             {
                               ptLink->strPort = ptJson->m["Me"]->m["Port"]->v;
                             }
                           }
                           // }}}
                           // {{{ Links
-                          if (ptJson->m.find("Links") != ptJson->m.end())
+                          if (exist(ptJson, "Links"))
                           {
                             for (auto &ptSubLink : ptJson->m["Links"]->l)
                             {
-                              if (ptSubLink->m.find("Node") != ptSubLink->m.end() && !ptSubLink->m["Node"]->v.empty() && ptSubLink->m.find("Server") != ptSubLink->m.end() && !ptSubLink->m["Server"]->v.empty() && ptSubLink->m.find("Port") != ptSubLink->m.end() && !ptSubLink->m["Port"]->v.empty())
+                              if (!empty(ptSubLink, "Node") && !empty(ptSubLink, "Server") && !empty(ptSubLink, "Port"))
                               {
                                 bool bFound = false;
                                 for (auto j = m_links.begin(); !bFound && j != m_links.end(); j++)
@@ -929,7 +929,7 @@ void Link::process(string strPrefix)
                           }
                           // }}}
                           // {{{ Password
-                          if (ptJson->m.find("Password") != ptJson->m.end())
+                          if (exist(ptJson, "Password"))
                           {
                             if (ptJson->m["Password"]->v == m_strPassword)
                             {
@@ -951,27 +951,27 @@ void Link::process(string strPrefix)
                             delete interface.second;
                           }
                           ptLink->interfaces.clear();
-                          if (ptJson->m.find("Interfaces") != ptJson->m.end())
+                          if (exist(ptJson, "Interfaces"))
                           {
                             for (auto &interface : ptJson->m["Interfaces"]->m)
                             {
                               ptLink->interfaces[interface.first] = new radialInterface;
-                              if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
+                              if (!empty(interface.second, "AccessFunction"))
                               {
                                 ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
                               }
-                              if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
+                              if (!empty(interface.second, "Command"))
                               {
                                 ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
                               }
                               ptLink->interfaces[interface.first]->nPid = -1;
-                              if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
+                              if (!empty(interface.second, "PID"))
                               { 
                                 stringstream ssPid(interface.second->m["PID"]->v);
                                 ssPid >> ptLink->interfaces[interface.first]->nPid;
                               }
-                              ptLink->interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
-                              ptLink->interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
+                              ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+                              ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
                             }
                           }
                           ptLinks->i("Function", "links");
@@ -1001,22 +1001,22 @@ void Link::process(string strPrefix)
                       }
                       // }}}
                       // {{{ _l
-                      else if (ptJson->m.find("_l") != ptJson->m.end())
+                      else if (exist(ptJson, "_l"))
                       {
-                        if (ptJson->m.find("Status") == ptJson->m.end())
+                        if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
                           for (auto &j : ptJson->m["_l"]->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
-                          if (ptJson->m.find("_d") != ptJson->m.end())
+                          if (exist(ptJson, "_d"))
                           {
                             delete ptJson->m["_d"];
                             ptJson->m.erase("_d");
                           }
                           ptJson->i("_s", m_strName);
-                          if (ptJson->m.find("_t") != ptJson->m.end() && ptJson->m["_t"]->v == "link" && ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                          if (exist(ptJson, "_t") && ptJson->m["_t"]->v == "link" && !empty(ptJson, "Interface"))
                           {
                             ptJson->i("_t", ptJson->m["Interface"]->v);
                           }
@@ -1039,9 +1039,9 @@ void Link::process(string strPrefix)
                       }
                       // }}}
                       // {{{ Interface
-                      else if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                      else if (!empty(ptJson, "Interface"))
                       {
-                        if (ptJson->m.find("Status") == ptJson->m.end())
+                        if (!exist(ptJson, "Status"))
                         {
                           if (ptLink->bAuthenticated)
                           {
@@ -1184,7 +1184,7 @@ void Link::process(string strPrefix)
           }
           // }}}
           // {{{ bootstrap links
-          if (m_ptLink->m.find("Links") != m_ptLink->m.end())
+          if (exist(m_ptLink, "Links"))
           {
             if ((CTime - CBootstrap) > unBootstrapSleep)
             {
@@ -1205,7 +1205,7 @@ void Link::process(string strPrefix)
                 {
                   for (auto &ptLink : m_ptLink->m["Links"]->l)
                   {
-                    if (ptLink->m.find("Node") != ptLink->m.end() && !ptLink->m["Node"]->v.empty() && ptLink->m.find("Server") != ptLink->m.end() && !ptLink->m["Server"]->v.empty() && ptLink->m.find("Port") != ptLink->m.end() && !ptLink->m["Port"]->v.empty())
+                    if (!empty(ptLink, "Node") && !empty(ptLink, "Server") && !empty(ptLink, "Port"))
                     {
                       bool bFound = false;
                       for (auto i = m_links.begin(); !bFound && i != m_links.end(); i++)
