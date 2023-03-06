@@ -500,27 +500,27 @@ void Hub::process(string strPrefix)
                               {
                                 ptLink->strPort = link.second->m["Port"]->v;
                               }
-                              if (link.second->m.find("Interfaces") != link.second->m.end())
+                              if (exist(link.second, "Interfaces"))
                               {
                                 for (auto &interface : link.second->m["Interfaces"]->m)
                                 {
                                   ptLink->interfaces[interface.first] = new radialInterface;
-                                  if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
+                                  if (!empty(interface.second, "AccessFunction"))
                                   {
                                     ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
                                   }
-                                  if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
+                                  if (!empty(interface.second, "Command"))
                                   {
                                     ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
                                   }
                                   ptLink->interfaces[interface.first]->nPid = -1;
-                                  if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
+                                  if (!empty(interface.second, "PID"))
                                   {
                                     stringstream ssPid(interface.second->m["PID"]->v);
                                     ssPid >> ptLink->interfaces[interface.first]->nPid;
                                   }
-                                  ptLink->interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
-                                  ptLink->interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
+                                  ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+                                  ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
                                 }
                               }
                               m_links.push_back(ptLink);
@@ -534,16 +534,16 @@ void Hub::process(string strPrefix)
                           bool bResult = false;
                           strError.clear();
                           // }}}
-                          if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                          if (!empty(ptJson, "Function"))
                           {
                             // {{{ add
                             if (ptJson->m["Function"]->v == "add")
                             {
-                              if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
+                              if (!empty(ptJson, "Name"))
                               {
-                                if (ptJson->m.find("Command") != ptJson->m.end() && !ptJson->m["Command"]->v.empty())
+                                if (!empty(ptJson, "Command"))
                                 {
-                                  if (add(strPrefix, ptJson->m["Name"]->v, ((ptJson->m.find("AccessFunction") != ptJson->m.end() && !ptJson->m["AccessFunction"]->v.empty())?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((ptJson->m.find("Respawn") != ptJson->m.end() && ptJson->m["Respawn"]->v == "1")?true:false), ((ptJson->m.find("Restricted") != ptJson->m.end() && ptJson->m["Restricted"]->v == "1")?true:false)))
+                                  if (add(strPrefix, ptJson->m["Name"]->v, ((!empty(ptJson, "AccessFunction"))?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((!empty(ptJson, "Respawn") && ptJson->m["Respawn"]->v == "1")?true:false), ((!empty(ptJson, "Restricted") && ptJson->m["Restricted"]->v == "1")?true:false)))
                                   {
                                     bResult = true;
                                     interfaces();
@@ -591,7 +591,7 @@ void Hub::process(string strPrefix)
                             // {{{ remove
                             else if (ptJson->m["Function"]->v == "remove")
                             {
-                              if (ptJson->m.find("Name") != ptJson->m.end() && !ptJson->m["Name"]->v.empty())
+                              if (!empty(ptJson, "Name"))
                               {
                                 if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
                                 {
@@ -617,7 +617,7 @@ void Hub::process(string strPrefix)
                             else if (ptJson->m["Function"]->v == "shutdown")
                             {
                               bResult = true;
-                              setShutdown(strPrefix, ((ptJson->m.find("Target") != ptJson->m.end())?ptJson->m["Target"]->v:""));
+                              setShutdown(strPrefix, ((!empty(ptJson, "Target"))?ptJson->m["Target"]->v:""));
                             }
                             // }}}
                             // {{{ invalid
@@ -687,13 +687,13 @@ void Hub::process(string strPrefix)
                         ptJson = new Json(managers[fds[i].fd][0].substr(0, unPosition));
                         managers[fds[i].fd][0].erase(0, (unPosition + 1));
                         strError.clear();
-                        if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                        if (!empty(ptJson, "Function"))
                         {
                           ifstream inInterfaces;
                           string strInterface;
                           stringstream ssInterfaces;
                           Json *ptInterfaces = NULL;
-                          if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                          if (!empty(ptJson, "Interface"))
                           {
                             strInterface = ptJson->m["Interface"]->v;
                           }
@@ -736,11 +736,11 @@ void Hub::process(string strPrefix)
                             {
                               if (!strInterface.empty())
                               {
-                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                if (exist(ptInterfaces, strInterface)
                                 {
                                   if (m_interfaces.find(strInterface) == m_interfaces.end())
                                   {
-                                    if (add(strPrefix, strInterface, ((ptInterfaces->m[strInterface]->m.find("AccessFunction") != ptInterfaces->m[strInterface]->m.end() && !ptInterfaces->m[strInterface]->m["AccessFunction"]->v.empty())?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ((ptInterfaces->m[strInterface]->m.find("Respawn") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((ptInterfaces->m[strInterface]->m.find("Restricted") != ptInterfaces->m[strInterface]->m.end() && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
+                                    if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
                                     {
                                       bProcessed = true;
                                       interfaces();
@@ -772,7 +772,7 @@ void Hub::process(string strPrefix)
                             {
                               if (!strInterface.empty())
                               {
-                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                if (exist(ptInterfaces, strInterface))
                                 {
                                   bProcessed = true;
                                   ptJson->i("Response", ((m_interfaces.find(strInterface) != m_interfaces.end())?"online":"offline"));
@@ -793,7 +793,7 @@ void Hub::process(string strPrefix)
                             {
                               if (!strInterface.empty())
                               {
-                                if (ptInterfaces->m.find(strInterface) != ptInterfaces->m.end())
+                                if (exist(ptInterfaces, strInterface))
                                 {
                                   bProcessed = true;
                                   if (m_interfaces.find(strInterface) != m_interfaces.end())
