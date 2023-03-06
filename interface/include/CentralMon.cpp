@@ -86,7 +86,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         if (!empty(ptJson, "Process"))
         {
           bValid = true;
-          ssRequest << " " << ptJson->m["Process"]->v << endl;
+          ssRequest << " " << ptJson->m["Process"]->v;
         }
         else
         {
@@ -118,6 +118,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
     {
       strError = "Please provide a valid Function:  process, system, update.";
     }
+    ssRequest << endl;
     if (bValid)
     {
       int fdSocket = -1;
@@ -179,7 +180,9 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     }
                     else
                     {
-                      strError = "Invalid number of fields returned.";
+                      ssMessage.str("");
+                      ssMessage << items.size() << " fields returned instead of the expected 10 lines. --- " << ssLine.str();
+                      strError = ssMessage.str();
                     }
                   }
                   else if (strFunction == "system")
@@ -223,7 +226,9 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     }
                     else
                     {
-                      strError = "Invalid number of fields returned.";
+                      ssMessage.str("");
+                      ssMessage << items.size() << " fields returned instead of the expected 14 lines. --- " << ssLine.str();
+                      strError = ssMessage.str();
                     }
                   }
                   else if (strBuffers[0].substr(0, unPosition) == "okay")
