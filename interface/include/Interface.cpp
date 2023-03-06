@@ -804,7 +804,7 @@ void Interface::process(string strPrefix)
             }
             else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
             {
-              if (!empty(ptJson, "Master")
+              if (!empty(ptJson, "Master"))
               {
                 time(&CMaster[0]);
                 if (m_strMaster != ptJson->m["Master"]->v)

@@ -736,7 +736,7 @@ void Hub::process(string strPrefix)
                             {
                               if (!strInterface.empty())
                               {
-                                if (exist(ptInterfaces, strInterface)
+                                if (exist(ptInterfaces, strInterface))
                                 {
                                   if (m_interfaces.find(strInterface) == m_interfaces.end())
                                   {

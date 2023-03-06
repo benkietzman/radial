@@ -852,7 +852,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             ssText << endl << "Memory Used:  " << ptResponse->m["MainUsed"]->v << " of " << ptResponse->m["MainTotal"]->v << " MB";
           }
-          if (!empty(ptResponse, "SwapUsed") && !empty(ptResponse, "SwapTotal")
+          if (!empty(ptResponse, "SwapUsed") && !empty(ptResponse, "SwapTotal"))
           {
             ssText << endl << "Swap Used:  " << ptResponse->m["SwapUsed"]->v << " of " << ptResponse->m["SwapTotal"]->v << " MB";
           }

@@ -647,7 +647,7 @@ void Link::process(string strPrefix)
                     {
                       for (auto &link : m_links)
                       {
-                        if ((!exist(ptJson, "Node") || empty(ptJson, "Node"]) || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
+                        if ((!exist(ptJson, "Node") || empty(ptJson, "Node") || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
                         {
                           link->responses.push_back(strLine);
                         }
@@ -871,7 +871,7 @@ void Link::process(string strPrefix)
                         if (ptJson->m["_f"]->v == "handshake")
                         {
                           // {{{ Me
-                          if (exist(ptJson, "Me")
+                          if (exist(ptJson, "Me"))
                           {
                             if (!empty(ptJson->m["Me"], "Node"))
                             {
