@@ -150,22 +150,22 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                   if (strFunction == "process")
                   {
                     string strItem;
-                    stringstream ssLine(strBuffers[0].substr(0, unPosition));
                     vector<string> items;
-                    while (getline(ssLine, strItem, ';'))
+                    for (size_t i = 1; i <= 10; i++)
                     {
+                      m_manip.getToken(strItem, strBuffers[0].substr(0, unPosition), i, ";", false);
                       items.push_back(strItem);
                     }
                     if (items.size() == 10)
                     {
                       size_t unIndex = 0;
-                      stringstream ssSubLine;
+                      stringstream ssLine;
                       bResult = true;
                       ptJson->m["Response"] = new Json;
                       ptJson->m["Response"]->i("StartTime", items[unIndex++]);
                       ptJson->m["Response"]->m["Owners"] = new Json;
-                      ssSubLine.str(items[unIndex++]);
-                      while (getline(ssSubLine, strItem, ','))
+                      ssLine.str(items[unIndex++]);
+                      while (getline(ssLine, strItem, ','))
                       {
                         ptJson->m["Response"]->m["Owners"]->pb(strItem);
                       }
@@ -188,16 +188,16 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                   else if (strFunction == "system")
                   {
                     string strItem;
-                    stringstream ssLine(strBuffers[0].substr(0, unPosition));
                     vector<string> items;
-                    while (getline(ssLine, strItem, ';'))
+                    for (size_t i = 1; i <= 14; i++)
                     {
+                      m_manip.getToken(strItem, strBuffers[0].substr(0, unPosition), i, ";", false);
                       items.push_back(strItem);
                     }
                     if (items.size() == 14)
                     {
                       size_t unIndex = 0;
-                      stringstream ssSubLine;
+                      stringstream ssLine;
                       bResult = true;
                       ptJson->m["Response"] = new Json;
                       ptJson->m["Response"]->i("Server", items[unIndex++]);
@@ -213,8 +213,8 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                       ptJson->m["Response"]->i("SwapUsed", items[unIndex++]);
                       ptJson->m["Response"]->i("SwapTotal", items[unIndex++]);
                       ptJson->m["Response"]->m["Partitions"] = new Json;
-                      ssSubLine.str(items[unIndex++]);
-                      while (getline(ssSubLine, strItem, ','))
+                      ssLine.str(items[unIndex++]);
+                      while (getline(ssLine, strItem, ','))
                       {
                         string strFirst, strSecond;
                         stringstream ssDeepLine(strItem);
