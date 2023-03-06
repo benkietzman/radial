@@ -261,7 +261,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
               }
             }
           }
-          else
+          else if (nReturn < 0)
           {
             bExit = true;
             ssMessage.str("");
