@@ -74,7 +74,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
     ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
     for (auto &i : m_ptMonitor->m)
     {
-      if (i.first != strTarget && i.second->m.find("Alerts") != i.second->m.end())
+      if (i.first != strTarget && exist(i.second, "Alerts"))
       {
         for (auto &j : i.second->m["Alerts"]->l)
         {
@@ -806,23 +806,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         if (!strProcess.empty())
         {
-          if (ptResponse->m.find("StartTime") != ptResponse->m.end() && !ptResponse->m["StartTime"]->v.empty())
+          if (!empty(ptResponse, "StartTime"))
           {
             ssText << endl << "Start Time:  " << ptResponse->m["StartTime"]->v;
           }
-          if (ptResponse->m.find("NumberOfProcesses") != ptResponse->m.end() && !ptResponse->m["NumberOfProcesses"]->v.empty())
+          if (!empty(ptResponse, "NumberOfProcesses"))
           {
             ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
           }
-          if (ptResponse->m.find("ImageSize") != ptResponse->m.end() && !ptResponse->m["ImageSize"]->v.empty())
+          if (!empty(ptResponse, "ImageSize"))
           {
             ssText << endl << "Image Size:  " << ptResponse->m["ImageSize"]->v << " KB";
           }
-          if (ptResponse->m.find("ResidentSize") != ptResponse->m.end() && !ptResponse->m["ResidentSize"]->v.empty())
+          if (!empty(ptResponse, "ResidentSize"))
           {
             ssText << endl << "Resident Size:  " << ptResponse->m["ResidentSize"]->v << " KB";
           }
-          if (ptResponse->m.find("Owners") != ptResponse->m.end() && !ptResponse->m["Owners"]->m.empty())
+          if (exist(ptResponse, "Owners") && !ptResponse->m["Owners"]->m.empty())
           {
             bool bFirst = true;
             ssText << endl << "Process Owners:  (";
@@ -836,43 +836,43 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          if (ptResponse->m.find("OperatingSystem") != ptResponse->m.end() && !ptResponse->m["OperatingSystem"]->v.empty())
+          if (!empty(ptResponse, "OperatingSystem"))
           {
             ssText << endl << "Operating System:  " << ptResponse->m["OperatingSystem"]->v;
           }
-          if (ptResponse->m.find("SystemRelease") != ptResponse->m.end() && !ptResponse->m["SystemRelease"]->v.empty())
+          if (!empty(ptResponse, "SystemRelease"))
           {
             ssText << endl << "System Release:  " << ptResponse->m["SystemRelease"]->v;
           }
-          if (ptResponse->m.find("UpTime") != ptResponse->m.end() && !ptResponse->m["UpTime"]->v.empty())
+          if (!empty(ptResponse, "UpTime"))
           {
             ssText << endl << "Uptime:  " << ptResponse->m["UpTime"]->v << " days";
           }
-          if (ptResponse->m.find("MainUsed") != ptResponse->m.end() && !ptResponse->m["MainUsed"]->v.empty() && ptResponse->m.find("MainTotal") != ptResponse->m.end() && !ptResponse->m["MainTotal"]->v.empty())
+          if (!empty(ptResponse, "MainUsed") && !empty(ptResponse, "MainTotal"))
           {
             ssText << endl << "Memory Used:  " << ptResponse->m["MainUsed"]->v << " of " << ptResponse->m["MainTotal"]->v << " MB";
           }
-          if (ptResponse->m.find("SwapUsed") != ptResponse->m.end() && !ptResponse->m["SwapUsed"]->v.empty() && ptResponse->m.find("SwapTotal") != ptResponse->m.end() && !ptResponse->m["SwapTotal"]->v.empty())
+          if (!empty(ptResponse, "SwapUsed") && !empty(ptResponse, "SwapTotal")
           {
             ssText << endl << "Swap Used:  " << ptResponse->m["SwapUsed"]->v << " of " << ptResponse->m["SwapTotal"]->v << " MB";
           }
-          if (ptResponse->m.find("NumberOfProcessors") != ptResponse->m.end() && !ptResponse->m["NumberOfProcessors"]->v.empty())
+          if (!empty(ptResponse, "NumberOfProcessors"))
           {
             ssText << endl << "# Processors:  " << ptResponse->m["NumberOfProcessors"]->v;
           }
-          if (ptResponse->m.find("CpuSpeed") != ptResponse->m.end() && !ptResponse->m["CpuSpeed"]->v.empty())
+          if (!empty(ptResponse, "CpuSpeed"))
           {
             ssText << endl << "CPU Speed:  " << ptResponse->m["CpuSpeed"]->v << " MHz";
           }
-          if (ptResponse->m.find("CpuUsage") != ptResponse->m.end() && !ptResponse->m["CpuUsage"]->v.empty())
+          if (!empty(ptResponse, "CpuUsage"))
           {
             ssText << endl << "CPU Usage:  " << ptResponse->m["CpuUsage"]->v << "%";
           }
-          if (ptResponse->m.find("NumberOfProcesses") != ptResponse->m.end() && !ptResponse->m["NumberOfProcesses"]->v.empty())
+          if (!empty(ptResponse, "NumberOfProcesses"))
           {
             ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
           }
-          if (ptResponse->m.find("Partitions") != ptResponse->m.end() && !ptResponse->m["Partitions"]->m.empty())
+          if (exist(ptResponse, "Partitions") && !ptResponse->m["Partitions"]->m.empty())
           {
             bool bFirst = true;
             ssText << endl << "Partitions:  (";
@@ -884,7 +884,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << ")";
           }
         }
-        if (ptResponse->m.find("Alarms") != ptResponse->m.end() && (!ptResponse->m["Alarms"]->l.empty() || !ptResponse->m["Alarms"]->v.empty()))
+        if (exist(ptResponse, "Alarms") && (!ptResponse->m["Alarms"]->l.empty() || !ptResponse->m["Alarms"]->v.empty()))
         {
           ssText << endl << "Alarms:  (";
           if (!ptResponse->m["Alarms"]->l.empty())
@@ -996,23 +996,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strJson.empty())
     {
       Json *ptJson = new Json(strJson);
-      if (ptJson->m.find("Application") != ptJson->m.end() && !ptJson->m["Application"]->v.empty())
+      if (!empty(ptJson, "Application"))
       {
         strApplication = ptJson->m["Application"]->v;
       }
-      if (ptJson->m.find("Class") != ptJson->m.end() && !ptJson->m["Class"]->v.empty())
+      if (!empty(ptJson, "Class"))
       {
         strClass = ptJson->m["Class"]->v;
       }
-      if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())
+      if (!empty(ptJson, "Message"))
       {
         strMessage = ptJson->m["Message"]->v;
       }
-      if (ptJson->m.find("Title") != ptJson->m.end() && !ptJson->m["Title"]->v.empty())
+      if (!empty(ptJson, "Title"))
       {
         strTitle = ptJson->m["Title"]->v;
       }
-      if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+      if (!empty(ptJson, "User"))
       {
         strUser = ptJson->m["User"]->v;
       }
@@ -1129,7 +1129,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         Json *ptJson = new Json(strJson);
         if (hub("storage", ptJson, strError))
         {
-          if (ptJson->m.find("Response") != ptJson->m.end() && (!ptJson->m["Response"]->l.empty() || !ptJson->m["Response"]->m.empty() || !ptJson->m["Response"]->v.empty()))
+          if (exist(ptJson, "Response") && (!ptJson->m["Response"]->l.empty() || !ptJson->m["Response"]->m.empty() || !ptJson->m["Response"]->v.empty()))
           {
             ssText << ":  " << ptJson->m["Response"];
           }
@@ -1646,13 +1646,13 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Irc::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     if (ptJson->m["Function"]->v == "chat")
     {
-      if (ptJson->m.find("Message") != ptJson->m.end() && !ptJson->m["Message"]->v.empty())
+      if (!empty(ptJson, "Message"))
       {
-        if (ptJson->m.find("Target") != ptJson->m.end() && !ptJson->m["Target"]->v.empty())
+        if (!empty(ptJson, "Target"))
         {
           size_t unCount = 0;
           while (unCount++ < 40 && !isMasterSettled())
@@ -2536,7 +2536,7 @@ string Irc::var(const string strName, Json *ptData)
 {
   string strValue;
 
-  if (ptData->m.find(strName) != ptData->m.end() && !ptData->m[strName]->v.empty())
+  if (!empty(ptData, strName))
   {
     strValue = ptData->m[strName]->v;
   }
