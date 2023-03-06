@@ -59,7 +59,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         ssMessage.str("");
         ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
         log(ssMessage.str());
-        if (ptJson->m.find("Response") != ptJson->m.end())
+        if (exist(ptJson, "Response"))
         {
           ptData = new Json(ptJson->m["Response"]);
         }
@@ -104,11 +104,11 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Storage::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     list<string> keys;
     Json *ptData = NULL;
-    if (ptJson->m.find("Keys") != ptJson->m.end())
+    if (exist(ptJson, "Keys"))
     {
       for (auto &ptKey : ptJson->m["Keys"]->l)
       {
@@ -117,7 +117,7 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
     {
-      if (ptJson->m.find("Request") != ptJson->m.end())
+      if (exist(ptJson, "Request"))
       {
         ptData = new Json(ptJson->m["Request"]);
       }
@@ -142,21 +142,21 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
       }
       else
       {
-        if (ptJson->m.find("Response") != ptJson->m.end())
+        if (exist(ptJson, "Response"))
         {
           delete ptJson->m["Response"];
         }
         ptJson->m["Response"] = ptData;
       }
     }
-    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (ptJson->m.find("Broadcast") == ptJson->m.end() || ptJson->m["Broadcast"]->v == "1"))
+    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (!exist(ptJson, "Broadcast") || ptJson->m["Broadcast"]->v == "1"))
     {
       Json *ptLink = new Json;
       ptLink->i("Interface", "storage");
       ptLink->i("Function", ptJson->m["Function"]->v);
       ptLink->i("Broadcast", "0", '0');
       ptLink->i("Keys", keys);
-      if (ptJson->m["Function"]->v != "remove" && ptJson->m.find("Request") != ptJson->m.end())
+      if (ptJson->m["Function"]->v != "remove" && exist(ptJson, "Request"))
       {
         ptLink->m["Request"] = new Json(ptJson->m["Request"]);
       }

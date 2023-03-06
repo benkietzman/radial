@@ -34,7 +34,7 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   m_pJunction->useSingleSocket(true);
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
   { 
-    if (ptAes->m.find("Secret") != ptAes->m.end() && !ptAes->m["Secret"]->v.empty())
+    if (!empty(ptAes, "Secret"))
     {
       m_strAesSecret = ptAes->m["Secret"]->v;
     }
@@ -42,11 +42,11 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   delete ptAes; 
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
   {
-    if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
+    if (!empty(ptJwt, "Secret"))
     {
       m_strJwtSecret = ptJwt->m["Secret"]->v;
     }
-    if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
+    if (!empty(ptJwt, "Signer"))
     {
       m_strJwtSigner = ptJwt->m["Signer"]->v;
     }
@@ -68,12 +68,12 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Secure::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     // {{{ auth
     if (ptJson->m["Function"]->v == "auth")
     {
-      if (ptJson->m.find("wsJwt") != ptJson->m.end() && !ptJson->m["wsJwt"]->v.empty())
+      if (!empty(ptJson, "wsJwt"))
       {
         string strBase64 = ptJson->m["wsJwt"]->v, strPayload;
         Json *ptJwt = new Json;
@@ -86,27 +86,27 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
         {
           bResult = true;
           ptJson->m["Response"] = new Json;
-          if (ptJwt->m.find("sl_admin") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_admin"))
           {
             ptJson->m["Response"]->m["admin"] = new Json(ptJwt->m["sl_admin"]);
           }
-          if (ptJwt->m.find("sl_auth") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_auth"))
           {
             ptJson->m["Response"]->m["apps"] = new Json(ptJwt->m["sl_auth"]);
           }
-          if (ptJwt->m.find("sl_email") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_email"))
           {
             ptJson->m["Response"]->m["email"] = new Json(ptJwt->m["sl_email"]);
           }
-          if (ptJwt->m.find("sl_first_name") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_first_name"))
           {
             ptJson->m["Response"]->m["first_name"] = new Json(ptJwt->m["sl_first_name"]);
           }
-          if (ptJwt->m.find("sl_last_name") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_last_name"))
           {
             ptJson->m["Response"]->m["last_name"] = new Json(ptJwt->m["sl_last_name"]);
           }
-          if (ptJwt->m.find("sl_login") != ptJwt->m.end())
+          if (exist(ptJwt, "sl_login"))
           {
             ptJson->m["Response"]->m["userid"] = new Json(ptJwt->m["sl_login"]);
           }
@@ -122,7 +122,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     // {{{ getSecurityModule
     else if (ptJson->m["Function"]->v == "getSecurityModule")
     {
-      if (ptJson->m.find("reqApp") != ptJson->m.end() && !ptJson->m["reqApp"]->v.empty())
+      if (!empty(ptJson, "reqApp"))
       {
         stringstream ssQuery;
         ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["reqApp"]->v, strValue) << "'";
@@ -157,9 +157,9 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     // {{{ login
     else if (ptJson->m["Function"]->v == "login")
     {
-      if (ptJson->m.find("Request") != ptJson->m.end())
+      if (exist(ptJson, "Request"))
       {
-        if (ptJson->m["Request"]->m.find("Type") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Type"]->v.empty())
+        if (!empty(ptJson->m["Request"], "Type"))
         {
           // {{{ password
           if (ptJson->m["Request"]->m["Type"]->v == "password")
@@ -200,14 +200,14 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
     // {{{ logout
     else if (ptJson->m["Function"]->v == "logout")
     {
-      if (ptJson->m.find("Request") != ptJson->m.end())
+      if (exist(ptJson, "Request"))
       {
-        if (ptJson->m["Request"]->m.find("Type") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Type"]->v.empty())
+        if (!empty(ptJson->m["Request"], "Type"))
         {
           // {{{ password
           if (ptJson->m["Request"]->m["Type"]->v == "password")
           {
-            if (ptJson->m["Request"]->m.find("Return") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Return"]->v.empty())
+            if (!empty(ptJson->m["Request"], "Return"))
             {
               bResult = true;
               ptJson->m["Response"] = new Json;
@@ -222,7 +222,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
           // {{{ windows
           else if (ptJson->m["Request"]->m["Type"]->v == "windows")
           {
-            if (ptJson->m["Request"]->m.find("Return") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Return"]->v.empty())
+            if (!empty(ptJson->m["Request"], "Return"))
             {
               bResult = true;
               ptJson->m["Response"] = new Json;
@@ -265,32 +265,32 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
       ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
-      if (ptJson->m["Request"]->m.find("Type") != ptJson->m["Request"]->m.end())
+      if (exist(ptJson, "Request"))
       {
-        if (ptJson->m["Request"]->m["Type"]->v == "password")
+        if (exist(ptJson->m["Request"], "Type"))
         {
-          ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
+          if (ptJson->m["Request"]->m["Type"]->v == "password")
+          {
+            ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
+          }
+          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
+          {
+            ptJson->m["Response"]->m["auth"]->i("login_title", "Windows Login");
+          }
+          else if (m_pLoginTitleCallback != NULL)
+          {
+            ptJson->m["Response"]->m["auth"]->i("login_title", m_pLoginTitleCallback(ptJson->m["Request"]->m["Type"]->v));
+          }
         }
-        else if (ptJson->m["Request"]->m["Type"]->v == "windows")
-        {
-          ptJson->m["Response"]->m["auth"]->i("login_title", "Windows Login");
-        }
-        else if (m_pLoginTitleCallback != NULL)
-        {
-          ptJson->m["Response"]->m["auth"]->i("login_title", m_pLoginTitleCallback(ptJson->m["Request"]->m["Type"]->v));
-        }
-      }
-      if (ptJson->m.find("Request") != ptJson->m.end())
-      {
         if (ptJson->m["Request"]->m.size() > 1)
         {
           Json *ptData = new Json(ptJson->m["Request"]);
-          if (ptJson->m["Request"]->m.find("password") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["password"]->v.empty())
+          if (!empty(ptJson->m["Request"], "password"))
           {
             delete ptJson->m["Request"]->m["password"];
             ptJson->m["Request"]->m.erase("password");
           }
-          if (ptData->m.find("password") == ptData->m.end() && ptData->m.find("Password") == ptData->m.end())
+          if (!exist(ptData, "password") && !exist(ptData, "Password"))
           {
             ptData->i("Password", "");
           }
@@ -304,7 +304,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
             {
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
             }
-            if (ptData->m.find("central") != ptData->m.end())
+            if (exist(ptData, "central"))
             {
               map<string, string> getPersonRow;
               string strPayload, strValue;
@@ -338,7 +338,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 ptJwt->m["RadialCredentials"] = new Json;
                 for (auto &getApplicationAccountRow : *getApplicationAccount)
                 {
-                  if (ptJwt->m["RadialCredentials"]->m.find(getApplicationAccountRow["name"]) == ptJwt->m["RadialCredentials"]->m.end())
+                  if (!exist(ptJwt->m["RadialCredentials"], getApplicationAccountRow["name"]))
                   {
                     ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
                   }
@@ -357,7 +357,7 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
                 }
               }
               dbfree(getApplicationAccount);
-              if (ptData->m["central"]->m.find("apps") != ptData->m["central"]->m.end())
+              if (exist(ptData->m["central"], "apps"))
               {
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
                 ptJson->m["Response"]->m["auth"]->m["apps"] = new Json(ptData->m["central"]->m["apps"]);
