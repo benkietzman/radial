@@ -37,12 +37,12 @@ void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Jwt::callback()";
-  if (ptJson->m.find("Signer") != ptJson->m.end() && !ptJson->m["Signer"]->v.empty())
+  if (!empty(ptJson, "Signer"))
   {
     MessageSigner *pSigner = nullptr;
     if (ptJson->m["Signer"]->v == "HS256" || ptJson->m["Signer"]->v == "HS384" || ptJson->m["Signer"]->v == "HS512")
     {
-      if (ptJson->m.find("Secret") != ptJson->m.end() && !ptJson->m["Secret"]->v.empty())
+      if (!empty(ptJson, "Secret"))
       {
         if (ptJson->m["Signer"]->v == "HS256")
         {
@@ -60,9 +60,9 @@ void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m["Signer"]->v == "RS256" || ptJson->m["Signer"]->v == "RS384" || ptJson->m["Signer"]->v == "RS512")
     {
-      if (ptJson->m.find("Public Key") != ptJson->m.end() && !ptJson->m["Public Key"]->v.empty())
+      if (!empty(ptJson, "Public Key"))
       {
-        if (ptJson->m.find("Private Key") != ptJson->m.end() && !ptJson->m["Private Key"]->v.empty())
+        if (!empty(ptJson, "Private Key"))
         {
           if (ptJson->m["Signer"]->v == "RS256")
           {
@@ -98,9 +98,9 @@ void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
         strError = "Please provide the Public Key.";
       }
     }
-    if (ptJson->m.find("Payload") != ptJson->m.end())
+    if (exist(ptJson, "Payload"))
     {
-      if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+      if (!empty(ptJson, "Function"))
       {
         if (ptJson->m["Function"]->v == "decode")
         {
