@@ -802,7 +802,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         ssText << " " << char(3) << "00,14 " << strProcess << " " << char(3);
       }
-      if (m_pJunction->sysInfo(strServer, strProcess, ptResponse, strError))
+      if (centralmon(strServer, strProcess, ptResponse, strError))
       {
         if (!strProcess.empty())
         {

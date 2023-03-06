@@ -38,6 +38,7 @@ class Interface : public Base
 
   void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
+  bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
   void dbfree(list<map<string, string> > *rows);

@@ -80,6 +80,55 @@ bool Interface::auth(Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
+// {{{ centralmon()
+bool Interface::centralmon(const string strServer, const string strProcess, Json *ptData, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json; 
+
+  ptJson->i("Function", ((!strProcess.empty())?"process":"system"));
+  ptJson->i("Server", strServer);
+  if (!strProcess.empty())
+  {
+    ptJson->i("Process", strProcess);
+  }
+  if (hub("centralmon", ptJson, strError))
+  {
+    bResult = true;
+    if (exist(ptJson, "Response"))
+    {
+      ptData->merge(ptJson->m["Response"], true, false);
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// {{{ chat()
+bool Interface::chat(const string strTarget, const string strMessage)
+{
+  string strError;
+
+  return chat(strTarget, strMessage, strError);
+}
+bool Interface::chat(const string strTarget, const string strMessage, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "chat");
+  ptJson->i("Target", strTarget);
+  ptJson->i("Message", strMessage);
+  if (hub("irc", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ db
 // {{{ dbfree()
 void Interface::dbfree(list<map<string, string> > *rows)
@@ -373,30 +422,6 @@ bool Interface::isMaster()
 bool Interface::isMasterSettled()
 {
   return m_bMasterSettled;
-}
-// }}}
-// {{{ chat()
-bool Interface::chat(const string strTarget, const string strMessage)
-{
-  string strError;
-
-  return chat(strTarget, strMessage, strError);
-}
-bool Interface::chat(const string strTarget, const string strMessage, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "chat");
-  ptJson->i("Target", strTarget);
-  ptJson->i("Message", strMessage);
-  if (hub("irc", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
 }
 // }}}
 // {{{ jwt()
