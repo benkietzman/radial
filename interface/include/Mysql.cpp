@@ -47,15 +47,15 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Mysql::callback()";
-  if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+  if (!empty(ptJson, "Server"))
   {
-    if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+    if (!empty(ptJson, "User"))
     {
-      if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+      if (!empty(ptJson, "Password"))
       {
-        if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+        if (!empty(ptJson, "Database"))
         {
-          if ((ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty()) || (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty()))
+          if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
           {
             list<radial_mysql *>::iterator mysqlIter;
             string strPort, strServer;
@@ -64,7 +64,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
             unsigned long long ullRows = 0;
             getline(ssServer, strServer, ':');
             getline(ssServer, strPort, ':');
-            if (ptJson->m.find("Port") != ptJson->m.end() && !ptJson->m["Port"]->v.empty())
+            if (!empty(ptJson, "Port"))
             {
               stringstream ssPort(ptJson->m["Port"]->v);
               ssPort >> unPort;
@@ -72,7 +72,7 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
             if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
             {
               (*mysqlIter)->secure.lock();
-              if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
+              if (!empty(ptJson, "Query"))
               {
                 MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
                 if (result != NULL)
