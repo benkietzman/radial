@@ -188,10 +188,10 @@ void Request::process(string strPrefix)
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   ptJson = new Json(strLine);
-                  if (ptJson->m.find("_r") != ptJson->m.end())
+                  if (exist(ptJson, "_r"))
                   {
                     Json *ptSubJson = ptJson->m["_r"];
-                    if (ptSubJson->m.find("_s") != ptSubJson->m.end() && ptSubJson->m["_s"]->v == m_strName && ptSubJson->m.find("_u") != ptSubJson->m.end() && !ptSubJson->m["_u"]->v.empty())
+                    if (exist(ptSubJson, "_s") && ptSubJson->m["_s"]->v == m_strName && !empty(ptSubJson, "_u"))
                     {
                       int fdClient;
                       size_t unUnique;
@@ -200,11 +200,11 @@ void Request::process(string strPrefix)
                       ssUnique >> strValue >> fdClient >> unUnique;
                       if (conns.find(fdClient) != conns.end() && conns[fdClient]->unUnique == unUnique)
                       {
-                        if (ptJson->m.find("_t") != ptJson->m.end())
+                        if (exist(ptJson, "_t"))
                         {
                           if (ptJson->m["_t"]->v == "auth" || ptJson->m["_t"]->v == "link")
                           {
-                            if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+                            if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                             {
                               hub(ptSubJson, false);
                             }
@@ -212,7 +212,7 @@ void Request::process(string strPrefix)
                             {
                               keyRemovals(ptSubJson);
                               ptSubJson->i("Status", "error");
-                              ptSubJson->i("Error", ((ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())?ptJson->m["Error"]->v:"Encountered an unknown error."));
+                              ptSubJson->i("Error", ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error."));
                               conns[fdClient]->responses.push_back(ptSubJson->j(strJson));
                             }
                           }
@@ -243,7 +243,7 @@ void Request::process(string strPrefix)
                     {
                       ssMessage.str("");
                       ssMessage << strPrefix << " error [stdin]:  ";
-                      if (ptSubJson->m.find("_s") == ptSubJson->m.end())
+                      if (!exist(ptSubJson, "_s"))
                       {
                         ssMessage << "Internal source does not exist.";
                       }
@@ -258,7 +258,7 @@ void Request::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
+                  else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdClient;
                     size_t unUnique;
@@ -277,9 +277,9 @@ void Request::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
+                  else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
                   {
-                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    if (!empty(ptJson, "Function"))
                     {
                       if (ptJson->m["Function"]->v == "interfaces")
                       {
@@ -314,7 +314,7 @@ void Request::process(string strPrefix)
                   {
                     bool bProcessed = false;
                     strError.clear();
-                    if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                    if (!empty(ptJson, "Function"))
                     {
                       if (ptJson->m["Function"]->v == "ping")
                       {
@@ -465,11 +465,11 @@ void Request::process(string strPrefix)
                     keyRemovals(ptJson);
                     if (!shutdown())
                     {
-                      if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                      if (!empty(ptJson, "Interface"))
                       {
                         if (ptJson->m["Interface"]->v == "hub")
                         {
-                          if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                          if (!empty(ptJson, "Function"))
                           {
                             if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
                             {
@@ -532,7 +532,7 @@ void Request::process(string strPrefix)
                           {
                             Json *ptAuth = new Json(ptJson);
                             ptAuth->i("Interface", "auth");
-                            if (ptAuth->m.find("Request") != ptAuth->m.end())
+                            if (exist(ptAuth, "Request"))
                             {
                               delete ptAuth->m["Request"];
                             }
