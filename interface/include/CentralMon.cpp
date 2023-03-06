@@ -149,11 +149,11 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                   bExit = true;
                   if (strFunction == "process")
                   {
-                    string strItem;
+                    string strItem, strLine = strBuffers[0].substr(0, unPosition);
                     vector<string> items;
                     for (size_t i = 1; i <= 10; i++)
                     {
-                      m_manip.getToken(strItem, strBuffers[0].substr(0, unPosition), i, ";", false);
+                      m_manip.getToken(strItem, strLine, i, ";", false);
                       items.push_back(strItem);
                     }
                     if (items.size() == 10)
@@ -181,17 +181,17 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     else
                     {
                       ssMessage.str("");
-                      ssMessage << items.size() << " fields returned instead of the expected 10 lines. --- " << ssLine.str();
+                      ssMessage << items.size() << " fields returned instead of the expected 10 lines. --- " << strLine;
                       strError = ssMessage.str();
                     }
                   }
                   else if (strFunction == "system")
                   {
-                    string strItem;
+                    string strItem, strLine = strBuffers[0].substr(0, unPosition);
                     vector<string> items;
                     for (size_t i = 1; i <= 14; i++)
                     {
-                      m_manip.getToken(strItem, strBuffers[0].substr(0, unPosition), i, ";", false);
+                      m_manip.getToken(strItem, strLine, i, ";", false);
                       items.push_back(strItem);
                     }
                     if (items.size() == 14)
@@ -227,7 +227,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
                     else
                     {
                       ssMessage.str("");
-                      ssMessage << items.size() << " fields returned instead of the expected 14 lines. --- " << ssLine.str();
+                      ssMessage << items.size() << " fields returned instead of the expected 14 lines. --- " << strLine;
                       strError = ssMessage.str();
                     }
                   }
