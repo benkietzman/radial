@@ -32,7 +32,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
     m_pWarden->vaultRetrieve({"radial", "radial"}, m_ptCred, strError);
     if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
     {
-      if (ptAes->m.find("Secret") != ptAes->m.end() && !ptAes->m["Secret"]->v.empty())
+      if (!empty(ptAes, "Secret"))
       {
         m_strAesSecret = ptAes->m["Secret"]->v;
       }
@@ -40,11 +40,11 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
     delete ptAes;
     if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
     {
-      if (ptJwt->m.find("Secret") != ptJwt->m.end() && !ptJwt->m["Secret"]->v.empty())
+      if (!empty(ptJwt, "Secret"))
       {
         m_strJwtSecret = ptJwt->m["Secret"]->v;
       }
-      if (ptJwt->m.find("Signer") != ptJwt->m.end() && !ptJwt->m["Signer"]->v.empty())
+      if (!empty(ptJwt, "Signer"))
       {
         m_strJwtSigner = ptJwt->m["Signer"]->v;
       }
@@ -3016,7 +3016,7 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     if (bResult)
     {
-      if (ptJson->m.find("Response") != ptJson->m.end())
+      if (exist(ptJson, "Response"))
       {
         delete ptJson->m["Response"];
       }
@@ -3545,7 +3545,7 @@ void Central::ny(Json *ptJson, const string strField)
 {
   if (ptJson != NULL)
   {
-    if (ptJson->m.find(strField) != ptJson->m.end())
+    if (exist(ptJson, strField))
     {
       if (ptJson->m[strField]->v == "1")
       {

@@ -72,17 +72,17 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->CentralMon::callback()";
-  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+  if (!empty(ptJson, "Function"))
   {
     bool bValid = false;
     stringstream ssRequest;
     ssRequest << ptJson->m["Function"]->v;
     if (ptJson->m["Function"]->v == "process")
     {
-      if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+      if (!empty(ptJson, "Server"))
       {
         ssRequest << " " << ptJson->m["Server"]->v;
-        if (ptJson->m.find("Process") != ptJson->m.end() && !ptJson->m["Process"]->v.empty())
+        if (!empty(ptJson, "Process"))
         {
           bValid = true;
           ssRequest << " " << ptJson->m["Process"]->v << endl;
@@ -99,7 +99,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
     }
     else if (ptJson->m["Function"]->v == "system")
     {
-      if (ptJson->m.find("Server") != ptJson->m.end() && !ptJson->m["Server"]->v.empty())
+      if (!empty(ptJson, "Server"))
       {
         bValid = true;
         ssRequest << " " << ptJson->m["Server"]->v;

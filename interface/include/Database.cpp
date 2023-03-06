@@ -53,9 +53,9 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Database::callback()";
-  if (ptJson->m.find("Database") != ptJson->m.end() && !ptJson->m["Database"]->v.empty())
+  if (!empty(ptJson, "Database"))
   {
-    if (ptJson->m.find("Query") != ptJson->m.end() && !ptJson->m["Query"]->v.empty())
+    if (!empty(ptJson, "Query"))
     {
       unsigned long long ullRows;
       auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, strError);
@@ -73,7 +73,7 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
       }
       m_pCentral->free(rows);
     }
-    else if (ptJson->m.find("Update") != ptJson->m.end() && !ptJson->m["Update"]->v.empty())
+    else if (!empty(ptJson, "Update"))
     {
       unsigned long long ullID, ullRows;
       if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, ullID, ullRows, strError))
@@ -117,7 +117,7 @@ bool Database::mysql(const string strType, const string strName, const string st
   {
     rows->clear();
   }
-  if (m_ptDatabases != NULL && m_ptDatabases->m.find(strName) != m_ptDatabases->m.end())
+  if (m_ptDatabases != NULL && exist(m_ptDatabases, strName))
   {
     if (!strType.empty())
     {
@@ -131,12 +131,12 @@ bool Database::mysql(const string strType, const string strName, const string st
           if (hub("mysql", ptJson, strError))
           {
             bResult = true;
-            if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+            if (!empty(ptJson, "ID"))
             {
               stringstream ssID(ptJson->m["ID"]->v);
               ssID >> ullID;
             }
-            if (strType == "query" && ptJson->m.find("Response") != ptJson->m.end())
+            if (strType == "query" && exist(ptJson, "Response"))
             {
               for (auto &i : ptJson->m["Response"]->l)
               {
@@ -145,7 +145,7 @@ bool Database::mysql(const string strType, const string strName, const string st
                 rows->push_back(row);
               }
             }
-            if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+            if (!empty(ptJson, "Rows"))
             {
               stringstream ssRows(ptJson->m["Rows"]->v);
               ssRows >> ullRows;

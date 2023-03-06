@@ -38,18 +38,18 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Auth::callback()";
-  if (ptJson->m.find("User") != ptJson->m.end() && !ptJson->m["User"]->v.empty())
+  if (!empty(ptJson, "User"))
   {
-    if (ptJson->m.find("Password") != ptJson->m.end() && !ptJson->m["Password"]->v.empty())
+    if (!empty(ptJson, "Password"))
     {
-      if (ptJson->m.find("Request") != ptJson->m.end())
+      if (exist(ptJson, "Request"))
       {
-        if (ptJson->m["Request"]->m.find("Interface") != ptJson->m["Request"]->m.end() && !ptJson->m["Request"]->m["Interface"]->v.empty())
+        if (!empty(ptJson->m["Request"], "Interface"))
         {
           Json *ptData = new Json(ptJson);
           if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
           {
-            if (ptData->m.find("radial") != ptData->m.end() && ptData->m["radial"]->m.find("Access") != ptData->m["radial"]->m.end() && ptData->m["radial"]->m["Access"]->m.find(ptJson->m["Request"]->m["Interface"]->v) != ptData->m["radial"]->m["Access"]->m.end())
+            if (exist(ptData, "radial") && exist(ptData->m["radial"], "Access") && exist(ptData->m["radial"]->m["Access"], ptJson->m["Request"]->m["Interface"]->v))
             {
               string strAccessFunction = "Function";
               if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
@@ -60,7 +60,7 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
               {
                 bResult = true;
               }
-              else if (ptJson->m.find(strAccessFunction) != ptJson->m.end() && !ptJson->m[strAccessFunction]->v.empty())
+              else if (!empty(ptJson, strAccessFunction))
               {
                 if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
                 {
@@ -138,12 +138,12 @@ bool Auth::init()
   ptJson->i("Function", "list");
   if (hub(ptJson, strError))
   {
-    if (ptJson->m.find("Response") != ptJson->m.end())
+    if (exist(ptJson, "Response"))
     {
       bResult = true;
       for (auto &interface : ptJson->m["Response"]->m)
       {
-        m_accessFunctions[interface.first] = ((interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())?interface.second->m["AccessFunction"]->v:"Function");
+        m_accessFunctions[interface.first] = ((!empty(interface.second, "AccessFunction"))?interface.second->m["AccessFunction"]->v:"Function");
       }
     }
   }
