@@ -57,9 +57,9 @@ bool Interface::auth(Json *ptJson, string &strError)
   Json *ptAuth = new Json(ptJson);
 
   keyRemovals(ptAuth);
-  if (ptAuth->m.find("Interface") != ptAuth->m.end() && !ptAuth->m["Interface"]->v.empty())
+  if (!empty(ptAuth, "Interface"))
   {
-    if (ptAuth->m.find("Request") != ptAuth->m.end())
+    if (exist(ptAuth, "Request"))
     {
       delete ptAuth->m["Request"];
     }
@@ -67,7 +67,7 @@ bool Interface::auth(Json *ptJson, string &strError)
     ptAuth->m["Request"]->i("Interface", ptAuth->m["Interface"]->v);
     ptAuth->i("Interface", "auth");
   }
-  if (ptJson->m.find("Node") != ptJson->m.end() && !ptJson->m["Node"]->v.empty())
+  if (!empty(ptJson, "Node"))
   {
     strTarget = "link";
   }
@@ -109,7 +109,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
   ptJson->i("Query", strQuery);
   if (hub("database", ptJson, strError))
   {
-    if (ptJson->m.find("Response") != ptJson->m.end())
+    if (exist(ptJson, "Response"))
     {
       rows = new list<map<string, string> >;
       for (auto &ptRow : ptJson->m["Response"]->l) 
@@ -119,7 +119,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
         rows->push_back(row);
       }
     }
-    if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+    if (!empty(ptJson, "Rows"))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -163,12 +163,12 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
   if (hub("database", ptJson, strError))
   {
     bResult = true;
-    if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+    if (!empty(ptJson, "ID"))
     {
       stringstream ssID(ptJson->m["ID"]->v);
       ssID >> ullID;
     }
-    if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+    if (!empty(ptJson, "Rows"))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -311,11 +311,11 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   bool bResult = false;
 
   hub(strTarget, ptJson, true);
-  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+  if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
   {
     bResult = true;
   }
-  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+  else if (!empty(ptJson, "Error"))
   {
     strError = ptJson->m["Error"]->v;
   }
@@ -337,27 +337,27 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
     delete i.second;
   }
   m_interfaces.clear();
-  if (ptJson->m.find("Interfaces") != ptJson->m.end())
+  if (exist(ptJson, "Interfaces"))
   {
     for (auto &interface : ptJson->m["Interfaces"]->m)
     {
       m_interfaces[interface.first] = new radialInterface;
-      if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
+      if (!empty(interface.second, "AccessFunction"))
       {
         m_interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
       }
-      if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
+      if (!empty(interface.second, "Command"))
       {
         m_interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
       }
       m_interfaces[interface.first]->nPid = -1;
-      if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
+      if (!empty(interface.second, "PID"))
       {
         stringstream ssPid(interface.second->m["PID"]->v);
         ssPid >> m_interfaces[interface.first]->nPid;
       }
-      m_interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
-      m_interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
+      m_interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+      m_interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
     }
   }
   m_mutexShare.unlock();
@@ -429,9 +429,9 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   }
   if (hub("jwt", ptJson, strError))
   {
-    if (ptJson->m.find("Response") != ptJson->m.end())
+    if (exist(ptJson, "Response"))
     {
-      if (ptJson->m["Response"]->m.find("Payload") != ptJson->m["Response"]->m.end())
+      if (exist(ptJson->m["Response"], "Payload"))
       {
         if (bDecode)
         {
@@ -477,7 +477,7 @@ void Interface::keyRemovals(Json *ptJson)
   }
   while (!removals.empty())
   {
-    if (ptJson->m.find(removals.front()) != ptJson->m.end())
+    if (exist(ptJson, removals.front()))
     {
       delete ptJson->m[removals.front()];
       ptJson->m.erase(removals.front());
@@ -501,41 +501,41 @@ void Interface::links(string strPrefix, Json *ptJson)
     delete link;
   }
   m_links.clear();
-  if (ptJson->m.find("Links") != ptJson->m.end())
+  if (exist(ptJson, "Links"))
   {
     for (auto &link : ptJson->m["Links"]->m)
     {
       radialLink *ptLink = new radialLink;
       ptLink->strNode = link.first;
-      if (link.second->m.find("Server") != link.second->m.end() && !link.second->m["Server"]->v.empty())
+      if (!empty(link.second, "Server"))
       {
         ptLink->strServer = link.second->m["Server"]->v;
       }
-      if (link.second->m.find("Port") != link.second->m.end() && !link.second->m["Port"]->v.empty())
+      if (!empty(link.second, "Port"))
       {
         ptLink->strPort = link.second->m["Port"]->v;
       }
-      if (link.second->m.find("Interfaces") != link.second->m.end())
+      if (exist(link.second, "Interfaces"))
       {
         for (auto &interface : link.second->m["Interfaces"]->m)
         {
           ptLink->interfaces[interface.first] = new radialInterface;
-          if (interface.second->m.find("AccessFunction") != interface.second->m.end() && !interface.second->m["AccessFunction"]->v.empty())
+          if (!empty(interface.second, "AccessFunction"))
           {
             ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
           }
-          if (interface.second->m.find("Command") != interface.second->m.end() && !interface.second->m["Command"]->v.empty())
+          if (!empty(interface.second, "Command"))
           {
             ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
           }
           ptLink->interfaces[interface.first]->nPid = -1;
-          if (interface.second->m.find("PID") != interface.second->m.end() && !interface.second->m["PID"]->v.empty())
+          if (!empty(interface.second, "PID"))
           {
             stringstream ssPid(interface.second->m["PID"]->v);
             ssPid >> ptLink->interfaces[interface.first]->nPid;
           }
-          ptLink->interfaces[interface.first]->bRespawn = ((interface.second->m.find("Respawn") != interface.second->m.end() && interface.second->m["Respawn"]->v == "1")?true:false);
-          ptLink->interfaces[interface.first]->bRestricted = ((interface.second->m.find("Restricted") != interface.second->m.end() && interface.second->m["Restricted"]->v == "1")?true:false);
+          ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+          ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
         }
       }
       m_links.push_back(ptLink);
@@ -640,7 +640,7 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   if (hub("mysql", ptJson, strError))
   {
     bResult = true;
-    if (ptJson->m.find("Response") != ptJson->m.end())
+    if (exist(ptJson, "Response"))
     {
       for (auto &ptRow : ptJson->m["Response"]->l)
       {
@@ -649,12 +649,12 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
         rows.push_back(row);
       }
     }
-    if (ptJson->m.find("ID") != ptJson->m.end() && !ptJson->m["ID"]->v.empty())
+    if (!empty(ptJson, "ID"))
     {
       stringstream ssID(ptJson->m["ID"]->v);
       ssID >> ullID;
     }
-    if (ptJson->m.find("Rows") != ptJson->m.end() && !ptJson->m["Rows"]->v.empty())
+    if (!empty(ptJson, "Rows"))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -762,7 +762,7 @@ void Interface::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-            if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == m_strName && ptJson->m.find("_u") != ptJson->m.end() && !ptJson->m["_u"]->v.empty())
+            if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
             {
               m_mutexShare.lock();
               if (m_waiting.find(ptJson->m["_u"]->v) != m_waiting.end())
@@ -775,9 +775,9 @@ void Interface::process(string strPrefix)
             {
               uniques[fdUnique] = strLine + "\n";
             }
-            else if (ptJson->m.find("_s") != ptJson->m.end() && ptJson->m["_s"]->v == "hub")
+            else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
             {
-              if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+              if (!empty(ptJson, "Function"))
               {
                 // {{{ interfaces
                 if (ptJson->m["Function"]->v == "interfaces")
@@ -802,9 +802,9 @@ void Interface::process(string strPrefix)
                 // }}}
               }
             }
-            else if (ptJson->m.find("Function") != ptJson->m.end() && ptJson->m["Function"]->v == "master")
+            else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
             {
-              if (ptJson->m.find("Master") != ptJson->m.end() && !ptJson->m["Master"]->v.empty())
+              if (!empty(ptJson, "Master")
               {
                 time(&CMaster[0]);
                 if (m_strMaster != ptJson->m["Master"]->v)
@@ -823,7 +823,7 @@ void Interface::process(string strPrefix)
             }
             else if (m_pCallback != NULL)
             {
-              if (ptJson->m.find("wsRequestID") != ptJson->m.end() && !ptJson->m["wsRequestID"]->v.empty())
+              if (!empty(ptJson, "wsRequestID"))
               {
                 string strIdentity, strName, strNode;
                 stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
@@ -834,11 +834,11 @@ void Interface::process(string strPrefix)
                   ptLive->i("radialProcess", m_strName);
                   ptLive->i("radialPrefix", strPrefix);
                   ptLive->i("radialPurpose", "status");
-                  if (ptJson->m.find("Interface") != ptJson->m.end() && !ptJson->m["Interface"]->v.empty())
+                  if (!empty(ptJson, "Interface"))
                   {
                     ptLive->i("radialInterface", ptJson->m["Interface"]->v);
                   }
-                  if (ptJson->m.find("Function") != ptJson->m.end() && !ptJson->m["Function"]->v.empty())
+                  if (!empty(ptJson, "Function"))
                   {
                     ptLive->i("radialFunction", ptJson->m["Function"]->v);
                   }
@@ -1017,7 +1017,7 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
   if (hub("storage", ptSubJson, strError))
   {
     bResult = true;
-    if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->m.find("Response") != ptSubJson->m.end())
+    if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && exist(ptSubJson, "Response"))
     {
       ptSubJson->m["Response"]->j(strJson);
       ptJson->parse(strJson);
