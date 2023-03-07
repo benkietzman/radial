@@ -26,7 +26,7 @@ class Irc : public Interface
 {
   protected:
   bool m_bEnabled;
-  bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, stringstream &, Json *);
+  bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *);
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &);
   list<string> m_channels;
   list<string> m_messages;
@@ -41,7 +41,7 @@ class Irc : public Interface
 
   void analyze(const string strNick, const string strTarget, const string strMessage);
   void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData);
-  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData);
+  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData);
   void analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData);
   void chat(const string strTarget, const string strMessage);
   void enable(const string strNick);
@@ -70,7 +70,7 @@ class Irc : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &));
+  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &));
 };
 // }}}
 }

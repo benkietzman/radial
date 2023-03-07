@@ -93,6 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
+  list<string> actions = {"central", "centralmon", "database", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -101,7 +102,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
-    if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ssData, ptRequest))
+    if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest))
     {
       // {{{ central
       if (strAction == "central")
@@ -387,10 +388,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // }}}
     }
   }
-  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ptRequest);
+  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, ptRequest);
   delete ptRequest;
 }
-void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData)
+void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData)
 {
   // {{{ prep work
   string strAction = var("Action", ptData), strError, strValue;
@@ -1214,14 +1215,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ invalid
   else
   {
-    vector<string> actions = {"central", "centralmon", "database", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
+    actions.sort();
+    actions.unique();
     ssText << ":  Please provide an Action:  ";
-    for (size_t i = 0; i < actions.size(); i++)
+    for (auto actionIter = actions.begin(); actionIter != actions.end(); actionIter++)
     {
-      ssText << ((i > 0)?", ":"") << actions[i];
+      ssText << ((actionIter != actions.begin())?", ":"") << (*actionIter);
     }
     ssText << ".";
-    actions.clear();
   }
   // }}}
   // {{{ post work
@@ -1985,7 +1986,7 @@ void Irc::quit()
 }
 // }}}
 // {{{ setAnalyze()
-void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &))
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &))
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;
