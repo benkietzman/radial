@@ -29,7 +29,6 @@ struct radialRequestConn
   list<string> responses;
   size_t unUnique;
   string strBuffers[2];
-  common_socket_type eSocketType;
 };
 // }}}
 // {{{ Request
