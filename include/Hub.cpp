@@ -46,6 +46,7 @@ Hub::~Hub()
 bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted)
 {
   bool bResult = false;
+  string strError;
   stringstream ssMessage;
 
   strPrefix += "->Hub::add()";
