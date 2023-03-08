@@ -95,7 +95,6 @@ void Request::process(string strPrefix)
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
-        m_pUtility->fdNonBlocking(fdSocket, strError);
         // }}}
         while (!bExit)
         {
@@ -367,6 +366,7 @@ void Request::process(string strPrefix)
               if ((fdClient = accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 radialRequestConn *ptConn = new radialRequestConn;
+                m_pUtility->fdNonBlocking(fdClient, strError);
                 ptConn->bRetry = false;
                 ptConn->ssl = NULL;
                 ptConn->unUnique = unUnique++;

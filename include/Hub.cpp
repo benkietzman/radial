@@ -359,7 +359,6 @@ void Hub::process(string strPrefix)
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to manager socket.";
         log(ssMessage.str());
-        m_pUtility->fdNonBlocking(fdUnix, strError);
         // }}}
         if (load(strPrefix, strError))
         {
@@ -419,6 +418,7 @@ void Hub::process(string strPrefix)
                 socklen_t clilen = sizeof(cli_addr);
                 if ((fdClient = accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
                 {
+                  m_pUtility->fdNonBlocking(fdClient, strError);
                   managers[fdClient] = {"", ""};
                 }
                 else
