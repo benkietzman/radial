@@ -989,7 +989,7 @@ void Interface::process(string strPrefix)
         CShutdown = CTime;
       }
       m_mutexShare.lock();
-      if ((CTime - CShutdown) > 30 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
+      if ((CTime - CShutdown) > 10 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
       {
         bExit = true;
       }

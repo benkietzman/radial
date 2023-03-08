@@ -101,6 +101,8 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->bRespawn = bRespawn;
           m_interfaces[strName]->bRestricted = bRestricted;
           m_interfaces[strName]->bShutdown = false;
+          m_interfaces[strName]->CKill = 0;
+          m_interfaces[strName]->CShutdown = 0;
           m_interfaces[strName]->fdRead = readpipe[0];
           m_interfaces[strName]->fdWrite = writepipe[1];
           m_interfaces[strName]->nPid = nPid;
@@ -368,7 +370,7 @@ void Hub::process(string strPrefix)
           pollfd *fds;
           size_t unIndex, unPosition;
           string strJson;
-          time_t CShutdownTime[2] = {0, 0};
+          time_t CShutdownTime[2] = {0, 0}, CTime;
           // }}}
           while (!bExit)
           {
@@ -895,6 +897,27 @@ void Hub::process(string strPrefix)
               close(managerRemovals.front());
               managerRemovals.pop_front();
             }
+            time(&CTime);
+            for (auto &i : m_interfaces)
+            {
+              if (i.second->CShutdown > 0 && (CTime - i.second->CShutdown) > 20)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  Sent terminate (SIGTERM) signal.";
+                log(ssMessage.str());
+                kill(i.second->nPid, SIGTERM);
+                i.second->CShutdown = 0;
+                i.second->CKill = CTime;
+              }
+              else if (i.second->CKill > 0 && (CTime - i.second->CKill) > 10)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  Sent kill (SIGKILL) signal.";
+                log(ssMessage.str());
+                kill(i.second->nPid, SIGKILL);
+                i.second->CKill = 0;
+              }
+            }
             removals.sort();
             removals.unique();
             if (!removals.empty())
@@ -980,6 +1003,8 @@ void Hub::remove(string strPrefix, const string strName)
   strPrefix += "->Hub::remove()";
   if (m_interfaces.find(strName) != m_interfaces.end())
   {
+    m_interfaces[strName]->CKill = 0;
+    m_interfaces[strName]->CShutdown = 0;
     close(m_interfaces[strName]->fdRead);
     m_interfaces[strName]->fdRead = -1;
     close(m_interfaces[strName]->fdWrite);
@@ -1030,6 +1055,7 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
       }
       interface.second->bShutdown = true;
       interface.second->strBuffers[1].append(strJson + "\n");
+      time(&(interface.second->CShutdown));
     }
   }
 }
