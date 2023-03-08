@@ -216,7 +216,6 @@ void Link::process(string strPrefix)
         log(ssMessage.str());
         time(&CTime);
         CBootstrap = CTime;
-        m_pUtility->fdNonBlocking(fdSocket, strError);
         // }}}
         while (!bExit)
         {
@@ -735,6 +734,7 @@ void Link::process(string strPrefix)
                 // {{{ prep work
                 bool bRetry;
                 SSL *ssl;
+                m_pUtility->fdNonBlocking(fdLink, strError);
                 // }}}
                 if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bRetry, strError)) != NULL)
                 {
