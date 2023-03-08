@@ -24,9 +24,12 @@
 #include <unistd.h>
 using namespace std;
 #include <Json>
+#include <Utility>
 using namespace common;
 
 #define UNIX_SOCKET "/tmp/rdl_mgr"
+
+Utility *gpUtility;
 
 bool request(const string strFunction, const string strInterface, string &strResponse, string &strError);
 
@@ -35,6 +38,7 @@ int main(int argc, char *argv[])
   if (argc == 2 || argc == 3)
   {
     string strError, strFunction = argv[1], strInterface = ((argc == 3)?argv[2]:""), strResponse;
+    Utility gpUtility = new Utility(strError);
     if (strFunction == "list")
     {
       if (request(strFunction, strInterface, strResponse, strError))
@@ -101,6 +105,7 @@ int main(int argc, char *argv[])
     {
       cerr << "Please provide a valid function:  list, restart, start, status, stop." << endl;
     }
+    delete gpUtility;
   }
   else
   {
@@ -142,6 +147,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
         }
         strBuffers[1] = ptJson->j(strJson) + "\n";
         delete ptJson;
+        gpUtility->fdNonBlocking(fdUnix, strError);
         while (!bExit)
         {
           pollfd fds[1];

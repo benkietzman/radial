@@ -250,20 +250,11 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
     if ((nReturn = pipe(fdUnique)) == 0)
     {
       bool bExit = false, bResult = false;
-      long lArg;
       size_t unPosition, unUnique = 0;
       string strBuffer, strError;
       stringstream ssUnique;
-      if ((lArg = fcntl(fdUnique[0], F_GETFL, NULL)) >= 0)
-      {
-        lArg |= O_NONBLOCK;
-        fcntl(fdUnique[0], F_SETFL, lArg);
-      }
-      if ((lArg = fcntl(fdUnique[1], F_GETFL, NULL)) >= 0)
-      {
-        lArg |= O_NONBLOCK;
-        fcntl(fdUnique[1], F_SETFL, lArg);
-      }
+      m_pUtility->fdNonBlocking(fdUnique[0], strError);
+      m_pUtility->fdNonBlocking(fdUnique[1], strError);
       m_mutexShare.lock();
       ssUnique << m_strName << "_" << unUnique;
       while (m_waiting.find(ssUnique.str()) != m_waiting.end())
@@ -721,7 +712,6 @@ void Interface::process(string strPrefix)
   int nReturn;
   list<int> uniqueRemovals;
   map<int, string> uniques;
-  long lArg;
   pollfd *fds;
   size_t unIndex, unPosition;
   string strError, strJson, strLine;
@@ -729,16 +719,8 @@ void Interface::process(string strPrefix)
   time_t CBroadcast, CMaster[2], CShutdown = 0, CTime, unBroadcastSleep = 15;
 
   strPrefix += "->Interface::process()";
-  if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(0, F_SETFL, lArg);
-  }
-  if ((lArg = fcntl(1, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(1, F_SETFL, lArg);
-  }
+  m_pUtility->fdNonBlocking(0, strError);
+  m_pUtility->fdNonBlocking(1, strError);
   time(&CBroadcast);
   CMaster[0] = CMaster[1] = CBroadcast;
   while (!bExit)

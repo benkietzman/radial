@@ -149,21 +149,12 @@ size_t Link::add(list<radialLink *> &links, radialLink *ptLink)
 void Link::process(string strPrefix)
 {
   // {{{ prep work
-  long lArg;
   SSL_CTX *ctxC = NULL, *ctxS = NULL;
   string strError, strJson;
   stringstream ssMessage;
   strPrefix += "->Link::process()";
-  if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
-  {   
-    lArg |= O_NONBLOCK;
-    fcntl(0, F_SETFL, lArg);
-  }
-  if ((lArg = fcntl(1, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(1, F_SETFL, lArg);
-  }
+  m_pUtility->fdNonBlocking(0, strError);
+  m_pUtility->fdNonBlocking(1, strError);
   // }}}
   if ((ctxS = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL && (ctxC = m_pUtility->sslInitClient(strError)) != NULL)
   {
@@ -225,6 +216,7 @@ void Link::process(string strPrefix)
         log(ssMessage.str());
         time(&CTime);
         CBootstrap = CTime;
+        m_pUtility->fdNonBlocking(fdSocket, strError);
         // }}}
         while (!bExit)
         {
@@ -340,12 +332,7 @@ void Link::process(string strPrefix)
               {
                 if ((link->fdConnecting = socket(link->rp->ai_family, link->rp->ai_socktype, link->rp->ai_protocol)) >= 0)
                 {
-                  long lArg;
-                  if ((lArg = fcntl(link->fdConnecting, F_GETFL, NULL)) >= 0)
-                  {
-                    lArg |= O_NONBLOCK;
-                    fcntl(link->fdConnecting, F_SETFL, lArg);
-                  }
+                  m_pUtility->fdNonBlocking(link->fdConnecting, strError);
                 }
                 else
                 {
@@ -748,11 +735,6 @@ void Link::process(string strPrefix)
                 // {{{ prep work
                 bool bRetry;
                 SSL *ssl;
-                if ((lArg = fcntl(fdLink, F_GETFL, NULL)) >= 0)
-                {
-                  lArg |= O_NONBLOCK;
-                  fcntl(fdLink, F_SETFL, lArg);
-                }
                 // }}}
                 if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bRetry, strError)) != NULL)
                 {

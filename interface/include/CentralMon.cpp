@@ -129,6 +129,7 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
         size_t unPosition;
         string strBuffers[2];
         strBuffers[1] = ssRequest.str();
+        m_pUtility->fdNonBlocking(fdSocket, strError);
         while (!bExit && !shutdown())
         {
           pollfd fds[1];

@@ -33,21 +33,12 @@ Request::~Request()
 void Request::process(string strPrefix)
 {
   // {{{ prep work
-  long lArg;
   SSL_CTX *ctx = NULL;
   string strError, strJson;
   stringstream ssMessage;
   strPrefix += "->Request::process()";
-  if ((lArg = fcntl(0, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(0, F_SETFL, lArg);
-  }
-  if ((lArg = fcntl(1, F_GETFL, NULL)) >= 0)
-  {
-    lArg |= O_NONBLOCK;
-    fcntl(1, F_SETFL, lArg);
-  }
+  m_pUtility->fdNonBlocking(0, strError);
+  m_pUtility->fdNonBlocking(1, strError);
   // }}}
   if ((ctx = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {
@@ -104,6 +95,7 @@ void Request::process(string strPrefix)
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
+        m_pUtility->fdNonBlocking(fdSocket, strError);
         // }}}
         while (!bExit)
         {
@@ -375,11 +367,6 @@ void Request::process(string strPrefix)
               if ((fdClient = accept(fds[2].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 radialRequestConn *ptConn = new radialRequestConn;
-                if ((lArg = fcntl(fdClient, F_GETFL, NULL)) >= 0)
-                {
-                  lArg |= O_NONBLOCK;
-                  fcntl(fdClient, F_SETFL, lArg);
-                }
                 ptConn->bRetry = false;
                 ptConn->ssl = NULL;
                 ptConn->unUnique = unUnique++;

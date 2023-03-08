@@ -87,21 +87,12 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
         }
         else if (nPid > 0)
         {
-          long lArg;
           bResult = true;
           ssMessage << " [" << strName << "]:  Interface added.";
           close(writepipe[0]);
           close(readpipe[1]);
-          if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
-          {
-            lArg |= O_NONBLOCK;
-            fcntl(readpipe[0], F_SETFL, lArg);
-          }
-          if ((lArg = fcntl(writepipe[1], F_GETFL, NULL)) >= 0)
-          {
-            lArg |= O_NONBLOCK;
-            fcntl(writepipe[1], F_SETFL, lArg);
-          }
+          m_pUtility->fdNonBlocking(readpipe[0], strError);
+          m_pUtility->fdNonBlocking(writepipe[1], strError);
           if (m_interfaces.find(strName) == m_interfaces.end())
           {
             m_interfaces[strName] = new radialInterface;
@@ -365,6 +356,7 @@ void Hub::process(string strPrefix)
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to manager socket.";
         log(ssMessage.str());
+        m_pUtility->fdNonBlocking(fdUnix, strError);
         // }}}
         if (load(strPrefix, strError))
         {
