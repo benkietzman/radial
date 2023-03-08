@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   if (argc == 2 || argc == 3)
   {
     string strError, strFunction = argv[1], strInterface = ((argc == 3)?argv[2]:""), strResponse;
-    Utility gpUtility = new Utility(strError);
+    gpUtility = new Utility(strError);
     if (strFunction == "list")
     {
       if (request(strFunction, strInterface, strResponse, strError))
