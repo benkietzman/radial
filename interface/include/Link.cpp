@@ -735,7 +735,6 @@ void Link::process(string strPrefix)
                 // {{{ prep work
                 bool bRetry;
                 SSL *ssl;
-                m_pUtility->fdNonBlocking(fdLink, strError);
                 // }}}
                 if ((ssl = m_pUtility->sslAccept(ctxS, fdLink, bRetry, strError)) != NULL)
                 {
