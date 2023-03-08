@@ -145,6 +145,18 @@ void Hub::alert(const string strMessage)
   log("alert", strMessage);
 }
 // }}}
+// {{{ chat()
+void Hub::chat(const string strTarget, const string strMessage)
+{
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "chat");
+  ptJson->i("Target", strTarget);
+  ptJson->i("Message", strMessage);
+  target("irc", ptJson);
+  delete ptJson;
+}
+// }}}
 // {{{ interfaces()
 void Hub::interfaces()
 {
@@ -303,6 +315,7 @@ void Hub::monitor(string strPrefix)
     {
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
+      chat("#radial", ssMessage.str());
       notify(ssMessage.str());
       setShutdown(strPrefix);
     }

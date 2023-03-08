@@ -641,6 +641,7 @@ void Interface::monitor(string strPrefix)
     {
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
+      chat("#radial", ssMessage.str());
       notify(ssMessage.str());
       setShutdown();
     }
