@@ -2344,12 +2344,18 @@ bool Central::applicationServerDetailEdit(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
+      }
       if (d.g || (applicationServer(c, e) && !empty(c.p->m["o"], "id")))
       {
         data f;
         init(d, f);
-        f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
+        if (!d.g)
+        {
+          f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
+        }
         if (d.g || isApplicationDeveloper(f, e))
         {
           q << "update application_server_detail set";
@@ -2436,12 +2442,18 @@ bool Central::applicationServerDetailRemove(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
+      }
       if (d.g || (applicationServer(c, e) && !empty(c.p->m["o"], "id")))
       {
         data f;
         init(d, f);
-        f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
+        if (!d.g)
+        {
+          f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
+        }
         if (d.g || isApplicationDeveloper(f, e))
         {
           q << "delete from application_server_detail where id = " << i->m["id"]->v;
@@ -2513,7 +2525,10 @@ bool Central::applicationServerRemove(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      }
       if (d.g || isApplicationDeveloper(c, e))
       {
         q << "delete from application_server where id = " << i->m["id"]->v;
@@ -2592,7 +2607,10 @@ bool Central::applicationUserAdd(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", i->m["application_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", i->m["application_id"]->v);
+      }
       if (d.g || (d.auth.find(a.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[a.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(c, e))
       {
         if (!empty(i, "userid"))
@@ -2710,12 +2728,18 @@ bool Central::applicationUserEdit(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      }
       if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
       {
         data f;
         init(d, f);
-        f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+        if (!d.g)
+        {
+          f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+        }
         if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
         {
           if (!empty(i, "userid"))
@@ -2833,12 +2857,18 @@ bool Central::applicationUserRemove(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      }
       if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
       {
         data f;
         init(d, f);
-        f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+        if (!d.g)
+        {
+          f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+        }
         if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
         {
           q << "delete from application_contact where id = " << i->m["id"]->v;
@@ -4456,7 +4486,10 @@ bool Central::serverUserEdit(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
+      }
       if (d.g || isServerAdmin(c, e))
       {
         if (!empty(i, "userid"))
@@ -4554,7 +4587,10 @@ bool Central::serverUserRemove(data &d, string &e)
     {
       data c;
       init(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
+      }
       if (d.g || isServerAdmin(c, e))
       {
         q << "delete from server_contact where id = " << i->m["id"]->v;
