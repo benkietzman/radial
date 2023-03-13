@@ -769,7 +769,7 @@ bool Central::applicationDependAdd(data &d, string &e)
     {
       data a;
       init(d, a);
-      a.p->m["i"]->i("id", i->m["id"]->v);
+      a.p->m["i"]->i("id", i->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(a, e))
       {
         string strID;
