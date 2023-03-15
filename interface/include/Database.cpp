@@ -23,10 +23,16 @@ namespace radial
 Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
 {
   string strError;
-  if (pMysql != NULL)
+  // {{{ command line arguments
+  for (int i = 1; i < argc; i++)
   {
-    m_pCentral->setMysql(pMysql);
+    string strArg = argv[i];
+    if (strArg == "--mysql" && pMysql != NULL)
+    {
+      m_pCentral->setMysql(pMysql);
+    }
   }
+  // }}}
   m_ptDatabases = new Json;
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
   {
