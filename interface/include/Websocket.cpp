@@ -420,7 +420,10 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   }
   ptConn->mutexShare.lock();
   ptConn->buffers.push_back(ptJson->j(strJson));
-  lws_callback_on_writable(ptConn->wsi);
+  if (ptConn->wsi != NULL)
+  {
+    lws_callback_on_writable(ptConn->wsi);
+  }
   if (ptConn->unThreads > 0)
   {
     ptConn->unThreads--;
@@ -515,7 +518,9 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     // {{{ LWS_CALLBACK_CLOSED
     case LWS_CALLBACK_CLOSED:
     {
+      m_mutex.lock();
       (*connIter)->wsi = NULL;
+      m_mutex.unlock();
       nResult = -1;
       break;
     }
