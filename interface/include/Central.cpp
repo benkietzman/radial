@@ -1420,6 +1420,10 @@ bool Central::applicationIssueEmail(data &d, string &e)
                   string strApplication, strName;
                   stringstream m[2], s;
                   s << c.p->m["o"]->m["name"]->v << " [" << i->m["action"]->v << "]:  Issue #" << i->m["id"]->v;
+                  if (!empty(a.p->m["o"], "summary"))
+                  {
+                    s << " - " << a.p->m["o"]->m["summary"]->v;
+                  }
                   for (auto &contact : f.p->m["o"]->l)
                   {
                     if (!empty(contact, "email"))
@@ -1466,6 +1470,10 @@ bool Central::applicationIssueEmail(data &d, string &e)
                   }
                   strName = getUserName(d);
                   m[0] << "<html><body style=\"background:#f3f3f3:padding:10px;\">";
+                  if (!empty(a.p->m["o"], "summary"))
+                  {
+                    m[0] << "<h3>" << a.p->m["o"]->m["summary"]->v << "</h3>";
+                  }
                   if (i->m["action"]->v == "add")
                   {
                     m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
