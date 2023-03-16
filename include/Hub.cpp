@@ -406,10 +406,10 @@ void Hub::process(string strPrefix)
               {
                 fds[unIndex].fd = interface.second->fdWrite;
                 time(&CTime);
-                if ((CTime - interface.second->CWrote) > 60)
+                if (!interface.second->bShutdown && !interface.second->bKill && (CTime - interface.second->CWrote) > 10)
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [" << interface.first << "]:  Unable to write to the interface for the last minute.";
+                  ssMessage << strPrefix << " [" << interface.first << "]:  Unable to write to the interface for the last 10 seconds.";
                   log(ssMessage.str());
                   setShutdown(strPrefix, interface.first);
                 }
