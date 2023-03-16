@@ -165,8 +165,12 @@ void Request::process(string strPrefix)
             }
             unIndex++;
           }
+          if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
+          {
+            bExit = true;
+          }
           // }}}
-          if ((nReturn = poll(fds, unIndex, 500)) > 0)
+          if (!bExit && (nReturn = poll(fds, unIndex, 500)) > 0)
           {
             // {{{ stdin
             if (fds[0].revents & (POLLHUP | POLLIN))
@@ -555,7 +559,7 @@ void Request::process(string strPrefix)
               // }}}
             }
           }
-          else if (nReturn < 0 && errno != EINTR)
+          else if (!bExit && nReturn < 0 && errno != EINTR)
           {
             bExit = true;
             ssMessage.str("");
