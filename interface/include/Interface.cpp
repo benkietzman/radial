@@ -997,6 +997,10 @@ void Interface::process(string strPrefix)
       m_mutexShare.unlock();
     }
   }
+  for (auto &unique : uniques)
+  {
+    close(unique.first);
+  }
   setShutdown();
 }
 // }}}
