@@ -406,7 +406,7 @@ void Hub::process(string strPrefix)
               {
                 fds[unIndex].fd = interface.second->fdWrite;
                 time(&CTime);
-                if (!interface.second->bShutdown && !interface.second->bKill && (CTime - interface.second->CWrote) > 10)
+                if (!interface.second->bShutdown && (CTime - interface.second->CWrote) > 10)
                 {
                   ssMessage.str("");
                   ssMessage << strPrefix << " [" << interface.first << "]:  Unable to write to the interface for the last 10 seconds.";
