@@ -103,6 +103,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->bShutdown = false;
           m_interfaces[strName]->CKill = 0;
           m_interfaces[strName]->CShutdown = 0;
+          time(&(m_interfaces[strName]->CWrote));
           m_interfaces[strName]->fdRead = readpipe[0];
           m_interfaces[strName]->fdWrite = writepipe[1];
           m_interfaces[strName]->nPid = nPid;
@@ -404,6 +405,18 @@ void Hub::process(string strPrefix)
               if (!interface.second->strBuffers[1].empty())
               {
                 fds[unIndex].fd = interface.second->fdWrite;
+                time(&CTime);
+                if ((CTime - interface.second->CWrote) > 60)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " [" << interface.first << "]:  Unable to write to the interface for the last minute.";
+                  log(ssMessage.str());
+                  setShutdown(strPrefix, interface.first);
+                }
+              }
+              else
+              {
+                time(&(m_interfaces[sockets[fds[i].fd]]->CWrote));
               }
               unIndex++;
             }
@@ -667,7 +680,11 @@ void Hub::process(string strPrefix)
                   // {{{ write
                   if (fds[i].revents & POLLOUT)
                   {
-                    if (!m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
+                    if (m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
+                    {
+                      time(&(m_interfaces[sockets[fds[i].fd]]->CWrote));
+                    }
+                    else
                     {
                       removals.push_back(sockets[fds[i].fd]);
                       if (nReturn < 0)
