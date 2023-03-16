@@ -416,7 +416,7 @@ void Hub::process(string strPrefix)
               }
               else
               {
-                time(&(m_interface.second->CWrote));
+                time(&(interface.second->CWrote));
               }
               unIndex++;
             }
