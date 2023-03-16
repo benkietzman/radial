@@ -919,6 +919,7 @@ void Interface::process(string strPrefix)
     uniqueRemovals.unique();
     while (!uniqueRemovals.empty())
     {
+      uniques.erase(uniqueRemovals.front());
       close(uniqueRemovals.front());
       uniqueRemovals.pop_front();
     }
