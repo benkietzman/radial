@@ -914,6 +914,10 @@ void Interface::process(string strPrefix)
       ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
       notify(ssMessage.str());
     }
+    if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
+    {
+      bExit = true;
+    }
     delete[] fds;
     uniqueRemovals.sort();
     uniqueRemovals.unique();
