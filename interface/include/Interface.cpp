@@ -757,7 +757,7 @@ void Interface::process(string strPrefix)
       fds[unIndex].events = POLLOUT;
       unIndex++;
     }
-    if (fds[0].fd != 0 || (fds[1] != -1 && fds[1] != 1))
+    if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
     {
       bExit = true;
     }
