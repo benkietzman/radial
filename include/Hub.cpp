@@ -416,7 +416,7 @@ void Hub::process(string strPrefix)
               }
               else
               {
-                time(&(m_interfaces[sockets[fds[i].fd]]->CWrote));
+                time(&(m_interface.second->CWrote));
               }
               unIndex++;
             }
