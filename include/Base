@@ -25,6 +25,7 @@
 #include <mutex>
 #include <netdb.h>
 #include <poll.h>
+#include <queue>
 #include <semaphore.h>
 #include <signal.h>
 #include <sstream>
