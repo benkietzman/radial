@@ -121,7 +121,7 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
   ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strMessage;
   ptJson->i("Function", "chat");
   ptJson->i("Target", strTarget);
-  ptJson->i("Message", strMessage);
+  ptJson->i("Message", ssMessage.str());
   if (hub("irc", ptJson, strError))
   {
     bResult = true;

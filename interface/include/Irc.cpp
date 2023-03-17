@@ -396,7 +396,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ prep work
   string strAction = var("Action", ptData), strError, strValue;
   stringstream ssQuery, ssText;
-  ssText << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
+  ssText << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
   if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText))
@@ -1490,7 +1490,7 @@ void Irc::bot(string strPrefix)
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
-                            ssMessage << strPrefix << ":  Assumed master role.";
+                            ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strPrefix << ":  Assumed master role.";
                             chat("#radial", ssMessage.str());
                           }
                         }
