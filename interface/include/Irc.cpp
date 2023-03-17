@@ -1490,7 +1490,7 @@ void Irc::bot(string strPrefix)
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
-                            ssMessage << strPrefix << " [" << m_strNode << "]:  Assumed master role.";
+                            ssMessage << strPrefix << ":  Assumed master role.";
                             chat("#radial", ssMessage.str());
                           }
                         }
