@@ -1461,9 +1461,6 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
-                            ssMessage.str("");
-                            ssMessage << strPrefix << " [" << m_strNode << "]:  Assumed master role.";
-                            chat("#radial", ssMessage.str());
                             break;
                           }
                           case 433:
@@ -1490,6 +1487,12 @@ void Irc::bot(string strPrefix)
                           m_channels.push_back(strChannel);
                           m_channels.sort();
                           m_channels.unique();
+                          if (strChannel == "#radial")
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strNode << "]:  Assumed master role.";
+                            chat("#radial", ssMessage.str());
+                          }
                         }
                       }
                       // }}}
