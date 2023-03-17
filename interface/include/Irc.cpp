@@ -1462,7 +1462,7 @@ void Irc::bot(string strPrefix)
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
                             ssMessage.str("");
-                            ssMessage << strPrefix << ":  Assumed master role.";
+                            ssMessage << strPrefix << " [" << m_strNode << "]:  Assumed master role.";
                             chat("#radial", ssMessage.str());
                             break;
                           }
