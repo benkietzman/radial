@@ -45,7 +45,7 @@ void Email::callback(string strPrefix, Json *ptJson, const bool bResponse)
     {
       to.push_back(ptJson->m["To"]->v);
     }
-    else
+    else if (exist(ptJson, "To"))
     {
       for (auto &i : ptJson->m["To"]->l)
       {
@@ -64,7 +64,7 @@ void Email::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         cc.push_back(ptJson->m["Cc"]->v);
       }
-      else
+      else if (exist(ptJson, "Cc"))
       {
         for (auto &i : ptJson->m["Cc"]->l)
         {
@@ -78,7 +78,7 @@ void Email::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         bcc.push_back(ptJson->m["Bcc"]->v);
       }
-      else
+      else if (exist(ptJson, "Bcc"))
       {
         for (auto &i : ptJson->m["Bcc"]->l)
         {
@@ -92,23 +92,26 @@ void Email::callback(string strPrefix, Json *ptJson, const bool bResponse)
       {
         fileList.push_back(ptJson->m["File"]->v);
       }
-      else if (!ptJson->m["File"]->l.empty())
+      else if (exist(ptJson, "File"))
       {
-        for (auto &i : ptJson->m["File"]->l)
+        if (!ptJson->m["File"]->l.empty())
         {
-          if (!i->v.empty())
+          for (auto &i : ptJson->m["File"]->l)
           {
-            fileList.push_back(i->v);
+            if (!i->v.empty())
+            {
+              fileList.push_back(i->v);
+            }
           }
         }
-      }
-      else if (!ptJson->m["File"]->m.empty())
-      {
-        for (auto &i : ptJson->m["File"]->m)
+        else if (!ptJson->m["File"]->m.empty())
         {
-          if (!i.second->v.empty())
+          for (auto &i : ptJson->m["File"]->m)
           {
-            fileMap[i.first] = i.second->v;
+            if (!i.second->v.empty())
+            {
+              fileMap[i.first] = i.second->v;
+            }
           }
         }
       }
