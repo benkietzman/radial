@@ -231,6 +231,68 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
 }
 // }}}
 // }}}
+// {{{ email()
+void Interface::email(const string strFrom, const string strTo, const string strSubject, const string strText, const string strHtml, string &strError)
+{
+  list<string> bcc, cc, to;
+  map<string, string> file;
+
+  to.push_back(strTo);
+  email(strFrom, to, cc, bcc, strSubject, strText, strHtml, file, strError);
+}
+void Interface::email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError)
+{
+  Json *ptJson = new Json;
+
+  ptJson->i("From", strFrom);
+  if (!to.empty())
+  {
+    ptJson->m["To"] = new Json;
+    for (auto &i : to)
+    {
+      ptJson->m["To"]->pb(i);
+    }
+  }
+  if (!cc.empty())
+  {
+    ptJson->m["Cc"] = new Json;
+    for (auto &i : cc)
+    {
+      ptJson->m["Cc"]->pb(i);
+    }
+  }
+  if (!bcc.empty())
+  {
+    ptJson->m["Bcc"] = new Json;
+    for (auto &i : bcc)
+    {
+      ptJson->m["Bcc"]->pb(i);
+    }
+  }
+  if (!strSubject.empty())
+  {
+    ptJson->i("Subject", strSubject);
+  }
+  if (!strText.empty())
+  {
+    ptJson->i("Text", strText);
+  }
+  if (!strHtml.empty())
+  {
+    ptJson->i("Html", strHtml);
+  }
+  if (!file.empty())
+  {
+    ptJson->m["File"] = new Json;
+    for (auto &i : file)
+    {
+      ptJson->m["file"]->i(i.first, i.second);
+    }
+  }
+  hub("email", ptJson, false);
+  delete ptJson;
+}
+// }}}
 // {{{ hub()
 void Interface::hub(Json *ptJson, const bool bWait)
 {
