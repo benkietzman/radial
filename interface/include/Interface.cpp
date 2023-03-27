@@ -234,10 +234,16 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
 // {{{ email()
 void Interface::email(const string strFrom, const string strTo, const string strSubject, const string strText, const string strHtml, string &strError)
 {
-  list<string> bcc, cc, to;
-  map<string, string> file;
+  list<string> to;
 
   to.push_back(strTo);
+  email(strFrom, to, strSubject, strText, strHtml, strError);
+}
+void Interface::email(const string strFrom, list<string> to, const string strSubject, const string strText, const string strHtml, string &strError)
+{
+  list<string> bcc, cc;
+  map<string, string> file;
+
   email(strFrom, to, cc, bcc, strSubject, strText, strHtml, file, strError);
 }
 void Interface::email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError)

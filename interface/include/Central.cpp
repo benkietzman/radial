@@ -1416,7 +1416,7 @@ bool Central::applicationIssueEmail(data &d, string &e)
                 f.p->m["i"]->i("Backup Developer", "1", 'n');
                 if (applicationUsersByApplicationID(f, e))
                 {
-                  list<string> bcc, cc, file, to;
+                  list<string> to;
                   string strApplication, strName;
                   stringstream m[2], s;
                   s << c.p->m["o"]->m["name"]->v << " [" << i->m["action"]->v << "]:  Issue #" << i->m["id"]->v;
@@ -1533,10 +1533,8 @@ bool Central::applicationIssueEmail(data &d, string &e)
                   m[0] << "</body></html>";
                   to.sort();
                   to.unique();
-                  if (m_pJunction->email(getUserEmail(d), to, cc, bcc, s.str(), m[1].str(), m[0].str(), file, e))
-                  {
-                    b = true;
-                  }
+                  email(getUserEmail(d), to, s.str(), m[1].str(), m[0].str(), e);
+                  b = true;
                 }
                 deinit(f);
               }
@@ -1876,7 +1874,7 @@ bool Central::applicationNotify(data &d, string &e)
                 s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
                 for (auto &k : o->m)
                 {
-                  list<string> bcc, cc, file, to;
+                  list<string> to;
                   stringstream m;
                   to.push_back(k.second->m["email"]->v);
                   m << "<html><body>";
@@ -1952,10 +1950,8 @@ bool Central::applicationNotify(data &d, string &e)
                   m << "If you have any questions or concerns, please contact your application contacts.";
                   m << "</div>";
                   m << "</body></html>";
-                  if (m_pJunction->email(getUserEmail(d), to, cc, bcc, s.str(), "", m.str(), file, e))
-                  {
-                    k.second->i("sent", "1", 'n');
-                  }
+                  email(getUserEmail(d), to, s.str(), "", m.str(), e);
+                  k.second->i("sent", "1", 'n');
                 }
               }
             }
@@ -3964,7 +3960,7 @@ bool Central::serverNotify(data &d, string &e)
                 s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
                 for (auto &k : o->m)
                 {
-                  list<string> bcc, cc, file, to;
+                  list<string> to;
                   stringstream m;
                   to.push_back(k.second->m["email"]->v);
                   m << "<html><body>";
@@ -4028,10 +4024,8 @@ bool Central::serverNotify(data &d, string &e)
                   m << "If you have any questions or concerns, please contact your server contacts.";
                   m << "</div>";
                   m << "</body></html>";
-                  if (m_pJunction->email(getUserEmail(d), to, cc, bcc, s.str(), "", m.str(), file, e))
-                  {
-                    k.second->i("sent", "1", 'n');
-                  }
+                  email(getUserEmail(d), to, s.str(), "", m.str(), e);
+                  k.second->i("sent", "1", 'n');
                 }
                 init(d, h);
                 h.p->m["i"]->i("server_id", i->m["id"]->v);
@@ -4087,7 +4081,7 @@ bool Central::serverNotify(data &d, string &e)
                           s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
                           for (auto &n : developer)
                           {
-                            list<string> bcc, cc, file, to;
+                            list<string> to;
                             stringstream m;
                             m << "<html><body>";
                             m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
@@ -4154,10 +4148,7 @@ bool Central::serverNotify(data &d, string &e)
                             m << "</body></html>";
                             to.sort();
                             to.unique();
-                            if (!to.empty())
-                            {
-                              m_pJunction->email(getUserEmail(d), to, cc, bcc, s.str(), "", m.str(), file, e);
-                            }
+                            email(getUserEmail(d), to, s.str(), "", m.str(), e);
                           }
                         }
                         deinit(l);
