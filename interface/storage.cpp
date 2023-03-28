@@ -21,7 +21,10 @@ int main(int argc, char *argv[])
   string strPrefix = "storage->main()";
   gpStorage = new radial::Storage(strPrefix, argc, argv, &callback);
   gpStorage->setAutoMode(&autoMode);
+  thread threadSchedule(&radial::Storage::schedule, gpStorage, strPrefix);
+  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpStorage->process(strPrefix);
+  threadSchedule.join();
   delete gpStorage;
   return 0;
 }

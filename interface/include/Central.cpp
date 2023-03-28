@@ -168,20 +168,31 @@ bool Central::accountType(data &d, string &e)
 bool Central::accountTypes(data &d, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "account_type"};
   stringstream q;
-  Json *o = d.p->m["o"];
+  Json *o = d.p->m["o"], *s = new Json;
 
-  q << "select id, type, description from account_type order by type";
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
+  if (storageRetrieve(k, s, e))
   {
     b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
+    d.p->i("o", s);
   }
-  dbf(g);
+  else
+  {
+    q << "select id, type, description from account_type order by type";
+    auto g = dbq(q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+      storageAdd(k, o, e);
+    }
+    dbf(g);
+  }
+  delete s;
 
   return b;
 }
@@ -3433,20 +3444,31 @@ bool Central::loginType(data &d, string &e)
 bool Central::loginTypes(data &d, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "login_type"};
   stringstream q;
-  Json *o = d.p->m["o"];
+  Json *o = d.p->m["o"], *s = new Json;
 
-  q << "select id, type from login_type order by type";
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
+  if (storageRetrieve(k, s, e))
   {
     b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
+    d.p->i("o", s);
   }
-  dbf(g);
+  else
+  {
+    q << "select id, type from login_type order by type";
+    auto g = dbq(q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+      storageAdd(k, o, e);
+    }
+    dbf(g);
+  }
+  delete s;
 
   return b;
 }
@@ -3494,20 +3516,31 @@ bool Central::menuAccess(data &d, string &e)
 bool Central::menuAccesses(data &d, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "menu_access"};
   stringstream q;
-  Json *o = d.p->m["o"];
+  Json *o = d.p->m["o"], *s = new Json;
 
-  q << "select id, type from menu_access order by type";
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
-  {
+  if (storageRetrieve(k, s, e))
+  { 
     b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
+    d.p->i("o", s);
   }
-  dbf(g);
+  else
+  { 
+    q << "select id, type from menu_access order by type";
+    auto g = dbq(q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+      storageAdd(k, o, e);
+    }
+    dbf(g);
+  }
+  delete s;
 
   return b;
 }
@@ -3516,20 +3549,31 @@ bool Central::menuAccesses(data &d, string &e)
 bool Central::notifyPriorities(data &d, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "notify_priority"};
   stringstream q;
-  Json *o = d.p->m["o"];
+  Json *o = d.p->m["o"], *s = new Json;
 
-  q << "select id, priority from notify_priority order by priority";
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
-  {
+  if (storageRetrieve(k, s, e))
+  { 
     b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
+    d.p->i("o", s);
   }
-  dbf(g);
+  else
+  { 
+    q << "select id, priority from notify_priority order by priority";
+    auto g = dbq(q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+      storageAdd(k, o, e);
+    }
+    dbf(g);
+  }
+  delete s;
 
   return b;
 }
@@ -3631,20 +3675,31 @@ bool Central::packageType(data &d, string &e)
 bool Central::packageTypes(data &d, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "package_type"};
   stringstream q;
-  Json *o = d.p->m["o"];
+  Json *o = d.p->m["o"], *s = new Json;
 
-  q << "select id, type from package_type order by type";
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
-  {
+  if (storageRetrieve(k, s, e))
+  { 
     b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
+    d.p->i("o", s);
   }
-  dbf(g);
+  else
+  { 
+    q << "select id, type from package_type order by type";
+    auto g = dbq(q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+      storageAdd(k, o, e);
+    }
+    dbf(g);
+  }
+  delete s;
 
   return b;
 }

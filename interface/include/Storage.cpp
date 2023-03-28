@@ -181,5 +181,44 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   threadDecrement();
 }
 // }}}
+// {{{ schedule()
+void Storage::schedule(string strPrefix)
+{
+  string strError;
+  stringstream ssMessage;
+  time_t CTime[3] = {0, 0, 0};
+  Json *ptJson;
+
+  threadIncrement();
+  strPrefix += "->Storage::schedule()";
+  time(&(CTime[0]));
+  while (!shutdown())
+  {
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[0]) > 600)
+    {
+      CTime[0] = CTime[1];
+      ptJson = new Json;
+      if (m_storage.retrieve({"database", "_time"}, ptJson, strError))
+      {
+        stringstream ssTime(ptJson->v);
+        ssTime >> CTime[2];
+        if ((CTime[0] - CTime[2]) > 14400)
+        {
+          m_storage.remove({"database"}, strError);
+        }
+      }
+      else if (strError == "Failed to find key.")
+      {
+        ptJson->i("_time", CTime[0]);
+        m_storage.add({"database"}, ptJson, strError);
+      }
+      delete ptJson;
+    }
+    msleep(2000);
+  }
+  threadDecrement();
+}
+// }}}
 }
 }
