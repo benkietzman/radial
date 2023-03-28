@@ -210,7 +210,9 @@ void Storage::schedule(string strPrefix)
       }
       else if (strError == "Failed to find key.")
       {
-        ptJson->i("_time", CTime[0]);
+        stringstream ssTime;
+        ssTime << CTime[0];
+        ptJson->i("_time", ssTime.str(), 'n');
         m_storage.add({"database"}, ptJson, strError);
       }
       delete ptJson;
