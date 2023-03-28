@@ -194,28 +194,31 @@ void Storage::schedule(string strPrefix)
   time(&(CTime[0]));
   while (!shutdown())
   {
-    time(&(CTime[1]));
-    if ((CTime[1] - CTime[0]) > 600)
+    if (isMaster())
     {
-      CTime[0] = CTime[1];
-      ptJson = new Json;
-      if (m_storage.retrieve({"database", "_time"}, ptJson, strError))
+      time(&(CTime[1]));
+      if ((CTime[1] - CTime[0]) > 600)
       {
-        stringstream ssTime(ptJson->v);
-        ssTime >> CTime[2];
-        if ((CTime[0] - CTime[2]) > 14400)
+        CTime[0] = CTime[1];
+        ptJson = new Json;
+        if (m_storage.retrieve({"database", "_time"}, ptJson, strError))
         {
-          m_storage.remove({"database"}, strError);
+          stringstream ssTime(ptJson->v);
+          ssTime >> CTime[2];
+          if ((CTime[0] - CTime[2]) > 14400)
+          {
+            m_storage.remove({"database"}, strError);
+          }
         }
+        else if (strError == "Failed to find key.")
+        {
+          stringstream ssTime;
+          ssTime << CTime[0];
+          ptJson->i("_time", ssTime.str(), 'n');
+          m_storage.add({"database"}, ptJson, strError);
+        }
+        delete ptJson;
       }
-      else if (strError == "Failed to find key.")
-      {
-        stringstream ssTime;
-        ssTime << CTime[0];
-        ptJson->i("_time", ssTime.str(), 'n');
-        m_storage.add({"database"}, ptJson, strError);
-      }
-      delete ptJson;
     }
     msleep(2000);
   }
