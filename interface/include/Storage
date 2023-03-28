@@ -36,7 +36,6 @@ class Storage : public Interface
   ~Storage();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void schedule(string strPrefix);
 };
 // }}}
 }

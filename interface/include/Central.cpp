@@ -168,7 +168,7 @@ bool Central::accountType(data &d, string &e)
 bool Central::accountTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "account_type"};
+  list<string> k = {"central", "account_type"};
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
@@ -2980,6 +2980,20 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
   return b;
 }
 // }}}
+// {{{ autoMode()
+void Central::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  threadIncrement();
+  strPrefix += "->Central::autoMode()";
+  if (strOldMaster != strNewMaster)
+  {
+    stringstream ssMessage;
+    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
+    log(ssMessage.str());
+  }
+  threadDecrement();
+}
+// }}}
 // {{{ callback()
 void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
@@ -3444,7 +3458,7 @@ bool Central::loginType(data &d, string &e)
 bool Central::loginTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "login_type"};
+  list<string> k = {"central", "login_type"};
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
@@ -3516,7 +3530,7 @@ bool Central::menuAccess(data &d, string &e)
 bool Central::menuAccesses(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "menu_access"};
+  list<string> k = {"central", "menu_access"};
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
@@ -3549,7 +3563,7 @@ bool Central::menuAccesses(data &d, string &e)
 bool Central::notifyPriorities(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "notify_priority"};
+  list<string> k = {"central", "notify_priority"};
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
@@ -3675,7 +3689,7 @@ bool Central::packageType(data &d, string &e)
 bool Central::packageTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "package_type"};
+  list<string> k = {"central", "package_type"};
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
@@ -3712,6 +3726,50 @@ void Central::rm(Json *ptJson, const string strField)
     delete ptJson->m[strField];
     ptJson->m.erase(strField);
   }
+}
+// }}}
+// {{{ schedule()
+void Central::schedule(string strPrefix)
+{
+  string strError;
+  stringstream ssMessage;
+  time_t CTime[3] = {0, 0, 0};
+  Json *ptJson;
+
+  threadIncrement();
+  strPrefix += "->Central::schedule()";
+  time(&(CTime[0]));
+  while (!shutdown())
+  {
+    if (isMaster())
+    {
+      time(&(CTime[1]));
+      if ((CTime[1] - CTime[0]) > 600)
+      {
+        CTime[0] = CTime[1];
+        ptJson = new Json;
+        if (storageRetrieve({"central", "_time"}, ptJson, strError))
+        {
+          stringstream ssTime(ptJson->v);
+          ssTime >> CTime[2];
+          if ((CTime[0] - CTime[2]) > 14400)
+          {
+            storageRemove({"central"}, strError);
+          }
+        }
+        else if (strError == "Failed to find key.")
+        {
+          stringstream ssTime;
+          ssTime << CTime[0];
+          ptJson->i("_time", ssTime.str(), 'n');
+          storageAdd({"central"}, ptJson, strError);
+        }
+        delete ptJson;
+      }
+    }
+    msleep(2000);
+  }
+  threadDecrement();
 }
 // }}}
 // {{{ server()
