@@ -3124,7 +3124,7 @@ bool Central::contactType(data &d, string &e)
         e = "No results returned.";
       }
     }
-    dbf(g); 
+    dbf(g);
   }
   else
   {
@@ -3535,12 +3535,12 @@ bool Central::menuAccesses(data &d, string &e)
   Json *o = d.p->m["o"], *s = new Json;
 
   if (sr(k, s, e))
-  { 
+  {
     b = true;
     d.p->i("o", s);
   }
   else
-  { 
+  {
     q << "select id, type from menu_access order by type";
     auto g = dbq(q.str(), e);
     if (g != NULL)
@@ -3568,12 +3568,12 @@ bool Central::notifyPriorities(data &d, string &e)
   Json *o = d.p->m["o"], *s = new Json;
 
   if (sr(k, s, e))
-  { 
+  {
     b = true;
     d.p->i("o", s);
   }
   else
-  { 
+  {
     q << "select id, priority from notify_priority order by priority";
     auto g = dbq(q.str(), e);
     if (g != NULL)
@@ -3694,12 +3694,12 @@ bool Central::packageTypes(data &d, string &e)
   Json *o = d.p->m["o"], *s = new Json;
 
   if (sr(k, s, e))
-  { 
+  {
     b = true;
     d.p->i("o", s);
   }
   else
-  { 
+  {
     q << "select id, type from package_type order by type";
     auto g = dbq(q.str(), e);
     if (g != NULL)
@@ -4298,7 +4298,7 @@ bool Central::serverNotify(data &d, string &e)
     else
     {
       e = "Please provide the notification.";
-    } 
+    }
   }
   else
   {
