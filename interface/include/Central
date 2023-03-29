@@ -110,6 +110,7 @@ class Central : public Interface
   bool packageType(data &d, string &e);
   bool packageTypes(data &d, string &e);
   void rm(Json *ptJson, const string strField);
+  bool sa(const string strKey, Json *ptData, string &strError);
   bool server(data &d, string &e);
   bool serverAdd(data &d, string &e);
   bool serverDetailsByApplicationID(data &d, string &e);
@@ -124,6 +125,7 @@ class Central : public Interface
   bool serverUserEdit(data &d, string &e);
   bool serverUserRemove(data &d, string &e);
   bool serverUsersByServerID(data &d, string &e);
+  bool sr(const string strKey, string &strError);
   bool user(data &d, string &e);
   bool userAdd(data &d, string &e);
   bool userEdit(data &d, string &e);

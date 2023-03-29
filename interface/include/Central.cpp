@@ -168,11 +168,11 @@ bool Central::accountType(data &d, string &e)
 bool Central::accountTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"central", "account_type"};
+  string k = "account_type";
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
-  if (storageRetrieve(k, s, e))
+  if (sr(k, s, e))
   {
     b = true;
     d.p->i("o", s);
@@ -188,7 +188,7 @@ bool Central::accountTypes(data &d, string &e)
       {
         o->pb(r);
       }
-      storageAdd(k, o, e);
+      sa(k, o, e);
     }
     dbf(g);
   }
@@ -3458,11 +3458,11 @@ bool Central::loginType(data &d, string &e)
 bool Central::loginTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"central", "login_type"};
+  string k = "login_type";
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
-  if (storageRetrieve(k, s, e))
+  if (sr(k, s, e))
   {
     b = true;
     d.p->i("o", s);
@@ -3478,7 +3478,7 @@ bool Central::loginTypes(data &d, string &e)
       {
         o->pb(r);
       }
-      storageAdd(k, o, e);
+      sa(k, o, e);
     }
     dbf(g);
   }
@@ -3530,11 +3530,11 @@ bool Central::menuAccess(data &d, string &e)
 bool Central::menuAccesses(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"central", "menu_access"};
+  string k = "menu_access";
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
-  if (storageRetrieve(k, s, e))
+  if (sr(k, s, e))
   { 
     b = true;
     d.p->i("o", s);
@@ -3550,7 +3550,7 @@ bool Central::menuAccesses(data &d, string &e)
       {
         o->pb(r);
       }
-      storageAdd(k, o, e);
+      sa(k, o, e);
     }
     dbf(g);
   }
@@ -3563,11 +3563,11 @@ bool Central::menuAccesses(data &d, string &e)
 bool Central::notifyPriorities(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"central", "notify_priority"};
+  string k = "notify_priority";
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
-  if (storageRetrieve(k, s, e))
+  if (sr(k, s, e))
   { 
     b = true;
     d.p->i("o", s);
@@ -3583,7 +3583,7 @@ bool Central::notifyPriorities(data &d, string &e)
       {
         o->pb(r);
       }
-      storageAdd(k, o, e);
+      sa(k, o, e);
     }
     dbf(g);
   }
@@ -3689,11 +3689,11 @@ bool Central::packageType(data &d, string &e)
 bool Central::packageTypes(data &d, string &e)
 {
   bool b = false;
-  list<string> k = {"central", "package_type"};
+  string k = "package_type";
   stringstream q;
   Json *o = d.p->m["o"], *s = new Json;
 
-  if (storageRetrieve(k, s, e))
+  if (sr(k, s, e))
   { 
     b = true;
     d.p->i("o", s);
@@ -3709,7 +3709,7 @@ bool Central::packageTypes(data &d, string &e)
       {
         o->pb(r);
       }
-      storageAdd(k, o, e);
+      sa(k, o, e);
     }
     dbf(g);
   }
@@ -3726,6 +3726,20 @@ void Central::rm(Json *ptJson, const string strField)
     delete ptJson->m[strField];
     ptJson->m.erase(strField);
   }
+}
+// }}}
+// {{{ sa()
+bool Central::sa(const string strKey, Json *ptData, string &strError)
+{
+  bool bResult = false;
+  list<string> keys = {"central", strKey};
+
+  if (storageAdd(keys, ptData, strError))
+  {
+    bResult = true;
+  }
+
+  return bResult;
 }
 // }}}
 // {{{ schedule()
@@ -3748,7 +3762,7 @@ void Central::schedule(string strPrefix)
       {
         CTime[0] = CTime[1];
         ptJson = new Json;
-        if (storageRetrieve({"central", "_time"}, ptJson, strError))
+        if (sr("_time", ptJson, strError))
         {
           stringstream ssTime(ptJson->v);
           ssTime >> CTime[2];
@@ -4799,6 +4813,20 @@ bool Central::serverUsersByServerID(data &d, string &e)
 void Central::setCallbackAddon(bool (*pCallback)(const string, data &, string &, bool &))
 {
   m_pCallbackAddon = pCallback;
+}
+// }}}
+// {{{ sr()
+bool Central::sr(const string strKey, Json *ptData, string &strError)
+{
+  bool bResult = false;
+  list<string> keys = {"central", strKey};
+
+  if (storageRetrieve(keys, ptData, strError))
+  {
+    bResult = true;
+  }
+
+  return bResult;
 }
 // }}}
 // {{{ user()
