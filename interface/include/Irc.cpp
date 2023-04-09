@@ -1029,8 +1029,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           nodes.unique();
           if (!nodes.empty())
           {
-            // TODO:  Add logic to perform a restart, start, stop.
-            // m_interfaces, m_links
             for (auto &node : nodes)
             {
               if (strFunction == "restart" || strFunction == "stop")
@@ -1038,6 +1036,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 if (interfaceRemove(node, strInterface, strError))
                 {
                 }
+                // TODO:  Add logic to test for removal using loop.
               }
               if (strFunction == "restart" || strFunction == "start")
               {
