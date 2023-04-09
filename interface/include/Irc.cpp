@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
-  list<string> actions = {"central", "centralmon", "database", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"central", "centralmon", "database", "interface", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -242,6 +242,29 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strQuery.empty())
           {
             ptRequest->i("Query", strQuery);
+          }
+        }
+      }
+      // }}}
+      // {{{ interface
+      else if (strAction == "interface")
+      {
+        string strInterface;
+        ssData >> strInterface;
+        if (!strInterface.empty())
+        {
+          string strFunction;
+          ptRequest->i("Interface", strInterface);
+          ssData >> strFunction;
+          if (!strFunction.empty())
+          {
+            string strNode;
+            ssData >> strNode;
+            ptRequest->i("Function", strFunction);
+            if (!strNode.empty())
+            {
+              ptRequest->i("Node", strNode);
+            }
           }
         }
       }
@@ -967,6 +990,81 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << " error:  You are not authorized to access database.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
+  // {{{ interface
+  else if (strAction == "irc")
+  {
+    string strInterface = var("Interface", ptData);
+    if (!strInterface.empty())
+    {
+      string strFunction = var("Function", ptData);
+      if (!strFunction.empty())
+      {
+        if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
+        {
+          list<string> nodes;
+          string strNode = var("Node", ptData);
+          m_mutexShare.lock();
+          if (!strNode.empty())
+          {
+            if (strInterface == "hub" || m_interfaces.find(strInterface) != m_interfaces.end())
+            {
+              nodes.push_back(strNode);
+            }
+          }
+          else
+          {
+            for (auto &link : m_links)
+            {
+              if (strInterface == "hub" || link.second->interfaces.find(strInterface) != link.second->interfaces.end())
+              {
+                nodes.push_back(link.first);
+              }
+            }
+          }
+          m_mutexShare.unlock();
+          nodes.sort();
+          nodes.unique();
+          if (!nodes.empty())
+          {
+            // TODO:  Add logic to perform a restart, start, stop.
+            // m_interfaces, m_links
+            for (auto &node : nodes)
+            {
+              if (strFunction == "restart" || strFunction == "stop")
+              {
+                if (interfaceRemove(node, strInterface, strError))
+                {
+                }
+              }
+              if (strFunction == "restart" || strFunction == "start")
+              {
+                if (interfaceAdd(node, strInterface, strError))
+                {
+                }
+              }
+            }
+          }
+          else
+          {
+            ssText << ":  Interface does not exist.";
+          }
+        }
+        else
+        {
+          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
+        }
+      }
+      else
+      {
+        ssText << ":  Please provide a Function immediately following the Interface.";
+      }
+    }
+    else
+    {
+      ssText << ":  The interface action is used to manage Radial interfaces.  Please provide an Interface immediately following the action.";
     }
   }
   // }}}

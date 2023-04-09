@@ -50,6 +50,8 @@ class Interface : public Base
   void email(const string strFrom, const string strTo, const string strSubject, const string strText, const string strHtml, string &strError);
   void email(const string strFrom, list<string> to, const string strSubject, const string strText, const string strHtml, string &strError);
   void email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError);
+  bool interfaceAdd(const string strNode, const string strInterface, string &strError);
+  bool interfaceRemove(const string strNode, const string strInterface, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
   bool isMaster();
   bool isMasterSettled();

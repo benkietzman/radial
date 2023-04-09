@@ -437,6 +437,26 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
+// {{{ interfaceAdd()
+bool Interface::interfaceAdd(const string strNode, const string strInterface, string &strError)
+{
+  bool bResult = false;
+
+  // TODO:  Add interface addition logic.
+
+  return bResult;
+}
+// }}}
+// {{{ interfaceRemove()
+bool Interface::interfaceRemove(const string strNode, const string strInterface, string &strError)
+{
+  bool bResult = false;
+
+  // TODO:  Add interface removal logic.
+
+  return bResult;
+}
+// }}}
 // {{{ interfaces()
 void Interface::interfaces(string strPrefix, Json *ptJson)
 {

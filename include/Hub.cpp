@@ -562,19 +562,67 @@ void Hub::process(string strPrefix)
                             {
                               if (!empty(ptJson, "Name"))
                               {
+                                bool bRespawn = false, bRestricted = false;
+                                ifstream inInterfaces;
+                                string strAccessFunction, strCommand;
+                                stringstream ssInterfaces;
+                                Json *ptInterfaces = NULL;
+                                ssInterfaces << m_strData << "/interfaces.json";
+                                inInterfaces.open(ssInterfaces.str().c_str());
+                                if (inInterfaces)
+                                {
+                                  string strLine;
+                                  stringstream ssJson;
+                                  while (getline(inInterfaces, strLine))
+                                  {
+                                    ssJson << strLine;
+                                  }
+                                  ptInterfaces = new Json(ssJson.str());
+                                }
+                                inInterfaces.close();
+                                if (ptInterfaces != NULL)
+                                {
+                                  if (exist(ptInterfaces, ptJson->m["Name"]->v))
+                                  {
+                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "AccessFunction"))
+                                    {
+                                      strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->m["AccessFunction"]->v;
+                                    }
+                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Command"))
+                                    {
+                                      strCommand = ptInterfaces->m[ptJson->m["Name"]->v]->m["Command"]->v;
+                                    }
+                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Respawn") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Respawn"]->v == "1")
+                                    {
+                                      bRespawn = true;
+                                    }
+                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Restricted") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Restricted"]->v == "1")
+                                    {
+                                      bRestricted = true;
+                                    }
+                                  }
+                                  delete ptInterfaces;
+                                }
+                                if (!empty(ptJson, "AccessFunction"))
+                                {
+                                  strAccessFunction = ptJson->m["AccessFunction"]->v;
+                                }
                                 if (!empty(ptJson, "Command"))
                                 {
-                                  if (add(strPrefix, ptJson->m["Name"]->v, ((!empty(ptJson, "AccessFunction"))?ptJson->m["AccessFunction"]->v:"Function"), ptJson->m["Command"]->v, ((!empty(ptJson, "Respawn") && ptJson->m["Respawn"]->v == "1")?true:false), ((!empty(ptJson, "Restricted") && ptJson->m["Restricted"]->v == "1")?true:false)))
-                                  {
-                                    bResult = true;
-                                    interfaces();
-                                  }
+                                  strCommand = ptJson->m["Command"]->v;
                                 }
-                                else
+                                if (!empty(ptJson, "Respawn"))
                                 {
-                                  ssMessage.str("");
-                                  ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add," << ptJson->m["Name"]->v << "]:  Please provide the Command.";
-                                  log(ssMessage.str());
+                                  bRespawn = ((ptJson->m["Respawn"]->v == "1")?true:false);
+                                }
+                                if (!empty(ptJson, "Restricted"))
+                                {
+                                  bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
+                                }
+                                if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, bRespawn, bRestricted))
+                                {
+                                  bResult = true;
+                                  interfaces();
                                 }
                               }
                               else
