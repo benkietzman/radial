@@ -1029,7 +1029,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssSubText << ":  Processing... -";
               for (auto &node : nodes)
               {
-                ssSubText << " " << node;
+                ssSubText << " (" << node << ")";
               }
               chat(strTarget, ssSubText.str());
               for (auto &node : nodes)
