@@ -1085,7 +1085,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   {
                     if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
                     {
-                      bResult = true;
+                      bSubResult = true;
                     }
                   }
                   else
@@ -1093,12 +1093,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     strError = "Failed to stop.";
                   }
                 }
-                for (auto &result : results)
-                {
-                  ssSubText.str("");
-                  ssSubText << node << ":  " << ((bSubResult)?"done":strError);
-                  chat(strTarget, ssSubText.str());
-                }
+                ssSubText.str("");
+                ssSubText << node << ":  " << ((bSubResult)?"done":strError);
+                chat(strTarget, ssSubText.str());
               }
               ssText << ":  done";
             }
