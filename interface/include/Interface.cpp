@@ -461,6 +461,7 @@ bool Interface::interfaceAdd(const string strNode, const string strInterface, st
   {
     Json *ptJson = new Json;
     ptJson->i("Node", strNode);
+    ptJson->i("Interface", "hub");
     ptJson->i("Function", "add");
     ptJson->i("Name", strInterface);
     if (hub("link", ptJson, strError))
@@ -501,6 +502,7 @@ bool Interface::interfaceRemove(const string strNode, const string strInterface,
   {
     Json *ptJson = new Json;
     ptJson->i("Node", strNode);
+    ptJson->i("Interface", "hub");
     ptJson->i("Function", "remove");
     ptJson->i("Name", strInterface);
     if (hub("link", ptJson, strError))

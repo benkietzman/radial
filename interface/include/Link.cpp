@@ -600,6 +600,11 @@ void Link::process(string strPrefix)
                   }
                   else if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v != "link")
                   {
+                    if (ptJson->m["Interface"]->v == "hub")
+                    {
+                      delete ptJson->m["Interface"];
+                      ptJson->m.erase("Interface");
+                    }
                     if (!empty(ptJson, "Node"))
                     {
                       list<radialLink *>::iterator linkIter = m_links.end();
