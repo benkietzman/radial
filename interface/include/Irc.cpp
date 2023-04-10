@@ -1081,7 +1081,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   }
                   else
                   {
-                    results[node] = strError;
+                    results[node] = (string)"Interface::interfaceAdd() " + strError;
                   }
                 }
                 else
@@ -1091,7 +1091,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
               else
               {
-                results[node] = strError;
+                results[node] = (string)"Interface::interfaceRemove() " + strError;
               }
             }
             for (auto &result : results)
