@@ -1028,6 +1028,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               for (auto &node : nodes)
               {
                 bool bSubResult = false;
+                stringstream ssSubText;
                 if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
                   bool bStopped = true;
@@ -1086,7 +1087,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     strError = "Failed to stop.";
                   }
                 }
-                ssSubText.str("");
                 ssSubText << node << ":  " << ((bSubResult)?"okay":strError);
                 chat(strTarget, ssSubText.str());
               }
