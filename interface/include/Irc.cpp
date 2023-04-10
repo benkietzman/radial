@@ -1015,13 +1015,20 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             else
             {
+              stringstream ssSubText;
               m_mutexShare.lock();
               for (auto &link : m_links)
               {
                 nodes.push_back(link->strNode);
+                ssSubText.str("");
+                ssSubText << "link - " << link->strNode;
+                chat(strTarget, ssSubText.str());
               }
               m_mutexShare.unlock();
               nodes.push_back(m_strNode);
+              ssSubText.str("");
+              ssSubText << "local - " << m_strNode;
+              chat(strTarget, ssSubText.str());
             }
             if (!nodes.empty())
             {
