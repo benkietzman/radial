@@ -994,7 +994,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   }
   // }}}
   // {{{ interface
-  else if (strAction == "irc")
+  else if (strAction == "interface")
   {
     string strInterface = var("Interface", ptData);
     if (!strInterface.empty())
