@@ -996,127 +996,134 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ interface
   else if (strAction == "interface")
   {
-    string strInterface = var("Interface", ptData);
-    if (!strInterface.empty())
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
-      string strFunction = var("Function", ptData);
-      if (!strFunction.empty())
+      string strInterface = var("Interface", ptData);
+      if (!strInterface.empty())
       {
-        if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
+        string strFunction = var("Function", ptData);
+        if (!strFunction.empty())
         {
-          list<string> nodes;
-          map<string, string> results;
-          string strNode = var("Node", ptData);
-          m_mutexShare.lock();
-          if (!strNode.empty())
+          if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
           {
-            nodes.push_back(strNode);
-          }
-          else
-          {
-            for (auto &link : m_links)
+            list<string> nodes;
+            map<string, string> results;
+            string strNode = var("Node", ptData);
+            m_mutexShare.lock();
+            if (!strNode.empty())
             {
-              nodes.push_back(link->strNode);
+              nodes.push_back(strNode);
             }
-          }
-          m_mutexShare.unlock();
-          nodes.sort();
-          nodes.unique();
-          if (!nodes.empty())
-          {
-            ssText << ":";
-            for (auto &node : nodes)
+            else
             {
-              if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
+              for (auto &link : m_links)
               {
-                bool bStopped = true;
-                if (strFunction == "restart" || strFunction == "stop")
+                nodes.push_back(link->strNode);
+              }
+            }
+            m_mutexShare.unlock();
+            nodes.sort();
+            nodes.unique();
+            if (!nodes.empty())
+            {
+              ssText << ":";
+              for (auto &node : nodes)
+              {
+                if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
-                  time_t CTime[2];
-                  bStopped = false;
-                  time(&(CTime[0]));
-                  CTime[1] = CTime[0];
-                  while (!bStopped && (CTime[1] - CTime[0]) < 40)
+                  bool bStopped = true;
+                  if (strFunction == "restart" || strFunction == "stop")
                   {
-                    m_mutexShare.lock();
-                    if (node == m_strNode)
+                    time_t CTime[2];
+                    bStopped = false;
+                    time(&(CTime[0]));
+                    CTime[1] = CTime[0];
+                    while (!bStopped && (CTime[1] - CTime[0]) < 40)
                     {
-                      if (m_interfaces.find(strInterface) == m_interfaces.end())
+                      m_mutexShare.lock();
+                      if (node == m_strNode)
                       {
-                        bStopped = true;
-                      }
-                    }
-                    else
-                    {
-                      auto linkIter = m_links.end();
-                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
-                      {
-                        if ((*i)->strNode == node)
-                        {
-                          linkIter = i;
-                        }
-                      }
-                      if (linkIter != m_links.end())
-                      {
-                        if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
+                        if (m_interfaces.find(strInterface) == m_interfaces.end())
                         {
                           bStopped = true;
                         }
                       }
                       else
                       {
-                        bStopped = true;
+                        auto linkIter = m_links.end();
+                        for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+                        {
+                          if ((*i)->strNode == node)
+                          {
+                            linkIter = i;
+                          }
+                        }
+                        if (linkIter != m_links.end())
+                        {
+                          if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
+                          {
+                            bStopped = true;
+                          }
+                        }
+                        else
+                        {
+                          bStopped = true;
+                        }
                       }
+                      m_mutexShare.unlock();
+                      msleep(250);
+                      time(&(CTime[1]));
                     }
-                    m_mutexShare.unlock();
-                    msleep(250);
-                    time(&(CTime[1]));
                   }
-                }
-                if (bStopped)
-                {
-                  if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
+                  if (bStopped)
                   {
-                    results[node] = "done";
+                    if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
+                    {
+                      results[node] = "done";
+                    }
+                    else
+                    {
+                      results[node] = (string)"Interface::interfaceAdd() " + strError;
+                    }
                   }
                   else
                   {
-                    results[node] = (string)"Interface::interfaceAdd() " + strError;
+                    results[node] = "Failed to stop.";
                   }
                 }
                 else
                 {
-                  results[node] = "Failed to stop.";
+                  results[node] = (string)"Interface::interfaceRemove() " + strError;
                 }
               }
-              else
+              for (auto &result : results)
               {
-                results[node] = (string)"Interface::interfaceRemove() " + strError;
+                ssText << endl << result.first << ":  " << result.second;
               }
             }
-            for (auto &result : results)
+            else
             {
-              ssText << endl << result.first << ":  " << result.second;
+              ssText << ":  Interface does not exist.";
             }
           }
           else
           {
-            ssText << ":  Interface does not exist.";
+            ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
           }
         }
         else
         {
-          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
+          ssText << ":  Please provide a Function immediately following the Interface.";
         }
       }
       else
       {
-        ssText << ":  Please provide a Function immediately following the Interface.";
+        ssText << ":  The interface action is used to manage Radial interfaces.  Please provide an Interface immediately following the action.";
       }
     }
     else
     {
-      ssText << ":  The interface action is used to manage Radial interfaces.  Please provide an Interface immediately following the action.";
+      ssText << " error:  You are not authorized to access interface.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
