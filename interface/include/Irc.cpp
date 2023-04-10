@@ -1016,15 +1016,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             else
             {
-              nodes.push_back(m_strNode);
               for (auto &link : m_links)
               {
                 nodes.push_back(link->strNode);
               }
+              nodes.push_back(m_strNode);
             }
             m_mutexShare.unlock();
-            nodes.sort();
-            nodes.unique();
             if (!nodes.empty())
             {
               ssText << ":";
