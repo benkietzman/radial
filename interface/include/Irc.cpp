@@ -1010,19 +1010,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           m_mutexShare.lock();
           if (!strNode.empty())
           {
-            if (strInterface == "hub" || m_interfaces.find(strInterface) != m_interfaces.end())
-            {
-              nodes.push_back(strNode);
-            }
+            nodes.push_back(strNode);
           }
           else
           {
             for (auto &link : m_links)
             {
-              if (strInterface == "hub" || link->interfaces.find(strInterface) != link->interfaces.end())
-              {
-                nodes.push_back(link->strNode);
-              }
+              nodes.push_back(link->strNode);
             }
           }
           m_mutexShare.unlock();
