@@ -1009,25 +1009,32 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             list<string> nodes;
             map<string, string> results;
             string strNode = var("Node", ptData);
-            m_mutexShare.lock();
             if (!strNode.empty())
             {
               nodes.push_back(strNode);
             }
             else
             {
+              m_mutexShare.lock();
               for (auto &link : m_links)
               {
                 nodes.push_back(link->strNode);
               }
+              m_mutexShare.unlock();
               nodes.push_back(m_strNode);
             }
-            m_mutexShare.unlock();
             if (!nodes.empty())
             {
-              ssText << ":";
+              stringstream ssSubText(ssText.str());
+              ssSubText << ":  Processing... -";
               for (auto &node : nodes)
               {
+                ssSubText << " " << node;
+              }
+              chat(strTarget, ssSubText.str());
+              for (auto &node : nodes)
+              {
+                bool bSubResult = false;
                 if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
                   bool bStopped = true;
@@ -1078,27 +1085,22 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   {
                     if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
                     {
-                      results[node] = "done";
-                    }
-                    else
-                    {
-                      results[node] = (string)"Interface::interfaceAdd() " + strError;
+                      bResult = true;
                     }
                   }
                   else
                   {
-                    results[node] = "Failed to stop.";
+                    strError = "Failed to stop.";
                   }
                 }
-                else
+                for (auto &result : results)
                 {
-                  results[node] = (string)"Interface::interfaceRemove() " + strError;
+                  ssSubText.str("");
+                  ssSubText << node << ":  " << ((bSubResult)?"done":strError);
+                  chat(strTarget, ssSubText.str());
                 }
               }
-              for (auto &result : results)
-              {
-                ssText << endl << result.first << ":  " << result.second;
-              }
+              ssText << ":  done";
             }
             else
             {
