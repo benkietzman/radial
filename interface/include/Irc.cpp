@@ -1087,7 +1087,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     strError = "Failed to stop.";
                   }
                 }
-                ssSubText << node << ":  " << ((bSubResult)?"okay":strError);
+                ssSubText << node << ":  " << ((bSubResult)?"done":strError);
                 chat(strTarget, ssSubText.str());
               }
               ssText << ":  done";
