@@ -497,6 +497,9 @@ void Hub::process(string strPrefix)
                         }
                         else if (sockets[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
                         {
+stringstream ssMessage;
+ssMessage << strPrefix << ":  " << ptJson;
+log(ssMessage.str());
                           for (auto &link : m_links)
                           {
                             for (auto &interface : link->interfaces)
