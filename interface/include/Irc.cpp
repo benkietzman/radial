@@ -1024,7 +1024,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           nodes.unique();
           if (!nodes.empty())
           {
-            ssText << ":  Processing request...";
+            ssText << ":";
             for (auto &node : nodes)
             {
               if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Interface not found.")
