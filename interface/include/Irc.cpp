@@ -1027,7 +1027,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << ":";
             for (auto &node : nodes)
             {
-              if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Interface not found.")
+              if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
               {
                 bool bStopped = true;
                 if (strFunction == "restart" || strFunction == "stop")
