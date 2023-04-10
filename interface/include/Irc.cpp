@@ -1025,13 +1025,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             if (!nodes.empty())
             {
-              stringstream ssSubText(ssText.str());
-              ssSubText << ":  Processing... -";
-              for (auto &node : nodes)
-              {
-                ssSubText << " (" << node << ")";
-              }
-              chat(strTarget, ssSubText.str());
               for (auto &node : nodes)
               {
                 bool bSubResult = false;
@@ -1094,7 +1087,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   }
                 }
                 ssSubText.str("");
-                ssSubText << node << ":  " << ((bSubResult)?"done":strError);
+                ssSubText << node << ":  " << ((bSubResult)?"okay":strError);
                 chat(strTarget, ssSubText.str());
               }
               ssText << ":  done";
