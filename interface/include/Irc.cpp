@@ -1005,6 +1005,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
         {
           list<string> nodes;
+          map<string, string> results;
           string strNode = var("Node", ptData);
           m_mutexShare.lock();
           if (!strNode.empty())
@@ -1018,9 +1019,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             for (auto &link : m_links)
             {
-              if (strInterface == "hub" || link.second->interfaces.find(strInterface) != link.second->interfaces.end())
+              if (strInterface == "hub" || link->interfaces.find(strInterface) != link->interfaces.end())
               {
-                nodes.push_back(link.first);
+                nodes.push_back(link->strNode);
               }
             }
           }
@@ -1029,21 +1030,79 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           nodes.unique();
           if (!nodes.empty())
           {
+            ssText << ":  Processing request...";
             for (auto &node : nodes)
             {
-              if (strFunction == "restart" || strFunction == "stop")
+              if (strFunction == "start" || interfaceRemove(node, strInterface, strError))
               {
-                if (interfaceRemove(node, strInterface, strError))
+                bool bStopped = true;
+                if (strFunction == "restart" || strFunction == "stop")
                 {
+                  time_t CTime[2];
+                  bStopped = false;
+                  time(&(CTime[0]));
+                  CTime[1] = CTime[0];
+                  while (!bStopped && (CTime[1] - CTime[0]) < 40)
+                  {
+                    m_mutexShare.lock();
+                    if (node == m_strNode)
+                    {
+                      if (m_interfaces.find(strInterface) == m_interfaces.end())
+                      {
+                        bStopped = true;
+                      }
+                    }
+                    else
+                    {
+                      auto linkIter = m_links.end();
+                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+                      {
+                        if ((*i)->strNode == node)
+                        {
+                          linkIter = i;
+                        }
+                      }
+                      if (linkIter != m_links.end())
+                      {
+                        if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
+                        {
+                          bStopped = true;
+                        }
+                      }
+                      else
+                      {
+                        bStopped = true;
+                      }
+                    }
+                    m_mutexShare.unlock();
+                    msleep(250);
+                    time(&(CTime[1]));
+                  }
                 }
-                // TODO:  Add logic to test for removal using loop.
+                if (bStopped)
+                {
+                  if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
+                  {
+                    results[node] = "done";
+                  }
+                  else
+                  {
+                    results[node] = strError;
+                  }
+                }
+                else
+                {
+                  results[node] = "Failed to stop.";
+                }
               }
-              if (strFunction == "restart" || strFunction == "start")
+              else
               {
-                if (interfaceAdd(node, strInterface, strError))
-                {
-                }
+                results[node] = strError;
               }
+            }
+            for (auto &result : results)
+            {
+              ssText << endl << result.first << ":  " << result.second;
             }
           }
           else

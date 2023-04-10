@@ -438,21 +438,81 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
 }
 // }}}
 // {{{ interfaceAdd()
+bool Interface::interfaceAdd(const string strInterface, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "add");
+  ptJson->i("Name", strInterface);
+  if (hub(ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
 bool Interface::interfaceAdd(const string strNode, const string strInterface, string &strError)
 {
   bool bResult = false;
 
-  // TODO:  Add interface addition logic.
+  if (!strNode.empty() && strNode != m_strNode)
+  {
+    Json *ptJson = new Json;
+    ptJson->i("Node", strNode);
+    ptJson->i("Function", "add");
+    ptJson->i("Name", strInterface);
+    if (hub("link", ptJson, strError))
+    {
+      bResult = true;
+    }
+    delete ptJson;
+  }
+  else if (interfaceAdd(strInterface, strError))
+  {
+    bResult = true;
+  }
 
   return bResult;
 }
 // }}}
 // {{{ interfaceRemove()
+bool Interface::interfaceRemove(const string strInterface, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "remove");
+  ptJson->i("Name", strInterface);
+  if (hub(ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
 bool Interface::interfaceRemove(const string strNode, const string strInterface, string &strError)
 {
   bool bResult = false;
 
-  // TODO:  Add interface removal logic.
+  if (!strNode.empty() && strNode != m_strNode)
+  {
+    Json *ptJson = new Json;
+    ptJson->i("Node", strNode);
+    ptJson->i("Function", "remove");
+    ptJson->i("Name", strInterface);
+    if (hub("link", ptJson, strError))
+    {
+      bResult = true;
+    }
+    delete ptJson;
+  }
+  else if (interfaceRemove(strInterface, strError))
+  {
+    bResult = true;
+  }
 
   return bResult;
 }
