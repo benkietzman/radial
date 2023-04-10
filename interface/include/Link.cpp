@@ -1015,16 +1015,21 @@ void Link::process(string strPrefix)
                           Json *ptSubLink = ptJson->m["_l"];
                           ptJson->m.erase("_l");
                           keyRemovals(ptJson);
-                          if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v == "hub")
-                          {
-                            delete ptJson->m["Interface"];
-                            ptJson->m.erase("Interface");
-                          }
                           for (auto &j : ptSubLink->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
                           delete ptSubLink;
+                          if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v == "hub")
+                          {
+                            delete ptJson->m["Interface"];
+                            ptJson->m.erase("Interface");
+                            if (exist(ptJson, "_t"))
+                            {
+                              delete ptJson->m["_t"];
+                              ptJson->m.erase("_t");
+                            }
+                          }
                           hub(ptJson, false);
                         }
                       }
