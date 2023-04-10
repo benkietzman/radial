@@ -1006,6 +1006,8 @@ void Link::process(string strPrefix)
                           {
                             if (ptJson->m["Interface"]->v == "hub")
                             {
+                              delete ptJson->m["_t"];
+                              ptJson->m.erase("_t");
                               delete ptJson->m["Interface"];
                               ptJson->m.erase("Interface");
                             }
