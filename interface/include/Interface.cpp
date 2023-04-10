@@ -669,6 +669,9 @@ void Interface::links(string strPrefix, Json *ptJson)
     delete link;
   }
   m_links.clear();
+stringstream ssMessage;
+ssMessage << strPrefix << ":  " << ptJson;
+log(ssMessage.str());
   if (exist(ptJson, "Links"))
   {
     for (auto &link : ptJson->m["Links"]->m)
