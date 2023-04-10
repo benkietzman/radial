@@ -1004,7 +1004,15 @@ void Link::process(string strPrefix)
                           ptJson->i("_s", m_strName);
                           if (exist(ptJson, "_t") && ptJson->m["_t"]->v == "link" && !empty(ptJson, "Interface"))
                           {
-                            ptJson->i("_t", ptJson->m["Interface"]->v);
+                            if (ptJson->m["Interface"]->v == "hub")
+                            {
+                              delete ptJson->m["Interface"];
+                              ptJson->m.erase("Interface");
+                            }
+                            else
+                            {
+                              ptJson->i("_t", ptJson->m["Interface"]->v);
+                            }
                           }
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           ptJson->i("_u", ssUnique.str());
@@ -1020,16 +1028,6 @@ void Link::process(string strPrefix)
                             ptJson->i(j.first, j.second);
                           }
                           delete ptSubLink;
-                          if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v == "hub")
-                          {
-                            delete ptJson->m["Interface"];
-                            ptJson->m.erase("Interface");
-                            if (exist(ptJson, "_t"))
-                            {
-                              delete ptJson->m["_t"];
-                              ptJson->m.erase("_t");
-                            }
-                          }
                           hub(ptJson, false);
                         }
                       }
