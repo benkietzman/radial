@@ -676,7 +676,7 @@ void Interface::links(string strPrefix, Json *ptJson)
 if (m_strNode == "office" && m_strName == "irc" && link.first == "mysql")
 {
   stringstream ssMessage;
-  ssMessage << "== 5 == Interface::links():  office|irc --- " << link.second;
+  ssMessage << "== 6 == Interface::links():  office|irc --- " << link.second;
   log(ssMessage.str());
 }
       radialLink *ptLink = new radialLink;
@@ -958,6 +958,12 @@ void Interface::process(string strPrefix)
                 // {{{ links
                 else if (ptJson->m["Function"]->v == "links")
                 {
+if (m_strNode == "office" || m_strName == "irc")
+{
+  stringstream ssMessage;
+  ssMessage << "== 5 == Interface::process():  office|irc --- " << ptJson;
+  log(ssMessage.str()); 
+}
                   links(strPrefix, ptJson);
                 }
                 // }}}
