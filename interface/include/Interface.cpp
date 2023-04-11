@@ -958,7 +958,7 @@ void Interface::process(string strPrefix)
                 // {{{ links
                 else if (ptJson->m["Function"]->v == "links")
                 {
-if (m_strNode == "office" || m_strName == "irc")
+if (m_strNode == "office" && m_strName == "irc")
 {
   stringstream ssMessage;
   ssMessage << "== 5 == Interface::process():  office|irc --- " << ptJson;
