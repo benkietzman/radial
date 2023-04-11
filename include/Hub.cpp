@@ -173,12 +173,6 @@ void Hub::interfaces()
   }
   for (auto &i : m_interfaces)
   {
-if (m_strNode == "basement" && i.first == "link" && exist(ptJson->m["Interfaces"], "mysql"))
-{
-  stringstream ssMessage;
-  ssMessage << "== 1 == Hub::interfaces():  basement|hub sent mysql to basement|link --- " << ptJson->m["Interfaces"]->m["mysql"];
-  log(ssMessage.str());
-}
     target(i.first, ptJson);
   }
   delete ptJson;
@@ -215,12 +209,6 @@ void Hub::links()
     if (interface.first != "link")
     {
       Json *ptSubJson = new Json(ptJson);
-if (m_strNode == "office" && interface.first == "irc")
-{
-  stringstream ssMessage;
-  ssMessage << "== 4 == Hub::links():  office|hub sent links to office|irc --- " << ptSubJson;
-  log(ssMessage.str());
-}
       target(interface.first, ptSubJson);
       delete ptSubJson;
     }

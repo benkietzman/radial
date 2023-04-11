@@ -564,22 +564,10 @@ void Link::process(string strPrefix)
                           delete ptWrite;
                           for (auto &link : links)
                           {
-if (m_strNode == "basement" && link->strNode == "office" && exist(ptJson->m["Interfaces"], "mysql"))
-{
-  stringstream ssMessage;
-  ssMessage << "== 2 == Link::process(stdin) [links]:  basement|link sent mysql office|link --- " << ptJson->m["Interface"]->m["mysql"];
-  log(ssMessage.str());
-}
                             link->responses.push_back(strJson);
                           }
                           for (auto &link : m_links)
                           {
-if (m_strNode == "basement" && link->strNode == "office" && exist(ptJson->m["Interfaces"], "mysql"))
-{
-  stringstream ssMessage;
-  ssMessage << "== 2 == Link::process(stdin) [m_links]:  basement|link sent mysql office|link --- " << ptJson->m["Interface"]->m["mysql"];
-  log(ssMessage.str());
-}
                             link->responses.push_back(strJson);
                           }
                         }
@@ -992,12 +980,6 @@ if (m_strNode == "basement" && link->strNode == "office" && exist(ptJson->m["Int
                               ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                             }
                           }
-if (m_strNode == "office")
-{
-  stringstream ssMessage;
-  ssMessage << "== 3 == Link::process(socket):  office|link sent links to office|hub --- " << ptLinks;
-  log(ssMessage.str());
-}
                           hub(ptLinks, false);
                           delete ptLinks;
                         }
