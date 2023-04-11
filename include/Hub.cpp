@@ -214,13 +214,15 @@ void Hub::links()
   {
     if (interface.first != "link")
     {
+      Json *ptSubJson = new Json(ptJson);
 if (m_strNode == "office" && interface.first == "irc")
 {
   stringstream ssMessage;
-  ssMessage << "== 4 == Hub::links():  office|hub sent links to office|irc --- " << ptJson;
+  ssMessage << "== 4 == Hub::links():  office|hub sent links to office|irc --- " << ptSubJson;
   log(ssMessage.str());
 }
-      target(interface.first, ptJson);
+      target(interface.first, ptSubJson);
+      delete ptSubJson;
     }
   }
   delete ptJson;
