@@ -673,6 +673,12 @@ void Interface::links(string strPrefix, Json *ptJson)
   {
     for (auto &link : ptJson->m["Links"]->m)
     {
+if (m_strNode == "office" && m_strName == "irc" && link.first == "mysql")
+{
+  stringstream ssMessage;
+  ssMessage << "== 6 == Interface::links():  office|irc --- " << link->second;
+  log(ssMessage.str());
+}
       radialLink *ptLink = new radialLink;
       ptLink->strNode = link.first;
       if (!empty(link.second, "Server"))

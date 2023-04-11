@@ -173,6 +173,12 @@ void Hub::interfaces()
   }
   for (auto &i : m_interfaces)
   {
+if (m_strNode == "basement" && i.first == "link" && exist(ptJson->m["Interface"], "mysql"))
+{
+  stringstream ssMessage;
+  ssMessage << "== 1 == Hub::interfaces():  basement|hub sent mysql to basement|link --- " << ptJson->m["Interface"]->m["mysql"];
+  log(ssMessage.str());
+}
     target(i.first, ptJson);
   }
   delete ptJson;
@@ -208,6 +214,12 @@ void Hub::links()
   {
     if (interface.first != "link")
     {
+if (m_strNode == "office" && m_strName == "irc" && interface.first == "mysql")
+{
+  stringstream ssMessage;
+  ssMessage << "== 4 == Hub::links():  office|hub sent links to office|irc --- " << ptJson;
+  log(ssMessage.str());
+}
       target(interface.first, ptJson);
     }
   }
