@@ -214,7 +214,7 @@ void Hub::links()
   {
     if (interface.first != "link")
     {
-if (m_strNode == "office" && interface.first == "mysql")
+if (m_strNode == "office" && interface.first == "irc")
 {
   stringstream ssMessage;
   ssMessage << "== 4 == Hub::links():  office|hub sent links to office|irc --- " << ptJson;
