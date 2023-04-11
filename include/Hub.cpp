@@ -173,7 +173,7 @@ void Hub::interfaces()
   }
   for (auto &i : m_interfaces)
   {
-if (m_strNode == "basement" && i.first == "link" && exist(ptJson->m["Interface"], "mysql"))
+if (m_strNode == "basement" && i.first == "link" && exist(ptJson->m["Interfaces"], "mysql"))
 {
   stringstream ssMessage;
   ssMessage << "== 1 == Hub::interfaces():  basement|hub sent mysql to basement|link --- " << ptJson->m["Interface"]->m["mysql"];
