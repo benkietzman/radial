@@ -176,7 +176,7 @@ void Hub::interfaces()
 if (m_strNode == "basement" && i.first == "link" && exist(ptJson->m["Interfaces"], "mysql"))
 {
   stringstream ssMessage;
-  ssMessage << "== 1 == Hub::interfaces():  basement|hub sent mysql to basement|link --- " << ptJson->m["Interface"]->m["mysql"];
+  ssMessage << "== 1 == Hub::interfaces():  basement|hub sent mysql to basement|link --- " << ptJson->m["Interfaces"]->m["mysql"];
   log(ssMessage.str());
 }
     target(i.first, ptJson);
