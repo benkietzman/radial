@@ -996,15 +996,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ interface
   else if (strAction == "interface")
   {
-    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    string strInterface = var("Interface", ptData);
+    if (!strInterface.empty())
     {
-      string strInterface = var("Interface", ptData);
-      if (!strInterface.empty())
+      string strFunction = var("Function", ptData);
+      if (!strFunction.empty())
       {
-        string strFunction = var("Function", ptData);
-        if (!strFunction.empty())
+        if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
         {
-          if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
+          if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
           {
             list<string> nodes;
             map<string, string> results;
@@ -1099,22 +1099,62 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
+            ssText << " error:  You are not authorized to restart/start/stop an interface.  You must be registered as a local administrator for Radial.";
           }
         }
         else
         {
-          ssText << ":  Please provide a Function immediately following the Interface.";
+          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
         }
       }
       else
       {
-        ssText << ":  The interface action is used to manage Radial interfaces.  Please provide an Interface immediately following the action.";
+        bool bFirst = true;
+        ssText << ":  ";
+        m_mutexShare.lock();
+        for (auto &link : m_links)
+        {
+          bool bFound = false;
+          for (auto interface = link->interfaces.begin(); !bFound && interface != link->interfaces.end(); interface++)
+          {
+            if (interface->first == strInterface)
+            {
+              bFound = true;
+            }
+          }
+          if (bFound)
+          {
+            if (bFirst)
+            {
+              bFirst = false;
+            }
+            else
+            {
+              ssText << ", ";
+            }
+            ssText << link->strNode;
+          }
+        }
+        m_mutexShare.unlock();
       }
     }
     else
     {
-      ssText << " error:  You are not authorized to access interface.  You must be registered as a local administrator for Radial.";
+      ssText << ":";
+      m_mutexShare.lock();
+      for (auto &link : m_links)
+      {
+        ssText << link->strNode;
+        for (auto interface = link->interfaces.begin(); interface != link->interfaces.end(); interface++)
+        {
+          if (interface != link->interfaces.begin())
+          {
+            ssText << ", ";
+          }
+          ssText << interface->first;
+        }
+      }
+      m_mutexShare.unlock();
     }
   }
   // }}}
