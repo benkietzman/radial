@@ -1000,10 +1000,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strInterface.empty())
     {
       string strFunction = var("Function", ptData);
+      ssText << " " << char(3) << "00,14 " << strInterface << " " << char(3);
       if (!strFunction.empty())
       {
         if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
         {
+          ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
           if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
           {
             list<string> nodes;
@@ -1144,7 +1146,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       m_mutexShare.lock();
       for (auto &link : m_links)
       {
-        ssText << link->strNode;
+        ssText << endl << link->strNode << ":  ";
         for (auto interface = link->interfaces.begin(); interface != link->interfaces.end(); interface++)
         {
           if (interface != link->interfaces.begin())
