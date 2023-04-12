@@ -1111,12 +1111,31 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        bool bFirst = true;
+        bool bFirst = true, bFound = false;
         ssText << ":  ";
         m_mutexShare.lock();
+        for (auto interface = m_interfaces.begin(); !bFound && interface != m_interfaces.end(); interface++)
+        {
+          if (interface->first == strInterface)
+          {
+            bFound = true;
+          }
+        }
+        if (bFound)
+        {
+          if (bFirst)
+          {
+            bFirst = false;
+          }
+          else
+          {
+            ssText << ", ";
+          }
+          ssText << m_strNode;
+        }
         for (auto &link : m_links)
         {
-          bool bFound = false;
+          bFound = false;
           for (auto interface = link->interfaces.begin(); !bFound && interface != link->interfaces.end(); interface++)
           {
             if (interface->first == strInterface)
@@ -1144,6 +1163,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       ssText << ":";
       m_mutexShare.lock();
+      ssText << endl << m_strNode << ":  ";
+      for (auto interface = m_interfaces.begin(); interface != m_interfaces.end(); interface++)
+      {
+        if (interface != m_interfaces.begin())
+        {
+          ssText << ", ";
+        }
+        ssText << interface->first;
+      }
       for (auto &link : m_links)
       {
         ssText << endl << link->strNode << ":  ";
