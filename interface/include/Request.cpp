@@ -269,23 +269,20 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
                     if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
                     {
                       hub(ptJson);
-                      ptJson->j(strJson);
-                      responses.push_back(strJson);
+                      responses.push_back(ptJson->j(strJson));
                     }
                     else
                     {
                       ptJson->i("Status", "error");
                       ptJson->i("Error", "Please provide a valid Function:  list, ping.");
-                      ptJson->j(strJson);
-                      responses.push_back(strJson);
+                      responses.push_back(ptJson->j(strJson));
                     }
                   }
                   else
                   {
                     ptJson->i("Status", "error");
                     ptJson->i("Error", "Please provide the Function.");
-                    ptJson->j(strJson);
-                    responses.push_back(strJson);
+                    responses.push_back(ptJson->j(strJson));
                   }
                 }
                 else
@@ -318,8 +315,7 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
                   if (!bRestricted)
                   {
                     hub(strTarget, ptJson);
-                    ptJson->j(strJson);
-                    responses.push_back(strJson);
+                    responses.push_back(ptJson->j(strJson));
                   }
                   else
                   {
@@ -341,8 +337,7 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
                       ptJson->i("Error", strError);
                     }
                     delete ptAuth;
-                    ptJson->j(strJson); 
-                    responses.push_back(strJson);
+                    responses.push_back(ptJson->j(strJson));
                   }
                 }
               }
