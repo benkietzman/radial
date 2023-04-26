@@ -21,16 +21,6 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ radialRequestConn
-struct radialRequestConn
-{
-  bool bRetry;
-  SSL *ssl;
-  list<string> responses;
-  size_t unUnique;
-  string strBuffers[2];
-};
-// }}}
 // {{{ Request
 class Request : public Interface
 {
