@@ -57,7 +57,7 @@ void Request::accept(string strPrefix)
       for (rp = result; !bBound[2] && rp != NULL; rp = rp->ai_next)
       {
         bBound[1] = false;
-        if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+        if ((fdSocket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
         {
           int nOn = 1;
           bBound[1] = true;
@@ -107,9 +107,9 @@ void Request::accept(string strPrefix)
               socklen_t clilen = sizeof(cli_addr);
               if ((fdClient = ::accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
-                thread threadRequest(&Request::request, this, strPrefix, fdClient, ctx);
-                pthread_setname_np(threadRequest.native_handle(), "request");
-                threadRequest.detach();
+                thread threadSocket(&Request::socket, this, strPrefix, fdClient, ctx);
+                pthread_setname_np(threadSocket.native_handle(), "socket");
+                threadSocket.detach();
               }
               else
               {
@@ -214,13 +214,129 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
 }
 // }}}
 // {{{ request()
-void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
+void Request::request(string strPrefix, const string strBuffer, list<string> *responses, mutex *mutexResponses)
+{
+  // {{{ prep work
+  string strError, strJson;
+  stringstream ssMessage;
+  Json *ptJson = new Json(strBuffer);
+  strPrefix += "->Request::request()";
+  threadIncrement();
+  keyRemovals(ptJson);
+  // }}}
+  if (!empty(ptJson, "Interface"))
+  {
+    if (ptJson->m["Interface"]->v == "hub")
+    {
+      if (!empty(ptJson, "Function"))
+      {
+        if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
+        {
+          hub(ptJson);
+          mutexResponses->lock();
+          responses->push_back(ptJson->j(strJson));
+          mutexResponses->unlock();
+        }
+        else
+        {
+          ptJson->i("Status", "error");
+          ptJson->i("Error", "Please provide a valid Function:  list, ping.");
+          mutexResponses->lock();
+          responses->push_back(ptJson->j(strJson));
+          mutexResponses->unlock();
+        }
+      }
+      else
+      {
+        ptJson->i("Status", "error");
+        ptJson->i("Error", "Please provide the Function.");
+        mutexResponses->lock();
+        responses->push_back(ptJson->j(strJson));
+        mutexResponses->unlock();
+      }
+    }
+    else
+    {
+      bool bRestricted = false;
+      string strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
+      stringstream ssUnique;
+      m_mutexShare.lock();
+      if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+      {
+        bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
+      }
+      else
+      {
+        list<radialLink *>::iterator linkIter = m_links.end();
+        for (auto j = m_links.begin(); linkIter == m_links.end() && j != m_links.end(); j++)
+        {
+          if ((*j)->interfaces.find(ptJson->m["Interface"]->v) != (*j)->interfaces.end())
+          { 
+            linkIter = j;
+          }
+        }
+        if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
+        {
+          ptJson->i("Node", (*linkIter)->strNode);
+          strTarget = strTargetAuth = "link";
+        }
+      }
+      m_mutexShare.unlock();
+      if (!bRestricted)
+      {
+        hub(strTarget, ptJson);
+        mutexResponses->lock();
+        responses->push_back(ptJson->j(strJson));
+        mutexResponses->unlock();
+      }
+      else
+      {
+        Json *ptAuth = new Json(ptJson);
+        ptAuth->i("Interface", "auth");
+        if (exist(ptAuth, "Request"))
+        {
+          delete ptAuth->m["Request"];
+        }
+        ptAuth->m["Request"] = new Json;
+        ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
+        if (hub(strTargetAuth, ptAuth, strError))
+        {
+          hub(strTarget, ptJson);
+        }
+        else
+        {
+          ptJson->i("Status", "error");
+          ptJson->i("Error", strError);
+        }
+        delete ptAuth;
+        mutexResponses->lock();
+        responses->push_back(ptJson->j(strJson));
+        mutexResponses->unlock();
+      }
+    }
+  }
+  else
+  {
+    ptJson->i("Status", "error");
+    ptJson->i("Error", "Please provide the Interface.");
+    mutexResponses->lock();
+    responses->push_back(ptJson->j(strJson));
+    mutexResponses->unlock();
+  }
+  // {{{ post work
+  delete ptJson;
+  threadDecrement();
+  // }}}
+}
+// }}}
+// {{{ socket()
+void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
 {
   // {{{ prep work
   string strError;
   stringstream ssMessage;
   SSL *ssl;
-  strPrefix += "->Request::request()";
+  strPrefix += "->Request::socket()";
   threadIncrement();
   // }}}
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
@@ -229,6 +345,7 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
     bool bExit = false;
     int nReturn;
     list<string> responses;
+    mutex mutexResponses;
     size_t unPosition;
     string strBuffers[2], strJson;
     // }}}
@@ -238,11 +355,13 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
       pollfd fds[1];
       fds[0].fd = fdSocket;
       fds[0].events = POLLIN;
+      mutexResponses.lock();
       while (!responses.empty())
       {
         strBuffers[1].append(responses.front()+"\n");
         responses.pop_front();
       }
+      mutexResponses.unlock();
       if (!strBuffers[1].empty())
       {
         fds[0].events |= POLLOUT;
@@ -257,97 +376,10 @@ void Request::request(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if ((unPosition = strBuffers[0].find("\n")) != string::npos)
             {
-              Json *ptJson = new Json(strBuffers[0].substr(0, unPosition));
               strBuffers[0].erase(0, (unPosition + 1));
-              keyRemovals(ptJson);
-              if (!empty(ptJson, "Interface"))
-              {
-                if (ptJson->m["Interface"]->v == "hub")
-                {
-                  if (!empty(ptJson, "Function"))
-                  {
-                    if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
-                    {
-                      hub(ptJson);
-                      responses.push_back(ptJson->j(strJson));
-                    }
-                    else
-                    {
-                      ptJson->i("Status", "error");
-                      ptJson->i("Error", "Please provide a valid Function:  list, ping.");
-                      responses.push_back(ptJson->j(strJson));
-                    }
-                  }
-                  else
-                  {
-                    ptJson->i("Status", "error");
-                    ptJson->i("Error", "Please provide the Function.");
-                    responses.push_back(ptJson->j(strJson));
-                  }
-                }
-                else
-                {
-                  bool bRestricted = false;
-                  string strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
-                  stringstream ssUnique;
-                  m_mutexShare.lock();
-                  if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
-                  {
-                    bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
-                  }
-                  else
-                  {
-                    list<radialLink *>::iterator linkIter = m_links.end();
-                    for (auto j = m_links.begin(); linkIter == m_links.end() && j != m_links.end(); j++)
-                    {
-                      if ((*j)->interfaces.find(ptJson->m["Interface"]->v) != (*j)->interfaces.end())
-                      { 
-                        linkIter = j;
-                      }
-                    }
-                    if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
-                    {
-                      ptJson->i("Node", (*linkIter)->strNode);
-                      strTarget = strTargetAuth = "link";
-                    }
-                  }
-                  m_mutexShare.unlock();
-                  if (!bRestricted)
-                  {
-                    hub(strTarget, ptJson);
-                    responses.push_back(ptJson->j(strJson));
-                  }
-                  else
-                  {
-                    Json *ptAuth = new Json(ptJson);
-                    ptAuth->i("Interface", "auth");
-                    if (exist(ptAuth, "Request"))
-                    {
-                      delete ptAuth->m["Request"];
-                    }
-                    ptAuth->m["Request"] = new Json;
-                    ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
-                    if (hub(strTargetAuth, ptAuth, strError))
-                    {
-                      hub(strTarget, ptJson);
-                    }
-                    else
-                    {
-                      ptJson->i("Status", "error");
-                      ptJson->i("Error", strError);
-                    }
-                    delete ptAuth;
-                    responses.push_back(ptJson->j(strJson));
-                  }
-                }
-              }
-              else
-              {
-                ptJson->i("Status", "error");
-                ptJson->i("Error", "Please provide the Interface.");
-                responses.push_back(ptJson->j(strJson));
-              }
-              delete ptJson;
+              thread threadRequest(&Request::request, this, strPrefix, strBuffers[0].substr(0, unPosition), &responses, &mutexResponses);
+              pthread_setname_np(threadRequest.native_handle(), "request");
+              threadRequest.detach();
             }
           }
           else
