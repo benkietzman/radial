@@ -380,7 +380,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         {
           if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
           {
-            if ((unPosition = strBuffers[0].find("\n")) != string::npos)
+            while ((unPosition = strBuffers[0].find("\n")) != string::npos)
             {
               mutexResponses.lock();
               unActive++;
