@@ -214,7 +214,7 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
 }
 // }}}
 // {{{ request()
-void Request::request(string strPrefix, size_t *punActive, const string strBuffer, list<string> *respones, mutex mutexResponses)
+void Request::request(string strPrefix, size_t &unActive, const string strBuffer, list<string> &responses, mutex &mutexResponses)
 {
   // {{{ prep work
   string strError, strJson;
@@ -234,7 +234,7 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
         {
           hub(ptJson);
           mutexResponses.lock();
-          responses->push_back(ptJson->j(strJson));
+          responses.push_back(ptJson->j(strJson));
           mutexResponses.unlock();
         }
         else
@@ -242,7 +242,7 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
           ptJson->i("Status", "error");
           ptJson->i("Error", "Please provide a valid Function:  list, ping.");
           mutexResponses.lock();
-          responses->push_back(ptJson->j(strJson));
+          responses.push_back(ptJson->j(strJson));
           mutexResponses.unlock();
         }
       }
@@ -251,7 +251,7 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
         ptJson->i("Status", "error");
         ptJson->i("Error", "Please provide the Function.");
         mutexResponses.lock();
-        responses->push_back(ptJson->j(strJson));
+        responses.push_back(ptJson->j(strJson));
         mutexResponses.unlock();
       }
     }
@@ -286,7 +286,7 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
       {
         hub(strTarget, ptJson);
         mutexResponses.lock();
-        responses->push_back(ptJson->j(strJson));
+        responses.push_back(ptJson->j(strJson));
         mutexResponses.unlock();
       }
       else
@@ -310,7 +310,7 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
         }
         delete ptAuth;
         mutexResponses.lock();
-        responses->push_back(ptJson->j(strJson));
+        responses.push_back(ptJson->j(strJson));
         mutexResponses.unlock();
       }
     }
@@ -320,16 +320,16 @@ void Request::request(string strPrefix, size_t *punActive, const string strBuffe
     ptJson->i("Status", "error");
     ptJson->i("Error", "Please provide the Interface.");
     mutexResponses.lock();
-    responses->push_back(ptJson->j(strJson));
+    responses.push_back(ptJson->j(strJson));
     mutexResponses.unlock();
   }
   // {{{ post work
   delete ptJson;
   threadDecrement();
   mutexResponses.lock();
-  if ((*punActive) > 0)
+  if (unActive > 0)
   {
-    (*punActive)++;
+    unActive++;
   }
   mutexResponses.unlock();
   // }}}
@@ -386,7 +386,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               mutexResponses.lock();
               unActive++;
               mutexResponses.unlock();
-              thread threadRequest(&Request::request, this, strPrefix, unActive, strBuffers[0].substr(0, unPosition), &responses, &mutexResponses);
+              thread threadRequest(&Request::request, this, strPrefix, ref(unActive), strBuffers[0].substr(0, unPosition), ref(responses), ref(mutexResponses));
               pthread_setname_np(threadRequest.native_handle(), "request");
               threadRequest.detach();
               strBuffers[0].erase(0, (unPosition + 1));
