@@ -373,7 +373,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         fds[0].events |= POLLOUT;
       }
       // }}}
-      if ((nReturn = poll(fds, 1, 2000)) > 0)
+      if ((nReturn = poll(fds, 1, 250)) > 0)
       {
         // {{{ read
         if (fds[0].revents & POLLIN)
