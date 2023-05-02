@@ -376,10 +376,10 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if ((unPosition = strBuffers[0].find("\n")) != string::npos)
             {
-              strBuffers[0].erase(0, (unPosition + 1));
               thread threadRequest(&Request::request, this, strPrefix, strBuffers[0].substr(0, unPosition), &responses, &mutexResponses);
               pthread_setname_np(threadRequest.native_handle(), "request");
               threadRequest.detach();
+              strBuffers[0].erase(0, (unPosition + 1));
             }
           }
           else
