@@ -214,7 +214,7 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
 }
 // }}}
 // {{{ request()
-void Request::request(string strPrefix, const string strBuffer, list<string> *responses, mutex *mutexResponses)
+void Request::request(string strPrefix, size_t *punActive, const string strBuffer, list<string> *respones, mutex mutexResponses)
 {
   // {{{ prep work
   string strError, strJson;
@@ -233,26 +233,26 @@ void Request::request(string strPrefix, const string strBuffer, list<string> *re
         if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
         {
           hub(ptJson);
-          mutexResponses->lock();
+          mutexResponses.lock();
           responses->push_back(ptJson->j(strJson));
-          mutexResponses->unlock();
+          mutexResponses.unlock();
         }
         else
         {
           ptJson->i("Status", "error");
           ptJson->i("Error", "Please provide a valid Function:  list, ping.");
-          mutexResponses->lock();
+          mutexResponses.lock();
           responses->push_back(ptJson->j(strJson));
-          mutexResponses->unlock();
+          mutexResponses.unlock();
         }
       }
       else
       {
         ptJson->i("Status", "error");
         ptJson->i("Error", "Please provide the Function.");
-        mutexResponses->lock();
+        mutexResponses.lock();
         responses->push_back(ptJson->j(strJson));
-        mutexResponses->unlock();
+        mutexResponses.unlock();
       }
     }
     else
@@ -285,9 +285,9 @@ void Request::request(string strPrefix, const string strBuffer, list<string> *re
       if (!bRestricted)
       {
         hub(strTarget, ptJson);
-        mutexResponses->lock();
+        mutexResponses.lock();
         responses->push_back(ptJson->j(strJson));
-        mutexResponses->unlock();
+        mutexResponses.unlock();
       }
       else
       {
@@ -309,9 +309,9 @@ void Request::request(string strPrefix, const string strBuffer, list<string> *re
           ptJson->i("Error", strError);
         }
         delete ptAuth;
-        mutexResponses->lock();
+        mutexResponses.lock();
         responses->push_back(ptJson->j(strJson));
-        mutexResponses->unlock();
+        mutexResponses.unlock();
       }
     }
   }
@@ -319,13 +319,19 @@ void Request::request(string strPrefix, const string strBuffer, list<string> *re
   {
     ptJson->i("Status", "error");
     ptJson->i("Error", "Please provide the Interface.");
-    mutexResponses->lock();
+    mutexResponses.lock();
     responses->push_back(ptJson->j(strJson));
-    mutexResponses->unlock();
+    mutexResponses.unlock();
   }
   // {{{ post work
   delete ptJson;
   threadDecrement();
+  mutexResponses.lock();
+  if ((*punActive) > 0)
+  {
+    (*punActive)++;
+  }
+  mutexResponses.unlock();
   // }}}
 }
 // }}}
@@ -342,12 +348,13 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
     // {{{ prep work
-    bool bExit = false;
+    bool bActive = true, bExit = false;
     int nReturn;
     list<string> responses;
     mutex mutexResponses;
-    size_t unPosition;
+    size_t unActive = 0, unPosition;
     string strBuffers[2], strJson;
+    time_t CActive[2];
     // }}}
     while (!bExit)
     {
@@ -376,7 +383,10 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if ((unPosition = strBuffers[0].find("\n")) != string::npos)
             {
-              thread threadRequest(&Request::request, this, strPrefix, strBuffers[0].substr(0, unPosition), &responses, &mutexResponses);
+              mutexResponses.lock();
+              unActive++;
+              mutexResponses.unlock();
+              thread threadRequest(&Request::request, this, strPrefix, unActive, strBuffers[0].substr(0, unPosition), &responses, &mutexResponses);
               pthread_setname_np(threadRequest.native_handle(), "request");
               threadRequest.detach();
               strBuffers[0].erase(0, (unPosition + 1));
@@ -423,6 +433,18 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         bExit = true;
       }
       // }}}
+    }
+    time(&(CActive[0]));
+    CActive[1] = CActive[0];
+    while (bActive && (CActive[1] - CActive[0]) < 30)
+    {
+      mutexResponses.lock();
+      if (unActive == 0)
+      {
+        bActive = false;
+      }
+      mutexResponses.unlock();
+      time(&(CActive[1]));
     }
     if (SSL_shutdown(ssl) == 0)
     {

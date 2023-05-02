@@ -29,7 +29,7 @@ class Request : public Interface
   ~Request();
   void accept(string strPrefix);
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void request(string strPrefix, const string strBuffer, list<string> *responses, mutex *mutexResponses);
+  void request(string strPrefix, size_t *punActive, const string strBuffer, list<string> *responses, mutex mutexResponses);
   void socket(string strPrefix, int fdSocket, SSL_CTX *ctx);
 };
 // }}}
