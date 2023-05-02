@@ -997,8 +997,10 @@ void Hub::process(string strPrefix)
               if (!i.second->bShutdown && Base::monitor(i.second->nPid, i.second->CMonitor, i.second->unMonitor, i.second->ulMemory, strMessage) == 2)
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << " [" << i.first << "]:  " << strMessage;
+                ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << "07,05 " << i.first << " " << char(3) << " " << strPrefix << ":  " << strMessage;
                 chat("#radial", ssMessage.str());
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  " << strMessage;
                 notify(ssMessage.str());
                 setShutdown(strPrefix, i.first);
               }
