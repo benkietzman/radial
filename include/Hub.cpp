@@ -43,7 +43,7 @@ Hub::~Hub()
 }
 // }}}
 // {{{ add()
-bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const bool bRespawn, const bool bRestricted)
+bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted)
 {
   bool bResult = false;
   string strError;
@@ -102,6 +102,8 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->bRestricted = bRestricted;
           m_interfaces[strName]->bShutdown = false;
           m_interfaces[strName]->CKill = 0;
+          m_interfaces[strName]->CMonitor[0] = 0;
+          m_interfaces[strName]->CMonitor[1] = 0;
           m_interfaces[strName]->CShutdown = 0;
           time(&(m_interfaces[strName]->CWrote));
           m_interfaces[strName]->fdRead = readpipe[0];
@@ -109,6 +111,8 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_interfaces[strName]->nPid = nPid;
           m_interfaces[strName]->strAccessFunction = strAccessFunction;
           m_interfaces[strName]->strCommand = strCommand;
+          m_interfaces[strName]->ulMemory = ulMemory;
+          m_interfaces[strName]->unMonitor = 0;
         }
         else
         {
@@ -249,7 +253,11 @@ bool Hub::load(string strPrefix, string &strError)
     bResult = true;
     if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command"))
     {
-      if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+      stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
+      unsigned long ulMemory;
+      ssMemory >> ulMemory;
+      ulMemory *= 1024;
+      if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
       {
         bResult = false;
       }
@@ -260,7 +268,11 @@ bool Hub::load(string strPrefix, string &strError)
     {
       if (!empty(i.second, "Command"))
       {
-        if (!add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
+        stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
+        unsigned long ulMemory;
+        ssMemory >> ulMemory;
+        ulMemory *= 1024;
+        if (!add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
         {
           bResult = false;
         }
@@ -568,6 +580,7 @@ void Hub::process(string strPrefix)
                                 ifstream inInterfaces;
                                 string strAccessFunction, strCommand;
                                 stringstream ssInterfaces;
+                                unsigned long ulMemory = 40 * 1024;
                                 Json *ptInterfaces = NULL;
                                 ssInterfaces << m_strData << "/interfaces.json";
                                 inInterfaces.open(ssInterfaces.str().c_str());
@@ -586,6 +599,9 @@ void Hub::process(string strPrefix)
                                 {
                                   if (exist(ptInterfaces, ptJson->m["Name"]->v))
                                   {
+                                    stringstream ssMemory((!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Memory"))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
+                                    ssMemory >> ulMemory;
+                                    ulMemory *= 1024;
                                     if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "AccessFunction"))
                                     {
                                       strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->m["AccessFunction"]->v;
@@ -613,6 +629,12 @@ void Hub::process(string strPrefix)
                                 {
                                   strCommand = ptJson->m["Command"]->v;
                                 }
+                                if (!empty(ptJson, "Memory"))
+                                {
+                                  stringstream ssMemory(ptJson->m["Memory"]->v);
+                                  ssMemory >> ulMemory;
+                                  ulMemory *= 1024;
+                                }
                                 if (!empty(ptJson, "Respawn"))
                                 {
                                   bRespawn = ((ptJson->m["Respawn"]->v == "1")?true:false);
@@ -621,7 +643,7 @@ void Hub::process(string strPrefix)
                                 {
                                   bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
                                 }
-                                if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, bRespawn, bRestricted))
+                                if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted))
                                 {
                                   bResult = true;
                                   interfaces();
@@ -815,7 +837,11 @@ void Hub::process(string strPrefix)
                                 {
                                   if (m_interfaces.find(strInterface) == m_interfaces.end())
                                   {
-                                    if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
+                                    stringstream ssMemory((!empty(ptInterfaces->m[strInterface], "Memory"))?ptInterfaces->m[strInterface]->m["Memory"]->v:"40");
+                                    unsigned long ulMemory;
+                                    ssMemory >> ulMemory;
+                                    ulMemory *= 1024;
+                                    if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
                                     {
                                       bProcessed = true;
                                       interfaces();
@@ -967,7 +993,16 @@ void Hub::process(string strPrefix)
             time(&CTime);
             for (auto &i : m_interfaces)
             {
-              if (i.second->CShutdown > 0 && (CTime - i.second->CShutdown) > 20)
+              string strMessage;
+              if (!i.second->bShutdown && Base::monitor(i.second->nPid, i.second->CMonitor, i.second->unMonitor, i.second->ulMemory, strMessage) == 2)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  " << strMessage;
+                chat("#radial", ssMessage.str());
+                notify(ssMessage.str());
+                setShutdown(strPrefix, i.first);
+              }
+              else if (i.second->CShutdown > 0 && (CTime - i.second->CShutdown) > 20)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << " [" << i.first << "]:  Sent terminate (SIGTERM) signal.";
@@ -1083,7 +1118,7 @@ void Hub::remove(string strPrefix, const string strName)
     log(ssMessage.str());
     if (!shutdown() && m_interfaces[strName]->bRespawn)
     {
-      add(strPrefix, strName, m_interfaces[strName]->strAccessFunction, m_interfaces[strName]->strCommand, true, m_interfaces[strName]->bRestricted);
+      add(strPrefix, strName, m_interfaces[strName]->strAccessFunction, m_interfaces[strName]->strCommand, m_interfaces[strName]->ulMemory, true, m_interfaces[strName]->bRestricted);
     }
     else
     {

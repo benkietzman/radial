@@ -167,28 +167,32 @@ bool Base::exist(Json *ptJson, const string strField)
 // {{{ monitor()
 size_t Base::monitor(string &strMessage)
 {
+  return monitor(getpid(), m_CMonitor, m_unMonitor, m_ulMaxResident, strMessage);
+}
+size_t Base::monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage)
+{
   size_t unResult = 0;
 
-  time(&m_CMonitor[1]);
-  if (m_CMonitor[1] - m_CMonitor[0] > 30)
+  time(&CMonitor[1]);
+  if ((CMonitor[1] - CMonitor[0]) > 30)
   {
     float fCpu = 0, fMem = 0;
     string strError;
     stringstream ssMessage;
     time_t CTime = 0;
     unsigned long ulImage = 0, ulResident = 0;
-    m_CMonitor[0] = m_CMonitor[1];
-    m_pCentral->getProcessStatus(CTime, fCpu, fMem, ulImage, ulResident);
-    if (ulResident >= m_ulMaxResident)
+    CMonitor[0] = CMonitor[1];
+    m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+    if (ulResident >= ulMaxResident)
     {
       unResult = 2;
-      ssMessage << "The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << m_ulMaxResident << " KB.  Shutting down process.";
+      ssMessage << "The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << ulMaxResident << " KB.  Shutting down process.";
       strMessage = ssMessage.str();
     }
-    else if (++m_unMonitor == 60)
+    else if (++unMonitor == 60)
     {
       unResult = 1;
-      m_unMonitor = 0;
+      unMonitor = 0;
       ssMessage << "Resident size is " << ulResident << ".";
       strMessage = ssMessage.str();
     }

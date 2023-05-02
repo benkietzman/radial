@@ -63,12 +63,15 @@ struct radialInterface
   int fdRead;
   int fdWrite;
   pid_t nPid;
+  size_t unMonitor;
   string strAccessFunction;
   string strBuffers[2];
   string strCommand;
   time_t CKill;
+  time_t CMonitor[2];
   time_t CShutdown;
   time_t CWrote;
+  unsigned long ulMemory;
 };
 // }}}
 // {{{ radialLink
@@ -119,6 +122,7 @@ class Base
   Warden *m_pWarden;
 
   size_t monitor(string &strMessage);
+  size_t monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage);
   void msleep(const unsigned long ulMilliSec);
   void threadDecrement();
   void threadIncrement();
