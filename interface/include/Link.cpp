@@ -1252,7 +1252,6 @@ void Link::process(string strPrefix)
             }
           }
           // }}}
-          monitor(strPrefix);
           if (shutdown())
           {
             bExit = true;

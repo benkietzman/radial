@@ -773,24 +773,6 @@ string Interface::master()
   return m_strMaster;
 }
 // }}}
-// {{{ monitor()
-void Interface::monitor(string strPrefix)
-{
-  strPrefix += "->Interface::monitor()";
-  if (!shutdown())
-  {
-    string strMessage;
-    if (Base::monitor(strMessage) == 2)
-    {
-      stringstream ssMessage;
-      ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
-      chat("#radial", ssMessage.str());
-      notify(ssMessage.str());
-      setShutdown();
-    }
-  }
-}
-// }}}
 // {{{ mysql
 // {{{ mysql()
 bool Interface::mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
@@ -1079,7 +1061,6 @@ void Interface::process(string strPrefix)
       close(uniqueRemovals.front());
       uniqueRemovals.pop_front();
     }
-    monitor(strPrefix);
     if (m_pAutoModeCallback != NULL)
     {
       time(&CTime);
