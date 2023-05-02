@@ -1001,7 +1001,7 @@ void Hub::process(string strPrefix)
                 chat("#radial", ssMessage.str());
                 ssMessage.str("");
                 ssMessage << strPrefix << " [" << i.first << "]:  " << strMessage;
-                notify(ssMessage.str());
+                log(ssMessage.str());
                 setShutdown(strPrefix, i.first);
               }
               else if (i.second->CShutdown > 0 && (CTime - i.second->CShutdown) > 20)
