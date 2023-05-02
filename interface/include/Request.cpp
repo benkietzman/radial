@@ -354,7 +354,6 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     mutex mutexResponses;
     size_t unActive = 0, unPosition;
     string strBuffers[2], strJson;
-    time_t CActive[2];
     // }}}
     while (!bExit)
     {
@@ -374,7 +373,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         fds[0].events |= POLLOUT;
       }
       // }}}
-      if ((nReturn = poll(fds, 1, 500)) > 0)
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
       {
         // {{{ read
         if (fds[0].revents & POLLIN)
@@ -434,9 +433,12 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       }
       // }}}
     }
-    time(&(CActive[0]));
-    CActive[1] = CActive[0];
-    while (bActive && (CActive[1] - CActive[0]) < 30)
+    if (SSL_shutdown(ssl) == 0)
+    {
+      SSL_shutdown(ssl);
+    }
+    SSL_free(ssl);
+    while (bActive)
     {
       mutexResponses.lock();
       if (unActive == 0)
@@ -444,13 +446,8 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         bActive = false;
       }
       mutexResponses.unlock();
-      time(&(CActive[1]));
+      msleep(250);
     }
-    if (SSL_shutdown(ssl) == 0)
-    {
-      SSL_shutdown(ssl);
-    }
-    SSL_free(ssl);
   }
   else
   {
