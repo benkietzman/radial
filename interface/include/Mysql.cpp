@@ -57,64 +57,83 @@ void Mysql::callback(string strPrefix, Json *ptJson, const bool bResponse)
         {
           if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
           {
-            list<radial_mysql *>::iterator mysqlIter;
-            string strPort, strServer;
-            stringstream ssError, ssServer(ptJson->m["Server"]->v);;
-            unsigned int unPort = 0;
-            unsigned long long ullRows = 0;
-            getline(ssServer, strServer, ':');
-            getline(ssServer, strPort, ':');
-            if (!empty(ptJson, "Port"))
+            bool bRetry = true;
+            size_t unAttempt = 0;
+            while (bRetry && unAttempt++ < 10)
             {
-              stringstream ssPort(ptJson->m["Port"]->v);
-              ssPort >> unPort;
-            }
-            if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
-            {
-              (*mysqlIter)->secure.lock();
-              if (!empty(ptJson, "Query"))
+              bRetry = false;
+              list<radial_mysql *>::iterator mysqlIter;
+              string strPort, strServer;
+              stringstream ssError, ssServer(ptJson->m["Server"]->v);;
+              unsigned int unPort = 0;
+              unsigned long long ullRows = 0;
+              getline(ssServer, strServer, ':');
+              getline(ssServer, strPort, ':');
+              if (!empty(ptJson, "Port"))
               {
-                MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
-                if (result != NULL)
+                stringstream ssPort(ptJson->m["Port"]->v);
+                ssPort >> unPort;
+              }
+              if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
+              {
+                bool bForce = false;
+                (*mysqlIter)->secure.lock();
+                if (!empty(ptJson, "Query"))
                 {
-                  vector<string> subFields;
-                  if (fields(result, subFields))
+                  MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
+                  if (result != NULL)
                   {
-                    map<string, string> *row;
-                    stringstream ssRows;
-                    bResult = true;
+                    vector<string> subFields;
+                    if (fields(result, subFields))
+                    {
+                      map<string, string> *row;
+                      stringstream ssRows;
+                      bResult = true;
+                      ssRows << ullRows;
+                      ptJson->i("Rows", ssRows.str(), 'n');
+                      ptJson->m["Response"] = new Json;
+                      while ((row = fetch(result, subFields)) != NULL)
+                      {
+                        ptJson->m["Response"]->pb(*row);
+                        row->clear();
+                        delete row;
+                      }
+                    }
+                    else
+                    {
+                      strError = "Failed to fetch field names.";
+                    }
+                    subFields.clear();
+                    free(result);
+                  }
+                  else if (strError.find("Lost connection") != string::npos)
+                  {
+                    bForce = bRetry = true;
+                  }
+                }
+                else
+                {
+                  unsigned long long ullID = 0;
+                  if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
+                  {
+                    stringstream ssID, ssRows;
+                    ssID << ullID;
+                    ptJson->i("ID", ssID.str(), 'n');
                     ssRows << ullRows;
                     ptJson->i("Rows", ssRows.str(), 'n');
-                    ptJson->m["Response"] = new Json;
-                    while ((row = fetch(result, subFields)) != NULL)
-                    {
-                      ptJson->m["Response"]->pb(*row);
-                      row->clear();
-                      delete row;
-                    }
                   }
-                  else
+                  else if (strError.find("Lost connection") != string::npos)
                   {
-                    strError = "Failed to fetch field names.";
+                    bForce = bRetry = true;
                   }
-                  subFields.clear();
-                  free(result);
                 }
+                (*mysqlIter)->secure.unlock();
+                disconnect(mysqlIter, bForce);
               }
               else
               {
-                unsigned long long ullID = 0;
-                if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
-                {
-                  stringstream ssID, ssRows;
-                  ssID << ullID;
-                  ptJson->i("ID", ssID.str(), 'n');
-                  ssRows << ullRows;
-                  ptJson->i("Rows", ssRows.str(), 'n');
-                }
+                bRetry = true;
               }
-              (*mysqlIter)->secure.unlock();
-              disconnect(mysqlIter);
             }
           }
           else
@@ -180,19 +199,29 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
     iter = m_conn[strName].end();
     for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
     {
-      if ((*i)->unThreads < 5)
+      if (!(*i)->bClose && (*i)->unThreads < 5)
       {
         iter = i;
       }
     }
     if (iter == m_conn[strName].end() && m_conn[strName].size() >= 20)
     {
-      iter = m_conn[strName].begin();
-      for (auto i = m_conn[strName].begin(); i != m_conn[strName].end(); i++)
+      iter = m_conn[strName].end();
+      for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
       {
-        if ((*i)->unThreads < (*iter)->unThreads)
+        if (!(*i)->bClose)
         {
           iter = i;
+        }
+      }
+      if (iter != m_conn[strName].end())
+      {
+        for (auto i = iter; i != m_conn[strName].end(); i++)
+        {
+          if (!(*i)->bClose && (*i)->unThreads < (*iter)->unThreads)
+          {
+            iter = i;
+          }
         }
       }
     }
@@ -202,6 +231,7 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
       {
         bool bConnected = false;
         radial_mysql *ptMysql = new radial_mysql;
+        ptMysql->bClose = false;
         if ((ptMysql->conn = mysql_init(NULL)) != NULL)
         {
           unsigned int unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
@@ -258,13 +288,17 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
 }
 // }}}
 // {{{ disconnect()
-void Mysql::disconnect(list<radial_mysql *>::iterator &iter)
+void Mysql::disconnect(list<radial_mysql *>::iterator &iter, const bool bForce)
 {
   list<map<string, list<radial_mysql *> >::iterator> removeName;
   time_t CTime;
 
   time(&CTime);
   lock();
+  if (bForce)
+  {
+    (*iter)->bClose = true;
+  }
   (*iter)->unThreads--;
   for (auto i = m_conn.begin(); i != m_conn.end(); i++)
   {
