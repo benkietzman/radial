@@ -329,7 +329,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
   mutexResponses.lock();
   if (unActive > 0)
   {
-    unActive++;
+    unActive--;
   }
   mutexResponses.unlock();
   // }}}
