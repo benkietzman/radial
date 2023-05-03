@@ -186,7 +186,7 @@ size_t Base::monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, un
     if (ulResident >= ulMaxResident)
     {
       unResult = 2;
-      ssMessage << "The process has a resident size of " << ulResident << " KB which exceeds the maximum resident restriction of " << ulMaxResident << " KB.  Shutting down process.";
+      ssMessage << "The process has a resident size of " << (ulResident / 1024) << " MB which exceeds the maximum resident restriction of " << (ulMaxResident / 1024) << " MB.  Shutting down process.";
       strMessage = ssMessage.str();
     }
     else if (++unMonitor == 60)
