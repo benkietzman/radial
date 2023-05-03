@@ -304,6 +304,24 @@ bool Hub::load(string strPrefix, string &strError)
                 log(ssMessage.str());
               }
             }
+            for (auto &i : m_interfaces)
+            {
+              bool bFound = false;
+              for (auto j = ptInterfaces->m.begin(); !bFound && j != ptInterfaces->m.end(); j++)
+              {
+                if (i.first == j->first)
+                {
+                  bFound = true;
+                }
+              }
+              if (!bFound)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  Stopping interface due non-existence in configuration.";
+                log(ssMessage.str());
+                setShutdown(strPrefix, i.first, true);
+              }
+            }
             delete ptInterfaces;
             if (!bResult)
             {
