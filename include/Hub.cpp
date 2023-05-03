@@ -30,6 +30,7 @@ Hub::Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(c
   signal(SIGPIPE, SIG_IGN);
   signal(SIGSEGV, SIG_IGN);
   signal(SIGWINCH, SIG_IGN);
+  m_CLoadModify = 0;
   m_env = env;
 }
 // }}}
@@ -224,75 +225,126 @@ void Hub::links()
 bool Hub::load(string strPrefix, string &strError)
 {
   bool bResult = false;
-  ifstream inInterfaces;
   stringstream ssInterfaces, ssMessage;
-  Json *ptInterfaces = NULL;
+  struct stat tStat;
 
   strPrefix += "->Hub::load()";
   ssInterfaces << m_strData << "/interfaces.json";
-  inInterfaces.open(ssInterfaces.str().c_str());
-  if (inInterfaces)
+  if (stat(ssInterfaces.str().c_str(), &tStat) == 0)
   {
-    string strLine;
-    stringstream ssJson;
-    while (getline(inInterfaces, strLine))
+    if (m_CLoadModify != tStat.st_mtime)
     {
-      ssJson << strLine;
-    }
-    ptInterfaces = new Json(ssJson.str());
-  }
-  else
-  {
-    ssMessage.str("");
-    ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
-    strError = ssMessage.str();
-  }
-  inInterfaces.close();
-  if (ptInterfaces != NULL)
-  {
-    bResult = true;
-    if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command"))
-    {
-      stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
-      unsigned long ulMemory;
-      ssMemory >> ulMemory;
-      ulMemory *= 1024;
-      if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+      ifstream inInterfaces;
+      Json *ptInterfaces = NULL;
+      inInterfaces.open(ssInterfaces.str().c_str());
+      if (inInterfaces)
       {
-        bResult = false;
-      }
-      delete ptInterfaces->m["log"];
-      ptInterfaces->m.erase("log");
-    }
-    for (auto &i : ptInterfaces->m)
-    {
-      if (!empty(i.second, "Command"))
-      {
-        stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
-        unsigned long ulMemory;
-        ssMemory >> ulMemory;
-        ulMemory *= 1024;
-        if (!add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
+        string strLine;
+        stringstream ssJson;
+        m_CLoadModify = tStat.st_mtime;
+        while (getline(inInterfaces, strLine))
         {
-          bResult = false;
+          ssJson << strLine;
+        }
+        ptInterfaces = new Json(ssJson.str());
+        if (ptInterfaces != NULL)
+        {
+          if (!ptInterfaces->m.empty())
+          {
+            bResult = true;
+            if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_interfaces.find("log") == m_interfaces.end())
+            {
+              stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
+              unsigned long ulMemory;
+              ssMemory >> ulMemory;
+              ulMemory *= 1024;
+              if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+              {
+                bResult = false;
+              }
+              delete ptInterfaces->m["log"];
+              ptInterfaces->m.erase("log");
+            }
+            for (auto &i : ptInterfaces->m)
+            {
+              if (!empty(i.second, "Command"))
+              {
+                stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
+                unsigned long ulMemory;
+                ssMemory >> ulMemory;
+                ulMemory *= 1024;
+                if (m_interfaces.find(i.first) != m_interfaces.end())
+                {
+                  m_interfaces[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
+                  m_interfaces[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
+                  m_interfaces[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
+                  if (m_interfaces[i.first]->strCommand != i.second->m["Command"]->v)
+                  {
+                    m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
+                    if (!m_interfaces[i.first]->bShutdown && m_interfaces[i.first]->bRespawn)
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << " [" << i.first << "]:  Restarting interface due to configuration change.";
+                      log(ssMessage.str());
+                      setShutdown(strPrefix, i.first);
+                    }
+                  }
+                  m_interfaces[i.first]->ulMemory = ulMemory;
+                }
+                else if (!add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
+                {
+                  bResult = false;
+                }
+              }
+              else
+              {
+                bResult = false;
+                ssMessage.str("");
+                ssMessage << strPrefix << " error [" << i.first << "] Please provide the Command.";
+                log(ssMessage.str());
+              }
+            }
+            delete ptInterfaces;
+            if (!bResult)
+            {
+              ssMessage.str("");
+              ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
+              strError = ssMessage.str();
+            }
+            interfaces();
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << "[" << ssInterfaces.str() << "] No interfaces configured.";
+            strError = ssMessage.str();
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << "[" << ssInterfaces.str() << "] Invalid configuration.";
+          strError = ssMessage.str();
         }
       }
       else
       {
-        bResult = false;
         ssMessage.str("");
-        ssMessage << strPrefix << " error [" << i.first << "] Please provide the Command.";
-        log(ssMessage.str());
+        ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+        strError = ssMessage.str();
       }
+      inInterfaces.close();
     }
-    delete ptInterfaces;
-    if (!bResult)
+    else
     {
-      ssMessage.str("");
-      ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
-      strError = ssMessage.str();
+      bResult = true;
     }
-    interfaces();
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << "stat(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+    strError = ssMessage.str();
   }
 
   return bResult;
@@ -384,7 +436,8 @@ void Hub::process(string strPrefix)
           pollfd *fds;
           size_t unIndex, unPosition;
           string strJson;
-          time_t CShutdownTime[2] = {0, 0}, CTime;
+          time_t CLoad, CShutdownTime[2] = {0, 0}, CTime;
+          time(&CLoad);
           // }}}
           while (!bExit)
           {
@@ -991,6 +1044,16 @@ void Hub::process(string strPrefix)
               managerRemovals.pop_front();
             }
             time(&CTime);
+            if ((CTime - CLoad) > 60)
+            {
+              CLoad = CTime;
+              if (!load(strPrefix, strError))
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Hub::load() error:  " << strError;
+                log(ssMessage.str());
+              }
+            }
             for (auto &i : m_interfaces)
             {
               string strMessage;

@@ -26,6 +26,7 @@ class Hub : public Base
 {
   private:
   char **m_env;
+  time_t m_CLoadModify;
 
   bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted);
   void chat(const string strTarget, const string strMessage);
