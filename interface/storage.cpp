@@ -22,6 +22,10 @@ int main(int argc, char *argv[])
   gpStorage = new radial::Storage(strPrefix, argc, argv, &callback);
   gpStorage->setAutoMode(&autoMode);
   gpStorage->process(strPrefix);
+  while (gpStorage->callbacks() > 0)
+  {
+    gpStorage->msleep(250);
+  }
   delete gpStorage;
   return 0;
 }

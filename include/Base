@@ -123,7 +123,6 @@ class Base
 
   size_t monitor(string &strMessage);
   size_t monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage);
-  void msleep(const unsigned long ulMilliSec);
   void threadDecrement();
   void threadIncrement();
 
@@ -133,6 +132,7 @@ class Base
   bool empty(Json *ptJson, const string strField);
   string esc(const string strValue);
   bool exist(Json *ptJson, const string strField);
+  void msleep(const unsigned long ulMilliSec);
   void setShutdown();
   bool shutdown();
 };

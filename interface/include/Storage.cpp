@@ -23,6 +23,7 @@ namespace radial
 Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
 {
   m_bInitialized = false;
+  m_unCallbacks = 0;
 }
 // }}}
 // {{{ ~Storage()
@@ -104,6 +105,9 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Storage::callback()";
+  mutexCallback.lock();
+  m_unCallbacks++;
+  mutexCallback.unlock();
   if (!empty(ptJson, "Function"))
   {
     list<string> keys;
@@ -179,6 +183,24 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   delete ptJson;
   threadDecrement();
+  mutexCallback.lock();
+  if (m_unCallbacks > 0)
+  {
+    m_unCallbacks--;
+  }
+  mutexCallback.unlock();
+}
+// }}}
+// {{{ callbacks()
+size_t Storage::callbacks()
+{
+  size_t unCallbacks;
+
+  mutexCallback.lock();
+  unCallbacks = m_unCallbacks;
+  mutexCallback.unlock();
+
+  return unCallbacks;
 }
 // }}}
 }
