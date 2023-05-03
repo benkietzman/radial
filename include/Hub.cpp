@@ -396,7 +396,7 @@ void Hub::monitor(string strPrefix)
     if (Base::monitor(strMessage) == 2)
     {
       stringstream ssMessage;
-      ssMessage << strPrefix << "->Base::monitor():  " << strMessage;
+      ssMessage << strPrefix << "->Base::monitor() [" << m_strNode << "]:  " << strMessage;
       chat("#radial", ssMessage.str());
       notify(ssMessage.str());
       setShutdown(strPrefix);
