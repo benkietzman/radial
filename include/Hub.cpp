@@ -496,11 +496,12 @@ void Hub::process(string strPrefix)
                 time(&CTime);
                 if (!interface.second->bShutdown && (CTime - interface.second->CWrote) > 60)
                 {
+                  strError = "Unable to write to the interface for the last 60 seconds.";
                   ssMessage.str("");
-                  ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << "07,05 " << interface.first << " " << char(3) << " " << strPrefix << ":  Unable to write to the interface for the last 60 seconds.";
+                  ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << "07,05 " << interface.first << " " << char(3) << " " << strPrefix << ":  " << strError;
                   chat("#radial", ssMessage.str());
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [" << interface.first << "]:  Unable to write to the interface for the last 30 seconds.";
+                  ssMessage << strPrefix << " [" << interface.first << "]:  " << strError;
                   log(ssMessage.str());
                   setShutdown(strPrefix, interface.first);
                 }
