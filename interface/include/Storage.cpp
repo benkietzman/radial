@@ -108,69 +108,76 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   mutexCallback.lock();
   m_unCallbacks++;
   mutexCallback.unlock();
-  if (!empty(ptJson, "Function"))
+  if (!shutdown())
   {
-    list<string> keys;
-    Json *ptData = NULL;
-    if (exist(ptJson, "Keys"))
+    if (!empty(ptJson, "Function"))
     {
-      for (auto &ptKey : ptJson->m["Keys"]->l)
+      list<string> keys;
+      Json *ptData = NULL;
+      if (exist(ptJson, "Keys"))
       {
-        keys.push_back(ptKey->v);
+        for (auto &ptKey : ptJson->m["Keys"]->l)
+        {
+          keys.push_back(ptKey->v);
+        }
       }
-    }
-    if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
-    {
-      if (exist(ptJson, "Request"))
+      if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
       {
-        ptData = new Json(ptJson->m["Request"]);
+        if (exist(ptJson, "Request"))
+        {
+          ptData = new Json(ptJson->m["Request"]);
+        }
+        else
+        {
+          ptData = new Json;
+        }
       }
-      else
+      else if (ptJson->m["Function"]->v == "retrieve" || ptJson->m["Function"]->v == "retrieveKeys")
       {
         ptData = new Json;
       }
-    }
-    else if (ptJson->m["Function"]->v == "retrieve" || ptJson->m["Function"]->v == "retrieveKeys")
-    {
-      ptData = new Json;
-    }
-    if (m_storage.request(ptJson->m["Function"]->v, keys, ptData, strError))
-    {
-      bResult = true;
-    }
-    if (ptData != NULL)
-    {
-      if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
+      if (m_storage.request(ptJson->m["Function"]->v, keys, ptData, strError))
       {
-        delete ptData;
+        bResult = true;
       }
-      else
+      if (ptData != NULL)
       {
-        if (exist(ptJson, "Response"))
+        if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
         {
-          delete ptJson->m["Response"];
+          delete ptData;
         }
-        ptJson->m["Response"] = ptData;
+        else
+        {
+          if (exist(ptJson, "Response"))
+          {
+            delete ptJson->m["Response"];
+          }
+          ptJson->m["Response"] = ptData;
+        }
+      }
+      if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (!exist(ptJson, "Broadcast") || ptJson->m["Broadcast"]->v == "1"))
+      {
+        Json *ptLink = new Json;
+        ptLink->i("Interface", "storage");
+        ptLink->i("Function", ptJson->m["Function"]->v);
+        ptLink->i("Broadcast", "0", '0');
+        ptLink->i("Keys", keys);
+        if (ptJson->m["Function"]->v != "remove" && exist(ptJson, "Request"))
+        {
+          ptLink->m["Request"] = new Json(ptJson->m["Request"]);
+        }
+        hub("link", ptLink, false);
+        delete ptLink;
       }
     }
-    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (!exist(ptJson, "Broadcast") || ptJson->m["Broadcast"]->v == "1"))
+    else
     {
-      Json *ptLink = new Json;
-      ptLink->i("Interface", "storage");
-      ptLink->i("Function", ptJson->m["Function"]->v);
-      ptLink->i("Broadcast", "0", '0');
-      ptLink->i("Keys", keys);
-      if (ptJson->m["Function"]->v != "remove" && exist(ptJson, "Request"))
-      {
-        ptLink->m["Request"] = new Json(ptJson->m["Request"]);
-      }
-      hub("link", ptLink, false);
-      delete ptLink;
+      strError = "Please provide the Function.";
     }
   }
   else
   {
-    strError = "Please provide the Function.";
+    strError = "Interface is shutting down.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
