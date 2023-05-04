@@ -992,7 +992,16 @@ void Interface::process(string strPrefix)
                   delete ptLive;
                 }
               }
-              m_pCallback(strPrefix, ptJson, true);
+              if (!shutdown())
+              {
+                m_pCallback(strPrefix, ptJson, true);
+              }
+              else
+              {
+                ptJson->i("Status", "error");
+                ptJson->i("Error", "Interface is shutting down.");
+                hub(ptJson, false);
+              }
             }
             delete ptJson;
           }
