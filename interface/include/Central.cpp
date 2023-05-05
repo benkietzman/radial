@@ -1320,7 +1320,7 @@ bool Central::applicationIssueEdit(data &d, string &e)
       {
         q << "update application_issue set ";
         q << "application_id = ";
-        if (exist(i, "transfer") && !empty(i->m["transfer"], "id") && i->m["transfer"]->m["id"]->v == i->m["application_id"]->v)
+        if (exist(i, "transfer") && !empty(i->m["transfer"], "id") && i->m["transfer"]->m["id"]->v != i->m["application_id"]->v)
         {
           q << i->m["transfer"]->m["id"]->v;
         }
