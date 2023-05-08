@@ -3755,7 +3755,7 @@ void Central::schedule(string strPrefix)
   time(&(CTime[0]));
   while (!shutdown())
   {
-    if (isMaster())
+    if (isMasterSettled() && isMaster())
     {
       time(&(CTime[1]));
       if ((CTime[1] - CTime[0]) > 600)
