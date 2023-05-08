@@ -98,6 +98,8 @@ Base::Base(int argc, char **argv)
   m_pCentral->setApplication(m_strApplication);
   m_pJunction = new ServiceJunction(strError);
   m_pJunction->setApplication(m_strApplication);
+  m_pJunction->setTimeout("300");
+  m_pJunction->useSecureSocket(true);
   m_pUtility = new Utility(strError);
   if (!strProxyServer.empty() && !strProxyPort.empty())
   {
