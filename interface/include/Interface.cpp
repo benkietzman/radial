@@ -1073,7 +1073,7 @@ void Interface::process(string strPrefix)
     if (m_pAutoModeCallback != NULL)
     {
       time(&CTime);
-      if (!m_bMasterSettled && (CTime - CMaster[1]) > 30)
+      if (!m_bMasterSettled && (CTime - CMaster[1]) > 120)
       {
         m_bMasterSettled = true;
       }
@@ -1100,7 +1100,7 @@ void Interface::process(string strPrefix)
             m_strMaster.clear();
           }
         }
-        if ((CTime - CMaster[0]) > 15)
+        if ((CTime - CMaster[0]) > 60)
         {
           m_strMaster.clear();
         }
