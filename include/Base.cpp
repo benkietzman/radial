@@ -101,7 +101,6 @@ Base::Base(int argc, char **argv)
   m_pJunction->setTimeout("300");
   m_pJunction->setThrottle(100);
   m_pJunction->useSecureJunction(true);
-  m_pJunction->useSingleSocket(true);
   m_pUtility = new Utility(strError);
   if (!strProxyServer.empty() && !strProxyPort.empty())
   {
