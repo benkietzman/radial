@@ -104,6 +104,9 @@ void Command::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
+ssMessage.str("");
+ssMessage << ptJson;
+log(ptJson);
             if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
             {
               if (!empty(ptJson, "Function"))
@@ -229,7 +232,6 @@ void Command::process(string strPrefix)
                       clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                       ptCommand->ptJson = new Json(ptJson);
                       commands.push_back(ptCommand);
-log("Launched command.");
                     }
                     else
                     {
@@ -317,7 +319,6 @@ log("Launched command.");
                 if (nReturn == 0)
                 {
                   (*j)->bProcessed = true;
-log("Completed command.");
                 }
                 else
                 {
