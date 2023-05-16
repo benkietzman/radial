@@ -195,14 +195,13 @@ void Command::process(string strPrefix)
                       ssMessage << "execve(" << errno << ") " << strerror(errno);
                       ptOut->i("Error", ssMessage.str());
                       ptOut->j(strOut);
-                      strOut += "\n";
                       write(1, strOut.c_str(), strOut.size());
                     }
                     else
                     {
                       ssMessage.str("");
                       ssMessage << "execve(" << errno << ") " << strerror(errno);
-                      write(1, ssMessage.str().c_str(), ssMessage.str().size());
+                      write([1], ssMessage.str().c_str(), ssMessage.str().size());
                     }
                     _exit(1);
                   }
@@ -235,7 +234,6 @@ void Command::process(string strPrefix)
                       if (ptCommand->bJson)
                       {
                         ptJson->m["Input"]->j(ptCommand->strBuffer[1]);
-                        ptCommand->strBuffer[1] += "\n";
                       }
                       else
                       {
