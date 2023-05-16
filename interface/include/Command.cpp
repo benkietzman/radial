@@ -49,7 +49,7 @@ void Command::process(string strPrefix)
   while (!bExit)
   {
     // {{{ prep work
-    fds = new pollfd[commands.size() + 2];
+    fds = new pollfd[(commands.size() * 2) + 2];
     unIndex = 0;
     // {{{ stdin
     fds[unIndex].fd = 0;
@@ -78,11 +78,11 @@ void Command::process(string strPrefix)
     // {{{ commands
     for (auto &command : commands)
     {
+      fds[unIndex].fd = command->fdRead;
       fds[unIndex].events = POLLIN;
-      if (!command->strBuffer[1].empty())
-      {
-        fds[unIndex].events |= POLLOUT;
-      }
+      unIndex++;
+      fds[unIndex].fd = command->fdWrite;
+      fds[unIndex].events |= POLLOUT;
       unIndex++;
     }
     // }}}
@@ -232,9 +232,6 @@ void Command::process(string strPrefix)
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                     ptCommand->ptJson = new Json(ptJson);
                     commands.push_back(ptCommand);
-ssMessage.str("");
-ssMessage << strPrefix << ":  Launched command.";
-log(ssMessage.str());
                   }
                   else
                   {
@@ -314,9 +311,6 @@ log(ssMessage.str());
             {
               if (!m_pUtility->fdRead((*j)->fdRead, (*j)->strBuffer[0], nReturn))
               {
-ssMessage.str("");
-ssMessage << strPrefix << ":  Received response.";
-log(ssMessage.str());
                 if (!bRemoved)
                 {
                   removals.push_back(j);
@@ -384,9 +378,6 @@ log(ssMessage.str());
       pid_t retWait;
       size_t unDuration = (((*i)->stop.tv_sec - (*i)->start.tv_sec) * 1000) + (((*i)->stop.tv_nsec - (*i)->start.tv_nsec) / 1000000);
       stringstream ssDuration;
-ssMessage.str("");
-ssMessage << strPrefix << ":  Closed.";
-log(ssMessage.str());
       close((*i)->fdRead);
       if ((*i)->fdWrite != -1)
       {
