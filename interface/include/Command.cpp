@@ -212,7 +212,7 @@ void Command::process(string strPrefix)
                     {
                       ptCommand->bJson = true;
                     }
-                    if (exist(ptCommand->ptJson, "Input"))
+                    if (exist(ptJson, "Input"))
                     {
                       if (ptCommand->bJson)
                       {
