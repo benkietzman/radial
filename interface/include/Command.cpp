@@ -106,7 +106,7 @@ void Command::process(string strPrefix)
             ptJson = new Json(strLine);
 ssMessage.str("");
 ssMessage << ptJson;
-log(ptJson);
+log(ssMessage.str());
             if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
             {
               if (!empty(ptJson, "Function"))
