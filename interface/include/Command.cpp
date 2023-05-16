@@ -401,6 +401,7 @@ void Command::process(string strPrefix)
       hub((*i)->ptJson, false);
       delete (*i)->ptJson;
       delete *i;
+      commands.erase(i);
     }
     removals.clear();
     if (shutdown())
