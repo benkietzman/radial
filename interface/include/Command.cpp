@@ -38,9 +38,6 @@ void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Command::callback()";
-ssMessage.str("");
-ssMessage << strPrefix << ":  Started callback.";
-log(ssMessage.str());
   if (!empty(ptJson, "Command"))
   {
     char *args[100], *pszArgument;
@@ -71,14 +68,8 @@ log(ssMessage.str());
     args[unIndex] = NULL;
     if (pipe(readpipe) == 0)
     {
-ssMessage.str("");
-ssMessage << strPrefix << "->pipe():  Created readpipe.";
-log(ssMessage.str());
       if (pipe(writepipe) == 0)
       {
-ssMessage.str("");
-ssMessage << strPrefix << "->pipe():  Created writepipe.";
-log(ssMessage.str());
         if ((execPid = fork()) == 0)
         {
           close(readpipe[0]);
@@ -99,9 +90,6 @@ log(ssMessage.str());
           string strBuffer[2];
           stringstream ssDuration;
           timespec start, stop;
-ssMessage.str("");
-ssMessage << strPrefix << "->fork():  Forked process.";
-log(ssMessage.str());
           bResult = true;
           close(writepipe[0]);
           close(readpipe[1]);
@@ -175,9 +163,6 @@ log(ssMessage.str());
           }
           close(readpipe[0]);
           close(writepipe[1]);
-ssMessage.str("");
-ssMessage << strPrefix << ":  Completed command.";
-log(ssMessage.str());
           unDuration = ((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000);
           ssDuration << unDuration;
           ptJson->insert("Duration", ssDuration.str(), 'n');

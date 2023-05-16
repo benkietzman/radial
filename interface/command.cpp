@@ -26,9 +26,9 @@ int main(int argc, char *argv[])
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  if (fork() == 0)
-  {
+  //if (fork() == 0)
+  //{
     gpCommand->callback(strPrefix, new Json(ptJson), bResponse);
-    _exit(0);
-  }
+  //  _exit(0);
+  //}
 }
