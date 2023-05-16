@@ -229,6 +229,7 @@ void Command::process(string strPrefix)
                       clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                       ptCommand->ptJson = new Json(ptJson);
                       commands.push_back(ptCommand);
+log("Launched command.");
                     }
                     else
                     {
@@ -316,6 +317,7 @@ void Command::process(string strPrefix)
                 if (nReturn == 0)
                 {
                   (*j)->bProcessed = true;
+log("Completed command.");
                 }
                 else
                 {
