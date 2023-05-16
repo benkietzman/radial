@@ -224,12 +224,14 @@ void Command::process(string strPrefix)
                         ptCommand->strBuffer[1] = ptJson->m["Input"]->v;
                       }
                     }
+                    if (ptCommand->strBuffer[1].empty())
+                    {
+                      close(ptCommand->fdWrite);
+                      ptCommand->fdWrite = -1;
+                    }
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                     ptCommand->ptJson = new Json(ptJson);
                     commands.push_back(ptCommand);
-ssMessage.str("");
-ssMessage << strPrefix << ":  Launched command.";
-log(ssMessage.str());
                   }
                   else
                   {
@@ -309,9 +311,6 @@ log(ssMessage.str());
             {
               if (!m_pUtility->fdRead((*j)->fdRead, (*j)->strBuffer[0], nReturn))
               {
-ssMessage.str("");
-ssMessage << strPrefix << ":  Command completed.";
-log(ssMessage.str());
                 if (!bRemoved)
                 {
                   removals.push_back(j);
@@ -333,7 +332,15 @@ log(ssMessage.str());
           {
             if (fds[i].revents & POLLOUT)
             {
-              if (!m_pUtility->fdWrite((*j)->fdWrite, (*j)->strBuffer[1], nReturn))
+              if (m_pUtility->fdWrite((*j)->fdWrite, (*j)->strBuffer[1], nReturn))
+              {
+                if ((*j)->strBuffer[1].empty(*))
+                {
+                  close((*j)->fdWrite);
+                  (*j)->fdWrite = -1;
+                }
+              }
+              else
               {
                 if (!bRemoved)
                 {
@@ -372,7 +379,10 @@ log(ssMessage.str());
       size_t unDuration = (((*i)->stop.tv_sec - (*i)->start.tv_sec) * 1000) + (((*i)->stop.tv_nsec - (*i)->start.tv_nsec) / 1000000);
       stringstream ssDuration;
       close((*i)->fdRead);
-      close((*i)->fdWrite);
+      if ((*i)->fdWrite != -1)
+      {
+        close((*i)->fdWrite);
+      }
       ssDuration << unDuration;
       (*i)->ptJson->insert("Duration", ssDuration.str(), 'n');
       if ((*i)->bJson)
@@ -420,7 +430,10 @@ log(ssMessage.str());
   for (auto &i : commands)
   {
     close(i->fdRead);
-    close(i->fdWrite);
+    if (i->fdWrite != -1)
+    {
+      close(i->fdWrite);
+    }
     if (waitpid(i->execPid, NULL, WNOHANG) == 0)
     {
       kill(i->execPid, SIGKILL);
