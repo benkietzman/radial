@@ -334,7 +334,7 @@ void Command::process(string strPrefix)
             {
               if (m_pUtility->fdWrite((*j)->fdWrite, (*j)->strBuffer[1], nReturn))
               {
-                if ((*j)->strBuffer[1].empty(*))
+                if ((*j)->strBuffer[1].empty())
                 {
                   close((*j)->fdWrite);
                   (*j)->fdWrite = -1;
