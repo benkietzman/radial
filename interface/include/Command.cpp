@@ -196,13 +196,13 @@ void Command::process(string strPrefix)
                       ptOut->i("Error", ssMessage.str());
                       ptOut->j(strOut);
                       strOut += "\n";
-                      write(readpipe[1], strOut.c_str(), strOut.size());
+                      write(1, strOut.c_str(), strOut.size());
                     }
                     else
                     {
                       ssMessage.str("");
                       ssMessage << "execve(" << errno << ") " << strerror(errno);
-                      write(readpipe[1], ssMessage.str().c_str(), ssMessage.str().size());
+                      write(1, ssMessage.str().c_str(), ssMessage.str().size());
                     }
                     _exit(1);
                   }
