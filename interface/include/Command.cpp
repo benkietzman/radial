@@ -186,6 +186,24 @@ void Command::process(string strPrefix)
                     dup2(readpipe[1], 1);
                     close(readpipe[1]);
                     execve(args[0], args, environ);
+                    if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
+                    {
+                      string strOut;
+                      Json *ptOut = new Json;
+                      ptOut->i("Status", "error");
+                      ssMessage.str("");
+                      ssMessage << "execve(" << errno << ") " << strerror(errno);
+                      ptOut->i("Error", ssMessage.str());
+                      ptOut->j(strOut);
+                      strOut += "\n";
+                      write(readpipe[1], strOut.c_str(), strOut.size());
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << "execve(" << errno << ") " << strerror(errno);
+                      write(readpipe[1], ssMessage.str().c_str(), ssMessage.str().size());
+                    }
                     _exit(1);
                   }
                   else if (execPid > 0)
