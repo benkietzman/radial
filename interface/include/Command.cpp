@@ -227,6 +227,9 @@ void Command::process(string strPrefix)
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                     ptCommand->ptJson = new Json(ptJson);
                     commands.push_back(ptCommand);
+ssMessage.str("");
+ssMessage << strPrefix << ":  Launched command.";
+log(ssMessage.str());
                   }
                   else
                   {
@@ -306,6 +309,9 @@ void Command::process(string strPrefix)
             {
               if (!m_pUtility->fdRead((*j)->fdRead, (*j)->strBuffer[0], nReturn))
               {
+ssMessage.str("");
+ssMessage << strPrefix << ":  Command completed.";
+log(ssMessage.str());
                 if (!bRemoved)
                 {
                   removals.push_back(j);
