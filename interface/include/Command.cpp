@@ -104,9 +104,6 @@ void Command::process(string strPrefix)
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
             ptJson = new Json(strLine);
-ssMessage.str("");
-ssMessage << ptJson;
-log(ssMessage.str());
             if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
             {
               if (!empty(ptJson, "Function"))
@@ -148,105 +145,93 @@ log(ssMessage.str());
                 log(ssMessage.str());
               }
             }
-            else
+            else if (!empty(ptJson, "Command"))
             {
-              if (!empty(ptJson, "Command"))
+              char *args[100], *pszArgument;
+              int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
+              pid_t execPid;
+              size_t unIndex = 0;
+              string strArgument;
+              stringstream ssCommand;
+              ssCommand.str(ptJson->m["Command"]->v);
+              while (ssCommand >> strArgument)
               {
-                char *args[100], *pszArgument;
-                int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
-                pid_t execPid;
-                size_t unIndex = 0;
-                string strArgument;
-                stringstream ssCommand;
-                ssCommand.str(ptJson->m["Command"]->v);
-                while (ssCommand >> strArgument)
+                pszArgument = new char[strArgument.size() + 1];
+                strcpy(pszArgument, strArgument.c_str());
+                args[unIndex++] = pszArgument;
+              }
+              if (exist(ptJson, "Arguments"))
+              {
+                for (auto &i : ptJson->m["Arguments"]->l)
                 {
-                  pszArgument = new char[strArgument.size() + 1];
-                  strcpy(pszArgument, strArgument.c_str());
-                  args[unIndex++] = pszArgument;
-                }
-                if (exist(ptJson, "Arguments"))
-                {
-                  for (auto &i : ptJson->m["Arguments"]->l)
+                  if (!i->v.empty())
                   {
-                    if (!i->v.empty())
-                    {
-                      pszArgument = new char[i->v.size() + 1];
-                      strcpy(pszArgument, i->v.c_str());
-                      args[unIndex++] = pszArgument;
-                    }
+                    pszArgument = new char[i->v.size() + 1];
+                    strcpy(pszArgument, i->v.c_str());
+                    args[unIndex++] = pszArgument;
                   }
                 }
-                args[unIndex] = NULL;
-                if (pipe(readpipe) == 0)
+              }
+              args[unIndex] = NULL;
+              if (pipe(readpipe) == 0)
+              {
+                if (pipe(writepipe) == 0)
                 {
-                  if (pipe(writepipe) == 0)
+                  if ((execPid = fork()) == 0)
                   {
-                    if ((execPid = fork()) == 0)
+                    close(readpipe[0]);
+                    close(writepipe[1]);
+                    dup2(writepipe[0], 0);
+                    close(writepipe[0]);
+                    dup2(readpipe[1], 1);
+                    close(readpipe[1]);
+                    execve(args[0], args, environ);
+                    _exit(1);
+                  }
+                  else if (execPid > 0)
+                  {
+                    radialCommand *ptCommand = new radialCommand;
+                    long lArg;
+                    close(writepipe[0]);
+                    close(readpipe[1]);
+                    ptCommand->bJson = false;
+                    ptCommand->bProcessed = false;
+                    ptCommand->fdRead = readpipe[0];
+                    ptCommand->fdWrite = writepipe[1];
+                    if ((lArg = fcntl(ptCommand->fdRead, F_GETFL, NULL)) >= 0)
                     {
-                      close(readpipe[0]);
-                      close(writepipe[1]);
-                      dup2(writepipe[0], 0);
-                      close(writepipe[0]);
-                      dup2(readpipe[1], 1);
-                      close(readpipe[1]);
-                      execve(args[0], args, environ);
-                      _exit(1);
+                      lArg |= O_NONBLOCK;
+                      fcntl(ptCommand->fdRead, F_SETFL, lArg);
                     }
-                    else if (execPid > 0)
+                    if ((lArg = fcntl(ptCommand->fdWrite, F_GETFL, NULL)) >= 0)
                     {
-                      radialCommand *ptCommand = new radialCommand;
-                      long lArg;
-                      close(writepipe[0]);
-                      close(readpipe[1]);
-                      ptCommand->bJson = false;
-                      ptCommand->bProcessed = false;
-                      ptCommand->fdRead = readpipe[0];
-                      ptCommand->fdWrite = writepipe[1];
-                      if ((lArg = fcntl(ptCommand->fdRead, F_GETFL, NULL)) >= 0)
-                      {
-                        lArg |= O_NONBLOCK;
-                        fcntl(ptCommand->fdRead, F_SETFL, lArg);
-                      }
-                      if ((lArg = fcntl(ptCommand->fdWrite, F_GETFL, NULL)) >= 0)
-                      {
-                        lArg |= O_NONBLOCK;
-                        fcntl(ptCommand->fdWrite, F_SETFL, lArg);
-                      }
-                      if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
-                      {
-                        ptCommand->bJson = true;
-                      }
-                      if (exist(ptCommand->ptJson, "Input"))
-                      {
-                        if (ptCommand->bJson)
-                        {
-                          ptJson->m["Input"]->j(ptCommand->strBuffer[1]);
-                          ptCommand->strBuffer[1] += "\n";
-                        }
-                        else
-                        {
-                          ptCommand->strBuffer[1] = ptJson->m["Input"]->v;
-                        }
-                      }
-                      clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
-                      ptCommand->ptJson = new Json(ptJson);
-                      commands.push_back(ptCommand);
+                      lArg |= O_NONBLOCK;
+                      fcntl(ptCommand->fdWrite, F_SETFL, lArg);
                     }
-                    else
+                    if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
                     {
-                      ssMessage.str("");
-                      ssMessage << "fork(" << errno << ") " << strerror(errno);
-                      strError = ssMessage.str();
-                      ptJson->i("Status", "error");
-                      ptJson->i("Error", strError);
-                      hub(ptJson, false);
+                      ptCommand->bJson = true;
                     }
+                    if (exist(ptCommand->ptJson, "Input"))
+                    {
+                      if (ptCommand->bJson)
+                      {
+                        ptJson->m["Input"]->j(ptCommand->strBuffer[1]);
+                        ptCommand->strBuffer[1] += "\n";
+                      }
+                      else
+                      {
+                        ptCommand->strBuffer[1] = ptJson->m["Input"]->v;
+                      }
+                    }
+                    clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
+                    ptCommand->ptJson = new Json(ptJson);
+                    commands.push_back(ptCommand);
                   }
                   else
                   {
                     ssMessage.str("");
-                    ssMessage << "pipe(" << errno << ") " << strerror(errno);
+                    ssMessage << "fork(" << errno << ") " << strerror(errno);
                     strError = ssMessage.str();
                     ptJson->i("Status", "error");
                     ptJson->i("Error", strError);
@@ -265,10 +250,19 @@ log(ssMessage.str());
               }
               else
               {
+                ssMessage.str("");
+                ssMessage << "pipe(" << errno << ") " << strerror(errno);
+                strError = ssMessage.str();
                 ptJson->i("Status", "error");
-                ptJson->i("Error", "Please provide the Command.");
+                ptJson->i("Error", strError);
                 hub(ptJson, false);
               }
+            }
+            else
+            {
+              ptJson->i("Status", "error");
+              ptJson->i("Error", "Please provide the Command.");
+              hub(ptJson, false);
             }
             delete ptJson;
           }
