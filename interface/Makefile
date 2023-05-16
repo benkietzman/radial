@@ -7,11 +7,12 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/database bin/email bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/database bin/email bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
+	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/email $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
@@ -55,6 +56,16 @@ obj/centralmon.o: centralmon.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c centralmon.cpp -o obj/centralmon.o $(CPPFLAGS) -I../../common
 obj/CentralMon.o: include/CentralMon.cpp obj
 	g++ -ggdb -Wall -c include/CentralMon.cpp -o obj/CentralMon.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ command
+command: bin/command $(prefix)/radial/interface
+	install --mode=775 bin/command $(prefix)/radial/interface/
+bin/command: ../../common/libcommon.a obj/command.o obj/Base.o obj/Interface.o obj/Command.o bin
+	g++ -o bin/command obj/command.o obj/Base.o obj/Interface.o obj/Command.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+obj/command.o: command.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c command.cpp -o obj/command.o $(CPPFLAGS) -I../../common
+obj/Command.o: include/Command.cpp obj
+	g++ -ggdb -Wall -c include/Command.cpp -o obj/Command.o $(CPPFLAGS) -I/usr/local/include -I../../common
 # }}}
 # {{{ database
 database: bin/database $(prefix)/radial/interface
