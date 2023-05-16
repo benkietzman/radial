@@ -38,6 +38,9 @@ void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
 
   threadIncrement();
   strPrefix += "->Command::callback()";
+ssMessage.str("");
+ssMessage << strPrefix << ":  Started callback.";
+log(ssMessage.str());
   if (!empty(ptJson, "Command"))
   {
     char *args[100], *pszArgument;
