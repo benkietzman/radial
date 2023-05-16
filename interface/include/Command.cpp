@@ -29,217 +29,403 @@ Command::~Command()
 {
 }
 // }}}
-// {{{ callback()
-void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
+// {{{ process()
+void Command::process(string strPrefix)
 {
-  bool bResult = false;
-  string strError;
+  // {{{ prep work
+  bool bExit = false;
+  int nReturn;
+  list<list<radialCommand *>::iterator> removals;
+  list<radialCommand *> commands;
+  pollfd *fds;
+  size_t unIndex, unPosition;
+  string strError, strLine;
   stringstream ssMessage;
 
-  threadIncrement();
-  strPrefix += "->Command::callback()";
-  if (!empty(ptJson, "Command"))
+  strPrefix += "->Command::process()";
+  m_pUtility->fdNonBlocking(0, strError);
+  m_pUtility->fdNonBlocking(1, strError);
+  // }}}
+  while (!bExit)
   {
-    char *args[100], *pszArgument;
-    int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
-    pid_t execPid;
-    size_t unIndex = 0;
-    string strArgument;
-    stringstream ssCommand;
-    ssCommand.str(ptJson->m["Command"]->v);
-    while (ssCommand >> strArgument)
-    {
-      pszArgument = new char[strArgument.size() + 1];
-      strcpy(pszArgument, strArgument.c_str());
-      args[unIndex++] = pszArgument;
-    }
-    if (exist(ptJson, "Arguments"))
-    {
-      for (auto &i : ptJson->m["Arguments"]->l)
+    // {{{ prep work
+    fds = new pollfd[commands.size() + 2];
+    unIndex = 0;
+    // {{{ stdin
+    fds[unIndex].fd = 0;
+    fds[unIndex].events = POLLIN;
+    unIndex++;
+    // }}}
+    // {{{ stdout
+    fds[unIndex].fd = -1;
+    fds[unIndex].events = POLLOUT;
+    if (m_strBuffers[1].empty())
+    {   
+      m_mutexShare.lock();
+      while (!m_responses.empty())
       {
-        if (!i->v.empty())
-        {
-          pszArgument = new char[i->v.size() + 1];
-          strcpy(pszArgument, i->v.c_str());
-          args[unIndex++] = pszArgument;
-        }
+        m_strBuffers[1].append(m_responses.front() + "\n");
+        m_responses.pop_front();
       }
+      m_mutexShare.unlock();
     }
-    args[unIndex] = NULL;
-    if (pipe(readpipe) == 0)
+    if (!m_strBuffers[1].empty())
     {
-      if (pipe(writepipe) == 0)
+      fds[unIndex].fd = 1;
+    }
+    unIndex++;
+    // }}}
+    // {{{ commands
+    for (auto &command : commands)
+    {
+      fds[unIndex].events = POLLIN;
+      if (!command->strBuffer[1].empty())
       {
-        if ((execPid = fork()) == 0)
+        fds[unIndex].events |= POLLOUT;
+      }
+      unIndex++;
+    }
+    // }}}
+    if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
+    {
+      bExit = true;
+    }
+    // }}}
+    if (!bExit && (nReturn = poll(fds, unIndex, 500)) > 0)
+    {
+      // {{{ stdin
+      if (fds[0].revents & (POLLHUP | POLLIN))
+      {
+        if (m_pUtility->fdRead(fds[0].fd, m_strBuffers[0], nReturn))
         {
-          close(readpipe[0]);
-          close(writepipe[1]);
-          dup2(writepipe[0], 0);
-          close(writepipe[0]);
-          dup2(readpipe[1], 1);
-          close(readpipe[1]);
-          execve(args[0], args, environ);
-          _exit(1);
-        }
-        else if (execPid > 0)
-        {
-          bool bExit = false, bKill = false, bJson = false;
-          int nReturn;
-          long lArg;
-          size_t unDuration;
-          string strBuffer[2];
-          stringstream ssDuration;
-          timespec start, stop;
-          bResult = true;
-          close(writepipe[0]);
-          close(readpipe[1]);
-          if ((lArg = fcntl(readpipe[0], F_GETFL, NULL)) >= 0)
+          while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
-            lArg |= O_NONBLOCK;
-            fcntl(readpipe[0], F_SETFL, lArg);
-          }
-          if ((lArg = fcntl(writepipe[1], F_GETFL, NULL)) >= 0)
-          {
-            lArg |= O_NONBLOCK;
-            fcntl(writepipe[1], F_SETFL, lArg);
-          }
-          if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
-          {
-            bJson = true;
-          }
-          if (exist(ptJson, "Input"))
-          {
-            if (bJson)
+            Json *ptJson;
+            strLine = m_strBuffers[0].substr(0, unPosition);
+            m_strBuffers[0].erase(0, (unPosition + 1));
+            ptJson = new Json(strLine);
+            if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
             {
-              ptJson->m["Input"]->j(strBuffer[1]);
-              strBuffer[1] += "\n";
+              if (!empty(ptJson, "Function"))
+              {
+                // {{{ interfaces
+                if (ptJson->m["Function"]->v == "interfaces")
+                {
+                  interfaces(strPrefix, ptJson);
+                }
+                // }}}
+                // {{{ links
+                else if (ptJson->m["Function"]->v == "links")
+                { 
+                  links(strPrefix, ptJson);
+                }
+                // }}}
+                // {{{ shutdown
+                else if (ptJson->m["Function"]->v == "shutdown")
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << ":  Shutting down.";
+                  log(ssMessage.str());
+                  setShutdown();
+                }
+                // }}}
+                // {{{ invalid
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << " error [stdin,hub," << ptJson->m["Function"]->v << "]:  Please provide a valid Function:  interfaces, shutdown.";
+                  log(ssMessage.str());
+                }
+                // }}}
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " error [stdin,hub]:  Please provide a Function.";
+                log(ssMessage.str());
+              }
             }
             else
             {
-              strBuffer[1] = ptJson->m["Input"]->v;
-            }
-          }
-          clock_gettime(CLOCK_REALTIME, &start);
-          while (!bExit)
-          {
-            pollfd fds[2];
-            fds[0].fd = readpipe[0];
-            fds[0].events = POLLIN;
-            fds[1].fd = -1;
-            if (!strBuffer[1].empty())
-            {
-              fds[1].fd = writepipe[1];
-              fds[1].events = POLLOUT;
-            }
-            if ((nReturn = poll(fds, 2, 500)) > 0)
-            {
-              if (fds[0].revents & (POLLHUP | POLLIN))
+              if (!empty(ptJson, "Command"))
               {
-                if (!m_pUtility->fdRead(readpipe[0], strBuffer[0], nReturn))
+                char *args[100], *pszArgument;
+                int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
+                pid_t execPid;
+                size_t unIndex = 0;
+                string strArgument;
+                stringstream ssCommand;
+                ssCommand.str(ptJson->m["Command"]->v);
+                while (ssCommand >> strArgument)
                 {
-                  bExit = true;
-                  if (nReturn < 0)
+                  pszArgument = new char[strArgument.size() + 1];
+                  strcpy(pszArgument, strArgument.c_str());
+                  args[unIndex++] = pszArgument;
+                }
+                if (exist(ptJson, "Arguments"))
+                {
+                  for (auto &i : ptJson->m["Arguments"]->l)
                   {
-                    ssMessage.str("");
-                    ssMessage << "read(" << errno << ") " << strerror(errno);
-                    strError = ssMessage.str();
+                    if (!i->v.empty())
+                    {
+                      pszArgument = new char[i->v.size() + 1];
+                      strcpy(pszArgument, i->v.c_str());
+                      args[unIndex++] = pszArgument;
+                    }
                   }
                 }
-              }
-              if (fds[1].revents & POLLOUT)
-              {
-                if (!m_pUtility->fdWrite(writepipe[1], strBuffer[1], nReturn))
+                args[unIndex] = NULL;
+                if (pipe(readpipe) == 0)
                 {
-                  bExit = true;
-                  if (nReturn < 0)
+                  if (pipe(writepipe) == 0)
+                  {
+                    if ((execPid = fork()) == 0)
+                    {
+                      close(readpipe[0]);
+                      close(writepipe[1]);
+                      dup2(writepipe[0], 0);
+                      close(writepipe[0]);
+                      dup2(readpipe[1], 1);
+                      close(readpipe[1]);
+                      execve(args[0], args, environ);
+                      _exit(1);
+                    }
+                    else if (execPid > 0)
+                    {
+                      radialCommand *ptCommand = new radialCommand;
+                      long lArg;
+                      close(writepipe[0]);
+                      close(readpipe[1]);
+                      ptCommand->bJson = false;
+                      ptCommand->bProcessed = false;
+                      ptCommand->fdRead = readpipe[0];
+                      ptCommand->fdWrite = writepipe[1];
+                      if ((lArg = fcntl(ptCommand->fdRead, F_GETFL, NULL)) >= 0)
+                      {
+                        lArg |= O_NONBLOCK;
+                        fcntl(ptCommand->fdRead, F_SETFL, lArg);
+                      }
+                      if ((lArg = fcntl(ptCommand->fdWrite, F_GETFL, NULL)) >= 0)
+                      {
+                        lArg |= O_NONBLOCK;
+                        fcntl(ptCommand->fdWrite, F_SETFL, lArg);
+                      }
+                      if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
+                      {
+                        ptCommand->bJson = true;
+                      }
+                      if (exist(ptCommand->ptJson, "Input"))
+                      {
+                        if (ptCommand->bJson)
+                        {
+                          ptJson->m["Input"]->j(ptCommand->strBuffer[1]);
+                          ptCommand->strBuffer[1] += "\n";
+                        }
+                        else
+                        {
+                          ptCommand->strBuffer[1] = ptJson->m["Input"]->v;
+                        }
+                      }
+                      clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
+                      ptCommand->ptJson = new Json(ptJson);
+                      commands.push_back(ptCommand);
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << "fork(" << errno << ") " << strerror(errno);
+                      strError = ssMessage.str();
+                      ptJson->i("Status", "error");
+                      ptJson->i("Error", strError);
+                      hub(ptJson, false);
+                    }
+                  }
+                  else
                   {
                     ssMessage.str("");
-                    ssMessage << "write(" << errno << ") " << strerror(errno);
+                    ssMessage << "pipe(" << errno << ") " << strerror(errno);
                     strError = ssMessage.str();
+                    ptJson->i("Status", "error");
+                    ptJson->i("Error", strError);
+                    hub(ptJson, false);
                   }
                 }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << "pipe(" << errno << ") " << strerror(errno);
+                  strError = ssMessage.str();
+                  ptJson->i("Status", "error");
+                  ptJson->i("Error", strError);
+                  hub(ptJson, false);
+                }
+              }
+              else
+              {
+                ptJson->i("Status", "error");
+                ptJson->i("Error", "Please provide the Command.");
+                hub(ptJson, false);
               }
             }
-            else if (nReturn < 0)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << "poll(" << errno << ") " << strerror(errno);
-              strError = ssMessage.str();
-            }
-            clock_gettime(CLOCK_REALTIME, &stop);
-            if ((stop.tv_sec - start.tv_sec) > 1800)
-            {
-              bExit = true;
-            }
-          }
-          close(readpipe[0]);
-          close(writepipe[1]);
-          unDuration = ((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000);
-          ssDuration << unDuration;
-          ptJson->insert("Duration", ssDuration.str(), 'n');
-          if (bJson)
-          {
-            Json *ptOutput = new Json(strBuffer[0]);
-            ptJson->i("Output", ptOutput);
-            delete ptOutput;
-          }
-          else
-          {
-            ptJson->i("Output", strBuffer[0]);
-          }
-          if (bKill)
-          {
-            pid_t retWait;
-            size_t unAttempts = 0;
-            kill(execPid, SIGTERM);
-            while ((retWait = waitpid(execPid, NULL, WNOHANG)) == 0 && unAttempts++ < 10)
-            {
-              msleep(1000);
-            }
-            if (retWait == 0)
-            {
-              kill(execPid, SIGKILL);
-            }
-            strError = "Terminated the child process due to crossing the 30 minute timeout.";
+            delete ptJson;
           }
         }
         else
         {
-          ssMessage.str("");
-          ssMessage << "fork(" << errno << ") " << strerror(errno);
-          strError = ssMessage.str();
+          bExit = true;
+          if (nReturn < 0 && errno != 104)
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") [stdin," << fds[0].fd << "]:  " << strerror(errno);
+            log(ssMessage.str());
+          }
         }
+      }
+      // }}}
+      // {{{ stdout
+      if (fds[1].revents & POLLOUT)
+      {
+        if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
+        {
+          bExit = true;
+          if (nReturn < 0)
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") [stdout," << fds[1].fd << "]:  " << strerror(errno);
+            log(ssMessage.str());
+          }
+        }
+      }
+      // }}}
+      // {{{ commands
+      for (size_t i = 2; i < unIndex; i++)
+      {
+        bool bRemoved = false;
+        for (auto j = commands.begin(); j != commands.end(); j++)
+        {
+          if (fds[i].fd == (*j)->fdRead)
+          {
+            if (fds[i].revents & (POLLHUP | POLLIN))
+            {
+              if (!m_pUtility->fdRead((*j)->fdRead, (*j)->strBuffer[0], nReturn))
+              {
+                if (!bRemoved)
+                {
+                  removals.push_back(j);
+                }
+                if (nReturn == 0)
+                {
+                  (*j)->bProcessed = true;
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
+                  (*j)->strError = ssMessage.str();
+                }
+              }
+            }
+          }
+          else if (fds[i].fd == (*j)->fdWrite)
+          {
+            if (fds[i].revents & POLLOUT)
+            {
+              if (!m_pUtility->fdWrite((*j)->fdWrite, (*j)->strBuffer[1], nReturn))
+              {
+                if (!bRemoved)
+                {
+                  removals.push_back(j);
+                }
+                if (nReturn < 0)
+                {
+                  ssMessage.str("");
+                  ssMessage << "Utility::fdWrite(" << errno << ") " << strerror(errno);
+                  (*j)->strError = ssMessage.str();
+                }
+              }
+            }
+          }
+          clock_gettime(CLOCK_REALTIME, &((*j)->stop));
+          if (!bRemoved && ((*j)->stop.tv_sec - (*j)->start.tv_sec) > 1800)
+          {
+            removals.push_back(j);
+          }
+        }
+      }
+      // }}}
+    }
+    else if (!bExit && nReturn < 0 && errno != EINTR)
+    {
+      bExit = true;
+      ssMessage.str("");
+      ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+      notify(ssMessage.str());
+    }
+    // {{{ post work
+    delete[] fds;
+    for (auto &i : removals)
+    {
+      pid_t retWait;
+      size_t unDuration = (((*i)->stop.tv_sec - (*i)->start.tv_sec) * 1000) + (((*i)->stop.tv_nsec - (*i)->start.tv_nsec) / 1000000);
+      stringstream ssDuration;
+      close((*i)->fdRead);
+      close((*i)->fdWrite);
+      ssDuration << unDuration;
+      (*i)->ptJson->insert("Duration", ssDuration.str(), 'n');
+      if ((*i)->bJson)
+      {
+        Json *ptOutput = new Json((*i)->strBuffer[0]);
+        (*i)->ptJson->i("Output", ptOutput);
+        delete ptOutput;
       }
       else
       {
-        ssMessage.str("");
-        ssMessage << "pipe(" << errno << ") " << strerror(errno);
-        strError = ssMessage.str();
+        (*i)->ptJson->i("Output", (*i)->strBuffer[0]);
       }
+      if ((retWait = waitpid((*i)->execPid, NULL, WNOHANG)) == 0)
+      {
+        size_t unAttempts = 0;
+        kill((*i)->execPid, SIGTERM);
+        while ((retWait = waitpid((*i)->execPid, NULL, WNOHANG)) == 0 && unAttempts++ < 5)
+        {
+          msleep(1000);
+        }
+        if (retWait == 0)
+        {
+          kill((*i)->execPid, SIGKILL);
+        }
+        (*i)->strError = "Terminated the child process due to crossing the 30 minute timeout.";
+      }
+      (*i)->ptJson->i("Status", (((*i)->bProcessed)?"okay":"error"));
+      if (!(*i)->strError.empty())
+      {
+        (*i)->ptJson->i("Error", (*i)->strError);
+      }
+      hub((*i)->ptJson, false);
+      delete (*i)->ptJson;
+      delete *i;
     }
-    else
+    removals.clear();
+    if (shutdown())
     {
-      ssMessage.str("");
-      ssMessage << "pipe(" << errno << ") " << strerror(errno);
-      strError = ssMessage.str();
+      bExit = true;
     }
+    // }}}
   }
-  else
+  // {{{ post work
+  for (auto &i : commands)
   {
-    strError = "Please provide the Command.";
+    close(i->fdRead);
+    close(i->fdWrite);
+    if (waitpid(i->execPid, NULL, WNOHANG) == 0)
+    {
+      kill(i->execPid, SIGKILL);
+    }
+    delete i->ptJson;
+    delete i;
   }
-  ptJson->i("Status", ((bResult)?"okay":"error"));
-  if (!strError.empty())
-  {
-    ptJson->i("Error", strError);
-  }
-  if (bResponse)
-  {
-    hub(ptJson, false);
-  }
-  delete ptJson;
-  threadDecrement();
+  setShutdown();
+  // }}}
 }
 // }}}
 }
