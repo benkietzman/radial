@@ -232,6 +232,9 @@ void Command::process(string strPrefix)
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                     ptCommand->ptJson = new Json(ptJson);
                     commands.push_back(ptCommand);
+ssMessage.str("");
+ssMessage << strPrefix << ":  Launched command.";
+log(ssMessage.str());
                   }
                   else
                   {
@@ -311,6 +314,9 @@ void Command::process(string strPrefix)
             {
               if (!m_pUtility->fdRead((*j)->fdRead, (*j)->strBuffer[0], nReturn))
               {
+ssMessage.str("");
+ssMessage << strPrefix << ":  Received response.";
+log(ssMessage.str());
                 if (!bRemoved)
                 {
                   removals.push_back(j);
@@ -378,6 +384,9 @@ void Command::process(string strPrefix)
       pid_t retWait;
       size_t unDuration = (((*i)->stop.tv_sec - (*i)->start.tv_sec) * 1000) + (((*i)->stop.tv_nsec - (*i)->start.tv_nsec) / 1000000);
       stringstream ssDuration;
+ssMessage.str("");
+ssMessage << strPrefix << ":  Closed.";
+log(ssMessage.str());
       close((*i)->fdRead);
       if ((*i)->fdWrite != -1)
       {
