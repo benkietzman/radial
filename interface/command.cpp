@@ -14,7 +14,7 @@
 ***********************************************************************/
 #include "include/Command"
 using namespace radial;
-static Command *gpCommand = NULL;
+Command *gpCommand = NULL;
 void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {

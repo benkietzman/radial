@@ -83,7 +83,7 @@ void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
         }
         else if (execPid > 0)
         {
-          bool bExit = false, bKill = false;
+          bool bExit = false, bKill = false, bJson = false;
           int nReturn;
           long lArg;
           size_t unDuration;
@@ -103,9 +103,21 @@ void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
             lArg |= O_NONBLOCK;
             fcntl(writepipe[1], F_SETFL, lArg);
           }
-          if (!empty(ptJson, "Input"))
+          if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
           {
-            strBuffer[1] = ptJson->m["Input"]->v;
+            bJson = true;
+          }
+          if (exist(ptJson, "Input"))
+          {
+            if (bJson)
+            {
+              ptJson->m["Input"]->j(strBuffer[1]);
+              strBuffer[1] += "\n";
+            }
+            else
+            {
+              strBuffer[1] = ptJson->m["Input"]->v;
+            }
           }
           clock_gettime(CLOCK_REALTIME, &start);
           while (!bExit)
@@ -166,7 +178,16 @@ void Command::callback(string strPrefix, Json *ptJson, const bool bResponse)
           unDuration = ((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000);
           ssDuration << unDuration;
           ptJson->insert("Duration", ssDuration.str(), 'n');
-          ptJson->i("Output", strBuffer[0]);
+          if (bJson)
+          {
+            Json *ptOutput = new Json(strBuffer[0]);
+            ptJson->i("Output", ptOutput);
+            delete ptOutput;
+          }
+          else
+          {
+            ptJson->i("Output", strBuffer[0]);
+          }
           if (bKill)
           {
             pid_t retWait;
