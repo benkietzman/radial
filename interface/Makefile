@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/live bin/log bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
@@ -20,6 +20,7 @@ install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email 
 	install --mode=775 bin/link $(prefix)/radial/interface/
 	install --mode=775 bin/live $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
+	install --mode=775 bin/logger $(prefix)/radial/interface/
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
@@ -136,6 +137,16 @@ obj/log.o: log.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c log.cpp -o obj/log.o $(CPPFLAGS) -I../../common
 obj/Log.o: include/Log.cpp obj
 	g++ -ggdb -Wall -c include/Log.cpp -o obj/Log.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ logger
+logger: bin/logger $(prefix)/radial/interface
+	install --mode=775 bin/logger $(prefix)/radial/interface/
+bin/logger: ../../common/libcommon.a obj/logger.o obj/Base.o obj/Interface.o obj/Logger.o bin
+	g++ -o bin/logger obj/logger.o obj/Base.o obj/Interface.o obj/Logger.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/logger.o: logger.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c logger.cpp -o obj/logger.o $(CPPFLAGS) -I../../common
+obj/Logger.o: include/Logger.cpp obj
+	g++ -ggdb -Wall -c include/Logger.cpp -o obj/Logger.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ mysql
 mysql: bin/mysql $(prefix)/radial/interface

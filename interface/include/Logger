@@ -1,0 +1,55 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Logger
+// author     : Ben Kietzman
+// begin      : 2023-05-17
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_LOGGER_
+#define _RADIAL_LOGGER_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ structs
+// {{{ radialConn
+struct radialConn
+{
+  int fdSocket;
+  list<string> message;
+  time_t CTime;
+  vector<string> buffer; 
+};
+// }}}
+// }}}
+// {{{ Logger
+class Logger : public Interface
+{
+  protected:
+  deque<map<string, string> > m_messages;
+  mutex m_mutex;
+  string m_strPassword;
+  string m_strPort;
+  string m_strServer;
+  string m_strUser;
+
+  public:
+  Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  ~Logger();
+  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void push(string strPrefix);
+};
+// }}}
+}
+}
+#endif
