@@ -16,6 +16,7 @@
 #define _RADIAL_BASE_
 // {{{ includes
 #include <arpa/inet.h>
+#include <bzlib.h>
 #include <cerrno>
 #include <cstring>
 #include <fstream>
@@ -38,6 +39,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+#include <zlib.h>
 using namespace std;
 #include <Central>
 #include <DateTime>
