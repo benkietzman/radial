@@ -56,7 +56,8 @@ void Logger::callback(string strPrefix, Json *ptJson, const bool bResponse)
         }
         else
         {
-          strError = "Please provide the Message.";
+          string strJson;
+          strError = "Please provide the Message. --- " + ptJson->j(strJson);
         }
       }
       else
