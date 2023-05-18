@@ -592,6 +592,37 @@ bool Interface::isMasterSettled()
   return m_bMasterSettled;
 }
 // }}}
+// {{{ junction()
+bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->m["Request"] = new Json;
+  for (auto &i : in)
+  {
+    ptJson->m["Request"]->pb(i);
+  }
+  for (auto &i : out)
+  {
+    delete i;
+  }
+  out.clear();
+  if (hub("junction", ptJson, strError))
+  {
+    if (exist(ptJson, "Response"))
+    {
+      for (auto &i : ptJson->m["Response"]->l)
+      {
+        out.push_back(new Json(i));
+      }
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ jwt()
 bool Interface::jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError)
 {
