@@ -7,14 +7,13 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
-	install --mode=775 bin/email $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/junction $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
@@ -78,16 +77,6 @@ obj/database.o: database.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c database.cpp -o obj/database.o $(CPPFLAGS) -I../../common
 obj/Database.o: include/Database.cpp obj
 	g++ -ggdb -Wall -c include/Database.cpp -o obj/Database.o $(CPPFLAGS) -I../../common
-# }}}
-# {{{ email
-email: bin/email $(prefix)/radial/interface
-	install --mode=775 bin/email $(prefix)/radial/interface/
-bin/email: ../../common/libcommon.a obj/email.o obj/Base.o obj/Interface.o obj/Email.o bin
-	g++ -o bin/email obj/email.o obj/Base.o obj/Interface.o obj/Email.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
-obj/email.o: email.cpp ../../common/Makefile obj
-	g++ -ggdb -Wall -c email.cpp -o obj/email.o $(CPPFLAGS) -I../../common
-obj/Email.o: include/Email.cpp obj
-	g++ -ggdb -Wall -c include/Email.cpp -o obj/Email.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ irc
 irc: bin/irc $(prefix)/radial/interface
