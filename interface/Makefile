@@ -7,13 +7,14 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
+	install --mode=775 bin/db $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/junction $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
@@ -77,6 +78,16 @@ obj/database.o: database.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c database.cpp -o obj/database.o $(CPPFLAGS) -I../../common
 obj/Database.o: include/Database.cpp obj
 	g++ -ggdb -Wall -c include/Database.cpp -o obj/Database.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ db
+db: bin/db $(prefix)/radial/interface
+	install --mode=775 bin/db $(prefix)/radial/interface/
+bin/db: ../../common/libcommon.a obj/db.o obj/Base.o obj/Interface.o obj/Db.o bin
+	g++ -o bin/db obj/db.o obj/Base.o obj/Interface.o obj/Db.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/db.o: db.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c db.cpp -o obj/db.o $(CPPFLAGS) -I../../common
+obj/Db.o: include/Db.cpp obj
+	g++ -ggdb -Wall -c include/Db.cpp -o obj/Db.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ irc
 irc: bin/irc $(prefix)/radial/interface

@@ -31,7 +31,6 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   m_pProcessJwtCallback = NULL;
   m_pProcessPostAuthzCallback = NULL;
   m_pProcessPreAuthzCallback = NULL;
-  m_pJunction->useSingleSocket(true);
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
   { 
     if (!empty(ptAes, "Secret"))
