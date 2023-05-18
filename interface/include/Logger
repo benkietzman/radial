@@ -21,33 +21,15 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ structs
-// {{{ radialConn
-struct radialConn
-{
-  int fdSocket;
-  list<string> message;
-  time_t CTime;
-  vector<string> buffer; 
-};
-// }}}
-// }}}
 // {{{ Logger
 class Logger : public Interface
 {
   protected:
-  deque<map<string, string> > m_messages;
-  mutex m_mutex;
-  string m_strPassword;
-  string m_strPort;
-  string m_strServer;
-  string m_strUser;
 
   public:
   Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Logger();
   void callback(string strPrefix, Json *ptJson, const bool bResponse);
-  void push(string strPrefix);
 };
 // }}}
 }

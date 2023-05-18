@@ -46,6 +46,7 @@ using namespace std;
 #include <DateTime>
 #include <File>
 #include <Json>
+#include <Logger>
 #include <ServiceJunction>
 #include <StringManip>
 #include <Terminal>
@@ -120,6 +121,7 @@ class Base
   Central *m_pCentral;
   DateTime m_date;
   File m_file;
+  Logger *m_pLogger;
   ServiceJunction *m_pJunction;
   StringManip m_manip;
   Utility *m_pUtility;

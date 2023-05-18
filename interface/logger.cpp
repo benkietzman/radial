@@ -14,22 +14,19 @@
 ***********************************************************************/
 #include "include/Logger"
 using namespace radial;
-Logger *gpLogger;
+radial::Logger *gpLogger;
 void callback(string strPrefix, Json *ptJson, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "logger->main()";
-  gpLogger = new Logger(strPrefix, argc, argv, &callback);
-  thread threadPush(&Logger::push, gpLogger, strPrefix);
-  pthread_setname_np(threadPush.native_handle(), "push");
+  gpLogger = new radial::Logger(strPrefix, argc, argv, &callback);
   gpLogger->process(strPrefix);
-  threadPush.join();
   delete gpLogger;
   return 0;
 }
 void callback(string strPrefix, Json *ptJson, const bool bResponse)
 {
-  thread threadCallback(&Logger::callback, gpLogger, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&radial::Logger::callback, gpLogger, strPrefix, new Json(ptJson), bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }
