@@ -64,6 +64,7 @@ class Interface : public Base
   bool live(const string strApplication, const string strUser, Json *ptMessage, string &strError);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
+  void logger(const string strFunction, map<string, string> label, const string strMessage);
   string master();
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
