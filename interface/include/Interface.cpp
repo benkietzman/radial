@@ -248,54 +248,79 @@ void Interface::email(const string strFrom, list<string> to, const string strSub
 }
 void Interface::email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError)
 {
-  Json *ptJson = new Json;
+  Json *ptJson = new Json, *ptReq = new Json;
 
-  ptJson->i("From", strFrom);
+  ptJson->m["Request"] = new Json;
+  ptReq->i("Service", "email");
+  ptReq->i("From", strFrom);
   if (!to.empty())
   {
-    ptJson->m["To"] = new Json;
-    for (auto &i : to)
+    stringstream ssTo;
+    for (auto i = to.begin(); i != to.end(); i++)
     {
-      ptJson->m["To"]->pb(i);
+      if (i != to.begin())
+      {
+        ssTo << ",";
+      }
+      ssTo << *i;
     }
+    ptReq->i("To", ssTo.str());
   }
   if (!cc.empty())
   {
-    ptJson->m["Cc"] = new Json;
-    for (auto &i : cc)
+    stringstream ssCc;
+    for (auto i = cc.begin(); i != cc.end(); i++)
     {
-      ptJson->m["Cc"]->pb(i);
+      if (i != cc.begin())
+      {
+        ssCc << ",";
+      }
+      ssCc << *i;
     }
+    ptReq->i("Cc", ssCc.str());
   }
   if (!bcc.empty())
   {
-    ptJson->m["Bcc"] = new Json;
-    for (auto &i : bcc)
+    stringstream ssBcc;
+    for (auto i = bcc.begin(); i != bcc.end(); i++)
     {
-      ptJson->m["Bcc"]->pb(i);
+      if (i != bcc.begin())
+      {
+        ssBcc << ",";
+      }
+      ssBcc << *i;
     }
+    ptReq->i("Bcc", ssBcc.str());
   }
   if (!strSubject.empty())
   {
-    ptJson->i("Subject", strSubject);
+    ptReq->i("Subject", strSubject);
   }
   if (!strText.empty())
   {
-    ptJson->i("Text", strText);
+    ptReq->i("Text", strText);
   }
   if (!strHtml.empty())
   {
-    ptJson->i("Html", strHtml);
+    ptReq->i("HTML", strHtml);
   }
+  ptJson->m["Request"]->pb(ptReq);
+  delete ptReq;
   if (!file.empty())
   {
-    ptJson->m["File"] = new Json;
     for (auto &i : file)
     {
-      ptJson->m["file"]->i(i.first, i.second);
+      string strData;
+      ptReq = new Json;
+      m_manip.encodeBase64(i.second, strData);
+      ptReq->i("Name", i.first);
+      ptReq->i("Data", strData);
+      ptReq->i("Encode", "base64");
+      ptJson->m["Request"]->pb(ptReq);
+      delete ptReq;
     }
   }
-  hub("email", ptJson, false);
+  hub("junction", ptJson, false);
   delete ptJson;
 }
 // }}}
