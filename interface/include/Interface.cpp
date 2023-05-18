@@ -614,7 +614,19 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
     {
       if (!ptJson->m["Response"]->l.empty())
       {
-        bResult = true;
+        Json *ptStatus = ptJson->m["Response"]->l.front();
+        if (exist(ptStatus, "Status") && ptStatus->m["Status"]->v == "okay")
+        {
+          bResult = true;
+        }
+        else if (!empty(ptStatus, "Error"))
+        {
+          strError = ptStatus->m["Error"]->v;
+        }
+        else
+        {
+          strError = "Encountered an unknown error.";
+        }
         for (auto &i : ptJson->m["Response"]->l)
         {
           out.push_back(new Json(i));
