@@ -498,7 +498,7 @@ void Hub::process(string strPrefix)
                 {
                   strError = "Unable to write to the interface for the last 60 seconds.";
                   ssMessage.str("");
-                  ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << "07,05 " << interface.first << " " << char(3) << " " << strPrefix << ":  " << strError;
+                  ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << interface.first << " " << char(3) << " " << strPrefix << ":  " << strError;
                   chat("#radial", ssMessage.str());
                   ssMessage.str("");
                   ssMessage << strPrefix << " [" << interface.first << "]:  " << strError;
@@ -1085,7 +1085,7 @@ void Hub::process(string strPrefix)
               if (!i.second->bShutdown && Base::monitor(i.second->nPid, i.second->CMonitor, i.second->unMonitor, i.second->ulMemory, strMessage) == 2)
               {
                 ssMessage.str("");
-                ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << "07,05 " << i.first << " " << char(3) << " " << strPrefix << ":  " << strMessage;
+                ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << i.first << " " << char(3) << " " << strPrefix << ":  " << strMessage;
                 chat("#radial", ssMessage.str());
                 ssMessage.str("");
                 ssMessage << strPrefix << " [" << i.first << "]:  " << strMessage;
