@@ -612,10 +612,22 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
   {
     if (exist(ptJson, "Response"))
     {
-      for (auto &i : ptJson->m["Response"]->l)
+      if (!ptJson->m["Response"]->l.empty())
       {
-        out.push_back(new Json(i));
+        bResult = true;
+        for (auto &i : ptJson->m["Response"]->l)
+        {
+          out.push_back(new Json(i));
+        }
       }
+      else
+      {
+        strError = "Failed to receive the status line of the Response.";
+      }
+    }
+    else
+    {
+      strError = "Failed to receive the Response.";
     }
   }
   delete ptJson;
