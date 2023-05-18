@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
@@ -16,6 +16,7 @@ install: bin/auth bin/central bin/centralmon bin/command bin/database bin/email 
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/email $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
+	install --mode=775 bin/junction $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
 	install --mode=775 bin/link $(prefix)/radial/interface/
 	install --mode=775 bin/live $(prefix)/radial/interface/
@@ -97,6 +98,16 @@ obj/irc.o: irc.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c irc.cpp -o obj/irc.o $(CPPFLAGS) -I../../common
 obj/Irc.o: include/Irc.cpp obj
 	g++ -ggdb -Wall -c include/Irc.cpp -o obj/Irc.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ junction
+junction: bin/junction $(prefix)/radial/interface
+	install --mode=775 bin/junction $(prefix)/radial/interface/
+bin/junction: ../../common/libcommon.a obj/junction.o obj/Base.o obj/Interface.o obj/Junction.o bin
+	g++ -o bin/junction obj/junction.o obj/Base.o obj/Interface.o obj/Junction.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/junction.o: junction.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c junction.cpp -o obj/junction.o $(CPPFLAGS) -I../../common
+obj/Junction.o: include/Junction.cpp obj
+	g++ -ggdb -Wall -c include/Junction.cpp -o obj/Junction.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ jwt
 jwt: bin/jwt $(prefix)/radial/interface
