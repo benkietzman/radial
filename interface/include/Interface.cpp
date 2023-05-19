@@ -930,6 +930,47 @@ void Interface::notify(const string strMessage)
   log("notify", strMessage);
 }
 // }}}
+// {{{ page
+// {{{ page()
+bool Interface::page(const string strType, const string strTarget, const string strMessage, string &strError)
+{
+  bool bResult = false;
+  list<Json *> in, out;
+  Json *ptJson = new Json;
+
+  ptJson->i("Service", "page");
+  ptJson->i(strType, strTarget);
+  ptJson->i("Message", strMessage);
+  in.push_back(ptJson);
+  if (junction(in, out, strError))
+  {
+    bResult = true;
+  }
+  for (auto &i : in)
+  {
+    delete i;
+  }
+  for (auto &i : out)
+  {
+    delete i;
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ pageGroup()
+bool Interface::pageGroup(const string strGroup, const string strMessage, string &strError)
+{
+  return page("Group", strGroup, strMessage, strError);
+}
+// }}}
+// {{{ pageUser()
+bool Interface::pageUser(const string strUser, const string strMessage, string &strError)
+{
+  return page("User", strUser, strMessage, strError);
+}
+// }}}
+// }}}
 // {{{ process()
 void Interface::process(string strPrefix)
 {
