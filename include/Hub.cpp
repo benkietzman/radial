@@ -319,7 +319,7 @@ bool Hub::load(string strPrefix, string &strError)
                 if (!bFound)
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << " [" << i.first << "]:  Stopping interface due non-existence in configuration.";
+                  ssMessage << strPrefix << " [" << i.first << "]:  Stopping interface due to non-existence in configuration.";
                   log(ssMessage.str());
                   setShutdown(strPrefix, i.first, true);
                 }
