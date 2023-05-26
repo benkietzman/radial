@@ -34,8 +34,7 @@ class Hub : public Base
   void log(const string strFunction, const string strMessage);
   void monitor(string strPrefix);
   void remove(string strPrefix, const string strName);
-  void target(radialPacket &p);
-  void target(const string t, Json *j, const string s = "");
+  void target(const string strTarget, Json *ptJson);
 
   public:
   Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(const int));

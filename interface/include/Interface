@@ -85,11 +85,10 @@ class Interface : public Base
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
   ~Interface();
-  void hub(radialPacket &p, const bool bWait = true);
-  void hub(const string strTarget, Json *ptJson, const bool bWait = true);
   void hub(Json *ptJson, const bool bWait = true);
-  bool hub(const string strTarget, Json *ptJson, string &strError);
+  void hub(const string strTarget, Json *ptJson, const bool bWait = true);
   bool hub(Json *ptJson, string &strError);
+  bool hub(const string strTarget, Json *ptJson, string &strError);
   void process(string strPrefix);
   void setAutoMode(void (*pCallback)(string, const string, const string));
 };

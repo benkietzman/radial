@@ -29,7 +29,6 @@ Base::Base(int argc, char **argv)
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;
-  m_cDelimiter = char(26);
   time(&m_CMonitor[0]);
   m_strApplication = "Radial";
   uname(&tServer);
@@ -220,34 +219,6 @@ void Base::msleep(const unsigned long ulMilliSec)
   m_pUtility->msleep(ulMilliSec);
 }
 // }}}
-// {{{ pack()
-string Base::pack(radialPacket &p)
-{
-  stringstream ssData;
-  Json *r = new Json;
-
-  if (!p.d.empty())
-  {
-    r->i("_d", p.d);
-  }
-  if (!p.s.empty())
-  {
-    r->i("_s", p.s);
-  }
-  if (!p.t.empty())
-  {
-    r->i("_t", p.t);
-  }
-  if (!p.u.empty())
-  {
-    r->i("_u", p.u);
-  }
-  ssData << r << m_cDelimiter << p.p;
-  delete r;
-
-  return ssData.str();
-}
-// }}}
 // {{{ setShutdown()
 void Base::setShutdown()
 {
@@ -280,34 +251,6 @@ void Base::threadIncrement()
   m_mutexBase.unlock();
 }
 // }}}
-// }}}
-// {{{ unpack()
-void Base::unpack(const string d, radialPacket &p)
-{
-  string strRoute;
-  stringstream ssData(d);
-  Json *r;
-
-  getline(ssData, strRoute, m_cDelimiter);
-  r = new Json(strRoute);
-  getline(ssData, p.p, m_cDelimiter);
-  if (!empty(r, "_d"))
-  {
-    p.d = r->m["_d"]->v;
-  }
-  if (!empty(r, "_s"))
-  {
-    p.s = r->m["_s"]->v;
-  }
-  if (!empty(r, "_t"))
-  {
-    p.t = r->m["_t"]->v;
-  }
-  if (!empty(r, "_u"))
-  {
-    p.t = r->m["_u"]->v;
-  }
-}
 // }}}
 }
 }
