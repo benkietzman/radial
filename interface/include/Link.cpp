@@ -496,10 +496,17 @@ void Link::process(string strPrefix)
               {
                 while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
                 {
-                  Json *ptJson;
-                  strLine = m_strBuffers[0].substr(0, unPosition);
+                  string strPayload, strRoute;
+                  stringstream ssData(m_strBuffers[0].substr(0, unPosition));
+                  Json *ptJson, *ptRoute;
                   m_strBuffers[0].erase(0, (unPosition + 1));
-                  ptJson = new Json(strLine);
+                  getline(ssData, strRoute, m_cDelimiter);
+                  getline(ssData, strPayload, m_cDelimiter);
+                  ptRoute = new Json(strRoute);
+                  ptJson = new Json(strPayload);
+                  ptJson->merge(ptRoute, true, false);
+                  delete ptRoute;
+                  ptJson->j(strLine);
                   if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdLink;
