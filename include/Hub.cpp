@@ -162,7 +162,6 @@ void Hub::interfaces()
 {
   Json *ptJson = new Json;
 
-  ptJson->i("_s", "hub");
   ptJson->i("Function", "interfaces");
   ptJson->m["Interfaces"] = new Json;
   for (auto &i : m_interfaces)
@@ -178,7 +177,7 @@ void Hub::interfaces()
   }
   for (auto &i : m_interfaces)
   {
-    target(i.first, ptJson);
+    target(i.first, ptJson, "hub");
   }
   delete ptJson;
 }
@@ -188,7 +187,6 @@ void Hub::links()
 {
   Json *ptJson = new Json;
 
-  ptJson->i("_s", "hub");
   ptJson->i("Function", "links");
   ptJson->m["Links"] = new Json;
   for (auto &link : m_links)
@@ -214,7 +212,7 @@ void Hub::links()
     if (interface.first != "link")
     {
       Json *ptSubJson = new Json(ptJson);
-      target(interface.first, ptSubJson);
+      target(interface.first, ptSubJson, "hub");
       delete ptSubJson;
     }
   }
@@ -545,50 +543,58 @@ void Hub::process(string strPrefix)
                     {
                       while ((unPosition = m_interfaces[sockets[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
                       {
-                        ptJson = new Json(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition));
+                        radialPacket p;
+                        unpack(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition), p);
                         m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
-                        if (!empty(ptJson, "_t"))
+                        if (!p.t.empty())
                         {
-                          if (!exist(ptJson, "_d"))
+                          if (!p.d.empty())
                           {
-                            if (m_interfaces.find(ptJson->m["_t"]->v) != m_interfaces.end())
+                            if (m_interfaces.find(p.t) != m_interfaces.end())
                             {
-                              ptJson->i("_d", "t");
-                              m_interfaces[ptJson->m["_t"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                              p.d = "t";
+                              m_interfaces[p.t]->strBuffers[1].append(pack(p) + "\n");
                             }
                             else
                             {
                               list<radialLink *>::iterator linkIter = m_links.end();
                               for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
                               {
-                                if ((*i)->interfaces.find(ptJson->m["_t"]->v) != (*i)->interfaces.end())
+                                if ((*i)->interfaces.find(p.t) != (*i)->interfaces.end())
                                 {
                                   linkIter = i;
                                 }
                               }
                               if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
                               {
-                                ptJson->i("_d", "t");
+                                Json *ptJson = new Json(p.p);
+                                p.d = "t";
                                 ptJson->i("Node", (*linkIter)->strNode);
-                                m_interfaces["link"]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                                ptJson->j(p.p);
+                                delete ptJson;
+                                m_interfaces["link"]->strBuffers[1].append(pack(p) + "\n");
                               }
-                              else if (!empty(ptJson, "_s") && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                              else if (!p.s.empty() && m_interfaces.find(p.s) != m_interfaces.end())
                               {
-                                ptJson->i("_d", "s");
+                                Json *ptJson = new Json(p.p);
+                                p.d = "s";
                                 ptJson->i("Status", "error");
                                 ptJson->i("Error", "Interface does not exist.");
-                                m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                                ptJson->j(p.p);
+                                delete ptJson;
+                                m_interfaces[p.s]->strBuffers[1].append(pack(p) + "\n");
                               }
                             }
                           }
-                          else if (ptJson->m["_d"]->v == "t" && !empty(ptJson, "_s") && m_interfaces.find(ptJson->m["_s"]->v) != m_interfaces.end())
+                          else if (p.d == "t" && !p.s.empty() && m_interfaces.find(p.s) != m_interfaces.end())
                           {
-                            ptJson->i("_d", "s");
-                            m_interfaces[ptJson->m["_s"]->v]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                            p.d = "s";
+                            m_interfaces[p.s]->strBuffers[1].append(pack(p) + "\n");
                           }
                         }
                         else if (sockets[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
                         {
+                          Json *ptJson = new Json(p.p);
                           for (auto &link : m_links)
                           {
                             for (auto &interface : link->interfaces)
@@ -639,12 +645,14 @@ void Hub::process(string strPrefix)
                               m_links.push_back(ptLink);
                             }
                           }
+                          delete ptJson;
                           links();
                         }
                         else
                         {
                           // {{{ prep work
                           bool bResult = false;
+                          Json *ptJson = new Json(p.p);
                           strError.clear();
                           // }}}
                           if (!empty(ptJson, "Function"))
@@ -799,16 +807,17 @@ void Hub::process(string strPrefix)
                             // }}}
                           }
                           // {{{ post work
-                          ptJson->i("_d", "s");
+                          p.d = "s";
                           ptJson->i("Status", ((bResult)?"okay":"error"));
                           if (!strError.empty())
                           {
                             ptJson->i("Error", strError);
                           }
-                          m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+                          ptJson->j(p.p);
+                          m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(pack(p) + "\n");
+                          delete ptJson;
                           // }}}
                         }
-                        delete ptJson;
                       }
                     }
                     else
@@ -1221,14 +1230,14 @@ void Hub::remove(string strPrefix, const string strName)
 // {{{ setShutdown()
 void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop)
 {
-  string strJson;
   stringstream ssMessage;
   Json *ptJson = new Json;
+  radialPacket p;
 
   strPrefix += "->shutdown()";
-  ptJson->i("_s", "hub");
+  p.s = "hub";
   ptJson->i("Function", "shutdown");
-  ptJson->j(strJson);
+  ptJson->j(p.p);
   delete ptJson;
   if (strTarget.empty())
   {
@@ -1246,23 +1255,32 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
         interface.second->bRespawn = false;
       }
       interface.second->bShutdown = true;
-      interface.second->strBuffers[1].append(strJson + "\n");
+      interface.second->strBuffers[1].append(pack(p) + "\n");
       time(&(interface.second->CShutdown));
     }
   }
 }
 // }}}
 // {{{ target()
-void Hub::target(const string strTarget, Json *ptJson)
+void Hub::target(radialPacket &p)
 {
-  string strJson;
-
-  if (m_interfaces.find(strTarget) != m_interfaces.end())
+  if (m_interfaces.find(p.t) != m_interfaces.end())
   {
-    ptJson->i("_t", strTarget);
-    ptJson->i("_d", "t");
-    m_interfaces[strTarget]->strBuffers[1].append(ptJson->j(strJson) + "\n");
+    p.d = "t";
+    m_interfaces[p.t]->strBuffers[1].append(pack(p) + "\n");
   }
+}
+void Hub::target(const string t, Json *j, const string s)
+{
+  radialPacket p;
+
+  if (!s.empty())
+  {
+    p.s = s;
+  }
+  p.t = t;
+  j->j(p.p);
+  target(p);
 }
 // }}}
 }

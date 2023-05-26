@@ -325,23 +325,15 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 }
 // }}}
 // {{{ hub()
-void Interface::hub(Json *ptJson, const bool bWait)
-{
-  hub("", ptJson, bWait);
-}
-void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
+void Interface::hub(radialPacket &p, const bool bWait)
 {
   string strJson;
 
-  if (!strTarget.empty())
-  {
-    ptJson->i("_t", strTarget);
-  }
   if (bWait)
   {
     int fdUnique[2] = {-1, -1}, nReturn;
     stringstream ssMessage;
-    ptJson->i("_s", m_strName);
+    p.s = m_strName;
     if ((nReturn = pipe(fdUnique)) == 0)
     {
       bool bExit = false, bResult = false;
@@ -358,10 +350,9 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
         ssUnique.str("");
         ssUnique << m_strName << "_" << unUnique;
       }
-      ptJson->i("_u", ssUnique.str());
+      p.u = ssUnique.str();
       m_waiting[ssUnique.str()] = fdUnique[1];
-      ptJson->j(strJson);
-      m_responses.push_back(strJson);
+      m_responses.push_back(pack(p));
       m_mutexShare.unlock();
       while (!bExit)
       {
@@ -412,34 +403,54 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
       m_mutexShare.unlock();
       if (bResult)
       {
-        ptJson->parse(strBuffer.substr(0, unPosition));
+        unpack(strBuffer.substr(0, unPosition), p);
       }
       else
       {
+        Json *ptJson = new Json(p.p);
         ptJson->i("Status", "error");
         ptJson->i("Error", ((!strError.empty())?strError:"Encountered an uknown error."));
+        ptJson->j(p.p);
+        delete ptJson;
       }
     }
     else
     {
+      Json *ptJson = new Json(p.p);
       ssMessage.str("");
       ssMessage << "pipe(" << errno << ") " << strerror(errno);
       ptJson->i("Status", "error");
       ptJson->i("Error", ssMessage.str());
+      ptJson->j(p.p);
+      delete ptJson;
     }
-    keyRemovals(ptJson);
   }
   else
   {
-    ptJson->j(strJson);
     m_mutexShare.lock();
-    m_responses.push_back(strJson);
+    m_responses.push_back(pack(p));
     m_mutexShare.unlock();
   }
 }
-bool Interface::hub(Json *ptJson, string &strError)
+void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
 {
-  return hub("", ptJson, strError);
+  string strJson;
+  radialPacket p;
+
+  ptJson->j(p.p);
+  if (!strTarget.empty())
+  {
+    p.t = strTarget;
+  }
+  hub(p, bWait);
+  if (bWait)
+  {
+    ptJson->parse(p.p);
+  }
+}
+void Interface::hub(Json *ptJson, const bool bWait)
+{
+  hub("", ptJson, bWait);
 }
 bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
 {
@@ -460,6 +471,10 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   }
 
   return bResult;
+}
+bool Interface::hub(Json *ptJson, string &strError)
+{
+  return hub("", ptJson, strError);
 }
 // }}}
 // {{{ interfaceAdd()
@@ -1036,16 +1051,15 @@ void Interface::process(string strPrefix)
           while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
             int fdUnique = -1;
-            Json *ptJson;
-            strLine = m_strBuffers[0].substr(0, unPosition);
+            radialPacket p;
+            unpack(m_strBuffers[0].substr(0, unPosition), p);
             m_strBuffers[0].erase(0, (unPosition + 1));
-            ptJson = new Json(strLine);
-            if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
+            if (p.s == m_strName && !p.u.empty())
             {
               m_mutexShare.lock();
-              if (m_waiting.find(ptJson->m["_u"]->v) != m_waiting.end())
+              if (m_waiting.find(p.u) != m_waiting.end())
               {
-                fdUnique = m_waiting[ptJson->m["_u"]->v];
+                fdUnique = m_waiting[p.u];
               }
               m_mutexShare.unlock();
             }
@@ -1053,8 +1067,9 @@ void Interface::process(string strPrefix)
             {
               uniques[fdUnique] = strLine + "\n";
             }
-            else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
+            else if (p.s == "hub")
             {
+              Json *ptJson = new Json(p.p);
               if (!empty(ptJson, "Function"))
               {
                 // {{{ interfaces
@@ -1079,63 +1094,69 @@ void Interface::process(string strPrefix)
                 }
                 // }}}
               }
+              delete ptJson;
             }
-            else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
+            else
             {
-              if (!empty(ptJson, "Master"))
+              Json *ptJson = new Json(p.p);
+              if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
               {
-                time(&CMaster[0]);
-                if (m_strMaster != ptJson->m["Master"]->v)
+                if (!empty(ptJson, "Master"))
                 {
-                  string strMaster = m_strMaster;
-                  m_strMaster = ptJson->m["Master"]->v;
-                  m_bMaster = ((m_strMaster == m_strNode)?true:false);
-                  m_bMasterSettled = false;
-                  time(&CMaster[1]);
-                  if (m_pAutoModeCallback != NULL)
+                  time(&CMaster[0]);
+                  if (m_strMaster != ptJson->m["Master"]->v)
                   {
-                    m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                    string strMaster = m_strMaster;
+                    m_strMaster = ptJson->m["Master"]->v;
+                    m_bMaster = ((m_strMaster == m_strNode)?true:false);
+                    m_bMasterSettled = false;
+                    time(&CMaster[1]);
+                    if (m_pAutoModeCallback != NULL)
+                    {
+                      m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                    }
                   }
                 }
               }
-            }
-            else if (m_pCallback != NULL)
-            {
-              if (!empty(ptJson, "wsRequestID"))
+              else if (m_pCallback != NULL)
               {
-                string strIdentity, strName, strNode;
-                stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
-                ssRequestID >> strNode >> strName >> strIdentity;
-                if (strName != m_strName)
+                if (!empty(ptJson, "wsRequestID"))
                 {
-                  Json *ptLive = new Json;
-                  ptLive->i("radialProcess", m_strName);
-                  ptLive->i("radialPrefix", strPrefix);
-                  ptLive->i("radialPurpose", "status");
-                  if (!empty(ptJson, "Interface"))
+                  string strIdentity, strName, strNode;
+                  stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
+                  ssRequestID >> strNode >> strName >> strIdentity;
+                  if (strName != m_strName)
                   {
-                    ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+                    Json *ptLive = new Json;
+                    ptLive->i("radialProcess", m_strName);
+                    ptLive->i("radialPrefix", strPrefix);
+                    ptLive->i("radialPurpose", "status");
+                    if (!empty(ptJson, "Interface"))
+                    {
+                      ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+                    }
+                    if (!empty(ptJson, "Function"))
+                    {
+                      ptLive->i("radialFunction", ptJson->m["Function"]->v);
+                    }
+                    hub(strName, ptLive, false);
+                    delete ptLive;
                   }
-                  if (!empty(ptJson, "Function"))
-                  {
-                    ptLive->i("radialFunction", ptJson->m["Function"]->v);
-                  }
-                  hub(strName, ptLive, false);
-                  delete ptLive;
+                }
+                if (!shutdown())
+                {
+                  m_pCallback(strPrefix, ptJson, true);
+                }
+                else
+                {
+                  ptJson->i("Status", "error");
+                  ptJson->i("Error", "Interface is shutting down.");
+                  ptJson->j(p.p);
+                  hub(p, false);
                 }
               }
-              if (!shutdown())
-              {
-                m_pCallback(strPrefix, ptJson, true);
-              }
-              else
-              {
-                ptJson->i("Status", "error");
-                ptJson->i("Error", "Interface is shutting down.");
-                hub(ptJson, false);
-              }
+              delete ptJson;
             }
-            delete ptJson;
           }
         }
         else

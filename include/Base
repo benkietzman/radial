@@ -99,13 +99,23 @@ struct radialLink
   string strServer;
 };
 // }}}
+// {{{ radialPacket
+struct radialPacket
+{
+  string d;
+  string p;
+  string s;
+  string t;
+  string u;
+};
+// }}}
 // }}}
 // {{{ Base
 class Base
 {
   protected:
   bool m_bShutdown;
-  char **m_argv;
+  char **m_argv, m_cDelimiter;
   int m_argc;
   list<radialLink *> m_links;
   map<string, radialInterface *> m_interfaces;
@@ -129,8 +139,10 @@ class Base
 
   size_t monitor(string &strMessage);
   size_t monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage);
+  string pack(radialPacket &p);
   void threadDecrement();
   void threadIncrement();
+  void unpack(const string d, radialPacket &p);
 
   public:
   Base(int argc, char **argv);
