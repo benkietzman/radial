@@ -1230,6 +1230,7 @@ void Hub::remove(string strPrefix, const string strName)
 // {{{ setShutdown()
 void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop)
 {
+  string strValue;
   stringstream ssMessage;
   Json *ptJson = new Json;
   radialPacket p;
