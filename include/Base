@@ -139,7 +139,7 @@ class Base
 
   size_t monitor(string &strMessage);
   size_t monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage);
-  string pack(radialPacket &p);
+  string pack(radialPacket &p, string &d);
   void threadDecrement();
   void threadIncrement();
   void unpack(const string d, radialPacket &p);
