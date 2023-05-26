@@ -117,8 +117,8 @@ class Base
   bool m_bShutdown;
   char **m_argv, m_cDelimiter;
   int m_argc;
-  list<radialLink *> m_links;
-  map<string, radialInterface *> m_interfaces;
+  list<radialLink *> m_l;
+  map<string, radialInterface *> m_i;
   mutex m_mutexBase;
   size_t m_unMonitor;
   size_t m_unThreads;

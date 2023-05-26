@@ -220,7 +220,7 @@ void Link::process(string strPrefix)
         while (!bExit)
         {
           // {{{ prep work
-          fds = new pollfd[links.size() + m_links.size() + 3];
+          fds = new pollfd[links.size() + m_l.size() + 3];
           unIndex = 0;
           // {{{ stdin
           fds[unIndex].fd = 0;
@@ -301,8 +301,8 @@ void Link::process(string strPrefix)
             // }}}
           }
           // }}}
-          // {{{ m_links
-          for (auto &link : m_links)
+          // {{{ m_l
+          for (auto &link : m_l)
           {
             fds[unIndex].events = POLLIN;
             if (link->fdSocket == -1)
@@ -394,7 +394,7 @@ void Link::process(string strPrefix)
                 ptWrite->i("_f", "handshake");
                 ptWrite->i("Password", m_strPassword);
                 ptWrite->m["Links"] = new Json;
-                for (auto &subLink : m_links)
+                for (auto &subLink : m_l)
                 {
                   if (!subLink->strNode.empty() && !subLink->strServer.empty() && !subLink->strPort.empty())
                   {
@@ -417,7 +417,7 @@ void Link::process(string strPrefix)
                 ptWrite = new Json;
                 ptWrite->i("_f", "interfaces");
                 ptWrite->m["Interfaces"] = new Json;
-                for (auto &interface : m_interfaces)
+                for (auto &interface : m_i)
                 {
                   stringstream ssPid;
                   ssPid << interface.second->nPid;
@@ -524,7 +524,7 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink == NULL)
                     {
-                      for (auto i = m_links.begin(); ptLink == NULL && i != m_links.end(); i++)
+                      for (auto i = m_l.begin(); ptLink == NULL && i != m_l.end(); i++)
                       {
                         if ((*i)->fdSocket == fdLink && (*i)->unUnique == unUnique)
                         {
@@ -573,7 +573,7 @@ void Link::process(string strPrefix)
                           {
                             link->responses.push_back(strJson);
                           }
-                          for (auto &link : m_links)
+                          for (auto &link : m_l)
                           {
                             link->responses.push_back(strJson);
                           }
@@ -609,15 +609,15 @@ void Link::process(string strPrefix)
                   {
                     if (!empty(ptJson, "Node"))
                     {
-                      list<radialLink *>::iterator linkIter = m_links.end();
-                      for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+                      list<radialLink *>::iterator linkIter = m_l.end();
+                      for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
                       {
                         if ((*i)->strNode == ptJson->m["Node"]->v)
                         {
                           linkIter = i;
                         }
                       }
-                      if (linkIter != m_links.end())
+                      if (linkIter != m_l.end())
                       {
                         Json *ptLink = new Json;
                         delete ptJson->m["Node"];
@@ -642,7 +642,7 @@ void Link::process(string strPrefix)
                     }
                     else
                     {
-                      for (auto &link : m_links)
+                      for (auto &link : m_l)
                       {
                         if ((!exist(ptJson, "Node") || empty(ptJson, "Node") || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
                         {
@@ -670,7 +670,7 @@ void Link::process(string strPrefix)
                         {
                           ptStatus->i("Node", m_ptLink->m["Node"]->v);
                         }
-                        for (auto &link : m_links)
+                        for (auto &link : m_l)
                         {
                           if (!link->strNode.empty())
                           {
@@ -760,10 +760,10 @@ void Link::process(string strPrefix)
                   ptLink->ssl = ssl;
                   ptLink->unUnique = unUnique++;
                   ptWrite->i("_f", "handshake");
-                  if (!m_links.empty())
+                  if (!m_l.empty())
                   {
                     ptWrite->m["Links"] = new Json;
-                    for (auto &link : m_links)
+                    for (auto &link : m_l)
                     {
                       if (!link->strNode.empty() && !link->strServer.empty() && !link->strPort.empty())
                       {
@@ -785,7 +785,7 @@ void Link::process(string strPrefix)
                   ptWrite = new Json;
                   ptWrite->i("_f", "interfaces");
                   ptWrite->m["Interfaces"] = new Json;
-                  for (auto &interface : m_interfaces)
+                  for (auto &interface : m_i)
                   {
                     stringstream ssPid;
                     ssPid << interface.second->nPid;
@@ -837,7 +837,7 @@ void Link::process(string strPrefix)
               }
               if (ptLink == NULL)
               {
-                for (auto j = m_links.begin(); ptLink == NULL && j != m_links.end(); j++)
+                for (auto j = m_l.begin(); ptLink == NULL && j != m_l.end(); j++)
                 {
                   if ((*j)->fdSocket == fds[i].fd)
                   {
@@ -888,7 +888,7 @@ void Link::process(string strPrefix)
                               if (!empty(ptSubLink, "Node") && !empty(ptSubLink, "Server") && !empty(ptSubLink, "Port"))
                               {
                                 bool bFound = false;
-                                for (auto j = m_links.begin(); !bFound && j != m_links.end(); j++)
+                                for (auto j = m_l.begin(); !bFound && j != m_l.end(); j++)
                                 {
                                   if (ptSubLink->m["Node"]->v == (*j)->strNode)
                                   {
@@ -909,7 +909,7 @@ void Link::process(string strPrefix)
                                   ptDeepLink->rp = NULL;
                                   ptDeepLink->ssl = NULL;
                                   ptDeepLink->unUnique = unUnique++;
-                                  if ((unReturn = add(m_links, ptDeepLink)) == 0)
+                                  if ((unReturn = add(m_l, ptDeepLink)) == 0)
                                   {
                                     ssMessage.str("");
                                     ssMessage << strPrefix << "->Utility::sslRead()->Link::add() error [" << ptJson->m["_f"]->v << "," << ptLink->strNode << "," << ptSubLink->m["Node"]->v << "]:  Failed to add link.";
@@ -969,7 +969,7 @@ void Link::process(string strPrefix)
                           }
                           ptLinks->i("Function", "links");
                           ptLinks->m["Links"] = new Json;
-                          for (auto &link : m_links)
+                          for (auto &link : m_l)
                           {
                             ptLinks->m["Links"]->m[link->strNode] = new Json;
                             ptLinks->m["Links"]->m[link->strNode]->i("Server", link->strServer);
@@ -1048,7 +1048,7 @@ void Link::process(string strPrefix)
                         {
                           if (ptLink->bAuthenticated)
                           {
-                            if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+                            if (m_i.find(ptJson->m["Interface"]->v) != m_i.end())
                             {
                               stringstream ssUnique;
                               keyRemovals(ptJson);
@@ -1157,15 +1157,15 @@ void Link::process(string strPrefix)
                 delete (*removeIter);
                 links.erase(removeIter);
               }
-              removeIter = m_links.end();
-              for (auto k = m_links.begin(); removeIter == m_links.end() && k != m_links.end(); k++)
+              removeIter = m_l.end();
+              for (auto k = m_l.begin(); removeIter == m_l.end() && k != m_l.end(); k++)
               {
                 if ((*k)->fdSocket == i)
                 {
                   removeIter = k;
                 }
               }
-              if (removeIter != m_links.end())
+              if (removeIter != m_l.end())
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << " [removals,connected," << (*removeIter)->strNode << "]:  Removed link.";
@@ -1180,7 +1180,7 @@ void Link::process(string strPrefix)
                   close((*removeIter)->fdSocket);
                 }
                 delete (*removeIter);
-                m_links.erase(removeIter);
+                m_l.erase(removeIter);
               }
             }
             removals.clear();
@@ -1197,7 +1197,7 @@ void Link::process(string strPrefix)
               if (ptBoot->l.empty())
               {
                 bool bReady = true;
-                for (auto i = m_links.begin(); bReady && i != m_links.end(); i++)
+                for (auto i = m_l.begin(); bReady && i != m_l.end(); i++)
                 {
                   if ((*i)->bRetry || (*i)->fdSocket == -1 || (*i)->strNode.empty() || (*i)->strPort.empty() || (*i)->strServer.empty())
                   {
@@ -1211,7 +1211,7 @@ void Link::process(string strPrefix)
                     if (!empty(ptLink, "Node") && !empty(ptLink, "Server") && !empty(ptLink, "Port"))
                     {
                       bool bFound = false;
-                      for (auto i = m_links.begin(); !bFound && i != m_links.end(); i++)
+                      for (auto i = m_l.begin(); !bFound && i != m_l.end(); i++)
                       {
                         if ((*i)->strNode == ptLink->m["Node"]->v && (*i)->strServer == ptLink->m["Server"]->v && (*i)->strPort == ptLink->m["Port"]->v)
                         {
@@ -1247,7 +1247,7 @@ void Link::process(string strPrefix)
               ptLink->rp = NULL;
               ptLink->ssl = NULL;
               ptLink->unUnique = unUnique++;
-              if ((unReturn = add(m_links, ptLink)) == 0)
+              if ((unReturn = add(m_l, ptLink)) == 0)
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << "->Link::add() error [bootstrap," << ptLink->strNode << "]:  Failed to add link.";
@@ -1280,7 +1280,7 @@ void Link::process(string strPrefix)
           delete link;
         }
         links.clear();
-        for (auto &link : m_links)
+        for (auto &link : m_l)
         {
           if (link->ssl != NULL)
           {
@@ -1293,7 +1293,7 @@ void Link::process(string strPrefix)
           }
           delete link;
         }
-        m_links.clear();
+        m_l.clear();
         delete ptBoot;
         // }}}
       }

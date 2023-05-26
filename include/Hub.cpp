@@ -37,7 +37,7 @@ Hub::Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(c
 // {{{ ~Hub()
 Hub::~Hub()
 {
-  for (auto &i : m_interfaces)
+  for (auto &i : m_i)
   {
     delete (i.second);
   }
@@ -52,7 +52,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
 
   strPrefix += "->Hub::add()";
   ssMessage << strPrefix;
-  if (m_interfaces.find(strName) == m_interfaces.end() || bRespawn)
+  if (m_i.find(strName) == m_i.end() || bRespawn)
   {
     int readpipe[2] = {-1, -1};
     if (pipe(readpipe) == 0)
@@ -95,25 +95,25 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           close(readpipe[1]);
           m_pUtility->fdNonBlocking(readpipe[0], strError);
           m_pUtility->fdNonBlocking(writepipe[1], strError);
-          if (m_interfaces.find(strName) == m_interfaces.end())
+          if (m_i.find(strName) == m_i.end())
           {
-            m_interfaces[strName] = new radialInterface;
+            m_i[strName] = new radialInterface;
           }
-          m_interfaces[strName]->bRespawn = bRespawn;
-          m_interfaces[strName]->bRestricted = bRestricted;
-          m_interfaces[strName]->bShutdown = false;
-          m_interfaces[strName]->CKill = 0;
-          m_interfaces[strName]->CMonitor[0] = 0;
-          m_interfaces[strName]->CMonitor[1] = 0;
-          m_interfaces[strName]->CShutdown = 0;
-          time(&(m_interfaces[strName]->CWrote));
-          m_interfaces[strName]->fdRead = readpipe[0];
-          m_interfaces[strName]->fdWrite = writepipe[1];
-          m_interfaces[strName]->nPid = nPid;
-          m_interfaces[strName]->strAccessFunction = strAccessFunction;
-          m_interfaces[strName]->strCommand = strCommand;
-          m_interfaces[strName]->ulMemory = ulMemory;
-          m_interfaces[strName]->unMonitor = 0;
+          m_i[strName]->bRespawn = bRespawn;
+          m_i[strName]->bRestricted = bRestricted;
+          m_i[strName]->bShutdown = false;
+          m_i[strName]->CKill = 0;
+          m_i[strName]->CMonitor[0] = 0;
+          m_i[strName]->CMonitor[1] = 0;
+          m_i[strName]->CShutdown = 0;
+          time(&(m_i[strName]->CWrote));
+          m_i[strName]->fdRead = readpipe[0];
+          m_i[strName]->fdWrite = writepipe[1];
+          m_i[strName]->nPid = nPid;
+          m_i[strName]->strAccessFunction = strAccessFunction;
+          m_i[strName]->strCommand = strCommand;
+          m_i[strName]->ulMemory = ulMemory;
+          m_i[strName]->unMonitor = 0;
         }
         else
         {
@@ -164,7 +164,7 @@ void Hub::interfaces()
 
   ptJson->i("Function", "interfaces");
   ptJson->m["Interfaces"] = new Json;
-  for (auto &i : m_interfaces)
+  for (auto &i : m_i)
   {
     stringstream ssPid;
     ssPid << i.second->nPid;
@@ -175,7 +175,7 @@ void Hub::interfaces()
     ptJson->m["Interfaces"]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
     ptJson->m["Interfaces"]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
   }
-  for (auto &i : m_interfaces)
+  for (auto &i : m_i)
   {
     target(i.first, ptJson, "hub");
   }
@@ -189,7 +189,7 @@ void Hub::links()
 
   ptJson->i("Function", "links");
   ptJson->m["Links"] = new Json;
-  for (auto &link : m_links)
+  for (auto &link : m_l)
   {
     ptJson->m["Links"]->m[link->strNode] = new Json;
     ptJson->m["Links"]->m[link->strNode]->i("Server", link->strServer);
@@ -207,7 +207,7 @@ void Hub::links()
       ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
     }
   }
-  for (auto &interface : m_interfaces)
+  for (auto &interface : m_i)
   {
     if (interface.first != "link")
     {
@@ -250,7 +250,7 @@ bool Hub::load(string strPrefix, string &strError)
           if (!ptInterfaces->m.empty())
           {
             bResult = true;
-            if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_interfaces.find("log") == m_interfaces.end())
+            if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_i.find("log") == m_i.end())
             {
               stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
               unsigned long ulMemory;
@@ -271,15 +271,15 @@ bool Hub::load(string strPrefix, string &strError)
                 unsigned long ulMemory;
                 ssMemory >> ulMemory;
                 ulMemory *= 1024;
-                if (m_interfaces.find(i.first) != m_interfaces.end())
+                if (m_i.find(i.first) != m_i.end())
                 {
-                  m_interfaces[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
-                  m_interfaces[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
-                  m_interfaces[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
-                  if (m_interfaces[i.first]->strCommand != i.second->m["Command"]->v)
+                  m_i[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
+                  m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
+                  m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
+                  if (m_i[i.first]->strCommand != i.second->m["Command"]->v)
                   {
-                    m_interfaces[i.first]->strCommand = i.second->m["Command"]->v;
-                    if (!m_interfaces[i.first]->bShutdown && m_interfaces[i.first]->bRespawn)
+                    m_i[i.first]->strCommand = i.second->m["Command"]->v;
+                    if (!m_i[i.first]->bShutdown && m_i[i.first]->bRespawn)
                     {
                       ssMessage.str("");
                       ssMessage << strPrefix << " [" << i.first << "]:  Restarting interface due to configuration change.";
@@ -287,7 +287,7 @@ bool Hub::load(string strPrefix, string &strError)
                       setShutdown(strPrefix, i.first);
                     }
                   }
-                  m_interfaces[i.first]->ulMemory = ulMemory;
+                  m_i[i.first]->ulMemory = ulMemory;
                 }
                 else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
                 {
@@ -302,7 +302,7 @@ bool Hub::load(string strPrefix, string &strError)
                 log(ssMessage.str());
               }
             }
-            for (auto &i : m_interfaces)
+            for (auto &i : m_i)
             {
               if (i.first != "log")
               {
@@ -451,10 +451,10 @@ void Hub::process(string strPrefix)
           // {{{ prep work
           bool bExit = false;
           int nReturn;
-          map<int, vector<string> > managers;
+          map<int, vector<string> > m;
           pollfd *fds;
           size_t unIndex, unPosition;
-          string strJson;
+          string strJson, strValue;
           time_t CLoad, CShutdownTime[2] = {0, 0}, CTime;
           time(&CLoad);
           // }}}
@@ -463,13 +463,13 @@ void Hub::process(string strPrefix)
             // {{{ prep work
             list<int> managerRemovals;
             list<string> removals;
-            map<int, string> sockets;
-            fds = new pollfd[(1+managers.size()+m_interfaces.size()*2)];
+            map<int, string> s;
+            fds = new pollfd[(1+m.size()+m_i.size()*2)];
             unIndex = 0;
             fds[unIndex].fd = fdUnix;
             fds[unIndex].events = POLLIN;
             unIndex++;
-            for (auto &manager : managers)
+            for (auto &manager : m)
             {
               fds[unIndex].fd = manager.first;
               fds[unIndex].events = POLLIN;
@@ -479,13 +479,13 @@ void Hub::process(string strPrefix)
               }
               unIndex++;
             }
-            for (auto &interface : m_interfaces)
+            for (auto &interface : m_i)
             {
-              sockets[interface.second->fdRead] = interface.first;
+              s[interface.second->fdRead] = interface.first;
               fds[unIndex].fd = interface.second->fdRead;
               fds[unIndex].events = POLLIN;
               unIndex++;
-              sockets[interface.second->fdWrite] = interface.first;
+              s[interface.second->fdWrite] = interface.first;
               fds[unIndex].fd = -1;
               fds[unIndex].events = POLLOUT;
               if (!interface.second->strBuffers[1].empty())
@@ -522,7 +522,7 @@ void Hub::process(string strPrefix)
                 if ((fdClient = accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
                 {
                   m_pUtility->fdNonBlocking(fdClient, strError);
-                  managers[fdClient] = {"", ""};
+                  m[fdClient] = {"", ""};
                 }
                 else
                 {
@@ -534,47 +534,47 @@ void Hub::process(string strPrefix)
               for (size_t i = 1; i < unIndex; i++)
               {
                 // {{{ interfaces
-                if (sockets.find(fds[i].fd) != sockets.end())
+                if (s.find(fds[i].fd) != s.end())
                 {
                   // {{{ read
                   if (fds[i].revents & (POLLHUP | POLLIN))
                   {
-                    if (m_pUtility->fdRead(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[0], nReturn))
+                    if (m_pUtility->fdRead(fds[i].fd, m_i[s[fds[i].fd]]->strBuffers[0], nReturn))
                     {
-                      while ((unPosition = m_interfaces[sockets[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
+                      while ((unPosition = m_i[s[fds[i].fd]]->strBuffers[0].find("\n")) != string::npos)
                       {
                         radialPacket p;
-                        unpack(m_interfaces[sockets[fds[i].fd]]->strBuffers[0].substr(0, unPosition), p);
-                        m_interfaces[sockets[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
+                        unpack(m_i[s[fds[i].fd]]->strBuffers[0].substr(0, unPosition), p);
+                        m_i[s[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
                         if (!p.t.empty())
                         {
                           if (!p.d.empty())
                           {
-                            if (m_interfaces.find(p.t) != m_interfaces.end())
+                            if (m_i.find(p.t) != m_i.end())
                             {
                               p.d = "t";
-                              m_interfaces[p.t]->strBuffers[1].append(pack(p) + "\n");
+                              m_i[p.t]->strBuffers[1].append(pack(p, strValue) + "\n");
                             }
                             else
                             {
-                              list<radialLink *>::iterator linkIter = m_links.end();
-                              for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+                              list<radialLink *>::iterator linkIter = m_l.end();
+                              for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
                               {
                                 if ((*i)->interfaces.find(p.t) != (*i)->interfaces.end())
                                 {
                                   linkIter = i;
                                 }
                               }
-                              if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end())
+                              if (linkIter != m_l.end() && m_i.find("link") != m_i.end())
                               {
                                 Json *ptJson = new Json(p.p);
                                 p.d = "t";
                                 ptJson->i("Node", (*linkIter)->strNode);
                                 ptJson->j(p.p);
                                 delete ptJson;
-                                m_interfaces["link"]->strBuffers[1].append(pack(p) + "\n");
+                                m_i["link"]->strBuffers[1].append(pack(p, strValue) + "\n");
                               }
-                              else if (!p.s.empty() && m_interfaces.find(p.s) != m_interfaces.end())
+                              else if (!p.s.empty() && m_i.find(p.s) != m_i.end())
                               {
                                 Json *ptJson = new Json(p.p);
                                 p.d = "s";
@@ -582,20 +582,20 @@ void Hub::process(string strPrefix)
                                 ptJson->i("Error", "Interface does not exist.");
                                 ptJson->j(p.p);
                                 delete ptJson;
-                                m_interfaces[p.s]->strBuffers[1].append(pack(p) + "\n");
+                                m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
                               }
                             }
                           }
-                          else if (p.d == "t" && !p.s.empty() && m_interfaces.find(p.s) != m_interfaces.end())
+                          else if (p.d == "t" && !p.s.empty() && m_i.find(p.s) != m_i.end())
                           {
                             p.d = "s";
-                            m_interfaces[p.s]->strBuffers[1].append(pack(p) + "\n");
+                            m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
                           }
                         }
-                        else if (sockets[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
+                        else if (s[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
                         {
                           Json *ptJson = new Json(p.p);
-                          for (auto &link : m_links)
+                          for (auto &link : m_l)
                           {
                             for (auto &interface : link->interfaces)
                             {
@@ -604,7 +604,7 @@ void Hub::process(string strPrefix)
                             link->interfaces.clear();
                             delete link;
                           }
-                          m_links.clear();
+                          m_l.clear();
                           if (exist(ptJson, "Links"))
                           {
                             for (auto &link : ptJson->m["Links"]->m)
@@ -642,7 +642,7 @@ void Hub::process(string strPrefix)
                                   ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
                                 }
                               }
-                              m_links.push_back(ptLink);
+                              m_l.push_back(ptLink);
                             }
                           }
                           delete ptJson;
@@ -738,7 +738,7 @@ void Hub::process(string strPrefix)
                               else
                               {
                                 ssMessage.str("");
-                                ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
+                                ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
                                 log(ssMessage.str());
                               }
                             }
@@ -748,7 +748,7 @@ void Hub::process(string strPrefix)
                             {
                               bResult = true;
                               ptJson->m["Response"] = new Json;
-                              for (auto &j : m_interfaces)
+                              for (auto &j : m_i)
                               {
                                 stringstream ssPid;
                                 ssPid << j.second->nPid;
@@ -772,7 +772,7 @@ void Hub::process(string strPrefix)
                             {
                               if (!empty(ptJson, "Name"))
                               {
-                                if (m_interfaces.find(ptJson->m["Name"]->v) != m_interfaces.end())
+                                if (m_i.find(ptJson->m["Name"]->v) != m_i.end())
                                 {
                                   bResult = true;
                                   setShutdown(strPrefix, ptJson->m["Name"]->v, true);
@@ -780,14 +780,14 @@ void Hub::process(string strPrefix)
                                 else
                                 {
                                   ssMessage.str("");
-                                  ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
+                                  ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
                                   log(ssMessage.str());
                                 }
                               }
                               else
                               {
                                 ssMessage.str("");
-                                ssMessage << strPrefix << " error [" << sockets[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
+                                ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
                                 log(ssMessage.str());
                               }
                             }
@@ -814,7 +814,7 @@ void Hub::process(string strPrefix)
                             ptJson->i("Error", strError);
                           }
                           ptJson->j(p.p);
-                          m_interfaces[sockets[fds[i].fd]]->strBuffers[1].append(pack(p) + "\n");
+                          m_i[s[fds[i].fd]]->strBuffers[1].append(pack(p, strValue) + "\n");
                           delete ptJson;
                           // }}}
                         }
@@ -822,11 +822,11 @@ void Hub::process(string strPrefix)
                     }
                     else
                     {
-                      removals.push_back(sockets[fds[i].fd]);
+                      removals.push_back(s[fds[i].fd]);
                       if (nReturn < 0 || errno == EINVAL)
                       {
                         ssMessage.str("");
-                        ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                        ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << s[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
                         if (errno == EINVAL)
                         {
                           ssMessage << " --- POSSIBLE CORE DUMP";
@@ -839,17 +839,17 @@ void Hub::process(string strPrefix)
                   // {{{ write
                   if (fds[i].revents & POLLOUT)
                   {
-                    if (m_pUtility->fdWrite(fds[i].fd, m_interfaces[sockets[fds[i].fd]]->strBuffers[1], nReturn))
+                    if (m_pUtility->fdWrite(fds[i].fd, m_i[s[fds[i].fd]]->strBuffers[1], nReturn))
                     {
-                      time(&(m_interfaces[sockets[fds[i].fd]]->CWrote));
+                      time(&(m_i[s[fds[i].fd]]->CWrote));
                     }
                     else
                     {
-                      removals.push_back(sockets[fds[i].fd]);
+                      removals.push_back(s[fds[i].fd]);
                       if (nReturn < 0)
                       {
                         ssMessage.str("");
-                        ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [" << sockets[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
+                        ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") error [" << s[fds[i].fd] << "," << fds[i].fd << "]:  " << strerror(errno);
                         log(ssMessage.str());
                       }
                     }
@@ -858,18 +858,18 @@ void Hub::process(string strPrefix)
                 }
                 // }}}
                 // {{{ managers
-                else if (managers.find(fds[i].fd) != managers.end())
+                else if (m.find(fds[i].fd) != m.end())
                 {
                   // {{{ read
                   if (fds[i].revents & POLLIN)
                   {
-                    if (m_pUtility->fdRead(fds[i].fd, managers[fds[i].fd][0], nReturn))
+                    if (m_pUtility->fdRead(fds[i].fd, m[fds[i].fd][0], nReturn))
                     {
-                      while ((unPosition = managers[fds[i].fd][0].find("\n")) != string::npos)
+                      while ((unPosition = m[fds[i].fd][0].find("\n")) != string::npos)
                       {
                         bool bProcessed = false;
-                        ptJson = new Json(managers[fds[i].fd][0].substr(0, unPosition));
-                        managers[fds[i].fd][0].erase(0, (unPosition + 1));
+                        ptJson = new Json(m[fds[i].fd][0].substr(0, unPosition));
+                        m[fds[i].fd][0].erase(0, (unPosition + 1));
                         strError.clear();
                         if (!empty(ptJson, "Function"))
                         {
@@ -922,7 +922,7 @@ void Hub::process(string strPrefix)
                               {
                                 if (exist(ptInterfaces, strInterface))
                                 {
-                                  if (m_interfaces.find(strInterface) == m_interfaces.end())
+                                  if (m_i.find(strInterface) == m_i.end())
                                   {
                                     stringstream ssMemory((!empty(ptInterfaces->m[strInterface], "Memory"))?ptInterfaces->m[strInterface]->m["Memory"]->v:"40");
                                     unsigned long ulMemory;
@@ -963,7 +963,7 @@ void Hub::process(string strPrefix)
                                 if (exist(ptInterfaces, strInterface))
                                 {
                                   bProcessed = true;
-                                  ptJson->i("Response", ((m_interfaces.find(strInterface) != m_interfaces.end())?"online":"offline"));
+                                  ptJson->i("Response", ((m_i.find(strInterface) != m_i.end())?"online":"offline"));
                                 }
                                 else
                                 {
@@ -984,7 +984,7 @@ void Hub::process(string strPrefix)
                                 if (exist(ptInterfaces, strInterface))
                                 {
                                   bProcessed = true;
-                                  if (m_interfaces.find(strInterface) != m_interfaces.end())
+                                  if (m_i.find(strInterface) != m_i.end())
                                   {
                                     setShutdown(strPrefix, strInterface, true);
                                   }
@@ -1020,7 +1020,7 @@ void Hub::process(string strPrefix)
                         {
                           ptJson->i("Error", strError);
                         }
-                        managers[fds[i].fd][1] = ptJson->j(strJson) + "\n";
+                        m[fds[i].fd][1] = ptJson->j(strJson) + "\n";
                         delete ptJson;
                       }
                     }
@@ -1039,9 +1039,9 @@ void Hub::process(string strPrefix)
                   // {{{ write
                   if (fds[i].revents & POLLOUT)
                   {
-                    if (m_pUtility->fdWrite(fds[i].fd, managers[fds[i].fd][1], nReturn))
+                    if (m_pUtility->fdWrite(fds[i].fd, m[fds[i].fd][1], nReturn))
                     {
-                      if (managers[fds[i].fd][1].empty())
+                      if (m[fds[i].fd][1].empty())
                       {
                         managerRemovals.push_back(fds[i].fd);
                       }
@@ -1073,7 +1073,7 @@ void Hub::process(string strPrefix)
             managerRemovals.unique();
             while (!managerRemovals.empty())
             {
-              managers.erase(managerRemovals.front());
+              m.erase(managerRemovals.front());
               close(managerRemovals.front());
               managerRemovals.pop_front();
             }
@@ -1088,7 +1088,7 @@ void Hub::process(string strPrefix)
                 log(ssMessage.str());
               }
             }
-            for (auto &i : m_interfaces)
+            for (auto &i : m_i)
             {
               string strMessage;
               if (!i.second->bShutdown && Base::monitor(i.second->nPid, i.second->CMonitor, i.second->unMonitor, i.second->ulMemory, strMessage) == 2)
@@ -1132,13 +1132,13 @@ void Hub::process(string strPrefix)
             monitor(strPrefix);
             if (shutdown())
             {
-              if (m_interfaces.empty())
+              if (m_i.empty())
               {
                 bExit = true;
               }
-              else if (m_interfaces.size() == 1)
+              else if (m_i.size() == 1)
               {
-                if (m_interfaces.find("log") != m_interfaces.end())
+                if (m_i.find("log") != m_i.end())
                 {
                   time(&CShutdownTime[1]);
                   if (CShutdownTime[0] == 0)
@@ -1162,11 +1162,11 @@ void Hub::process(string strPrefix)
             // }}}
           }
           // {{{ post work
-          for (auto &manager : managers)
+          for (auto &manager : m)
           {
             close(manager.first);
           }
-          managers.clear();
+          m.clear();
           // }}}
         }
         else
@@ -1202,27 +1202,27 @@ void Hub::remove(string strPrefix, const string strName)
   stringstream ssMessage;
 
   strPrefix += "->Hub::remove()";
-  if (m_interfaces.find(strName) != m_interfaces.end())
+  if (m_i.find(strName) != m_i.end())
   {
-    m_interfaces[strName]->CKill = 0;
-    m_interfaces[strName]->CShutdown = 0;
-    close(m_interfaces[strName]->fdRead);
-    m_interfaces[strName]->fdRead = -1;
-    close(m_interfaces[strName]->fdWrite);
-    m_interfaces[strName]->fdWrite = -1;
-    m_interfaces[strName]->strBuffers[0].clear();
-    m_interfaces[strName]->strBuffers[1].clear();
+    m_i[strName]->CKill = 0;
+    m_i[strName]->CShutdown = 0;
+    close(m_i[strName]->fdRead);
+    m_i[strName]->fdRead = -1;
+    close(m_i[strName]->fdWrite);
+    m_i[strName]->fdWrite = -1;
+    m_i[strName]->strBuffers[0].clear();
+    m_i[strName]->strBuffers[1].clear();
     ssMessage.str("");
     ssMessage << strPrefix << " [" << strName << "]:  Interface removed.";
     log(ssMessage.str());
-    if (!shutdown() && m_interfaces[strName]->bRespawn)
+    if (!shutdown() && m_i[strName]->bRespawn)
     {
-      add(strPrefix, strName, m_interfaces[strName]->strAccessFunction, m_interfaces[strName]->strCommand, m_interfaces[strName]->ulMemory, true, m_interfaces[strName]->bRestricted);
+      add(strPrefix, strName, m_i[strName]->strAccessFunction, m_i[strName]->strCommand, m_i[strName]->ulMemory, true, m_i[strName]->bRestricted);
     }
     else
     {
-      delete m_interfaces[strName];
-      m_interfaces.erase(strName);
+      delete m_i[strName];
+      m_i.erase(strName);
     }
   }
 }
@@ -1243,7 +1243,7 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
   {
     Base::setShutdown();
   }
-  for (auto &interface : m_interfaces)
+  for (auto &interface : m_i)
   {
     if (!interface.second->bShutdown && (strTarget.empty() || interface.first == strTarget) && (interface.first != "log" || strTarget == "log"))
     {
@@ -1255,7 +1255,7 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
         interface.second->bRespawn = false;
       }
       interface.second->bShutdown = true;
-      interface.second->strBuffers[1].append(pack(p) + "\n");
+      interface.second->strBuffers[1].append(pack(p, strValue) + "\n");
       time(&(interface.second->CShutdown));
     }
   }
@@ -1264,10 +1264,12 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
 // {{{ target()
 void Hub::target(radialPacket &p)
 {
-  if (m_interfaces.find(p.t) != m_interfaces.end())
+  string strValue;
+
+  if (m_i.find(p.t) != m_i.end())
   {
     p.d = "t";
-    m_interfaces[p.t]->strBuffers[1].append(pack(p) + "\n");
+    m_i[p.t]->strBuffers[1].append(pack(p, strValue) + "\n");
   }
 }
 void Hub::target(const string t, Json *j, const string s)

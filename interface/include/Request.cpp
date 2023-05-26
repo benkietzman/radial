@@ -261,21 +261,21 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
       string strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
       stringstream ssUnique;
       m_mutexShare.lock();
-      if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+      if (m_i.find(ptJson->m["Interface"]->v) != m_i.end())
       {
-        bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
+        bRestricted = m_i[ptJson->m["Interface"]->v]->bRestricted;
       }
       else
       {
-        list<radialLink *>::iterator linkIter = m_links.end();
-        for (auto j = m_links.begin(); linkIter == m_links.end() && j != m_links.end(); j++)
+        list<radialLink *>::iterator linkIter = m_l.end();
+        for (auto j = m_l.begin(); linkIter == m_l.end() && j != m_l.end(); j++)
         {
           if ((*j)->interfaces.find(ptJson->m["Interface"]->v) != (*j)->interfaces.end())
           { 
             linkIter = j;
           }
         }
-        if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
+        if (linkIter != m_l.end() && m_i.find("link") != m_i.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
         {
           ptJson->i("Node", (*linkIter)->strNode);
           strTarget = strTargetAuth = "link";

@@ -221,7 +221,7 @@ bool Live::retrieve(const string strWsRequestID, string &strApplication, string 
   bool bResult = false;
   string strError;
 
-  if (m_interfaces.find("websocket") != m_interfaces.end())
+  if (m_i.find("websocket") != m_i.end())
   {
     Json *ptJson = new Json;
     ptJson->i("Function", "list");

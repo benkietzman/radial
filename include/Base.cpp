@@ -128,16 +128,16 @@ Base::~Base()
 {
   size_t unThreads;
 
-  for (auto &i : m_interfaces)
+  for (auto &i : m_i)
   {
     delete (i.second);
   }
-  m_interfaces.clear();
-  for (auto &i : m_links)
+  m_i.clear();
+  for (auto &i : m_l)
   {
     delete i;
   }
-  m_links.clear();
+  m_l.clear();
   do 
   {
     m_mutexBase.lock();
@@ -221,7 +221,7 @@ void Base::msleep(const unsigned long ulMilliSec)
 }
 // }}}
 // {{{ pack()
-string Base::pack(radialPacket &p)
+string Base::pack(radialPacket &p, string &d)
 {
   stringstream ssData;
   Json *r = new Json;
@@ -244,8 +244,9 @@ string Base::pack(radialPacket &p)
   }
   ssData << r << m_cDelimiter << p.p;
   delete r;
+  d = ssData.str();
 
-  return ssData.str();
+  return d;
 }
 // }}}
 // {{{ setShutdown()

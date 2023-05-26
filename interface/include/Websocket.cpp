@@ -376,21 +376,21 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
       bool bRestricted = false;
       string strTarget = ptJson->m["Interface"]->v;
       m_mutexShare.lock();
-      if (m_interfaces.find(ptJson->m["Interface"]->v) != m_interfaces.end())
+      if (m_i.find(ptJson->m["Interface"]->v) != m_i.end())
       {
-        bRestricted = m_interfaces[ptJson->m["Interface"]->v]->bRestricted;
+        bRestricted = m_i[ptJson->m["Interface"]->v]->bRestricted;
       }
       else
       {
-        list<radialLink *>::iterator linkIter = m_links.end();
-        for (auto i = m_links.begin(); linkIter == m_links.end() && i != m_links.end(); i++)
+        list<radialLink *>::iterator linkIter = m_l.end();
+        for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
         {
           if ((*i)->interfaces.find(ptJson->m["Interface"]->v) != (*i)->interfaces.end())
           { 
             linkIter = i;
           }
         }
-        if (linkIter != m_links.end() && m_interfaces.find("link") != m_interfaces.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
+        if (linkIter != m_l.end() && m_i.find("link") != m_i.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
         {
           ptJson->i("Node", (*linkIter)->strNode);
           strTarget = "link";

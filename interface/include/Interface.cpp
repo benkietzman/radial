@@ -327,7 +327,7 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 // {{{ hub()
 void Interface::hub(radialPacket &p, const bool bWait)
 {
-  string strJson;
+  string strJson, strValue;
 
   if (bWait)
   {
@@ -352,7 +352,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
       }
       p.u = ssUnique.str();
       m_waiting[ssUnique.str()] = fdUnique[1];
-      m_responses.push_back(pack(p));
+      m_responses.push_back(pack(p, strValue));
       m_mutexShare.unlock();
       while (!bExit)
       {
@@ -428,7 +428,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
   else
   {
     m_mutexShare.lock();
-    m_responses.push_back(pack(p));
+    m_responses.push_back(pack(p, strValue));
     m_mutexShare.unlock();
   }
 }
@@ -564,32 +564,32 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
 {
   strPrefix += "->Interface::interfaces()";
   m_mutexShare.lock();
-  for (auto &i : m_interfaces)
+  for (auto &i : m_i)
   {
     delete i.second;
   }
-  m_interfaces.clear();
+  m_i.clear();
   if (exist(ptJson, "Interfaces"))
   {
     for (auto &interface : ptJson->m["Interfaces"]->m)
     {
-      m_interfaces[interface.first] = new radialInterface;
+      m_i[interface.first] = new radialInterface;
       if (!empty(interface.second, "AccessFunction"))
       {
-        m_interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
+        m_i[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
       }
       if (!empty(interface.second, "Command"))
       {
-        m_interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
+        m_i[interface.first]->strCommand = interface.second->m["Command"]->v;
       }
-      m_interfaces[interface.first]->nPid = -1;
+      m_i[interface.first]->nPid = -1;
       if (!empty(interface.second, "PID"))
       {
         stringstream ssPid(interface.second->m["PID"]->v);
-        ssPid >> m_interfaces[interface.first]->nPid;
+        ssPid >> m_i[interface.first]->nPid;
       }
-      m_interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
-      m_interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+      m_i[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+      m_i[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
     }
   }
   m_mutexShare.unlock();
@@ -754,7 +754,7 @@ void Interface::links(string strPrefix, Json *ptJson)
 {
   strPrefix += "->Interface::links()";
   m_mutexShare.lock();
-  for (auto &link : m_links)
+  for (auto &link : m_l)
   {
     for (auto &interface : link->interfaces)
     {
@@ -763,7 +763,7 @@ void Interface::links(string strPrefix, Json *ptJson)
     link->interfaces.clear();
     delete link;
   }
-  m_links.clear();
+  m_l.clear();
   if (exist(ptJson, "Links"))
   {
     for (auto &link : ptJson->m["Links"]->m)
@@ -801,7 +801,7 @@ void Interface::links(string strPrefix, Json *ptJson)
           ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
         }
       }
-      m_links.push_back(ptLink);
+      m_l.push_back(ptLink);
     }
   }
   m_mutexShare.unlock();
@@ -1240,7 +1240,7 @@ void Interface::process(string strPrefix)
         {
           bool bFound = false;
           m_mutexShare.lock();
-          for (auto linkIter = m_links.begin(); !bFound && linkIter != m_links.end(); linkIter++)
+          for (auto linkIter = m_l.begin(); !bFound && linkIter != m_l.end(); linkIter++)
           {
             if ((*linkIter)->strNode == m_strMaster)
             {
