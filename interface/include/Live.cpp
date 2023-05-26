@@ -155,7 +155,7 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
               delete ptSubJson;
             }
           }
-          for (auto &link : m_links)
+          for (auto &link : m_l)
           {
             if (link->interfaces.find("live") != link->interfaces.end() && link->interfaces.find("websocket") != link->interfaces.end())
             {
