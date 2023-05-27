@@ -1052,7 +1052,8 @@ void Interface::process(string strPrefix)
           {
             int fdUnique = -1;
             radialPacket p;
-            unpack(m_strBuffers[0].substr(0, unPosition), p);
+            strLine = m_strBuffers[0].substr(0, unPosition);
+            unpack(strLine, p);
             m_strBuffers[0].erase(0, (unPosition + 1));
             if (p.s == m_strName && !p.u.empty())
             {
