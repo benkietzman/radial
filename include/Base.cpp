@@ -29,7 +29,7 @@ Base::Base(int argc, char **argv)
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;
-  m_cDelimiter = '|';
+  m_cDelimiter = char(26);
   time(&m_CMonitor[0]);
   m_strApplication = "Radial";
   uname(&tServer);
@@ -182,19 +182,19 @@ void Base::extractRoute(radialPacket &p, Json *j)
 {
   if (exist(j, "_p"))
   {
-    if (!empty(j->m["_p"], "_d")
+    if (!empty(j->m["_p"], "_d"))
     {
       p.d = j->m["_p"]->m["_d"]->v;
     }
-    if (!empty(j->m["_p"], "_s")
+    if (!empty(j->m["_p"], "_s"))
     {
       p.s = j->m["_p"]->m["_s"]->v;
     }
-    if (!empty(j->m["_p"], "_t")
+    if (!empty(j->m["_p"], "_t"))
     {
       p.t = j->m["_p"]->m["_t"]->v;
     }
-    if (!empty(j->m["_p"], "_u")
+    if (!empty(j->m["_p"], "_u"))
     {
       p.u = j->m["_p"]->m["_u"]->v;
     }
