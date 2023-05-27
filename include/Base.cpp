@@ -198,6 +198,8 @@ void Base::extractRoute(radialPacket &p, Json *j)
     {
       p.u = j->m["_p"]->m["_u"]->v;
     }
+    delete j->m["_p"];
+    j->m.erase("_p");
   }
 }
 // }}}
