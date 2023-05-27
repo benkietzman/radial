@@ -177,6 +177,56 @@ bool Base::exist(Json *ptJson, const string strField)
   return (ptJson->m.find(strField) != ptJson->m.end());
 }
 // }}}
+// {{{ extracttRoute()
+void Base::extractRoute(radialPacket &p, Json *j)
+{
+  if (exist(j, "_p"))
+  {
+    if (!empty(j->m["_p"], "_d")
+    {
+      p.d = j->m["_p"]->m["_d"]->v;
+    }
+    if (!empty(j->m["_p"], "_s")
+    {
+      p.s = j->m["_p"]->m["_s"]->v;
+    }
+    if (!empty(j->m["_p"], "_t")
+    {
+      p.t = j->m["_p"]->m["_t"]->v;
+    }
+    if (!empty(j->m["_p"], "_u")
+    {
+      p.u = j->m["_p"]->m["_u"]->v;
+    }
+  }
+}
+// }}}
+// {{{ injectRoute()
+void Base::injectRoute(radialPacket &p, Json *j)
+{
+  if (exist(j, "_p"))
+  {
+    delete j->m["_p"];
+  }
+  j->m["_p"] = new Json;
+  if (!p.d.empty())
+  {
+    j->m["_p"]->i("_d", p.d);
+  }
+  if (!p.s.empty())
+  {
+    j->m["_p"]->i("_s", p.s);
+  }
+  if (!p.t.empty())
+  {
+    j->m["_p"]->i("_t", p.t);
+  }
+  if (!p.u.empty())
+  {
+    j->m["_p"]->i("_u", p.u);
+  }
+}
+// }}}
 // {{{ monitor()
 size_t Base::monitor(string &strMessage)
 {

@@ -437,6 +437,7 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
   string strJson;
   radialPacket p;
 
+  extractRoute(p, ptJson);
   ptJson->j(p.p);
   if (!strTarget.empty())
   {
@@ -1146,6 +1147,7 @@ void Interface::process(string strPrefix)
                 }
                 if (!shutdown())
                 {
+                  injectRoute(p, ptJson);
                   m_pCallback(strPrefix, ptJson, true);
                 }
                 else
