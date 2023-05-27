@@ -306,7 +306,7 @@ void Base::unpack(const string d, radialPacket &p)
   }
   if (!empty(r, "_u"))
   {
-    p.t = r->m["_u"]->v;
+    p.u = r->m["_u"]->v;
   }
 }
 // }}}
