@@ -592,231 +592,232 @@ void Hub::process(string strPrefix)
                             m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
                           }
                         }
-                        else if (s[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
-                        {
-                          Json *ptJson = new Json(p.p);
-                          for (auto &link : m_l)
-                          {
-                            for (auto &interface : link->interfaces)
-                            {
-                              delete interface.second;
-                            }
-                            link->interfaces.clear();
-                            delete link;
-                          }
-                          m_l.clear();
-                          if (exist(ptJson, "Links"))
-                          {
-                            for (auto &link : ptJson->m["Links"]->m)
-                            {
-                              radialLink *ptLink = new radialLink;
-                              ptLink->strNode = link.first;
-                              if (!empty(link.second, "Server"))
-                              {
-                                ptLink->strServer = link.second->m["Server"]->v;
-                              }
-                              if (!empty(link.second, "Port"))
-                              {
-                                ptLink->strPort = link.second->m["Port"]->v;
-                              }
-                              if (exist(link.second, "Interfaces"))
-                              {
-                                for (auto &interface : link.second->m["Interfaces"]->m)
-                                {
-                                  ptLink->interfaces[interface.first] = new radialInterface;
-                                  if (!empty(interface.second, "AccessFunction"))
-                                  {
-                                    ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
-                                  }
-                                  if (!empty(interface.second, "Command"))
-                                  {
-                                    ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
-                                  }
-                                  ptLink->interfaces[interface.first]->nPid = -1;
-                                  if (!empty(interface.second, "PID"))
-                                  {
-                                    stringstream ssPid(interface.second->m["PID"]->v);
-                                    ssPid >> ptLink->interfaces[interface.first]->nPid;
-                                  }
-                                  ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
-                                  ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
-                                }
-                              }
-                              m_l.push_back(ptLink);
-                            }
-                          }
-                          delete ptJson;
-                          links();
-                        }
                         else
                         {
-                          // {{{ prep work
-                          bool bResult = false;
                           Json *ptJson = new Json(p.p);
-                          strError.clear();
-                          // }}}
-                          if (!empty(ptJson, "Function"))
+                          if (s[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
                           {
-                            // {{{ add
-                            if (ptJson->m["Function"]->v == "add")
+                            for (auto &link : m_l)
                             {
-                              if (!empty(ptJson, "Name"))
+                              for (auto &interface : link->interfaces)
                               {
-                                bool bRespawn = false, bRestricted = false;
-                                ifstream inInterfaces;
-                                string strAccessFunction, strCommand;
-                                stringstream ssInterfaces;
-                                unsigned long ulMemory = 40 * 1024;
-                                Json *ptInterfaces = NULL;
-                                ssInterfaces << m_strData << "/interfaces.json";
-                                inInterfaces.open(ssInterfaces.str().c_str());
-                                if (inInterfaces)
+                                delete interface.second;
+                              }
+                              link->interfaces.clear();
+                              delete link;
+                            }
+                            m_l.clear();
+                            if (exist(ptJson, "Links"))
+                            {
+                              for (auto &link : ptJson->m["Links"]->m)
+                              {
+                                radialLink *ptLink = new radialLink;
+                                ptLink->strNode = link.first;
+                                if (!empty(link.second, "Server"))
                                 {
-                                  string strLine;
-                                  stringstream ssJson;
-                                  while (getline(inInterfaces, strLine))
-                                  {
-                                    ssJson << strLine;
-                                  }
-                                  ptInterfaces = new Json(ssJson.str());
+                                  ptLink->strServer = link.second->m["Server"]->v;
                                 }
-                                inInterfaces.close();
-                                if (ptInterfaces != NULL)
+                                if (!empty(link.second, "Port"))
                                 {
-                                  if (exist(ptInterfaces, ptJson->m["Name"]->v))
+                                  ptLink->strPort = link.second->m["Port"]->v;
+                                }
+                                if (exist(link.second, "Interfaces"))
+                                {
+                                  for (auto &interface : link.second->m["Interfaces"]->m)
                                   {
-                                    stringstream ssMemory((!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Memory"))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
+                                    ptLink->interfaces[interface.first] = new radialInterface;
+                                    if (!empty(interface.second, "AccessFunction"))
+                                    {
+                                      ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
+                                    }
+                                    if (!empty(interface.second, "Command"))
+                                    {
+                                      ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
+                                    }
+                                    ptLink->interfaces[interface.first]->nPid = -1;
+                                    if (!empty(interface.second, "PID"))
+                                    {
+                                      stringstream ssPid(interface.second->m["PID"]->v);
+                                      ssPid >> ptLink->interfaces[interface.first]->nPid;
+                                    }
+                                    ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
+                                    ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+                                  }
+                                }
+                                m_l.push_back(ptLink);
+                              }
+                            }
+                            links();
+                          }
+                          else
+                          {
+                            // {{{ prep work
+                            bool bResult = false;
+                            strError.clear();
+                            // }}}
+                            if (!empty(ptJson, "Function"))
+                            {
+                              // {{{ add
+                              if (ptJson->m["Function"]->v == "add")
+                              {
+                                if (!empty(ptJson, "Name"))
+                                {
+                                  bool bRespawn = false, bRestricted = false;
+                                  ifstream inInterfaces;
+                                  string strAccessFunction, strCommand;
+                                  stringstream ssInterfaces;
+                                  unsigned long ulMemory = 40 * 1024;
+                                  Json *ptInterfaces = NULL;
+                                  ssInterfaces << m_strData << "/interfaces.json";
+                                  inInterfaces.open(ssInterfaces.str().c_str());
+                                  if (inInterfaces)
+                                  {
+                                    string strLine;
+                                    stringstream ssJson;
+                                    while (getline(inInterfaces, strLine))
+                                    {
+                                      ssJson << strLine;
+                                    }
+                                    ptInterfaces = new Json(ssJson.str());
+                                  }
+                                  inInterfaces.close();
+                                  if (ptInterfaces != NULL)
+                                  {
+                                    if (exist(ptInterfaces, ptJson->m["Name"]->v))
+                                    {
+                                      stringstream ssMemory((!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Memory"))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
+                                      ssMemory >> ulMemory;
+                                      ulMemory *= 1024;
+                                      if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "AccessFunction"))
+                                      {
+                                        strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->m["AccessFunction"]->v;
+                                      }
+                                      if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Command"))
+                                      {
+                                        strCommand = ptInterfaces->m[ptJson->m["Name"]->v]->m["Command"]->v;
+                                      }
+                                      if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Respawn") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Respawn"]->v == "1")
+                                      {
+                                        bRespawn = true;
+                                      }
+                                      if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Restricted") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Restricted"]->v == "1")
+                                      {
+                                        bRestricted = true;
+                                      }
+                                    }
+                                    delete ptInterfaces;
+                                  }
+                                  if (!empty(ptJson, "AccessFunction"))
+                                  {
+                                    strAccessFunction = ptJson->m["AccessFunction"]->v;
+                                  }
+                                  if (!empty(ptJson, "Command"))
+                                  {
+                                    strCommand = ptJson->m["Command"]->v;
+                                  }
+                                  if (!empty(ptJson, "Memory"))
+                                  {
+                                    stringstream ssMemory(ptJson->m["Memory"]->v);
                                     ssMemory >> ulMemory;
                                     ulMemory *= 1024;
-                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "AccessFunction"))
-                                    {
-                                      strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->m["AccessFunction"]->v;
-                                    }
-                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Command"))
-                                    {
-                                      strCommand = ptInterfaces->m[ptJson->m["Name"]->v]->m["Command"]->v;
-                                    }
-                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Respawn") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Respawn"]->v == "1")
-                                    {
-                                      bRespawn = true;
-                                    }
-                                    if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Restricted") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Restricted"]->v == "1")
-                                    {
-                                      bRestricted = true;
-                                    }
                                   }
-                                  delete ptInterfaces;
-                                }
-                                if (!empty(ptJson, "AccessFunction"))
-                                {
-                                  strAccessFunction = ptJson->m["AccessFunction"]->v;
-                                }
-                                if (!empty(ptJson, "Command"))
-                                {
-                                  strCommand = ptJson->m["Command"]->v;
-                                }
-                                if (!empty(ptJson, "Memory"))
-                                {
-                                  stringstream ssMemory(ptJson->m["Memory"]->v);
-                                  ssMemory >> ulMemory;
-                                  ulMemory *= 1024;
-                                }
-                                if (!empty(ptJson, "Respawn"))
-                                {
-                                  bRespawn = ((ptJson->m["Respawn"]->v == "1")?true:false);
-                                }
-                                if (!empty(ptJson, "Restricted"))
-                                {
-                                  bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
-                                }
-                                if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted))
-                                {
-                                  bResult = true;
-                                  interfaces();
-                                }
-                              }
-                              else
-                              {
-                                ssMessage.str("");
-                                ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
-                                log(ssMessage.str());
-                              }
-                            }
-                            // }}}
-                            // {{{ list
-                            else if (ptJson->m["Function"]->v == "list")
-                            {
-                              bResult = true;
-                              ptJson->m["Response"] = new Json;
-                              for (auto &j : m_i)
-                              {
-                                stringstream ssPid;
-                                ssPid << j.second->nPid;
-                                ptJson->m["Response"]->m[j.first] = new Json;
-                                ptJson->m["Response"]->m[j.first]->i("AccessFunction", j.second->strAccessFunction);
-                                ptJson->m["Response"]->m[j.first]->i("Command", j.second->strCommand);
-                                ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
-                                ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
-                                ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
-                              }
-                            }
-                            // }}}
-                            // {{{ ping
-                            else if (ptJson->m["Function"]->v == "ping")
-                            {
-                              bResult = true;
-                            }
-                            // }}}
-                            // {{{ remove
-                            else if (ptJson->m["Function"]->v == "remove")
-                            {
-                              if (!empty(ptJson, "Name"))
-                              {
-                                if (m_i.find(ptJson->m["Name"]->v) != m_i.end())
-                                {
-                                  bResult = true;
-                                  setShutdown(strPrefix, ptJson->m["Name"]->v, true);
+                                  if (!empty(ptJson, "Respawn"))
+                                  {
+                                    bRespawn = ((ptJson->m["Respawn"]->v == "1")?true:false);
+                                  }
+                                  if (!empty(ptJson, "Restricted"))
+                                  {
+                                    bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
+                                  }
+                                  if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted))
+                                  {
+                                    bResult = true;
+                                    interfaces();
+                                  }
                                 }
                                 else
                                 {
                                   ssMessage.str("");
-                                  ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
+                                  ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",add]:  Please provide the Name.";
                                   log(ssMessage.str());
                                 }
                               }
+                              // }}}
+                              // {{{ list
+                              else if (ptJson->m["Function"]->v == "list")
+                              {
+                                bResult = true;
+                                ptJson->m["Response"] = new Json;
+                                for (auto &j : m_i)
+                                {
+                                  stringstream ssPid;
+                                  ssPid << j.second->nPid;
+                                  ptJson->m["Response"]->m[j.first] = new Json;
+                                  ptJson->m["Response"]->m[j.first]->i("AccessFunction", j.second->strAccessFunction);
+                                  ptJson->m["Response"]->m[j.first]->i("Command", j.second->strCommand);
+                                  ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
+                                  ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
+                                  ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
+                                }
+                              }
+                              // }}}
+                              // {{{ ping
+                              else if (ptJson->m["Function"]->v == "ping")
+                              {
+                                bResult = true;
+                              }
+                              // }}}
+                              // {{{ remove
+                              else if (ptJson->m["Function"]->v == "remove")
+                              {
+                                if (!empty(ptJson, "Name"))
+                                {
+                                  if (m_i.find(ptJson->m["Name"]->v) != m_i.end())
+                                  {
+                                    bResult = true;
+                                    setShutdown(strPrefix, ptJson->m["Name"]->v, true);
+                                  }
+                                  else
+                                  {
+                                    ssMessage.str("");
+                                    ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
+                                    log(ssMessage.str());
+                                  }
+                                }
+                                else
+                                {
+                                  ssMessage.str("");
+                                  ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
+                                  log(ssMessage.str());
+                                }
+                              }
+                              // }}}
+                              // {{{ shutdown
+                              else if (ptJson->m["Function"]->v == "shutdown")
+                              {
+                                bResult = true;
+                                setShutdown(strPrefix, ((!empty(ptJson, "Target"))?ptJson->m["Target"]->v:""));
+                              }
+                              // }}}
+                              // {{{ invalid
                               else
                               {
-                                ssMessage.str("");
-                                ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Please provide the Name.";
-                                log(ssMessage.str());
+                                strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
                               }
+                              // }}}
                             }
-                            // }}}
-                            // {{{ shutdown
-                            else if (ptJson->m["Function"]->v == "shutdown")
+                            // {{{ post work
+                            p.d = "s";
+                            ptJson->i("Status", ((bResult)?"okay":"error"));
+                            if (!strError.empty())
                             {
-                              bResult = true;
-                              setShutdown(strPrefix, ((!empty(ptJson, "Target"))?ptJson->m["Target"]->v:""));
+                              ptJson->i("Error", strError);
                             }
-                            // }}}
-                            // {{{ invalid
-                            else
-                            {
-                              strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
-                            }
+                            ptJson->j(p.p);
+                            m_i[s[fds[i].fd]]->strBuffers[1].append(pack(p, strValue) + "\n");
                             // }}}
                           }
-                          // {{{ post work
-                          p.d = "s";
-                          ptJson->i("Status", ((bResult)?"okay":"error"));
-                          if (!strError.empty())
-                          {
-                            ptJson->i("Error", strError);
-                          }
-                          ptJson->j(p.p);
-                          m_i[s[fds[i].fd]]->strBuffers[1].append(pack(p, strValue) + "\n");
                           delete ptJson;
-                          // }}}
                         }
                       }
                     }
