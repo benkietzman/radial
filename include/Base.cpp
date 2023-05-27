@@ -29,7 +29,7 @@ Base::Base(int argc, char **argv)
   m_argc = argc;
   m_argv = argv;
   m_bShutdown = false;
-  m_cDelimiter = char(26);
+  m_cDelimiter = '|';
   time(&m_CMonitor[0]);
   m_strApplication = "Radial";
   uname(&tServer);
