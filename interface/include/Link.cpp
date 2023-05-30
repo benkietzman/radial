@@ -497,16 +497,19 @@ void Link::process(string strPrefix)
                 while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
                 {
                   string strPayload, strRoute;
-                  stringstream ssData(m_strBuffers[0].substr(0, unPosition));
+                  stringstream ssData;
                   Json *ptJson, *ptRoute;
+                  radialPacket p;
+                  strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
+                  unpack(strLine, p);
+                  ssData.str(strLine);
                   getline(ssData, strRoute, m_cDelimiter);
-                  getline(ssData, strPayload, m_cDelimiter);
                   ptRoute = new Json(strRoute);
-                  ptJson = new Json(strPayload);
+                  ptJson = new Json(p.p);
                   ptJson->merge(ptRoute, true, false);
                   delete ptRoute;
-                  ptJson->j(strLine);
+                  ptJson->j(strLine); // TODO
                   if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdLink;
@@ -637,7 +640,8 @@ void Link::process(string strPrefix)
                       {
                         ptJson->i("Status", "error");
                         ptJson->i("Error", "Linked Node does not exist.");
-                        hub(ptJson, false);
+                        ptJson->j(p.p);
+                        hub(p, false);
                       }
                     }
                     else
@@ -700,7 +704,8 @@ void Link::process(string strPrefix)
                     {
                       ptJson->i("Error", strError);
                     }
-                    hub(ptJson, false);
+                    ptJson->j(p.p);
+                    hub(p, false);
                   }
                   delete ptJson;
                 }
@@ -999,6 +1004,7 @@ void Link::process(string strPrefix)
                         if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
+                          radialPacket p;
                           for (auto &j : ptJson->m["_l"]->m)
                           {
                             ptJson->i(j.first, j.second);
@@ -1008,28 +1014,35 @@ void Link::process(string strPrefix)
                             delete ptJson->m["_d"];
                             ptJson->m.erase("_d");
                           }
-                          ptJson->i("_s", m_strName);
-                          if (exist(ptJson, "_t") && ptJson->m["_t"]->v == "link" && !empty(ptJson, "Interface"))
+                          p.s = m_strName;
+                          if (!empty(ptJson, "_t"))
+                          {
+                            p.t = ptJson->m["_t"]->v;
+                            delete ptJson->m["_t"];
+                            ptJson->m.erase("_t");
+                          }
+                          if (p.t == "link" && !empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
                             {
-                              delete ptJson->m["_t"];
-                              ptJson->m.erase("_t");
+                              p.t.clear();
                               delete ptJson->m["Interface"];
                               ptJson->m.erase("Interface");
                             }
                             else
                             {
-                              ptJson->i("_t", ptJson->m["Interface"]->v);
+                              p.t = ptJson->m["Interface"]->v;
                             }
                           }
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
-                          ptJson->i("_u", ssUnique.str());
-                          hub(ptJson, false);
+                          p.u = ssUnique.str();
+                          ptJson->j(p.p);
+                          hub(p, false);
                         }
                         else
                         {
                           Json *ptSubLink = ptJson->m["_l"];
+                          radialPacket p;
                           ptJson->m.erase("_l");
                           keyRemovals(ptJson);
                           for (auto &j : ptSubLink->m)
@@ -1037,7 +1050,32 @@ void Link::process(string strPrefix)
                             ptJson->i(j.first, j.second);
                           }
                           delete ptSubLink;
-                          hub(ptJson, false);
+                          if (empty(ptJson, "_d"))
+                          {
+                            p.d = ptJson->m["_d"]->v;
+                            delete ptJson->m["_d"];
+                            ptJson->m.erase("_d");
+                          }
+                          if (empty(ptJson, "_s"))
+                          {
+                            p.s = ptJson->m["_s"]->v;
+                            delete ptJson->m["_s"];
+                            ptJson->m.erase("_s");
+                          }
+                          if (empty(ptJson, "_t"))
+                          {
+                            p.t = ptJson->m["_t"]->v;
+                            delete ptJson->m["_t"];
+                            ptJson->m.erase("_t");
+                          }
+                          if (empty(ptJson, "_u"))
+                          {
+                            p.u = ptJson->m["_u"]->v;
+                            delete ptJson->m["_u"];
+                            ptJson->m.erase("_u");
+                          }
+                          ptJson->j(p.p);
+                          hub(p, false);
                         }
                       }
                       // }}}
@@ -1051,11 +1089,14 @@ void Link::process(string strPrefix)
                             if (m_i.find(ptJson->m["Interface"]->v) != m_i.end())
                             {
                               stringstream ssUnique;
+                              radialPacket p;
                               keyRemovals(ptJson);
-                              ptJson->i("_s", m_strName);
+                              p.s = m_strName;
+                              p.t = ptJson->m["Interface"]->v;
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
-                              ptJson->i("_u", ssUnique.str());
-                              hub(ptJson->m["Interface"]->v, ptJson, false);
+                              p.u = ssUnique.str();
+                              ptJson->j(p.p);
+                              hub(p, false);
                             }
                             else
                             {

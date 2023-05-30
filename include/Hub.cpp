@@ -1266,10 +1266,9 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
 // {{{ target()
 void Hub::target(radialPacket &p)
 {
-  string strValue;
-
   if (m_i.find(p.t) != m_i.end())
   {
+    string strValue;
     p.d = "t";
     m_i[p.t]->strBuffers[1].append(pack(p, strValue) + "\n");
   }

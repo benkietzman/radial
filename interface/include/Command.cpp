@@ -100,11 +100,13 @@ void Command::process(string strPrefix)
         {
           while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
           {
+            radialPacket p;
             Json *ptJson;
             strLine = m_strBuffers[0].substr(0, unPosition);
             m_strBuffers[0].erase(0, (unPosition + 1));
-            ptJson = new Json(strLine);
-            if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
+            unpack(strLine, p);
+            ptJson = new Json(p.p);
+            if (p.s == "hub")
             {
               if (!empty(ptJson, "Function"))
               {
@@ -258,7 +260,7 @@ void Command::process(string strPrefix)
                     strError = ssMessage.str();
                     ptJson->i("Status", "error");
                     ptJson->i("Error", strError);
-                    hub(ptJson, false);
+                    hub(p, false);
                   }
                 }
                 else
@@ -268,7 +270,7 @@ void Command::process(string strPrefix)
                   strError = ssMessage.str();
                   ptJson->i("Status", "error");
                   ptJson->i("Error", strError);
-                  hub(ptJson, false);
+                  hub(p, false);
                 }
               }
               else
@@ -278,14 +280,14 @@ void Command::process(string strPrefix)
                 strError = ssMessage.str();
                 ptJson->i("Status", "error");
                 ptJson->i("Error", strError);
-                hub(ptJson, false);
+                hub(p, false);
               }
             }
             else
             {
               ptJson->i("Status", "error");
               ptJson->i("Error", "Please provide the Command.");
-              hub(ptJson, false);
+              hub(p, false);
             }
             delete ptJson;
           }
