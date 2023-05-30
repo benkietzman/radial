@@ -327,7 +327,7 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 // {{{ hub()
 void Interface::hub(radialPacket &p, const bool bWait)
 {
-  string strJson, strValue;
+  string strValue;
 
   if (bWait)
   {
@@ -434,7 +434,6 @@ void Interface::hub(radialPacket &p, const bool bWait)
 }
 void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
 {
-  string strJson;
   radialPacket p;
 
   ptJson->j(p.p);
