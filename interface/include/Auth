@@ -29,9 +29,9 @@ class Auth : public Interface
   bool (*m_pAnalyzeCallback)(string, Json *, Json *, string &);
 
   public:
-  Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Auth();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
   bool init();
   void setAnalyze(bool (*)(string, Json *, Json *, string &));
 };

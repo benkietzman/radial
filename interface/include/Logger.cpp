@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Logger()
-Logger::Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "logger", argc, argv, pCallback)
+Logger::Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "logger", argc, argv, pCallback)
 {
   m_pLogger->useSingleSocket(true);
 }
@@ -31,14 +31,18 @@ Logger::~Logger()
 }
 // }}}
 // {{{ callback()
-void Logger::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Logger::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Logger::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
@@ -81,7 +85,8 @@ void Logger::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

@@ -29,9 +29,9 @@ class Jwt : public Interface
   protected:
 
   public:
-  Jwt(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Jwt(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Jwt();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
 };
 // }}}
 }

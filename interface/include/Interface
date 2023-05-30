@@ -34,7 +34,7 @@ class Interface : public Base
   string m_strMaster;
   string m_strName;
   void (*m_pAutoModeCallback)(string, const string, const string);
-  void (*m_pCallback)(string, Json *, const bool);
+  void (*m_pCallback)(string, const string, const bool);
 
   void alert(const string strMessage);
   bool auth(Json *ptJson, string &strError);
@@ -83,7 +83,7 @@ class Interface : public Base
   bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
 
   public:
-  Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Interface();
   void hub(radialPacket &p, const bool bWait = true);
   void hub(const string strTarget, Json *ptJson, const bool bWait = true);

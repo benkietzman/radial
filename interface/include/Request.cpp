@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Request()
-Request::Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "request", argc, argv, pCallback)
+Request::Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "request", argc, argv, pCallback)
 {
 }
 // }}}
@@ -178,13 +178,17 @@ void Request::accept(string strPrefix)
 }
 // }}}
 // {{{ callback()
-void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Request::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Request::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     if (ptJson->m["Function"]->v == "ping")
@@ -207,7 +211,8 @@ void Request::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

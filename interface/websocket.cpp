@@ -23,7 +23,7 @@ struct lws_protocols gtProtocols[] =
   {NULL, NULL, 0, 0}
 };
 radial::Websocket *gpWebsocket;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   char *pszCert, *pszKey;
@@ -80,9 +80,9 @@ int main(int argc, char *argv[])
   utility.sslDeinit();
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Websocket::callback, gpWebsocket, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&radial::Websocket::callback, gpWebsocket, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

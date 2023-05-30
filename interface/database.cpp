@@ -15,7 +15,7 @@
 #include "include/Database"
 using namespace radial;
 Database *gpDatabase = NULL;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 int main(int argc, char *argv[])
 {
@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
   delete gpDatabase;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Database::callback, gpDatabase, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Database::callback, gpDatabase, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

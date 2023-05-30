@@ -36,9 +36,9 @@ class Secure : public Interface
   void (*m_pProcessPreAuthzCallback)(string, Json *, Json *);
 
   public:
-  Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Secure();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
   void setLogin(bool (*pCallback)(string, Json *, string &));
   void setLoginTitle(string (*pCallback)(const string));
   void setLogout(bool (*pCallback)(string, Json *, string &));

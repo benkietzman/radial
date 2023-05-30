@@ -31,7 +31,7 @@ class Link : public Interface
   size_t add(list<radialLink *> &links, radialLink *ptLink);
 
   public:
-  Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Link(string strPrefix, int argc, char **argv);
   ~Link();
   void process(string strPrefix);
 };

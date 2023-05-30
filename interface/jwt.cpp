@@ -15,7 +15,7 @@
 #include "include/Jwt"
 using namespace radial;
 Jwt *gpJwt = NULL;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "jwt->main()";
@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
   delete gpJwt;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Jwt::callback, gpJwt, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Jwt::callback, gpJwt, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

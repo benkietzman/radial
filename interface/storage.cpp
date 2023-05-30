@@ -15,7 +15,7 @@
 #include "include/Storage"
 radial::Storage *gpStorage;
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "storage->main()";
@@ -35,9 +35,9 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
   pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
   threadAutoMode.detach();
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Storage::callback, gpStorage, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&radial::Storage::callback, gpStorage, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

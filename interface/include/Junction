@@ -27,9 +27,9 @@ class Junction : public Interface
   protected:
 
   public:
-  Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Junction();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
 };
 // }}}
 }

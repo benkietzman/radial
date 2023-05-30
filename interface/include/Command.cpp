@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Command()
-Command::Command(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "command", argc, argv, pCallback)
+Command::Command(string strPrefix, int argc, char **argv) : Interface(strPrefix, "command", argc, argv, NULL)
 {
 }
 // }}}

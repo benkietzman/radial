@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Storage()
-Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
+Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
 {
   m_bInitialized = false;
   m_unCallbacks = 0;
@@ -97,14 +97,18 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
 }
 // }}}
 // {{{ callback()
-void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Storage::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Storage::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   mutexCallback.lock();
   m_unCallbacks++;
   mutexCallback.unlock();
@@ -179,7 +183,8 @@ void Storage::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

@@ -15,7 +15,7 @@
 #include "include/Mysql"
 using namespace radial;
 Mysql *gpMysql;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "mysql->main()";
@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
   delete gpMysql;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Mysql::callback, gpMysql, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Mysql::callback, gpMysql, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

@@ -18,7 +18,7 @@ Link *gpLink;
 int main(int argc, char *argv[])
 {
   string strPrefix = "link->main()";
-  gpLink = new Link(strPrefix, argc, argv, NULL);
+  gpLink = new Link(strPrefix, argc, argv);
   gpLink->process(strPrefix);
   delete gpLink;
   return 0;

@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Log()
-Log::Log(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "log", argc, argv, pCallback)
+Log::Log(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "log", argc, argv, pCallback)
 {
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
@@ -51,14 +51,18 @@ Log::~Log()
 }
 // }}}
 // {{{ callback()
-void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Log::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Log::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     if (!empty(ptJson, "Message"))
@@ -105,7 +109,8 @@ void Log::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

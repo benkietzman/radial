@@ -15,7 +15,7 @@
 #include "include/Secure"
 using namespace radial;
 Secure *gpSecure;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "secure->main()";
@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
   delete gpSecure;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Secure::callback, gpSecure, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Secure::callback, gpSecure, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

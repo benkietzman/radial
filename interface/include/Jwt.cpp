@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Jwt()
-Jwt::Jwt(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "jwt", argc, argv, pCallback)
+Jwt::Jwt(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "jwt", argc, argv, pCallback)
 {
 }
 // }}}
@@ -30,13 +30,17 @@ Jwt::~Jwt()
 }
 // }}}
 // {{{ callback()
-void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Jwt::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Jwt::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Signer"))
   {
     MessageSigner *pSigner = nullptr;
@@ -173,7 +177,8 @@ void Jwt::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

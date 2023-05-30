@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Websocket()
-Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
+Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
   string strError;
   Json *ptAes = new Json, *ptJwt = new Json;
@@ -54,14 +54,18 @@ Websocket::~Websocket()
 }
 // }}}
 // {{{ callback()
-void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Websocket::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError, strJson;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Websocket::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "wsRequestID"))
   {
     string strIdentity, strName, strNode;
@@ -152,7 +156,8 @@ void Websocket::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Central()
-Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "central", argc, argv, pCallback)
+Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "central", argc, argv, pCallback)
 {
   string strError;
 
@@ -2995,13 +2995,17 @@ void Central::autoMode(string strPrefix, const string strOldMaster, const string
 }
 // }}}
 // {{{ callback()
-void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Central::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bInvalid = true, bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Central::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v, strJwt;
@@ -3087,7 +3091,8 @@ void Central::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

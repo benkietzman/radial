@@ -52,9 +52,9 @@ class Mysql : public Interface
   bool update(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 
   public:
-  Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Mysql();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
 };
 // }}}
 }

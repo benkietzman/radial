@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Interface()
-Interface::Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Base(argc, argv)
+Interface::Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Base(argc, argv)
 {
   strPrefix += "->Interface::Interface()";
   signal(SIGBUS, SIG_IGN);
@@ -437,7 +437,6 @@ void Interface::hub(const string strTarget, Json *ptJson, const bool bWait)
   string strJson;
   radialPacket p;
 
-  extractRoute(p, ptJson);
   ptJson->j(p.p);
   if (!strTarget.empty())
   {
@@ -1054,8 +1053,8 @@ void Interface::process(string strPrefix)
             int fdUnique = -1;
             radialPacket p;
             strLine = m_strBuffers[0].substr(0, unPosition);
-            unpack(strLine, p);
             m_strBuffers[0].erase(0, (unPosition + 1));
+            unpack(strLine, p);
             if (p.s == m_strName && !p.u.empty())
             {
               m_mutexShare.lock();
@@ -1147,8 +1146,7 @@ void Interface::process(string strPrefix)
                 }
                 if (!shutdown())
                 {
-                  injectRoute(p, ptJson);
-                  m_pCallback(strPrefix, ptJson, true);
+                  m_pCallback(strPrefix, strLine, true);
                 }
                 else
                 {

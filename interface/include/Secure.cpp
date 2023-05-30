@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Secure()
-Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "secure", argc, argv, pCallback)
+Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "secure", argc, argv, pCallback)
 {
   string strError;
   Json *ptAes = new Json, *ptJwt = new Json;
@@ -59,14 +59,18 @@ Secure::~Secure()
 }
 // }}}
 // {{{ callback()
-void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Secure::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError, strValue;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Secure::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     // {{{ auth
@@ -399,7 +403,8 @@ void Secure::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

@@ -28,9 +28,9 @@ class Database : public Interface
   Json *m_ptDatabases;
 
   public:
-  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
+  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
   ~Database();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
   bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 };
 // }}}

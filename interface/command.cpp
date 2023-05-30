@@ -14,12 +14,10 @@
 ***********************************************************************/
 #include "include/Command"
 using namespace radial;
-Command *gpCommand = NULL;
 int main(int argc, char *argv[])
 {
   string strPrefix = "command->main()";
-  gpCommand = new Command(strPrefix, argc, argv, NULL);
-  gpCommand->process(strPrefix);
-  delete gpCommand;
+  Command command(strPrefix, argc, argv);
+  command.process(strPrefix);
   return 0;
 }

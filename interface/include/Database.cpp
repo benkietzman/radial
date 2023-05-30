@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Database()
-Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
+Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
 {
   string strError;
   // {{{ command line arguments
@@ -52,13 +52,17 @@ Database::~Database()
 }
 // }}}
 // {{{ callback()
-void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Database::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Database::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Database"))
   {
     if (!empty(ptJson, "Query"))
@@ -108,7 +112,8 @@ void Database::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

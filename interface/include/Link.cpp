@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Link()
-Link::Link(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "link", argc, argv, pCallback)
+Link::Link(string strPrefix, int argc, char **argv) : Interface(strPrefix, "link", argc, argv, NULL)
 {
   ifstream inLink((m_strData + "/link.json").c_str());
   string strError;

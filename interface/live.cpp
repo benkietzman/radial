@@ -14,7 +14,7 @@
 ***********************************************************************/
 #include "include/Live"
 radial::Live *gpLive;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "live->main()";
@@ -23,9 +23,9 @@ int main(int argc, char *argv[])
   delete gpLive;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Live::callback, gpLive, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&radial::Live::callback, gpLive, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

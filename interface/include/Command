@@ -37,13 +37,14 @@ struct radialCommand
   Json *ptJson;
 };
 // }}}
+// }}}
 // {{{ Command
 class Command : public Interface
 {
   protected:
 
   public:
-  Command(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Command(string strPrefix, int argc, char **argv);
   ~Command();
   void process(string strPrefix);
 };

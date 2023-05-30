@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ CentralMon()
-CentralMon::CentralMon(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "centralmon", argc, argv, pCallback)
+CentralMon::CentralMon(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "centralmon", argc, argv, pCallback)
 {
   m_strPort = "4636";
   m_strServer = "localhost";
@@ -64,14 +64,18 @@ CentralMon::~CentralMon()
 }
 // }}}
 // {{{ callback()
-void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void CentralMon::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->CentralMon::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     bool bValid = false;
@@ -290,7 +294,8 @@ void CentralMon::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

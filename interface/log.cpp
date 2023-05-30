@@ -15,7 +15,7 @@
 #include "include/Log"
 using namespace radial;
 Log *gpLog;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "log->main()";
@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
   delete gpLog;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Log::callback, gpLog, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Log::callback, gpLog, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

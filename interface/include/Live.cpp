@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Live()
-Live::Live(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "live", argc, argv, pCallback)
+Live::Live(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "live", argc, argv, pCallback)
 {
 }
 // }}}
@@ -34,15 +34,19 @@ Live::~Live()
 }
 // }}}
 // {{{ callback()
-void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Live::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
   time_t CTime;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Live::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   m_mutex.lock();
   time(&CTime);
   if ((CTime - m_CTime) > 600)
@@ -209,7 +213,8 @@ void Live::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

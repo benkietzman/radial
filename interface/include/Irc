@@ -65,11 +65,11 @@ class Irc : public Interface
   string var(const string strName, Json *ptData);
 
   public:
-  Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Irc();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
   void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &));
 };
 // }}}

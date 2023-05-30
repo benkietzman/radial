@@ -29,9 +29,9 @@ class CentralMon : public Interface
   string m_strServer;
 
   public:
-  CentralMon(string, int argc, char **argv, void (*pCallback)(string, Json *, const bool));
+  CentralMon(string, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~CentralMon();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
 };
 // }}}
 }

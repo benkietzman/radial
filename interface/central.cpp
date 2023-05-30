@@ -15,7 +15,7 @@
 #include "include/Central"
 radial::Central *gpCentral = NULL;
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "central->main()";
@@ -34,9 +34,9 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
   pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
   threadAutoMode.detach();
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Central::callback, gpCentral, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&radial::Central::callback, gpCentral, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }

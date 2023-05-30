@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Irc()
-Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "irc", argc, argv, pCallback)
+Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
@@ -1874,13 +1874,17 @@ void Irc::bot(string strPrefix)
 }
 // }}}
 // {{{ callback()
-void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Irc::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Irc::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
     if (ptJson->m["Function"]->v == "chat")
@@ -1955,7 +1959,8 @@ void Irc::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

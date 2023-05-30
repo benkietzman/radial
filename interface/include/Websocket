@@ -53,9 +53,9 @@ class Websocket : public Interface
   void request(string strPrefix, data *ptConn, Json *ptJson);
 
   public:
-  Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
+  Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
   ~Websocket();
-  void callback(string strPrefix, Json *ptJson, const bool bResponse);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
   void socket(string strPrefix, lws_context *ptContext);
   int websocket(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
 };

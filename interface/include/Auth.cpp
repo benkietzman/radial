@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Auth()
-Auth::Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "auth", argc, argv, pCallback)
+Auth::Auth(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "auth", argc, argv, pCallback)
 {
   m_pAnalyzeCallback = NULL;
 }
@@ -31,13 +31,17 @@ Auth::~Auth()
 }
 // }}}
 // {{{ callback()
-void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Auth::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Auth::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (!empty(ptJson, "User"))
   {
     if (!empty(ptJson, "Password"))
@@ -122,7 +126,8 @@ void Auth::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

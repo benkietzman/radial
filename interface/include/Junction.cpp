@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Junction()
-Junction::Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, Json *, const bool)) : Interface(strPrefix, "junction", argc, argv, pCallback)
+Junction::Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "junction", argc, argv, pCallback)
 {
   m_pJunction->useSingleSocket(true);
 }
@@ -31,14 +31,18 @@ Junction::~Junction()
 }
 // }}}
 // {{{ callback()
-void Junction::callback(string strPrefix, Json *ptJson, const bool bResponse)
+void Junction::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   stringstream ssMessage;
+  Json *ptJson;
+  radialPacket p;
 
   threadIncrement();
   strPrefix += "->Junction::callback()";
+  unpack(strPacket, p);
+  ptJson = new Json(p.p);
   if (exist(ptJson, "Request"))
   {
     list<string> in, out;
@@ -68,7 +72,8 @@ void Junction::callback(string strPrefix, Json *ptJson, const bool bResponse)
   }
   if (bResponse)
   {
-    hub(ptJson, false);
+    ptJson->j(p.p);
+    hub(p, false);
   }
   delete ptJson;
   threadDecrement();

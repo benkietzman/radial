@@ -15,7 +15,7 @@
 #include "include/Db"
 using namespace radial;
 Db *gpDb = NULL;
-void callback(string strPrefix, Json *ptJson, const bool bResponse);
+void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "db->main()";
@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
   delete gpDb;
   return 0;
 }
-void callback(string strPrefix, Json *ptJson, const bool bResponse)
+void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Db::callback, gpDb, strPrefix, new Json(ptJson), bResponse);
+  thread threadCallback(&Db::callback, gpDb, strPrefix, strPacket, bResponse);
   pthread_setname_np(threadCallback.native_handle(), "callback");
   threadCallback.detach();
 }
