@@ -860,8 +860,23 @@ void Link::process(string strPrefix)
                   {
                     while ((unPosition = ptLink->strBuffers[0].find("\n")) != string::npos)
                     {
-                      Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
+                      string strRoute, strPayload;
+                      stringstream ssData(ptLink->strBuffers[0].substr(0, unPosition));
+                      Json *ptJson;
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
+                      getline(ssData, strRoute, m_cDelimiter);
+                      getline(ssData, strPayload, m_cDelimiter);
+                      if (!strPayload.empty())
+                      {
+                        Json *ptRoute = new Json(strRoute);
+                        ptJson = new Json(strPayload);
+                        ptJson->merge(ptRoute, true, false);
+                        delete ptRoute;
+                      }
+                      else
+                      {
+                        ptJson = new Json(strRoute);
+                      }
                       // {{{ _f
                       if (!empty(ptJson, "_f"))
                       {
