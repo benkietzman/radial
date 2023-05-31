@@ -250,7 +250,8 @@ void Command::process(string strPrefix)
                       ptCommand->fdWrite = -1;
                     }
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
-                    ptCommand->ptJson = new Json(ptJson);
+                    ptJson->j(p.p);
+                    pack(p, ptCommand->strPacket);
                     commands.push_back(ptCommand);
                   }
                   else
@@ -260,6 +261,7 @@ void Command::process(string strPrefix)
                     strError = ssMessage.str();
                     ptJson->i("Status", "error");
                     ptJson->i("Error", strError);
+                    ptJson->j(p.p);
                     hub(p, false);
                   }
                 }
@@ -270,6 +272,7 @@ void Command::process(string strPrefix)
                   strError = ssMessage.str();
                   ptJson->i("Status", "error");
                   ptJson->i("Error", strError);
+                  ptJson->j(p.p);
                   hub(p, false);
                 }
               }
@@ -280,6 +283,7 @@ void Command::process(string strPrefix)
                 strError = ssMessage.str();
                 ptJson->i("Status", "error");
                 ptJson->i("Error", strError);
+                ptJson->j(p.p);
                 hub(p, false);
               }
             }
@@ -287,6 +291,7 @@ void Command::process(string strPrefix)
             {
               ptJson->i("Status", "error");
               ptJson->i("Error", "Please provide the Command.");
+              ptJson->j(p.p);
               hub(p, false);
             }
             delete ptJson;
@@ -398,22 +403,26 @@ void Command::process(string strPrefix)
       pid_t retWait;
       size_t unDuration = (((*i)->stop.tv_sec - (*i)->start.tv_sec) * 1000) + (((*i)->stop.tv_nsec - (*i)->start.tv_nsec) / 1000000);
       stringstream ssDuration;
+      Json *ptJson;
+      radialPacket p;
       close((*i)->fdRead);
       if ((*i)->fdWrite != -1)
       {
         close((*i)->fdWrite);
       }
+      unpack((*i)->strPacket, p);
+      ptJson = new Json(p.p);
       ssDuration << unDuration;
-      (*i)->ptJson->insert("Duration", ssDuration.str(), 'n');
+      ptJson->insert("Duration", ssDuration.str(), 'n');
       if ((*i)->bJson)
       {
         Json *ptOutput = new Json((*i)->strBuffer[0]);
-        (*i)->ptJson->i("Output", ptOutput);
+        ptJson->i("Output", ptOutput);
         delete ptOutput;
       }
       else
       {
-        (*i)->ptJson->i("Output", (*i)->strBuffer[0]);
+        ptJson->i("Output", (*i)->strBuffer[0]);
       }
       if ((retWait = waitpid((*i)->execPid, NULL, WNOHANG)) == 0)
       {
@@ -429,13 +438,14 @@ void Command::process(string strPrefix)
         }
         (*i)->strError = "Terminated the child process due to crossing the 30 minute timeout.";
       }
-      (*i)->ptJson->i("Status", (((*i)->bProcessed)?"okay":"error"));
+      ptJson->i("Status", (((*i)->bProcessed)?"okay":"error"));
       if (!(*i)->strError.empty())
       {
-        (*i)->ptJson->i("Error", (*i)->strError);
+        ptJson->i("Error", (*i)->strError);
       }
-      hub((*i)->ptJson, false);
-      delete (*i)->ptJson;
+      ptJson->j(p.p);
+      hub(p, false);
+      delete ptJson;
       delete *i;
       commands.erase(i);
     }
@@ -458,7 +468,6 @@ void Command::process(string strPrefix)
     {
       kill(i->execPid, SIGKILL);
     }
-    delete i->ptJson;
     delete i;
   }
   setShutdown();

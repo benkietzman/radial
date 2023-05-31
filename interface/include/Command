@@ -32,9 +32,9 @@ struct radialCommand
   int fdWrite;
   string strBuffer[2];
   string strError;
+  string strPacket;
   timespec start;
   timespec stop;
-  Json *ptJson;
 };
 // }}}
 // }}}
