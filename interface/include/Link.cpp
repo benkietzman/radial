@@ -1050,25 +1050,25 @@ void Link::process(string strPrefix)
                             ptJson->i(j.first, j.second);
                           }
                           delete ptSubLink;
-                          if (empty(ptJson, "_d"))
+                          if (!empty(ptJson, "_d"))
                           {
                             p.d = ptJson->m["_d"]->v;
                             delete ptJson->m["_d"];
                             ptJson->m.erase("_d");
                           }
-                          if (empty(ptJson, "_s"))
+                          if (!empty(ptJson, "_s"))
                           {
                             p.s = ptJson->m["_s"]->v;
                             delete ptJson->m["_s"];
                             ptJson->m.erase("_s");
                           }
-                          if (empty(ptJson, "_t"))
+                          if (!empty(ptJson, "_t"))
                           {
                             p.t = ptJson->m["_t"]->v;
                             delete ptJson->m["_t"];
                             ptJson->m.erase("_t");
                           }
-                          if (empty(ptJson, "_u"))
+                          if (!empty(ptJson, "_u"))
                           {
                             p.u = ptJson->m["_u"]->v;
                             delete ptJson->m["_u"];
