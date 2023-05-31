@@ -509,7 +509,7 @@ void Link::process(string strPrefix)
                   ptJson = new Json(p.p);
                   ptJson->merge(ptRoute, true, false);
                   delete ptRoute;
-                  ptJson->j(strLine); // TODO
+                  ptJson->j(strLine);
                   if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdLink;

@@ -780,7 +780,7 @@ void Hub::process(string strPrefix)
                                   else
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove]:  Interface not found.";
+                                    ssMessage << strPrefix << " error [" << s[fds[i].fd] << "," << fds[i].fd << ",remove," << ptJson->m["Name"]->v << "]:  Interface not found.";
                                     log(ssMessage.str());
                                   }
                                 }
