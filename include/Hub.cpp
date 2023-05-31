@@ -548,7 +548,7 @@ void Hub::process(string strPrefix)
                         m_i[s[fds[i].fd]]->strBuffers[0].erase(0, (unPosition + 1));
                         if (!p.t.empty())
                         {
-                          if (!p.d.empty())
+                          if (p.d.empty())
                           {
                             if (m_i.find(p.t) != m_i.end())
                             {
