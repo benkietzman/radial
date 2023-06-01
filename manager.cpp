@@ -76,6 +76,13 @@ int main(int argc, char *argv[])
         cerr << strError << endl;
       }
     }
+    else if (strFunction == "sniff")
+    {
+      if (!request(strFunction, strInterface, strResponse, strError))
+      {
+        cerr << strError << endl;
+      }
+    }
     else if (strFunction == "start")
     {
       if (!request(strFunction, strInterface, strResponse, strError))
@@ -134,12 +141,16 @@ bool request(const string strFunction, const string strInterface, string &strRes
       strncpy(addr.sun_path, UNIX_SOCKET, sizeof(addr.sun_path) - 1);
       if (connect(fdUnix, (sockaddr *)&addr, sizeof(sockaddr)) == 0)
       {
-        bool bExit = false;
+        bool bExit = false, bFirst = true, bSniff = false;
         char szBuffer[65536];
         int nReturn;
         size_t unPosition;
-        string strBuffers[2], strJson;
+        string strBuffers[2], strJson, strLine;
         Json *ptJson = new Json;
+        if (strFunction == "sniff")
+        {
+          bSniff = true;
+        }
         ptJson->i("Function", strFunction);
         if (!strInterface.empty())
         {
@@ -164,26 +175,54 @@ bool request(const string strFunction, const string strInterface, string &strRes
               if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
               {
                 strBuffers[0].append(szBuffer, nReturn);
-                if ((unPosition = strBuffers[0].find("\n")) != string::npos)
+                while (!bExit && (unPosition = strBuffers[0].find("\n")) != string::npos)
                 {
-                  Json *ptJson = new Json(strBuffers[0].substr(0, unPosition));
+                  strLine = strBuffers[0].substr(0, unPosition);
                   strBuffers[0].erase(0, (unPosition + 1));
-                  bExit = true;
-                  if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+                  if (bSniff && !bFirst)
                   {
-                    bResult = true;
-                    if (ptJson->m.find("Response") != ptJson->m.end() && !ptJson->m["Response"]->v.empty())
-                    {
-                      strResponse = ptJson->m["Response"]->v;
-                    }
-                  }
-                  else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
-                  {
-                    strError = ptJson->m["Error"]->v;
+                    cout << strLine << endl;
                   }
                   else
                   {
-                    strError = "Encountered an unknown error.";
+                    Json *ptJson = new Json(strLine);
+                    if (!bSniff)
+                    {
+                      bExit = true;
+                    }
+                    bFirst = false;
+                    if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+                    {
+                      bResult = true;
+                      if (ptJson->m.find("Response") != ptJson->m.end() && !ptJson->m["Response"]->v.empty())
+                      {
+                        strResponse = ptJson->m["Response"]->v;
+                      }
+                      if (bSniff)
+                      {
+                        cout << "-- sniffing ";
+                        if (!strInterface.empty())
+                        {
+                          cout << strInterface << " interface";
+                        }
+                        else
+                        {
+                          cout << " all interfaces";
+                        }
+                        cout << " --" << endl;
+                      }
+                    }
+                    else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+                    {
+                      bExit = true;
+                      strError = ptJson->m["Error"]->v;
+                    }
+                    else
+                    {
+                      bExit = true;
+                      strError = "Encountered an unknown error.";
+                    }
+                    delete ptJson;
                   }
                 }
               }

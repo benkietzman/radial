@@ -451,7 +451,7 @@ void Hub::process(string strPrefix)
           // {{{ prep work
           bool bExit = false;
           int nReturn;
-          map<int, vector<string> > m;
+          map<int, vector<string> > m, s;
           pollfd *fds;
           size_t unIndex, unPosition;
           string strJson, strValue;
@@ -583,6 +583,13 @@ void Hub::process(string strPrefix)
                                 ptJson->j(p.p);
                                 delete ptJson;
                                 m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
+                              }
+                            }
+                            for (auto &i : m)
+                            {
+                              if (i.second.size() == 3 && (i.second[2].empty() || i.second[2] == p.t))
+                              {
+                                i.second[1].append(p.p + "\n");
                               }
                             }
                           }
@@ -916,6 +923,33 @@ void Hub::process(string strPrefix)
                             {
                               bProcessed = true;
                               ptJson->i("Response", ssInterfaces.str());
+                            }
+                            else if (ptJson->m["Function"]->v == "sniff")
+                            {
+                              if (!strInterface.empty())
+                              {
+                                if (exist(ptInterfaces, strInterface))
+                                {
+                                  if (m_i.find(strInterface) != m_i.end())
+                                  {
+                                    bProcessed = true;
+                                    m[fds[i].fd][2] = strInterface;
+                                  }
+                                  else
+                                  {
+                                    ssMessage << "Interface is not running.";
+                                  }
+                                }
+                                else
+                                {
+                                  ssMessage << "Please provide a valid Interface:  " << ssInterfaces.str() << ".";
+                                }
+                              }
+                              else
+                              {
+                                bProcessed = true;
+                                m[fds[i].fd][2] = "";
+                              }
                             }
                             else if (ptJson->m["Function"]->v == "start")
                             {
