@@ -587,9 +587,11 @@ void Hub::process(string strPrefix)
                             }
                             for (auto &manager : m)
                             {
-                              if (manager.second.size() == 3 && (manager.second[2].empty() || manager.second[2] == p.t))
+                              if (manager.second.size() == 3 && (manager.second[2].empty() || manager.second[2] == p.s || manager.second[2] == p.t))
                               {
-                                manager.second[1].append(p.p + "\n");
+                                ssMessage.str("");
+                                ssMessage << "[" << p.s << "-->" << p.t << "] " << p.p << endl;
+                                manager.second[1].append(ssMessage.str());
                               }
                             }
                           }
@@ -597,6 +599,15 @@ void Hub::process(string strPrefix)
                           {
                             p.d = "s";
                             m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
+                            for (auto &manager : m)
+                            {
+                              if (manager.second.size() == 3 && (manager.second[2].empty() || manager.second[2] == p.s || manager.second[2] == p.t))
+                              {
+                                ssMessage.str("");
+                                ssMessage << "[" << p.s << "<--" << p.t << "] " << p.p << endl;
+                                manager.second[1].append(ssMessage.str());
+                              }
+                            }
                           }
                         }
                         else
