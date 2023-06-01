@@ -1084,7 +1084,7 @@ void Hub::process(string strPrefix)
                   {
                     if (m_pUtility->fdWrite(fds[i].fd, m[fds[i].fd][1], nReturn))
                     {
-                      if (m[fds[i].fd][1].empty())
+                      if (mfds[i].fd].size() == 2 && m[fds[i].fd][1].empty())
                       {
                         managerRemovals.push_back(fds[i].fd);
                       }
