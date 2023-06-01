@@ -585,11 +585,11 @@ void Hub::process(string strPrefix)
                                 m_i[p.s]->strBuffers[1].append(pack(p, strValue) + "\n");
                               }
                             }
-                            for (auto &i : m)
+                            for (auto &manager : m)
                             {
-                              if (i.second.size() == 3 && (i.second[2].empty() || i.second[2] == p.t))
+                              if (manager.second.size() == 3 && (manager.second[2].empty() || manager.second[2] == p.t))
                               {
-                                i.second[1].append(p.p + "\n");
+                                manager.second[1].append(p.p + "\n");
                               }
                             }
                           }
