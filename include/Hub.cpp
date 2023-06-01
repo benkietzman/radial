@@ -933,7 +933,7 @@ void Hub::process(string strPrefix)
                                   if (m_i.find(strInterface) != m_i.end())
                                   {
                                     bProcessed = true;
-                                    m[fds[i].fd][2] = strInterface;
+                                    m[fds[i].fd].push_back(strInterface);
                                   }
                                   else
                                   {
@@ -948,7 +948,7 @@ void Hub::process(string strPrefix)
                               else
                               {
                                 bProcessed = true;
-                                m[fds[i].fd][2] = "";
+                                m[fds[i].fd].push_back("");
                               }
                             }
                             else if (ptJson->m["Function"]->v == "start")
