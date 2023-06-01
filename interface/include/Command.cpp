@@ -444,8 +444,8 @@ void Command::process(string strPrefix)
         ptJson->i("Error", (*i)->strError);
       }
       ptJson->j(p.p);
-      hub(p, false);
       delete ptJson;
+      hub(p, false);
       delete *i;
       commands.erase(i);
     }
