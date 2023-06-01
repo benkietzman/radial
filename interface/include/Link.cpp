@@ -208,7 +208,7 @@ void Link::process(string strPrefix)
         list<int> removals;
         pollfd *fds;
         size_t unIndex, unPosition, unUnique = 0;
-        string strLine, strValue;
+        string strLine;
         time_t CBootstrap, CTime, unBootstrapSleep = 0;
         Json *ptBoot = new Json;
         ssMessage.str("");
@@ -390,7 +390,6 @@ void Link::process(string strPrefix)
               if (link->fdSocket != -1)
               {
                 Json *ptWrite = new Json;
-                radialPacket p;
                 freeaddrinfo(link->result);
                 ptWrite->i("_f", "handshake");
                 ptWrite->i("Password", m_strPassword);
@@ -413,9 +412,8 @@ void Link::process(string strPrefix)
                 ptWrite->m["Me"]->i("Node", m_ptLink->m["Node"]->v);
                 ptWrite->m["Me"]->i("Server", m_ptLink->m["Server"]->v);
                 ptWrite->m["Me"]->i("Port", m_ptLink->m["Port"]->v, 'n');
-                ptWrite->j(p.p);
+                link->responses.push_back(ptWrite->j(strJson));
                 delete ptWrite;
-                link->responses.push_back(pack(p, strValue));
                 ptWrite = new Json;
                 ptWrite->i("_f", "interfaces");
                 ptWrite->m["Interfaces"] = new Json;
@@ -430,9 +428,8 @@ void Link::process(string strPrefix)
                   ptWrite->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
                   ptWrite->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                 }
-                ptWrite->j(p.p);
+                link->responses.push_back(ptWrite->j(strJson));
                 delete ptWrite;
-                link->responses.push_back(pack(p, strValue));
               }
               // }}}
             }
@@ -499,18 +496,26 @@ void Link::process(string strPrefix)
               {
                 while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
                 {
-                  Json *ptJson;
+                  string strPayload, strRoute;
+                  stringstream ssData;
+                  Json *ptJson, *ptRoute;
                   radialPacket p;
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
+                  ssData.str(strLine);
+                  getline(ssData, strRoute, m_cDelimiter);
+                  ptRoute = new Json(strRoute);
                   ptJson = new Json(p.p);
-                  if (p.s == m_strName && !p.u.empty())
+                  ptJson->merge(ptRoute, true, false);
+                  delete ptRoute;
+                  ptJson->j(strLine);
+                  if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
                   {
                     int fdLink;
                     size_t unUnique;
                     string strValue;
-                    stringstream ssUnique(p.u);
+                    stringstream ssUnique(ptJson->m["_u"]->v);
                     radialLink *ptLink = NULL;
                     ssUnique >> strValue >> fdLink >> unUnique;
                     for (auto i = links.begin(); ptLink == NULL && i != links.end(); i++)
@@ -533,7 +538,6 @@ void Link::process(string strPrefix)
                     if (ptLink != NULL)
                     {
                       Json *ptSubLink = NULL;
-                      radialPacket subp;
                       if (exist(ptJson, "_l"))
                       {
                         ptSubLink = ptJson->m["_l"];
@@ -544,8 +548,7 @@ void Link::process(string strPrefix)
                       {
                         ptJson->m["_l"] = ptSubLink;
                       }
-                      ptJson->j(subp.p);
-                      ptLink->responses.push_back(pack(subp, strValue));
+                      ptLink->responses.push_back(ptJson->j(strJson));
                     }
                     else
                     {
@@ -554,7 +557,7 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (p.s == "hub")
+                  else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
                   {
                     if (!empty(ptJson, "Function"))
                     {
@@ -565,18 +568,17 @@ void Link::process(string strPrefix)
                         if (exist(ptJson, "Interfaces"))
                         {
                           Json *ptWrite = new Json;
-                          radialPacket subp;
                           ptWrite->i("_f", "interfaces");
                           ptWrite->m["Interfaces"] = new Json(ptJson->m["Interfaces"]);
-                          ptWrite->j(subp.p);
+                          ptWrite->j(strJson);
                           delete ptWrite;
                           for (auto &link : links)
                           {
-                            link->responses.push_back(pack(subp, strValue));
+                            link->responses.push_back(strJson);
                           }
                           for (auto &link : m_l)
                           {
-                            link->responses.push_back(pack(subp, strValue));
+                            link->responses.push_back(strJson);
                           }
                         }
                       }
@@ -621,28 +623,18 @@ void Link::process(string strPrefix)
                       if (linkIter != m_l.end())
                       {
                         Json *ptLink = new Json;
-                        radialPacket p;
                         delete ptJson->m["Node"];
                         ptJson->m.erase("Node");
-                        if (!p.d.empty())
+                        for (auto &i : ptJson->m)
                         {
-                          ptLink->i("_d", p.d);
+                          if (!i.first.empty() && i.first[0] == '_')
+                          {
+                            ptLink->i(i.first, i.second);
+                          }
                         }
-                        if (!p.s.empty())
-                        {
-                          ptLink->i("_s", p.s);
-                        }
-                        if (!p.t.empty())
-                        {
-                          ptLink->i("_t", p.t);
-                        }
-                        if (!p.u.empty())
-                        {
-                          ptLink->i("_u", p.u);
-                        }
+                        keyRemovals(ptJson);
                         ptJson->m["_l"] = ptLink;
-                        ptJson->j(p.p);
-                        (*linkIter)->responses.push_back(pack(p, strValue));
+                        (*linkIter)->responses.push_back(ptJson->j(strJson));
                       }
                       else
                       {
@@ -658,7 +650,7 @@ void Link::process(string strPrefix)
                       {
                         if ((!exist(ptJson, "Node") || empty(ptJson, "Node") || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
                         {
-                          link->responses.push_back(pack(p, strValue));
+                          link->responses.push_back(strLine);
                         }
                       }
                     }
@@ -765,7 +757,6 @@ void Link::process(string strPrefix)
                   size_t unReturn;
                   Json *ptWrite = new Json;
                   radialLink *ptLink = new radialLink;
-                  radialPacket p;
                   ptLink->bAuthenticated = false;
                   ptLink->bRetry = bRetry;
                   ptLink->fdConnecting = -1;
@@ -794,9 +785,8 @@ void Link::process(string strPrefix)
                   ptWrite->m["Me"]->i("Node", m_ptLink->m["Node"]->v);
                   ptWrite->m["Me"]->i("Server", m_ptLink->m["Server"]->v);
                   ptWrite->m["Me"]->i("Port", m_ptLink->m["Port"]->v, 'n');
-                  ptWrite->j(p.p);
+                  ptLink->responses.push_back(ptWrite->j(strJson));
                   delete ptWrite;
-                  ptLink->responses.push_back(pack(p, strValue));
                   ptWrite = new Json;
                   ptWrite->i("_f", "interfaces");
                   ptWrite->m["Interfaces"] = new Json;
@@ -811,9 +801,8 @@ void Link::process(string strPrefix)
                     ptWrite->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
                     ptWrite->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
                   }
-                  ptWrite->j(p.p);
+                  ptLink->responses.push_back(ptWrite->j(strJson));
                   delete ptWrite;
-                  ptLink->responses.push_back(pack(p, strValue));
                   if ((unReturn = add(links, ptLink)) == 0)
                   {
                     SSL_shutdown(ssl);
@@ -871,27 +860,8 @@ void Link::process(string strPrefix)
                   {
                     while ((unPosition = ptLink->strBuffers[0].find("\n")) != string::npos)
                     {
-                      string strRoute, strPayload;
-                      stringstream ssData;
-                      Json *ptJson;
-                      radialPacket p;
-                      strLine = ptLink->strBuffers[0].substr(0, unPosition);
+                      Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
-                      unpack(strLine, p);
-                      ssData.str(strLine);
-                      getline(ssData, strRoute, m_cDelimiter);
-                      getline(ssData, strPayload, m_cDelimiter);
-                      if (!strPayload.empty())
-                      {
-                        Json *ptRoute = new Json(strRoute);
-                        ptJson = new Json(strPayload);
-                        ptJson->merge(ptRoute, true, false);
-                        delete ptRoute;
-                      }
-                      else
-                      {
-                        ptJson = new Json(strRoute);
-                      }
                       // {{{ _f
                       if (!empty(ptJson, "_f"))
                       {
@@ -1132,16 +1102,14 @@ void Link::process(string strPrefix)
                             {
                               ptJson->i("Status", "error");
                               ptJson->i("Error", "Interface does not exist.");
-                              ptJson->j(p.p);
-                              ptLink->responses.push_back(pack(p, strValue));
+                              ptLink->responses.push_back(ptJson->j(strJson));
                             }
                           }
                           else
                           {
                             ptJson->i("Status", "error");
                             ptJson->i("Error", "Failed authentication.");
-                            ptJson->j(p.p);
-                            ptLink->responses.push_back(pack(p, strValue));
+                            ptLink->responses.push_back(ptJson->j(strJson));
                           }
                         }
                       }
@@ -1151,8 +1119,7 @@ void Link::process(string strPrefix)
                       {
                         ptJson->i("Status", "error");
                         ptJson->i("Error", "Please provide the _f or Interface.");
-                        ptJson->j(p.p);
-                        ptLink->responses.push_back(pack(p, strValue));
+                        ptLink->responses.push_back(ptJson->j(strJson));
                       }
                       // }}}
                       delete ptJson;
