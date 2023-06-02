@@ -323,9 +323,9 @@ bool Central::applicationAccount(data &d, string &e)
   if (!empty(i, "id"))
   {
     q << "select id, application_id, user_id, encrypt, aes, password, ";
-    if (!empty(i, "aes") && i->m["aes"]->v != "0")
+    if (!m_strAesSecret.empty())
     {
-      q << "aes_decrypt(from_base64(password), sha2('" << esc(i->m["aes"]->v) << "', 512)) decrypted_password, ";
+      q << "aes_decrypt(from_base64(password), sha2('" << esc(m_strAesSecret) << "', 512)) decrypted_password, ";
     }
     q << "type_id, description from application_account where id = " << i->m["id"]->v;
     auto g = dbq(q.str(), e);
@@ -416,9 +416,9 @@ bool Central::applicationAccountAdd(data &d, string &e)
               {
                 q << "0, concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
               }
-              else if (!empty(i, "aes") && i->m["aes"]->v != "0")
+              else if (!m_strAesSecret.empty())
               {
-                q << "1, to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(i->m["aes"]->v) << "', 512)))";
+                q << "1, to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(m_strAesSecret) << "', 512)))";
               }
               else
               {
@@ -497,9 +497,9 @@ bool Central::applicationAccountEdit(data &d, string &e)
               {
                 q << "0, `password` = concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
               }
-              else if (!empty(i, "aes") && i->m["aes"]->v != "0")
+              else if (!m_strAesSecret.empty())
               {
-                q << "1, `password` = to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(i->m["aes"]->v) << "', 512)))";
+                q << "1, `password` = to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(m_strAesSecret) << "', 512)))";
               }
               else
               {
@@ -599,9 +599,9 @@ bool Central::applicationAccountsByApplicationID(data &d, string &e)
     if (d.g || isApplicationDeveloper(a, e))
     {
       q << "select id, application_id, user_id, encrypt, aes, password, ";
-      if (!empty(i, "aes") && i->m["aes"]->v != "0")
+      if (!m_strAesSecret.empty())
       {
-        q << "aes_decrypt(from_base64(password), sha2('" << esc(i->m["aes"]->v) << "', 512)) decrypted_password, ";
+        q << "aes_decrypt(from_base64(password), sha2('" << esc(m_strAesSecret) << "', 512)) decrypted_password, ";
       }
       q << "type_id, description from application_account where application_id = " << i->m["application_id"]->v << " order by user_id";
       if (exist(i, "page"))
