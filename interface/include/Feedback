@@ -25,8 +25,18 @@ namespace radial
 class Feedback : public Interface
 {
   protected:
-  bool answers(const string strQuestionID, list<map<string, string> > &getAnswer, string &strError);
-  bool questions(const string strSurveyID, list<map<string, string> > &getQuestion, string &strError);
+  map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
+
+  bool answers(radialUser &d, string &e);
+  bool questions(radialUser &d, string &e);
+  bool results(radialUser &d, string &e);
+  bool resultAdd(radialUser &d, string &e);
+  bool survey(radialUser &d, string &e);
+  bool surveyEdit(radialUser &d, string &e);
+  bool surveyRemove(radialUser &d, string &e);
+  bool surveys(radialUser &d, string &e);
+  bool type(radialUser &d, string &e);
+  bool types(radialUser &d, string &e);
 
   public:
   Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));

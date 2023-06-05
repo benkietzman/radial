@@ -21,6 +21,17 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ structs
+// {{{ radialUser
+struct radialUser
+{
+  bool g;
+  map<string, bool> auth;
+  string u;
+  Json *p;
+};
+// }}}
+// }}}
 // {{{ Interface
 class Interface : public Base
 {
@@ -30,9 +41,11 @@ class Interface : public Base
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutexShare;
+  string m_strAesSecret;
   string m_strBuffers[2];
+  string m_strJwtSecret;
+  string m_strJwtSigner;
   string m_strMaster;
-  string m_strName;
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
@@ -50,13 +63,21 @@ class Interface : public Base
   void email(const string strFrom, const string strTo, const string strSubject, const string strText, const string strHtml, string &strError);
   void email(const string strFrom, list<string> to, const string strSubject, const string strText, const string strHtml, string &strError);
   void email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError);
+  string getUserEmail(radialUser &d);
+  string getUserFirstName(radialUser &d);
+  string getUserLastName(radialUser &d); 
+  string getUserName(radialUser &d);
   bool interfaceAdd(const string strInterface, string &strError);
   bool interfaceAdd(const string strNode, const string strInterface, string &strError);
   bool interfaceRemove(const string strInterface, string &strError);
   bool interfaceRemove(const string strNode, const string strInterface, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
+  bool isApplicationDeveloper(radialUser &d, string &e);
+  bool isServerAdmin(radialUser &d, string &e);
+  bool isLocalAdmin(radialUser &d, const string strApplication = "", const bool bAny = false, const bool bLocal = false);
   bool isMaster();
   bool isMasterSettled();
+  bool isValid(radialUser &d, const string strApplication = "");
   bool junction(list<Json *> in, list<Json *> &out, string &strError);
   bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
   void keyRemovals(Json *ptJson);
@@ -71,6 +92,7 @@ class Interface : public Base
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void notify(const string strMessage);
+  void ny(Json *ptJson, const string strField); 
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
@@ -81,6 +103,11 @@ class Interface : public Base
   bool storageRetrieve(const list<string> keys, Json *ptJson, string &strError);
   bool storageRetrieveKeys(const list<string> keysIn, list<string> &keysOut, string &strError);
   bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
+  bool user(radialUser &d, string &e);
+  void userDeinit(radialUser &d);
+  void userInit(radialUser &d);
+  void userInit(radialUser &i, radialUser &o);
+  void userInit(Json *ptJson, radialUser &d);
 
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool));

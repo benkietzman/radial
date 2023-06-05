@@ -28,28 +28,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_ptCred = new Json;
   if (m_pWarden != NULL)
   {
-    Json *ptAes = new Json, *ptJwt = new Json;
     m_pWarden->vaultRetrieve({"radial", "radial"}, m_ptCred, strError);
-    if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
-    {
-      if (!empty(ptAes, "Secret"))
-      {
-        m_strAesSecret = ptAes->m["Secret"]->v;
-      }
-    }
-    delete ptAes;
-    if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
-    {
-      if (!empty(ptJwt, "Secret"))
-      {
-        m_strJwtSecret = ptJwt->m["Secret"]->v;
-      }
-      if (!empty(ptJwt, "Signer"))
-      {
-        m_strJwtSigner = ptJwt->m["Signer"]->v;
-      }
-    }
-    delete ptJwt;
   }
   m_functions["accountType"] = &Central::accountType;
   m_functions["accountTypes"] = &Central::accountTypes;
@@ -132,7 +111,7 @@ Central::~Central()
 }
 // }}}
 // {{{ accountType()
-bool Central::accountType(data &d, string &e)
+bool Central::accountType(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -165,7 +144,7 @@ bool Central::accountType(data &d, string &e)
 }
 // }}}
 // {{{ accountTypes()
-bool Central::accountTypes(data &d, string &e)
+bool Central::accountTypes(radialUser &d, string &e)
 {
   bool b = false;
   string k = "account_type";
@@ -198,7 +177,7 @@ bool Central::accountTypes(data &d, string &e)
 }
 // }}}
 // {{{ application()
-bool Central::application(data &d, string &e)
+bool Central::application(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -232,14 +211,14 @@ bool Central::application(data &d, string &e)
           ssValue >> unValue;
           if (unValue > 0)
           {
-            data l;
-            init(d, l);
+            radialUser l;
+            userInit(d, l);
             l.p->m["i"]->i("id", j->m["login_type_id"]->v);
             if (loginType(l, e))
             {
               j->i("login_type", l.p->m["o"]);
             }
-            deinit(l);
+            userDeinit(l);
           }
         }
         if (!empty(j, "menu_id"))
@@ -249,14 +228,14 @@ bool Central::application(data &d, string &e)
           ssValue >> unValue;
           if (unValue > 0)
           {
-            data m;
-            init(d, m);
+            radialUser m;
+            userInit(d, m);
             m.p->m["i"]->i("id", j->m["menu_id"]->v);
             if (menuAccess(m, e))
             {
               j->i("menu_access", m.p->m["o"]);
             }
-            deinit(m);
+            userDeinit(m);
           }
         }
         if (!empty(j, "notify_priority_id"))
@@ -266,14 +245,14 @@ bool Central::application(data &d, string &e)
           ssValue >> unValue;
           if (unValue > 0)
           {
-            data n;
-            init(d, n);
+            radialUser n;
+            userInit(d, n);
             n.p->m["i"]->i("id", j->m["notify_priority_id"]->v);
             if (notifyPriority(n, e))
             {
               j->i("notify_priority", n.p->m["o"]);
             }
-            deinit(n);
+            userDeinit(n);
           }
         }
         if (!empty(j, "package_type_id"))
@@ -283,14 +262,14 @@ bool Central::application(data &d, string &e)
           ssValue >> unValue;
           if (unValue > 0)
           {
-            data p;
-            init(d, p);
+            radialUser p;
+            userInit(d, p);
             p.p->m["i"]->i("id", j->m["package_type_id"]->v);
             if (packageType(p, e))
             {
               j->i("package_type", p.p->m["o"]);
             }
-            deinit(p);
+            userDeinit(p);
           }
         }
         ny(j, "secure_port");
@@ -314,7 +293,7 @@ bool Central::application(data &d, string &e)
 }
 // }}}
 // {{{ applicationAccount()
-bool Central::applicationAccount(data &d, string &e)
+bool Central::applicationAccount(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -333,9 +312,9 @@ bool Central::applicationAccount(data &d, string &e)
     {
       if (!g->empty())
       {
-        data a;
+        radialUser a;
         Json *j = new Json(g->front());
-        init(d, a);
+        userInit(d, a);
         a.p->m["i"]->i("id", j->m["application_id"]->v);
         if (d.g || isApplicationDeveloper(a, e))
         {
@@ -365,7 +344,7 @@ bool Central::applicationAccount(data &d, string &e)
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(a);
+        userDeinit(a);
         delete j;
       }
       else
@@ -384,7 +363,7 @@ bool Central::applicationAccount(data &d, string &e)
 }
 // }}}
 // {{{ applicationAccountAdd()
-bool Central::applicationAccountAdd(data &d, string &e)
+bool Central::applicationAccountAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -392,8 +371,8 @@ bool Central::applicationAccountAdd(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -460,7 +439,7 @@ bool Central::applicationAccountAdd(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -471,7 +450,7 @@ bool Central::applicationAccountAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationAccountEdit()
-bool Central::applicationAccountEdit(data &d, string &e)
+bool Central::applicationAccountEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -479,8 +458,8 @@ bool Central::applicationAccountEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (applicationAccount(a, e))
     {
@@ -544,7 +523,7 @@ bool Central::applicationAccountEdit(data &d, string &e)
         e = "Please provide the user_id.";
       }
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -555,7 +534,7 @@ bool Central::applicationAccountEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationAccountRemove()
-bool Central::applicationAccountRemove(data &d, string &e)
+bool Central::applicationAccountRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -563,8 +542,8 @@ bool Central::applicationAccountRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (applicationAccount(a, e))
     {
@@ -574,7 +553,7 @@ bool Central::applicationAccountRemove(data &d, string &e)
         b = true;
       }
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -585,7 +564,7 @@ bool Central::applicationAccountRemove(data &d, string &e)
 }
 // }}}
 // {{{ applicationAccountsByApplicationID()
-bool Central::applicationAccountsByApplicationID(data &d, string &e)
+bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -593,8 +572,8 @@ bool Central::applicationAccountsByApplicationID(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -642,14 +621,14 @@ bool Central::applicationAccountsByApplicationID(data &d, string &e)
           ny(j, "encrypt");
           if (!empty(j, "type_id"))
           {
-            data t;
-            init(d, t);
+            radialUser t;
+            userInit(d, t);
             t.p->m["i"]->i("id", j->m["type_id"]->v);
             if (accountType(t, e))
             {
               j->i("type", t.p->m["o"]);
             }
-            deinit(t);
+            userDeinit(t);
           }
           o->pb(j);
           delete j;
@@ -661,7 +640,7 @@ bool Central::applicationAccountsByApplicationID(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -672,7 +651,7 @@ bool Central::applicationAccountsByApplicationID(data &d, string &e)
 }
 // }}}
 // {{{ applicationAdd()
-bool Central::applicationAdd(data &d, string &e)
+bool Central::applicationAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -682,8 +661,8 @@ bool Central::applicationAdd(data &d, string &e)
   {
     if (!empty(i, "name"))
     {
-      data a;
-      init(d, a);
+      radialUser a;
+      userInit(d, a);
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!application(a, e) && e == "No results returned.")
       {
@@ -692,14 +671,14 @@ bool Central::applicationAdd(data &d, string &e)
         q << "insert into application (name, creation_date) values ('" << esc(i->m["name"]->v) << "', now())";
         if (dbu(q.str(), strID, e))
         {
-          data u;
+          radialUser u;
           o->i("id", strID);
-          init(d, u);
+          userInit(d, u);
           u.p->m["i"]->i("userid", d.u);
           if (user(u, e) && !empty(u.p->m["o"], "id"))
           {
-            data c;
-            init(d, c);
+            radialUser c;
+            userInit(d, c);
             c.p->m["i"]->i("type", "Primary Developer");
             if (contactType(c, e) && !empty(c.p->m["o"], "id"))
             {
@@ -710,16 +689,16 @@ bool Central::applicationAdd(data &d, string &e)
                 b = true;
               }
             }
-            deinit(c);
+            userDeinit(c);
           }
-          deinit(u);
+          userDeinit(u);
         }
       }
       else if (e.empty())
       {
         e = "Application already exists.";
       }
-      deinit(a);
+      userDeinit(a);
     }
     else
     {
@@ -735,7 +714,7 @@ bool Central::applicationAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationDepend()
-bool Central::applicationDepend(data &d, string &e)
+bool Central::applicationDepend(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -768,7 +747,7 @@ bool Central::applicationDepend(data &d, string &e)
 }
 // }}}
 // {{{ applicationDependAdd()
-bool Central::applicationDependAdd(data &d, string &e)
+bool Central::applicationDependAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -778,8 +757,8 @@ bool Central::applicationDependAdd(data &d, string &e)
   {
     if (!empty(i, "dependant_id"))
     {
-      data a;
-      init(d, a);
+      radialUser a;
+      userInit(d, a);
       a.p->m["i"]->i("id", i->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(a, e))
       {
@@ -795,7 +774,7 @@ bool Central::applicationDependAdd(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(a);
+      userDeinit(a);
     }
     else
     {
@@ -811,7 +790,7 @@ bool Central::applicationDependAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationDependRemove()
-bool Central::applicationDependRemove(data &d, string &e)
+bool Central::applicationDependRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -819,13 +798,13 @@ bool Central::applicationDependRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (applicationDepend(a, e) && !empty(a.p->m["o"], "application_id"))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(c, e))
       {
@@ -839,9 +818,9 @@ bool Central::applicationDependRemove(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -852,7 +831,7 @@ bool Central::applicationDependRemove(data &d, string &e)
 }
 // }}}
 // {{{ applicationEdit()
-bool Central::applicationEdit(data &d, string &e)
+bool Central::applicationEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -860,8 +839,8 @@ bool Central::applicationEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -966,7 +945,7 @@ bool Central::applicationEdit(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -977,7 +956,7 @@ bool Central::applicationEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssue()
-bool Central::applicationIssue(data &d, string &e)
+bool Central::applicationIssue(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -995,14 +974,14 @@ bool Central::applicationIssue(data &d, string &e)
         b = true;
         if (exist(i, "comments") && i->m["comments"]->v == "1" && !empty(j, "id"))
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("issue_id", j->m["id"]->v);
           if (applicationIssueComments(a, e))
           {
             j->i("comments", a.p->m["o"]);
           }
-          deinit(a);
+          userDeinit(a);
         }
         d.p->i("o", j);
         delete j;
@@ -1023,7 +1002,7 @@ bool Central::applicationIssue(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueAdd()
-bool Central::applicationIssueAdd(data &d, string &e)
+bool Central::applicationIssueAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1067,23 +1046,23 @@ bool Central::applicationIssueAdd(data &d, string &e)
         o->i("id", strID);
         if (!empty(i, "comments"))
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("issue_id", strID);
           a.p->m["i"]->i("comments", i->m["comments"]->v);
           applicationIssueCommentAdd(a, e);
-          deinit(a);
+          userDeinit(a);
         }
         if (!empty(i, "server"))
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("id", strID);
           a.p->m["i"]->i("action", "add");
           a.p->m["i"]->i("application_id", i->m["application_id"]->v);
           a.p->m["i"]->i("server", i->m["server"]->v);
           applicationIssueEmail(a, e);
-          deinit(a);
+          userDeinit(a);
         }
       }
     }
@@ -1101,7 +1080,7 @@ bool Central::applicationIssueAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueClose()
-bool Central::applicationIssueClose(data &d, string &e)
+bool Central::applicationIssueClose(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1131,7 +1110,7 @@ bool Central::applicationIssueClose(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueCommentAdd()
-bool Central::applicationIssueCommentAdd(data &d, string &e)
+bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1159,14 +1138,14 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
               o->i("id", strID);
               if (!empty(i, "server"))
               {
-                data c;
-                init(d, c);
+                radialUser c;
+                userInit(d, c);
                 c.p->m["i"]->i("id", i->m["issue_id"]->v);
                 c.p->m["i"]->i("action", "update");
                 c.p->m["i"]->i("application_id", i->m["application_id"]->v);
                 c.p->m["i"]->i("server", i->m["server"]->v);
                 applicationIssueEmail(c, e);
-                deinit(c);
+                userDeinit(c);
               }
             }
           }
@@ -1196,7 +1175,7 @@ bool Central::applicationIssueCommentAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueCommentEdit()
-bool Central::applicationIssueCommentEdit(data &d, string &e)
+bool Central::applicationIssueCommentEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1270,7 +1249,7 @@ bool Central::applicationIssueCommentEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueComments()
-bool Central::applicationIssueComments(data &d, string &e)
+bool Central::applicationIssueComments(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1303,7 +1282,7 @@ bool Central::applicationIssueComments(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueEdit()
-bool Central::applicationIssueEdit(data &d, string &e)
+bool Central::applicationIssueEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1311,8 +1290,8 @@ bool Central::applicationIssueEdit(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("application_id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -1375,7 +1354,7 @@ bool Central::applicationIssueEdit(data &d, string &e)
         e = "Please provide the id.";
       }
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -1386,7 +1365,7 @@ bool Central::applicationIssueEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssueEmail()
-bool Central::applicationIssueEmail(data &d, string &e)
+bool Central::applicationIssueEmail(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1402,19 +1381,19 @@ bool Central::applicationIssueEmail(data &d, string &e)
         {
           if (!empty(i, "id"))
           {
-            data a;
-            init(d, a);
+            radialUser a;
+            userInit(d, a);
             a.p->m["i"]->i("id", i->m["id"]->v);
             a.p->m["i"]->i("comments", "1", 'n');
             if (applicationIssue(a, e) && !empty(a.p->m["o"], "application_id"))
             {
-              data c;
-              init(d, c);
+              radialUser c;
+              userInit(d, c);
               c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
               if (application(c, e) && !empty(c.p->m["o"], "id") && !empty(c.p->m["o"], "name"))
               {
-                data f;
-                init(d, f);
+                radialUser f;
+                userInit(d, f);
                 f.p->m["i"]->i("application_id", c.p->m["o"]->m["id"]->v);
                 f.p->m["i"]->i("Primary Developer", "1", 'n');
                 f.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -1437,14 +1416,14 @@ bool Central::applicationIssueEmail(data &d, string &e)
                   }
                   if (i->m["action"]->v == "transfer" && !empty(i, "application_id"))
                   {
-                    data h;
-                    init(d, h);
+                    radialUser h;
+                    userInit(d, h);
                     h.p->m["i"]->i("id", i->m["application_id"]->v);
                     if (application(h, e) && !empty(h.p->m["o"], "name"))
                     {
-                      data k;
+                      radialUser k;
                       strApplication = h.p->m["o"]->m["name"]->v;
-                      init(d, k);
+                      userInit(d, k);
                       k.p->m["i"]->i("application_id", i->m["application_id"]->v);
                       k.p->m["i"]->i("Primary Developer", "1", 'n');
                       k.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -1458,9 +1437,9 @@ bool Central::applicationIssueEmail(data &d, string &e)
                           }
                         }
                       }
-                      deinit(k);
+                      userDeinit(k);
                     }
-                    deinit(h);
+                    userDeinit(h);
                   }
                   if (exist(a.p->m["o"], "comments"))
                   {
@@ -1540,11 +1519,11 @@ bool Central::applicationIssueEmail(data &d, string &e)
                   email(getUserEmail(d), to, s.str(), m[1].str(), m[0].str(), e);
                   b = true;
                 }
-                deinit(f);
+                userDeinit(f);
               }
-              deinit(c);
+              userDeinit(c);
             }
-            deinit(a);
+            userDeinit(a);
           }
           else
           {
@@ -1575,7 +1554,7 @@ bool Central::applicationIssueEmail(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssues()
-bool Central::applicationIssues(data &d, string &e)
+bool Central::applicationIssues(radialUser &d, string &e)
 {
   bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact;
   string strCloseDateEnd, strCloseDateStart, strCommenter, strDisplay, strOpenDateEnd, strOpenDateStart;
@@ -1637,14 +1616,14 @@ bool Central::applicationIssues(data &d, string &e)
       Json *j = new Json(r);
       if (bApplication)
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("id", r["application_id"]);
         if (application(a, e))
         {
-          data c;
+          radialUser c;
           j->i("application", a.p->m["o"]);
-          init(d, c);
+          userInit(d, c);
           c.p->m["i"]->i("application_id", r["application_id"]);
           if (bPrimaryDeveloper)
           {
@@ -1676,14 +1655,14 @@ bool Central::applicationIssues(data &d, string &e)
               }
             }
           }
-          deinit(c);
+          userDeinit(c);
         }
-        deinit(a);
+        userDeinit(a);
       }
       if (bComments)
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("issue_id", r["id"]);
         if (applicationIssueComments(a, e))
         {
@@ -1699,7 +1678,7 @@ bool Central::applicationIssues(data &d, string &e)
             }
           }
         }
-        deinit(a);
+        userDeinit(a);
       }
       if (bUse)
       {
@@ -1714,7 +1693,7 @@ bool Central::applicationIssues(data &d, string &e)
 }
 // }}}
 // {{{ applicationIssuesByApplicationID()
-bool Central::applicationIssuesByApplicationID(data &d, string &e)
+bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1737,14 +1716,14 @@ bool Central::applicationIssuesByApplicationID(data &d, string &e)
         Json *j = new Json(r);
         if (!empty(i, "comments") && i->m["comments"]->v == "1")
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("issue_id", r["id"]);
           if (applicationIssueComments(a, e))
           {
             j->i("comments", a.p->m["o"]);
           }
-          deinit(a);
+          userDeinit(a);
         }
         o->pb(j);
         delete j;
@@ -1761,7 +1740,7 @@ bool Central::applicationIssuesByApplicationID(data &d, string &e)
 }
 // }}}
 // {{{ applicationNotify()
-bool Central::applicationNotify(data &d, string &e)
+bool Central::applicationNotify(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1787,18 +1766,18 @@ bool Central::applicationNotify(data &d, string &e)
       }
       if (!empty(i, "server"))
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("id", i->m["id"]->v);
         if (d.g || isApplicationDeveloper(a, e))
         {
-          data c;
-          init(d, c);
+          radialUser c;
+          userInit(d, c);
           c.p->m["i"]->i("id", i->m["id"]->v);
           if (application(c, e) && !empty(c.p->m["o"], "name"))
           {
-            data f;
-            init(d, f);
+            radialUser f;
+            userInit(d, f);
             f.p->m["i"]->i("application_id", i->m["id"]->v);
             f.p->m["i"]->i("Primary Developer", "1", 'n');
             f.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -1810,7 +1789,7 @@ bool Central::applicationNotify(data &d, string &e)
               for (auto &contact : f.p->m["o"]->l)
               {
                 stringstream s;
-                data h;
+                radialUser h;
                 if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                 {
                   if (!exist(o, contact->m["userid"]->v))
@@ -1841,7 +1820,7 @@ bool Central::applicationNotify(data &d, string &e)
                     o->m[contact->m["userid"]->v]->i("contact", "1", 1);
                   }
                 }
-                init(d, h);
+                userInit(d, h);
                 h.p->m["i"]->i("application_id", i->m["id"]->v);
                 h.p->m["i"]->i("contacts", "1", 'n');
                 if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
@@ -1874,7 +1853,7 @@ bool Central::applicationNotify(data &d, string &e)
                     }
                   }
                 }
-                deinit(h);
+                userDeinit(h);
                 s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
                 for (auto &k : o->m)
                 {
@@ -1959,15 +1938,15 @@ bool Central::applicationNotify(data &d, string &e)
                 }
               }
             }
-            deinit(f);
+            userDeinit(f);
           }
-          deinit(c);
+          userDeinit(c);
         }
         else
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(a);
+        userDeinit(a);
       }
       else
       {
@@ -1988,7 +1967,7 @@ bool Central::applicationNotify(data &d, string &e)
 }
 // }}}
 // {{{ applicationRemove()
-bool Central::applicationRemove(data &d, string &e)
+bool Central::applicationRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1996,8 +1975,8 @@ bool Central::applicationRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -2011,7 +1990,7 @@ bool Central::applicationRemove(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2022,7 +2001,7 @@ bool Central::applicationRemove(data &d, string &e)
 }
 // }}}
 // {{{ applications()
-bool Central::applications(data &d, string &e)
+bool Central::applications(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2064,8 +2043,8 @@ bool Central::applications(data &d, string &e)
       Json *j = new Json(r);
       if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("application_id", r["id"]);
         a.p->m["i"]->i("Primary Developer", "1", 'n');
         a.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -2074,18 +2053,18 @@ bool Central::applications(data &d, string &e)
         {
           j->i("contacts", a.p->m["o"]);
         }
-        deinit(a);
+        userDeinit(a);
       }
       if (!empty(i, "servers") && i->m["servers"]->v == "1")
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("application_id", r["id"]);
         if (serversByApplicationID(a, e))
         {
           j->i("servers", a.p->m["o"]);
         }
-        deinit(a);
+        userDeinit(a);
       }
       o->pb(j);
       delete j;
@@ -2097,7 +2076,7 @@ bool Central::applications(data &d, string &e)
 }
 // }}}
 // {{{ applicationsByServerID()
-bool Central::applicationsByServerID(data &d, string &e)
+bool Central::applicationsByServerID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2131,7 +2110,7 @@ bool Central::applicationsByServerID(data &d, string &e)
 }
 // }}}
 // {{{ applicationsByUserID()
-bool Central::applicationsByUserID(data &d, string &e)
+bool Central::applicationsByUserID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2160,7 +2139,7 @@ bool Central::applicationsByUserID(data &d, string &e)
 }
 // }}}
 // {{{ applicationServer()
-bool Central::applicationServer(data &d, string &e)
+bool Central::applicationServer(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2193,7 +2172,7 @@ bool Central::applicationServer(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerAdd()
-bool Central::applicationServerAdd(data &d, string &e)
+bool Central::applicationServerAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2201,8 +2180,8 @@ bool Central::applicationServerAdd(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
@@ -2221,7 +2200,7 @@ bool Central::applicationServerAdd(data &d, string &e)
         e = "Please provide the server_id.";
       }
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2232,7 +2211,7 @@ bool Central::applicationServerAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerDetail()
-bool Central::applicationServerDetail(data &d, string &e)
+bool Central::applicationServerDetail(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2265,7 +2244,7 @@ bool Central::applicationServerDetail(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerDetailAdd()
-bool Central::applicationServerDetailAdd(data &d, string &e)
+bool Central::applicationServerDetailAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2273,8 +2252,8 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
 
   if (!empty(i, "application_server_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_server_id"]->v);
     if (d.g || applicationServer(a, e))
     {
@@ -2326,7 +2305,7 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
         o->i("id", strID);
       }
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2337,7 +2316,7 @@ bool Central::applicationServerDetailAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerDetailEdit()
-bool Central::applicationServerDetailEdit(data &d, string &e)
+bool Central::applicationServerDetailEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2345,21 +2324,21 @@ bool Central::applicationServerDetailEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (applicationServerDetail(a, e) && !empty(a.p->m["o"], "application_server_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
       }
       if (d.g || (applicationServer(c, e) && !empty(c.p->m["o"], "id")))
       {
-        data f;
-        init(d, f);
+        radialUser f;
+        userInit(d, f);
         if (!d.g)
         {
           f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
@@ -2420,11 +2399,11 @@ bool Central::applicationServerDetailEdit(data &d, string &e)
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(f);
+        userDeinit(f);
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2435,7 +2414,7 @@ bool Central::applicationServerDetailEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerDetailRemove()
-bool Central::applicationServerDetailRemove(data &d, string &e)
+bool Central::applicationServerDetailRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2443,21 +2422,21 @@ bool Central::applicationServerDetailRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (applicationServerDetail(a, e) && !empty(a.p->m["o"], "application_server_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["application_server_id"]->v);
       }
       if (d.g || (applicationServer(c, e) && !empty(c.p->m["o"], "id")))
       {
-        data f;
-        init(d, f);
+        radialUser f;
+        userInit(d, f);
         if (!d.g)
         {
           f.p->m["i"]->i("id", c.p->m["o"]->m["id"]->v);
@@ -2474,11 +2453,11 @@ bool Central::applicationServerDetailRemove(data &d, string &e)
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(f);
+        userDeinit(f);
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2489,7 +2468,7 @@ bool Central::applicationServerDetailRemove(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerDetails()
-bool Central::applicationServerDetails(data &d, string &e)
+bool Central::applicationServerDetails(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2518,7 +2497,7 @@ bool Central::applicationServerDetails(data &d, string &e)
 }
 // }}}
 // {{{ applicationServerRemove()
-bool Central::applicationServerRemove(data &d, string &e)
+bool Central::applicationServerRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2526,13 +2505,13 @@ bool Central::applicationServerRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (applicationServer(a, e) && !empty(a.p->m["o"], "application_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
@@ -2549,9 +2528,9 @@ bool Central::applicationServerRemove(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2562,7 +2541,7 @@ bool Central::applicationServerRemove(data &d, string &e)
 }
 // }}}
 // {{{ applicationUser()
-bool Central::applicationUser(data &d, string &e)
+bool Central::applicationUser(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2600,7 +2579,7 @@ bool Central::applicationUser(data &d, string &e)
 }
 // }}}
 // {{{ applicationUserAdd()
-bool Central::applicationUserAdd(data &d, string &e)
+bool Central::applicationUserAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2608,13 +2587,13 @@ bool Central::applicationUserAdd(data &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || (application(a, e) && !empty(a.p->m["o"], "name")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", i->m["application_id"]->v);
@@ -2624,8 +2603,8 @@ bool Central::applicationUserAdd(data &d, string &e)
         if (!empty(i, "userid"))
         {
           bool bReady = false;
-          data f;
-          init(d, f);
+          radialUser f;
+          userInit(d, f);
           f.p->m["i"]->i("userid", i->m["userid"]->v);
           if (user(f, e) && !empty(f.p->m["o"], "id"))
           {
@@ -2633,14 +2612,14 @@ bool Central::applicationUserAdd(data &d, string &e)
           }
           else if (e == "No results returned.")
           {
-            deinit(f);
-            init(d, f);
+            userDeinit(f);
+            userInit(d, f);
             f.p->m["i"]->i("userid", i->m["userid"]->v);
             f.p->m["i"]->i("application_id", i->m["application_id"]->v);
             if (userAdd(f, e))
             {
-              deinit(f);
-              init(d, f);
+              userDeinit(f);
+              userInit(d, f);
               f.p->m["i"]->i("userid", i->m["userid"]->v);
               if (user(f, e) && !empty(f.p->m["o"], "id"))
               {
@@ -2652,8 +2631,8 @@ bool Central::applicationUserAdd(data &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "type"))
             {
-              data h;
-              init(d, h);
+              radialUser h;
+              userInit(d, h);
               h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
               if (contactType(h, e) && !empty(h.p->m["o"], "id"))
               {
@@ -2690,14 +2669,14 @@ bool Central::applicationUserAdd(data &d, string &e)
                   e = "Please provide the admin.";
                 }
               }
-              deinit(h);
+              userDeinit(h);
             }
             else
             {
               e = "Please provide the type.";
             }
           }
-          deinit(f);
+          userDeinit(f);
         }
         else
         {
@@ -2708,9 +2687,9 @@ bool Central::applicationUserAdd(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2721,7 +2700,7 @@ bool Central::applicationUserAdd(data &d, string &e)
 }
 // }}}
 // {{{ applicationUserEdit()
-bool Central::applicationUserEdit(data &d, string &e)
+bool Central::applicationUserEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2729,21 +2708,21 @@ bool Central::applicationUserEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (applicationUser(a, e) && !empty(a.p->m["o"], "application_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       }
       if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
       {
-        data f;
-        init(d, f);
+        radialUser f;
+        userInit(d, f);
         if (!d.g)
         {
           f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
@@ -2753,8 +2732,8 @@ bool Central::applicationUserEdit(data &d, string &e)
           if (!empty(i, "userid"))
           {
             bool bReady = false;
-            data h;
-            init(d, h);
+            radialUser h;
+            userInit(d, h);
             h.p->m["i"]->i("userid", i->m["userid"]->v);
             if (user(h, e) && !empty(h.p->m["o"], "id"))
             {
@@ -2762,14 +2741,14 @@ bool Central::applicationUserEdit(data &d, string &e)
             }
             else if (e == "No results returned.")
             {
-              deinit(h);
-              init(d, h);
+              userDeinit(h);
+              userInit(d, h);
               h.p->m["i"]->i("userid", i->m["userid"]->v);
               h.p->m["i"]->i("application_id", i->m["application_id"]->v);
               if (userAdd(h, e))
               {
-                deinit(h);
-                init(d, h);
+                userDeinit(h);
+                userInit(d, h);
                 h.p->m["i"]->i("userid", i->m["userid"]->v);
                 if (user(h, e) && !empty(h.p->m["o"], "id"))
                 {
@@ -2781,8 +2760,8 @@ bool Central::applicationUserEdit(data &d, string &e)
             {
               if (exist(i, "type") && !empty(i->m["type"], "type"))
               {
-                data k;
-                init(d, k);
+                radialUser k;
+                userInit(d, k);
                 k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
                 if (contactType(k, e) && !empty(k.p->m["o"], "id"))
                 {
@@ -2817,14 +2796,14 @@ bool Central::applicationUserEdit(data &d, string &e)
                     e = "Please provide the admin.";
                   }
                 }
-                deinit(k);
+                userDeinit(k);
               }
               else
               {
                 e = "Please provide the type.";
               }
             }
-            deinit(h);
+            userDeinit(h);
           }
           else
           {
@@ -2835,11 +2814,11 @@ bool Central::applicationUserEdit(data &d, string &e)
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(f);
+        userDeinit(f);
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2850,7 +2829,7 @@ bool Central::applicationUserEdit(data &d, string &e)
 }
 // }}}
 // {{{ applicationUserRemove()
-bool Central::applicationUserRemove(data &d, string &e)
+bool Central::applicationUserRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2858,21 +2837,21 @@ bool Central::applicationUserRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (applicationUser(a, e) && !empty(a.p->m["o"], "application_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       }
       if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
       {
-        data f;
-        init(d, f);
+        radialUser f;
+        userInit(d, f);
         if (!d.g)
         {
           f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
@@ -2889,11 +2868,11 @@ bool Central::applicationUserRemove(data &d, string &e)
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(f);
+        userDeinit(f);
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -2904,7 +2883,7 @@ bool Central::applicationUserRemove(data &d, string &e)
 }
 // }}}
 // {{{ applicationUsersByApplicationID()
-bool Central::applicationUsersByApplicationID(data &d, string &e)
+bool Central::applicationUsersByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -2955,12 +2934,12 @@ bool Central::applicationUsersByApplicationID(data &d, string &e)
       b = true;
       for (auto &r : *g)
       {
-        data a;
+        radialUser a;
         Json *j = new Json(r);
         ny(j, "admin");
         ny(j, "locked");
         ny(j, "notify");
-        init(d, a);
+        userInit(d, a);
         a.p->m["i"]->i("id", r["type_id"]);
         if (contactType(a, e))
         {
@@ -3009,50 +2988,9 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v, strJwt;
-    data tData;
-    init(tData);
-    if (exist(ptJson, "Request"))
-    {
-      tData.p->insert("i", ptJson->m["Request"]);
-    }
-    if (!empty(ptJson, "Jwt"))
-    {
-      strJwt = ptJson->m["Jwt"]->v;
-    }
-    else if (!empty(ptJson, "wsJwt"))
-    {
-      strJwt = ptJson->m["wsJwt"]->v;
-    }
-    if (!strJwt.empty() && !m_strJwtSecret.empty() && !m_strJwtSigner.empty())
-    {
-      string strBase64 = ptJson->m["wsJwt"]->v, strPayload, strValue;
-      Json *ptJwt = new Json;
-      m_manip.decryptAes(m_manip.decodeBase64(strBase64, strValue), m_strJwtSecret, strPayload, strError);
-      if (strPayload.empty())
-      {
-        strPayload = strBase64;
-      }
-      if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
-      {
-        if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
-        {
-          tData.g = true;
-        }
-        if (exist(ptJwt, "sl_auth"))
-        {
-          for (auto &auth : ptJwt->m["sl_auth"]->m)
-          {
-            tData.auth[auth.first] = (auth.second->v == "1");
-          }
-        }
-        if (!empty(ptJwt, "sl_login"))
-        {
-          tData.u = ptJwt->m["sl_login"]->v;
-        }
-      }
-      delete ptJwt;
-    }
-    if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, tData, strError, bInvalid))
+    radialUser d;
+    userInit(ptJson, d);
+    if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, d, strError, bInvalid))
     {
       bResult = true;
     }
@@ -3060,7 +2998,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
     {
       if (m_functions.find(strFunction) != m_functions.end())
       {
-        if ((this->*m_functions[strFunction])(tData, strError))
+        if ((this->*m_functions[strFunction])(d, strError))
         {
           bResult = true;
         }
@@ -3076,9 +3014,9 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
       {
         delete ptJson->m["Response"];
       }
-      ptJson->m["Response"] = new Json(tData.p->m["o"]);
+      ptJson->m["Response"] = new Json(d.p->m["o"]);
     }
-    deinit(tData);
+    userDeinit(d);
   }
   else
   {
@@ -3099,7 +3037,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
 }
 // }}}
 // {{{ contactType()
-bool Central::contactType(data &d, string &e)
+bool Central::contactType(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3161,14 +3099,8 @@ bool Central::dbu(const string strQuery, string &strID, string &e)
   return dbupdate("central", strQuery, strID, e);
 }
 // }}}
-// {{{ deinit()
-void Central::deinit(data &d)
-{
-  delete d.p;
-}
-// }}}
 // {{{ dependentsByApplicationID()
-bool Central::dependentsByApplicationID(data &d, string &e)
+bool Central::dependentsByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3186,8 +3118,8 @@ bool Central::dependentsByApplicationID(data &d, string &e)
         Json *j = new Json(r);
         if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("application_id", r["application_id"]);
           a.p->m["i"]->i("Primary Developer", "1", 'n');
           a.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -3196,18 +3128,18 @@ bool Central::dependentsByApplicationID(data &d, string &e)
           {
             j->i("contacts", a.p->m["o"]);
           }
-          deinit(a);
+          userDeinit(a);
         }
         if (!empty(i, "servers") && i->m["servers"]->v == "1")
         {
-          data a;
-          init(d, a);
+          radialUser a;
+          userInit(d, a);
           a.p->m["i"]->i("application_id", r["application_id"]);
           if (serversByApplicationID(a, e))
           {
             j->i("servers", a.p->m["o"]);
           }
-          deinit(a);
+          userDeinit(a);
         }
         o->m["depends"]->pb(j);
         delete j;
@@ -3224,8 +3156,8 @@ bool Central::dependentsByApplicationID(data &d, string &e)
           Json *j = new Json(r);
           if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
           {
-            data a;
-            init(d, a);
+            radialUser a;
+            userInit(d, a);
             a.p->m["i"]->i("application_id", r["application_id"]);
             a.p->m["i"]->i("Primary Developer", "1", 'n');
             a.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -3234,18 +3166,18 @@ bool Central::dependentsByApplicationID(data &d, string &e)
             {
               j->i("contacts", a.p->m["o"]);
             }
-            deinit(a);
+            userDeinit(a);
           }
           if (!empty(i, "servers") && i->m["servers"]->v == "1")
           {
-            data a;
-            init(d, a);
+            radialUser a;
+            userInit(d, a);
             a.p->m["i"]->i("application_id", r["application_id"]);
             if (serversByApplicationID(a, e))
             {
               j->i("servers", a.p->m["o"]);
             }
-            deinit(a);
+            userDeinit(a);
           }
           o->m["dependents"]->pb(j);
           delete j;
@@ -3263,171 +3195,8 @@ bool Central::dependentsByApplicationID(data &d, string &e)
   return b;
 }
 // }}}
-// {{{ getUserEmail()
-string Central::getUserEmail(data &d)
-{
-  string e, v;
-  data a;
-
-  init(d, a);
-  a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "email"))
-  {
-    v = a.p->m["o"]->m["email"]->v;
-  }
-  deinit(a);
-
-  return v;
-}
-// }}}
-// {{{ getUserFirstName()
-string Central::getUserFirstName(data &d)
-{
-  string e, v;
-  data a;
-
-  init(d, a);
-  a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "first_name"))
-  {
-    v = a.p->m["o"]->m["first_name"]->v;
-  }
-  deinit(a);
-
-  return v;
-}
-// }}}
-// {{{ getUserLastName()
-string Central::getUserLastName(data &d)
-{
-  string e, v;
-  data a;
-
-  init(d, a);
-  a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "last_name"))
-  {
-    v = a.p->m["o"]->m["last_name"]->v;
-  }
-  deinit(a);
-
-  return v;
-}
-// }}}
-// {{{ getUserName()
-string Central::getUserName(data &d)
-{
-  string e;
-  stringstream v;
-  data a;
-
-  init(d, a);
-  a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "first_name") && !empty(a.p->m["o"], "last_name"))
-  {
-    v << a.p->m["o"]->m["first_name"]->v << " " << a.p->m["o"]->m["last_name"]->v;
-  }
-  deinit(a);
-
-  return v.str();
-}
-// }}}
-// {{{ init()
-void Central::init(data &d)
-{
-  d.g = false;
-  d.p = new Json;
-  d.p->m["i"] = new Json;
-  d.p->m["o"] = new Json;
-}
-void Central::init(data &i, data &o)
-{
-  init(o);
-  o.auth = i.auth;
-  o.g = i.g;
-  o.u = i.u;
-}
-// }}}
-// {{{ isApplicationDeveloper()
-bool Central::isApplicationDeveloper(data &d, string &e)
-{
-  bool b = false;
-  stringstream q;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id"))
-  {
-    if (!d.u.empty())
-    {
-      q << "select a.id from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["id"]->v << " and b.type in ('Primary Developer', 'Backup Developer') and c.userid = '" << d.u << "'";
-      auto g = dbq(q.str(), e);
-      if (g != NULL)
-      {
-        if (!g->empty())
-        {
-          b = true;
-        }
-        else
-        {
-          e = "You are not a developer for this application.";
-        }
-      }
-      dbf(g);
-    }
-    else
-    {
-      e = "You are not authorized to run this request.";
-    }
-  }
-  else
-  {
-    e = "Please provide the id.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ isServerAdmin()
-bool Central::isServerAdmin(data &d, string &e)
-{
-  bool b = false;
-  stringstream q;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id"))
-  {
-    if (!d.u.empty())
-    {
-      q << "select a.id from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.server_id = " << i->m["id"]->v << " and b.type in ('Primary Admin', 'Backup Admin') and c.userid = '" << d.u << "'";
-      auto g = dbq(q.str(), e);
-      if (g != NULL)
-      {
-        if (!g->empty())
-        {
-          b = true;
-        }
-        else
-        {
-          e = "You are not an admin for this server.";
-        }
-      }
-      dbf(g);
-    }
-    else
-    {
-      e = "You are not authorized to run this request.";
-    }
-  }
-  else
-  {
-    e = "Please provide the id.";
-  }
-
-  return b;
-}
-// }}}
 // {{{ loginType()
-bool Central::loginType(data &d, string &e)
+bool Central::loginType(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3460,7 +3229,7 @@ bool Central::loginType(data &d, string &e)
 }
 // }}}
 // {{{ loginTypes()
-bool Central::loginTypes(data &d, string &e)
+bool Central::loginTypes(radialUser &d, string &e)
 {
   bool b = false;
   string k = "login_type";
@@ -3499,7 +3268,7 @@ void Central::merge(Json *ptOuter, Json *ptInner)
 }
 // }}}
 // {{{ menuAccess()
-bool Central::menuAccess(data &d, string &e)
+bool Central::menuAccess(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3532,7 +3301,7 @@ bool Central::menuAccess(data &d, string &e)
 }
 // }}}
 // {{{ menuAccesses()
-bool Central::menuAccesses(data &d, string &e)
+bool Central::menuAccesses(radialUser &d, string &e)
 {
   bool b = false;
   string k = "menu_access";
@@ -3565,7 +3334,7 @@ bool Central::menuAccesses(data &d, string &e)
 }
 // }}}
 // {{{ notifyPriorities()
-bool Central::notifyPriorities(data &d, string &e)
+bool Central::notifyPriorities(radialUser &d, string &e)
 {
   bool b = false;
   string k = "notify_priority";
@@ -3598,7 +3367,7 @@ bool Central::notifyPriorities(data &d, string &e)
 }
 // }}}
 // {{{ notifyPriority()
-bool Central::notifyPriority(data &d, string &e)
+bool Central::notifyPriority(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3630,35 +3399,8 @@ bool Central::notifyPriority(data &d, string &e)
   return b;
 }
 // }}}
-// {{{ ny()
-void Central::ny(Json *ptJson, const string strField)
-{
-  if (ptJson != NULL)
-  {
-    if (exist(ptJson, strField))
-    {
-      if (ptJson->m[strField]->v == "1")
-      {
-        ptJson->m[strField]->i("name", "Yes");
-        ptJson->m[strField]->i("value", "1", 1);
-      }
-      else
-      {
-        ptJson->m[strField]->i("name", "No");
-        ptJson->m[strField]->i("value", "0", 0);
-      }
-    }
-    else
-    {
-      ptJson->m[strField] = new Json;
-      ptJson->m[strField]->i("name", "No");
-      ptJson->m[strField]->i("value", "0", 0);
-    }
-  }
-}
-// }}}
 // {{{ packageType()
-bool Central::packageType(data &d, string &e)
+bool Central::packageType(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3691,7 +3433,7 @@ bool Central::packageType(data &d, string &e)
 }
 // }}}
 // {{{ packageTypes()
-bool Central::packageTypes(data &d, string &e)
+bool Central::packageTypes(radialUser &d, string &e)
 {
   bool b = false;
   string k = "package_type";
@@ -3792,7 +3534,7 @@ void Central::schedule(string strPrefix)
 }
 // }}}
 // {{{ server()
-bool Central::server(data &d, string &e)
+bool Central::server(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3833,7 +3575,7 @@ bool Central::server(data &d, string &e)
 }
 // }}}
 // {{{ serverAdd()
-bool Central::serverAdd(data &d, string &e)
+bool Central::serverAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3843,8 +3585,8 @@ bool Central::serverAdd(data &d, string &e)
   {
     if (!empty(i, "name"))
     {
-      data a;
-      init(d, a);
+      radialUser a;
+      userInit(d, a);
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!server(a, e) && e == "No results returned.")
       {
@@ -3876,7 +3618,7 @@ bool Central::serverAdd(data &d, string &e)
 }
 // }}}
 // {{{ serverDetailsByApplicationID()
-bool Central::serverDetailsByApplicationID(data &d, string &e)
+bool Central::serverDetailsByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3905,7 +3647,7 @@ bool Central::serverDetailsByApplicationID(data &d, string &e)
 }
 // }}}
 // {{{ serverEdit()
-bool Central::serverEdit(data &d, string &e)
+bool Central::serverEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -3913,8 +3655,8 @@ bool Central::serverEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
@@ -3991,7 +3733,7 @@ bool Central::serverEdit(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -4002,7 +3744,7 @@ bool Central::serverEdit(data &d, string &e)
 }
 // }}}
 // {{{ serverNotify()
-bool Central::serverNotify(data &d, string &e)
+bool Central::serverNotify(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4028,18 +3770,18 @@ bool Central::serverNotify(data &d, string &e)
       }
       if (!empty(i, "server"))
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("id", i->m["id"]->v);
         if (d.g || isServerAdmin(a, e))
         {
-          data c;
-          init(d, c);
+          radialUser c;
+          userInit(d, c);
           c.p->m["i"]->i("id", i->m["id"]->v);
           if (server(c, e) && !empty(c.p->m["o"], "name"))
           {
-            data f;
-            init(d, f);
+            radialUser f;
+            userInit(d, f);
             f.p->m["i"]->i("server_id", i->m["id"]->v);
             f.p->m["i"]->i("Primary Admin", "1", 'n');
             f.p->m["i"]->i("Backup Admin", "1", 'n');
@@ -4050,7 +3792,7 @@ bool Central::serverNotify(data &d, string &e)
               b = true;
               for (auto &contact : f.p->m["o"]->l)
               {
-                data h;
+                radialUser h;
                 stringstream s;
                 if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                 {
@@ -4152,7 +3894,7 @@ bool Central::serverNotify(data &d, string &e)
                   email(getUserEmail(d), to, s.str(), "", m.str(), e);
                   k.second->i("sent", "1", 'n');
                 }
-                init(d, h);
+                userInit(d, h);
                 h.p->m["i"]->i("server_id", i->m["id"]->v);
                 if (applicationsByServerID(h, e))
                 {
@@ -4161,13 +3903,13 @@ bool Central::serverNotify(data &d, string &e)
                   {
                     if (!empty(app, "application_id"))
                     {
-                      data k;
-                      init(d, k);
+                      radialUser k;
+                      userInit(d, k);
                       k.p->m["i"]->i("id", app->m["application_id"]->v);
                       if (application(k, e) && !empty(k.p->m["o"], "name") && empty(k.p->m["o"], "retirement_date"))
                       {
-                        data l;
-                        init(d, l);
+                        radialUser l;
+                        userInit(d, l);
                         l.p->m["i"]->i("application_id", app->m["application_id"]->v);
                         l.p->m["i"]->i("Primary Developer", "1", 'n');
                         l.p->m["i"]->i("Backup Developer", "1", 'n');
@@ -4276,24 +4018,24 @@ bool Central::serverNotify(data &d, string &e)
                             email(getUserEmail(d), to, s.str(), "", m.str(), e);
                           }
                         }
-                        deinit(l);
+                        userDeinit(l);
                       }
-                      deinit(k);
+                      userDeinit(k);
                     }
                   }
                 }
-                deinit(h);
+                userDeinit(h);
               }
             }
-            deinit(f);
+            userDeinit(f);
           }
-          deinit(c);
+          userDeinit(c);
         }
         else
         {
           e = "You are not authorized to perform this action.";
         }
-        deinit(a);
+        userDeinit(a);
       }
       else
       {
@@ -4314,7 +4056,7 @@ bool Central::serverNotify(data &d, string &e)
 }
 // }}}
 // {{{ serverRemove()
-bool Central::serverRemove(data &d, string &e)
+bool Central::serverRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4322,8 +4064,8 @@ bool Central::serverRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
@@ -4337,7 +4079,7 @@ bool Central::serverRemove(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -4348,7 +4090,7 @@ bool Central::serverRemove(data &d, string &e)
 }
 // }}}
 // {{{ servers()
-bool Central::servers(data &d, string &e)
+bool Central::servers(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4386,8 +4128,8 @@ bool Central::servers(data &d, string &e)
       Json *j = new Json(r);
       if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
       {
-        data a;
-        init(d, a);
+        radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("server_id", r["id"]);
         a.p->m["i"]->i("Primary Admin", "1", 'n');
         a.p->m["i"]->i("Backup Admin", "1", 'n');
@@ -4396,7 +4138,7 @@ bool Central::servers(data &d, string &e)
         {
           j->i("contacts", a.p->m["o"]);
         }
-        deinit(a);
+        userDeinit(a);
       }
       o->pb(j);
       delete j;
@@ -4408,7 +4150,7 @@ bool Central::servers(data &d, string &e)
 }
 // }}}
 // {{{ serversByApplicationID()
-bool Central::serversByApplicationID(data &d, string &e)
+bool Central::serversByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4437,7 +4179,7 @@ bool Central::serversByApplicationID(data &d, string &e)
 }
 // }}}
 // {{{ serversByUserID()
-bool Central::serversByUserID(data &d, string &e)
+bool Central::serversByUserID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4466,7 +4208,7 @@ bool Central::serversByUserID(data &d, string &e)
 }
 // }}}
 // {{{ serverUser()
-bool Central::serverUser(data &d, string &e)
+bool Central::serverUser(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4502,7 +4244,7 @@ bool Central::serverUser(data &d, string &e)
 }
 // }}}
 // {{{ serverUserAdd()
-bool Central::serverUserAdd(data &d, string &e)
+bool Central::serverUserAdd(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4510,16 +4252,16 @@ bool Central::serverUserAdd(data &d, string &e)
 
   if (!empty(i, "server_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["server_id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
       if (!empty(i, "userid"))
       {
         bool bReady = false;
-        data c;
-        init(d, c);
+        radialUser c;
+        userInit(d, c);
         c.p->m["i"]->i("userid", i->m["userid"]->v);
         if (user(c, e) && !empty(c.p->m["o"], "id"))
         {
@@ -4527,14 +4269,14 @@ bool Central::serverUserAdd(data &d, string &e)
         }
         else if (e == "No results returned.")
         {
-          deinit(c);
-          init(d, c);
+          userDeinit(c);
+          userInit(d, c);
           c.p->m["i"]->i("userid", i->m["userid"]->v);
           c.p->m["i"]->i("server_id", i->m["server_id"]->v);
           if (userAdd(c, e))
           {
-            deinit(c);
-            init(d, c);
+            userDeinit(c);
+            userInit(d, c);
             c.p->m["i"]->i("userid", i->m["userid"]->v);
             if (user(c, e) && !empty(c.p->m["o"], "id"))
             {
@@ -4546,8 +4288,8 @@ bool Central::serverUserAdd(data &d, string &e)
         {
           if (exist(i, "type") && !empty(i->m["type"], "type"))
           {
-            data f;
-            init(d, f);
+            radialUser f;
+            userInit(d, f);
             f.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
             if (contactType(f, e) && !empty(f.p->m["o"], "id"))
             {
@@ -4566,14 +4308,14 @@ bool Central::serverUserAdd(data &d, string &e)
                 e = "Please provide the notify.";
               }
             }
-            deinit(f);
+            userDeinit(f);
           }
           else
           {
             e = "Please provide the type.";
           }
         }
-        deinit(c);
+        userDeinit(c);
       }
       else
       {
@@ -4584,7 +4326,7 @@ bool Central::serverUserAdd(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -4595,7 +4337,7 @@ bool Central::serverUserAdd(data &d, string &e)
 }
 // }}}
 // {{{ serverUserEdit()
-bool Central::serverUserEdit(data &d, string &e)
+bool Central::serverUserEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4603,13 +4345,13 @@ bool Central::serverUserEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (serverUser(a, e) && !empty(a.p->m["o"], "server_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
@@ -4619,8 +4361,8 @@ bool Central::serverUserEdit(data &d, string &e)
         if (!empty(i, "userid"))
         {
           bool bReady = false;
-          data f;
-          init(d, f);
+          radialUser f;
+          userInit(d, f);
           f.p->m["i"]->i("userid", i->m["userid"]->v);
           if (user(f, e) && !empty(f.p->m["o"], "id"))
           {
@@ -4628,14 +4370,14 @@ bool Central::serverUserEdit(data &d, string &e)
           }
           else if (e == "No results returned.")
           {
-            deinit(f);
-            init(d, f);
+            userDeinit(f);
+            userInit(d, f);
             f.p->m["i"]->i("userid", i->m["userid"]->v);
             f.p->m["i"]->i("server_id", i->m["server_id"]->v);
             if (userAdd(f, e))
             {
-              deinit(f);
-              init(d, f);
+              userDeinit(f);
+              userInit(d, f);
               f.p->m["i"]->i("userid", i->m["userid"]->v);
               if (user(f, e) && !empty(f.p->m["o"], "id"))
               {
@@ -4647,8 +4389,8 @@ bool Central::serverUserEdit(data &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "type"))
             {
-              data h;
-              init(d, h);
+              radialUser h;
+              userInit(d, h);
               h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
               if (contactType(h, e) && !empty(h.p->m["o"], "id"))
               {
@@ -4665,14 +4407,14 @@ bool Central::serverUserEdit(data &d, string &e)
                   e = "Please provide the notify.";
                 }
               }
-              deinit(h);
+              userDeinit(h);
             }
             else
             {
               e = "Please provide the type.";
             }
           }
-          deinit(f);
+          userDeinit(f);
         }
         else
         {
@@ -4683,9 +4425,9 @@ bool Central::serverUserEdit(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -4696,7 +4438,7 @@ bool Central::serverUserEdit(data &d, string &e)
 }
 // }}}
 // {{{ serverUserRemove()
-bool Central::serverUserRemove(data &d, string &e)
+bool Central::serverUserRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4704,13 +4446,13 @@ bool Central::serverUserRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (serverUser(a, e) && !empty(a.p->m["o"], "server_id")))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       if (!d.g)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
@@ -4727,9 +4469,9 @@ bool Central::serverUserRemove(data &d, string &e)
       {
         e = "You are not authorized to perform this action.";
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -4740,7 +4482,7 @@ bool Central::serverUserRemove(data &d, string &e)
 }
 // }}}
 // {{{ serverUsersByServerID()
-bool Central::serverUsersByServerID(data &d, string &e)
+bool Central::serverUsersByServerID(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4791,10 +4533,10 @@ bool Central::serverUsersByServerID(data &d, string &e)
       b = true;
       for (auto &r : *g)
       {
-        data a;
+        radialUser a;
         Json *j = new Json(r);
         ny(j, "notify");
-        init(d, a);
+        userInit(d, a);
         a.p->m["i"]->i("id", r["type_id"]);
         if (contactType(a, e))
         {
@@ -4815,7 +4557,7 @@ bool Central::serverUsersByServerID(data &d, string &e)
 }
 // }}}
 // {{{ setCallbackAddon()
-void Central::setCallbackAddon(bool (*pCallback)(const string, data &, string &, bool &))
+void Central::setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &))
 {
   m_pCallbackAddon = pCallback;
 }
@@ -4834,54 +4576,8 @@ bool Central::sr(const string strKey, Json *ptData, string &strError)
   return bResult;
 }
 // }}}
-// {{{ user()
-bool Central::user(data &d, string &e)
-{
-  bool b = false;
-  stringstream q;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "userid"))
-  {
-    q << "select id, last_name, first_name, userid, email, pager, active, admin, locked from person where ";
-    if (!empty(i, "id"))
-    {
-      q << "id = " << i->m["id"]->v;
-    }
-    else
-    {
-      q << "userid = '" << i->m["userid"]->v << "'";
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
-      {
-        Json *j = new Json(g->front());
-        b = true;
-        ny(j, "active");
-        ny(j, "admin");
-        ny(j, "locked");
-        d.p->i("o", j);
-        delete j;
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the id or userid.";
-  }
-
-  return b;
-}
-// }}}
 // {{{ userAdd()
-bool Central::userAdd(data &d, string &e)
+bool Central::userAdd(radialUser &d, string &e)
 {
   bool b = false, bApplication = false, bCentral = false, bServer = false;
   stringstream q;
@@ -4893,39 +4589,39 @@ bool Central::userAdd(data &d, string &e)
   }
   else if (!empty(i, "application_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (application(a, e) && !empty(a.p->m["o"], "name"))
     {
-      data c;
-      init(d, c);
+      radialUser c;
+      userInit(d, c);
       c.p->m["i"]->i("id", i->m["application_id"]->v);
       if ((d.auth.find(a.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[a.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(c, e))
       {
         bApplication = true;
       }
-      deinit(c);
+      userDeinit(c);
     }
-    deinit(a);
+    userDeinit(a);
   }
   else if (!empty(i, "server_id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["server_id"]->v);
     if (isServerAdmin(a, e))
     {
       bServer = true;
     }
-    deinit(a);
+    userDeinit(a);
   }
   if (d.g || bCentral || bApplication || bServer)
   {
     if (!empty(i, "userid"))
     {
-      data a;
-      init(d, a);
+      radialUser a;
+      userInit(d, a);
       a.p->m["i"]->i("userid", i->m["userid"]->v);
       if (!user(a, e) && e == "No results returned.")
       {
@@ -4937,7 +4633,7 @@ bool Central::userAdd(data &d, string &e)
           o->i("id", strID);
         }
       }
-      deinit(a);
+      userDeinit(a);
     }
     else
     {
@@ -4953,7 +4649,7 @@ bool Central::userAdd(data &d, string &e)
 }
 // }}}
 // {{{ userEdit()
-bool Central::userEdit(data &d, string &e)
+bool Central::userEdit(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -4961,8 +4657,8 @@ bool Central::userEdit(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "userid") && d.u == a.p->m["o"]->m["userid"]->v))
     {
@@ -5057,7 +4753,7 @@ bool Central::userEdit(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -5068,7 +4764,7 @@ bool Central::userEdit(data &d, string &e)
 }
 // }}}
 // {{{ userRemove()
-bool Central::userRemove(data &d, string &e)
+bool Central::userRemove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -5076,8 +4772,8 @@ bool Central::userRemove(data &d, string &e)
 
   if (!empty(i, "id"))
   {
-    data a;
-    init(d, a);
+    radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "userid") && d.u == a.p->m["o"]->m["userid"]->v))
     {
@@ -5091,7 +4787,7 @@ bool Central::userRemove(data &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    deinit(a);
+    userDeinit(a);
   }
   else
   {
@@ -5102,7 +4798,7 @@ bool Central::userRemove(data &d, string &e)
 }
 // }}}
 // {{{ users()
-bool Central::users(data &d, string &e)
+bool Central::users(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;

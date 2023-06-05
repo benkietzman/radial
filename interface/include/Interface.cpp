@@ -32,10 +32,26 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   signal(SIGWINCH, SIG_IGN);
   m_bMaster = false;
   m_bMasterSettled = false;
+  m_bUserAdmin = false;
   m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
+  if (m_pWarden != NULL)
+  {
+    Json *ptAes = new Json, *ptJwt = new Json;
+    if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && !empty(ptAes, "Secret"))
+    { 
+      m_strAesSecret = ptAes->m["Secret"]->v;
+    }
+    delete ptAes;
+    if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && !empty(ptJwt, "Secret") && !empty(ptJwt, "Signer"))
+    {
+      m_strJwtSecret = ptJwt->m["Secret"]->v;
+      m_strJwtSigner = ptJwt->m["Signer"]->v;
+    }
+    delete ptJwt;
+  }
 }
 // }}}
 // {{{ ~Interface()
@@ -324,6 +340,75 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
   delete ptJson;
 }
 // }}}
+// {{{ getUserEmail()
+string Central::getUserEmail(radialUser &d)
+{
+  string e, v;
+  radialUser a;
+  
+  userInit(d, a);
+  a.p->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a.p->m["o"], "email"))
+  {
+    v = a.p->m["o"]->m["email"]->v;
+  } 
+  userDeinit(a);
+  
+  return v;
+} 
+// }}}
+// {{{ getUserFirstName()
+string Central::getUserFirstName(radialUser &d)
+{
+  string e, v;
+  radialUser a;
+  
+  userInit(d, a);
+  a.p->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a.p->m["o"], "first_name"))
+  {
+    v = a.p->m["o"]->m["first_name"]->v;
+  }
+  userDeinit(a);
+
+  return v;
+}
+// }}}
+// {{{ getUserLastName()
+string Central::getUserLastName(radialUser &d)
+{
+  string e, v;
+  radialUser a;
+
+  userInit(d, a);
+  a.p->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a.p->m["o"], "last_name"))
+  {
+    v = a.p->m["o"]->m["last_name"]->v;
+  }
+  userDeinit(a);
+
+  return v;
+}
+// }}}
+// {{{ getUserName()
+string Central::getUserName(radialUser &d)
+{
+  string e;
+  stringstream v;
+  radialUser a;
+
+  userInit(d, a);
+  a.p->m["i"]->i("userid", d.u);
+  if (user(a, e) && !empty(a.p->m["o"], "first_name") && !empty(a.p->m["o"], "last_name"))
+  {
+    v << a.p->m["o"]->m["first_name"]->v << " " << a.p->m["o"]->m["last_name"]->v;
+  }
+  userDeinit(a);
+
+  return v.str();
+}
+// }}}
 // {{{ hub()
 void Interface::hub(radialPacket &p, const bool bWait)
 {
@@ -594,6 +679,68 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
   m_mutexShare.unlock();
 }
 // }}}
+// {{{ isApplicationDeveloper()
+bool Central::isApplicationDeveloper(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id"))
+  {
+    if (!d.u.empty())
+    {
+      q << "select a.id from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["id"]->v << " and b.type in ('Primary Developer', 'Backup Developer') and c.userid = '" << d.u << "'";
+      auto g = dbquery("central_r", q.str(), e);
+      if (g != NULL)
+      {
+        if (!g->empty())
+        {
+          b = true;
+        }
+        else
+        {
+          e = "You are not a developer for this application.";
+        }
+      }
+      dbfree(g);
+    }
+    else
+    {
+      e = "You are not authorized to run this request.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ isLocalAdmin()
+bool Interface::isLocalAdmin(radialUser &d, const string strApplication, const bool bAny, const bool bLocal)
+{
+  bool bResult = false;
+
+  if (!bLocal && d.g)
+  {
+    bResult = true;
+  }
+  else if ((bAny || !strApplication.empty()) && !d.u.empty())
+  {
+    for (auto &app : d.auth)
+    {
+      if ((bAny || app.first == strApplication) && app.second)
+      {
+        bResult = true;
+      }
+    }
+  }
+
+  return bResult;
+}
+// }}}
 // {{{ isMaster()
 bool Interface::isMaster()
 {
@@ -604,6 +751,75 @@ bool Interface::isMaster()
 bool Interface::isMasterSettled()
 {
   return m_bMasterSettled;
+}
+// }}}
+// {{{ isServerAdmin()
+bool Central::isServerAdmin(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id"))
+  {
+    if (!d.u.empty())
+    {
+      q << "select a.id from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.server_id = " << i->m["id"]->v << " and b.type in ('Primary Admin', 'Backup Admin') and c.userid = '" << d.u << "'";
+      auto g = dbquery("central_r", q.str(), e);
+      if (g != NULL)
+      {
+        if (!g->empty())
+        {
+          b = true;
+        }
+        else
+        {
+          e = "You are not an admin for this server.";
+        }
+      }
+      dbfree(g);
+    }
+    else
+    {
+      e = "You are not authorized to run this request.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ isValid()
+bool Interface::isValid(radialUser &d, const string strApplication)
+{
+  bool bResult = false;
+
+  if (d.g)
+  {
+    bResult = true;
+  }
+  else if (!d.u.empty())
+  {
+    if (!strApplication.empty())
+    {
+      for (auto &app : d.auth)
+      {
+        if (app.first == strApplication)
+        {
+          bResult = true;
+        }
+      }
+    }
+    else
+    {
+      bResult = true;
+    }
+  }
+
+  return bResult;
 }
 // }}}
 // {{{ junction()
@@ -942,6 +1158,33 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
 void Interface::notify(const string strMessage)
 {
   log("notify", strMessage);
+}
+// }}}
+// {{{ ny()
+void Central::ny(Json *ptJson, const string strField)
+{
+  if (ptJson != NULL)
+  {
+    if (exist(ptJson, strField))
+    {
+      if (ptJson->m[strField]->v == "1")
+      {
+        ptJson->m[strField]->i("name", "Yes");
+        ptJson->m[strField]->i("value", "1", 1);
+      }
+      else
+      {
+        ptJson->m[strField]->i("name", "No");
+        ptJson->m[strField]->i("value", "0", 0);
+      }
+    }
+    else
+    {
+      ptJson->m[strField] = new Json;
+      ptJson->m[strField]->i("name", "No");
+      ptJson->m[strField]->i("value", "0", 0);
+    }
+  }
 }
 // }}}
 // {{{ page
@@ -1388,6 +1631,121 @@ bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &str
   return storage("update", keys, ptJson, strError);
 }
 // }}}
+// }}}
+// {{{ user()
+bool Interface::user(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "userid"))
+  {
+    q << "select id, last_name, first_name, userid, email, pager, active, admin, locked from person where ";
+    if (!empty(i, "id"))
+    {
+      q << "id = " << i->m["id"]->v;
+    }
+    else
+    {
+      q << "userid = '" << i->m["userid"]->v << "'";
+    }
+    auto g = dbquery("central_r", q.str(), e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        Json *j = new Json(g->front());
+        b = true;
+        ny(j, "active");
+        ny(j, "admin");
+        ny(j, "locked");
+        d.p->i("o", j);
+        delete j;
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the id or userid.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ userDeinit()
+void Interface::userDeinit(radialUser &d)
+{
+  delete d.p;
+}
+// }}}
+// {{{ userInit()
+void Interface::userInit(radialUser &d)
+{
+  d.g = false;
+  d.p = new Json;
+  d.p->m["i"] = new Json;
+  d.p->m["o"] = new Json;
+}
+void Interface::userInit(radialUser &i, radialUser &o)
+{
+  userInit(o);
+  o.auth = i.auth;
+  o.g = i.g;
+  o.u = i.u;
+}
+void Interface::userInit(Json *ptJson, radialUser &d)
+{
+  string strJwt;
+
+  userInit(d);
+  if (exist(ptJson, "Request"))
+  {
+    d.p->insert("i", ptJson->m["Request"]);
+  }
+  if (!empty(ptJson, "Jwt"))
+  {
+    strJwt = ptJson->m["Jwt"]->v;
+  }
+  else if (!empty(ptJson, "wsJwt"))
+  {
+    strJwt = ptJson->m["wsJwt"]->v;
+  }
+  if (!strJwt.empty())
+  {
+    string strPayload, strValue;
+    Json *ptJwt = new Json;
+    m_manip.decryptAes(m_manip.decodeBase64(strJwt, strValue), m_strJwtSecret, strPayload, strError);
+    if (strPayload.empty())
+    {
+      strPayload = strJwt;
+    }
+    if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+    {
+      if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
+      {
+        d.g = true;
+      }
+      if (exist(ptJwt, "sl_auth"))
+      {
+        for (auto &auth : ptJwt->m["sl_auth"]->m)
+        {
+          d.auth[auth.first] = (auth.second->v == "1");
+        }
+      }
+      if (!empty(ptJwt, "sl_login"))
+      {
+        d.u = ptJwt->m["sl_login"]->v;
+      }
+    }
+    delete ptJwt;
+  }
+}
 // }}}
 }
 }

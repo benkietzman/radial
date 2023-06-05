@@ -22,29 +22,6 @@ namespace radial
 // {{{ Websocket()
 Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
-  string strError;
-  Json *ptAes = new Json, *ptJwt = new Json;
-
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
-  {
-    if (!empty(ptAes, "Secret"))
-    {
-      m_strAesSecret = ptAes->m["Secret"]->v;
-    }
-  }
-  delete ptAes;
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
-  {
-    if (!empty(ptJwt, "Secret"))
-    {
-      m_strJwtSecret = ptJwt->m["Secret"]->v;
-    }
-    if (!empty(ptJwt, "Signer"))
-    {
-      m_strJwtSigner = ptJwt->m["Signer"]->v;
-    }
-  }
-  delete ptJwt;
   m_pWebsocket = pWebsocket;
 }
 // }}}

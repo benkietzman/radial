@@ -113,13 +113,13 @@ Base::Base(int argc, char **argv)
   m_pWarden = NULL;
   if (!m_strWarden.empty())
   {
-    Json *ptCred = new Json;
+    Json *ptLogger = new Json;
     m_pWarden = new Warden(m_strApplication, m_strWarden, strError);
-    if (m_pWarden->vaultRetrieve({"logger"}, ptCred, strError) && !empty(ptCred, "Password") && !empty(ptCred, "User"))
+    if (m_pWarden->vaultRetrieve({"logger"}, ptLogger, strError) && !empty(ptLogger, "Password") && !empty(ptLogger, "User"))
     {
-      m_pLogger->setCredentials("Radial", ptCred->m["User"]->v, ptCred->m["Password"]->v);
+      m_pLogger->setCredentials("Radial", ptLogger->m["User"]->v, ptLogger->m["Password"]->v);
     }
-    delete ptCred;
+    delete ptLogger;
   }
 }
 // }}}

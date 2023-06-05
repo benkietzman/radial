@@ -22,6 +22,16 @@ namespace radial
 // {{{ Feedback()
 Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "feedback", argc, argv, pCallback)
 {
+  m_functions["answers"] = &Central::answers;
+  m_functions["questions"] = &Central::questions;
+  m_functions["results"] = &Central::results;
+  m_functions["resultAdd"] = &Central::resultAdd;
+  m_functions["survey"] = &Central::survey;
+  m_functions["surveyEdit"] = &Central::surveyEdit;
+  m_functions["surveyRemove"] = &Central::surveyRemove;
+  m_functions["surveys"] = &Central::surveys;
+  m_functions["type"] = &Central::type;
+  m_functions["types"] = &Central::types;
 }
 // }}}
 // {{{ ~Feedback()
@@ -30,35 +40,32 @@ Feedback::~Feedback()
 }
 // }}}
 // {{{ answers()
-bool Feedback::answers(const string strQuestionID, list<map<string, string> > &getAnswer, string &strError)
+bool Feedback::answers(radialUser &d, string &e)
 {
-  bool bResult = false;
-  Json *ptAnswer = new Json;
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  ptAnswer->i("question_id", strQuestionID);
-  if (db("dbFeedbackAnswers", ptAnswer, getAnswer, strError))
+  if (!empty(i, "question_id"))
   {
-    bResult = true;
+    q << "select id, sequence, answer from answer where question_id = " << i->m["question_id"]->v << " order by sequence, id";
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbfree(g);
   }
-  delete ptAnswer;
-
-  return bResult;
-}
-// }}}
-// {{{ questions()
-bool Feedback::questions(const string strSurveyID, list<map<string, string> > &getQuestion, string &strError)
-{
-  bool bResult = false;
-  Json *ptQuestion = new Json;
-
-  ptQuestion->i("survey_id", strSurveyID);
-  if (db("dbFeedbackQuestions", ptQuestion, getQuestion, strError))
+  else
   {
-    bResult = true;
+    e = "Please provide the question_id.";
   }
-  delete ptQuestion;
 
-  return bResult;
+  return b;
 }
 // }}}
 // {{{ callback()
@@ -75,110 +82,29 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
-    // {{{ answers
-    if (ptJson->m["Function"]->v == "answers")
+    string strFunction = ptJson->m["Function"]->v;
+    radialUser d;
+    userInit(ptJson, d);
+    if (m_functions.find(strFunction) != m_functions.end())
     {
-      if (exist(ptJson, "Request"))
+      if ((this->*m_functions[strFunction])(d, strError))
       {
-        if (!empty(ptJson->m["Request"], "question_id"))
-        {
-          list<map<string, string> > getAnswer;
-          if (answers(ptJson->m["Request"]->m["question_id"]->v, getAnswer, strError))
-          {
-            bResult = true;
-            ptJson->m["Response"] = new Json;
-            for (auto &getAnswerRow : getAnswer)
-            {
-              ptJson->m["Response"]->pb(getAnswerRow);
-            }
-          }
-        }
-        else
-        {
-          strError = "Please provide the question_id within the Request.";
-        }
-      }
-      else
-      {
-        strError = "Please provide the Request.";
+        bResult = true;
       }
     }
-    // }}}
-    // {{{ questions
-    else if (ptJson->m["Function"]->v == "questions")
-    {
-      if (exist(ptJson, "Request"))
-      {
-        if (!empty(ptJson->m["Request"], "survey_id"))
-        {
-          list<map<string, string> > getQuestion;
-          if (questions(ptJson->m["Request"]->m["survey_id"]->v, getQuestion, strError))
-          {
-            bResult = true;
-            ptJson->m["Response"] = new Json;
-            for (auto &getQuestionRow : getQuestion)
-            {
-              ptJson->m["Response"]->pb(getQuestionRow);
-            }
-          }
-        }
-        else
-        {
-          strError = "Please provide the survey_id within the Request.";
-        }
-      }
-      else
-      {
-        strError = "Please provide the Request.";
-      }
-    }
-    // }}}
-    // {{{ results
-    else if (ptJson->m["Function"]->v == "results")
-    {
-    }
-    // }}}
-    // {{{ resultAdd
-    else if (ptJson->m["Function"]->v == "resultAdd")
-    {
-    }
-    // }}}
-    // {{{ survey
-    else if (ptJson->m["Function"]->v == "survey")
-    {
-    }
-    // }}}
-    // {{{ surveyEdit
-    else if (ptJson->m["Function"]->v == "surveyEdit")
-    {
-    }
-    // }}}
-    // {{{ surveyRemove
-    else if (ptJson->m["Function"]->v == "surveyRemove")
-    {
-    }
-    // }}}
-    // {{{ surveys
-    else if (ptJson->m["Function"]->v == "surveys")
-    {
-    }
-    // }}}
-    // {{{ type
-    else if (ptJson->m["Function"]->v == "type")
-    {
-    }
-    // }}}
-    // {{{ types
-    else if (ptJson->m["Function"]->v == "types")
-    {
-    }
-    // }}}
-    // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  answers, questions, results, resultAdd, survey, surveyEdit, surveyRemove, surveys, type, types.";
+      strError = "Please provide a valid Function.";
     }
-    // }}}
+    if (bResult)
+    {
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json(d.p->m["o"]);
+    }
+    userDeinit(d);
   }
   else
   {
@@ -196,6 +122,549 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ questions()
+bool Feedback::questions(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "survey_id"))
+  {
+    q << "select id, sequence, question, type_id, required from question where survey_id = " << i->m["survey_id"]->v << " order by sequence, id";
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the survey_id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ results()
+bool Feedback::results(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "survey_id"))
+  {
+    if (!empty(i, "question_id"))
+    {
+      radialUser s;
+      userInit(d, s);
+      s.p->m["i"]->i("id", i->m["survey_id"]->v);
+      if (survey(s, e))
+      {
+        bool bValid = (s.p->m["o"]->m["restrict"]->v == "0");
+        if (!bValid && isValid(d, "Feedback") && d.u == s.p->m["o"]->m["userid"]->v)
+        {
+          bValid = true;
+        }
+        if (bValid)
+        {
+          q << "select " << ((s.p->m["o"]->m["anonymous"]->v == "0")?"a.application_contact_id, ":"") << "date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, b.answer from result a, result_answer b where a.id = b.result_id and a.survey_id = " << i->m["survey_id"]->v << " and b.question_id = " << i->m["question_id"]->v << " order by a.entry_date";
+          auto g = dbquery("feedback_r", q.str(), e);
+          if (g != NULL)
+          {
+            b = true;
+            for (auto &r : *g)
+            {
+              Json *ro;
+              if (exist(i, "type") && !empty(i->m["type"], "name") && exist(i, "answers"))
+              {
+                if (i->m["type"]->m["name"]->v == "checkbox")
+                {
+                  string strA;
+                  stringstream ssA(r["answers"]);
+                  r["answer"].clear();
+                  while (getline(ssA, strA, ','))
+                  {
+                    bool bFound = false;
+                    for (auto a = i->m["answers"]->l.begin(); !bFound && a != i->m["answers"]->l.end(); a++)
+                    {
+                      if (!empty((*a), "id") && strA == (*a)->m["id"]->v)
+                      {
+                        bFound = true;
+                        if (!empty((*a), "answer"))
+                        {
+                          if (r["answer"].empty())
+                          {
+                            r["answer"] .= ", ";
+                          }
+                          r["answer"] .= (*a)->m["answer"]->v;
+                        }
+                      }
+                    }
+                  }
+                }
+                else if (i->m["type"]->m["name"]->v == "radio" || i->m["type"]->m["name"]->v == "select")
+                {
+                  bool bFound = false;
+                  for (auto a = i->m["answers"]->l.begin(); !bFound && a != i->m["answers"]->l.end(); a++)
+                  {
+                    if (!empty((*a), "id") && r["answer"] == (*a)->m["id"]->v)
+                    {
+                      bFound = true;
+                      if (!empty((*a), "answer"))
+                      {
+                        r["answer"] = (*a)->m["answer"]->v;
+                      }
+                    }
+                  }
+                }
+              }
+              ro = new Json(r);
+              if (s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
+              {
+                q.str("");
+                q << "select b.userid, b.first_name, b.last_name from central.application_contact a, central.person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
+                auto pg = dbquery("feedback_r", q.str(), e);
+                if (pg != NULL && !pg->empty())
+                {
+                  ro->i("contact", pg->front());
+                }
+                dbfree(pg);
+              }
+              o->pb(ro);
+              delete ro;
+            }
+          }
+          dbfree(g);
+        }
+        else
+        {
+          e = "You are not authorized to view the survey results.";
+        }
+      }
+      userDeinit(s);
+    }
+    else
+    {
+      e = "Please provide the question_id.";
+    }
+  }
+  else
+  {
+    e = "Please provide the question_id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ resultAdd()
+bool Feedback::resultAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (exist(i, "survey"))
+  {
+    if (!empty(i->m["survey"], "id"))
+    {
+      if (!empty(i->m["survey"], "hash"))
+      {
+        if (exist(i->m["survey"], "questions") && !i->m["survey"]->m["questions"]->l.empty())
+        {
+          bool bAnonymous = (!empty(i->m["survey"], "anonymous") && i->m["survey"]->m["anonymous"]->v == "1");
+          if (bAnonymous || isValid(d, "Feedback"))
+          {
+            bool bGood = true;
+            string strApplicationContactID;
+            if (!bAnonymous)
+            {
+              q << "select b.id from central.application a, central.application_contact b, central.person c where a.id = b.application_id and b.contact_id = c.id and a.name = 'Feedback' and c.userid = '" << d.u << "'";
+              auto g = dbquery("feedback_r", q.str(), e);
+              if (g != NULL && !g->empty())
+              {
+                strApplicationContactID = g->front()["id"];
+              }
+              else
+              {
+                bGood = false;
+              }
+              dbfree(g);
+            }
+            if (bGood)
+            {
+              for (auto j = i->m["survey"]->m["questions"]->l.begin(); bGood && j != i->m["survey"]->m["questions"]->l.end(); j++)
+              {
+                if (!empty(j, "required") && j->m["required"]->v == "1" && (!exist(j, "answer") || (empty(j, "answer") && j->m["answer"]->l.empty())))
+                {
+                  bGood = false;
+                }
+              }
+              if (bGood)
+              {
+                string strID;
+                q.str("");
+                q << "insert into result (survey_id" << ((bAnonymous)?"":", application_contact_id") << ", entry_date) values(" << i->m["survey"]->m["id"]->v << ((bAnonymous)?"":(string)", "+strApplicationContactID) << ", now())";
+                if (dbupdate("feedback", q.str(), strID, e))
+                {
+                  size_t unQuestion = 1;
+                  bResult = true;
+                  if (exist(i->m["survey"], "owner") && !empty(i->m["survey"]->m["owner"], "email"))
+                  {
+                    stringstream ssSubject, ssText;
+                    ssSubject << "Feedback Received:  " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"");
+                    ssText << "Feedback has been received for the " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"") << "survey." << endl << endl << "https://loadbalancer.web.att.com/feedback/#/results/" << i->m["survey"]->m["hash"]->v;
+                    email("", i->m["survey"]->m["owner"]->m["email"]->v, ssSubject.str(), ssText.str(), "", e);
+                  }
+                  for (auto &j : i->m["survey"]->m["questions"]->l)
+                  {
+                    if (exist(j, "answer") && exist(j, "id"))
+                    {
+                      string strAnswer;
+                      if (!empty(j, "answer"))
+                      {
+                        trim(strAnswer, j->m["answer"]->v);
+                      }
+                      else if (!empty(j->m["answer"], "id"))
+                      {
+                        strAnswer = j->m["answer"]->m["id"]->v;
+                      }
+                      if (!strAnswer.empty())
+                      {
+                        q.str("");
+                        q << "insert into result_answer (result_id, question_id, answer) values (" << strID << ", " << j->m["id"]->v << ", '" << esc(strAnswer) << "'";
+                        if (!dbupdate("feedback", q.str(), e))
+                        {
+                          stringstream ssError;
+                          ssError << "Failed to store feedback results for question " << unQuestion << ".";
+                          e = ssError.str();
+                        }
+                      }
+                    }
+                    unQuestion++;
+                  }
+                }
+                else
+                {
+                  e = "Failed to store feedback results.";
+                }
+              }
+              else
+              {
+                e = "Please answer all required questions.";
+              }
+            }
+            else
+            {
+              e = "Failed to retrieve your account information.";
+            }
+          }
+          else
+          {
+            e = "You must be logged in for this survey.";
+          }
+        }
+        else
+        {
+          e = "Please provide the suvey questions.";
+        }
+      }
+      else
+      {
+        e = "Please provide the suvey hash.";
+      }
+    }
+    else
+    {
+      e = "Please provide the survey id.";
+    }
+  }
+  else
+  {
+    e = "Please provide the survey.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ survey()
+bool Feedback::survey(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "hash") || !empty(i, "id"))
+  {
+    q << "select id, hash, application_contact_id, title, date_format(entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(start_date, '%Y-%m-%d %H:%i') start_date, date_format(end_date, '%Y-%m-%d %H:%i') end_date, public, anonymous, `unique`, `restrict` from survey where ";
+    if (!empty(i, "hash"))
+    {
+      q << "hash = '" << i->m["hash"]->v;
+    }
+    else
+    {
+      q << "id = " << i->m["id"]->v;
+    }
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        auto r = g->front();
+        struct tm tTime;
+        time_t CTime;
+        b = true;
+        d.p->i("o", r);
+        if (!r["application_contact_id"].empty())
+        {
+          q.str("");
+          q << "select b.first_name, b.last_name, b.userid, b.email from application_contact a, person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
+          auto &gp = dbquery("central_r", q.str(), e);
+          if (gp != NULL && !gp->empty())
+          {
+            d.p->m["o"]->i("owner", gp->front());
+          }
+          dbfree(gp);
+        }
+        time(&CTime);
+        localtime_r(&CTime, &tTime);
+        d.p->m["o"]->i("now_date", put_time(&tTime, "%Y-%m-%d %H:%M"));
+      }
+      else
+      {
+        e = "Survey does not exist.";
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the hash or id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ surveyEdit()
+bool Feedback::surveyEdit(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "question_id"))
+  {
+    q << "select id, sequence, answer from answer where question_id = " << i->m["question_id"]->v << " order by sequence, id";
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      b = true;
+      for (auto &r : *g)
+      {
+        o->pb(r);
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the question_id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ surveyRemove()
+bool Feedback::surveyRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id"))
+  {
+    q << "select application_contact_id from survey where id = " << i->m["id"]->v;
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        auto r = g->front();
+        string strUserID;
+        if (!r["application_contact_id"].empty())
+        {
+          q.str("");
+          q << "select b.userid from application_contact a, person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
+          auto *gp = dbquery("central_r", q.str(), e);
+          if (gp != NULL && !gp->empty())
+          {
+            strUserID = gp->front()["userid"];
+          }
+          dbfree(gp);
+        }
+        if (isLocalAdmin(d, "Feedback") || (isValid(d, "Feedback") && !strUserID.empty() && d.u == strUserID))
+        {
+          q.str("");
+          q << "delete from survey where id = " << i->m["id"]->v;
+          if (dbupdate("feedback", q.str(), e))
+          {
+            bResult = true;
+          }
+          else
+          {
+            e = "Failed to remove survey.";
+          }
+        }
+        else
+        {
+          e = "You are not authorized to remove the survey.";
+        }
+      }
+      else
+      {
+        e = "Survey does not exist.";
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ surveys()
+bool Feedback::surveys(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  q << "select a.id, a.application_contact_id, a.title, a.public, a.anonymous, a.unique, a.restrict, date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(a.modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(a.start_date, '%Y-%m-%d %H:%i') start_date, date_format(a.end_date, '%Y-%m-%d %H:%i') end_date, a.hash from survey a"
+  if (!empty(i, "type") && i->m["type"]->v == "Your Surveys")
+  {
+    q << ", central.application_contact b, central.person c";
+  }
+  q << " where ";
+  if (!empty(i, "type") && i->m["type"]->v == "Public Surveys")
+  {
+    q << "a.public = 1 and (a.start_date is null or a.start_date <= now()) and (a.start_date is null  or a.end_date >= now())";
+  }
+  else
+  {
+    q << "a.application_contact_id = b.id and b.contact_id = c.id and c.userid = '" << d.u << "'";
+  }
+  q << " order by a.entry_date desc";
+  auto g = dbquery("feedback_r", q.str(), e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      string strDate;
+      struct tm tTime;
+      time_t CTime;
+      Json *j;
+      time(&CTime);
+      localtime_r(&CTime, &tTime);
+      strDate = put_time(&tTime, "%Y-%m-%d %H:%M");
+      r["open"] = (((r["start_date"].empty() || r["start_date"] <= strDate) && (r["end_date"].empty() || r["end_date"] >= strDate))?"1":"0");
+      j = new Json(r);
+      if (!r["application_contact_id"].empty())
+      {
+        q.str("");
+        q << "select b.first_name, b.last_name, b.userid, b.email from application_contact a, person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
+        auto &gp = dbquery("central_r", q.str(), e);
+        if (gp != NULL && !gp->empty())
+        {
+          j->i("owner", gp->front());
+        }
+        dbfree(gp);
+      }
+      q.str("");
+      q << "select count(*) numResults from result where survey_id = " << r["id"];
+      auto &gr = dbquery("feedback_r", q.str(), e);
+      if (gr != NULL && !gr->empty())
+      {
+        j->i("numResults", gr->front()["numResults"]->v);
+      }
+      dbfree(gr);
+      o->pb(j);
+      delete j;
+    }
+  }
+  dbfree(g);
+
+  return b;
+}
+// }}}
+// {{{ type()
+bool Feedback::type(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "type_id"))
+  {
+    q << "select id, ame from type where id = " << i->m["type_id"]->v;
+    auto g = dbquery("feedback_r", q.str(), e);
+    if (g != NULL)
+    {
+      if (!g->empty())
+      {
+        b = true;
+        d.p->i("o", g->front());
+      }
+      else
+      {
+        e = "Type does not exist.";
+      }
+    }
+    dbfree(g);
+  }
+  else
+  {
+    e = "Please provide the type_id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ types()
+bool Feedback::types(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  q << "select id, name from type order by name";
+  auto g = dbquery("feedback_r", q.str(), e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  else
+  {
+    e = "Failed to retieve types.";
+  }
+  dbfree(g);
+
+  return b;
 }
 // }}}
 }
