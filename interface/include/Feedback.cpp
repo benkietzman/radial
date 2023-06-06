@@ -494,10 +494,6 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
             i->m["survey"]->i("id", strID);
             i->m["survey"]->i("hash", strHash);
           }
-          else
-          {
-            e = "Failed to insert survey.";
-          }
         }
         if (!empty(i->m["survey"], "id") && !empty(i->m["survey"], "hash"))
         {
@@ -698,7 +694,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
           }
           dbfree(gs);
         }
-        else
+        else if (e.empty())
         {
           e = "Please provide the id and hash.";
         }
