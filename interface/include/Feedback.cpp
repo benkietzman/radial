@@ -22,16 +22,16 @@ namespace radial
 // {{{ Feedback()
 Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "feedback", argc, argv, pCallback)
 {
-  m_functions["answers"] = &Central::answers;
-  m_functions["questions"] = &Central::questions;
-  m_functions["results"] = &Central::results;
-  m_functions["resultAdd"] = &Central::resultAdd;
-  m_functions["survey"] = &Central::survey;
-  m_functions["surveyEdit"] = &Central::surveyEdit;
-  m_functions["surveyRemove"] = &Central::surveyRemove;
-  m_functions["surveys"] = &Central::surveys;
-  m_functions["type"] = &Central::type;
-  m_functions["types"] = &Central::types;
+  m_functions["answers"] = &Feedback::answers;
+  m_functions["questions"] = &Feedback::questions;
+  m_functions["results"] = &Feedback::results;
+  m_functions["resultAdd"] = &Feedback::resultAdd;
+  m_functions["survey"] = &Feedback::survey;
+  m_functions["surveyEdit"] = &Feedback::surveyEdit;
+  m_functions["surveyRemove"] = &Feedback::surveyRemove;
+  m_functions["surveys"] = &Feedback::surveys;
+  m_functions["type"] = &Feedback::type;
+  m_functions["types"] = &Feedback::types;
 }
 // }}}
 // {{{ ~Feedback()
@@ -203,9 +203,9 @@ bool Feedback::results(radialUser &d, string &e)
                         {
                           if (r["answer"].empty())
                           {
-                            r["answer"] .= ", ";
+                            r["answer"] += ", ";
                           }
-                          r["answer"] .= (*a)->m["answer"]->v;
+                          r["answer"] += (*a)->m["answer"]->v;
                         }
                       }
                     }
@@ -303,7 +303,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
             {
               for (auto j = i->m["survey"]->m["questions"]->l.begin(); bGood && j != i->m["survey"]->m["questions"]->l.end(); j++)
               {
-                if (!empty(j, "required") && j->m["required"]->v == "1" && (!exist(j, "answer") || (empty(j, "answer") && j->m["answer"]->l.empty())))
+                if (!empty((*j), "required") && (*j)->m["required"]->v == "1" && (!exist((*j), "answer") || (empty((*j), "answer") && (*j)->m["answer"]->l.empty())))
                 {
                   bGood = false;
                 }
@@ -316,7 +316,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                 if (dbupdate("feedback", q.str(), strID, e))
                 {
                   size_t unQuestion = 1;
-                  bResult = true;
+                  b = true;
                   if (exist(i->m["survey"], "owner") && !empty(i->m["survey"]->m["owner"], "email"))
                   {
                     stringstream ssSubject, ssText;
@@ -331,7 +331,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                       string strAnswer;
                       if (!empty(j, "answer"))
                       {
-                        trim(strAnswer, j->m["answer"]->v);
+                        m_manip.trim(strAnswer, j->m["answer"]->v);
                       }
                       else if (!empty(j->m["answer"], "id"))
                       {
@@ -419,6 +419,7 @@ bool Feedback::survey(radialUser &d, string &e)
       if (!g->empty())
       {
         auto r = g->front();
+        stringstream ssDate;
         struct tm tTime;
         time_t CTime;
         b = true;
@@ -427,7 +428,7 @@ bool Feedback::survey(radialUser &d, string &e)
         {
           q.str("");
           q << "select b.first_name, b.last_name, b.userid, b.email from application_contact a, person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
-          auto &gp = dbquery("central_r", q.str(), e);
+          auto gp = dbquery("central_r", q.str(), e);
           if (gp != NULL && !gp->empty())
           {
             d.p->m["o"]->i("owner", gp->front());
@@ -436,7 +437,8 @@ bool Feedback::survey(radialUser &d, string &e)
         }
         time(&CTime);
         localtime_r(&CTime, &tTime);
-        d.p->m["o"]->i("now_date", put_time(&tTime, "%Y-%m-%d %H:%M"));
+        ssDate << put_time(&tTime, "%Y-%m-%d %H:%M");
+        d.p->m["o"]->i("now_date", ssDate.str());
       }
       else
       {
@@ -519,7 +521,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q << "title = ";
               if (!empty(i->m["survey"], "title"))
               {
-                q << "'" << esc(empty(i->m["survey"]->m["title"]-v) << "'";
+                q << "'" << esc(i->m["survey"]->m["title"]->v) << "'";
               }
               else
               {
@@ -534,7 +536,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q << "start_date = ";
               if (!empty(i->m["survey"], "start_date"))
               {
-                q << "'" << esc(empty(i->m["survey"]->m["start_date"]-v) << "'";
+                q << "'" << esc(i->m["survey"]->m["start_date"]->v) << "'";
               }
               else
               {
@@ -544,7 +546,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q << "end_date = ";
               if (!empty(i->m["survey"], "end_date"))
               {
-                q << "'" << esc(empty(i->m["survey"]->m["end_date"]-v) << "'";
+                q << "'" << esc(i->m["survey"]->m["end_date"]->v) << "'";
               }
               else
               {
@@ -553,7 +555,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q << " where id = " << i->m["survey"]->m["id"]->v;
               if (dbupdate("feedback", q.str(), e))
               {
-                bResult = true;
+                b = true;
                 if (exist(i->m["survey"], "questions"))
                 {
                   for (auto &j : i->m["survey"]->m["questions"]->l)
@@ -568,7 +570,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                         j->i("id", strID);
                       }
                     }
-                    if (!empty(j, "id")
+                    if (!empty(j, "id"))
                     {
                       string strTypeID;
                       if (exist(j, "type") && !empty(j->m["type"], "id"))
@@ -584,7 +586,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                       }
                       q.str("");
                       q << "update question set ";
-                      q << "type_id = " << ((!strType.empty())?strType:"null") << ", ";
+                      q << "type_id = " << ((!strTypeID.empty())?strTypeID:"null") << ", ";
                       q << "sequence = " << ((!empty(j, "sequence"))?j->m["sequence"]->v:"null") << ", ";
                       q << "required = " << ((!empty(j, "required"))?j->m["required"]->v:"null") << ", ";
                       q << "question = ";
@@ -605,6 +607,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                           {
                             if (empty(k, "id"))
                             {
+                              string strID;
                               q.str("");
                               q << "insert into answer (question_id) values (" << j->m["id"]->v << ")";
                               if (dbupdate("feedback", q.str(), strID, e))
@@ -638,7 +641,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                             for (auto &ra : *qa)
                             {
                               bool bFound = false;
-                              for (auto k = j->m["answers"]->l.begin() !bFound && k != j->m["answers"]->l.end(); k++)
+                              for (auto k = j->m["answers"]->l.begin(); !bFound && k != j->m["answers"]->l.end(); k++)
                               {
                                 if (!empty((*k), "id") && ra["id"] == (*k)->m["id"]->v)
                                 {
@@ -666,7 +669,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                     for (auto &rq : *qq)
                     {
                       bool bFound = false;
-                      for (auto j = i->m["survey"]->m["questions"]->l.begin(); !bFound && i->m["survey"]->m["questions"]->l.end(); j++)
+                      for (auto j = i->m["survey"]->m["questions"]->l.begin(); !bFound && j != i->m["survey"]->m["questions"]->l.end(); j++)
                       {
                         if (!empty((*j), "id") && rq["id"] == (*j)->m["id"]->v)
                         {
@@ -758,7 +761,7 @@ bool Feedback::surveyRemove(radialUser &d, string &e)
           q << "delete from survey where id = " << i->m["id"]->v;
           if (dbupdate("feedback", q.str(), e))
           {
-            bResult = true;
+            b = true;
           }
           else
           {
@@ -792,7 +795,7 @@ bool Feedback::surveys(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  q << "select a.id, a.application_contact_id, a.title, a.public, a.anonymous, a.unique, a.restrict, date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(a.modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(a.start_date, '%Y-%m-%d %H:%i') start_date, date_format(a.end_date, '%Y-%m-%d %H:%i') end_date, a.hash from survey a"
+  q << "select a.id, a.application_contact_id, a.title, a.public, a.anonymous, a.unique, a.restrict, date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(a.modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(a.start_date, '%Y-%m-%d %H:%i') start_date, date_format(a.end_date, '%Y-%m-%d %H:%i') end_date, a.hash from survey a";
   if (!empty(i, "type") && i->m["type"]->v == "Your Surveys")
   {
     q << ", central.application_contact b, central.person c";
@@ -813,20 +816,20 @@ bool Feedback::surveys(radialUser &d, string &e)
     b = true;
     for (auto &r : *g)
     {
-      string strDate;
+      stringstream ssDate;
       struct tm tTime;
       time_t CTime;
       Json *j;
       time(&CTime);
       localtime_r(&CTime, &tTime);
-      strDate = put_time(&tTime, "%Y-%m-%d %H:%M");
-      r["open"] = (((r["start_date"].empty() || r["start_date"] <= strDate) && (r["end_date"].empty() || r["end_date"] >= strDate))?"1":"0");
+      ssDate << put_time(&tTime, "%Y-%m-%d %H:%M");
+      r["open"] = (((r["start_date"].empty() || r["start_date"] <= ssDate.str()) && (r["end_date"].empty() || r["end_date"] >= ssDate.str()))?"1":"0");
       j = new Json(r);
       if (!r["application_contact_id"].empty())
       {
         q.str("");
         q << "select b.first_name, b.last_name, b.userid, b.email from application_contact a, person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
-        auto &gp = dbquery("central_r", q.str(), e);
+        auto gp = dbquery("central_r", q.str(), e);
         if (gp != NULL && !gp->empty())
         {
           j->i("owner", gp->front());
@@ -835,10 +838,10 @@ bool Feedback::surveys(radialUser &d, string &e)
       }
       q.str("");
       q << "select count(*) numResults from result where survey_id = " << r["id"];
-      auto &gr = dbquery("feedback_r", q.str(), e);
+      auto gr = dbquery("feedback_r", q.str(), e);
       if (gr != NULL && !gr->empty())
       {
-        j->i("numResults", gr->front()["numResults"]->v);
+        j->i("numResults", gr->front()["numResults"]);
       }
       dbfree(gr);
       o->pb(j);
@@ -888,7 +891,7 @@ bool Feedback::types(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *o = d.p->m["o"];
 
   q << "select id, name from type order by name";
   auto g = dbquery("feedback_r", q.str(), e);

@@ -22,6 +22,8 @@ namespace radial
 // {{{ Interface()
 Interface::Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Base(argc, argv)
 {
+  string strError;
+
   strPrefix += "->Interface::Interface()";
   signal(SIGBUS, SIG_IGN);
   signal(SIGCHLD, SIG_IGN);
@@ -32,7 +34,6 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   signal(SIGWINCH, SIG_IGN);
   m_bMaster = false;
   m_bMasterSettled = false;
-  m_bUserAdmin = false;
   m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
@@ -341,7 +342,7 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 }
 // }}}
 // {{{ getUserEmail()
-string Central::getUserEmail(radialUser &d)
+string Interface::getUserEmail(radialUser &d)
 {
   string e, v;
   radialUser a;
@@ -358,7 +359,7 @@ string Central::getUserEmail(radialUser &d)
 } 
 // }}}
 // {{{ getUserFirstName()
-string Central::getUserFirstName(radialUser &d)
+string Interface::getUserFirstName(radialUser &d)
 {
   string e, v;
   radialUser a;
@@ -375,7 +376,7 @@ string Central::getUserFirstName(radialUser &d)
 }
 // }}}
 // {{{ getUserLastName()
-string Central::getUserLastName(radialUser &d)
+string Interface::getUserLastName(radialUser &d)
 {
   string e, v;
   radialUser a;
@@ -392,7 +393,7 @@ string Central::getUserLastName(radialUser &d)
 }
 // }}}
 // {{{ getUserName()
-string Central::getUserName(radialUser &d)
+string Interface::getUserName(radialUser &d)
 {
   string e;
   stringstream v;
@@ -680,7 +681,7 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
 }
 // }}}
 // {{{ isApplicationDeveloper()
-bool Central::isApplicationDeveloper(radialUser &d, string &e)
+bool Interface::isApplicationDeveloper(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -754,7 +755,7 @@ bool Interface::isMasterSettled()
 }
 // }}}
 // {{{ isServerAdmin()
-bool Central::isServerAdmin(radialUser &d, string &e)
+bool Interface::isServerAdmin(radialUser &d, string &e)
 {
   bool b = false;
   stringstream q;
@@ -1161,7 +1162,7 @@ void Interface::notify(const string strMessage)
 }
 // }}}
 // {{{ ny()
-void Central::ny(Json *ptJson, const string strField)
+void Interface::ny(Json *ptJson, const string strField)
 {
   if (ptJson != NULL)
   {
@@ -1701,7 +1702,7 @@ void Interface::userInit(radialUser &i, radialUser &o)
 }
 void Interface::userInit(Json *ptJson, radialUser &d)
 {
-  string strJwt;
+  string strError, strJwt;
 
   userInit(d);
   if (exist(ptJson, "Request"))

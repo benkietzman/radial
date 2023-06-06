@@ -7,14 +7,15 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/db $(prefix)/radial/interface/
+	install --mode=775 bin/feedback $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/junction $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
@@ -88,6 +89,16 @@ obj/db.o: db.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c db.cpp -o obj/db.o $(CPPFLAGS) -I../../common
 obj/Db.o: include/Db.cpp obj
 	g++ -ggdb -Wall -c include/Db.cpp -o obj/Db.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ feedback
+feedback: bin/feedback $(prefix)/radial/interface
+	install --mode=775 bin/feedback $(prefix)/radial/interface/
+bin/feedback: ../../common/libcommon.a obj/feedback.o obj/Base.o obj/Interface.o obj/Feedback.o bin
+	g++ -o bin/feedback obj/feedback.o obj/Base.o obj/Interface.o obj/Feedback.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/feedback.o: feedback.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c feedback.cpp -o obj/feedback.o $(CPPFLAGS) -I../../common
+obj/Feedback.o: include/Feedback.cpp obj
+	g++ -ggdb -Wall -c include/Feedback.cpp -o obj/Feedback.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ irc
 irc: bin/irc $(prefix)/radial/interface

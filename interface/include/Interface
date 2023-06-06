@@ -46,6 +46,7 @@ class Interface : public Base
   string m_strJwtSecret;
   string m_strJwtSigner;
   string m_strMaster;
+  string m_strName;
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
