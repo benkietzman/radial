@@ -523,7 +523,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q << "public = " << ((!empty(i->m["survey"], "public"))?i->m["survey"]->m["public"]->v:"null") << ", ";
               q << "anonymous = " << ((!empty(i->m["survey"], "anonymous"))?i->m["survey"]->m["anonymous"]->v:"null") << ", ";
               q << "`unique` = " << ((!empty(i->m["survey"], "unique"))?i->m["survey"]->m["unique"]->v:"null") << ", ";
-              q << "`restrict` = " << ((!empty(i->m["survey"], "restrict"))?i->m["survey"]->m["restrice"]->v:"null") << ", ";
+              q << "`restrict` = " << ((!empty(i->m["survey"], "restrict"))?i->m["survey"]->m["restrict"]->v:"null") << ", ";
               q << "start_date = ";
               if (!empty(i->m["survey"], "start_date"))
               {
