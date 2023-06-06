@@ -570,9 +570,118 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                     }
                     if (!empty(j, "id")
                     {
-                      // LINE 440
+                      string strTypeID;
+                      if (exist(j, "type") && !empty(j->m["type"], "id"))
+                      {
+                        q.str("");
+                        q << "select id from type where id = " << j->m["type"]->m["id"]->v;
+                        auto gt = dbquery("feedback_r", q.str(), e);
+                        if (gt != NULL && !gt->empty())
+                        {
+                          strTypeID = gt->front()["id"];
+                        }
+                        dbfree(gt);
+                      }
+                      q.str("");
+                      q << "update question set ";
+                      q << "type_id = " << ((!strType.empty())?strType:"null") << ", ";
+                      q << "sequence = " << ((!empty(j, "sequence"))?j->m["sequence"]->v:"null") << ", ";
+                      q << "required = " << ((!empty(j, "required"))?j->m["required"]->v:"null") << ", ";
+                      q << "question = ";
+                      if (!empty(j, "question"))
+                      {
+                        q << "'" << esc(j->m["question"]->v) << "'";
+                      }
+                      else
+                      {
+                        q << "null";
+                      }
+                      q << " where id = " << j->m["id"]->v;
+                      if (dbupdate("feedback", q.str(), e))
+                      {
+                        if (exist(j, "answers"))
+                        {
+                          for (auto &k : j->m["answers"]->l)
+                          {
+                            if (empty(k, "id"))
+                            {
+                              q.str("");
+                              q << "insert into answer (question_id) values (" << j->m["id"]->v << ")";
+                              if (dbupdate("feedback", q.str(), strID, e))
+                              {
+                                k->i("id", strID);
+                              }
+                            }
+                            if (!empty(k, "id"))
+                            {
+                              q.str("");
+                              q << "update answer set ";
+                              q << "sequence = " << ((!empty(k, "sequence"))?k->m["sequence"]->v:"null") << ", ";
+                              q << "answer = ";
+                              if (!empty(k, "answer"))
+                              {
+                                q << "'" << esc(k->m["sequence"]->v) << "'";
+                              }
+                              else
+                              {
+                                q << "null";
+                              }
+                              q << " where id = " << k->m["id"]->v;
+                              dbupdate("feedback", q.str(), e);
+                            }
+                          }
+                          q.str("");
+                          q << "select id from answer where question_id = " << j->m["id"]->v;
+                          auto qa = dbquery("feedback", q.str(), e);
+                          if (qa != NULL)
+                          {
+                            for (auto &ra : *qa)
+                            {
+                              bool bFound = false;
+                              for (auto k = j->m["answers"]->l.begin() !bFound && k != j->m["answers"]->l.end(); k++)
+                              {
+                                if (!empty((*k), "id") && ra["id"] == (*k)->m["id"]->v)
+                                {
+                                  bFound = true;
+                                }
+                              }
+                              if (!bFound)
+                              {
+                                q.str("");
+                                q << "delete from answer where id = " << ra["id"];
+                                dbupdate("feedback", q.str(), e);
+                              }
+                            }
+                          }
+                          dbfree(qa);
+                        }
+                      }
                     }
                   }
+                  q.str("");
+                  q << "select id from question where survey_id = " << i->m["survey"]->m["id"]->v;
+                  auto qq = dbquery("feedback", q.str(), e);
+                  if (qq != NULL)
+                  {
+                    for (auto &rq : *qq)
+                    {
+                      bool bFound = false;
+                      for (auto j = i->m["survey"]->m["questions"]->l.begin(); !bFound && i->m["survey"]->m["questions"]->l.end(); j++)
+                      {
+                        if (!empty((*j), "id") && rq["id"] == (*j)->m["id"]->v)
+                        {
+                          bFound = true;
+                        }
+                      }
+                      if (!bFound)
+                      {
+                        q.str("");
+                        q << "delete from question where id = " << rq["id"];
+                        dbupdate("feedback", q.str(), e);
+                      }
+                    }
+                  }
+                  dbfree(qq);
                 }
               }
               else
