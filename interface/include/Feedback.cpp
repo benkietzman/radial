@@ -862,7 +862,7 @@ bool Feedback::type(radialUser &d, string &e)
 
   if (!empty(i, "type_id"))
   {
-    q << "select id, ame from type where id = " << i->m["type_id"]->v;
+    q << "select id, name from type where id = " << i->m["type_id"]->v;
     auto g = dbquery("feedback_r", q.str(), e);
     if (g != NULL)
     {
