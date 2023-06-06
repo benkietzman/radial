@@ -460,23 +460,156 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "question_id"))
+  if (exist(i, "survey"))
   {
-    q << "select id, sequence, answer from answer where question_id = " << i->m["question_id"]->v << " order by sequence, id";
-    auto g = dbquery("feedback_r", q.str(), e);
-    if (g != NULL)
+    if (isValid(d, "Feedback"))
     {
-      b = true;
-      for (auto &r : *g)
+      q << "select b.id from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and a.name = 'Feedback' and c.userid = '" << d.u << "'";
+      auto g = dbquery("central_r", q.str(), e);
+      if (g != NULL && !g->empty())
       {
-        o->pb(r);
+        auto r = g->front();
+        if (!exist(i->m["survey"], "id") || i->m["survey"]->m["id"]->v.empty())
+        {
+          const EVP_MD* md = EVP_md5();
+          string strHash, strID;
+          stringstream ssTime;
+          time_t CTime;
+          unsigned char md_value[EVP_MAX_MD_SIZE];
+          unsigned int md_len;
+          EVP_MD_CTX *context = EVP_MD_CTX_new();
+          time(&CTime);
+          ssTime << CTime;
+          EVP_DigestInit_ex2(context, md, NULL);
+          EVP_DigestUpdate(context, ssTime.str().c_str(), ssTime.str().length());
+          EVP_DigestFinal_ex(context, md_value, &md_len);
+          EVP_MD_CTX_free(context);
+          strHash.resize(md_len * 2);
+          for (unsigned int i = 0; i < md_len ; ++i)
+          {
+            sprintf(&strHash[i*2], "%02x", md_value[i]);
+          }
+          i->m["survey"]->i("application_contact_id", r["application_contact_id"]);
+          q.str("");
+          q << "insert into survey (application_contact_id, hash) values (" << r["application_contact_id"] << ", '" << strHash << "')";
+          if (dbupdate("feedback", q.str(), strID, e))
+          {
+            i->m["survey"]->i("id", strID);
+            i->m["survey"]->i("hash", strHash);
+          }
+          else
+          {
+            e = "Failed to insert survey.";
+          }
+        }
+        if (!empty(i->m["survey"], "id") && !empty(i->m["survey"], "hash"))
+        {
+          o->i("id", i->m["survey"]->m["id"]->v);
+          o->i("hash", i->m["survey"]->m["hash"]->v);
+          q.str("");
+          q << "select application_contact_id from survey where id = " << i->m["survey"]->m["id"]->v;
+          auto gs = dbquery("feedback", q.str(), e);
+          if (gs != NULL && !gs->empty())
+          {
+            auto sr = gs->front();
+            if (sr["application_contact_id"] == r["id"])
+            {
+              q.str("");
+              q << "update survey set ";
+              q << "title = ";
+              if (!empty(i->m["survey"], "title"))
+              {
+                q << "'" << esc(empty(i->m["survey"]->m["title"]-v) << "'";
+              }
+              else
+              {
+                q << "null";
+              }
+              q << ", ";
+              q << "modified_date = now(),";
+              q << "public = " << ((!empty(i->m["survey"], "public"))?i->m["survey"]->m["public"]->v:"null") << ", ";
+              q << "anonymous = " << ((!empty(i->m["survey"], "anonymous"))?i->m["survey"]->m["anonymous"]->v:"null") << ", ";
+              q << "`unique` = " << ((!empty(i->m["survey"], "unique"))?i->m["survey"]->m["unique"]->v:"null") << ", ";
+              q << "`restrict` = " << ((!empty(i->m["survey"], "restrict"))?i->m["survey"]->m["restrice"]->v:"null") << ", ";
+              q << "start_date = ";
+              if (!empty(i->m["survey"], "start_date"))
+              {
+                q << "'" << esc(empty(i->m["survey"]->m["start_date"]-v) << "'";
+              }
+              else
+              {
+                q << "null";
+              }
+              q << ", ";
+              q << "end_date = ";
+              if (!empty(i->m["survey"], "end_date"))
+              {
+                q << "'" << esc(empty(i->m["survey"]->m["end_date"]-v) << "'";
+              }
+              else
+              {
+                q << "null";
+              }
+              q << " where id = " << i->m["survey"]->m["id"]->v;
+              if (dbupdate("feedback", q.str(), e))
+              {
+                bResult = true;
+                if (exist(i->m["survey"], "questions"))
+                {
+                  for (auto &j : i->m["survey"]->m["questions"]->l)
+                  {
+                    if (empty(j, "id"))
+                    {
+                      string strID;
+                      q.str("");
+                      q << "insert into question (survey_id) values (" << i->m["survey"]->m["id"]->v << ")";
+                      if (dbupdate("feedback", q.str(), strID, e))
+                      {
+                        j->i("id", strID);
+                      }
+                    }
+                    if (!empty(j, "id")
+                    {
+                      // LINE 440
+                    }
+                  }
+                }
+              }
+              else
+              {
+                e = "Failed to update survey.";
+              }
+            }
+            else
+            {
+              e = "You are not the owner of this survey.";
+            }
+          }
+          else
+          {
+            e = "Failed to retrieve survey.";
+          }
+          dbfree(gs);
+        }
+        else
+        {
+          e = "Please provide the id and hash.";
+        }
       }
+      else
+      {
+        e = "Failed to fetch contact information.";
+      }
+      dbfree(g);
     }
-    dbfree(g);
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
   }
   else
   {
-    e = "Please provide the question_id.";
+    e = "Please provide the survey.";
   }
 
   return b;
