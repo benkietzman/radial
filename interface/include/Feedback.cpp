@@ -232,7 +232,7 @@ bool Feedback::results(radialUser &d, string &e)
               {
                 q.str("");
                 q << "select b.userid, b.first_name, b.last_name from central.application_contact a, central.person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
-                auto pg = dbquery("feedback_r", q.str(), e);
+                auto pg = dbquery("central_r", q.str(), e);
                 if (pg != NULL && !pg->empty())
                 {
                   ro->i("contact", pg->front());
@@ -288,7 +288,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
             if (!bAnonymous)
             {
               q << "select b.id from central.application a, central.application_contact b, central.person c where a.id = b.application_id and b.contact_id = c.id and a.name = 'Feedback' and c.userid = '" << d.u << "'";
-              auto g = dbquery("feedback_r", q.str(), e);
+              auto g = dbquery("central_r", q.str(), e);
               if (g != NULL && !g->empty())
               {
                 strApplicationContactID = g->front()["id"];
@@ -407,7 +407,7 @@ bool Feedback::survey(radialUser &d, string &e)
     q << "select id, hash, application_contact_id, title, date_format(entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(start_date, '%Y-%m-%d %H:%i') start_date, date_format(end_date, '%Y-%m-%d %H:%i') end_date, public, anonymous, `unique`, `restrict` from survey where ";
     if (!empty(i, "hash"))
     {
-      q << "hash = '" << i->m["hash"]->v;
+      q << "hash = '" << i->m["hash"]->v << "'";
     }
     else
     {
