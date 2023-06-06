@@ -903,10 +903,6 @@ bool Feedback::types(radialUser &d, string &e)
       o->pb(r);
     }
   }
-  else
-  {
-    e = "Failed to retieve types.";
-  }
   dbfree(g);
 
   return b;
