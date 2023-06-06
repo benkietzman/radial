@@ -486,9 +486,9 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
           {
             sprintf(&strHash[i*2], "%02x", md_value[i]);
           }
-          i->m["survey"]->i("application_contact_id", r["application_contact_id"]);
+          i->m["survey"]->i("application_contact_id", r["id"]);
           q.str("");
-          q << "insert into survey (application_contact_id, hash) values (" << r["application_contact_id"] << ", '" << strHash << "')";
+          q << "insert into survey (application_contact_id, hash) values (" << r["id"] << ", '" << strHash << "')";
           if (dbupdate("feedback", q.str(), strID, e))
           {
             i->m["survey"]->i("id", strID);
