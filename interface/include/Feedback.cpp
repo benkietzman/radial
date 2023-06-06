@@ -340,13 +340,8 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                       if (!strAnswer.empty())
                       {
                         q.str("");
-                        q << "insert into result_answer (result_id, question_id, answer) values (" << strID << ", " << j->m["id"]->v << ", '" << esc(strAnswer) << "'";
-                        if (!dbupdate("feedback", q.str(), e))
-                        {
-                          stringstream ssError;
-                          ssError << "Failed to store feedback results for question " << unQuestion << ".";
-                          e = ssError.str();
-                        }
+                        q << "insert into result_answer (result_id, question_id, answer) values (" << strID << ", " << j->m["id"]->v << ", '" << esc(strAnswer) << "')";
+                        dbupdate("feedback", q.str(), e);
                       }
                     }
                     unQuestion++;
