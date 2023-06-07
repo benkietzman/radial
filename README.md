@@ -4,7 +4,7 @@ Provides a radial design with a central hub and adjunct interfaces.
 # Available Interfaces
 This is a list of interfaces hosted by Radial.  The Common Library contains Radial classes written in C++ as well as PHP.  Those classes can reach all the interfaces via the request function. Beyond that, there are a number of specialized functions within the Radial classes fine tuned to the needs of particular interfaces.
 
-* auth:  Provides authentication/authorization via Warden.
+* auth:  Provides interface authentication/authorization via Warden.
 * central:  Provides functional hooks into Central.
 * centralmon:  Provides functional hooks into Central Monitor.
 * command:  Provides the ability to execute commands on the local server and return the stdout results.
