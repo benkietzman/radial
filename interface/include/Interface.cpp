@@ -1424,12 +1424,6 @@ void Interface::process(string strPrefix)
         else
         {
           bExit = true;
-          if (nReturn < 0)
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") [" << fds[0].fd << "]:  " << strerror(errno);
-            log(ssMessage.str());
-          }
         }
       }
       if (fds[1].revents & POLLOUT)
@@ -1437,21 +1431,19 @@ void Interface::process(string strPrefix)
         if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
         {
           bExit = true;
-          if (nReturn < 0)
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Utility::fdWrite(" << errno << ") [" << fds[1].fd << "]:  " << strerror(errno);
-            log(ssMessage.str());
-          }
         }
       }
       if (fds[2].revents & POLLIN)
       {
-        if ((nReturn = read(fds[2].fd, &cChar, 1)) == 1)
+        if ((nReturn = read(fds[2].fd, &cChar, 1)) > 0)
         {
           m_mutexShare.lock();
           m_bResponse = false;
           m_mutexShare.unlock();
+        }
+        else
+        {
+          bExit = true;
         }
       }
       for (size_t i = 3; i < unIndex; i++)
