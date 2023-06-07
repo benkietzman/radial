@@ -498,6 +498,8 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         mutexResponses.unlock();
         msleep(250);
       }
+      close(fdResponse[0]);
+      close(fdResponse[1]);
       // }}}
     }
     else
