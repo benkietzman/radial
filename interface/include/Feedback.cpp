@@ -614,7 +614,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                               q << "answer = ";
                               if (!empty(k, "answer"))
                               {
-                                q << "'" << esc(k->m["sequence"]->v) << "'";
+                                q << "'" << esc(k->m["answer"]->v) << "'";
                               }
                               else
                               {
