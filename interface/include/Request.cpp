@@ -412,7 +412,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         fds[1].fd = fdResponse[0];
         fds[1].events = POLLIN;
         // }}}
-        if ((nReturn = poll(fds, 1, 2000)) > 0)
+        if ((nReturn = poll(fds, 2, 2000)) > 0)
         {
           if (fds[0].revents & POLLIN)
           {
