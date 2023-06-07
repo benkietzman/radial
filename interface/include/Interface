@@ -38,6 +38,8 @@ class Interface : public Base
   protected:
   bool m_bMaster;
   bool m_bMasterSettled;
+  bool m_bResponse;
+  int m_fdResponse[2];
   list<string> m_responses;
   map<string, int> m_waiting;
   mutex m_mutexShare;

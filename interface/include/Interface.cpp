@@ -34,10 +34,12 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   signal(SIGWINCH, SIG_IGN);
   m_bMaster = false;
   m_bMasterSettled = false;
+  m_bResponse = false;
   m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
+  pipe(m_fdResponse);
   if (m_pWarden != NULL)
   {
     Json *ptAes = new Json, *ptJwt = new Json;
@@ -58,6 +60,8 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
 // {{{ ~Interface()
 Interface::~Interface()
 {
+  close(m_fdResponse[0]);
+  close(m_fdResponse[1]);
 }
 // }}}
 // {{{ alert()
@@ -439,6 +443,11 @@ void Interface::hub(radialPacket &p, const bool bWait)
       p.u = ssUnique.str();
       m_waiting[ssUnique.str()] = fdUnique[1];
       m_responses.push_back(pack(p, strValue));
+      if (!m_bResponse)
+      {
+        m_bResponse = true;
+        write(m_fdResponse[1], "\n", 1);
+      }
       m_mutexShare.unlock();
       while (!bExit)
       {
@@ -515,6 +524,11 @@ void Interface::hub(radialPacket &p, const bool bWait)
   {
     m_mutexShare.lock();
     m_responses.push_back(pack(p, strValue));
+    if (!m_bResponse)
+    {
+      m_bResponse = true;
+      write(m_fdResponse[1], "\n", 1);
+    }
     m_mutexShare.unlock();
   }
 }
@@ -1233,6 +1247,7 @@ bool Interface::pageUser(const string strUser, const string strMessage, string &
 void Interface::process(string strPrefix)
 {
   bool bExit = false;
+  char cChar;
   int nReturn;
   list<int> uniqueRemovals;
   map<int, string> uniques;
@@ -1249,7 +1264,7 @@ void Interface::process(string strPrefix)
   CMaster[0] = CMaster[1] = CBroadcast;
   while (!bExit)
   {
-    fds = new pollfd[uniques.size() + 2];
+    fds = new pollfd[uniques.size() + 3];
     unIndex = 0;
     fds[unIndex].fd = 0;
     fds[unIndex].events = POLLIN;
@@ -1270,6 +1285,9 @@ void Interface::process(string strPrefix)
     {
       fds[unIndex].fd = 1;
     }
+    unIndex++;
+    fds[unIndex].fd = m_fdResponse[0];
+    fds[unIndex].events = POLLIN;
     unIndex++;
     for (auto &unique : uniques)
     {
@@ -1427,7 +1445,16 @@ void Interface::process(string strPrefix)
           }
         }
       }
-      for (size_t i = 2; i < unIndex; i++)
+      if (fds[2].revents & POLLIN)
+      {
+        if ((nReturn = read(fds[2].fd, &cChar, 1)) == 1)
+        {
+          m_mutexShare.lock();
+          m_bResponse = false;
+          m_mutexShare.unlock();
+        }
+      }
+      for (size_t i = 3; i < unIndex; i++)
       {
         if (fds[i].revents & POLLOUT)
         {
