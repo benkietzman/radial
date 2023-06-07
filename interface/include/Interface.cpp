@@ -35,11 +35,12 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_bMaster = false;
   m_bMasterSettled = false;
   m_bResponse = false;
+  m_fdResponse[0] = -1;
+  m_fdResponse[1] = -1;
   m_pAutoModeCallback = NULL;
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
-  pipe(m_fdResponse);
   if (m_pWarden != NULL)
   {
     Json *ptAes = new Json, *ptJwt = new Json;
@@ -60,8 +61,6 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
 // {{{ ~Interface()
 Interface::~Interface()
 {
-  close(m_fdResponse[0]);
-  close(m_fdResponse[1]);
 }
 // }}}
 // {{{ alert()
@@ -443,7 +442,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
       p.u = ssUnique.str();
       m_waiting[ssUnique.str()] = fdUnique[1];
       m_responses.push_back(pack(p, strValue));
-      if (!m_bResponse)
+      if (!m_bResponse && m_fdResponse[1] != -1)
       {
         m_bResponse = true;
         write(m_fdResponse[1], "\n", 1);
@@ -524,7 +523,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
   {
     m_mutexShare.lock();
     m_responses.push_back(pack(p, strValue));
-    if (!m_bResponse)
+    if (!m_bResponse && m_fdResponse[1] != -1)
     {
       m_bResponse = true;
       write(m_fdResponse[1], "\n", 1);
@@ -1246,322 +1245,330 @@ bool Interface::pageUser(const string strUser, const string strMessage, string &
 // {{{ process()
 void Interface::process(string strPrefix)
 {
-  bool bExit = false;
-  char cChar;
   int nReturn;
-  list<int> uniqueRemovals;
-  map<int, string> uniques;
-  pollfd *fds;
-  size_t unIndex, unPosition;
-  string strError, strJson, strLine;
+  string strError;
   stringstream ssMessage;
-  time_t CBroadcast, CMaster[2], CShutdown = 0, CTime, unBroadcastSleep = 15;
 
   strPrefix += "->Interface::process()";
-  m_pUtility->fdNonBlocking(0, strError);
-  m_pUtility->fdNonBlocking(1, strError);
-  time(&CBroadcast);
-  CMaster[0] = CMaster[1] = CBroadcast;
-  while (!bExit)
+  if ((nReturn = pipe(m_fdResponse)) == 0)
   {
-    fds = new pollfd[uniques.size() + 3];
-    unIndex = 0;
-    fds[unIndex].fd = 0;
-    fds[unIndex].events = POLLIN;
-    unIndex++;
-    fds[unIndex].fd = -1;
-    fds[unIndex].events = POLLOUT;
-    if (m_strBuffers[1].empty())
+    bool bExit = false;
+    char cChar;
+    list<int> uniqueRemovals;
+    map<int, string> uniques;
+    pollfd *fds;
+    size_t unIndex, unPosition;
+    string strJson, strLine;
+    time_t CBroadcast, CMaster[2], CShutdown = 0, CTime, unBroadcastSleep = 15;
+    m_pUtility->fdNonBlocking(0, strError);
+    m_pUtility->fdNonBlocking(1, strError);
+    time(&CBroadcast);
+    CMaster[0] = CMaster[1] = CBroadcast;
+    while (!bExit)
     {
-      m_mutexShare.lock();
-      while (!m_responses.empty())
-      {
-        m_strBuffers[1].append(m_responses.front() + "\n");
-        m_responses.pop_front();
-      }
-      m_mutexShare.unlock();
-    }
-    if (!m_strBuffers[1].empty())
-    {
-      fds[unIndex].fd = 1;
-    }
-    unIndex++;
-    fds[unIndex].fd = m_fdResponse[0];
-    fds[unIndex].events = POLLIN;
-    unIndex++;
-    for (auto &unique : uniques)
-    {
-      fds[unIndex].fd = -1;
-      if (!unique.second.empty())
-      {
-        fds[unIndex].fd = unique.first;
-      }
-      fds[unIndex].events = POLLOUT;
+      fds = new pollfd[uniques.size() + 3];
+      unIndex = 0;
+      fds[unIndex].fd = 0;
+      fds[unIndex].events = POLLIN;
       unIndex++;
-    }
-    if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
-    {
-      bExit = true;
-    }
-    if (!bExit && (nReturn = poll(fds, unIndex, 2000)) > 0)
-    {
-      if (fds[0].revents & (POLLHUP | POLLIN))
+      fds[unIndex].fd = -1;
+      fds[unIndex].events = POLLOUT;
+      if (m_strBuffers[1].empty())
       {
-        if (m_pUtility->fdRead(fds[0].fd, m_strBuffers[0], nReturn))
+        m_mutexShare.lock();
+        while (!m_responses.empty())
         {
-          while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
+          m_strBuffers[1].append(m_responses.front() + "\n");
+          m_responses.pop_front();
+        }
+        m_mutexShare.unlock();
+      }
+      if (!m_strBuffers[1].empty())
+      {
+        fds[unIndex].fd = 1;
+      }
+      unIndex++;
+      fds[unIndex].fd = m_fdResponse[0];
+      fds[unIndex].events = POLLIN;
+      unIndex++;
+      for (auto &unique : uniques)
+      {
+        fds[unIndex].fd = -1;
+        if (!unique.second.empty())
+        {
+          fds[unIndex].fd = unique.first;
+        }
+        fds[unIndex].events = POLLOUT;
+        unIndex++;
+      }
+      if (fds[0].fd != 0 || (fds[1].fd != -1 && fds[1].fd != 1))
+      {
+        bExit = true;
+      }
+      if (!bExit && (nReturn = poll(fds, unIndex, 2000)) > 0)
+      {
+        if (fds[0].revents & (POLLHUP | POLLIN))
+        {
+          if (m_pUtility->fdRead(fds[0].fd, m_strBuffers[0], nReturn))
           {
-            int fdUnique = -1;
-            radialPacket p;
-            strLine = m_strBuffers[0].substr(0, unPosition);
-            m_strBuffers[0].erase(0, (unPosition + 1));
-            unpack(strLine, p);
-            if (p.s == m_strName && !p.u.empty())
+            while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
             {
-              m_mutexShare.lock();
-              if (m_waiting.find(p.u) != m_waiting.end())
+              int fdUnique = -1;
+              radialPacket p;
+              strLine = m_strBuffers[0].substr(0, unPosition);
+              m_strBuffers[0].erase(0, (unPosition + 1));
+              unpack(strLine, p);
+              if (p.s == m_strName && !p.u.empty())
               {
-                fdUnique = m_waiting[p.u];
+                m_mutexShare.lock();
+                if (m_waiting.find(p.u) != m_waiting.end())
+                {
+                  fdUnique = m_waiting[p.u];
+                }
+                m_mutexShare.unlock();
               }
-              m_mutexShare.unlock();
-            }
-            if (fdUnique != -1)
-            {
-              uniques[fdUnique] = strLine + "\n";
-            }
-            else if (p.s == "hub")
-            {
-              Json *ptJson = new Json(p.p);
-              if (!empty(ptJson, "Function"))
+              if (fdUnique != -1)
               {
-                // {{{ interfaces
-                if (ptJson->m["Function"]->v == "interfaces")
-                {
-                  interfaces(strPrefix, ptJson);
-                }
-                // }}}
-                // {{{ links
-                else if (ptJson->m["Function"]->v == "links")
-                {
-                  links(strPrefix, ptJson);
-                }
-                // }}}
-                // {{{ shutdown
-                else if (ptJson->m["Function"]->v == "shutdown")
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << ":  Shutting down.";
-                  log(ssMessage.str());
-                  setShutdown();
-                }
-                // }}}
+                uniques[fdUnique] = strLine + "\n";
               }
-              delete ptJson;
-            }
-            else
-            {
-              Json *ptJson = new Json(p.p);
-              if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
+              else if (p.s == "hub")
               {
-                if (!empty(ptJson, "Master"))
+                Json *ptJson = new Json(p.p);
+                if (!empty(ptJson, "Function"))
                 {
-                  time(&CMaster[0]);
-                  if (m_strMaster != ptJson->m["Master"]->v)
+                  // {{{ interfaces
+                  if (ptJson->m["Function"]->v == "interfaces")
                   {
-                    string strMaster = m_strMaster;
-                    m_strMaster = ptJson->m["Master"]->v;
-                    m_bMaster = ((m_strMaster == m_strNode)?true:false);
-                    m_bMasterSettled = false;
-                    time(&CMaster[1]);
-                    if (m_pAutoModeCallback != NULL)
+                    interfaces(strPrefix, ptJson);
+                  }
+                  // }}}
+                  // {{{ links
+                  else if (ptJson->m["Function"]->v == "links")
+                  {
+                    links(strPrefix, ptJson);
+                  }
+                  // }}}
+                  // {{{ shutdown
+                  else if (ptJson->m["Function"]->v == "shutdown")
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << ":  Shutting down.";
+                    log(ssMessage.str());
+                    setShutdown();
+                  }
+                  // }}}
+                }
+                delete ptJson;
+              }
+              else
+              {
+                Json *ptJson = new Json(p.p);
+                if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
+                {
+                  if (!empty(ptJson, "Master"))
+                  {
+                    time(&CMaster[0]);
+                    if (m_strMaster != ptJson->m["Master"]->v)
                     {
-                      m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                      string strMaster = m_strMaster;
+                      m_strMaster = ptJson->m["Master"]->v;
+                      m_bMaster = ((m_strMaster == m_strNode)?true:false);
+                      m_bMasterSettled = false;
+                      time(&CMaster[1]);
+                      if (m_pAutoModeCallback != NULL)
+                      {
+                        m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+                      }
                     }
                   }
                 }
-              }
-              else if (m_pCallback != NULL)
-              {
-                if (!empty(ptJson, "wsRequestID"))
+                else if (m_pCallback != NULL)
                 {
-                  string strIdentity, strName, strNode;
-                  stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
-                  ssRequestID >> strNode >> strName >> strIdentity;
-                  if (strName != m_strName)
+                  if (!empty(ptJson, "wsRequestID"))
                   {
-                    Json *ptLive = new Json;
-                    ptLive->i("radialProcess", m_strName);
-                    ptLive->i("radialPrefix", strPrefix);
-                    ptLive->i("radialPurpose", "status");
-                    if (!empty(ptJson, "Interface"))
+                    string strIdentity, strName, strNode;
+                    stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
+                    ssRequestID >> strNode >> strName >> strIdentity;
+                    if (strName != m_strName)
                     {
-                      ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+                      Json *ptLive = new Json;
+                      ptLive->i("radialProcess", m_strName);
+                      ptLive->i("radialPrefix", strPrefix);
+                      ptLive->i("radialPurpose", "status");
+                      if (!empty(ptJson, "Interface"))
+                      {
+                        ptLive->i("radialInterface", ptJson->m["Interface"]->v);
+                      }
+                      if (!empty(ptJson, "Function"))
+                      {
+                        ptLive->i("radialFunction", ptJson->m["Function"]->v);
+                      }
+                      hub(strName, ptLive, false);
+                      delete ptLive;
                     }
-                    if (!empty(ptJson, "Function"))
-                    {
-                      ptLive->i("radialFunction", ptJson->m["Function"]->v);
-                    }
-                    hub(strName, ptLive, false);
-                    delete ptLive;
+                  }
+                  if (!shutdown())
+                  {
+                    m_pCallback(strPrefix, strLine, true);
+                  }
+                  else
+                  {
+                    ptJson->i("Status", "error");
+                    ptJson->i("Error", "Interface is shutting down.");
+                    ptJson->j(p.p);
+                    hub(p, false);
                   }
                 }
-                if (!shutdown())
-                {
-                  m_pCallback(strPrefix, strLine, true);
-                }
-                else
-                {
-                  ptJson->i("Status", "error");
-                  ptJson->i("Error", "Interface is shutting down.");
-                  ptJson->j(p.p);
-                  hub(p, false);
-                }
+                delete ptJson;
               }
-              delete ptJson;
-            }
-          }
-        }
-        else
-        {
-          bExit = true;
-        }
-      }
-      if (fds[1].revents & POLLOUT)
-      {
-        if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
-        {
-          bExit = true;
-        }
-      }
-      if (fds[2].revents & POLLIN)
-      {
-        if ((nReturn = read(fds[2].fd, &cChar, 1)) > 0)
-        {
-          m_mutexShare.lock();
-          m_bResponse = false;
-          m_mutexShare.unlock();
-        }
-        else
-        {
-          bExit = true;
-        }
-      }
-      for (size_t i = 3; i < unIndex; i++)
-      {
-        if (fds[i].revents & POLLOUT)
-        {
-          if (m_pUtility->fdWrite(fds[i].fd, uniques[fds[i].fd], nReturn))
-          {
-            if (uniques[fds[i].fd].empty())
-            {
-              uniqueRemovals.push_back(fds[i].fd);
             }
           }
           else
           {
-            uniqueRemovals.push_back(fds[i].fd);
-            if (nReturn < 0)
+            bExit = true;
+          }
+        }
+        if (fds[1].revents & POLLOUT)
+        {
+          if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
+          {
+            bExit = true;
+          }
+        }
+        if (fds[2].revents & POLLIN)
+        {
+          if ((nReturn = read(fds[2].fd, &cChar, 1)) > 0)
+          {
+            m_mutexShare.lock();
+            m_bResponse = false;
+            m_mutexShare.unlock();
+          }
+          else
+          {
+            bExit = true;
+          }
+        }
+        for (size_t i = 3; i < unIndex; i++)
+        {
+          if (fds[i].revents & POLLOUT)
+          {
+            if (m_pUtility->fdWrite(fds[i].fd, uniques[fds[i].fd], nReturn))
             {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->m_pUtility->fdWrite(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
-              log(ssMessage.str());
+              if (uniques[fds[i].fd].empty())
+              {
+                uniqueRemovals.push_back(fds[i].fd);
+              }
+            }
+            else
+            {
+              uniqueRemovals.push_back(fds[i].fd);
+              if (nReturn < 0)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->m_pUtility->fdWrite(" << errno << ") [" << fds[i].fd << "]:  " << strerror(errno);
+                log(ssMessage.str());
+              }
             }
           }
         }
       }
-    }
-    else if (!bExit && nReturn < 0 && errno != EINTR)
-    {
-      bExit = true;
-      ssMessage.str("");
-      ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
-      notify(ssMessage.str());
-    }
-    delete[] fds;
-    uniqueRemovals.sort();
-    uniqueRemovals.unique();
-    while (!uniqueRemovals.empty())
-    {
-      uniques.erase(uniqueRemovals.front());
-      close(uniqueRemovals.front());
-      uniqueRemovals.pop_front();
-    }
-    if (m_pAutoModeCallback != NULL)
-    {
-      time(&CTime);
-      if (!m_bMasterSettled && (CTime - CMaster[1]) > 120)
+      else if (!bExit && nReturn < 0 && errno != EINTR)
       {
-        m_bMasterSettled = true;
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
+        notify(ssMessage.str());
       }
-      if ((CTime - CBroadcast) > unBroadcastSleep)
+      delete[] fds;
+      uniqueRemovals.sort();
+      uniqueRemovals.unique();
+      while (!uniqueRemovals.empty())
       {
-        string strMaster = m_strMaster;
-        unsigned int unSeed = CTime + getpid();
-        srand(unSeed);
-        unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
-        if (!m_strMaster.empty() && m_strMaster != m_strNode)
+        uniques.erase(uniqueRemovals.front());
+        close(uniqueRemovals.front());
+        uniqueRemovals.pop_front();
+      }
+      if (m_pAutoModeCallback != NULL)
+      {
+        time(&CTime);
+        if (!m_bMasterSettled && (CTime - CMaster[1]) > 120)
         {
-          bool bFound = false;
-          m_mutexShare.lock();
-          for (auto linkIter = m_l.begin(); !bFound && linkIter != m_l.end(); linkIter++)
+          m_bMasterSettled = true;
+        }
+        if ((CTime - CBroadcast) > unBroadcastSleep)
+        {
+          string strMaster = m_strMaster;
+          unsigned int unSeed = CTime + getpid();
+          srand(unSeed);
+          unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
+          if (!m_strMaster.empty() && m_strMaster != m_strNode)
           {
-            if ((*linkIter)->strNode == m_strMaster)
+            bool bFound = false;
+            m_mutexShare.lock();
+            for (auto linkIter = m_l.begin(); !bFound && linkIter != m_l.end(); linkIter++)
             {
-              bFound = true;
+              if ((*linkIter)->strNode == m_strMaster)
+              {
+                bFound = true;
+              }
+            }
+            m_mutexShare.unlock();
+            if (!bFound)
+            {
+              m_strMaster.clear();
             }
           }
-          m_mutexShare.unlock();
-          if (!bFound)
+          if ((CTime - CMaster[0]) > 60)
           {
             m_strMaster.clear();
           }
+          if (m_strMaster.empty())
+          {
+            m_strMaster = m_strNode;
+          }
+          if (!m_strMaster.empty() && m_strMaster == m_strNode)
+          {
+            Json *ptJson = new Json;
+            CMaster[0] = CTime;
+            ptJson->i("Interface", m_strName);
+            ptJson->i("Function", "master");
+            ptJson->i("Master", m_strMaster);
+            hub("link", ptJson, false);
+            delete ptJson;
+          }
+          if (strMaster != m_strMaster)
+          {
+            m_bMaster = ((m_strMaster == m_strNode)?true:false);
+            m_bMasterSettled = false;
+            time(&CMaster[1]);
+            m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
+          }
+          CBroadcast = CTime;
         }
-        if ((CTime - CMaster[0]) > 60)
+      }
+      if (shutdown())
+      {
+        time(&CTime);
+        if (CShutdown == 0)
         {
-          m_strMaster.clear();
+          CShutdown = CTime;
         }
-        if (m_strMaster.empty())
+        m_mutexShare.lock();
+        if ((CTime - CShutdown) > 10 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
         {
-          m_strMaster = m_strNode;
+          bExit = true;
         }
-        if (!m_strMaster.empty() && m_strMaster == m_strNode)
-        {
-          Json *ptJson = new Json;
-          CMaster[0] = CTime;
-          ptJson->i("Interface", m_strName);
-          ptJson->i("Function", "master");
-          ptJson->i("Master", m_strMaster);
-          hub("link", ptJson, false);
-          delete ptJson;
-        }
-        if (strMaster != m_strMaster)
-        {
-          m_bMaster = ((m_strMaster == m_strNode)?true:false);
-          m_bMasterSettled = false;
-          time(&CMaster[1]);
-          m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
-        }
-        CBroadcast = CTime;
+        m_mutexShare.unlock();
       }
     }
-    if (shutdown())
+    for (auto &unique : uniques)
     {
-      time(&CTime);
-      if (CShutdown == 0)
-      {
-        CShutdown = CTime;
-      }
-      m_mutexShare.lock();
-      if ((CTime - CShutdown) > 10 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
-      {
-        bExit = true;
-      }
-      m_mutexShare.unlock();
+      close(unique.first);
     }
-  }
-  for (auto &unique : uniques)
-  {
-    close(unique.first);
+    close(m_fdResponse[0]);
+    m_fdResponse[0] = -1;
+    close(m_fdResponse[1]);
+    m_fdResponse[1] = -1;
   }
   setShutdown();
 }
