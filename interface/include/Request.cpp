@@ -240,7 +240,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
           hub(ptJson);
           mutexResponses.lock();
           responses.push_back(ptJson->j(strJson));
-          if (!bResponse)
+          if (!bResponse && fdResponse != -1)
           {
             bResponse = true;
             write(fdResponse, "\n", 1);
@@ -253,7 +253,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
           ptJson->i("Error", "Please provide a valid Function:  list, ping.");
           mutexResponses.lock();
           responses.push_back(ptJson->j(strJson));
-          if (!bResponse)
+          if (!bResponse && fdResponse != -1)
           {
             bResponse = true;
             write(fdResponse, "\n", 1);
@@ -267,7 +267,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
         ptJson->i("Error", "Please provide the Function.");
         mutexResponses.lock();
         responses.push_back(ptJson->j(strJson));
-        if (!bResponse)
+        if (!bResponse && fdResponse != -1)
         {
           bResponse = true;
           write(fdResponse, "\n", 1);
@@ -333,7 +333,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
       }
       mutexResponses.lock();
       responses.push_back(p.p);
-      if (!bResponse)
+      if (!bResponse && fdResponse != -1)
       {
         bResponse = true;
         write(fdResponse, "\n", 1);
@@ -347,7 +347,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
     ptJson->i("Error", "Please provide the Interface.");
     mutexResponses.lock();
     responses.push_back(ptJson->j(strJson));
-    if (!bResponse)
+    if (!bResponse && fdResponse != -1)
     {
       bResponse = true;
       write(fdResponse, "\n", 1);
@@ -488,6 +488,10 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         // }}}
       }
       // {{{ post work
+      close(fdResponse[0]);
+      fdResponse[0] = -1;
+      close(fdResponse[1]);
+      fdResponse[1] = -1;
       while (bActive)
       {
         mutexResponses.lock();
@@ -498,8 +502,6 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         mutexResponses.unlock();
         msleep(250);
       }
-      close(fdResponse[0]);
-      close(fdResponse[1]);
       // }}}
     }
     else
