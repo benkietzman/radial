@@ -143,7 +143,7 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
           {
             fds[0].events |= POLLOUT;
           }
-          if ((nReturn = poll(fds, 1, 500)) > 0)
+          if ((nReturn = poll(fds, 1, 2000)) > 0)
           {
             if (fds[0].revents & POLLIN)
             {

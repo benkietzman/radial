@@ -97,7 +97,7 @@ void Request::accept(string strPrefix)
           fds[0].fd = fdSocket;
           fds[0].events = POLLIN;
           // }}}
-          if ((nReturn = poll(fds, 1, 500)) > 0)
+          if ((nReturn = poll(fds, 1, 2000)) > 0)
           {
             // {{{ accept
             if (fds[0].revents & POLLIN)
@@ -219,7 +219,7 @@ void Request::callback(string strPrefix, const string strPacket, const bool bRes
 }
 // }}}
 // {{{ request()
-void Request::request(string strPrefix, size_t &unActive, const string strBuffer, list<string> &responses, mutex &mutexResponses)
+void Request::request(string strPrefix, size_t &unActive, const string strBuffer, bool &bResponse, int &fdResponse, list<string> &responses, mutex &mutexResponses)
 {
   // {{{ prep work
   string strError, strJson;
@@ -240,6 +240,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
           hub(ptJson);
           mutexResponses.lock();
           responses.push_back(ptJson->j(strJson));
+          if (!bResponse)
+          {
+            bResponse = true;
+            write(fdResponse, "\n", 1);
+          }
           mutexResponses.unlock();
         }
         else
@@ -248,6 +253,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
           ptJson->i("Error", "Please provide a valid Function:  list, ping.");
           mutexResponses.lock();
           responses.push_back(ptJson->j(strJson));
+          if (!bResponse)
+          {
+            bResponse = true;
+            write(fdResponse, "\n", 1);
+          }
           mutexResponses.unlock();
         }
       }
@@ -257,6 +267,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
         ptJson->i("Error", "Please provide the Function.");
         mutexResponses.lock();
         responses.push_back(ptJson->j(strJson));
+        if (!bResponse)
+        {
+          bResponse = true;
+          write(fdResponse, "\n", 1);
+        }
         mutexResponses.unlock();
       }
     }
@@ -318,6 +333,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
       }
       mutexResponses.lock();
       responses.push_back(p.p);
+      if (!bResponse)
+      {
+        bResponse = true;
+        write(fdResponse, "\n", 1);
+      }
       mutexResponses.unlock();
     }
   }
@@ -327,6 +347,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
     ptJson->i("Error", "Please provide the Interface.");
     mutexResponses.lock();
     responses.push_back(ptJson->j(strJson));
+    if (!bResponse)
+    {
+      bResponse = true;
+      write(fdResponse, "\n", 1);
+    }
     mutexResponses.unlock();
   }
   // {{{ post work
@@ -354,106 +379,140 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
     // {{{ prep work
-    bool bActive = true, bExit = false;
-    int nReturn;
-    list<string> responses;
-    mutex mutexResponses;
-    size_t unActive = 0, unPosition;
-    string strBuffers[2], strJson;
+    bool bResponse = false;
+    int fdResponse[2] = {-1, -1}, nReturn;
     // }}}
-    while (!bExit)
+    if ((nReturn = pipe(fdResponse)) == 0)
     {
       // {{{ prep work
-      pollfd fds[1];
-      fds[0].fd = fdSocket;
-      fds[0].events = POLLIN;
-      mutexResponses.lock();
-      while (!responses.empty())
-      {
-        strBuffers[1].append(responses.front()+"\n");
-        responses.pop_front();
-      }
-      mutexResponses.unlock();
-      if (!strBuffers[1].empty())
-      {
-        fds[0].events |= POLLOUT;
-      }
+      bool bActive = true, bExit = false;
+      char cChar;
+      list<string> responses;
+      mutex mutexResponses;
+      size_t unActive = 0, unPosition;
+      string strBuffers[2], strJson;
       // }}}
-      if ((nReturn = poll(fds, 1, 250)) > 0)
+      while (!bExit)
       {
-        // {{{ read
-        if (fds[0].revents & POLLIN)
+        // {{{ prep work
+        pollfd fds[2];
+        fds[0].fd = fdSocket;
+        fds[0].events = POLLIN;
+        mutexResponses.lock();
+        while (!responses.empty())
         {
-          if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
+          strBuffers[1].append(responses.front()+"\n");
+          responses.pop_front();
+        }
+        mutexResponses.unlock();
+        if (!strBuffers[1].empty())
+        {
+          fds[0].events |= POLLOUT;
+        }
+        fds[1].fd = fdResponse[0];
+        fds[1].events = POLLIN;
+        // }}}
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
+        {
+          if (fds[0].revents & POLLIN)
           {
-            while ((unPosition = strBuffers[0].find("\n")) != string::npos)
+            if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
+            {
+              while ((unPosition = strBuffers[0].find("\n")) != string::npos)
+              {
+                mutexResponses.lock();
+                unActive++;
+                mutexResponses.unlock();
+                thread threadRequest(&Request::request, this, strPrefix, ref(unActive), strBuffers[0].substr(0, unPosition), ref(bResponse), ref(fdResponse[1]), ref(responses), ref(mutexResponses));
+                pthread_setname_np(threadRequest.native_handle(), "request");
+                threadRequest.detach();
+                strBuffers[0].erase(0, (unPosition + 1));
+              }
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0 && errno != 104)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error [read," << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                log(ssMessage.str());
+              }
+            }
+          }
+          if (fds[0].revents & POLLOUT)
+          {
+            if (!m_pUtility->sslWrite(ssl, strBuffers[1], nReturn))
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error [write," << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                log(ssMessage.str());
+              }
+            }
+          }
+          if (fds[1].revents & POLLIN)
+          {
+            if ((nReturn = read(fds[1].fd, &cChar, 1)) > 0)
             {
               mutexResponses.lock();
-              unActive++;
+              bResponse = false;
               mutexResponses.unlock();
-              thread threadRequest(&Request::request, this, strPrefix, ref(unActive), strBuffers[0].substr(0, unPosition), ref(responses), ref(mutexResponses));
-              pthread_setname_np(threadRequest.native_handle(), "request");
-              threadRequest.detach();
-              strBuffers[0].erase(0, (unPosition + 1));
             }
-          }
-          else
-          {
-            bExit = true;
-            if (nReturn < 0 && errno != 104)
+            else
             {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error [read," << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
-              log(ssMessage.str());
+              bExit = true;
+              if (nReturn < 0)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
+                log(ssMessage.str());
+              }
             }
           }
         }
-        // }}}
-        // {{{ write
-        if (fds[0].revents & POLLOUT)
+        else if (nReturn < 0 && errno != EINTR)
         {
-          if (!m_pUtility->sslWrite(ssl, strBuffers[1], nReturn))
-          {
-            bExit = true;
-            if (nReturn < 0)
-            {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error [write," << fds[0].fd << "]:  " << m_pUtility->sslstrerror(ssl, nReturn);
-              log(ssMessage.str());
-            }
-          }
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+          log(ssMessage.str());
+        }
+        // {{{ post work
+        if (shutdown())
+        {
+          bExit = true;
         }
         // }}}
-      }
-      else if (nReturn < 0 && errno != EINTR)
-      {
-        bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-        notify(ssMessage.str());
       }
       // {{{ post work
-      if (shutdown())
+      while (bActive)
       {
-        bExit = true;
+        mutexResponses.lock();
+        if (unActive == 0)
+        {
+          bActive = false;
+        }
+        mutexResponses.unlock();
+        msleep(250);
       }
       // }}}
     }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
+      log(ssMessage.str());
+    }
+    // {{{ post work
     if (SSL_shutdown(ssl) == 0)
     {
       SSL_shutdown(ssl);
     }
     SSL_free(ssl);
-    while (bActive)
-    {
-      mutexResponses.lock();
-      if (unActive == 0)
-      {
-        bActive = false;
-      }
-      mutexResponses.unlock();
-      msleep(250);
-    }
+    // }}}
   }
   else
   {

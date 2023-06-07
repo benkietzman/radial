@@ -454,7 +454,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
         pollfd fds[1];
         fds[0].fd = fdUnique[0];
         fds[0].events = POLLIN;
-        if ((nReturn = poll(fds, 1, 500)) > 0)
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
         {
           if (fds[0].revents & (POLLHUP | POLLIN))
           {

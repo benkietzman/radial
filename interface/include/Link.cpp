@@ -487,7 +487,7 @@ void Link::process(string strPrefix)
             bExit = true;
           }
           // }}}
-          if (!bExit && (nReturn = poll(fds, unIndex, 500)) > 0)
+          if (!bExit && (nReturn = poll(fds, unIndex, 2000)) > 0)
           {
             // {{{ stdin
             if (fds[0].revents & (POLLHUP | POLLIN))
