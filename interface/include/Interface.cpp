@@ -1395,6 +1395,7 @@ void Interface::process(string strPrefix)
                 else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "status")
                 {
                   float fCpu = 0, fMem = 0;
+                  pid_t nPid = getpid();
                   string strError;
                   stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
                   time_t CTime = 0;
@@ -1409,24 +1410,24 @@ void Interface::process(string strPrefix)
                   ssCpu << fCpu;
                   ptJson->m["Response"]->i("CPU Usage", ssCpu.str(), 'n');
                   ssImage << ulImage;
-                  ptJson->m["Response"]->i("Image" << ssImage.str(), 'n');
+                  ptJson->m["Response"]->i("Image", ssImage.str(), 'n');
                   ssMem << fMem;
                   ptJson->m["Response"]->i("Memory Usage", ssMem.str(), 'n');
                   ssPid << nPid;
                   ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
                   ssImage << ulResident;
-                  ptJson->m["Response"]->i("Resident" << ssResident.str(), 'n');
+                  ptJson->m["Response"]->i("Resident", ssResident.str(), 'n');
                   if (!m_strMaster.empty())
                   {
-                    ptJson->m["Response"]->j("Master", m_strMaster);
-                    ptJson->m["Response"]->j("MasterSettled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+                    ptJson->m["Response"]->i("Master", m_strMaster);
+                    ptJson->m["Response"]->i("MasterSettled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
                   }
                   m_mutexBase.lock();
                   if (m_unThreads > 0)
                   {
                     stringstream ssThreads;
                     ssThreads << m_unThreads;
-                    ptJson->m["Response"]->j("Threads", ssThreads.str(), 'n');
+                    ptJson->m["Response"]->i("Threads", ssThreads.str(), 'n');
                   }
                   m_mutexBase.unlock();
                   ptJson->j(p.p);
