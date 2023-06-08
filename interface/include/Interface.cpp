@@ -1408,19 +1408,21 @@ void Interface::process(string strPrefix)
                   ptJson->m["Response"] = new Json;
                   m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
                   ssCpu << fCpu;
-                  ptJson->m["Response"]->i("CPU Usage", ssCpu.str(), 'n');
+                  ptJson->m["Response"]->i("CPU", ssCpu.str(), 'n');
+                  ptJson->m["Response"]->m["Memory"] = new Json;
                   ssImage << ulImage;
-                  ptJson->m["Response"]->i("Image", ssImage.str(), 'n');
+                  ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
+                  ssResident << ulResident;
+                  ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
                   ssMem << fMem;
-                  ptJson->m["Response"]->i("Memory Usage", ssMem.str(), 'n');
+                  ptJson->m["Response"]->m["Memory"]->i("Usage", ssMem.str(), 'n');
                   ssPid << nPid;
                   ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
-                  ssResident << ulResident;
-                  ptJson->m["Response"]->i("Resident", ssResident.str(), 'n');
                   if (!m_strMaster.empty())
                   {
-                    ptJson->m["Response"]->i("Master", m_strMaster);
-                    ptJson->m["Response"]->i("MasterSettled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+                    ptJson->m["Response"]->m["Master"] = new Json;
+                    ptJson->m["Response"]->m["Master"]->i("Node", m_strMaster);
+                    ptJson->m["Response"]->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
                   }
                   m_mutexBase.lock();
                   if (m_unThreads > 0)
