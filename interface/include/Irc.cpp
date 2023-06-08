@@ -1003,10 +1003,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ssText << " " << char(3) << "00,14 " << strInterface << " " << char(3);
       if (!strFunction.empty())
       {
-        if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
+        if (strFunction == "restart" || strFunction == "start" || strFunction == "status" || strFunction == "stop")
         {
           ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
-          if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+          if (strFunction == "status" || isLocalAdmin(strIdent, "Radial", bAdmin, auth))
           {
             list<string> nodes;
             map<string, string> results;
@@ -1030,8 +1030,30 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               for (auto &node : nodes)
               {
                 bool bSubResult = false;
+                string strResult = "done";
                 stringstream ssSubText;
-                if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
+                if (strFunction == "status")
+                {
+                  string strT;
+                  Json *ptJson = new Json;
+                  if (node != m_strNode)
+                  {
+                    ptJson->i("Node", node);
+                    strT = "link";
+                  }
+                  ptJson->i("Interface", strInterface);
+                  ptJson->i("Function", "status");
+                  if (hub(strT, ptJson, strError))
+                  {
+                    bSubResult = true;
+                    if (exist(ptJson, "Response"))
+                    {
+                      ptJson->m["Response"]->j(strResult);
+                    }
+                  }
+                  delete ptJson;
+                }
+                else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
                   bool bStopped = true;
                   if (strFunction == "restart" || strFunction == "stop")
@@ -1089,7 +1111,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     strError = "Failed to stop.";
                   }
                 }
-                ssSubText << node << ":  " << ((bSubResult)?"done":strError);
+                ssSubText << node << ":  " << ((bSubResult)?strResult:strError);
                 chat(strTarget, ssSubText.str());
               }
               ssText << ":  done";
@@ -1106,7 +1128,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, stop.";
+          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, status, stop.";
         }
       }
       else
