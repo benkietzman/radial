@@ -667,9 +667,26 @@ void Link::process(string strPrefix)
                       }
                       else if (ptJson->m["Function"]->v == "status")
                       {
+                        float fCpu = 0, fMem = 0;
                         list<string> subLinks;
+                        pid_t nPid = getpid();
+                        stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
+                        time_t CTime = 0;
+                        unsigned long ulImage = 0, ulResident = 0;
                         Json *ptStatus = new Json;
                         bProcessed = true;
+                        m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+                        ssCpu << fCpu;
+                        ptStatus->i("CPU", ssCpu.str(), 'n');
+                        ptStatus->m["Memory"] = new Json;
+                        ssImage << ulImage;
+                        ptStatus->m["Memory"]->i("Image", ssImage.str(), 'n');
+                        ssResident << ulResident;
+                        ptStatus->m["Memory"]->i("Resident", ssResident.str(), 'n');
+                        ssMem << fMem;
+                        ptStatus->m["Memory"]->i("Usage", ssMem.str(), 'n');
+                        ssPid << nPid;
+                        ptStatus->i("PID", ssPid.str(), 'n');
                         if (!empty(m_ptLink, "Node"))
                         {
                           ptStatus->i("Node", m_ptLink->m["Node"]->v);

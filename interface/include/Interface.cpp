@@ -1396,7 +1396,6 @@ void Interface::process(string strPrefix)
                 {
                   float fCpu = 0, fMem = 0;
                   pid_t nPid = getpid();
-                  string strError;
                   stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
                   time_t CTime = 0;
                   unsigned long ulImage = 0, ulResident = 0;
