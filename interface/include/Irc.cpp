@@ -1034,14 +1034,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 stringstream ssSubText;
                 if (strFunction == "status")
                 {
-                  string strT;
+                  string strT = strInterface;
                   Json *ptJson = new Json;
                   if (node != m_strNode)
                   {
+                    ptJson->i("Interface", strInterface);
                     ptJson->i("Node", node);
                     strT = "link";
                   }
-                  ptJson->i("Interface", strInterface);
                   ptJson->i("Function", "status");
                   if (hub(strT, ptJson, strError))
                   {
