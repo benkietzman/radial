@@ -1415,7 +1415,7 @@ void Interface::process(string strPrefix)
                   ptJson->m["Response"]->i("Memory Usage", ssMem.str(), 'n');
                   ssPid << nPid;
                   ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
-                  ssImage << ulResident;
+                  ssResident << ulResident;
                   ptJson->m["Response"]->i("Resident", ssResident.str(), 'n');
                   if (!m_strMaster.empty())
                   {
