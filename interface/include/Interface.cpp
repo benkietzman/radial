@@ -429,6 +429,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
       size_t unPosition, unUnique = 0;
       string strBuffer, strError;
       stringstream ssUnique;
+      time_t CTime[2];
       m_pUtility->fdNonBlocking(fdUnique[0], strError);
       m_pUtility->fdNonBlocking(fdUnique[1], strError);
       m_mutexShare.lock();
@@ -448,6 +449,7 @@ void Interface::hub(radialPacket &p, const bool bWait)
         write(m_fdResponse[1], "\n", 1);
       }
       m_mutexShare.unlock();
+      time(&(CTime[0]));
       while (!bExit)
       {
         pollfd fds[1];
@@ -488,6 +490,14 @@ void Interface::hub(radialPacket &p, const bool bWait)
           bExit = true;
           ssMessage.str("");
           ssMessage << "poll(" << errno << ") " << strerror(errno);
+          strError = ssMessage.str();
+        }
+        time(&(CTime[1]));
+        if ((CTime[1] - CTime[0]) > 600)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << "Failed to receive a response within 10 minutes.";
           strError = ssMessage.str();
         }
       }
