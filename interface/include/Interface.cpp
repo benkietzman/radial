@@ -1392,6 +1392,41 @@ void Interface::process(string strPrefix)
                     }
                   }
                 }
+                else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "status")
+                {
+                  float fCpu = 0, fMem = 0;
+                  string strError;
+                  stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
+                  time_t CTime = 0;
+                  unsigned long ulImage = 0, ulResident = 0;
+                  ptJson->i("Status", "okay");
+                  m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+                  ssCpu << fCpu;
+                  ptJson->i("CPU Usage", ssCpu.str(), 'n');
+                  ssImage << ulImage;
+                  ptJson->i("Image" << ssImage.str(), 'n');
+                  ssMem << fMem;
+                  ptJson->i("Memory Usage", ssMem.str(), 'n');
+                  ssPid << nPid;
+                  ptJson->i("PID", ssPid.str(), 'n');
+                  ssImage << ulResident;
+                  ptJson->i("Resident" << ssResident.str(), 'n');
+                  if (!m_strMaster.empty())
+                  {
+                    ptJson->j("Master", m_strMaster);
+                    ptJson->j("MasterSettled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+                  }
+                  m_mutexBase.lock();
+                  if (m_unThreads > 0)
+                  {
+                    stringstream ssThreads;
+                    ssThreads << m_unThreads;
+                    ptJson->j("Threads", ssThreads.str(), 'n');
+                  }
+                  m_mutexBase.unlock();
+                  ptJson->j(p.p);
+                  hub(p, false);
+                }
                 else if (m_pCallback != NULL)
                 {
                   if (!empty(ptJson, "wsRequestID"))
