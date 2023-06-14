@@ -1171,7 +1171,8 @@ void Hub::process(string strPrefix)
                 log(ssMessage.str());
               }
             }
-            if ((CTime - CThroughput) >= 3600)
+            //if ((CTime - CThroughput) >= 3600)
+            if ((CTime - CThroughput) >= 300)
             {
               CThroughput = CTime;
               ptJson = new Json;
@@ -1189,6 +1190,7 @@ void Hub::process(string strPrefix)
               t.clear();
               ssMessage.str("");
               ssMessage << strPrefix << ":  THROUGHPUT " << ptJson;
+              delete ptJson;
               log(ssMessage.str());
             }
             for (auto &i : m_i)

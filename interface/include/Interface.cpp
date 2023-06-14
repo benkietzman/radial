@@ -1273,8 +1273,7 @@ void Interface::process(string strPrefix)
     m_pUtility->fdNonBlocking(0, strError);
     m_pUtility->fdNonBlocking(1, strError);
     time(&CBroadcast);
-    CThroughput = CBroadcast;
-    CMaster[0] = CMaster[1] = CBroadcast;
+    CMaster[0] = CMaster[1] = CThroughput = CBroadcast;
     while (!bExit)
     {
       fds = new pollfd[uniques.size() + 3];
@@ -1602,7 +1601,9 @@ void Interface::process(string strPrefix)
       if ((CThroughput - CTime) >= 60)
       {
         Json *ptJson = new Json;
+        radialPacket p;
         CThroughput = CTime;
+        p.s = m_strName;
         ptJson->i("Function", "throughput");
         ptJson->m["Response"] = new Json;
         m_mutexBase.lock();
@@ -1614,8 +1615,9 @@ void Interface::process(string strPrefix)
         }
         m_throughput.clear();
         m_mutexBase.lock();
-        hub(ptJson, false);
+        ptJson->j(p.p);
         delete ptJson;
+        hub(p, false);
       }
       if (shutdown())
       {

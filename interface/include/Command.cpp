@@ -458,14 +458,17 @@ void Command::process(string strPrefix)
     {
       stringstream ssThroughput;
       Json *ptJson = new Json;
+      radialPacket p;
       CThroughput = CTime;
+      p.s = m_strName;
       ssThroughput << unThroughput;
       unThroughput = 0;
       ptJson->i("Function", "throughput");
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->i("request", ssThroughput.str(), 'n');
-      hub(ptJson, false);
-      delete ptJson; 
+      ptJson->j(p.p);
+      delete ptJson;
+      hub(p, false);
     }
     if (shutdown())
     {

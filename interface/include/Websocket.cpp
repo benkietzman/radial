@@ -147,8 +147,8 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage, ssRequestID;
 
-  strPrefix += "->Websocket::request()";
   threadIncrement();
+  strPrefix += "->Websocket::request()";
   throughput("request");
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
