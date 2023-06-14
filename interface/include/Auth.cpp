@@ -40,6 +40,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
 
   threadIncrement();
   strPrefix += "->Auth::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "User"))

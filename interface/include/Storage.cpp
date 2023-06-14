@@ -107,6 +107,7 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
 
   threadIncrement();
   strPrefix += "->Storage::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   mutexCallback.lock();

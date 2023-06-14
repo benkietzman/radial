@@ -69,6 +69,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
 
   threadIncrement();
   strPrefix += "->Secure::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))

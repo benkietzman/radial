@@ -45,6 +45,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
 
   threadIncrement();
   strPrefix += "->Live::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   m_mutex.lock();

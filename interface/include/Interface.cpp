@@ -1269,10 +1269,11 @@ void Interface::process(string strPrefix)
     pollfd *fds;
     size_t unIndex, unPosition;
     string strJson, strLine;
-    time_t CBroadcast, CMaster[2], CShutdown = 0, CTime, unBroadcastSleep = 15;
+    time_t CBroadcast, CMaster[2], CShutdown = 0, CThroughput, CTime, unBroadcastSleep = 15;
     m_pUtility->fdNonBlocking(0, strError);
     m_pUtility->fdNonBlocking(1, strError);
     time(&CBroadcast);
+    CThroughput = CBroadcast;
     CMaster[0] = CMaster[1] = CBroadcast;
     while (!bExit)
     {
@@ -1373,7 +1374,7 @@ void Interface::process(string strPrefix)
               else
               {
                 Json *ptJson = new Json(p.p);
-                if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "master")
+                if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "master")
                 {
                   if (!empty(ptJson, "Master"))
                   {
@@ -1392,7 +1393,7 @@ void Interface::process(string strPrefix)
                     }
                   }
                 }
-                else if (exist(ptJson, "Function") && ptJson->m["Function"]->v == "status")
+                else if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "status")
                 {
                   float fCpu = 0, fMem = 0;
                   pid_t nPid = getpid();
@@ -1540,9 +1541,9 @@ void Interface::process(string strPrefix)
         close(uniqueRemovals.front());
         uniqueRemovals.pop_front();
       }
+      time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        time(&CTime);
         if (!m_bMasterSettled && (CTime - CMaster[1]) > 120)
         {
           m_bMasterSettled = true;
@@ -1583,7 +1584,7 @@ void Interface::process(string strPrefix)
             Json *ptJson = new Json;
             CMaster[0] = CTime;
             ptJson->i("Interface", m_strName);
-            ptJson->i("Function", "master");
+            ptJson->i("|function", "master");
             ptJson->i("Master", m_strMaster);
             hub("link", ptJson, false);
             delete ptJson;
@@ -1597,6 +1598,24 @@ void Interface::process(string strPrefix)
           }
           CBroadcast = CTime;
         }
+      }
+      if ((CThroughput - CTime) >= 60)
+      {
+        Json *ptJson = new Json;
+        CThroughput = CTime;
+        ptJson->i("Function", "throughput");
+        ptJson->m["Response"] = new Json;
+        m_mutexBase.lock();
+        for (auto &i : m_throughput)
+        {
+          stringstream ssThroughput;
+          ssThroughput << i.second;
+          ptJson->m["Response"]->i(i.first, ssThroughput.str(), 'n');
+        }
+        m_throughput.clear();
+        m_mutexBase.lock();
+        hub(ptJson, false);
+        delete ptJson;
       }
       if (shutdown())
       {
@@ -1710,6 +1729,18 @@ bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &str
   return storage("update", keys, ptJson, strError);
 }
 // }}}
+// }}}
+// {{{ throughput()
+void Interface::throughput(const string strType, const size_t unThroughput)
+{
+  m_mutexBase.lock();
+  if (m_throughput.find(strType) == m_throughput.end())
+  {
+    m_throughput[strType] = 0;
+  }
+  m_throughput[strType] += unThroughput;
+  m_mutexBase.unlock();
+}
 // }}}
 // {{{ user()
 bool Interface::user(radialUser &d, string &e)

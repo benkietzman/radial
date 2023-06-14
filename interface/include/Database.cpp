@@ -61,6 +61,7 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
 
   threadIncrement();
   strPrefix += "->Database::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Database"))

@@ -39,6 +39,7 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
 
   threadIncrement();
   strPrefix += "->Jwt::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Signer"))

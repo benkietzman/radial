@@ -419,6 +419,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ prep work
   string strAction = var("Action", ptData), strError, strValue;
   stringstream ssQuery, ssText;
+  throughput("analyze");
   ssText << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
@@ -1042,7 +1043,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     ptJson->i("Node", node);
                     strT = "link";
                   }
-                  ptJson->i("Function", "status");
+                  ptJson->i("|function", "status");
                   if (hub(strT, ptJson, strError))
                   {
                     bSubResult = true;
@@ -1905,6 +1906,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
 
   threadIncrement();
   strPrefix += "->Irc::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))

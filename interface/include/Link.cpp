@@ -207,15 +207,15 @@ void Link::process(string strPrefix)
         list<radialLink *> links;
         list<int> removals;
         pollfd *fds;
-        size_t unIndex, unPosition, unUnique = 0;
+        size_t unIndex, unPosition, unThroughput = 0, unUnique = 0;
         string strLine;
-        time_t CBootstrap, CTime, unBootstrapSleep = 0;
+        time_t CBootstrap, CThroughput, CTime, unBootstrapSleep = 0;
         Json *ptBoot = new Json;
         ssMessage.str("");
         ssMessage << strPrefix << "->listen():  Listening to incoming socket.";
         log(ssMessage.str());
         time(&CTime);
-        CBootstrap = CTime;
+        CBootstrap = CThroughput = CTime;
         // }}}
         while (!bExit)
         {
@@ -659,7 +659,40 @@ void Link::process(string strPrefix)
                   {
                     bool bProcessed = false;
                     strError.clear();
-                    if (!empty(ptJson, "Function"))
+                    if (!empty(ptJson, "|function"))
+                    {
+                      if (ptJson->m["|function"]->v == "status")
+                      {
+                        float fCpu = 0, fMem = 0;
+                        pid_t nPid = getpid();
+                        stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
+                        time_t CTime = 0;
+                        unsigned long ulImage = 0, ulResident = 0;
+                        bProcessed = true;
+                        if (exist(ptJson, "Response"))
+                        {
+                          delete ptJson->m["Response"];
+                        }
+                        ptJson->m["Response"] = new Json;
+                        m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+                        ssCpu << fCpu;
+                        ptJson->m["Response"]->i("CPU", ssCpu.str(), 'n');
+                        ptJson->m["Response"]->m["Memory"] = new Json;
+                        ssImage << ulImage;
+                        ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
+                        ssResident << ulResident;
+                        ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
+                        ssMem << fMem;
+                        ptJson->m["Response"]->m["Memory"]->i("Usage", ssMem.str(), 'n');
+                        ssPid << nPid;
+                        ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
+                      }
+                      else
+                      {
+                        strError = "Please provide a valid |function.";
+                      }
+                    }
+                    else if (!empty(ptJson, "Function"))
                     {
                       if (ptJson->m["Function"]->v == "ping")
                       {
@@ -667,26 +700,9 @@ void Link::process(string strPrefix)
                       }
                       else if (ptJson->m["Function"]->v == "status")
                       {
-                        float fCpu = 0, fMem = 0;
                         list<string> subLinks;
-                        pid_t nPid = getpid();
-                        stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
-                        time_t CTime = 0;
-                        unsigned long ulImage = 0, ulResident = 0;
                         Json *ptStatus = new Json;
                         bProcessed = true;
-                        m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
-                        ssCpu << fCpu;
-                        ptStatus->i("CPU", ssCpu.str(), 'n');
-                        ptStatus->m["Memory"] = new Json;
-                        ssImage << ulImage;
-                        ptStatus->m["Memory"]->i("Image", ssImage.str(), 'n');
-                        ssResident << ulResident;
-                        ptStatus->m["Memory"]->i("Resident", ssResident.str(), 'n');
-                        ssMem << fMem;
-                        ptStatus->m["Memory"]->i("Usage", ssMem.str(), 'n');
-                        ssPid << nPid;
-                        ptStatus->i("PID", ssPid.str(), 'n');
                         if (!empty(m_ptLink, "Node"))
                         {
                           ptStatus->i("Node", m_ptLink->m["Node"]->v);
@@ -1315,6 +1331,21 @@ void Link::process(string strPrefix)
               delete ptBoot->l.front();
               ptBoot->l.pop_front();
             }
+          }
+          // }}}
+          // {{{ throughput
+          if ((CThroughput - CTime) >= 60)
+          {
+            stringstream ssThroughput;
+            Json *ptJson = new Json;
+            CThroughput = CTime;
+            ssThroughput << unThroughput;
+            unThroughput = 0;
+            ptJson->i("Function", "throughput");
+            ptJson->m["Response"] = new Json;
+            ptJson->m["Response"]->i("request", ssThroughput.str(), 'n');
+            hub(ptJson, false);
+            delete ptJson;
           }
           // }}}
           if (shutdown())

@@ -452,11 +452,13 @@ void Hub::process(string strPrefix)
           bool bExit = false;
           int nReturn;
           map<int, vector<string> > m, s;
+          map<string, map<string, size_t> > t;
           pollfd *fds;
           size_t unIndex, unPosition;
           string strJson, strValue;
-          time_t CLoad, CShutdownTime[2] = {0, 0}, CTime;
+          time_t CLoad, CShutdownTime[2] = {0, 0}, CThroughput, CTime;
           time(&CLoad);
+          CThroughput = CLoad;
           // }}}
           while (!bExit)
           {
@@ -817,10 +819,37 @@ void Hub::process(string strPrefix)
                                 setShutdown(strPrefix, ((!empty(ptJson, "Target"))?ptJson->m["Target"]->v:""));
                               }
                               // }}}
+                              // {{{ throughput
+                              else if (ptJson->m["Function"]->v == "throughput")
+                              {
+                                if (!p.s.empty())
+                                {
+                                  bResult = true;
+                                  if (t.find(p.s) == t.end())
+                                  {
+                                    t[p.s] = {};
+                                  }
+                                  if (exist(ptJson, "Response"))
+                                  {
+                                    for (auto &throughput : ptJson->m["Response"]->m)
+                                    {
+                                      size_t unThroughput;
+                                      stringstream ssThroughput(throughput.second->v);
+                                      ssThroughput >> unThroughput;
+                                      if (t[p.s].find(throughput.first) == t[p.s].end())
+                                      {
+                                        t[p.s][throughput.first] = 0;
+                                      }
+                                      t[p.s][throughput.first] += unThroughput;
+                                    }
+                                  }
+                                }
+                              }
+                              // }}}
                               // {{{ invalid
                               else
                               {
-                                strError = "Please provide a valid Function:  add, list, ping, remove, shutdown.";
+                                strError = "Please provide a valid Function:  add, list, ping, remove, shutdown, throughput.";
                               }
                               // }}}
                             }
@@ -1141,6 +1170,26 @@ void Hub::process(string strPrefix)
                 ssMessage << strPrefix << "->Hub::load() error:  " << strError;
                 log(ssMessage.str());
               }
+            }
+            if ((CTime - CThroughput) >= 3600)
+            {
+              CThroughput = CTime;
+              ptJson = new Json;
+              for (auto &i : t)
+              {
+                ptJson->m[i.first] = new Json;
+                for (auto &j : i.second)
+                {
+                  stringstream ssThroughput;
+                  ssThroughput << j.second;
+                  ptJson->m[i.first]->i(j.first, ssThroughput.str(), 'n');
+                }
+                i.second.clear();
+              }
+              t.clear();
+              ssMessage.str("");
+              ssMessage << strPrefix << ":  THROUGHPUT " << ptJson;
+              log(ssMessage.str());
             }
             for (auto &i : m_i)
             {

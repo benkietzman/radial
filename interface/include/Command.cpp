@@ -38,13 +38,15 @@ void Command::process(string strPrefix)
   list<list<radialCommand *>::iterator> removals;
   list<radialCommand *> commands;
   pollfd *fds;
-  size_t unIndex, unPosition;
+  size_t unIndex, unPosition, unThroughput = 0;
   string strError, strLine;
   stringstream ssMessage;
+  time_t CThroughput, CTime;
 
   strPrefix += "->Command::process()";
   m_pUtility->fdNonBlocking(0, strError);
   m_pUtility->fdNonBlocking(1, strError);
+  time(&CThroughput);
   // }}}
   while (!bExit)
   {
@@ -155,6 +157,7 @@ void Command::process(string strPrefix)
               size_t unIndex = 0;
               string strArgument;
               stringstream ssCommand;
+              unThroughput++;
               ssCommand.str(ptJson->m["Command"]->v);
               while (ssCommand >> strArgument)
               {
@@ -450,6 +453,20 @@ void Command::process(string strPrefix)
       commands.erase(i);
     }
     removals.clear();
+    time(&CTime);
+    if ((CThroughput - CTime) >= 60)
+    {
+      stringstream ssThroughput;
+      Json *ptJson = new Json;
+      CThroughput = CTime;
+      ssThroughput << unThroughput;
+      unThroughput = 0;
+      ptJson->i("Function", "throughput");
+      ptJson->m["Response"] = new Json;
+      ptJson->m["Response"]->i("request", ssThroughput.str(), 'n');
+      hub(ptJson, false);
+      delete ptJson; 
+    }
     if (shutdown())
     {
       bExit = true;

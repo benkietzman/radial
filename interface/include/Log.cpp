@@ -61,6 +61,7 @@ void Log::callback(string strPrefix, const string strPacket, const bool bRespons
 
   threadIncrement();
   strPrefix += "->Log::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))

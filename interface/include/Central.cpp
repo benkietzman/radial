@@ -2983,6 +2983,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
 
   threadIncrement();
   strPrefix += "->Central::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))

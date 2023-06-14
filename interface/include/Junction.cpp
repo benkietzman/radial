@@ -41,6 +41,7 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
 
   threadIncrement();
   strPrefix += "->Junction::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (exist(ptJson, "Request"))

@@ -187,6 +187,7 @@ void Request::callback(string strPrefix, const string strPacket, const bool bRes
 
   threadIncrement();
   strPrefix += "->Request::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
@@ -227,6 +228,7 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
   Json *ptJson = new Json(strBuffer);
   strPrefix += "->Request::request()";
   threadIncrement();
+  throughput("request");
   keyRemovals(ptJson);
   // }}}
   if (!empty(ptJson, "Interface"))

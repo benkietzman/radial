@@ -74,6 +74,7 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
 
   threadIncrement();
   strPrefix += "->CentralMon::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))

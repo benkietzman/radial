@@ -41,6 +41,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
 
   threadIncrement();
   strPrefix += "->Websocket::callback()";
+  throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
   if (!empty(ptJson, "wsRequestID"))
@@ -146,8 +147,9 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage, ssRequestID;
 
-  threadIncrement();
   strPrefix += "->Websocket::request()";
+  threadIncrement();
+  throughput("request");
   ptConn->mutexShare.lock();
   ptConn->unThreads++;
   ptConn->mutexShare.unlock();

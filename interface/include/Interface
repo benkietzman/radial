@@ -42,6 +42,7 @@ class Interface : public Base
   int m_fdResponse[2];
   list<string> m_responses;
   map<string, int> m_waiting;
+  map<string, size_t> m_throughput;
   mutex m_mutexShare;
   string m_strAesSecret;
   string m_strBuffers[2];
@@ -106,6 +107,7 @@ class Interface : public Base
   bool storageRetrieve(const list<string> keys, Json *ptJson, string &strError);
   bool storageRetrieveKeys(const list<string> keysIn, list<string> &keysOut, string &strError);
   bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
+  void throughput(const string strType, const size_t unThroughput = 1);
   bool user(radialUser &d, string &e);
   void userDeinit(radialUser &d);
   void userInit(radialUser &d);
