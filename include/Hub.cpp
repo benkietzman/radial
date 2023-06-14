@@ -672,7 +672,7 @@ void Hub::process(string strPrefix)
                           else
                           {
                             // {{{ prep work
-                            bool bRespond = false, bResult = false;
+                            bool bRespond = true, bResult = false;
                             strError.clear();
                             // }}}
                             if (!empty(ptJson, "Function"))
