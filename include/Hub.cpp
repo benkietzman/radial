@@ -672,7 +672,7 @@ void Hub::process(string strPrefix)
                           else
                           {
                             // {{{ prep work
-                            bool bResult = false;
+                            bool bRespond = false, bResult = false;
                             strError.clear();
                             // }}}
                             if (!empty(ptJson, "Function"))
@@ -822,9 +822,9 @@ void Hub::process(string strPrefix)
                               // {{{ throughput
                               else if (ptJson->m["Function"]->v == "throughput")
                               {
+                                bResponse = false;
                                 if (!p.s.empty())
                                 {
-                                  bResult = true;
                                   if (t.find(p.s) == t.end())
                                   {
                                     t[p.s] = {};
@@ -854,14 +854,17 @@ void Hub::process(string strPrefix)
                               // }}}
                             }
                             // {{{ post work
-                            p.d = "s";
-                            ptJson->i("Status", ((bResult)?"okay":"error"));
-                            if (!strError.empty())
+                            if (bRespond)
                             {
-                              ptJson->i("Error", strError);
+                              p.d = "s";
+                              ptJson->i("Status", ((bResult)?"okay":"error"));
+                              if (!strError.empty())
+                              {
+                                ptJson->i("Error", strError);
+                              }
+                              ptJson->j(p.p);
+                              m_i[s[fds[i].fd]]->strBuffers[1].append(pack(p, strValue) + "\n");
                             }
-                            ptJson->j(p.p);
-                            m_i[s[fds[i].fd]]->strBuffers[1].append(pack(p, strValue) + "\n");
                             // }}}
                           }
                           delete ptJson;
@@ -1171,7 +1174,8 @@ void Hub::process(string strPrefix)
                 log(ssMessage.str());
               }
             }
-            if ((CTime - CThroughput) >= 3600)
+            //if ((CTime - CThroughput) >= 3600)
+            if ((CTime - CThroughput) >= 300)
             {
               CThroughput = CTime;
               ptJson = new Json;
