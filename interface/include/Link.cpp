@@ -500,6 +500,7 @@ void Link::process(string strPrefix)
                   stringstream ssData;
                   Json *ptJson, *ptRoute;
                   radialPacket p;
+                  unThroughput++;
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
@@ -894,6 +895,7 @@ void Link::process(string strPrefix)
                     while ((unPosition = ptLink->strBuffers[0].find("\n")) != string::npos)
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
+                      unThroughput++;
                       ptLink->strBuffers[0].erase(0, (unPosition + 1));
                       // {{{ _f
                       if (!empty(ptJson, "_f"))
