@@ -1614,7 +1614,7 @@ void Interface::process(string strPrefix)
           ptJson->m["Response"]->i(i.first, ssThroughput.str(), 'n');
         }
         m_throughput.clear();
-        m_mutexBase.lock();
+        m_mutexBase.unlock();
         ptJson->j(p.p);
         delete ptJson;
         hub(p, false);
