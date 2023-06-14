@@ -822,7 +822,7 @@ void Hub::process(string strPrefix)
                               // {{{ throughput
                               else if (ptJson->m["Function"]->v == "throughput")
                               {
-                                bResponse = false;
+                                bRespond = false;
                                 if (!p.s.empty())
                                 {
                                   if (t.find(p.s) == t.end())
