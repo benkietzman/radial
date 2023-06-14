@@ -1598,7 +1598,7 @@ void Interface::process(string strPrefix)
           CBroadcast = CTime;
         }
       }
-      if ((CThroughput - CTime) >= 60)
+      if ((CTime - CThroughput) >= 60)
       {
         Json *ptJson = new Json;
         radialPacket p;
@@ -1616,9 +1616,6 @@ void Interface::process(string strPrefix)
         m_throughput.clear();
         m_mutexBase.lock();
         ptJson->j(p.p);
-ssMessage.str("");
-ssMessage << strPrefix << ":  THOUGHPUT " << ptJson;
-log(ssMessage.str());
         delete ptJson;
         hub(p, false);
       }

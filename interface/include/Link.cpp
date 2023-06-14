@@ -1334,7 +1334,7 @@ void Link::process(string strPrefix)
           }
           // }}}
           // {{{ throughput
-          if ((CThroughput - CTime) >= 60)
+          if ((CTime - CThroughput) >= 60)
           {
             stringstream ssThroughput;
             Json *ptJson = new Json;
