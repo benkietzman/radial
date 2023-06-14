@@ -32,7 +32,7 @@ class Hub : public Base
   void chat(const string strTarget, const string strMessage);
   bool load(string strPrefix, string &strError);
   void log(const string strFunction, const string strMessage);
-  void monitor(string strPrefix);
+  void monitor(string strPrefix, const pid_t nPid);
   void remove(string strPrefix, const string strName);
   void target(radialPacket &p);
   void target(const string t, Json *j, const string s = "");

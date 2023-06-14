@@ -178,9 +178,9 @@ bool Base::exist(Json *ptJson, const string strField)
 }
 // }}}
 // {{{ monitor()
-size_t Base::monitor(string &strMessage)
+size_t Base::monitor(const pid_t nPid, string &strMessage)
 {
-  return monitor(getpid(), m_CMonitor, m_unMonitor, m_ulMaxResident, strMessage);
+  return monitor(nPid, m_CMonitor, m_unMonitor, m_ulMaxResident, strMessage);
 }
 size_t Base::monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage)
 {

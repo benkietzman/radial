@@ -385,13 +385,13 @@ void Hub::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ monitor()
-void Hub::monitor(string strPrefix)
+void Hub::monitor(string strPrefix, const pid_t nPid)
 {
   strPrefix += "->Hub::monitor()";
   if (!shutdown())
   {
     string strMessage;
-    if (Base::monitor(strMessage) == 2)
+    if (Base::monitor(nPid, strMessage) == 2)
     {
       stringstream ssMessage;
       ssMessage << strPrefix << "->Base::monitor() [" << m_strNode << "]:  " << strMessage;
@@ -453,6 +453,7 @@ void Hub::process(string strPrefix)
           int nReturn;
           map<int, vector<string> > m, s;
           map<string, map<string, size_t> > t;
+          pid_t nPid = getpid();
           pollfd *fds;
           size_t unIndex, unPosition;
           string strJson, strValue;
@@ -1174,7 +1175,8 @@ void Hub::process(string strPrefix)
                 log(ssMessage.str());
               }
             }
-            if ((CTime - CThroughput) >= 3600)
+            //if ((CTime - CThroughput) >= 3600)
+            if ((CTime - CThroughput) >= 300)
             {
               CThroughput = CTime;
               ptJson = new Json;
@@ -1236,7 +1238,7 @@ void Hub::process(string strPrefix)
               }
               interfaces();
             }
-            monitor(strPrefix);
+            monitor(strPrefix, nPid);
             if (shutdown())
             {
               if (m_i.empty())
