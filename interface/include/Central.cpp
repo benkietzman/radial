@@ -1319,7 +1319,7 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         q << ", summary = ";
         if (!empty(i, "summary"))
         {
-          q << "'" << i->m["summary"]->v << "'";
+          q << "'" << esc(i->m["summary"]->v) << "'";
         }
         else
         {
