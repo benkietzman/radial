@@ -1724,7 +1724,15 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
     {
       q << " and close_date is null";
     }
-    q << " order by close_date, open_date, id";
+    if (!empty(i, "release") && i->m["release"]->v == "1")
+    {
+      q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
+      q << " order by release_date, id";
+    }
+    else
+    {
+      q << " order by close_date, open_date, id";
+    }
     auto g = dbq(q.str(), e);
     if (g != NULL)
     {
