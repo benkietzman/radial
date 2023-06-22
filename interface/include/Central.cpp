@@ -1334,10 +1334,28 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         {
           q << "null";
         }
+        q << ", hold = ";
+        if (!empty(i, "hold"))
+        {
+          q << i->m["hold"]->v;
+        }
+        else
+        {
+          q << "0";
+        }
         q << ", priority = ";
         if (!empty(i, "priority"))
         {
           q << i->m["priority"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", release_date = ";
+        if (!empty(i, "release_date"))
+        {
+          q << "'" << i->m["release_date"]->v << "'";
         }
         else
         {
