@@ -1719,7 +1719,7 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    q << "select id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority from application_issue where application_id = " << i->m["application_id"]->v;
+    q << "select id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority, date_format(release_date, '%Y-%m-%d') release_date from application_issue where application_id = " << i->m["application_id"]->v;
     if (!empty(i, "open") && i->m["open"]->v == "1")
     {
       q << " and close_date is null";
