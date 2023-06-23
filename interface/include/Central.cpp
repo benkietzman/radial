@@ -1574,7 +1574,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
 // {{{ applicationIssues()
 bool Central::applicationIssues(radialUser &d, string &e)
 {
-  bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact;
+  bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact, bRelease;
   string strCloseDateEnd, strCloseDateStart, strCommenter, strDisplay, strOpenDateEnd, strOpenDateStart;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
@@ -1587,6 +1587,7 @@ bool Central::applicationIssues(radialUser &d, string &e)
   bOwner = (!empty(i, "owner") && i->m["owner"]->v == "1");
   bPrimaryContact = (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1");
   bPrimaryDeveloper = (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1");
+  bRelease = (!empty(i, "release") && i->m["release"]->v == "1");
   strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
   strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
   strCommenter = ((!empty(i, "commenter"))?i->m["commenter"]->v:"");
@@ -1594,13 +1595,17 @@ bool Central::applicationIssues(radialUser &d, string &e)
   strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
   strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
   q << "select id, application_id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority, date_format(release_date, '%Y-%m-%d') release_date from application_issue";
-  if (bOpen || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
+  if (bOpen || bRelease || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
   {
     bool bFirst = true;
-    if (bOpen && strDisplay != "all")
+    if ((bOpen || bRelease) && strDisplay != "all")
     {
       q << ((bFirst)?" where":" and") << " close_date is null";
       bFirst = false;
+      if (bRelease)
+      {
+        q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
+      }
     }
     if (!strOpenDateStart.empty())
     {
@@ -1622,7 +1627,14 @@ bool Central::applicationIssues(radialUser &d, string &e)
       q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
       bFirst = false;
     }
-    q << " order by due_date, priority desc, id";
+    if (bRelease)
+    {
+      q << " order by release_date, due_date, priority desc, id";
+    }
+    else
+    {
+      q << " order by due_date, priority desc, id";
+    }
   }
   auto g = dbq(q.str(), e);
   if (g != NULL)
@@ -1727,7 +1739,7 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
     if (!empty(i, "release") && i->m["release"]->v == "1")
     {
       q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
-      q << " order by release_date, id";
+      q << " order by release_date, due_date, priority desc, id";
     }
     else
     {
