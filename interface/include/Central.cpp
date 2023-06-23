@@ -1698,11 +1698,11 @@ bool Central::applicationIssues(radialUser &d, string &e)
     }
     if (bRelease)
     {
-      q << " order by release_date, due_date, priority desc, id";
+      q << " order by release_date, priority desc, due_date, open_date, id";
     }
     else
     {
-      q << " order by due_date, priority desc, id";
+      q << " order by priority desc, due_date, open_date, id";
     }
   }
   auto g = dbq(q.str(), e);
@@ -1819,7 +1819,7 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
     if (!empty(i, "release") && i->m["release"]->v == "1")
     {
       q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
-      q << " order by release_date, due_date, priority desc, id";
+      q << " order by release_date, priority desc, due_date, open_date, id";
     }
     else
     {
