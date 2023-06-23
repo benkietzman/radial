@@ -1660,7 +1660,7 @@ bool Central::applicationIssues(radialUser &d, string &e)
   strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
   strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
   strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
-  q << "select id, application_id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority, date_format(release_date, '%Y-%m-%d') release_date from application_issue";
+  q << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue";
   if (bOpen || bRelease || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
   {
     bool bFirst = true;
