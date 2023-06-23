@@ -1051,7 +1051,7 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
         radialUser a;
         q << ", ";
         userInit(d, a);
-        a.p->m["i"]->i("id", i->m["assigned_userid"]->v);
+        a.p->m["i"]->i("userid", i->m["assigned_userid"]->v);
         if (user(a, e) && !empty(a.p->m["o"], "id"))
         {
           q << a.p->m["o"]->m["id"]->v;
@@ -1351,7 +1351,7 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         {
           radialUser a;
           userInit(d, a);
-          a.p->m["i"]->i("id", i->m["assigned_userid"]->v);
+          a.p->m["i"]->i("userid", i->m["assigned_userid"]->v);
           if (user(a, e) && !empty(a.p->m["o"], "id"))
           {
             q << a.p->m["o"]->m["id"]->v;
