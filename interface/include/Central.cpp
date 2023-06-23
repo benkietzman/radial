@@ -964,7 +964,7 @@ bool Central::applicationIssue(radialUser &d, string &e)
 
   if (!empty(i, "id"))
   {
-    q << "select id, application_id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(due_date, '%Y-%m-%d') due_date, date_format(close_date, '%Y-%m-%d') close_date, hold, priority, date_format(release_date, '%Y-%m-%d') release_date from application_issue where id = " << i->m["id"]->v;
+    q << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where id = " << i->m["id"]->v;
     auto g = dbq(q.str(), e);
     if (g != NULL)
     {
@@ -1307,19 +1307,19 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         {
           q << i->m["application_id"]->v;
         }
-        q << ", close_date = ";
-        if (!empty(i, "close_date"))
+        q << ", assigned_id = ";
+        if (!empty(i, "assigned_id"))
         {
-          q << "'" << i->m["close_date"]->v << "'";
+          q << i->m["assigned_id"]->v;
         }
         else
         {
           q << "null";
         }
-        q << ", summary = ";
-        if (!empty(i, "summary"))
+        q << ", close_date = ";
+        if (!empty(i, "close_date"))
         {
-          q << "'" << esc(i->m["summary"]->v) << "'";
+          q << "'" << i->m["close_date"]->v << "'";
         }
         else
         {
@@ -1356,6 +1356,15 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         if (!empty(i, "release_date"))
         {
           q << "'" << i->m["release_date"]->v << "'";
+        }
+        else
+        {
+          q << "null";
+        }
+        q << ", summary = ";
+        if (!empty(i, "summary"))
+        {
+          q << "'" << esc(i->m["summary"]->v) << "'";
         }
         else
         {
@@ -1731,7 +1740,7 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
 
   if (!empty(i, "application_id"))
   {
-    q << "select id, summary, date_format(open_date, '%Y-%m-%d') open_date, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, priority, date_format(release_date, '%Y-%m-%d') release_date from application_issue where application_id = " << i->m["application_id"]->v;
+    q << "select id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where application_id = " << i->m["application_id"]->v;
     if ((!empty(i, "open") && i->m["open"]->v == "1") || (!empty(i, "release") && i->m["release"]->v == "1"))
     {
       q << " and close_date is null";
