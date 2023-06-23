@@ -1025,7 +1025,7 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
     {
       string strID;
       q << "insert into application_issue (application_id, open_date";
-      if (!empty(i, "assigned_id"))
+      if (!empty(i, "assigned_id") || !empty(i, "assigned_userid"))
       {
         q << ", assigned_id";
       }
@@ -1044,7 +1044,23 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
       q << ") values (" << i->m["application_id"]->v << ", now()";
       if (!empty(i, "assigned_id"))
       {
-        q << ", " << esc(i->m["assigned_id"]->v);
+        q << ", " << i->m["assigned_id"]->v;
+      }
+      else if (!empty(i, "assigned_userid"))
+      {
+        radialUser a;
+        q << ", ";
+        userInit(d, a);
+        a.p->m["i"]->i("id", i->m["assigned_userid"]->v);
+        if (user(a, e) && !empty(a.p->m["o"], "id"))
+        {
+          q << a.p->m["o"]->m["id"]->v;
+        }
+        else
+        {
+          q << "null";
+        }
+        userDeinit(a);
       }
       if (!empty(i, "due_date"))
       {
@@ -1330,6 +1346,21 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         if (!empty(i, "assigned_id"))
         {
           q << i->m["assigned_id"]->v;
+        }
+        else if (!empty(i, "assigned_userid"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", i->m["assigned_userid"]->v);
+          if (user(a, e) && !empty(a.p->m["o"], "id"))
+          {
+            q << a.p->m["o"]->m["id"]->v;
+          }
+          else
+          {
+            q << "null";
+          }
+          userDeinit(a);
         }
         else
         {
