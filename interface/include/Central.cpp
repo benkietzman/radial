@@ -1484,11 +1484,18 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                   {
                     s << " - " << a.p->m["o"]->m["summary"]->v;
                   }
-                  for (auto &contact : f.p->m["o"]->l)
+                  if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
                   {
-                    if (!empty(contact, "email"))
+                    to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
+                  }
+                  else
+                  {
+                    for (auto &contact : f.p->m["o"]->l)
                     {
-                      to.push_back(contact->m["email"]->v);
+                      if (!empty(contact, "email"))
+                      {
+                        to.push_back(contact->m["email"]->v);
+                      }
                     }
                   }
                   if (i->m["action"]->v == "transfer" && !empty(i, "application_id"))
@@ -1499,11 +1506,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                     if (application(h, e) && !empty(h.p->m["o"], "name"))
                     {
                       strApplication = h.p->m["o"]->m["name"]->v;
-                      if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
-                      {
-                        to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
-                      }
-                      else
+                      if (!exist(a.p->m["o"], "assigned") || empty(a.p->m["o"]->m["assigned"], "email"))
                       {
                         radialUser k;
                         userInit(d, k);
