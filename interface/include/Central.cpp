@@ -972,6 +972,17 @@ bool Central::applicationIssue(radialUser &d, string &e)
       {
         Json *j = new Json(g->front());
         b = true;
+        if (!empty(j, "assigned_id"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", j->m["assigned_id"]->v);
+          if (user(a, e))
+          {
+            j->i("assigned", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
         if (exist(i, "comments") && i->m["comments"]->v == "1" && !empty(j, "id"))
         {
           radialUser a;
@@ -1014,9 +1025,9 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
     {
       string strID;
       q << "insert into application_issue (application_id, open_date";
-      if (!empty(i, "summary"))
+      if (!empty(i, "assigned_id"))
       {
-        q << ", summary";
+        q << ", assigned_id";
       }
       if (!empty(i, "due_date"))
       {
@@ -1026,10 +1037,14 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
       {
         q << ", priority";
       }
-      q << ") values (" << i->m["application_id"]->v << ", now()";
       if (!empty(i, "summary"))
       {
-        q << ", '" << esc(i->m["summary"]->v) << "'";
+        q << ", summary";
+      }
+      q << ") values (" << i->m["application_id"]->v << ", now()";
+      if (!empty(i, "assigned_id"))
+      {
+        q << ", " << esc(i->m["assigned_id"]->v);
       }
       if (!empty(i, "due_date"))
       {
@@ -1038,6 +1053,10 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
       if (!empty(i, "priority"))
       {
         q << ", '" << esc(i->m["priority"]->v) << "'";
+      }
+      if (!empty(i, "summary"))
+      {
+        q << ", '" << esc(i->m["summary"]->v) << "'";
       }
       q << ")";
       if (dbu(q.str(), strID, e))
@@ -1448,23 +1467,30 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                     h.p->m["i"]->i("id", i->m["application_id"]->v);
                     if (application(h, e) && !empty(h.p->m["o"], "name"))
                     {
-                      radialUser k;
                       strApplication = h.p->m["o"]->m["name"]->v;
-                      userInit(d, k);
-                      k.p->m["i"]->i("application_id", i->m["application_id"]->v);
-                      k.p->m["i"]->i("Primary Developer", "1", 'n');
-                      k.p->m["i"]->i("Backup Developer", "1", 'n');
-                      if (applicationUsersByApplicationID(k, e))
+                      if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
                       {
-                        for (auto &contact : k.p->m["o"]->l)
+                        to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
+                      }
+                      else
+                      {
+                        radialUser k;
+                        userInit(d, k);
+                        k.p->m["i"]->i("application_id", i->m["application_id"]->v);
+                        k.p->m["i"]->i("Primary Developer", "1", 'n');
+                        k.p->m["i"]->i("Backup Developer", "1", 'n');
+                        if (applicationUsersByApplicationID(k, e))
                         {
-                          if (!empty(contact, "email"))
+                          for (auto &contact : k.p->m["o"]->l)
                           {
-                            to.push_back(contact->m["email"]->v);
+                            if (!empty(contact, "email"))
+                            {
+                              to.push_back(contact->m["email"]->v);
+                            }
                           }
                         }
+                        userDeinit(k);
                       }
-                      userDeinit(k);
                     }
                     userDeinit(h);
                   }
@@ -1698,6 +1724,17 @@ bool Central::applicationIssues(radialUser &d, string &e)
         }
         userDeinit(a);
       }
+      if (!r["assigned_id"].empty())
+      {
+        radialUser a;
+        userInit(d, a);
+        a.p->m["i"]->i("id", r["assigned_id"]);
+        if (user(a, e))
+        {
+          j->i("assigned", a.p->m["o"]);
+        }
+        userDeinit(a);
+      }
       if (bComments)
       {
         radialUser a;
@@ -1761,6 +1798,17 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
       for (auto &r : *g)
       {
         Json *j = new Json(r);
+        if (!r["assigned_id"].empty())
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", r["assigned_id"]);
+          if (user(a, e))
+          {
+            j->i("assigned", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
         if (!empty(i, "comments") && i->m["comments"]->v == "1")
         {
           radialUser a;
