@@ -29,6 +29,7 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   m_pLoginTitleCallback = NULL;
   m_pLogoutCallback = NULL;
   m_pProcessJwtCallback = NULL;
+  m_pProcessNonCentralCallback = NULL;
   m_pProcessPostAuthzCallback = NULL;
   m_pProcessPreAuthzCallback = NULL;
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
@@ -376,6 +377,23 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
               }
               delete ptJwt;
             }
+            else if (m_pProcessNonCentralCallback != NULL)
+            {
+              Json *ptJwt = new Json;
+              if (m_pProcessNonCentralCallback(strPrefix, ptJson, ptData, ptJwt, strError))
+              {
+                string strPayload, strValue;
+                if (m_pProcessJwtCallback != NULL)
+                {
+                  m_pProcessJwtCallback(strPrefix, ptJson, ptData, ptJwt);
+                }
+                if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+                {
+                  ptJson->m["Response"]->i("jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+                }
+              }
+              delete ptJwt;
+            }
             else
             {
               strError = "Failed to parse central authz data.";
@@ -433,6 +451,12 @@ void Secure::setLogout(bool (*pCallback)(string, Json *, string &))
 void Secure::setProcessJwt(void (*pCallback)(string, Json *, Json *, Json *))
 {
   m_pProcessJwtCallback = pCallback;
+}
+// }}}
+// {{{ setProcessNonCentral()
+void Secure::setProcessNonCentral(bool (*pCallback)(string, Json *, Json *, Json *, string &))
+{
+  m_pProcessNonCentralCallback = pCallback;
 }
 // }}}
 // {{{ setProcessPostAuthz()
