@@ -393,7 +393,7 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
               q << ") values (" << i->m["application_id"]->v << ", '" << i->m["user_id"]->v << "', " << i->m["encrypt"]->m["value"]->v << ", ";
               if (i->m["encrypt"]->m["value"]->v == "1")
               {
-                q << "0, concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
+                q << "0, concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
               }
               else if (!m_strAesSecret.empty())
               {
@@ -474,7 +474,7 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
               q << "update application_account set user_id = '" << i->m["user_id"]->v << "', encrypt = " << i->m["encrypt"]->m["value"]->v << ", aes = ";
               if (i->m["encrypt"]->m["value"]->v == "1")
               {
-                q << "0, `password` = concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
+                q << "0, `password` = concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
               }
               else if (!m_strAesSecret.empty())
               {
@@ -4862,7 +4862,7 @@ bool Central::userEdit(radialUser &d, string &e)
         q << ", `password` = ";
         if (!empty(i, "password"))
         {
-          q << "concat('*',upper(sha1(unhex(sha1('" << esc(i->m["password"]->v) << "')))))";
+          q << "concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
         }
         else
         {
