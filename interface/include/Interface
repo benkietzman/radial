@@ -58,6 +58,16 @@ class Interface : public Base
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
+  bool db(const string f, Json *d, string &e);
+  bool db(const string f, Json *d, string &q, string &e);
+  bool db(const string f, Json *d, string &id, string &q, string &e);
+  bool db(const string f, Json *i, list<map<string, string> > &rs, string &e);
+  bool db(const string f, Json *i, list<map<string, string> > &rs, string &q, string &e);
+  bool db(const string f, Json *i, map<string, string> &r, string &e);
+  bool db(const string f, Json *i, map<string, string> &r, string &q, string &e);
+  bool db(const string f, Json *i, Json *o, string &e);
+  bool db(const string f, Json *i, Json *o, string &q, string &e);
+  bool db(const string f, Json *i, Json *o, string &id, string &q, string &e);
   void dbfree(list<map<string, string> > *rows);
   list<map<string, string> > *dbquery(const string strDatabase, const string strQuery, string &strError);
   list<map<string, string> > *dbquery(const string strDatabase, const string strQuery, unsigned long long &ullRows, string &strError);
@@ -69,7 +79,7 @@ class Interface : public Base
   void email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file, string &strError);
   string getUserEmail(radialUser &d);
   string getUserFirstName(radialUser &d);
-  string getUserLastName(radialUser &d); 
+  string getUserLastName(radialUser &d);
   string getUserName(radialUser &d);
   bool interfaceAdd(const string strInterface, string &strError);
   bool interfaceAdd(const string strNode, const string strInterface, string &strError);
@@ -96,7 +106,7 @@ class Interface : public Base
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void notify(const string strMessage);
-  void ny(Json *ptJson, const string strField); 
+  void ny(Json *ptJson, const string strField);
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);

@@ -114,26 +114,23 @@ Central::~Central()
 bool Central::accountType(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
   {
-    q << "select id, type, description from account_type where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralAccountTypes", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
@@ -147,31 +144,17 @@ bool Central::accountType(radialUser &d, string &e)
 bool Central::accountTypes(radialUser &d, string &e)
 {
   bool b = false;
-  string k = "account_type";
-  stringstream q;
-  Json *o = d.p->m["o"], *s = new Json;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (sr(k, s, e))
+  if (db("dbCentralAccountTypes", i, rs, e))
   {
     b = true;
-    d.p->i("o", s);
-  }
-  else
-  {
-    q << "select id, type, description from account_type order by type";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    for (auto &r : rs)
     {
-      b = true;
-      for (auto &r : *g)
-      {
-        o->pb(r);
-      }
-      sa(k, o, e);
+      o->pb(r);
     }
-    dbf(g);
   }
-  delete s;
 
   return b;
 }
@@ -180,26 +163,16 @@ bool Central::accountTypes(radialUser &d, string &e)
 bool Central::application(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id") || !empty(i, "name"))
   {
-    q << "select id, name, date_format(creation_date, '%Y-%m-%d') creation_date, notify_priority_id, website, login_type_id, secure_port, auto_register, account_check, dependable, date_format(retirement_date, '%Y-%m-%d') retirement_date, menu_id, package_type_id, wiki, highlight, description from application where ";
-    if (!empty(i, "id"))
+    map<string, string> r;
+    if (db("dbCentralApplications", i, r, e))
     {
-      q << "id = " << i->m["id"]->v;
-    }
-    else
-    {
-      q << "name = '" << esc(i->m["name"]->v) << "'";
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
+      if (!r.empty())
       {
-        Json *j = new Json(g->front());
+        Json *j = new Json(r);
         b = true;
         ny(j, "account_check");
         ny(j, "auto_register");
@@ -282,11 +255,10 @@ bool Central::application(radialUser &d, string &e)
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or name.";
   }
 
   return b;
@@ -296,24 +268,17 @@ bool Central::application(radialUser &d, string &e)
 bool Central::applicationAccount(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
   {
-    q << "select id, application_id, user_id, encrypt, aes, password, ";
-    if (!m_strAesSecret.empty())
+    map<string, string> r;
+    if (db("dbCentralApplicationAccounts", i, r, e))
     {
-      q << "aes_decrypt(from_base64(password), sha2('" << esc(m_strAesSecret) << "', 512)) decrypted_password, ";
-    }
-    q << "type_id, description from application_account where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
+      if (!r.empty())
       {
         radialUser a;
-        Json *j = new Json(g->front());
+        Json *j = new Json(r);
         userInit(d, a);
         a.p->m["i"]->i("id", j->m["application_id"]->v);
         if (d.g || isApplicationDeveloper(a, e))
@@ -338,6 +303,18 @@ bool Central::applicationAccount(radialUser &d, string &e)
           {
             rm(j, "decrypted_password");
           }
+          ny(j, "encrypt");
+          if (!empty(j, "type_id"))
+          {
+            radialUser t;
+            userInit(d, t);
+            t.p->m["i"]->i("id", j->m["type_id"]->v);
+            if (accountType(t, e))
+            {
+              j->i("type", t.p->m["o"]);
+            }
+            userDeinit(t);
+          }
           d.p->i("o", j);
         }
         else
@@ -352,7 +329,6 @@ bool Central::applicationAccount(radialUser &d, string &e)
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
@@ -366,7 +342,6 @@ bool Central::applicationAccount(radialUser &d, string &e)
 bool Central::applicationAccountAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
@@ -384,35 +359,11 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "id"))
             {
-              string strID;
-              q << "insert into application_account (application_id, user_id, encrypt, aes, `password`, type_id";
-              if (!empty(i, "description"))
-              {
-                q << ", description";
-              }
-              q << ") values (" << i->m["application_id"]->v << ", '" << i->m["user_id"]->v << "', " << i->m["encrypt"]->m["value"]->v << ", ";
-              if (i->m["encrypt"]->m["value"]->v == "1")
-              {
-                q << "0, concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
-              }
-              else if (!m_strAesSecret.empty())
-              {
-                q << "1, to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(m_strAesSecret) << "', 512)))";
-              }
-              else
-              {
-                q << "0, '" << esc(i->m["password"]->v) << "'";
-              }
-              q << ", " << i->m["type"]->m["id"]->v;
-              if (!empty(i, "description"))
-              {
-                q << ", '" << esc(i->m["description"]->v) << "'";
-              }
-              q << ")";
-              if (dbu(q.str(), strID, e))
+              string id, q;
+              if (db("dbCentralApplicationAccountAdd", i, id, q, e))
               {
                 b = true;
-                o->i("id", strID);
+                o->i("id", id);
               }
             }
             else
@@ -453,7 +404,6 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
 bool Central::applicationAccountEdit(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
@@ -471,34 +421,7 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "id"))
             {
-              q << "update application_account set user_id = '" << i->m["user_id"]->v << "', encrypt = " << i->m["encrypt"]->m["value"]->v << ", aes = ";
-              if (i->m["encrypt"]->m["value"]->v == "1")
-              {
-                q << "0, `password` = concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
-              }
-              else if (!m_strAesSecret.empty())
-              {
-                q << "1, `password` = to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(m_strAesSecret) << "', 512)))";
-              }
-              else
-              {
-                q << "0, `password` = '" << esc(i->m["password"]->v) << "'";
-              }
-              q << ", type_id = " << i->m["type"]->m["id"]->v;
-              if (exist(i, "description"))
-              {
-                q << ", description = ";
-                if (!empty(i, "description"))
-                {
-                  q << "'" << esc(i->m["description"]->v) << "'";
-                }
-                else
-                {
-                  q << "null";
-                }
-              }
-              q << " where id = " << i->m["id"]->v;
-              if (dbu(q.str(), e))
+              if (db("dbCentralApplicationAccountUpdate", i, e))
               {
                 b = true;
               }
@@ -537,7 +460,6 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
 bool Central::applicationAccountRemove(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
@@ -545,13 +467,9 @@ bool Central::applicationAccountRemove(radialUser &d, string &e)
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
-    if (applicationAccount(a, e))
+    if (applicationAccount(a, e) && db("dbCentralApplicationAccountRemove", i, e))
     {
-      q << "delete from application_account where id = " << i->m["id"]->v;
-      if (dbu(q.str(), e))
-      {
-        b = true;
-      }
+      b = true;
     }
     userDeinit(a);
   }
@@ -567,7 +485,6 @@ bool Central::applicationAccountRemove(radialUser &d, string &e)
 bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
@@ -577,26 +494,11 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      q << "select id, application_id, user_id, encrypt, aes, password, ";
-      if (!m_strAesSecret.empty())
-      {
-        q << "aes_decrypt(from_base64(password), sha2('" << esc(m_strAesSecret) << "', 512)) decrypted_password, ";
-      }
-      q << "type_id, description from application_account where application_id = " << i->m["application_id"]->v << " order by user_id";
-      if (exist(i, "page"))
-      {
-        size_t unNumPerPage, unOffset, unPage;
-        stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-        ssNumPerPage >> unNumPerPage;
-        ssPage >> unPage;
-        unOffset = unPage * unNumPerPage;
-        q << " limit " << unNumPerPage << " offset " << unOffset;
-      }
-      auto g = dbq(q.str(), e);
-      if (g != NULL)
+      list<map<string, string> > rs;
+      if (db("dbCentralApplicationAccounts", i, rs, e))
       {
         b = true;
-        for (auto &r : *g)
+        for (auto &r : rs)
         {
           Json *j = new Json(r);
           if (!empty(j, "encrypt") && j->m["encrypt"]->v == "1" && exist(j, "password"))
@@ -634,7 +536,6 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
           delete j;
         }
       }
-      dbf(g);
     }
     else
     {
@@ -654,7 +555,6 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
 bool Central::applicationAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (d.g || d.auth.find("Central") != d.auth.end())
@@ -666,30 +566,25 @@ bool Central::applicationAdd(radialUser &d, string &e)
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!application(a, e) && e == "No results returned.")
       {
-        string strID;
-        e.clear();
-        q << "insert into application (name, creation_date) values ('" << esc(i->m["name"]->v) << "', now())";
-        if (dbu(q.str(), strID, e))
+        string id, q;
+        if (db("dbCentralApplicationAdd", i, id, q, e))
         {
+          o->i("id", id);
           radialUser u;
-          o->i("id", strID);
           userInit(d, u);
+          u.p->m["i"]->i("application_id", id);
           u.p->m["i"]->i("userid", d.u);
-          if (user(u, e) && !empty(u.p->m["o"], "id"))
+          u.p->m["i"]->m["type"] = new Json;
+          u.p->m["i"]->m["type"]->i("type", "Primary Developer");
+          u.p->m["i"]->m["admin"] = new Json;
+          u.p->m["i"]->m["admin"]->i("value", "1", 'n');
+          u.p->m["i"]->m["locked"] = new Json;
+          u.p->m["i"]->m["locked"]->i("value", "0", 'n');
+          u.p->m["i"]->m["notify"] = new Json;
+          u.p->m["i"]->m["notify"]->i("value", "1", 'n');
+          if (applicationUserAdd(u, e))
           {
-            radialUser c;
-            userInit(d, c);
-            c.p->m["i"]->i("type", "Primary Developer");
-            if (contactType(c, e) && !empty(c.p->m["o"], "id"))
-            {
-              q.str("");
-              q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify) values (" << strID << ", " << u.p->m["o"]->m["id"]->v << ", " << c.p->m["o"]->m["id"]->v << ", 1, 0, 1)";
-              if (dbu(q.str(), e))
-              {
-                b = true;
-              }
-            }
-            userDeinit(c);
+            b = true;
           }
           userDeinit(u);
         }
@@ -717,26 +612,23 @@ bool Central::applicationAdd(radialUser &d, string &e)
 bool Central::applicationDepend(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
   {
-    q << "select id, application_id, dependant_id from application_dependant where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralApplicationDepends", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
@@ -750,7 +642,6 @@ bool Central::applicationDepend(radialUser &d, string &e)
 bool Central::applicationDependAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (!empty(i, "application_id"))
@@ -762,12 +653,11 @@ bool Central::applicationDependAdd(radialUser &d, string &e)
       a.p->m["i"]->i("id", i->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(a, e))
       {
-        string strID;
-        q << "insert into application_dependant (application_id, dependant_id) values (" << i->m["application_id"]->v << ", " << i->m["dependant_id"]->v << ")";
-        if (dbu(q.str(), strID, e))
+        string id, q;
+        if (db("dbCentralApplicationDependAdd", i, id, q, e))
         {
           b = true;
-          o->i("id", strID);
+          o->i("id", id);
         }
       }
       else
@@ -793,7 +683,6 @@ bool Central::applicationDependAdd(radialUser &d, string &e)
 bool Central::applicationDependRemove(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id"))
@@ -808,8 +697,7 @@ bool Central::applicationDependRemove(radialUser &d, string &e)
       c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(c, e))
       {
-        q << "delete from application_dependant where id = " << i->m["id"]->v;
-        if (dbu(q.str(), e))
+        if (db("dbCentralApplicationDependRemove", i, e))
         {
           b = true;
         }
@@ -2133,43 +2021,17 @@ bool Central::applicationRemove(radialUser &d, string &e)
 bool Central::applications(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
+  list<map<string, string> > rs;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  q << "select id, highlight, menu_id, name, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, website from application where 1";
-  if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
-  {
-    q << " and dependable = 1";
-  }
-  if (!empty(i, "letter"))
-  {
-    q << " and";
-    if (i->m["letter"]->v == "#")
-    {
-      q << " name regexp '^[ -@[-`{-~]'";
-    }
-    else
-    {
-      q << " upper(name) like '" << i->m["letter"]->v << "%'";
-    }
-  }
-  q << " order by name";
-  if (!empty(i, "page"))
-  {
-    size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-    ssNumPerPage >> unNumPerPage;
-    ssPage >> unPage;
-    unOffset = unPage * unNumPerPage;
-    q << " limit " << unNumPerPage << " offset " << unOffset;
-  }
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
+  if (db("dbCentralApplications", i, rs, e))
   {
     b = true;
-    for (auto &r : *g)
+    for (auto &r : rs)
     {
       Json *j = new Json(r);
+      ny(j, "account_check");
+      ny(j, "auto_register");
       if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
       {
         radialUser a;
@@ -2184,6 +2046,76 @@ bool Central::applications(radialUser &d, string &e)
         }
         userDeinit(a);
       }
+      ny(j, "dependable");
+      if (!empty(j, "login_type_id"))
+      {
+        size_t unValue;
+        stringstream ssValue(j->m["login_type_id"]->v);
+        ssValue >> unValue;
+        if (unValue > 0)
+        {
+          radialUser l;
+          userInit(d, l);
+          l.p->m["i"]->i("id", j->m["login_type_id"]->v);
+          if (loginType(l, e))
+          {
+            j->i("login_type", l.p->m["o"]);
+          }
+          userDeinit(l);
+        }
+      }
+      if (!empty(j, "menu_id"))
+      {
+        size_t unValue;
+        stringstream ssValue(j->m["menu_id"]->v);
+        ssValue >> unValue;
+        if (unValue > 0)
+        {
+          radialUser m;
+          userInit(d, m);
+          m.p->m["i"]->i("id", j->m["menu_id"]->v);
+          if (menuAccess(m, e))
+          {
+            j->i("menu_access", m.p->m["o"]);
+          }
+          userDeinit(m);
+        }
+      }
+      if (!empty(j, "notify_priority_id"))
+      {
+        size_t unValue;
+        stringstream ssValue(j->m["notify_priority_id"]->v);
+        ssValue >> unValue;
+        if (unValue > 0)
+        {
+          radialUser n;
+          userInit(d, n);
+          n.p->m["i"]->i("id", j->m["notify_priority_id"]->v);
+          if (notifyPriority(n, e))
+          {
+            j->i("notify_priority", n.p->m["o"]);
+          }
+          userDeinit(n);
+        }
+      }
+      if (!empty(j, "package_type_id"))
+      {
+        size_t unValue;
+        stringstream ssValue(j->m["package_type_id"]->v);
+        ssValue >> unValue;
+        if (unValue > 0)
+        {
+          radialUser p;
+          userInit(d, p);
+          p.p->m["i"]->i("id", j->m["package_type_id"]->v);
+          if (packageType(p, e))
+          {
+            j->i("package_type", p.p->m["o"]);
+          }
+          userDeinit(p);
+        }
+      }
+      ny(j, "secure_port");
       if (!empty(i, "servers") && i->m["servers"]->v == "1")
       {
         radialUser a;
@@ -2195,11 +2127,11 @@ bool Central::applications(radialUser &d, string &e)
         }
         userDeinit(a);
       }
+      ny(j, "wiki");
       o->pb(j);
       delete j;
     }
   }
-  dbf(g);
 
   return b;
 }

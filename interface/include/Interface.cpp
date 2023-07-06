@@ -45,7 +45,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   {
     Json *ptAes = new Json, *ptJwt = new Json;
     if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && !empty(ptAes, "Secret"))
-    { 
+    {
       m_strAesSecret = ptAes->m["Secret"]->v;
     }
     delete ptAes;
@@ -104,7 +104,7 @@ bool Interface::auth(Json *ptJson, string &strError)
 bool Interface::centralmon(const string strServer, const string strProcess, Json *ptData, string &strError)
 {
   bool bResult = false;
-  Json *ptJson = new Json; 
+  Json *ptJson = new Json;
 
   ptJson->i("Function", ((!strProcess.empty())?"process":"system"));
   ptJson->i("Server", strServer);
@@ -152,6 +152,150 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
 }
 // }}}
 // {{{ db
+// {{{ db()
+bool Interface::db(const string f, Json *d, string &e)
+{
+  string q;
+
+  return db(f, d, q, e);
+}
+bool Interface::db(const string f, Json *d, string &q, string &e)
+{
+  string id;
+
+  return db(f, d, id, q, e);
+}
+bool Interface::db(const string f, Json *d, string &id, string &q, string &e)
+{
+  bool b = false, s = false;
+  Json *i, *o;
+
+  if (exist(d, "Request"))
+  {
+    s = true;
+    i = d->m["Request"];
+    if (exist(d, "Response"))
+    {
+      delete d->m["Response"];
+      d->m.erase("Response");
+    }
+    d->m["Response"] = new Json;
+    o = d->m["Response"];
+  }
+  else
+  {
+    i = d;
+    o = new Json;
+  }
+  b = db(f, i, o, id, q, e);
+  if (!s)
+  {
+    d->merge(o, true, false);
+    delete o;
+  }
+
+  return b;
+}
+bool Interface::db(const string f, Json *i, list<map<string, string> > &rs, string &e)
+{
+  string q;
+
+  return db(f, i, rs, q, e);
+}
+bool Interface::db(const string f, Json *i, list<map<string, string> > &rs, string &q, string &e)
+{
+  bool b = false;
+  Json *o = new Json;
+
+  if ((b = db(f, i, o, q, e)))
+  {
+    if (!o->m.empty())
+    {
+      map<string, string> r;
+      o->flatten(r, true, false);
+      rs.push_back(r);
+    }
+    else
+    {
+      for (auto &a : o->l)
+      {
+        map<string, string> r;
+        a->flatten(r, true, false);
+        rs.push_back(r);
+      }
+    }
+  }
+  delete o;
+
+  return b;
+}
+bool Interface::db(const string f, Json *i, map<string, string> &r, string &e)
+{
+  string q;
+
+  return db(f, i, r, q, e);
+}
+bool Interface::db(const string f, Json *i, map<string, string> &r, string &q, string &e)
+{
+  bool b = false;
+  list<map<string, string> > rs;
+
+  if ((b = db(f, i, rs, q, e)))
+  {
+    if (!rs.empty())
+    {
+      r = rs.front();
+    }
+  }
+
+  return b;
+}
+bool Interface::db(const string f, Json *i, Json *o, string &e)
+{
+  string q;
+
+  return db(f, i, o, q, e);
+}
+bool Interface::db(const string f, Json *i, Json *o, string &q, string &e)
+{
+  string id;
+
+  return db(f, i, o, id, q, e);
+}
+bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (!f.empty())
+  {
+    Json *j = new Json;
+    j->i("Function", f);
+    j->m["Request"] = i;
+    j->m["Response"] = o;
+    if (hub("db", j, e))
+    {
+      b = true;
+      if (!empty(j, "ID"))
+      {
+        id = j->m["ID"]->v;
+      }
+      if (!empty(j, "Query"))
+      {
+        q = j->m["Query"]->v;
+      }
+    }
+    j->m.erase("Request");
+    j->m.erase("Response");
+    delete j;
+  }
+  else
+  {
+    e = "Please provide the Function.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ dbfree()
 void Interface::dbfree(list<map<string, string> > *rows)
 {
@@ -183,7 +327,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
     if (exist(ptJson, "Response"))
     {
       rows = new list<map<string, string> >;
-      for (auto &ptRow : ptJson->m["Response"]->l) 
+      for (auto &ptRow : ptJson->m["Response"]->l)
       {
         map<string, string> row;
         ptRow->flatten(row, true, false);
@@ -349,24 +493,24 @@ string Interface::getUserEmail(radialUser &d)
 {
   string e, v;
   radialUser a;
-  
+
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
   if (user(a, e) && !empty(a.p->m["o"], "email"))
   {
     v = a.p->m["o"]->m["email"]->v;
-  } 
+  }
   userDeinit(a);
-  
+
   return v;
-} 
+}
 // }}}
 // {{{ getUserFirstName()
 string Interface::getUserFirstName(radialUser &d)
 {
   string e, v;
   radialUser a;
-  
+
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
   if (user(a, e) && !empty(a.p->m["o"], "first_name"))
