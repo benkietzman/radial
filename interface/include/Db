@@ -50,6 +50,7 @@ class Db : public Interface
   bool dbCentralApplicationServerDetailRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationServerDetails(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationServerDetailUpdate(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationServerRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationServers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationUserAdd(Json *i, Json *o, string &id, string &q, string &e);
@@ -76,16 +77,31 @@ class Db : public Interface
   bool dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   void dbf(list<map<string, string> > *g);
-  list<map<string, string> > *dbq(const string d, const string q, string &e);
-  list<map<string, string> > *dbq(const string d, const string q, const list<string> k, string &e);
-  bool dbu(const string d, const string q, string &e);
-  bool dbu(const string d, const string q, string &id, string &e);
+  bool dbq(const string d, stringstream &qs, string &q, Json *o, string &e);
+  bool dbq(const string d, stringstream &qs, string &q, const list<string> k, Json *o, string &e);
+  list<map<string, string> > *dbq(const string d, stringstream &qs, string &q, string &e);
+  list<map<string, string> > *dbq(const string d, stringstream &qs, string &q, const list<string> k, string &e);
+  bool dbu(const string d, stringstream &qs, string &q, string &e);
+  bool dbu(const string d, stringstream &qs, string &q, string &id, string &e);
+  bool dep(const list<string> fs, Json *i, string &e);
+  string ia(const list<string> ks, Json *i);
+  string ia(const list<string> ks, Json *i, bool &f);
+  string ia(const string k, Json *i);
+  string ia(const string k, Json *i, bool &f);
+  string ia(const string k);
+  string ia(const string k, bool &f);
+  string ib(const list<string> ks, Json *i);
+  string ib(const list<string> ks, Json *i, bool &f);
+  string ib(const string k, Json *i);
+  string ib(const string k, Json *i, bool &f);
+  string ib(const string k, const string i);
+  string ib(const string k, const string i, bool &f);
+  string u(const list<string> ks, Json *i);
+  string u(const list<string> ks, Json *i, bool &f);
   string u(const string k, Json *i);
   string u(const string k, Json *i, bool &f);
-  string u(const string n, const string k, Json *i);
-  string u(const string n, const string k, Json *i, bool &f);
-  string u(const string n, const string i);
-  string u(const string n, const string i, bool &f);
+  string u(const string k, const string i);
+  string u(const string k, const string i, bool &f);
   string v(const string i);
 
   public:

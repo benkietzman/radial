@@ -45,6 +45,7 @@ class Central : public Interface
   bool applicationIssue(radialUser &d, string &e);
   bool applicationIssueAdd(radialUser &d, string &e);
   bool applicationIssueClose(radialUser &d, string &e);
+  bool applicationIssueComment(radialUser &d, string &e);
   bool applicationIssueCommentAdd(radialUser &d, string &e);
   bool applicationIssueCommentEdit(radialUser &d, string &e);
   bool applicationIssueComments(radialUser &d, string &e);
@@ -71,10 +72,12 @@ class Central : public Interface
   bool applicationUserRemove(radialUser &d, string &e);
   bool applicationUsersByApplicationID(radialUser &d, string &e);
   bool contactType(radialUser &d, string &e);
+  bool contactTypes(radialUser &d, string &e);
   void dbf(list<map<string, string> > *get);
   list<map<string, string> > *dbq(const string strQuery, string &e);
   bool dbu(const string strQuery, string &e);
   bool dbu(const string strQuery, string &strID, string &e);
+  bool dep(const list<string> fs, Json *i, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);

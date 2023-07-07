@@ -167,16 +167,15 @@ bool Db::dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &
   stringstream qs;
 
   qs << "select id, type, description from account_type order by type";
-  q = qs.str();
-  auto g = dbq("central_r", q, k, e);
+  auto g = dbq("central_r", qs, q, k, e);
   if (g != NULL)
   {
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id"))
+      if (!empty(i, "id") || !empty(i, "type"))
       {
-        if (r["id"] == i->m["id"]->v)
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -196,38 +195,24 @@ bool Db::dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &
 bool Db::dbCentralApplicationAccountAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
-    qs << "insert into application_account (application_id";
-    if (!empty(i, "description"))
-    {
-      qs << ", description";
-    }
+    bool fa = true, fb = true;
+    list<string> ks = {"application_id", "description", "type_id", "user_id"};
+    stringstream qs;
+    qs << "insert into application_account (" << ia(ks, i, fa);
     if (!empty(i, "password"))
     {
-      qs << ", encrypt";
-      qs << ", aes";
-      qs << ", `password`";
+      qs << ((fa)?"":",") << " encrypt, aes, `password`";
+      fa = false;
     }
-    if (exist(i, "type") && !empty(i->m["type"], "id"))
-    {
-      qs << ", type_id";
-    }
-    if (!empty(i, "user_id"))
-    {
-      qs << ", user_id";
-    }
-    qs << ") values (" << i->m["application_id"]->v;
-    if (!empty(i, "description"))
-    {
-      qs << ", " << v(i->m["description"]->v);
-    }
+    qs << ") values (" << ib(ks, i, fb);
     if (!empty(i, "password"))
     {
-      qs << ", ";
-      if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value") && i->m["encrypt"]->m["value"]->v == "1")
+      qs << ((fb)?" ":", ");
+      fb = false;
+      if (!empty(i, "encrypt") && i->m["encrypt"]->v == "1")
       {
         qs << "1, 0, concat('!',upper(sha2(unhex(sha2(" << v(i->m["password"]->v) << ", 512)), 512)))";
       }
@@ -240,24 +225,8 @@ bool Db::dbCentralApplicationAccountAdd(Json *i, Json *o, string &id, string &q,
         qs << "0, 0, " << v(i->m["password"]->v);
       }
     }
-    if (exist(i, "type") && !empty(i->m["type"], "id"))
-    {
-      qs << ", " << v(i->m["type"]->m["id"]->v);
-    }
-    if (!empty(i, "user_id"))
-    {
-      qs << ", " << v(i->m["user_id"]->v);
-    }
     qs << ")";
-    q = qs.str();
-    if (dbu("central", q, id, e))
-    {
-      b = true;
-    }
-  }
-  else
-  {
-    e = "Please provide the application_id.";
+    b = dbu("central", qs, q, id, e);
   }
 
   return b;
@@ -267,20 +236,12 @@ bool Db::dbCentralApplicationAccountAdd(Json *i, Json *o, string &id, string &q,
 bool Db::dbCentralApplicationAccountRemove(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
+    stringstream qs;
     qs << "delete from application_account where id = " << v(i->m["id"]->v);
-    q = qs.str();
-    if (dbu("central", q, e))
-    {
-      b = true;
-    }
-  }
-  else
-  {
-    e = "Please provide the id.";
+    b = dbu("central", qs, q, e);
   }
 
   return b;
@@ -289,7 +250,6 @@ bool Db::dbCentralApplicationAccountRemove(Json *i, Json *o, string &id, string 
 // {{{ dbCentralApplicationAccounts()
 bool Db::dbCentralApplicationAccounts(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
   stringstream qs;
 
   qs << "select id, application_id, user_id, encrypt, aes, password, ";
@@ -316,30 +276,19 @@ bool Db::dbCentralApplicationAccounts(Json *i, Json *o, string &id, string &q, s
     unOffset = unPage * unNumPerPage;
     qs << " limit " << unNumPerPage << " offset " << unOffset;
   }
-  q = qs.str();
-  auto g = dbq("central_r", q, e);
-  if (g != NULL)
-  {
-    b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
-  }
-  dbf(g);
 
-  return b;
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralApplicationAccountUpdate()
 bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     bool f = true;
+    stringstream qs;
     qs << "update application_account set" << u("user_id", i, f);
     if (exist(i, "password"))
     {
@@ -354,17 +303,17 @@ bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string 
       qs << " encrypt = ";
       if (!empty(i, "password"))
       {
-        if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value") && i->m["encrypt"]->m["value"]->v == "1")
+        if (!empty(i, "encrypt") && i->m["encrypt"]->v == "1")
         {
-          qs << "1, aes = 0, `password` = concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
+          qs << "1, aes = 0, `password` = concat('!',upper(sha2(unhex(sha2(" << v(i->m["password"]->v) << ", 512)), 512)))";
         }
         else if (!m_strAesSecret.empty())
         {
-          qs << "0, aes = 1, `password` = to_base64(aes_encrypt('" << esc(i->m["password"]->v) << "', sha2('" << esc(m_strAesSecret) << "', 512)))";
+          qs << "0, aes = 1, `password` = to_base64(aes_encrypt(" << v(i->m["password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
         }
         else
         {
-          qs << "0, aes = 0, `password` = '" << esc(i->m["password"]->v) << "'";
+          qs << "0, aes = 0, `password` = " << v(i->m["password"]->v);
         }
       }
       else
@@ -372,23 +321,15 @@ bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string 
         qs << "0, aes = 0, `password` = null";
       }
     }
-    qs << u("type", i, f) << u("description", i, f) << " where id = " << v(i->m["id"]->v);
-    q = qs.str();
+    qs << u("type_id", i, f) << u("description", i, f) << " where id = " << v(i->m["id"]->v);
     if (!f)
     {
-      if (dbu("central", q, e))
-      {
-        b = true;
-      }
+      b = dbu("central", qs, q, e);
     }
     else
     {
       e = "Please provide at least one field to update.";
     }
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -398,20 +339,15 @@ bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string 
 bool Db::dbCentralApplicationAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
 
-  if (!empty(i, "name"))
+  if (dep({"name"}, i, e))
   {
-    qs << "insert into application (name, creation_date) values (" << v(i->m["name"]->v) << ", now())";
-    q = qs.str();
-    if (dbu("central", q, id, e))
-    {
-      b = true;
-    }
-  }
-  else
-  {
-    e = "Please provide the name.";
+    bool fa = true, fb = true;
+    list<string> ks = {"account_check", "auto_register", "dependable", "description", "highlight", "login_type_id", "menu_id", "name", "notify_priority_id", "package_type_id", "retirement_date", "secure_port", "website", "wiki"};
+    stringstream qs;
+    i->i("creation_date", "now()");
+    qs << "insert into application (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
   }
 
   return b;
@@ -421,27 +357,14 @@ bool Db::dbCentralApplicationAdd(Json *i, Json *o, string &id, string &q, string
 bool Db::dbCentralApplicationDependAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
   
-  if (!empty(i, "application_id"))
+  if (dep({"application_id", "dependant_id"}, i, e))
   {
-    if (!empty(i, "dependant_id"))
-    {
-      qs << "insert into application_dependant (application_id, dependant_id) values (" << v(i->m["application_id"]->v) << ", " << v(i->m["dependant_id"]->v) << ")";
-      q = qs.str();
-      if (dbu("central", q, id, e))
-      {
-        b = true;
-      } 
-    }
-    else
-    {
-      e = "Please provide the dependant_id.";
-    }
-  }
-  else
-  {
-    e = "Please provide the application_id.";
+    bool fa = true, fb = true;
+    list<string> ks = {"application_id", "dependant_id"};
+    stringstream qs;
+    qs << "insert into application_dependant (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
   }
 
   return b;
@@ -451,28 +374,20 @@ bool Db::dbCentralApplicationDependAdd(Json *i, Json *o, string &id, string &q, 
 bool Db::dbCentralApplicationDependRemove(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  stringstream qs;
   
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   { 
+    stringstream qs;
     qs << "delete from application_dependant where id = " << v(i->m["id"]->v);
-    q = qs.str();
-    if (dbu("central", q, e))
-    {
-      b = true;
-    } 
+    b = dbu("central", qs, q, e);
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
+
   return b;
 }
 // }}}
 // {{{ dbCentralApplicationDepends()
 bool Db::dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
   stringstream qs;
   
   qs << "select id, application_id, dependant_id from application_dependant";
@@ -480,25 +395,24 @@ bool Db::dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, st
   {
     qs << " where id = " << v(i->m["id"]->v);
   }
-  q = qs.str();
-  auto g = dbq("central_r", q, e);
-  if (g != NULL)
-  {
-    b = true;
-    for (auto &r : *g)
-    {
-      o->pb(r);
-    }
-  }
-  dbf(g);
 
-  return b;
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralApplicationIssueAdd()
 bool Db::dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+
+  if (dep({"application_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"application_id", "assigned_id", "due_date", "open_date", "priority", "summary"};
+    stringstream qs;
+    i->i("open_date", "now()");
+    qs << "insert into application_issue (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
 
   return b;
 }
@@ -507,6 +421,16 @@ bool Db::dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, s
 bool Db::dbCentralApplicationIssueCommentAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  
+  if (dep({"issue_id", "comments", "user_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"comments", "entry_date", "issue_id", "user_id"};
+    stringstream qs;
+    i->i("entry_date", "now()");
+    qs << "insert issue_comment (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
 
   return b;
 }
@@ -514,15 +438,34 @@ bool Db::dbCentralApplicationIssueCommentAdd(Json *i, Json *o, string &id, strin
 // {{{ dbCentralApplicationIssueComments()
 bool Db::dbCentralApplicationIssueComments(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select a.id, a.comments, date_format(a.entry_date, '%Y-%m-%d %H:%i:%s') entry_date, b.email, b.first_name, b.last_name, a.user_id, b.userid from issue_comment a, person b where a.user_id = b.id";
+  if (!empty(i, "issue_id"))
+  {
+    qs << " and a.issue_id = " << v(i->m["issue_id"]->v);
+  }
+  qs << " order by entry_date, id";
+  if (!empty(i, "limit"))
+  {
+    qs << " limit " << i->m["limit"]->v;
+  }
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralApplicationIssueCommentUpdate()
 bool Db::dbCentralApplicationIssueCommentUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  
+  if (dep({"comments", "id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update issue_comment set" << u("comments", i, f) << " where id = " << i->m["id"]->v;
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
@@ -530,15 +473,82 @@ bool Db::dbCentralApplicationIssueCommentUpdate(Json *i, Json *o, string &id, st
 // {{{ dbCentralApplicationIssues()
 bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  bool bOpen, bRelease;
+  string strCloseDateEnd, strCloseDateStart, strDisplay, strOpenDateEnd, strOpenDateStart;
+  stringstream qs;
 
-  return b;
+  bOpen = (!empty(i, "open") && i->m["open"]->v == "1");
+  bRelease = (!empty(i, "release") && i->m["release"]->v == "1");
+  strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
+  strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
+  strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
+  strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
+  strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
+  qs << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where 1";
+  if (!empty(i, "application_id"))
+  {
+    qs << " and application_id = " << v(i->m["application_id"]->v);
+  }
+  if ((bOpen || bRelease) && strDisplay != "all")
+  {
+    qs << " and close_date is null";
+    if (bRelease)
+    {
+      qs << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
+    }
+  }
+  if (!empty(i, "id"))
+  {
+    qs << " and id = " << v(i->m["id"]->v);
+  }
+  if (!strOpenDateStart.empty())
+  {
+    qs << " and date_format(open_date, '%Y-%m-%d') >= '" << strOpenDateStart << "'";
+  }
+  if (!strOpenDateEnd.empty())
+  {
+    qs << " and date_format(open_date, '%Y-%m-%d') < '" << strOpenDateEnd << "'";
+  }
+  if (!strCloseDateStart.empty())
+  {
+    qs << " and date_format(close_date, '%Y-%m-%d') >= '" << strCloseDateStart << "'";
+  }
+  if (!strCloseDateEnd.empty())
+  {
+    qs << " and date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
+  }
+  if (bRelease)
+  {
+    qs << " order by release_date, priority desc, due_date, open_date, id";
+  }
+  else
+  {
+    qs << " order by priority desc, due_date, open_date, id";
+  }
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralApplicationIssueUpdate()
 bool Db::dbCentralApplicationIssueUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+
+  if (dep({"application_id", "id"}, i, e))
+  {
+    stringstream qs;
+    qs << "update application_issue set application_id = ";
+    if (!empty(i, "transfer_id") && i->m["transfer_id"]->v != i->m["application_id"]->v)
+    {
+      qs << v(i->m["transfe_id"]->v);
+    }
+    else
+    {
+      qs << v(i->m["application_id"]->v);
+    }
+    qs << u({"assigned_id", "close_date", "due_date", "hold", "priority", "release_date", "summary"}, i) << " where id = " << i->m["id"]->v;
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
@@ -548,42 +558,276 @@ bool Db::dbCentralApplicationRemove(Json *i, Json *o, string &id, string &q, str
 {
   bool b = false;
 
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
   return b;
 }
 // }}}
 // {{{ dbCentralApplications()
 bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
   stringstream qs;
 
-  qs << "select id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, highlight, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki from application where 1";
-  if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
+  if (!empty(i, "server_id"))
   {
-    qs << " and dependable = 1";
+    qs << "select a.id, b.id application_id, b.name from application_server a, application b where a.application_id = b.id and a.server_id = " << v(i->m["server_id"]->v);
+    if (!empty(i, "retired") && i->m["retired"]->v == "1")
+    {
+      qs << " and b.retirement_date is null";
+    }
+    qs << " order by b.name";
   }
+  else if (!empty(i, "contact_id"))
+  {
+    qs << "select a.id, b.id application_id, b.name, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+  }
+  else
+  {
+    qs << "select id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, highlight, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki from application where 1";
+    if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
+    {
+      qs << " and dependable = 1";
+    }
+    if (!empty(i, "id"))
+    {
+      qs << " and id = " << v(i->m["id"]->v);
+    }
+    if (!empty(i, "letter"))
+    {
+      qs << " and";
+      if (i->m["letter"]->v == "#")
+      {
+        qs << " name regexp '^[ -@[-`{-~]'";
+      }
+      else
+      {
+        qs << " upper(name) like '" << i->m["letter"]->v << "%'";
+      }
+    }
+    if (!empty(i, "name"))
+    {
+      qs << " and name = " << v(i->m["name"]->v);
+    }
+    qs << " order by name";
+    if (!empty(i, "page"))
+    {
+      size_t unNumPerPage, unOffset, unPage;
+      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      ssNumPerPage >> unNumPerPage;
+      ssPage >> unPage;
+      unOffset = unPage * unNumPerPage;
+      qs << " limit " << unNumPerPage << " offset " << unOffset;
+    }
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationServerAdd()
+bool Db::dbCentralApplicationServerAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (!dep({"application_id", "server_id"}, i, e))
+  {
+    stringstream qs;
+    qs << "insert into application_server (application_id, server_id) values (" << v(i->m["application_id"]->v) << ", " << v(i->m["server_id"]->v) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationServerDetailAdd()
+bool Db::dbCentralApplicationServerDetailAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"application_server_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"application_server_id", "daemon", "delay", "max_image", "max_processes", "max_resident", "min_image", "min_processes", "min_resident", "owner", "script", "version"};
+    stringstream qs;
+    qs << "insert into application_server_detail (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationServerDetailRemove()
+bool Db::dbCentralApplicationServerDetailRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application_server_detail where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationServerDetails()
+bool Db::dbCentralApplicationServerDetails(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, application_server_id, daemon, delay, max_image, max_processes, max_resident, min_image, min_processes, min_resident, owner, script, version from application_server_detail where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "letter"))
+  if (!empty(i, "application_server_id"))
   {
-    qs << " and";
-    if (i->m["letter"]->v == "#")
-    {
-      qs << " name regexp '^[ -@[-`{-~]'";
-    }
-    else
-    {
-      qs << " upper(name) like '" << i->m["letter"]->v << "%'";
-    }
+    qs << " and application_server_id = " << v(i->m["application_server_id"]->v);
   }
-  if (!empty(i, "name"))
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationServerDetailUpdate()
+bool Db::dbCentralApplicationServerDetailUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
   {
-    qs << " and name = " << v(i->m["name"]->v);
+    bool f = true;
+    stringstream qs;
+    qs << "update application_server_detail set" << u({"daemon", "delay", "max_image", "max_processes", "max_resident", "min_image", "max_processes", "max_resident", "owner", "script", "version"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
   }
-  qs << " order by name";
-  if (!empty(i, "page"))
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationServerRemove()
+bool Db::dbCentralApplicationServerRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (!dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application_server where id = (" << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationServers()
+bool Db::dbCentralApplicationServers(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, application_id, server_id from application_server";
+  if (!empty(i, "id"))
+  {
+    qs << " where id = " << v(i->m["id"]->v);
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationUpdate()
+bool Db::dbCentralApplicationUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id", "name"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update application set" << u({"account_check", "auto_register", "dependable", "description", "highlight", "login_type_id", "menu_id", "name", "notify_priority_id", "retirement_date", "secure_port", "website", "wiki"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationUserAdd()
+bool Db::dbCentralApplicationUserAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"application_id", "contact_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"admin", "application_id", "contact_id", "description", "locked", "notify", "type_id"};
+    stringstream qs;
+    qs << "insert into application_contact (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationUserRemove()
+bool Db::dbCentralApplicationUserRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application_contact where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationUsers()
+bool Db::dbCentralApplicationUsers(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select a.id, a.application_id, a.admin, a.description, c.email, c.first_name, c.last_name, a.locked, a.notify, b.type, a.type_id, c.id user_id, c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  if (!empty(i, "id"))
+  {
+    qs << " and a.id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "application_id"))
+  {
+    qs << " and a.application_id = " << v(i->m["application_id"]->v);
+  }
+  if ((!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1") || (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  {
+    bool f = true;
+    qs << " and b.type in (";
+    if (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Developer'";
+      f = false;
+    }
+    if (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Backup Developer'";
+      f = false;
+    }
+    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Contact'";
+      f = false;
+    }
+    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Contact'";
+      f = false;
+    }
+    qs << ")";
+  }
+  qs << " order by c.last_name, c.first_name, c.userid";
+  if (exist(i, "page"))
   {
     size_t unNumPerPage, unOffset, unPage;
     stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
@@ -592,16 +836,43 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
     unOffset = unPage * unNumPerPage;
     qs << " limit " << unNumPerPage << " offset " << unOffset;
   }
-  q = qs.str();
-  auto g = dbq("central_r", q, e);
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationUserUpdate()
+bool Db::dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update application_contact set" << u({"admin", "contact_id", "description", "locked", "notifyf", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralContactTypes()
+bool Db::dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+  list<string> k = {"database", "central", "contact_type"};
+  stringstream qs;
+
+  qs << "select id, type from contact_type order by type";
+  auto g = dbq("central_r", qs, q, k, e);
   if (g != NULL)
   {
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "name"))
+      if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "name") && r["name"] == i->m["name"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -617,136 +888,53 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
   return b;
 }
 // }}}
-// {{{ dbCentralApplicationServerAdd()
-bool Db::dbCentralApplicationServerAdd(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationServerDetailAdd()
-bool Db::dbCentralApplicationServerDetailAdd(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationServerDetailRemove()
-bool Db::dbCentralApplicationServerDetailRemove(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationServerDetails()
-bool Db::dbCentralApplicationServerDetails(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationServerDetailUpdate()
-bool Db::dbCentralApplicationServerDetailUpdate(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationServers()
-bool Db::dbCentralApplicationServers(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationUpdate()
-bool Db::dbCentralApplicationUpdate(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-  stringstream qs;
-
-  if (!empty(i, "id"))
-  {
-    if (!empty(i, "name"))
-    {
-      qs << "update application set" << u("name", i->m["name"]->v) << u("account_check", i) << u("auto_register", i) << u("dependable", i) << u("description", i) << u("highlight", i) << u("login_type_id", i) << u("menu_id", i) << u("notify_priority_id", i) << u("retirement_date", i) << u("secure_port", i) << u("website", i) << u("wiki", i) << " where id = " << i->m["id"]->v;
-      q = qs.str();
-      if (dbu("central", q, e))
-      {
-        b = true;
-      }
-    }
-    else
-    {
-      e = "Please provide the name";
-    }
-  }
-  else
-  {
-    e = "Please provide the id.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationUserAdd()
-bool Db::dbCentralApplicationUserAdd(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationUserRemove()
-bool Db::dbCentralApplicationUserRemove(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationUsers()
-bool Db::dbCentralApplicationUsers(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationUserUpdate()
-bool Db::dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
-// {{{ dbCentralContactTypes()
-bool Db::dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  return b;
-}
-// }}}
 // {{{ dbCentralDependents()
 bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.dependant_id = b.id";
+  if (!empty(i, "dependant_id"))
+  {
+    qs << " and a.dependant_id = " << v(i->m["dependant_id"]->v);
+  }
+  else if (!empty(i, "application_id"))
+  {
+    qs << " and a.application_id = " << v(i->m["application_id"]->v);
+  }
+  qs << " order by b.name";
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralLoginTypes()
 bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "login_type"};
+  stringstream qs;
+
+  qs << "select id, type from login_type order by type";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "type"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -755,6 +943,30 @@ bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
 bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "menu_access"};
+  stringstream qs;
+
+  qs << "select id, type from menu_access order by type";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "type"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -763,6 +975,30 @@ bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &
 bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "notify_priority"};
+  stringstream qs;
+
+  qs << "select id, priority from notify_priority order by priority";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "priority"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "priority") && r["id"] == i->m["priority"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -771,6 +1007,30 @@ bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, stri
 bool Db::dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  list<string> k = {"database", "central", "package_type"};
+  stringstream qs;
+
+  qs << "select id, type from package_type order by type";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "type"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
 
   return b;
 }
@@ -780,15 +1040,31 @@ bool Db::dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
 
+  if (dep({"name"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"cpu_usage", "description", "disk_size", "main_memory", "name", "processes", "swap_memory"};
+    stringstream qs;
+    qs << "insert into server (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
   return b;
 }
 // }}}
 // {{{ dbCentralServerDetails()
 bool Db::dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select a.id application_server_id, b.id server_id, b.name, c.id application_server_detail_id, c.daemon from application_server a, server b, application_server_detail c where a.server_id = b.id and a.id = c.application_server_id";
+  if (!empty(i, "application_id"))
+  {
+    qs << " and a.application_id = " << v(i->m["application_id"]->v);
+  }
+  qs << " order by b.name, c.daemon";
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralServerRemove()
@@ -796,21 +1072,67 @@ bool Db::dbCentralServerRemove(Json *i, Json *o, string &id, string &q, string &
 {
   bool b = false;
 
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from server where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
   return b;
 }
 // }}}
 // {{{ dbCentralServers()
 bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory from server where 1";
+  if (!empty(i, "id"))
+  {
+    qs << " and id = " << v(i->m["id"]->v);
+  } 
+  if (!empty(i, "letter"))
+  {
+    if (i->m["letter"]->v == "#")
+    {
+      qs << " and name regexp '^[ -@[-`{-~]'";
+    }
+    else
+    {
+      qs << " and upper(name) like '" << i->m["letter"]->v << "%'";
+    }
+  }
+  if (!empty(i, "name"))
+  {
+    qs << " and name = " << v(i->m["name"]->v);
+  } 
+  qs << " order by name";
+  if (!empty(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    qs << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralServerUpdate()
 bool Db::dbCentralServerUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+
+  if (dep({"id", "name"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update server set" << u({"cpu_usage", "description", "disk_size", "main_memory", "name", "processes", "swap_memory"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
@@ -887,15 +1209,52 @@ void Db::dbf(list<map<string, string> > *g)
 }
 // }}}
 // {{{ dbq()
-list<map<string, string> > *Db::dbq(const string d, const string q, string &e)
+bool Db::dbq(const string d, stringstream &qs, string &q, Json *o, string &e)
 {
+  auto g = dbq(d, qs, q, e);
+  bool b = false;
+
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
+
+  return b;
+}
+bool Db::dbq(const string d, stringstream &qs, string &q, const list<string> k, Json *o, string &e)
+{
+  auto g = dbq(d, qs, q, k, e);
+  bool b = false;
+
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      o->pb(r);
+    }
+  }
+  dbf(g);
+
+  return b;
+}
+list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q, string &e)
+{
+  q = qs.str();
+
   return dbquery(d, q, e);
 }
-list<map<string, string> > *Db::dbq(const string d, const string q, const list<string> k, string &e)
+list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q, const list<string> k, string &e)
 {
   Json *s = new Json;
   list<map<string, string> > *g= NULL;
 
+  q = qs.str();
   if (storageRetrieve(k, s, e))
   {
     g = new list<map<string, string> >;
@@ -921,15 +1280,38 @@ list<map<string, string> > *Db::dbq(const string d, const string q, const list<s
 }
 // }}}
 // {{{ dbu()
-bool Db::dbu(const string d, const string q, string &e)
+bool Db::dbu(const string d, stringstream &qs, string &q, string &e)
 {
+  q = qs.str();
+
   return dbupdate(d, q, e);
 }
-bool Db::dbu(const string d, const string q, string &id, string &e)
+bool Db::dbu(const string d, stringstream &qs, string &q, string &id, string &e)
 {
+  q = qs.str();
+
   return dbupdate(d, q, id, e);
 }
 // }}}
+// }}}
+// {{{ dep()
+bool Db::dep(const list<string> fs, Json *i, string &e)
+{
+  bool bResult = true;
+  stringstream es;
+
+  for (auto fi = fs.begin(); bResult && fi != fs.end(); fi++)
+  {
+    if (!exist(i, *fi) || empty(i, *fi))
+    {
+      bResult = false;
+      es << "Please provide the " << *fi;
+      e = es.str();
+    }
+  }
+
+  return bResult;
+}
 // }}}
 // {{{ setCallbackAddon()
 void Db::setCallbackAddon(bool (*pCallback)(const string, Json *, Json *, string &, string &, string &, bool &))
@@ -937,39 +1319,50 @@ void Db::setCallbackAddon(bool (*pCallback)(const string, Json *, Json *, string
   m_pCallbackAddon = pCallback;
 }
 // }}}
-// {{{ u()
-string Db::u(const string k, Json *i)
-{
-  return u(k, k, i);
-}
-string Db::u(const string k, Json *i, bool &f)
-{
-  return u(k, k, i, f);
-}
-string Db::u(const string n, const string k, Json *i)
+// {{{ ia()
+string Db::ia(const list<string> ks, Json *i)
 {
   bool f = false;
 
-  return u(n, k, i, f);
+  return ia(ks, i, f);
 }
-string Db::u(const string n, const string k, Json *i, bool &f)
+string Db::ia(const list<string> ks, Json *i, bool &f)
+{
+  string o;
+  stringstream os;
+
+  for (auto &k : ks)
+  {
+    os << ia(k, i, f);
+  }
+  o = os.str();
+
+  return o;
+}
+string Db::ia(const string k, Json *i)
+{
+  bool f = false;
+
+  return ia(k, i, f);
+}
+string Db::ia(const string k, Json *i, bool &f)
 {
   string s;
 
   if (exist(i, k))
   {
-    s = u(n, i->m[k]->v, f);
+    s = ia(k, f);
   }
 
   return s;
 }
-string Db::u(const string n, const string i)
+string Db::ia(const string k)
 {
   bool f = false;
 
-  return u(n, i, f);
+  return ia(k, f);
 }
-string Db::u(const string n, const string i, bool &f)
+string Db::ia(const string k, bool &f)
 {
   string s;
   stringstream os;
@@ -982,7 +1375,131 @@ string Db::u(const string n, const string i, bool &f)
   {
     os << ",";
   }
-  os << " `" << n << "` = " << v(i);
+  os << " `" << k << "`";
+
+  s = os.str();
+  return s;
+}
+// }}}
+// {{{ ib()
+string Db::ib(const list<string> ks, Json *i)
+{
+  bool f = false;
+
+  return ib(ks, i, f);
+}
+string Db::ib(const list<string> ks, Json *i, bool &f)
+{
+  string o;
+  stringstream os;
+
+  for (auto &k : ks)
+  {
+    os << ib(k, i, f);
+  }
+  o = os.str();
+
+  return o;
+}
+string Db::ib(const string k, Json *i)
+{
+  bool f = false;
+
+  return ib(k, i, f);
+}
+string Db::ib(const string k, Json *i, bool &f)
+{
+  string s;
+
+  if (exist(i, k))
+  {
+    s = ib(k, i->m[k]->v, f);
+  }
+
+  return s;
+}
+string Db::ib(const string k, const string i)
+{
+  bool f = false;
+
+  return ib(k, i, f);
+}
+string Db::ib(const string k, const string i, bool &f)
+{
+  string s;
+  stringstream os;
+
+  if (f)
+  {
+    f = false;
+  }
+  else
+  {
+    os << ",";
+  }
+  os << " " << ((i == "now()")?i:v(i));
+
+  s = os.str();
+  return s;
+}
+// }}}
+// {{{ u()
+string Db::u(const list<string> ks, Json *i)
+{
+  bool f = false;
+
+  return u(ks, i, f);
+}
+string Db::u(const list<string> ks, Json *i, bool &f)
+{
+  string o;
+  stringstream os;
+
+  for (auto &k : ks)
+  {
+    os << u(k, i, f);
+  }
+  o = os.str();
+
+  return o;
+}
+string Db::u(const string k, Json *i)
+{
+  bool f = false;
+
+  return u(k, i, f);
+}
+string Db::u(const string k, Json *i, bool &f)
+{
+  string s;
+
+  if (exist(i, k))
+  {
+    s = u(k, i->m[k]->v, f);
+  }
+
+  return s;
+}
+string Db::u(const string k, const string i)
+{
+  bool f = false;
+
+  return u(k, i, f);
+}
+string Db::u(const string k, const string i, bool &f)
+{
+  string s;
+  stringstream os;
+
+  if (f)
+  {
+    f = false;
+  }
+  else
+  {
+    os << ",";
+  }
+  os << " `" << k << "` = " << ((i == "now()")?i:v(i));
 
   s = os.str();
   return s;

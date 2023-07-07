@@ -116,7 +116,7 @@ bool Central::accountType(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!empty(i, "id") || !empty(i, "type"))
   {
     map<string, string> r;
     if (db("dbCentralAccountTypes", i, r, e))
@@ -134,7 +134,7 @@ bool Central::accountType(radialUser &d, string &e)
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or type.";
   }
 
   return b;
@@ -270,7 +270,7 @@ bool Central::applicationAccount(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     map<string, string> r;
     if (db("dbCentralApplicationAccounts", i, r, e))
@@ -330,10 +330,6 @@ bool Central::applicationAccount(radialUser &d, string &e)
       }
     }
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -344,46 +340,26 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
+  {
+    i->i("encrypt", i->m["encrypt"]->m["value"]->v);
+  }
+  if (exist(i, "type") && !empty(i->m["type"], "id"))
+  {
+    i->i("type_id", i->m["type"]->m["id"]->v);
+  }
+  if (dep({"application_id", "user_id", "encrypt", "password", "type_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      if (!empty(i, "user_id"))
+      string id, q;
+      if (db("dbCentralApplicationAccountAdd", i, id, q, e))
       {
-        if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
-        {
-          if (!empty(i, "password"))
-          {
-            if (exist(i, "type") && !empty(i->m["type"], "id"))
-            {
-              string id, q;
-              if (db("dbCentralApplicationAccountAdd", i, id, q, e))
-              {
-                b = true;
-                o->i("id", id);
-              }
-            }
-            else
-            {
-              e = "Please provide the type.";
-            }
-          }
-          else
-          {
-            e = "Please provide the password.";
-          }
-        }
-        else
-        {
-          e = "Please provide the encrypt.";
-        }
-      }
-      else
-      {
-        e = "Please provide the user_id.";
+        b = true;
+        o->i("id", id);
       }
     }
     else
@@ -391,10 +367,6 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -406,51 +378,24 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
+  {
+    i->i("encrypt", i->m["encrypt"]->m["value"]->v);
+  }
+  if (exist(i, "type") && !empty(i->m["type"], "id"))
+  {
+    i->i("type_id", i->m["type"]->m["id"]->v);
+  }
+  if (dep({"id", "user_id", "encrypt", "password", "type_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (applicationAccount(a, e))
     {
-      if (!empty(i, "user_id"))
-      {
-        if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
-        {
-          if (!empty(i, "password"))
-          {
-            if (exist(i, "type") && !empty(i->m["type"], "id"))
-            {
-              if (db("dbCentralApplicationAccountUpdate", i, e))
-              {
-                b = true;
-              }
-            }
-            else
-            {
-              e = "Please provide the type.";
-            }
-          }
-          else
-          {
-            e = "Please provide the password.";
-          }
-        }
-        else
-        {
-          e = "Please provide the encrypt.";
-        }
-      }
-      else
-      {
-        e = "Please provide the user_id.";
-      }
+      b = db("dbCentralApplicationAccountUpdate", i, e);
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -462,7 +407,7 @@ bool Central::applicationAccountRemove(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -472,10 +417,6 @@ bool Central::applicationAccountRemove(radialUser &d, string &e)
       b = true;
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -487,7 +428,7 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -543,10 +484,6 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -559,7 +496,7 @@ bool Central::applicationAdd(radialUser &d, string &e)
 
   if (d.g || d.auth.find("Central") != d.auth.end())
   {
-    if (!empty(i, "name"))
+    if (dep({"name"}, i, e))
     {
       radialUser a;
       userInit(d, a);
@@ -582,10 +519,7 @@ bool Central::applicationAdd(radialUser &d, string &e)
           u.p->m["i"]->m["locked"]->i("value", "0", 'n');
           u.p->m["i"]->m["notify"] = new Json;
           u.p->m["i"]->m["notify"]->i("value", "1", 'n');
-          if (applicationUserAdd(u, e))
-          {
-            b = true;
-          }
+          b = applicationUserAdd(u, e);
           userDeinit(u);
         }
       }
@@ -594,10 +528,6 @@ bool Central::applicationAdd(radialUser &d, string &e)
         e = "Application already exists.";
       }
       userDeinit(a);
-    }
-    else
-    {
-      e = "Please provide the name.";
     }
   }
   else
@@ -614,7 +544,7 @@ bool Central::applicationDepend(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     map<string, string> r;
     if (db("dbCentralApplicationDepends", i, r, e))
@@ -630,10 +560,6 @@ bool Central::applicationDepend(radialUser &d, string &e)
       }
     }
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -644,36 +570,25 @@ bool Central::applicationDependAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id", "dependant_id"}, i, e))
   {
-    if (!empty(i, "dependant_id"))
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
     {
-      radialUser a;
-      userInit(d, a);
-      a.p->m["i"]->i("id", i->m["application_id"]->v);
-      if (d.g || isApplicationDeveloper(a, e))
+      string id, q;
+      if (db("dbCentralApplicationDependAdd", i, id, q, e))
       {
-        string id, q;
-        if (db("dbCentralApplicationDependAdd", i, id, q, e))
-        {
-          b = true;
-          o->i("id", id);
-        }
+        b = true;
+        o->i("id", id);
       }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
-      userDeinit(a);
     }
     else
     {
-      e = "Please provide the dependant_id.";
+      e = "You are not authorized to perform this action.";
     }
-  }
-  else
-  {
-    e = "Please provide the application_id.";
+    userDeinit(a);
   }
 
   return b;
@@ -685,7 +600,7 @@ bool Central::applicationDependRemove(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -697,10 +612,7 @@ bool Central::applicationDependRemove(radialUser &d, string &e)
       c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(c, e))
       {
-        if (db("dbCentralApplicationDependRemove", i, e))
-        {
-          b = true;
-        }
+        b = db("dbCentralApplicationDependRemove", i, e);
       }
       else
       {
@@ -709,10 +621,6 @@ bool Central::applicationDependRemove(radialUser &d, string &e)
       userDeinit(c);
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -725,119 +633,52 @@ bool Central::applicationEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (exist(i, "account_check") && !empty(i->m["account_check"], "value"))
+  {
+    i->i("account_check", i->m["account_check"]->m["value"]->v);
+  }
+  if (exist(i, "auto_register") && !empty(i->m["auto_register"], "value"))
+  {
+    i->i("auto_register", i->m["auto_register"]->m["value"]->v);
+  }
+  if (exist(i, "dependable") && !empty(i->m["dependable"], "value"))
+  {
+    i->i("dependable", i->m["dependable"]->m["value"]->v);
+  }
+  if (exist(i, "login_type") && !empty(i->m["login_type"], "id"))
+  {
+    i->i("login_type_id", i->m["login_type"]->m["id"]->v);
+  }
+  if (exist(i, "menu_access") && !empty(i->m["menu_access"], "id"))
+  {
+    i->i("menu_id", i->m["menu_access"]->m["id"]->v);
+  }
+  if (exist(i, "notify_priority") && !empty(i->m["notify_priority"], "id"))
+  {
+    i->i("notify_priority_id", i->m["notify_priority"]->m["id"]->v);
+  }
+  if (exist(i, "secure_port") && !empty(i->m["secure_port"], "value"))
+  {
+    i->i("secure_port", i->m["secure_port"]->m["value"]->v);
+  }
+  if (exist(i, "wiki") && !empty(i->m["wiki"], "value"))
+  {
+    i->i("wiki", i->m["wiki"]->m["value"]->v);
+  }
+  if (dep({"id", "name"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      if (!empty(i, "name"))
-      {
-        q << "update application set name = '" << esc(i->m["name"]->v) << "'";
-        q << ", notify_priority_id = ";
-        if (exist(i, "notify_priority") && !empty(i->m["notify_priority"], "id"))
-        {
-          q << i->m["notify_priority"]->m["id"]->v;
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", website = ";
-        if (!empty(i, "website"))
-        {
-          q << "'" << esc(i->m["website"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", login_type_id = ";
-        if (exist(i, "login_type") && !empty(i->m["login_type"], "id"))
-        {
-          q << i->m["login_type"]->m["id"]->v;
-        }
-        else
-        {
-          q << "null";
-        }
-        if (exist(i, "secure_port") && !empty(i->m["secure_port"], "value"))
-        {
-          q << ", secure_port = " << i->m["secure_port"]->m["value"]->v;
-        }
-        if (exist(i, "auto_register") && !empty(i->m["auto_register"], "value"))
-        {
-          q << ", auto_register = " << i->m["auto_register"]->m["value"]->v;
-        }
-        if (exist(i, "account_check") && !empty(i->m["account_check"], "value"))
-        {
-          q << ", account_check = " << i->m["account_check"]->m["value"]->v;
-        }
-        if (exist(i, "dependable") && !empty(i->m["dependable"], "value"))
-        {
-          q << ", dependable = " << i->m["dependable"]->m["value"]->v;
-        }
-        q << ", menu_id = ";
-        if (exist(i, "menu_access") && !empty(i->m["menu_access"], "id"))
-        {
-          q << i->m["menu_access"]->m["id"]->v;
-        }
-        else
-        {
-          q << "null";
-        }
-        if (exist(i, "wiki") && !empty(i->m["wiki"], "value"))
-        {
-          q << ", wiki = " << i->m["wiki"]->m["value"]->v;
-        }
-        q << ", highlight = ";
-        if (!empty(i, "highlight"))
-        {
-          q << "'" << esc(i->m["highlight"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", description = ";
-        if (!empty(i, "description"))
-        {
-          q << "'" << esc(i->m["description"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", retirement_date = ";
-        if (!empty(i, "retirement_date"))
-        {
-          q << "'" << esc(i->m["retirement_date"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << " where id = " << i->m["id"]->v;
-        if (dbu(q.str(), e))
-        {
-          b = true;
-        }
-      }
-      else
-      {
-        e = "Please provide the name";
-      }
+      b = db("dbCentralApplicationUpdate", i, e);
     }
     else
     {
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -847,18 +688,16 @@ bool Central::applicationEdit(radialUser &d, string &e)
 bool Central::applicationIssue(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
-    q << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralApplicationIssues", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
-        Json *j = new Json(g->front());
+        Json *j = new Json(r);
         b = true;
         if (!empty(j, "assigned_id"))
         {
@@ -890,11 +729,6 @@ bool Central::applicationIssue(radialUser &d, string &e)
         e = "No results returned.";
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -909,69 +743,29 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
 
   if (!d.u.empty())
   {
-    if (!empty(i, "application_id"))
+    if (dep({"application_id"}, i, e))
     {
-      string strID;
-      q << "insert into application_issue (application_id, open_date";
-      if (!empty(i, "assigned_id") || !empty(i, "assigned_userid"))
-      {
-        q << ", assigned_id";
-      }
-      if (!empty(i, "due_date"))
-      {
-        q << ", due_date";
-      }
-      if (!empty(i, "priority"))
-      {
-        q << ", priority";
-      }
-      if (!empty(i, "summary"))
-      {
-        q << ", summary";
-      }
-      q << ") values (" << i->m["application_id"]->v << ", now()";
-      if (!empty(i, "assigned_id"))
-      {
-        q << ", " << i->m["assigned_id"]->v;
-      }
-      else if (!empty(i, "assigned_userid"))
+      string id, q;
+      if (empty(i, "assigned_id") && !empty(i, "assigned_userid"))
       {
         radialUser a;
-        q << ", ";
         userInit(d, a);
         a.p->m["i"]->i("userid", i->m["assigned_userid"]->v);
         if (user(a, e) && !empty(a.p->m["o"], "id"))
         {
-          q << a.p->m["o"]->m["id"]->v;
-        }
-        else
-        {
-          q << "null";
+          i->i("assigned_id", a.p->m["o"]->m["id"]->v);
         }
         userDeinit(a);
       }
-      if (!empty(i, "due_date"))
-      {
-        q << ", '" << esc(i->m["due_date"]->v) << "'";
-      }
-      if (!empty(i, "priority"))
-      {
-        q << ", '" << esc(i->m["priority"]->v) << "'";
-      }
-      if (!empty(i, "summary"))
-      {
-        q << ", '" << esc(i->m["summary"]->v) << "'";
-      }
-      q << ")";
-      if (dbu(q.str(), strID, e))
+      if (db("dbCentralApplicationIssueAdd", i, id, q, e))
       {
         b = true;
-        o->i("id", strID);
+        o->i("id", id);
         if (!empty(i, "comments"))
         {
           radialUser a;
           userInit(d, a);
-          a.p->m["i"]->i("issue_id", strID);
+          a.p->m["i"]->i("issue_id", id);
           a.p->m["i"]->i("comments", i->m["comments"]->v);
           applicationIssueCommentAdd(a, e);
           userDeinit(a);
@@ -980,7 +774,7 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
         {
           radialUser a;
           userInit(d, a);
-          a.p->m["i"]->i("id", strID);
+          a.p->m["i"]->i("id", id);
           a.p->m["i"]->i("action", "add");
           a.p->m["i"]->i("application_id", i->m["application_id"]->v);
           a.p->m["i"]->i("server", i->m["server"]->v);
@@ -988,10 +782,6 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
           userDeinit(a);
         }
       }
-    }
-    else
-    {
-      e = "Please provide the application_id.";
     }
   }
   else
@@ -1006,22 +796,14 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
 bool Central::applicationIssueClose(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!d.u.empty())
   {
-    if (!empty(i, "id"))
+    if (dep({"id"}, i, e))
     {
-      q << "update application_issue set close_date = now() where id = " << i->m["id"]->v;
-      if (dbu(q.str(), e))
-      {
-        b = true;
-      }
-    }
-    else
-    {
-      e = "Please provide the id.";
+      i->i("close_date", "now()");
+      b = db("dbCentralApplicationIssueUpdate", i, e);
     }
   }
   else
@@ -1032,61 +814,66 @@ bool Central::applicationIssueClose(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ applicationIssueComment()
+bool Central::applicationIssueComment(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    map<string, string> r;
+    if (db("dbCentralApplicationIssues", i, r, e))
+    {
+      if (!r.empty())
+      {
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
 // {{{ applicationIssueCommentAdd()
 bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["i"];
 
   if (!d.u.empty())
   {
-    if (!empty(i, "issue_id"))
+    if (dep({"comments", "issue_id"}, i, e))
     {
-      if (!empty(i, "comments"))
+      radialUser a;
+      userInit(d, a);
+      a.p->m["i"]->i("userid", d.u);
+      if (user(a, e) && !empty(a.p->m["o"], "id"))
       {
-        q << "select id from person where userid = '" << d.u << "'";
-        auto g = dbq(q.str(), e);
-        if (g != NULL)
+        string id, q;
+        i->i("user_id", a.p->m["o"]->m["id"]->v);
+        if (db("dbCentalApplicationIssueCommentAdd", i, id, q, e))
         {
-          if (!g->empty())
+          b = true;
+          o->i("id", id);
+          if (!empty(i, "server"))
           {
-            auto r = g->front();
-            string strID;
-            q.str("");
-            q << "insert issue_comment (issue_id, entry_date, user_id, comments) values (" << i->m["issue_id"]->v << ", now(), " << r["id"] << ", '" << esc(i->m["comments"]->v) << "')";
-            if (dbu(q.str(), strID, e))
-            {
-              b = true;
-              o->i("id", strID);
-              if (!empty(i, "server"))
-              {
-                radialUser c;
-                userInit(d, c);
-                c.p->m["i"]->i("id", i->m["issue_id"]->v);
-                c.p->m["i"]->i("action", "update");
-                c.p->m["i"]->i("application_id", i->m["application_id"]->v);
-                c.p->m["i"]->i("server", i->m["server"]->v);
-                applicationIssueEmail(c, e);
-                userDeinit(c);
-              }
-            }
-          }
-          else
-          {
-            e = "No results returned.";
+            radialUser c;
+            userInit(d, c);
+            c.p->m["i"]->i("id", i->m["issue_id"]->v);
+            c.p->m["i"]->i("action", "update");
+            c.p->m["i"]->i("application_id", i->m["application_id"]->v);
+            c.p->m["i"]->i("server", i->m["server"]->v);
+            applicationIssueEmail(c, e);
+            userDeinit(c);
           }
         }
-        dbf(g);
       }
-      else
-      {
-        e = "Please provide the comments.";
-      }
-    }
-    else
-    {
-      e = "Please provide the issue_id.";
+      userDeinit(a);
     }
   }
   else
@@ -1101,66 +888,34 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
 bool Central::applicationIssueCommentEdit(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!d.u.empty())
   {
-    if (!empty(i, "id"))
+    if (dep({"comments", "id"}, i, e))
     {
-      if (!empty(i, "comments"))
+      radialUser a;
+      userInit(d, a);
+      a.p->m["i"]->i("userid", d.u);
+      if (user(a, e) && !empty(a.p->m["o"], "id"))
       {
-        q << "select id from person where userid = '" << d.u << "'";
-        auto g = dbq(q.str(), e);
-        if (g != NULL)
+        radialUser c;
+        userInit(d, c);
+        c.p->m["i"]->i("id", i->m["id"]->v);
+        if (applicationIssueComment(c, e) && !empty(c.p->m["o"], "user_id"))
         {
-          if (!g->empty())
+          if (a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["user_id"]->v)
           {
-            auto r = g->front();
-            q.str("");
-            q << "select user_id from issue_comment where id = " << i->m["id"]->v;
-            auto h = dbq(q.str(), e);
-            if (h != NULL)
-            {
-              if (!h->empty())
-              {
-                auto s = h->front();
-                if (r["id"] == s["user_id"])
-                {
-                  q.str("");
-                  q << "update issue_comment set comments = '" << esc(i->m["comments"]->v) << "' where id = " << i->m["id"]->v;
-                  if (dbu(q.str(), e))
-                  {
-                    b = true;
-                  }
-                }
-                else
-                {
-                  e = "You are not authorized to perform this action.";
-                }
-              }
-              else
-              {
-                e = "No results returned.";
-              }
-            }
-            dbf(h);
+            b = db("dbCentralApplicationIssueCommentUpdate", i, e);
           }
           else
           {
-            e = "No results returned.";
+            e = "You are not authorized to perform this action.";
           }
         }
-        dbf(g);
+        userDeinit(c);
       }
-      else
-      {
-        e = "Please provide the comments.";
-      }
-    }
-    else
-    {
-      e = "Please provide the id.";
+      userDeinit(a);
     }
   }
   else
@@ -1175,30 +930,19 @@ bool Central::applicationIssueCommentEdit(radialUser &d, string &e)
 bool Central::applicationIssueComments(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "issue_id"))
+  if (dep({"issue_id"}, i, e))
   {
-    q << "select a.id, date_format(a.entry_date, '%Y-%m-%d %H:%i:%s') entry_date, a.user_id, a.comments, b.last_name, b.first_name, b.userid, b.email from issue_comment a, person b where a.user_id = b.id and a.issue_id = " << i->m["issue_id"]->v << " order by entry_date, id";
-    if (!empty(i, "limit"))
-    {
-      q << " limit " << i->m["limit"]->v;
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplicationIssueComments", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         o->pb(r);
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the issue_id.";
   }
 
   return b;
@@ -1211,119 +955,35 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "application_id"))
+  if (exist(i, "transfer") && !empty(i->m["transfer"], "id"))
+  {
+    i->i("transfer_id", i->m["transfer"]->m["id"]->v);
+  }
+  if (dep({"application_id", "id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("application_id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      if (!empty(i, "id"))
+      if (empty(i, "assigned_id") && !empty(i, "assigned_userid"))
       {
-        q << "update application_issue set ";
-        q << "application_id = ";
-        if (exist(i, "transfer") && !empty(i->m["transfer"], "id") && i->m["transfer"]->m["id"]->v != i->m["application_id"]->v)
+        radialUser a;
+        userInit(d, a);
+        a.p->m["i"]->i("userid", i->m["assigned_userid"]->v);
+        if (user(a, e) && !empty(a.p->m["o"], "id"))
         {
-          q << i->m["transfer"]->m["id"]->v;
+          i->i("assigned_id", a.p->m["o"]->m["id"]->v);
         }
-        else
-        {
-          q << i->m["application_id"]->v;
-        }
-        q << ", assigned_id = ";
-        if (!empty(i, "assigned_id"))
-        {
-          q << i->m["assigned_id"]->v;
-        }
-        else if (!empty(i, "assigned_userid"))
-        {
-          radialUser a;
-          userInit(d, a);
-          a.p->m["i"]->i("userid", i->m["assigned_userid"]->v);
-          if (user(a, e) && !empty(a.p->m["o"], "id"))
-          {
-            q << a.p->m["o"]->m["id"]->v;
-          }
-          else
-          {
-            q << "null";
-          }
-          userDeinit(a);
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", close_date = ";
-        if (!empty(i, "close_date"))
-        {
-          q << "'" << i->m["close_date"]->v << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", due_date = ";
-        if (!empty(i, "due_date"))
-        {
-          q << "'" << i->m["due_date"]->v << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", hold = ";
-        if (!empty(i, "hold"))
-        {
-          q << i->m["hold"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << ", priority = ";
-        if (!empty(i, "priority"))
-        {
-          q << i->m["priority"]->v;
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", release_date = ";
-        if (!empty(i, "release_date"))
-        {
-          q << "'" << i->m["release_date"]->v << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", summary = ";
-        if (!empty(i, "summary"))
-        {
-          q << "'" << esc(i->m["summary"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << " where id = " << i->m["id"]->v;
-        if (dbu(q.str(), e))
-        {
-          b = true;
-        }
+        userDeinit(a);
       }
-      else
-      {
-        e = "Please provide the id.";
-      }
+      b = db("dbCentralApplicationIssueUpdate", i, e);
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -1338,186 +998,168 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
 
   if (!d.u.empty())
   {
-    if (!empty(i, "action"))
+    if (dep({"action", "id", "server"}, i, e))
     {
       if (i->m["action"]->v == "add" || i->m["action"]->v == "close" || i->m["action"]->v == "transfer" || i->m["action"]->v == "update")
       {
-        if (!empty(i, "server"))
+        radialUser a;
+        userInit(d, a);
+        a.p->m["i"]->i("id", i->m["id"]->v);
+        a.p->m["i"]->i("comments", "1", 'n');
+        if (applicationIssue(a, e) && !empty(a.p->m["o"], "application_id"))
         {
-          if (!empty(i, "id"))
+          radialUser c;
+          userInit(d, c);
+          c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+          if (application(c, e) && !empty(c.p->m["o"], "id") && !empty(c.p->m["o"], "name"))
           {
-            radialUser a;
-            userInit(d, a);
-            a.p->m["i"]->i("id", i->m["id"]->v);
-            a.p->m["i"]->i("comments", "1", 'n');
-            if (applicationIssue(a, e) && !empty(a.p->m["o"], "application_id"))
+            radialUser f;
+            userInit(d, f);
+            f.p->m["i"]->i("application_id", c.p->m["o"]->m["id"]->v);
+            f.p->m["i"]->i("Primary Developer", "1", 'n');
+            f.p->m["i"]->i("Backup Developer", "1", 'n');
+            if (applicationUsersByApplicationID(f, e))
             {
-              radialUser c;
-              userInit(d, c);
-              c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
-              if (application(c, e) && !empty(c.p->m["o"], "id") && !empty(c.p->m["o"], "name"))
+              list<string> to;
+              string strApplication, strName;
+              stringstream m[2], s;
+              s << c.p->m["o"]->m["name"]->v << " [" << i->m["action"]->v << "]:  Issue #" << i->m["id"]->v;
+              if (!empty(a.p->m["o"], "summary"))
               {
-                radialUser f;
-                userInit(d, f);
-                f.p->m["i"]->i("application_id", c.p->m["o"]->m["id"]->v);
-                f.p->m["i"]->i("Primary Developer", "1", 'n');
-                f.p->m["i"]->i("Backup Developer", "1", 'n');
-                if (applicationUsersByApplicationID(f, e))
-                {
-                  list<string> to;
-                  string strApplication, strName;
-                  stringstream m[2], s;
-                  s << c.p->m["o"]->m["name"]->v << " [" << i->m["action"]->v << "]:  Issue #" << i->m["id"]->v;
-                  if (!empty(a.p->m["o"], "summary"))
-                  {
-                    s << " - " << a.p->m["o"]->m["summary"]->v;
-                  }
-                  if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
-                  {
-                    to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
-                  }
-                  else
-                  {
-                    for (auto &contact : f.p->m["o"]->l)
-                    {
-                      if (!empty(contact, "email"))
-                      {
-                        to.push_back(contact->m["email"]->v);
-                      }
-                    }
-                  }
-                  if (i->m["action"]->v == "transfer" && !empty(i, "application_id"))
-                  {
-                    radialUser h;
-                    userInit(d, h);
-                    h.p->m["i"]->i("id", i->m["application_id"]->v);
-                    if (application(h, e) && !empty(h.p->m["o"], "name"))
-                    {
-                      strApplication = h.p->m["o"]->m["name"]->v;
-                      if (!exist(a.p->m["o"], "assigned") || empty(a.p->m["o"]->m["assigned"], "email"))
-                      {
-                        radialUser k;
-                        userInit(d, k);
-                        k.p->m["i"]->i("application_id", i->m["application_id"]->v);
-                        k.p->m["i"]->i("Primary Developer", "1", 'n');
-                        k.p->m["i"]->i("Backup Developer", "1", 'n');
-                        if (applicationUsersByApplicationID(k, e))
-                        {
-                          for (auto &contact : k.p->m["o"]->l)
-                          {
-                            if (!empty(contact, "email"))
-                            {
-                              to.push_back(contact->m["email"]->v);
-                            }
-                          }
-                        }
-                        userDeinit(k);
-                      }
-                    }
-                    userDeinit(h);
-                  }
-                  if (exist(a.p->m["o"], "comments"))
-                  {
-                    for (auto &contact : a.p->m["o"]->m["comments"]->l)
-                    {
-                      if (!empty(contact, "email"))
-                      {
-                        to.push_back(contact->m["email"]->v);
-                      }
-                    }
-                  }
-                  strName = getUserName(d);
-                  m[0] << "<html><body style=\"background:#f3f3f3:padding:10px;\">";
-                  if (!empty(a.p->m["o"], "summary"))
-                  {
-                    m[0] << "<h3>" << a.p->m["o"]->m["summary"]->v << "</h3>";
-                  }
-                  if (i->m["action"]->v == "add")
-                  {
-                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
-                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>created</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
-                  }
-                  else if (i->m["action"]->v == "close")
-                  {
-                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>closed</b> by " << strName << ".";
-                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>closed</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
-                  }
-                  else if (i->m["action"]->v == "transfer")
-                  {
-                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << ".";
-                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
-                  }
-                  else if (i->m["action"]->v == "update")
-                  {
-                    m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
-                    m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
-                  }
-                  if (exist(a.p->m["o"], "comments") && !a.p->m["o"]->m["comments"]->l.empty())
-                  {
-                    m[0] << "<div style=\"margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;\">";
-                    m[0] << "<small style=\"float:right;color:#999999;\"><i>";
-                    if (!empty(a.p->m["o"]->m["comments"]->l.back(), "entry_date"))
-                    {
-                      m[0] << a.p->m["o"]->m["comments"]->l.back()->m["entry_date"]->v;
-                    }
-                    if (!empty(a.p->m["o"]->m["comments"]->l.back(), "first_name") && !empty(a.p->m["o"]->m["comments"]->l.back(), "last_name"))
-                    {
-                      m[0] << " by " << a.p->m["o"]->m["comments"]->l.back()->m["first_name"]->v << " " << a.p->m["o"]->m["comments"]->l.back()->m["last_name"]->v;
-                    }
-                    m[0] << "</i></small>";
-                    if (!empty(a.p->m["o"]->m["comments"]->l.back(), "comments"))
-                    {
-                      size_t unPosition;
-                      string strComments = a.p->m["o"]->m["comments"]->l.back()->m["comments"]->v;
-                      while ((unPosition = strComments.find("<")) != string::npos)
-                      {
-                        strComments.replace(unPosition, 1, "&lt;");
-                      }
-                      while ((unPosition = strComments.find(">")) != string::npos)
-                      {
-                        strComments.replace(unPosition, 1, "&gt;");
-                      }
-                      while ((unPosition = strComments.find("\n")) != string::npos)
-                      {
-                        strComments.replace(unPosition, 1, "<br>");
-                      }
-                      m[0] << "<pre style=\"white-space:pre-wrap;\">" << strComments << "</pre>";
-                    }
-                    m[0] << "</div>";
-                  }
-                  m[0] << "<p>Viewing your <a href=\"http://" << i->m["server"]->v << "/central/#/Applications/Workload\">Workload</a> provides you with your personalized list of open application issues.  The issues provided on the Workload are pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>";
-                  m[0] << "<p>Please use the <a href=\"http://" << i->m["server"]->v << "/central/#/Home/FrontDoor\">Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.</p>";
-                  m[0] << "This message was sent by <a href=\"https://" << i->m["server"]->v << "/central\" style=\"text-decoration:none;\">Central</a>.";
-                  m[0] << "</body></html>";
-                  to.sort();
-                  to.unique();
-                  email(getUserEmail(d), to, s.str(), m[1].str(), m[0].str(), e);
-                  b = true;
-                }
-                userDeinit(f);
+                s << " - " << a.p->m["o"]->m["summary"]->v;
               }
-              userDeinit(c);
+              if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
+              {
+                to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
+              }
+              else
+              {
+                for (auto &contact : f.p->m["o"]->l)
+                {
+                  if (!empty(contact, "email"))
+                  {
+                    to.push_back(contact->m["email"]->v);
+                  }
+                }
+              }
+              if (i->m["action"]->v == "transfer" && !empty(i, "application_id"))
+              {
+                radialUser h;
+                userInit(d, h);
+                h.p->m["i"]->i("id", i->m["application_id"]->v);
+                if (application(h, e) && !empty(h.p->m["o"], "name"))
+                {
+                  strApplication = h.p->m["o"]->m["name"]->v;
+                  if (!exist(a.p->m["o"], "assigned") || empty(a.p->m["o"]->m["assigned"], "email"))
+                  {
+                    radialUser k;
+                    userInit(d, k);
+                    k.p->m["i"]->i("application_id", i->m["application_id"]->v);
+                    k.p->m["i"]->i("Primary Developer", "1", 'n');
+                    k.p->m["i"]->i("Backup Developer", "1", 'n');
+                    if (applicationUsersByApplicationID(k, e))
+                    {
+                      for (auto &contact : k.p->m["o"]->l)
+                      {
+                        if (!empty(contact, "email"))
+                        {
+                          to.push_back(contact->m["email"]->v);
+                        }
+                      }
+                    }
+                    userDeinit(k);
+                  }
+                }
+                userDeinit(h);
+              }
+              if (exist(a.p->m["o"], "comments"))
+              {
+                for (auto &contact : a.p->m["o"]->m["comments"]->l)
+                {
+                  if (!empty(contact, "email"))
+                  {
+                    to.push_back(contact->m["email"]->v);
+                  }
+                }
+              }
+              strName = getUserName(d);
+              m[0] << "<html><body style=\"background:#f3f3f3:padding:10px;\">";
+              if (!empty(a.p->m["o"], "summary"))
+              {
+                m[0] << "<h3>" << a.p->m["o"]->m["summary"]->v << "</h3>";
+              }
+              if (i->m["action"]->v == "add")
+              {
+                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>created</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+              }
+              else if (i->m["action"]->v == "close")
+              {
+                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>closed</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>closed</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+              }
+              else if (i->m["action"]->v == "transfer")
+              {
+                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+              }
+              else if (i->m["action"]->v == "update")
+              {
+                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+              }
+              if (exist(a.p->m["o"], "comments") && !a.p->m["o"]->m["comments"]->l.empty())
+              {
+                m[0] << "<div style=\"margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;\">";
+                m[0] << "<small style=\"float:right;color:#999999;\"><i>";
+                if (!empty(a.p->m["o"]->m["comments"]->l.back(), "entry_date"))
+                {
+                  m[0] << a.p->m["o"]->m["comments"]->l.back()->m["entry_date"]->v;
+                }
+                if (!empty(a.p->m["o"]->m["comments"]->l.back(), "first_name") && !empty(a.p->m["o"]->m["comments"]->l.back(), "last_name"))
+                {
+                  m[0] << " by " << a.p->m["o"]->m["comments"]->l.back()->m["first_name"]->v << " " << a.p->m["o"]->m["comments"]->l.back()->m["last_name"]->v;
+                }
+                m[0] << "</i></small>";
+                if (!empty(a.p->m["o"]->m["comments"]->l.back(), "comments"))
+                {
+                  size_t unPosition;
+                  string strComments = a.p->m["o"]->m["comments"]->l.back()->m["comments"]->v;
+                  while ((unPosition = strComments.find("<")) != string::npos)
+                  {
+                    strComments.replace(unPosition, 1, "&lt;");
+                  }
+                  while ((unPosition = strComments.find(">")) != string::npos)
+                  {
+                    strComments.replace(unPosition, 1, "&gt;");
+                  }
+                  while ((unPosition = strComments.find("\n")) != string::npos)
+                  {
+                    strComments.replace(unPosition, 1, "<br>");
+                  }
+                  m[0] << "<pre style=\"white-space:pre-wrap;\">" << strComments << "</pre>";
+                }
+                m[0] << "</div>";
+              }
+              m[0] << "<p>Viewing your <a href=\"http://" << i->m["server"]->v << "/central/#/Applications/Workload\">Workload</a> provides you with your personalized list of open application issues.  The issues provided on the Workload are pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>";
+              m[0] << "<p>Please use the <a href=\"http://" << i->m["server"]->v << "/central/#/Home/FrontDoor\">Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.</p>";
+              m[0] << "This message was sent by <a href=\"https://" << i->m["server"]->v << "/central\" style=\"text-decoration:none;\">Central</a>.";
+              m[0] << "</body></html>";
+              to.sort();
+              to.unique();
+              email(getUserEmail(d), to, s.str(), m[1].str(), m[0].str(), e);
+              b = true;
             }
-            userDeinit(a);
+            userDeinit(f);
           }
-          else
-          {
-            e = "Please provide the id.";
-          }
+          userDeinit(c);
         }
-        else
-        {
-          e = "Please provide the server.";
-        }
+        userDeinit(a);
       }
       else
       {
         e = "Please provide a valid action:  add, close, transfer, update.";
       }
-    }
-    else
-    {
-      e = "Please provide the action.";
     }
   }
   else
@@ -1531,73 +1173,23 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
 // {{{ applicationIssues()
 bool Central::applicationIssues(radialUser &d, string &e)
 {
-  bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOpen, bOwner, bPrimaryDeveloper, bPrimaryContact, bRelease;
-  string strCloseDateEnd, strCloseDateStart, strCommenter, strDisplay, strOpenDateEnd, strOpenDateStart;
-  stringstream q;
+  bool b = false, bApplication, bBackupDeveloper, bComments, bContact, bOwner, bPrimaryDeveloper, bPrimaryContact;
+  list<map<string, string> > rs;
+  string strCommenter;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   bApplication = (!empty(i, "application") && i->m["application"]->v == "1");
   bBackupDeveloper = (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1");
   bComments = (!empty(i, "comments") && i->m["comments"]->v == "1");
   bContact = (!empty(i, "Contact") && i->m["Contact"]->v == "1");
-  bOpen = (!empty(i, "open") && i->m["open"]->v == "1");
   bOwner = (!empty(i, "owner") && i->m["owner"]->v == "1");
   bPrimaryContact = (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1");
   bPrimaryDeveloper = (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1");
-  bRelease = (!empty(i, "release") && i->m["release"]->v == "1");
-  strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
-  strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
   strCommenter = ((!empty(i, "commenter"))?i->m["commenter"]->v:"");
-  strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
-  strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
-  strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
-  q << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue";
-  if (bOpen || bRelease || !strOpenDateStart.empty() || !strOpenDateEnd.empty() || !strCloseDateStart.empty() || !strCloseDateEnd.empty())
-  {
-    bool bFirst = true;
-    if ((bOpen || bRelease) && strDisplay != "all")
-    {
-      q << ((bFirst)?" where":" and") << " close_date is null";
-      bFirst = false;
-      if (bRelease)
-      {
-        q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
-      }
-    }
-    if (!strOpenDateStart.empty())
-    {
-      q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') >= '" << strOpenDateStart << "'";
-      bFirst = false;
-    }
-    if (!strOpenDateEnd.empty())
-    {
-      q << ((bFirst)?" where":" and") << " date_format(open_date, '%Y-%m-%d') < '" << strOpenDateEnd << "'";
-      bFirst = false;
-    }
-    if (!strCloseDateStart.empty())
-    {
-      q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') >= '" << strCloseDateStart << "'";
-      bFirst = false;
-    }
-    if (!strCloseDateEnd.empty())
-    {
-      q << ((bFirst)?" where":" and") << " date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
-      bFirst = false;
-    }
-    if (bRelease)
-    {
-      q << " order by release_date, priority desc, due_date, open_date, id";
-    }
-    else
-    {
-      q << " order by priority desc, due_date, open_date, id";
-    }
-  }
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
+  if (db("dbCentralApplicationIssues", i, rs, e))
   {
     b = true;
-    for (auto &r : *g)
+    for (auto &r : rs)
     {
       bool bUse = ((bOwner || !strCommenter.empty())?false:true);
       Json *j = new Json(r);
@@ -1685,7 +1277,6 @@ bool Central::applicationIssues(radialUser &d, string &e)
       delete j;
     }
   }
-  dbf(g);
 
   return b;
 }
@@ -1694,30 +1285,15 @@ bool Central::applicationIssues(radialUser &d, string &e)
 bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
-    q << "select id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where application_id = " << i->m["application_id"]->v;
-    if ((!empty(i, "open") && i->m["open"]->v == "1") || (!empty(i, "release") && i->m["release"]->v == "1"))
-    {
-      q << " and close_date is null";
-    }
-    if (!empty(i, "release") && i->m["release"]->v == "1")
-    {
-      q << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
-      q << " order by release_date, priority desc, due_date, open_date, id";
-    }
-    else
-    {
-      q << " order by close_date, open_date, id";
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplicationIssues", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         Json *j = new Json(r);
         if (!r["assigned_id"].empty())
@@ -1746,11 +1322,6 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
         delete j;
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -1763,221 +1334,203 @@ bool Central::applicationNotify(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "id"))
+  if (dep({"id", "notification", "server"}, i, e))
   {
-    if (!empty(i, "notification"))
+    string strNotification = i->m["notification"]->v;
+    size_t unPosition;
+    radialUser a;
+    while ((unPosition = strNotification.find("<")) != string::npos)
     {
-      string strNotification = i->m["notification"]->v;
-      size_t unPosition;
-      while ((unPosition = strNotification.find("<")) != string::npos)
+      strNotification.replace(unPosition, 1, "&lt;");
+    }
+    while ((unPosition = strNotification.find(">")) != string::npos)
+    {
+      strNotification.replace(unPosition, 1, "&gt;");
+    }
+    while ((unPosition = strNotification.find("\n")) != string::npos)
+    {
+      strNotification.replace(unPosition, 1, "<br>");
+    }
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      radialUser c;
+      userInit(d, c);
+      c.p->m["i"]->i("id", i->m["id"]->v);
+      if (application(c, e) && !empty(c.p->m["o"], "name"))
       {
-        strNotification.replace(unPosition, 1, "&lt;");
-      }
-      while ((unPosition = strNotification.find(">")) != string::npos)
-      {
-        strNotification.replace(unPosition, 1, "&gt;");
-      }
-      while ((unPosition = strNotification.find("\n")) != string::npos)
-      {
-        strNotification.replace(unPosition, 1, "<br>");
-      }
-      if (!empty(i, "server"))
-      {
-        radialUser a;
-        userInit(d, a);
-        a.p->m["i"]->i("id", i->m["id"]->v);
-        if (d.g || isApplicationDeveloper(a, e))
+        radialUser f;
+        userInit(d, f);
+        f.p->m["i"]->i("application_id", i->m["id"]->v);
+        f.p->m["i"]->i("Primary Developer", "1", 'n');
+        f.p->m["i"]->i("Backup Developer", "1", 'n');
+        f.p->m["i"]->i("Contact", "1", 'n');
+        if (applicationUsersByApplicationID(f, e))
         {
-          radialUser c;
-          userInit(d, c);
-          c.p->m["i"]->i("id", i->m["id"]->v);
-          if (application(c, e) && !empty(c.p->m["o"], "name"))
+          map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
+          b = true;
+          for (auto &contact : f.p->m["o"]->l)
           {
-            radialUser f;
-            userInit(d, f);
-            f.p->m["i"]->i("application_id", i->m["id"]->v);
-            f.p->m["i"]->i("Primary Developer", "1", 'n');
-            f.p->m["i"]->i("Backup Developer", "1", 'n');
-            f.p->m["i"]->i("Contact", "1", 'n');
-            if (applicationUsersByApplicationID(f, e))
+            stringstream s;
+            radialUser h;
+            if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
             {
-              map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
-              b = true;
-              for (auto &contact : f.p->m["o"]->l)
+              if (!exist(o, contact->m["userid"]->v))
               {
-                stringstream s;
-                radialUser h;
-                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                o->m[contact->m["userid"]->v] = new Json;
+              }
+              o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+              o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
+              o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+              if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
+              {
+                if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                 {
-                  if (!exist(o, contact->m["userid"]->v))
-                  {
-                    o->m[contact->m["userid"]->v] = new Json;
-                  }
-                  o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                  o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
-                  o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
-                  {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                    {
-                      o->m[contact->m["userid"]->v]->i("primary", "1", 1);
-                    }
-                    developer["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
-                  }
-                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
-                  {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                    {
-                      o->m[contact->m["userid"]->v]->i("backup", "1", 1);
-                    }
-                    developer["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
-                  }
-                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                  {
-                    o->m[contact->m["userid"]->v]->i("contact", "1", 1);
-                  }
+                  o->m[contact->m["userid"]->v]->i("primary", "1", 1);
                 }
-                userInit(d, h);
-                h.p->m["i"]->i("application_id", i->m["id"]->v);
-                h.p->m["i"]->i("contacts", "1", 'n');
-                if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+                developer["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+              }
+              else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
+              {
+                if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                 {
-                  for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+                  o->m[contact->m["userid"]->v]->i("backup", "1", 1);
+                }
+                developer["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+              }
+              else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+              {
+                o->m[contact->m["userid"]->v]->i("contact", "1", 1);
+              }
+            }
+            userInit(d, h);
+            h.p->m["i"]->i("application_id", i->m["id"]->v);
+            h.p->m["i"]->i("contacts", "1", 'n');
+            if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+            {
+              for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+              {
+                if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                {
+                  for (auto &contact : dependent->m["contacts"]->l)
                   {
-                    if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                    if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                     {
-                      for (auto &contact : dependent->m["contacts"]->l)
+                      if (!exist(o, contact->m["userid"]->v))
                       {
-                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                        o->m[contact->m["userid"]->v] = new Json;
+                      }
+                      o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                      o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
+                      o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                      if (!empty(dependent, "name"))
+                      {
+                        if (!exist(o->m[contact->m["userid"]->v], "depend"))
                         {
-                          if (!exist(o, contact->m["userid"]->v))
-                          {
-                            o->m[contact->m["userid"]->v] = new Json;
-                          }
-                          o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                          o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
-                          o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                          if (!empty(dependent, "name"))
-                          {
-                            if (!exist(o->m[contact->m["userid"]->v], "depend"))
-                            {
-                              o->m[contact->m["userid"]->v]->m["depend"] = new Json;
-                            }
-                            o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
-                          }
+                          o->m[contact->m["userid"]->v]->m["depend"] = new Json;
                         }
+                        o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
                       }
                     }
                   }
-                }
-                userDeinit(h);
-                s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
-                for (auto &k : o->m)
-                {
-                  list<string> to;
-                  stringstream m;
-                  to.push_back(k.second->m["email"]->v);
-                  m << "<html><body>";
-                  m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-                  m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
-                  m << strNotification;
-                  m << "<br><br>";
-                  m << "<b>You are receiving this application notification for the following reason(s):</b>";
-                  m << "<br><br>";
-                  m << "<ul>";
-                  if (exist(k.second, "primary"))
-                  {
-                    m << "<li>You are a Primary Developer for this application.</li>";
-                  }
-                  else if (exist(k.second, "backup"))
-                  {
-                    m << "<li>You are a Backup Developer for this application.</li>";
-                  }
-                  else if (exist(k.second, "contact"))
-                  {
-                    m << "<li>You are a Contact for this application.</li>";
-                  }
-                  if (exist(k.second, "depend"))
-                  {
-                    m << "<li>";
-                    m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
-                    m << "<ul>";
-                    for (auto &depend : k.second->m["depend"]->l)
-                    {
-                      m << "<li>" << depend->v << "</li>";
-                    }
-                    m << "</ul>";
-                    m << "</li>";
-                  }
-                  m << "</ul>";
-                  if (!developer["primary"].empty())
-                  {
-                    bool bFirst = true;
-                    m << "<br><br>";
-                    m << "<b>Primary Developer(s):</b><br>";
-                    for (auto &dev : developer["primary"])
-                    {
-                      if (bFirst)
-                      {
-                        bFirst = false;
-                      }
-                      else
-                      {
-                        m << ", ";
-                      }
-                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
-                    }
-                  }
-                  if (!developer["backup"].empty())
-                  {
-                    bool bFirst = true;
-                    m << "<br><br>";
-                    m << "<b>Backup Developer(s):</b><br>";
-                    for (auto &dev : developer["backup"])
-                    {
-                      if (bFirst)
-                      {
-                        bFirst = false;
-                      }
-                      else
-                      {
-                        m << ", ";
-                      }
-                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
-                    }
-                  }
-                  m << "<br><br>";
-                  m << "If you have any questions or concerns, please contact your application contacts.";
-                  m << "</div>";
-                  m << "</body></html>";
-                  email(getUserEmail(d), to, s.str(), "", m.str(), e);
-                  k.second->i("sent", "1", 'n');
                 }
               }
             }
-            userDeinit(f);
+            userDeinit(h);
+            s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
+            for (auto &k : o->m)
+            {
+              list<string> to;
+              stringstream m;
+              to.push_back(k.second->m["email"]->v);
+              m << "<html><body>";
+              m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
+              m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+              m << strNotification;
+              m << "<br><br>";
+              m << "<b>You are receiving this application notification for the following reason(s):</b>";
+              m << "<br><br>";
+              m << "<ul>";
+              if (exist(k.second, "primary"))
+              {
+                m << "<li>You are a Primary Developer for this application.</li>";
+              }
+              else if (exist(k.second, "backup"))
+              {
+                m << "<li>You are a Backup Developer for this application.</li>";
+              }
+              else if (exist(k.second, "contact"))
+              {
+                m << "<li>You are a Contact for this application.</li>";
+              }
+              if (exist(k.second, "depend"))
+              {
+                m << "<li>";
+                m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
+                m << "<ul>";
+                for (auto &depend : k.second->m["depend"]->l)
+                {
+                  m << "<li>" << depend->v << "</li>";
+                }
+                m << "</ul>";
+                m << "</li>";
+              }
+              m << "</ul>";
+              if (!developer["primary"].empty())
+              {
+                bool bFirst = true;
+                m << "<br><br>";
+                m << "<b>Primary Developer(s):</b><br>";
+                for (auto &dev : developer["primary"])
+                {
+                  if (bFirst)
+                  {
+                    bFirst = false;
+                  }
+                  else
+                  {
+                    m << ", ";
+                  }
+                  m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                }
+              }
+              if (!developer["backup"].empty())
+              {
+                bool bFirst = true;
+                m << "<br><br>";
+                m << "<b>Backup Developer(s):</b><br>";
+                for (auto &dev : developer["backup"])
+                {
+                  if (bFirst)
+                  {
+                    bFirst = false;
+                  }
+                  else
+                  {
+                    m << ", ";
+                  }
+                  m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                }
+              }
+              m << "<br><br>";
+              m << "If you have any questions or concerns, please contact your application contacts.";
+              m << "</div>";
+              m << "</body></html>";
+              email(getUserEmail(d), to, s.str(), "", m.str(), e);
+              k.second->i("sent", "1", 'n');
+            }
           }
-          userDeinit(c);
         }
-        else
-        {
-          e = "You are not authorized to perform this action.";
-        }
-        userDeinit(a);
+        userDeinit(f);
       }
-      else
-      {
-        e = "Please provide the server.";
-      }
+      userDeinit(c);
     }
     else
     {
-      e = "Please provide the notification.";
+      e = "You are not authorized to perform this action.";
     }
-  }
-  else
-  {
-    e = "Please provide the id.";
+    userDeinit(a);
   }
 
   return b;
@@ -1987,31 +1540,22 @@ bool Central::applicationNotify(radialUser &d, string &e)
 bool Central::applicationRemove(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      q << "delete from application where id = " << i->m["id"]->v;
-      if (dbu(q.str(), e))
-      {
-        b = true;
-      }
+      b = db("dbCentralApplicationRemove", i, e);
     }
     else
     {
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -2140,31 +1684,19 @@ bool Central::applications(radialUser &d, string &e)
 bool Central::applicationsByServerID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "server_id"))
+  if (dep({"server_id"}, i, e))
   {
-    q << "select a.id, b.id application_id, b.name from application_server a, application b where a.application_id = b.id and a.server_id = " << i->m["server_id"]->v;
-    if (!empty(i, "retired") && i->m["retired"]->v == "1")
-    {
-      q << " and b.retirement_date is null";
-    }
-    q << " order by b.name";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplications", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         o->pb(r);
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the server_id.";
   }
 
   return b;
@@ -2174,26 +1706,19 @@ bool Central::applicationsByServerID(radialUser &d, string &e)
 bool Central::applicationsByUserID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "contact_id"))
+  if (dep({"contact_id"}, i, e))
   {
-    q << "select distinct a.id, b.id application_id, b.name, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << i->m["contact_id"]->v << " order by b.name";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplications", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         o->pb(r);
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the contact_id.";
   }
 
   return b;
@@ -2203,30 +1728,23 @@ bool Central::applicationsByUserID(radialUser &d, string &e)
 bool Central::applicationServer(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
-    q << "select id, application_id, server_id from application_server where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralApplicationServers", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -2236,36 +1754,27 @@ bool Central::applicationServer(radialUser &d, string &e)
 bool Central::applicationServerAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id", "server_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      if (!empty(i, "server_id"))
+      string id, q;
+      if (db("dbCentralApplicationServerAdd", i, id, q, e))
       {
-        string strID;
-        q << "insert into application_server (application_id, server_id) values (" << i->m["application_id"]->v << ", " << i->m["server_id"]->v << ")";
-        if (dbu(q.str(), strID, e))
-        {
-          b = true;
-          o->i("id", strID);
-        }
-      }
-      else
-      {
-        e = "Please provide the server_id.";
+        b = true;
+        o->i("id", id);
       }
     }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -2278,23 +1787,21 @@ bool Central::applicationServerDetail(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
-    q << "select id, application_server_id, version, daemon, owner, script, delay, min_processes max_processes, min_image, max_image, min_resident, max_resident from application_server_detail where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralApplicationServerDetails", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
@@ -2308,69 +1815,23 @@ bool Central::applicationServerDetail(radialUser &d, string &e)
 bool Central::applicationServerDetailAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_server_id"))
+  if (dep({"application_server_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["application_server_id"]->v);
     if (d.g || applicationServer(a, e))
     {
-      string strID;
-      q << "insert into application_server_detail (application_server_id, version, daemon, owner, script, delay, min_processes, max_processes, min_image, max_image, min_resident, max_resident) values (" << i->m["application_server_id"]->v;
-      if (!empty(i, "version"))
-      {
-        q << ", '" << esc(i->m["version"]->v) << "'";
-      }
-      else
-      {
-        q << ", null";
-      }
-      if (!empty(i, "daemon"))
-      {
-        q << ", '" << esc(i->m["daemon"]->v) << "'";
-      }
-      else
-      {
-        q << ", null";
-      }
-      if (!empty(i, "owner"))
-      {
-        q << ", '" << esc(i->m["owner"]->v) << "'";
-      }
-      else
-      {
-        q << ", null";
-      }
-      if (!empty(i, "script"))
-      {
-        q << ", '" << esc(i->m["script"]->v) << "'";
-      }
-      else
-      {
-        q << ", null";
-      }
-      q << ", " << ((!empty(i, "delay"))?i->m["delay"]->v:"0");
-      q << ", " << ((!empty(i, "min_processes"))?i->m["min_processes"]->v:"0");
-      q << ", " << ((!empty(i, "max_processes"))?i->m["max_processes"]->v:"0");
-      q << ", " << ((!empty(i, "min_image"))?i->m["min_image"]->v:"0");
-      q << ", " << ((!empty(i, "max_image"))?i->m["max_image"]->v:"0");
-      q << ", " << ((!empty(i, "min_resident"))?i->m["min_resident"]->v:"0");
-      q << ", " << ((!empty(i, "max_resident"))?i->m["max_resident"]->v:"0");
-      q << ")";
-      if (dbu(q.str(), strID, e))
+      string id, q;
+      if (db("dbCentralApplicationServerDetailAdd", i, id, q, e))
       {
         b = true;
-        o->i("id", strID);
+        o->i("id", id);
       }
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the application_server_id.";
   }
 
   return b;
@@ -2380,10 +1841,9 @@ bool Central::applicationServerDetailAdd(radialUser &d, string &e)
 bool Central::applicationServerDetailEdit(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -2406,55 +1866,7 @@ bool Central::applicationServerDetailEdit(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          q << "update application_server_detail set";
-          q << " version = ";
-          if (!empty(i, "verson"))
-          {
-            q << "'" << esc(i->m["version"]->v) << "'";
-          }
-          else
-          {
-            q << "null";
-          }
-          q << ", daemon = ";
-          if (!empty(i, "daemon"))
-          {
-            q << "'" << esc(i->m["daemon"]->v) << "'";
-          }
-          else
-          {
-            q << "null";
-          }
-          q << ", owner = ";
-          if (!empty(i, "owner"))
-          {
-            q << "'" << esc(i->m["owner"]->v) << "'";
-          }
-          else
-          {
-            q << "null";
-          }
-          q << ", script = ";
-          if (!empty(i, "script"))
-          {
-            q << "'" << esc(i->m["script"]->v) << "'";
-          }
-          else
-          {
-            q << "null";
-          }
-          q << ", delay = " << ((!empty(i, "delay"))?i->m["delay"]->v:"null");
-          q << ", min_processes = " << ((!empty(i, "min_processes"))?i->m["min_processes"]->v:"null");
-          q << ", max_processes = " << ((!empty(i, "max_processes"))?i->m["max_processes"]->v:"null");
-          q << ", min_image = " << ((!empty(i, "min_image"))?i->m["min_image"]->v:"null");
-          q << ", max_image = " << ((!empty(i, "max_image"))?i->m["max_image"]->v:"null");
-          q << ", min_resident = " << ((!empty(i, "min_resident"))?i->m["min_resident"]->v:"null");
-          q << ", max_resident = " << ((!empty(i, "max_resident"))?i->m["max_resident"]->v:"null");
-          q << " where id = " << i->m["id"]->v;
-          if (dbu(q.str(), e))
-          {
-            b = true;
-          }
+          b = db("dbCentralApplicationServerDetailUpdate", i, e);
         }
         else
         {
@@ -2465,10 +1877,6 @@ bool Central::applicationServerDetailEdit(radialUser &d, string &e)
       userDeinit(c);
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -2478,10 +1886,9 @@ bool Central::applicationServerDetailEdit(radialUser &d, string &e)
 bool Central::applicationServerDetailRemove(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -2504,11 +1911,7 @@ bool Central::applicationServerDetailRemove(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          q << "delete from application_server_detail where id = " << i->m["id"]->v;
-          if (dbu(q.str(), e))
-          {
-            b = true;
-          }
+          b = db("dbCentralApplicationServerDetailRemove", i, e);
         }
         else
         {
@@ -2520,10 +1923,6 @@ bool Central::applicationServerDetailRemove(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -2532,26 +1931,19 @@ bool Central::applicationServerDetailRemove(radialUser &d, string &e)
 bool Central::applicationServerDetails(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_server_id"))
+  if (dep({"application_server_id"}, i, e))
   {
-    q << "select id, application_server_id, version, daemon, owner, script, delay, min_processes, max_processes, min_image, max_image, min_resident, max_resident from application_server_detail where application_server_id = " << i->m["application_server_id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplicationServerDetails", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         o->pb(r);
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the application_server_id.";
   }
 
   return b;
@@ -2564,7 +1956,7 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -2579,11 +1971,7 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
       }
       if (d.g || isApplicationDeveloper(c, e))
       {
-        q << "delete from application_server where id = " << i->m["id"]->v;
-        if (dbu(q.str(), e))
-        {
-          b = true;
-        }
+        b = db("dbCentralApplicationServerRemove", i, e);
       }
       else
       {
@@ -2593,10 +1981,6 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -2605,18 +1989,16 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
 bool Central::applicationUser(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
-    q << "select a.id, a.application_id, a.admin, a.locked, a.notify, a.description, b.type, c.last_name, c.first_name, c.userid, c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralApplicationUsers", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
-        Json *j = new Json(g->front());
+        Json *j = new Json(r);
         b = true;
         ny(j, "admin");
         ny(j, "locked");
@@ -2629,11 +2011,6 @@ bool Central::applicationUser(radialUser &d, string &e)
         e = "No results returned.";
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -2646,7 +2023,7 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id", "userid"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -2661,28 +2038,140 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
       }
       if (d.g || (d.auth.find(a.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[a.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(c, e))
       {
-        if (!empty(i, "userid"))
+        bool bReady = false;
+        radialUser f;
+        userInit(d, f);
+        f.p->m["i"]->i("userid", i->m["userid"]->v);
+        if (user(f, e) && !empty(f.p->m["o"], "id"))
         {
-          bool bReady = false;
-          radialUser f;
+          bReady = true;
+        }
+        else if (e == "No results returned.")
+        {
+          userDeinit(f);
           userInit(d, f);
           f.p->m["i"]->i("userid", i->m["userid"]->v);
-          if (user(f, e) && !empty(f.p->m["o"], "id"))
+          f.p->m["i"]->i("application_id", i->m["application_id"]->v);
+          if (userAdd(f, e))
+          {
+            userDeinit(f);
+            userInit(d, f);
+            f.p->m["i"]->i("userid", i->m["userid"]->v);
+            if (user(f, e) && !empty(f.p->m["o"], "id"))
+            {
+              bReady = true;
+            }
+          }
+        }
+        if (bReady)
+        {
+          if (exist(i, "type") && !empty(i->m["type"], "type"))
+          {
+            radialUser h;
+            userInit(d, h);
+            h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
+            if (contactType(h, e) && !empty(h.p->m["o"], "id"))
+            {
+              if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+              {
+                if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+                {
+                  if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                  {
+                    string id, q;
+                    i->i("contact_id", f.p->m["o"]->m["id"]->v);
+                    i->i("type_id", h.p->m["o"]->m["id"]->v);
+                    if (db("dbCentralApplicationUserAdd", i, id, q, e))
+                    {
+                      b = true;
+                      o->i("id", id);
+                    }
+                  }
+                  else
+                  {
+                    e = "Please provide the notify.";
+                  }
+                }
+                else
+                {
+                  e = "Please provide the locked.";
+                }
+              }
+              else
+              {
+                e = "Please provide the admin.";
+              }
+            }
+            userDeinit(h);
+          }
+          else
+          {
+            e = "Please provide the type.";
+          }
+        }
+        userDeinit(f);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      userDeinit(c);
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationUserEdit()
+bool Central::applicationUserEdit(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id", "userid"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationUser(a, e) && !empty(a.p->m["o"], "application_id")))
+    {
+      radialUser c;
+      userInit(d, c);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      }
+      if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
+      {
+        radialUser f;
+        userInit(d, f);
+        if (!d.g)
+        {
+          f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+        }
+        if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
+        {
+          bool bReady = false;
+          radialUser h;
+          userInit(d, h);
+          h.p->m["i"]->i("userid", i->m["userid"]->v);
+          if (user(h, e) && !empty(h.p->m["o"], "id"))
           {
             bReady = true;
           }
           else if (e == "No results returned.")
           {
-            userDeinit(f);
-            userInit(d, f);
-            f.p->m["i"]->i("userid", i->m["userid"]->v);
-            f.p->m["i"]->i("application_id", i->m["application_id"]->v);
-            if (userAdd(f, e))
+            userDeinit(h);
+            userInit(d, h);
+            h.p->m["i"]->i("userid", i->m["userid"]->v);
+            h.p->m["i"]->i("application_id", i->m["application_id"]->v);
+            if (userAdd(h, e))
             {
-              userDeinit(f);
-              userInit(d, f);
-              f.p->m["i"]->i("userid", i->m["userid"]->v);
-              if (user(f, e) && !empty(f.p->m["o"], "id"))
+              userDeinit(h);
+              userInit(d, h);
+              h.p->m["i"]->i("userid", i->m["userid"]->v);
+              if (user(h, e) && !empty(h.p->m["o"], "id"))
               {
                 bReady = true;
               }
@@ -2692,10 +2181,10 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
           {
             if (exist(i, "type") && !empty(i->m["type"], "type"))
             {
-              radialUser h;
-              userInit(d, h);
-              h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
-              if (contactType(h, e) && !empty(h.p->m["o"], "id"))
+              radialUser k;
+              userInit(d, k);
+              k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
+              if (contactType(k, e) && !empty(k.p->m["o"], "id"))
               {
                 if (exist(i, "admin") && !empty(i->m["admin"], "value"))
                 {
@@ -2703,17 +2192,9 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
                   {
                     if (exist(i, "notify") && !empty(i->m["notify"], "value"))
                     {
-                      string strID;
-                      if (!exist(i, "description"))
-                      {
-                        i->m["description"] = new Json;
-                      }
-                      q << "insert into application_contact (application_id, contact_id, type_id, admin, locked, notify, description) values (" << i->m["application_id"]->v << ", " << f.p->m["o"]->m["id"]->v << ", " << h.p->m["o"]->m["id"]->v << ", " << i->m["admin"]->m["value"]->v << ", " << i->m["locked"]->m["value"]->v << ", " << i->m["notify"]->m["value"]->v << ", '" << esc(i->m["description"]->v) << "')";
-                      if (dbu(q.str(), strID, e))
-                      {
-                        b = true;
-                        o->i("id", strID);
-                      }
+                      i->i("contact_id", h.p->m["o"]->m["id"]->v);
+                      i->i("type_id", k.p->m["o"]->m["id"]->v);
+                      b = db("dbCentralApplicationUserUpdate", i, e);
                     }
                     else
                     {
@@ -2730,146 +2211,14 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
                   e = "Please provide the admin.";
                 }
               }
-              userDeinit(h);
+              userDeinit(k);
             }
             else
             {
               e = "Please provide the type.";
             }
           }
-          userDeinit(f);
-        }
-        else
-        {
-          e = "Please provide the userid.";
-        }
-      }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
-      userDeinit(c);
-    }
-    userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationUserEdit()
-bool Central::applicationUserEdit(radialUser &d, string &e)
-{
-  bool b = false;
-  stringstream q;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id"))
-  {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    if (d.g || (applicationUser(a, e) && !empty(a.p->m["o"], "application_id")))
-    {
-      radialUser c;
-      userInit(d, c);
-      if (!d.g)
-      {
-        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
-      }
-      if (d.g || (application(c, e) && !empty(c.p->m["o"], "name")))
-      {
-        radialUser f;
-        userInit(d, f);
-        if (!d.g)
-        {
-          f.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
-        }
-        if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
-        {
-          if (!empty(i, "userid"))
-          {
-            bool bReady = false;
-            radialUser h;
-            userInit(d, h);
-            h.p->m["i"]->i("userid", i->m["userid"]->v);
-            if (user(h, e) && !empty(h.p->m["o"], "id"))
-            {
-              bReady = true;
-            }
-            else if (e == "No results returned.")
-            {
-              userDeinit(h);
-              userInit(d, h);
-              h.p->m["i"]->i("userid", i->m["userid"]->v);
-              h.p->m["i"]->i("application_id", i->m["application_id"]->v);
-              if (userAdd(h, e))
-              {
-                userDeinit(h);
-                userInit(d, h);
-                h.p->m["i"]->i("userid", i->m["userid"]->v);
-                if (user(h, e) && !empty(h.p->m["o"], "id"))
-                {
-                  bReady = true;
-                }
-              }
-            }
-            if (bReady)
-            {
-              if (exist(i, "type") && !empty(i->m["type"], "type"))
-              {
-                radialUser k;
-                userInit(d, k);
-                k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
-                if (contactType(k, e) && !empty(k.p->m["o"], "id"))
-                {
-                  if (exist(i, "admin") && !empty(i->m["admin"], "value"))
-                  {
-                    if (exist(i, "locked") && !empty(i->m["locked"], "value"))
-                    {
-                      if (exist(i, "notify") && !empty(i->m["notify"], "value"))
-                      {
-                        if (!exist(i, "description"))
-                        {
-                          i->m["description"] = new Json;
-                        }
-                        q << "update application_contact set contact_id = " << h.p->m["o"]->m["id"]->v << ", type_id = " << k.p->m["o"]->m["id"]->v << ", admin = " << i->m["admin"]->m["value"]->v << ", locked = " << i->m["locked"]->m["value"]->v << ", notify = " << i->m["notify"]->m["value"]->v << ", description = '" << esc(i->m["description"]->v) << "' where id = " << i->m["id"]->v;
-                        if (dbu(q.str(), e))
-                        {
-                          b = true;
-                        }
-                      }
-                      else
-                      {
-                        e = "Please provide the notify.";
-                      }
-                    }
-                    else
-                    {
-                      e = "Please provide the locked.";
-                    }
-                  }
-                  else
-                  {
-                    e = "Please provide the admin.";
-                  }
-                }
-                userDeinit(k);
-              }
-              else
-              {
-                e = "Please provide the type.";
-              }
-            }
-            userDeinit(h);
-          }
-          else
-          {
-            e = "Please provide the userid.";
-          }
+          userDeinit(h);
         }
         else
         {
@@ -2880,10 +2229,6 @@ bool Central::applicationUserEdit(radialUser &d, string &e)
       userDeinit(c);
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -2896,7 +2241,7 @@ bool Central::applicationUserRemove(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -2919,11 +2264,7 @@ bool Central::applicationUserRemove(radialUser &d, string &e)
         }
         if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
         {
-          q << "delete from application_contact where id = " << i->m["id"]->v;
-          if (dbu(q.str(), e))
-          {
-            b = true;
-          }
+          b = db("dbCentralApplicationUserRemove", i, e);
         }
         else
         {
@@ -2935,10 +2276,6 @@ bool Central::applicationUserRemove(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  else
-  {
-    e = "Please provide the id.";
-  }
 
   return b;
 }
@@ -2947,53 +2284,15 @@ bool Central::applicationUserRemove(radialUser &d, string &e)
 bool Central::applicationUsersByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
-    q << "select a.id, a.application_id, a.admin, a.locked, a.notify, a.description, a.type_id, c.id user_id, c.last_name, c.first_name, c.userid, c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["application_id"]->v;
-    if ((!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1") || (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
-    {
-      bool bFirst = true;
-      q << " and b.type in (";
-      if (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1")
-      {
-        q << ((!bFirst)?", ":"") << "'Primary Developer'";
-        bFirst = false;
-      }
-      if (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1")
-      {
-        q << ((!bFirst)?", ":"") << "'Backup Developer'";
-        bFirst = false;
-      }
-      if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
-      {
-        q << ((!bFirst)?", ":"") << "'Primary Contact'";
-        bFirst = false;
-      }
-      if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
-      {
-        q << ((!bFirst)?", ":"") << "'Contact'";
-        bFirst = false;
-      }
-      q << ")";
-    }
-    q << " order by c.last_name, c.first_name, c.userid";
-    if (exist(i, "page"))
-    {
-      size_t unNumPerPage, unOffset, unPage;
-      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-      ssNumPerPage >> unNumPerPage;
-      ssPage >> unPage;
-      unOffset = unPage * unNumPerPage;
-      q << " limit " << unNumPerPage << " offset " << unOffset;
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralApplicationUsers", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         radialUser a;
         Json *j = new Json(r);
@@ -3010,11 +2309,6 @@ bool Central::applicationUsersByApplicationID(radialUser &d, string &e)
         delete j;
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -3102,38 +2396,46 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
 bool Central::contactType(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id") || !empty(i, "type"))
   {
-    q << "select id, type from contact_type where ";
-    if (!empty(i, "id"))
+    map<string, string> r;
+    if (db("dbCentralContactTypes", i, r, e))
     {
-      q << "id = " << i->m["id"]->v;
-    }
-    else
-    {
-      q << "type = '" << esc(i->m["type"]->v) << "'";
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
     e = "Please provide the id or type.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ contactTypes()
+bool Central::contactTypes(radialUser &d, string &e)
+{
+  bool b = false;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (db("dbCentralContactTypes", i, rs, e))
+  {
+    b = true;
+    for (auto &r : rs)
+    {
+      o->pb(r);
+    }
   }
 
   return b;
@@ -3161,6 +2463,25 @@ bool Central::dbu(const string strQuery, string &strID, string &e)
   return dbupdate("central", strQuery, strID, e);
 }
 // }}}
+// {{{ dep()
+bool Central::dep(const list<string> fs, Json *i, string &e)
+{
+  bool bResult = true;
+  stringstream es;
+
+  for (auto fi = fs.begin(); bResult && fi != fs.end(); fi++)
+  {
+    if (!exist(i, *fi) || empty(i, *fi))
+    {
+      bResult = false;
+      es << "Please provide the " << *fi;
+      e = es.str();
+    }
+  }
+
+  return bResult;
+}
+// }}}
 // {{{ dependentsByApplicationID()
 bool Central::dependentsByApplicationID(radialUser &d, string &e)
 {
@@ -3168,14 +2489,13 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
-    q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.dependant_id = b.id and a.application_id = " << i->m["application_id"]->v << " order by b.name";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralDependents", i, rs, e))
     {
       o->m["depends"] = new Json;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         Json *j = new Json(r);
         if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
@@ -3206,14 +2526,13 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
         o->m["depends"]->pb(j);
         delete j;
       }
-      q.str("");
-      q << "select a.id, b.id application_id, b.name from application_dependant a, application b where a.application_id = b.id and a.dependant_id = " << i->m["application_id"]->v << " order by b.name";
-      auto h = dbq(q.str(), e);
-      if (h != NULL)
+      i->i("dependant_id", i->m["application_id"]->v);
+      list<map<string, string> > hs;
+      if (db("dbCentralDependents", i, hs, e))
       {
         b = true;
         o->m["dependents"] = new Json;
-        for (auto &r : *h)
+        for (auto &r : hs)
         {
           Json *j = new Json(r);
           if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
@@ -3245,13 +2564,7 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
           delete j;
         }
       }
-      dbf(h);
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -3261,30 +2574,27 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
 bool Central::loginType(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!empty(i, "id") || !empty(i, "type"))
   {
-    q << "select id, type from login_type where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralLoginTypes", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or type.";
   }
 
   return b;
@@ -3294,31 +2604,17 @@ bool Central::loginType(radialUser &d, string &e)
 bool Central::loginTypes(radialUser &d, string &e)
 {
   bool b = false;
-  string k = "login_type";
-  stringstream q;
-  Json *o = d.p->m["o"], *s = new Json;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (sr(k, s, e))
+  if (db("dbCentralLoginTypes", i, rs, e))
   {
     b = true;
-    d.p->i("o", s);
-  }
-  else
-  {
-    q << "select id, type from login_type order by type";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    for (auto &r : rs)
     {
-      b = true;
-      for (auto &r : *g)
-      {
-        o->pb(r);
-      }
-      sa(k, o, e);
+      o->pb(r);
     }
-    dbf(g);
   }
-  delete s;
 
   return b;
 }
@@ -3333,30 +2629,27 @@ void Central::merge(Json *ptOuter, Json *ptInner)
 bool Central::menuAccess(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!empty(i, "id") || !empty(i, "type"))
   {
-    q << "select id, type from menu_access where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralMenuAccesses", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or type.";
   }
 
   return b;
@@ -3366,31 +2659,17 @@ bool Central::menuAccess(radialUser &d, string &e)
 bool Central::menuAccesses(radialUser &d, string &e)
 {
   bool b = false;
-  string k = "menu_access";
-  stringstream q;
-  Json *o = d.p->m["o"], *s = new Json;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (sr(k, s, e))
+  if (db("dbCentralMenuAccesses", i, rs, e))
   {
     b = true;
-    d.p->i("o", s);
-  }
-  else
-  {
-    q << "select id, type from menu_access order by type";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    for (auto &r : rs)
     {
-      b = true;
-      for (auto &r : *g)
-      {
-        o->pb(r);
-      }
-      sa(k, o, e);
+      o->pb(r);
     }
-    dbf(g);
   }
-  delete s;
 
   return b;
 }
@@ -3399,31 +2678,17 @@ bool Central::menuAccesses(radialUser &d, string &e)
 bool Central::notifyPriorities(radialUser &d, string &e)
 {
   bool b = false;
-  string k = "notify_priority";
-  stringstream q;
-  Json *o = d.p->m["o"], *s = new Json;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (sr(k, s, e))
+  if (db("dbCentralNotifyPriorities", i, rs, e))
   {
     b = true;
-    d.p->i("o", s);
-  }
-  else
-  {
-    q << "select id, priority from notify_priority order by priority";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    for (auto &r : rs)
     {
-      b = true;
-      for (auto &r : *g)
-      {
-        o->pb(r);
-      }
-      sa(k, o, e);
+      o->pb(r);
     }
-    dbf(g);
   }
-  delete s;
 
   return b;
 }
@@ -3432,30 +2697,27 @@ bool Central::notifyPriorities(radialUser &d, string &e)
 bool Central::notifyPriority(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!empty(i, "id") || !empty(i, "priority"))
   {
-    q << "select id, priority from notify_priority where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralNotifyPriorities", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or priority.";
   }
 
   return b;
@@ -3465,30 +2727,27 @@ bool Central::notifyPriority(radialUser &d, string &e)
 bool Central::packageType(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!empty(i, "id") || !empty(i, "type"))
   {
-    q << "select id, type from package_type where id = " << i->m["id"]->v;
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    map<string, string> r;
+    if (db("dbCentralPackageTypes", i, r, e))
     {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
-    e = "Please provide the id.";
+    e = "Please provide the id or type.";
   }
 
   return b;
@@ -3498,31 +2757,17 @@ bool Central::packageType(radialUser &d, string &e)
 bool Central::packageTypes(radialUser &d, string &e)
 {
   bool b = false;
-  string k = "package_type";
-  stringstream q;
-  Json *o = d.p->m["o"], *s = new Json;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (sr(k, s, e))
+  if (db("dbCentralPackageTypes", i, rs, e))
   {
     b = true;
-    d.p->i("o", s);
-  }
-  else
-  {
-    q << "select id, type from package_type order by type";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    for (auto &r : rs)
     {
-      b = true;
-      for (auto &r : *g)
-      {
-        o->pb(r);
-      }
-      sa(k, o, e);
+      o->pb(r);
     }
-    dbf(g);
   }
-  delete s;
 
   return b;
 }
@@ -3599,34 +2844,23 @@ void Central::schedule(string strPrefix)
 bool Central::server(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id") || !empty(i, "name"))
   {
-    q << "select id, name, description, processes, cpu_usage, main_memory, swap_memory, disk_size from server where ";
-    if (!empty(i, "id"))
+    map<string, string> r;
+    if (db("dbCentralServers", i, r, e))
     {
-      q << "id = " << i->m["id"]->v;
-    }
-    else
-    {
-      q << "name = '" << esc(i->m["name"]->v) << "'";
-    }
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
+      if (!r.empty())
       {
         b = true;
-        d.p->i("o", g->front());
+        d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
       }
     }
-    dbf(g);
   }
   else
   {
@@ -3640,35 +2874,28 @@ bool Central::server(radialUser &d, string &e)
 bool Central::serverAdd(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (d.g || d.auth.find("Central") != d.auth.end())
   {
-    if (!empty(i, "name"))
+    if (dep({"name"}, i, e))
     {
       radialUser a;
       userInit(d, a);
       a.p->m["i"]->i("name", i->m["name"]->v);
       if (!server(a, e) && e == "No results returned.")
       {
-        string strID;
-        e.clear();
-        q << "insert into server (name) values ('" << esc(i->m["name"]->v) << "')";
-        if (dbu(q.str(), strID, e))
+        string id, q;
+        if (db("dbCentralServerAdd", i, id, q, e))
         {
           b = true;
-          o->i("id", strID);
+          o->i("id", id);
         }
       }
       else if (e.empty())
       {
         e = "Server already exists.";
       }
-    }
-    else
-    {
-      e = "Please provide the name.";
     }
   }
   else
@@ -3683,26 +2910,19 @@ bool Central::serverAdd(radialUser &d, string &e)
 bool Central::serverDetailsByApplicationID(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "application_id"))
+  if (dep({"application_id"}, i, e))
   {
-    q << "select a.id application_server_id, b.id server_id, b.name, c.id application_server_detail_id, c.daemon from application_server a, server b, application_server_detail c where a.server_id = b.id and a.id = c.application_server_id and a.application_id = " << i->m["application_id"]->v << " order by b.name, c.daemon";
-    auto g = dbq(q.str(), e);
-    if (g != NULL)
+    list<map<string, string> > rs;
+    if (db("dbCentralServerDetails", i, rs, e))
     {
       b = true;
-      for (auto &r : *g)
+      for (auto &r : rs)
       {
         o->pb(r);
       }
     }
-    dbf(g);
-  }
-  else
-  {
-    e = "Please provide the application_id.";
   }
 
   return b;
@@ -3712,94 +2932,22 @@ bool Central::serverDetailsByApplicationID(radialUser &d, string &e)
 bool Central::serverEdit(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id", "name"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      if (!empty(i, "name"))
-      {
-        q << "update server set";
-        q << " name = '" << esc(i->m["id"]->v) << "'";
-        q << ", description = ";
-        if (!empty(i, "description"))
-        {
-          q << "'" << esc(i->m["description"]->v) << "'";
-        }
-        else
-        {
-          q << "null";
-        }
-        q << ", processes = ";
-        if (!empty(i, "processes"))
-        {
-          q << i->m["processes"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << ", cpu_usage = ";
-        if (!empty(i, "cpu_usage"))
-        {
-          q << i->m["cpu_usage"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << ", main_memory = ";
-        if (!empty(i, "main_memory"))
-        {
-          q << i->m["main_memory"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << ", swap_memory = ";
-        if (!empty(i, "swap_memory"))
-        {
-          q << i->m["swap_memory"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << ", disk_size = ";
-        if (!empty(i, "disk_size"))
-        {
-          q << i->m["disk_size"]->v;
-        }
-        else
-        {
-          q << "0";
-        }
-        q << " where id = " << i->m["id"]->v;
-        if (dbu(q.str(), e))
-        {
-          b = true;
-        }
-      }
-      else
-      {
-        e = "Please provide the name.";
-      }
+      b = db("dbCentralServerUpdate", i, e);
     }
     else
     {
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -4124,28 +3272,20 @@ bool Central::serverRemove(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (dep({"id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      q << "delete from server where id = " << i->m["id"]->v;
-      if (dbu(q.str(), e))
-      {
-        b = true;
-      }
+      b = db("dbCentralServerRemove", i, e);
     }
     else
     {
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
-  }
-  else
-  {
-    e = "Please provide the id.";
   }
 
   return b;
@@ -4155,37 +3295,13 @@ bool Central::serverRemove(radialUser &d, string &e)
 bool Central::servers(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
+  list<map<string, string> > rs;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  q << "select id, name from server";
-  if (!empty(i, "letter"))
-  {
-    q << " where";
-    if (i->m["letter"]->v == "#")
-    {
-      q << " name regexp '^[ -@[-`{-~]'";
-    }
-    else
-    {
-      q << " upper(name) like '" << i->m["letter"]->v << "%'";
-    }
-  }
-  q << " order by name";
-  if (!empty(i, "page"))
-  {
-    size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-    ssNumPerPage >> unNumPerPage;
-    ssPage >> unPage;
-    unOffset = unPage * unNumPerPage;
-    q << " limit " << unNumPerPage << " offset " << unOffset;
-  }
-  auto g = dbq(q.str(), e);
-  if (g != NULL)
+  if (db("dbCentralServers", i, rs, e))
   {
     b = true;
-    for (auto &r : *g)
+    for (auto &r : rs)
     {
       Json *j = new Json(r);
       if (!empty(i, "contacts") && i->m["contacts"]->v == "1")
@@ -4206,7 +3322,6 @@ bool Central::servers(radialUser &d, string &e)
       delete j;
     }
   }
-  dbf(g);
 
   return b;
 }
