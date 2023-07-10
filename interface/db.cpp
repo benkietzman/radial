@@ -20,7 +20,11 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "db->main()";
   gpDb = new Db(strPrefix, argc, argv, &callback);
+  gpDb->setAutoMode(&autoMode);
+  thread threadSchedule(&Db::schedule, gpDb, strPrefix);
+  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpDb->process(strPrefix);
+  threadSchedule.join();
   delete gpDb;
   return 0;
 }

@@ -76,6 +76,20 @@ Db::~Db()
 {
 }
 // }}}
+// {{{ autoMode()
+void Db::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  threadIncrement();
+  strPrefix += "->Db::autoMode()";
+  if (strOldMaster != strNewMaster)
+  {
+    stringstream ssMessage;
+    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
+    log(ssMessage.str());
+  }
+  threadDecrement();
+}
+// }}}
 // {{{ callback()
 void Db::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
@@ -160,7 +174,7 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
 bool Db::dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "account_type"};
+  list<string> k = {"db", "central", "account_type"};
   stringstream qs;
 
   qs << "select id, type, description from account_type order by type";
@@ -857,7 +871,7 @@ bool Db::dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q,
 bool Db::dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "contact_type"};
+  list<string> k = {"db", "central", "contact_type"};
   stringstream qs;
 
   qs << "select id, type from contact_type order by type";
@@ -908,7 +922,7 @@ bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
 bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "login_type"};
+  list<string> k = {"db", "central", "login_type"};
   stringstream qs;
 
   qs << "select id, type from login_type order by type";
@@ -940,7 +954,7 @@ bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
 bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "menu_access"};
+  list<string> k = {"db", "central", "menu_access"};
   stringstream qs;
 
   qs << "select id, type from menu_access order by type";
@@ -972,7 +986,7 @@ bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &
 bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "notify_priority"};
+  list<string> k = {"db", "central", "notify_priority"};
   stringstream qs;
 
   qs << "select id, priority from notify_priority order by priority";
@@ -1004,7 +1018,7 @@ bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, stri
 bool Db::dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
-  list<string> k = {"database", "central", "package_type"};
+  list<string> k = {"db", "central", "package_type"};
   stringstream qs;
 
   qs << "select id, type from package_type order by type";
@@ -1455,12 +1469,6 @@ bool Db::dep(const list<string> fs, Json *i, string &e)
   return bResult;
 }
 // }}}
-// {{{ setCallbackAddon()
-void Db::setCallbackAddon(bool (*pCallback)(const string, Json *, Json *, string &, string &, string &, bool &))
-{
-  m_pCallbackAddon = pCallback;
-}
-// }}}
 // {{{ ia()
 string Db::ia(const list<string> ks, Json *i)
 {
@@ -1583,6 +1591,56 @@ string Db::ib(const string k, const string i, bool &f)
 
   s = os.str();
   return s;
+}
+// }}}
+// {{{ schedule()
+void Db::schedule(string strPrefix)
+{
+  string strError;
+  stringstream ssMessage;
+  time_t CTime[3] = {0, 0, 0};
+  Json *ptJson;
+
+  threadIncrement();
+  strPrefix += "->Db::schedule()";
+  time(&(CTime[0]));
+  while (!shutdown())
+  {
+    if (isMasterSettled() && isMaster())
+    {
+      time(&(CTime[1]));
+      if ((CTime[1] - CTime[0]) > 600)
+      {
+        CTime[0] = CTime[1];
+        ptJson = new Json;
+        if (storageRetrieve({"db", "_time"}, ptJson, strError))
+        {
+          stringstream ssTime(ptJson->v);
+          ssTime >> CTime[2];
+          if ((CTime[0] - CTime[2]) > 14400)
+          {
+            storageRemove({"db"}, strError);
+          }
+        }
+        else if (strError == "Failed to find key.")
+        {
+          stringstream ssTime;
+          ssTime << CTime[0];
+          ptJson->i("_time", ssTime.str(), 'n');
+          storageAdd({"db"}, ptJson, strError);
+        }
+        delete ptJson;
+      }
+    }
+    msleep(2000);
+  }
+  threadDecrement();
+}
+// }}}
+// {{{ setCallbackAddon()
+void Db::setCallbackAddon(bool (*pCallback)(const string, Json *, Json *, string &, string &, string &, bool &))
+{
+  m_pCallbackAddon = pCallback;
 }
 // }}}
 // {{{ u()
