@@ -15,6 +15,7 @@
 #include "include/Db"
 using namespace radial;
 Db *gpDb = NULL;
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
@@ -27,6 +28,12 @@ int main(int argc, char *argv[])
   threadSchedule.join();
   delete gpDb;
   return 0;
+}
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  thread threadAutoMode(&Db::autoMode, gpDb, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
