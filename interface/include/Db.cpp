@@ -1087,35 +1087,46 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory from server where 1";
-  if (!empty(i, "id"))
+  if (!empty(i, "application_id"))
   {
-    qs << " and id = " << v(i->m["id"]->v);
-  } 
-  if (!empty(i, "letter"))
-  {
-    if (i->m["letter"]->v == "#")
-    {
-      qs << " and name regexp '^[ -@[-`{-~]'";
-    }
-    else
-    {
-      qs << " and upper(name) like '" << i->m["letter"]->v << "%'";
-    }
+    qs << "select a.id, b.id server_id, b.name from application_server a, server b where a.server_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
   }
-  if (!empty(i, "name"))
+  else if (!empty(i, "contact_id"))
   {
-    qs << " and name = " << v(i->m["name"]->v);
-  } 
-  qs << " order by name";
-  if (!empty(i, "page"))
+    qs << "select distinct a.id, b.id server_id, b.name, c.type from server_contact a, server b, contact_type c where a.server_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+  }
+  else
   {
-    size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-    ssNumPerPage >> unNumPerPage;
-    ssPage >> unPage;
-    unOffset = unPage * unNumPerPage;
-    qs << " limit " << unNumPerPage << " offset " << unOffset;
+    qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory from server where 1";
+    if (!empty(i, "id"))
+    {
+      qs << " and id = " << v(i->m["id"]->v);
+    } 
+    if (!empty(i, "letter"))
+    {
+      if (i->m["letter"]->v == "#")
+      {
+        qs << " and name regexp '^[ -@[-`{-~]'";
+      }
+      else
+      {
+        qs << " and upper(name) like '" << i->m["letter"]->v << "%'";
+      }
+    }
+    if (!empty(i, "name"))
+    {
+      qs << " and name = " << v(i->m["name"]->v);
+    } 
+    qs << " order by name";
+    if (!empty(i, "page"))
+    {
+      size_t unNumPerPage, unOffset, unPage;
+      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      ssNumPerPage >> unNumPerPage;
+      ssPage >> unPage;
+      unOffset = unPage * unNumPerPage;
+      qs << " limit " << unNumPerPage << " offset " << unOffset;
+    }
   }
 
   return dbq("central_r", qs, q, o, e);
@@ -1142,6 +1153,15 @@ bool Db::dbCentralServerUserAdd(Json *i, Json *o, string &id, string &q, string 
 {
   bool b = false;
 
+  if (dep({"contact_id", "notify", "server_id", "type_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"contact_id", "notify", "server_id", "type_id"};
+    stringstream qs;
+    qs << "insert into server_contact (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
   return b;
 }
 // }}}
@@ -1150,21 +1170,78 @@ bool Db::dbCentralServerUserRemove(Json *i, Json *o, string &id, string &q, stri
 {
   bool b = false;
 
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from server_contact where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
   return b;
 }
 // }}}
 // {{{ dbCentralServerUsers()
 bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select a.id, c.email, c.first-name, c.last_name, a.notify, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  if (!empty(i, "id"))
+  {
+    qs << " and a.id = " << v(i->m["id"]->v);
+  }
+  if ((!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1") || (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  {
+    bool f = true;
+    q << " and b.type in (";
+    if (!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Admin'";
+      f = false;
+    }
+    if (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Backup Admin'";
+      f = false;
+    }
+    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Contact'";
+      f = false;
+    }
+    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Contact'";
+      f = false;
+    }
+    qs << ")";
+  }
+  qs << " order by c.last_name, c.first_name, c.userid";
+  if (exist(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    qs << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralServerUserUpdate()
 bool Db::dbCentralServerUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+
+  if (dep({"contact_id", "id", "notify", "type_id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update server_contact set" << u({"contact_id", "notify", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
@@ -1174,6 +1251,15 @@ bool Db::dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
 
+  if (dep({"userid"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"active", "admin", "locked", "userid"};
+    stringstream qs;
+    qs << "insert into person (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
   return b;
 }
 // }}}
@@ -1182,6 +1268,13 @@ bool Db::dbCentralUserRemove(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
 
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from person where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
   return b;
 }
 // }}}
@@ -1189,14 +1282,68 @@ bool Db::dbCentralUserRemove(Json *i, Json *o, string &id, string &q, string &e)
 bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+  stringstream qs;
 
-  return b;
+  qs << "select id, active, admin, email, first_name, last_name, locked, pager, userid from person where 1";
+  if (!empty(i, "id"))
+  {
+    qs << " and id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "letter"))
+  {
+    if (i->m["letter"]->v == "#")
+    {
+      qs << " and last_name regexp '^[ -@[-`{-~]'";
+    }
+    else
+    {
+      qs << " and upper(last_name) like '" << i->m["letter"]->v << "%'";
+    }
+  }
+  if (!empty(i, "userid"))
+  {
+    qs << " and userid = " << v(i->m["userid"]->v);
+  }
+  qs << " order by last_name, first_name, userid";
+  if (!empty(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    qs << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+
+  return dbq("central_r", qs, q, o, e);
 }
 // }}}
 // {{{ dbCentralUserUpdate()
 bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
 {
   bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    bool f = true
+    stringstream qs;
+    qs << "update person set" << u({"active", "admin", "email", "first_name", "last_name", "locked", "pager", "userid"}, i, f);
+    if (exist(i, "password"))
+    {
+      qs << ((f)?"":",") << " `password` = ";
+      f = false;
+      if (!empty(i, "password"))
+      {
+        qs << "concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
+      }
+      else
+      {
+        qs << "null";
+      }
+    }
+    qs << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
@@ -1491,15 +1638,8 @@ string Db::u(const string k, const string i, bool &f)
   string s;
   stringstream os;
 
-  if (f)
-  {
-    f = false;
-  }
-  else
-  {
-    os << ",";
-  }
-  os << " `" << k << "` = " << ((i == "now()")?i:v(i));
+  os << ((f)?"":"," << " `" << k << "` = " << ((i == "now()")?i:v(i));
+  f = false;
 
   s = os.str();
   return s;

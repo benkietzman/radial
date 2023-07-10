@@ -1892,26 +1892,16 @@ void Interface::throughput(const string strType, const size_t unThroughput)
 bool Interface::user(radialUser &d, string &e)
 {
   bool b = false;
-  stringstream q;
   Json *i = d.p->m["i"];
 
   if (!empty(i, "id") || !empty(i, "userid"))
   {
-    q << "select id, last_name, first_name, userid, email, pager, active, admin, locked from person where ";
-    if (!empty(i, "id"))
+    map<string, string> r;
+    if (db("dbCentralUsers", i, r, e))
     {
-      q << "id = " << i->m["id"]->v;
-    }
-    else
-    {
-      q << "userid = '" << i->m["userid"]->v << "'";
-    }
-    auto g = dbquery("central_r", q.str(), e);
-    if (g != NULL)
-    {
-      if (!g->empty())
+      if (!r.empty())
       {
-        Json *j = new Json(g->front());
+        Json *j = new Json(r);
         b = true;
         ny(j, "active");
         ny(j, "admin");
@@ -1924,7 +1914,6 @@ bool Interface::user(radialUser &d, string &e)
         e = "No results returned.";
       }
     }
-    dbfree(g);
   }
   else
   {
