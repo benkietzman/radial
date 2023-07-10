@@ -67,7 +67,7 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralServerUserUpdate"] = &Db::dbCentralServerUserUpdate;
   m_functions["dbCentralUserAdd"] = &Db::dbCentralUserAdd;
   m_functions["dbCentralUserRemove"] = &Db::dbCentralUserRemove;
-  m_functions["dbCentralUserUsers"] = &Db::dbCentralUsers;
+  m_functions["dbCentralUsers"] = &Db::dbCentralUsers;
   m_functions["dbCentralUserUpdate"] = &Db::dbCentralUserUpdate;
 }
 // }}}
