@@ -3625,7 +3625,7 @@ bool Central::serverUsersByServerID(radialUser &d, string &e)
   if (dep({"server_id"}, i, e))
   {
     list<map<string, string> > rs;
-    if (db("dbCentralSserverUsers", i, rs, e))
+    if (db("dbCentralServerUsers", i, rs, e))
     {
       b = true;
       for (auto &r : rs)
