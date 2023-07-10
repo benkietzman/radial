@@ -1395,7 +1395,7 @@ list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q,
 list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q, const list<string> k, string &e)
 {
   Json *s = new Json;
-  list<map<string, string> > *g= NULL;
+  list<map<string, string> > *g = NULL;
 
   q = qs.str();
   if (storageRetrieve(k, s, e))
@@ -1408,9 +1408,8 @@ list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q,
       g->push_back(r);
     }
   }
-  else
+  else if ((g = dbquery(d, q, e)) != NULL)
   {
-    g = dbquery(d, q, e);
     for (auto &r : *g)
     {
       s->pb(r);
