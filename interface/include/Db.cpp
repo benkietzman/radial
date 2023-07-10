@@ -93,45 +93,42 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
   {
     if (ptJson->m["Function"]->v.size() > 2 && ptJson->m["Function"]->v.substr(0, 2) == "db")
     {
-      if (exist(ptJson, "Request"))
+      bool bInvalid = true;
+      string strID, strQuery;
+      if (!exist(ptJson, "Request"))
       {
-        bool bInvalid = false;
-        string strID, strQuery;
-        if (exist(ptJson, "Response"))
+        ptJson->m["Request"] = new Json;
+      }
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json;
+      if (m_pCallbackAddon != NULL && m_pCallbackAddon(ptJson->m["Function"]->v, ptJson->m["Request"], ptJson->m["Response"], strID, strQuery, strError, bInvalid))
+      {
+        bResult = true;
+      }
+      else if (m_pCallbackAddon != NULL && bInvalid)
+      {
+        if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
         {
-          delete ptJson->m["Response"];
-        }
-        ptJson->m["Response"] = new Json;
-        if (m_pCallbackAddon != NULL && m_pCallbackAddon(ptJson->m["Function"]->v, ptJson->m["Request"], ptJson->m["Response"], strID, strQuery, strError, bInvalid))
-        {
-          bResult = true;
-        }
-        else if (bInvalid)
-        {
-          if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
+          if ((this->*m_functions[ptJson->m["Function"]->v])(ptJson->m["Request"], ptJson->m["Response"], strID, strQuery, strError))
           {
-            if ((this->*m_functions[ptJson->m["Function"]->v])(ptJson->m["Request"], ptJson->m["Response"], strID, strQuery, strError))
+            bResult = true;
+            if (!strID.empty())
             {
-              bResult = true;
-              if (!strID.empty())
-              {
-                ptJson->i("ID", strID, 'n');
-              }
-              if (!strQuery.empty())
-              {
-                ptJson->i("Query", strQuery);
-              }
+              ptJson->i("ID", strID, 'n');
+            }
+            if (!strQuery.empty())
+            {
+              ptJson->i("Query", strQuery);
             }
           }
-          else
-          {
-            strError = "Please provide a valid Function.";
-          }
         }
-      }
-      else
-      {
-        strError = "Please provide the Request.";
+        else
+        {
+          strError = "Please provide a valid Function.";
+        }
       }
     }
     else

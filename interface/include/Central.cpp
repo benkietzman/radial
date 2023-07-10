@@ -2331,7 +2331,7 @@ void Central::autoMode(string strPrefix, const string strOldMaster, const string
 // {{{ callback()
 void Central::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  bool bInvalid = true, bResult = false;
+  bool bResult = false;
   string strError;
   Json *ptJson;
   radialPacket p;
@@ -2343,6 +2343,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
+    bool bInvalid = true;
     string strFunction = ptJson->m["Function"]->v, strJwt;
     radialUser d;
     userInit(ptJson, d);
