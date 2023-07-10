@@ -856,7 +856,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
       {
         string id, q;
         i->i("user_id", a.p->m["o"]->m["id"]->v);
-        if (db("dbCentalApplicationIssueCommentAdd", i, id, q, e))
+        if (db("dbCentralApplicationIssueCommentAdd", i, id, q, e))
         {
           b = true;
           o->i("id", id);
