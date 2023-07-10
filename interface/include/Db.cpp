@@ -1193,7 +1193,7 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
   if ((!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1") || (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
   {
     bool f = true;
-    q << " and b.type in (";
+    qs << " and b.type in (";
     if (!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Admin'";
@@ -1281,7 +1281,6 @@ bool Db::dbCentralUserRemove(Json *i, Json *o, string &id, string &q, string &e)
 // {{{ dbCentralUsers()
 bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
 {
-  bool b = false;
   stringstream qs;
 
   qs << "select id, active, admin, email, first_name, last_name, locked, pager, userid from person where 1";
@@ -1325,7 +1324,7 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
 
   if (dep({"id"}, i, e))
   {
-    bool f = true
+    bool f = true;
     stringstream qs;
     qs << "update person set" << u({"active", "admin", "email", "first_name", "last_name", "locked", "pager", "userid"}, i, f);
     if (exist(i, "password"))
@@ -1638,7 +1637,7 @@ string Db::u(const string k, const string i, bool &f)
   string s;
   stringstream os;
 
-  os << ((f)?"":"," << " `" << k << "` = " << ((i == "now()")?i:v(i));
+  os << ((f)?"":",") << " `" << k << "` = " << ((i == "now()")?i:v(i));
   f = false;
 
   s = os.str();
