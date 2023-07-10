@@ -268,10 +268,11 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
 
   if (!f.empty())
   {
+    string strJson;
     Json *j = new Json;
     j->i("Function", f);
-    j->m["Request"] = i;
-    j->m["Response"] = o;
+    j->m["Request"] = new Json(i);
+    j->m["Response"] = new Json(o);
     if (hub("db", j, e))
     {
       b = true;
@@ -284,8 +285,8 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
         q = j->m["Query"]->v;
       }
     }
-    j->m.erase("Request");
-    j->m.erase("Response");
+    i->parse(j->m["Request"]->j(strJson));
+    o->parse(j->m["Response"]->j(strJson));
     delete j;
   }
   else
