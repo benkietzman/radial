@@ -545,19 +545,22 @@ bool Db::dbCentralApplicationIssueUpdate(Json *i, Json *o, string &id, string &q
 {
   bool b = false;
 
-  if (dep({"application_id", "id"}, i, e))
+  if (dep({"id"}, i, e))
   {
+    bool f = true;
     stringstream qs;
-    qs << "update application_issue set application_id = ";
+    qs << "update application_issue set";
     if (!empty(i, "transfer_id") && i->m["transfer_id"]->v != i->m["application_id"]->v)
     {
-      qs << v(i->m["transfe_id"]->v);
+      f = false;
+      qs << " application_id = " << v(i->m["transfer_id"]->v);
     }
-    else
+    else if (!empty(i, "application_id"))
     {
-      qs << v(i->m["application_id"]->v);
+      f = false;
+      qs << " application_id = " << v(i->m["application_id"]->v);
     }
-    qs << u({"assigned_id", "close_date", "due_date", "hold", "priority", "release_date", "summary"}, i) << " where id = " << i->m["id"]->v;
+    qs << u({"assigned_id", "close_date", "due_date", "hold", "priority", "release_date", "summary"}, i, f) << " where id = " << i->m["id"]->v;
     b = dbu("central", qs, q, e);
   }
 
