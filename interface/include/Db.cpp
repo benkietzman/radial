@@ -1201,6 +1201,10 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
   {
     qs << " and a.id = " << v(i->m["id"]->v);
   }
+  if (!empty(i, "server_id"))
+  {
+    qs << " and a.server_id = " << v(i->m["server_id"]->v);
+  }
   if ((!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1") || (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
   {
     bool f = true;
