@@ -3669,6 +3669,12 @@ bool Central::sr(const string strKey, Json *ptData, string &strError)
   return bResult;
 }
 // }}}
+// {{{ user()
+bool Central::user(radialUser &d, string &e)
+{
+  return Interface::user(d, e);
+}
+// }}}
 // {{{ userAdd()
 bool Central::userAdd(radialUser &d, string &e)
 {
