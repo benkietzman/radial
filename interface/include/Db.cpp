@@ -108,7 +108,7 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
       {
         bResult = true;
       }
-      else if (m_pCallbackAddon != NULL && bInvalid)
+      else if (bInvalid)
       {
         if (m_functions.find(ptJson->m["Function"]->v) != m_functions.end())
         {
