@@ -172,7 +172,7 @@ bool Db::dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &
     {
       if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -869,7 +869,7 @@ bool Db::dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &
     {
       if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -920,7 +920,7 @@ bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
     {
       if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -952,7 +952,7 @@ bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &
     {
       if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -984,7 +984,7 @@ bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, stri
     {
       if (!empty(i, "id") || !empty(i, "priority"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "priority") && r["id"] == i->m["priority"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "priority") && r["priority"] == i->m["priority"]->v))
         {
           o->pb(r);
         }
@@ -1016,7 +1016,7 @@ bool Db::dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &
     {
       if (!empty(i, "id") || !empty(i, "type"))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["id"] == i->m["type"]->v))
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
