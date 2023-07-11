@@ -1061,7 +1061,7 @@ bool Db::dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e)
   qs << "select session_data Data, session_json Json from php_session where 1";
   if (!empty(i, "ID"))
   {
-    qs << " and session_id =  = " << v(i->m["ID"]->v);
+    qs << " and session_id = " << v(i->m["ID"]->v);
   }
   qs << " and session_data is not null and session_data != ''";
 
