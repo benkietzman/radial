@@ -63,6 +63,9 @@ class Db : public Interface
   bool dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerRemove(Json *i, Json *o, string &id, string &q, string &e);

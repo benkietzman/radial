@@ -52,29 +52,21 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
         // {{{ destroy
         if (ptJson->m["Function"]->v == "destroy")
         {
-          ssQuery.str("");
-          ssQuery << "delete from php_session where session_id = '" << esc(ptJson->m["Request"]->m["ID"]->v) << "'";
-          if (dbupdate("central", ssQuery.str(), strError))
-          {
-            bResult = true;
-          }
+          bResult = db("dbCentralPhpSessionRemove", ptJson->m["Request"], strError);
         }
         // }}}
         // {{{ read
         else if (ptJson->m["Function"]->v == "read")
         {
-          ssQuery.str("");
-          ssQuery << "select session_data Data, session_json Json from php_session where session_id = '" << esc(ptJson->m["Request"]->m["ID"]->v) << "' and session_data is not null and session_data != ''";
-          auto getSession = dbquery("central_r", ssQuery.str(), strError);
-          if (getSession != NULL)
+          map<string, string> getSessionRow;
+          if (db("dbCentralPhpSession", ptJson->m["Request"], getSessionRow, strError))
           {
             bResult = true;
-            if (!getSession->empty())
+            if (!getSessionRow.empty())
             {
-              ptJson->insert("Response", getSession->front());
+              ptJson->insert("Response", getSessionRow);
             }
           }
-          dbfree(getSession);
         }
         // }}}
         // {{{ write
@@ -84,12 +76,7 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
           {
             if (exist(ptJson->m["Request"], "Json"))
             {
-              ssQuery.str("");
-              ssQuery << "insert into php_session (session_id, last_updated, session_data, session_json) values ('" << esc(ptJson->m["Request"]->m["ID"]->v) << "', now(), '" << esc(ptJson->m["Request"]->m["Data"]->v) << "', '" << esc(ptJson->m["Request"]->m["Json"]->v) << "') on duplicate key update last_updated = now(), session_data = '" << esc(ptJson->m["Request"]->m["Data"]->v) << "', session_json = '" << esc(ptJson->m["Request"]->m["Json"]->v) << "'";
-              if (dbupdate("central", ssQuery.str(), strError))
-              {
-                bResult = true;
-              }
+              bResult = db("dbCentralPhpSessionAdd", ptJson->m["Request"], strError);
             }
             else
             {

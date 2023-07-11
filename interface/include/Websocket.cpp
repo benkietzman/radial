@@ -257,24 +257,25 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   // {{{ wsSessionID
   else if ((strUser.empty() || strPassword.empty()) && !empty(ptJson, "wsSessionID"))
   {
-    stringstream ssQuery;
-    ssQuery << "select session_json from php_session where session_id = '" << ptJson->m["wsSessionID"]->v << "'";
-    auto getSession = dbquery("central_r", ssQuery.str(), strError);
-    if (getSession != NULL)
+    map<string, string> getSessionRow;
+    Json *ptSession = new Json;
+    ptSession->i("Function", "read");
+    ptSession->m["Request"] = new Json;
+    ptSession->m["Request"]->i("ID", ptJson->m["wsSessionID"]->v);
+    if (hub("session", ptSession, strError))
     {
-      if (!getSession->empty())
+      if (exist(ptSession, "Response"))
       {
-        Json *ptSessionData = new Json(getSession->front()["session_json"]);
-        if (exist(ptSessionData, "RadialCredentials"))
+        if (exist(ptSession->m["Response"], "RadialCredentials"))
         {
-          if (exist(ptSessionData->m["RadialCredentials"], strApplication))
+          if (exist(ptSession->m["Response"]->m["RadialCredentials"], strApplication))
           {
-            if (!empty(ptSessionData->m["RadialCredentials"]->m[strApplication], "User"))
+            if (!empty(ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication], "User"))
             {
-              strUser = ptConn->strUser = ptSessionData->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
-              if (!empty(ptSessionData->m["RadialCredentials"]->m[strApplication], "Password"))
+              strUser = ptConn->strUser = ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
+              if (!empty(ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication], "Password"))
               {
-                strPassword = ptConn->strPassword = ptSessionData->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
+                strPassword = ptConn->strPassword = ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
               }
               else
               {
@@ -297,26 +298,25 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             log(ssMessage.str());
           }
         }
-        if (!empty(ptSessionData, "sl_login"))
+        if (!empty(ptSession->m["Response"], "sl_login"))
         {
-          strUserID = ptConn->strUserID = ptSessionData->m["sl_login"]->v;
+          strUserID = ptConn->strUserID = ptSession->m["Response"]->m["sl_login"]->v;
         }
-        delete ptSessionData;
       }
       else
       {
         ssMessage.str("");
-        ssMessage << strPrefix << "->query(" << ssQuery.str() << ") error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  No results returned.";
+        ssMessage << strPrefix << "->Interface::hub(session,read) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  No results returned.";
         log(ssMessage.str());
       }
     }
     else
     {
       ssMessage.str("");
-      ssMessage << strPrefix << "->query(" << ssQuery.str() << ") error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
+      ssMessage << strPrefix << "->Interface::hub(session,read) error [" << ptConn->strUser << "," << ptConn->strUserID << "]:  " << strError;
       log(ssMessage.str());
     }
-    dbfree(getSession);
+    delete ptSession;
   }
   // }}}
   if (!strUser.empty() && !strPassword.empty())

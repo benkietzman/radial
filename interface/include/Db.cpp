@@ -57,6 +57,9 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralMenuAccesses"] = &Db::dbCentralMenuAccesses;
   m_functions["dbCentralNotifyPriorities"] = &Db::dbCentralNotifyPriorities;
   m_functions["dbCentralPackageTypes"] = &Db::dbCentralPackageTypes;
+  m_functions["dbCentralPhpSession"] = &Db::dbCentralPhpSession;
+  m_functions["dbCentralPhpSessionAdd"] = &Db::dbCentralPhpSessionAdd;
+  m_functions["dbCentralPhpSessionRemove"] = &Db::dbCentralPhpSessionRemove;
   m_functions["dbCentralServerAdd"] = &Db::dbCentralServerAdd;
   m_functions["dbCentralServerDetails"] = &Db::dbCentralServerDetails;
   m_functions["dbCentralServerRemove"] = &Db::dbCentralServerRemove;
@@ -1046,6 +1049,51 @@ bool Db::dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &
     }
   }
   dbf(g);
+
+  return b;
+}
+// }}}
+// {{{ dbCentralPhpSession()
+bool Db::dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select session_data Data, session_json Json from php_session where 1";
+  if (!empty(i, "ID"))
+  {
+    qs << " and session_id =  = " << v(i->m["ID"]->v);
+  }
+  qs << " and session_data is not null and session_data != ''";
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralPhpSessionAdd()
+bool Db::dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"Data", "Json"}, i, e))
+  {
+    stringstream qs;
+    qs << "insert into php_session (session_id, last_updated, session_data, session_json) values (" << v(i->m["ID"]->v) << ", now(), " << v(i->m["Data"]->v) << ", " << v(i->m["Json"]->v) << ") on duplicate key update last_updated = now(), session_data = " << v(i->m["Data"]->v) << ", session_json = " << v(i->m["Json"]->v);
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralPhpSessionRemove()
+bool Db::dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"ID"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from php_session where session_id = " << v(i->m["ID"]->v);
+    b = dbu("central", qs, q, e);
+  }
 
   return b;
 }
