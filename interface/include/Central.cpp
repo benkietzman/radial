@@ -838,6 +838,7 @@ bool Central::applicationIssueComment(radialUser &d, string &e)
     {
       if (!r.empty())
       {
+        b = true;
         d.p->i("o", r);
       }
       else
