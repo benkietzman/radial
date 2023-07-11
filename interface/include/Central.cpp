@@ -356,7 +356,7 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
     if (d.g || isApplicationDeveloper(a, e))
     {
       string id, q;
-      if (db("dbCentralApplicationAccountAdd", i, o, id, q, e))
+      if (db("dbCentralApplicationAccountAdd", i, id, q, e))
       {
         b = true;
         o->i("id", id);
@@ -393,7 +393,7 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (applicationAccount(a, e))
     {
-      b = db("dbCentralApplicationAccountUpdate", i, o, e);
+      b = db("dbCentralApplicationAccountUpdate", i, e);
     }
     userDeinit(a);
   }
@@ -412,7 +412,7 @@ bool Central::applicationAccountRemove(radialUser &d, string &e)
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
-    if (applicationAccount(a, e) && db("dbCentralApplicationAccountRemove", i, o, e))
+    if (applicationAccount(a, e) && db("dbCentralApplicationAccountRemove", i, e))
     {
       b = true;
     }
@@ -504,7 +504,7 @@ bool Central::applicationAdd(radialUser &d, string &e)
       if (!application(a, e) && e == "No results returned.")
       {
         string id, q;
-        if (db("dbCentralApplicationAdd", i, o, id, q, e))
+        if (db("dbCentralApplicationAdd", i, id, q, e))
         {
           o->i("id", id);
           radialUser u;
@@ -578,7 +578,7 @@ bool Central::applicationDependAdd(radialUser &d, string &e)
     if (d.g || isApplicationDeveloper(a, e))
     {
       string id, q;
-      if (db("dbCentralApplicationDependAdd", i, o, id, q, e))
+      if (db("dbCentralApplicationDependAdd", i, id, q, e))
       {
         b = true;
         o->i("id", id);
@@ -612,7 +612,7 @@ bool Central::applicationDependRemove(radialUser &d, string &e)
       c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
       if (d.g || isApplicationDeveloper(c, e))
       {
-        b = db("dbCentralApplicationDependRemove", i, o, e);
+        b = db("dbCentralApplicationDependRemove", i, e);
       }
       else
       {
@@ -672,7 +672,7 @@ bool Central::applicationEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      b = db("dbCentralApplicationUpdate", i, o, e);
+      b = db("dbCentralApplicationUpdate", i, e);
     }
     else
     {
@@ -757,7 +757,7 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
         }
         userDeinit(a);
       }
-      if (db("dbCentralApplicationIssueAdd", i, o, id, q, e))
+      if (db("dbCentralApplicationIssueAdd", i, id, q, e))
       {
         b = true;
         o->i("id", id);
@@ -814,7 +814,7 @@ bool Central::applicationIssueClose(radialUser &d, string &e)
     if (dep({"id"}, i, e))
     {
       i->i("close_date", "now()");
-      b = db("dbCentralApplicationIssueUpdate", i, o, e);
+      b = db("dbCentralApplicationIssueUpdate", i, e);
     }
   }
   else
@@ -869,7 +869,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
         i->i("user_id", a.p->m["o"]->m["id"]->v);
         string strJson;
         chat("#radial", (string)"0 " + i->json(strJson));
-        if (db("dbCentralApplicationIssueCommentAdd", i, o, id, q, e))
+        if (db("dbCentralApplicationIssueCommentAdd", i, id, q, e))
         {
           b = true;
           o->i("id", id);
@@ -951,7 +951,7 @@ bool Central::applicationIssueCommentEdit(radialUser &d, string &e)
         {
           if (a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["user_id"]->v)
           {
-            b = db("dbCentralApplicationIssueCommentUpdate", i, o, e);
+            b = db("dbCentralApplicationIssueCommentUpdate", i, e);
           }
           else
           {
@@ -1022,7 +1022,7 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
         }
         userDeinit(a);
       }
-      b = db("dbCentralApplicationIssueUpdate", i, o, e);
+      b = db("dbCentralApplicationIssueUpdate", i, e);
     }
     else
     {
@@ -1594,7 +1594,7 @@ bool Central::applicationRemove(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isApplicationDeveloper(a, e))
     {
-      b = db("dbCentralApplicationRemove", i, o, e);
+      b = db("dbCentralApplicationRemove", i, e);
     }
     else
     {
@@ -1809,7 +1809,7 @@ bool Central::applicationServerAdd(radialUser &d, string &e)
     if (d.g || isApplicationDeveloper(a, e))
     {
       string id, q;
-      if (db("dbCentralApplicationServerAdd", i, o, id, q, e))
+      if (db("dbCentralApplicationServerAdd", i, id, q, e))
       {
         b = true;
         o->i("id", id);
@@ -1870,7 +1870,7 @@ bool Central::applicationServerDetailAdd(radialUser &d, string &e)
     if (d.g || applicationServer(a, e))
     {
       string id, q;
-      if (db("dbCentralApplicationServerDetailAdd", i, o, id, q, e))
+      if (db("dbCentralApplicationServerDetailAdd", i, id, q, e))
       {
         b = true;
         o->i("id", id);
@@ -1911,7 +1911,7 @@ bool Central::applicationServerDetailEdit(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          b = db("dbCentralApplicationServerDetailUpdate", i, o, e);
+          b = db("dbCentralApplicationServerDetailUpdate", i, e);
         }
         else
         {
@@ -1956,7 +1956,7 @@ bool Central::applicationServerDetailRemove(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          b = db("dbCentralApplicationServerDetailRemove", i, o, e);
+          b = db("dbCentralApplicationServerDetailRemove", i, e);
         }
         else
         {
@@ -2016,7 +2016,7 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
       }
       if (d.g || isApplicationDeveloper(c, e))
       {
-        b = db("dbCentralApplicationServerRemove", i, o, e);
+        b = db("dbCentralApplicationServerRemove", i, e);
       }
       else
       {
@@ -2126,7 +2126,7 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
                     string id, q;
                     i->i("contact_id", f.p->m["o"]->m["id"]->v);
                     i->i("type_id", h.p->m["o"]->m["id"]->v);
-                    if (db("dbCentralApplicationUserAdd", i, o, id, q, e))
+                    if (db("dbCentralApplicationUserAdd", i, id, q, e))
                     {
                       b = true;
                       o->i("id", id);
@@ -2239,7 +2239,7 @@ bool Central::applicationUserEdit(radialUser &d, string &e)
                     {
                       i->i("contact_id", h.p->m["o"]->m["id"]->v);
                       i->i("type_id", k.p->m["o"]->m["id"]->v);
-                      b = db("dbCentralApplicationUserUpdate", i, o, e);
+                      b = db("dbCentralApplicationUserUpdate", i, e);
                     }
                     else
                     {
@@ -2309,7 +2309,7 @@ bool Central::applicationUserRemove(radialUser &d, string &e)
         }
         if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isApplicationDeveloper(f, e))
         {
-          b = db("dbCentralApplicationUserRemove", i, o, e);
+          b = db("dbCentralApplicationUserRemove", i, e);
         }
         else
         {
@@ -2932,7 +2932,7 @@ bool Central::serverAdd(radialUser &d, string &e)
       if (!server(a, e) && e == "No results returned.")
       {
         string id, q;
-        if (db("dbCentralServerAdd", i, o, id, q, e))
+        if (db("dbCentralServerAdd", i, id, q, e))
         {
           b = true;
           o->i("id", id);
@@ -2987,7 +2987,7 @@ bool Central::serverEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      b = db("dbCentralServerUpdate", i, o, e);
+      b = db("dbCentralServerUpdate", i, e);
     }
     else
     {
@@ -3325,7 +3325,7 @@ bool Central::serverRemove(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      b = db("dbCentralServerRemove", i, o, e);
+      b = db("dbCentralServerRemove", i, e);
     }
     else
     {
@@ -3506,7 +3506,7 @@ bool Central::serverUserAdd(radialUser &d, string &e)
               i->i("contact_id", c.p->m["o"]->m["id"]->v);
               i->i("notify", i->m["notify"]->m["value"]->v);
               i->i("type_id", f.p->m["o"]->m["id"]->v);
-              if (db("dbCentralServerUserAdd", i, o, id, q, e))
+              if (db("dbCentralServerUserAdd", i, id, q, e))
               {
                 b = true;
                 o->i("id", id);
@@ -3597,7 +3597,7 @@ bool Central::serverUserEdit(radialUser &d, string &e)
                 i->i("contact_id", f.p->m["o"]->m["id"]->v);
                 i->i("notify", i->m["notify"]->m["value"]->v);
                 i->i("type_id", h.p->m["o"]->m["id"]->v);
-                b = db("dbCentralServerUserUpdate", i, o, e);
+                b = db("dbCentralServerUserUpdate", i, e);
               }
               else
               {
@@ -3647,7 +3647,7 @@ bool Central::serverUserRemove(radialUser &d, string &e)
       }
       if (d.g || isServerAdmin(c, e))
       {
-        b = db("dbCentralServerUserRemove", i, o, e);
+        b = db("dbCentralServerUserRemove", i, e);
       }
       else
       {
@@ -3767,7 +3767,7 @@ bool Central::userAdd(radialUser &d, string &e)
         i->i("active", "1", 'n');
         i->i("admin", "0", 'n');
         i->i("locked", "0", 'n');
-        if (db("dbCentralUserAdd", i, o, id, q, e))
+        if (db("dbCentralUserAdd", i, id, q, e))
         {
           b = true;
           o->i("id", id);
@@ -3809,7 +3809,7 @@ bool Central::userEdit(radialUser &d, string &e)
       {
         i->i("locked", i->m["locked"]->m["value"]->v);
       }
-      b = db("dbCentralUserUpdate", i, o, e);
+      b = db("dbCentralUserUpdate", i, e);
     }
     else
     {
@@ -3834,7 +3834,7 @@ bool Central::userRemove(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "userid") && d.u == a.p->m["o"]->m["userid"]->v))
     {
-      b = db("dbCentralUserRemove", i, o, e);
+      b = db("dbCentralUserRemove", i, e);
     }
     else
     {

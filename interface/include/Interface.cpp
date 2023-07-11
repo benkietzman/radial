@@ -190,7 +190,6 @@ bool Interface::db(const string f, Json *d, string &id, string &q, string &e)
   b = db(f, i, o, id, q, e);
   if (!s)
   {
-    d->merge(o, true, false);
     delete o;
   }
 
