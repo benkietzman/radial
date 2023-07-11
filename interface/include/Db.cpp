@@ -1073,11 +1073,25 @@ bool Db::dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string 
 {
   bool b = false;
 
-  if (exist(i, "Data") && exist(i, "Json"))
+  if (dep("ID", i, e))
   {
-    stringstream qs;
-    qs << "insert into php_session (session_id, last_updated, session_data, session_json) values (" << v(i->m["ID"]->v) << ", now(), " << v(i->m["Data"]->v) << ", " << v(i->m["Json"]->v) << ") on duplicate key update last_updated = now(), session_data = " << v(i->m["Data"]->v) << ", session_json = " << v(i->m["Json"]->v);
-    b = dbu("central", qs, q, id, e);
+    if (exist(i, "Data"))
+    {
+      if (exist(i, "Json"))
+      {
+        stringstream qs;
+        qs << "insert into php_session (session_id, last_updated, session_data, session_json) values (" << v(i->m["ID"]->v) << ", now(), " << v(i->m["Data"]->v) << ", " << v(i->m["Json"]->v) << ") on duplicate key update last_updated = now(), session_data = " << v(i->m["Data"]->v) << ", session_json = " << v(i->m["Json"]->v);
+        b = dbu("central", qs, q, id, e);
+      }
+      else
+      {
+        e = "Please provide the Json.";
+      }
+    }
+    else
+    {
+      e = "Please provide the Data.";
+    }
   }
 
   return b;
