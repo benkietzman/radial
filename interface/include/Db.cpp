@@ -1073,7 +1073,7 @@ bool Db::dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string 
 {
   bool b = false;
 
-  if (dep("ID", i, e))
+  if (dep({"ID"}, i, e))
   {
     if (exist(i, "Data"))
     {
