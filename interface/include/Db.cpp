@@ -44,6 +44,7 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationServerDetailRemove"] = &Db::dbCentralApplicationServerDetailRemove;
   m_functions["dbCentralApplicationServerDetails"] = &Db::dbCentralApplicationServerDetails;
   m_functions["dbCentralApplicationServerDetailUpdate"] = &Db::dbCentralApplicationServerDetailUpdate;
+  m_functions["dbCentralApplicationServerRemove"] = &Db::dbCentralApplicationServerRemove;
   m_functions["dbCentralApplicationServers"] = &Db::dbCentralApplicationServers;
   m_functions["dbCentralApplicationUpdate"] = &Db::dbCentralApplicationUpdate;
   m_functions["dbCentralApplicationUserAdd"] = &Db::dbCentralApplicationUserAdd;
