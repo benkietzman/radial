@@ -732,7 +732,7 @@ bool Db::dbCentralApplicationServerRemove(Json *i, Json *o, string &id, string &
   if (dep({"id"}, i, e))
   {
     stringstream qs;
-    qs << "delete from application_server where id = (" << v(i->m["id"]->v);
+    qs << "delete from application_server where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
