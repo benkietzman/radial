@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket
+install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
@@ -26,6 +26,7 @@ install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
+	install --mode=775 bin/session $(prefix)/radial/interface/
 	install --mode=775 bin/storage $(prefix)/radial/interface/
 	install --mode=775 bin/websocket $(prefix)/radial/interface/
 # }}}
@@ -199,6 +200,16 @@ obj/secure.o: secure.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c secure.cpp -o obj/secure.o $(CPPFLAGS) -I../../common
 obj/Secure.o: include/Secure.cpp obj
 	g++ -ggdb -Wall -c include/Secure.cpp -o obj/Secure.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ session
+session: bin/session $(prefix)/radial/interface
+	install --mode=775 bin/session $(prefix)/radial/interface/
+bin/session: ../../common/libcommon.a obj/session.o obj/Base.o obj/Interface.o obj/Session.o bin
+	g++ -o bin/session obj/session.o obj/Base.o obj/Interface.o obj/Session.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/session.o: session.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c session.cpp -o obj/session.o $(CPPFLAGS) -I../../common
+obj/Session.o: include/Session.cpp obj
+	g++ -ggdb -Wall -c include/Session.cpp -o obj/Session.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ storage
 storage: bin/storage $(prefix)/radial/interface
