@@ -763,6 +763,7 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
         o->i("id", id);
         if (!empty(i, "comments"))
         {
+          string sube;
           radialUser a;
           userInit(d, a);
           if (!empty(i, "server"))
@@ -773,7 +774,14 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
           }
           a.p->m["i"]->i("issue_id", id);
           a.p->m["i"]->i("comments", i->m["comments"]->v);
-          applicationIssueCommentAdd(a, e);
+          if (applicationIssueCommentAdd(a, sube))
+          {
+            o->i("CommentAddStatus", "okay");
+          }
+          else
+          {
+            o->i("CommentAddStatus", sube);
+          }
           userDeinit(a);
         }
       }
@@ -857,21 +865,37 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
           o->i("id", id);
           if (!empty(i, "action") && i->m["action"]->v == "close")
           {
-            radialUser f;
-            userInit(d, f);
-            f.p->m["i"]->i("id", i->m["issue_id"]->v);
-            applicationIssueClose(f, e);
-            userDeinit(f);
+            string sube;
+            radialUser c;
+            userInit(d, c);
+            c.p->m["i"]->i("id", i->m["issue_id"]->v);
+            if (applicationIssueClose(c, sube))
+            {
+              o->i("CloseStatus", "okay");
+            }
+            else
+            {
+              o->i("CloseStatus", sube);
+            }
+            userDeinit(c);
           }
           if (!empty(i, "application_id") && !empty(i, "server"))
           {
+            string sube;
             radialUser c;
             userInit(d, c);
             c.p->m["i"]->i("id", i->m["issue_id"]->v);
             c.p->m["i"]->i("action", ((!empty(i, "action"))?i->m["action"]->v:"update"));
             c.p->m["i"]->i("application_id", i->m["application_id"]->v);
             c.p->m["i"]->i("server", i->m["server"]->v);
-            applicationIssueEmail(c, e);
+            if (applicationIssueEmail(c, sube))
+            {
+              o->i("EmailStatus", "okay");
+            }
+            else
+            {
+              o->i("EmailStatus", sube);
+            }
             userDeinit(c);
           }
         }
