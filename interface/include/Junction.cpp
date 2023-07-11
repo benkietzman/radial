@@ -52,7 +52,6 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
     {
       in.push_back(i->j(strJson));
     }
-string strJson;
 chat("#radial", ptJson->j(strJson));
     if (m_pJunction->request(in, out, strError))
     {
