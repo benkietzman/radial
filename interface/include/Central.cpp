@@ -782,6 +782,14 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
           {
             o->i("CommentAddStatus", sube);
           }
+          if (!empty(a.p->m["o"], "CloseStatus"))
+          {
+            o->i("CloseStatus", a.p->m["o"]->m["CloseStatus"]->v);
+          }
+          if (!empty(a.p->m["o"], "EmailStatus"))
+          {
+            o->i("EmailStatus", a.p->m["o"]->m["EmailStatus"]->v);
+          }
           userDeinit(a);
         }
       }
