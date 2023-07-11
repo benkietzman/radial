@@ -867,36 +867,28 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
       {
         string id, q;
         i->i("user_id", a.p->m["o"]->m["id"]->v);
-        string strJson;
-        chat("#radial", (string)"0 " + i->json(strJson));
         if (db("dbCentralApplicationIssueCommentAdd", i, id, q, e))
         {
           b = true;
           o->i("id", id);
-          chat("#radial", (string)"0-0 " + i->json(strJson));
           if (!empty(i, "action") && i->m["action"]->v == "close")
           {
-            chat("#radial", "0-0-0");
             string sube;
             radialUser c;
             userInit(d, c);
             c.p->m["i"]->i("id", i->m["issue_id"]->v);
             if (applicationIssueClose(c, sube))
             {
-              chat("#radial", "0-0-0-0 okay");
               o->i("CloseStatus", "okay");
             }
             else
             {
-              chat("#radial", (string)"0-0-0-1 " + sube);
               o->i("CloseStatus", sube);
             }
             userDeinit(c);
           }
-          chat("#radial", "0-1");
           if (!empty(i, "application_id") && !empty(i, "server"))
           {
-            chat("#radial", "0-1-0");
             string sube;
             radialUser c;
             userInit(d, c);
@@ -906,12 +898,10 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
             c.p->m["i"]->i("server", i->m["server"]->v);
             if (applicationIssueEmail(c, sube))
             {
-              chat("#radial", "0-1-0-0 okay");
               o->i("EmailStatus", "okay");
             }
             else
             {
-              chat("#radial", (string)"0-1-0-0-1 " + sube);
               o->i("EmailStatus", sube);
             }
             userDeinit(c);
