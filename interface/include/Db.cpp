@@ -648,7 +648,7 @@ bool Db::dbCentralApplicationServerAdd(Json *i, Json *o, string &id, string &q, 
 {
   bool b = false;
 
-  if (!dep({"application_id", "server_id"}, i, e))
+  if (dep({"application_id", "server_id"}, i, e))
   {
     stringstream qs;
     qs << "insert into application_server (application_id, server_id) values (" << v(i->m["application_id"]->v) << ", " << v(i->m["server_id"]->v) << ")";
@@ -729,7 +729,7 @@ bool Db::dbCentralApplicationServerRemove(Json *i, Json *o, string &id, string &
 {
   bool b = false;
 
-  if (!dep({"id"}, i, e))
+  if (dep({"id"}, i, e))
   {
     stringstream qs;
     qs << "delete from application_server where id = (" << v(i->m["id"]->v);
