@@ -765,20 +765,15 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
         {
           radialUser a;
           userInit(d, a);
+          if (!empty(i, "server"))
+          {
+            a.p->m["i"]->i("action", "add");
+            a.p->m["i"]->i("application_id", i->m["application_id"]->v);
+            a.p->m["i"]->i("server", i->m["server"]->v);
+          }
           a.p->m["i"]->i("issue_id", id);
           a.p->m["i"]->i("comments", i->m["comments"]->v);
           applicationIssueCommentAdd(a, e);
-          userDeinit(a);
-        }
-        if (!empty(i, "server"))
-        {
-          radialUser a;
-          userInit(d, a);
-          a.p->m["i"]->i("id", id);
-          a.p->m["i"]->i("action", "add");
-          a.p->m["i"]->i("application_id", i->m["application_id"]->v);
-          a.p->m["i"]->i("server", i->m["server"]->v);
-          applicationIssueEmail(a, e);
           userDeinit(a);
         }
       }
@@ -860,12 +855,20 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
         {
           b = true;
           o->i("id", id);
-          if (!empty(i, "server"))
+          if (!empty(i, "action") && i->m["action"]->v == "close")
+          {
+            radialUser f;
+            userInit(d, f);
+            f.p->m["i"]->i("id", i->m["issue_id"]->v);
+            applicationIssueClose(f, e);
+            userDeinit(f);
+          }
+          if (!empty(i, "application_id") && !empty(i, "server"))
           {
             radialUser c;
             userInit(d, c);
             c.p->m["i"]->i("id", i->m["issue_id"]->v);
-            c.p->m["i"]->i("action", "update");
+            c.p->m["i"]->i("action", ((!empty(i, "action"))?i->m["action"]->v:"update"));
             c.p->m["i"]->i("application_id", i->m["application_id"]->v);
             c.p->m["i"]->i("server", i->m["server"]->v);
             applicationIssueEmail(c, e);
