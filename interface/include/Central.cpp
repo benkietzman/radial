@@ -871,6 +871,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
         {
           b = true;
           o->i("id", id);
+          o->i("BenStatus", "okay");
           if (!empty(i, "action") && i->m["action"]->v == "close")
           {
             string sube;
