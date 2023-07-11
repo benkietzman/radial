@@ -52,10 +52,8 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
     {
       in.push_back(i->j(strJson));
     }
-chat("#radial", ptJson->j(strJson));
     if (m_pJunction->request(in, out, strError))
     {
-chat("#radial", "okay");
       bResult = true;
       ptJson->m["Response"] = new Json;
       for (auto &i : out)
@@ -63,10 +61,6 @@ chat("#radial", "okay");
         ptJson->m["Response"]->l.push_back(new Json(i));
       }
     }
-else
-{
-chat("#radial", strError);
-}
   }
   else
   {
