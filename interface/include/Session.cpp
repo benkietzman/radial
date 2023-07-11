@@ -34,7 +34,7 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
 {
   bool bResult = false;
   string strError;
-  stringstream ssMessage, strQuery;
+  stringstream ssMessage, ssQuery;
   Json *ptJson;
   radialPacket p;
 
