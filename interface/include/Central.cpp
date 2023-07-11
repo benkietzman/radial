@@ -872,7 +872,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
           b = true;
           o->i("id", id);
           string strJson;
-          chat("#radial", (strign)"0 " + i->json(strJson));
+          chat("#radial", (string)"0 " + i->json(strJson));
           if (!empty(i, "action") && i->m["action"]->v == "close")
           {
             chat("#radial", "0-0");
