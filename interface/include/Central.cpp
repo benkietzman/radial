@@ -834,7 +834,7 @@ bool Central::applicationIssueComment(radialUser &d, string &e)
   if (dep({"id"}, i, e))
   {
     map<string, string> r;
-    if (db("dbCentralApplicationIssues", i, r, e))
+    if (db("dbCentralApplicationIssueComments", i, r, e))
     {
       if (!r.empty())
       {
