@@ -1262,7 +1262,7 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
 {
   stringstream qs;
 
-  qs << "select a.id, c.email, c.first-name, c.last_name, a.notify, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  qs << "select a.id, c.email, c.first_name, c.last_name, a.notify, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
   if (!empty(i, "id"))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
