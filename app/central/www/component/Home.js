@@ -22,7 +22,10 @@ export default
       // }}}
       a: a,
       c: c,
-      message: null
+      message: null,
+      numApplications: 0,
+      numServers: 0,
+      numUsers: 0
     });
     c.setMenu('Home', null);
   },
@@ -32,48 +35,43 @@ export default
   {{#if message}}
   <div class="text-danger" style="font-weight:bold;"><br><br>{{message}}<br><br></div>
   {{/if}}
-  <div class="row">
-    <div class="page-header row" style="margin-top: 0px;">
-      <div class="col-md-6">
-        <h3 style="margin-top: 0px;"><small>Welcome to</small><br>Central<small> of AT&amp;T</small></h3>
-      </div>
-      <div class="col-md-6">
-        <div class="row">
-          <div class="col-md-4">
-            <div ng-show="store.numApplications" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-warning" href="#/Applications"><b>Applications:</b> {{store.numApplications | number}}</a>
-            </div>
+  <div class="page-header row" style="margin-top: 0px;">
+    <div class="col-md-6">
+      <h4 style="margin-top: 0px;">Welcome to Central</h4>
+    </div>
+    <div class="col-md-6">
+      <div class="row">
+        <div class="col-md-4">
+          <div ng-show="store.numApplications" class="well" style="padding: 10px; text-align: center;">
+            <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
           </div>
-          <div class="col-md-4">
-            <div ng-show="store.numServers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-success" href="#/Servers"><b>Servers:</b> {{store.numServers | number}}</a>
-            </div>
+        </div>
+        <div class="col-md-4">
+          <div ng-show="store.numServers" class="well" style="padding: 10px; text-align: center;">
+            <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers 0}}</a>
           </div>
-          <div class="col-md-4">
-            <div ng-show="store.numUsers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-info" href="#/Users"><b>Users:</b> {{store.numUsers | number}}</a>
-            </div>
+        </div>
+        <div class="col-md-4">
+          <div ng-show="store.numUsers" class="well" style="padding: 10px; text-align: center;">
+            <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
           </div>
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-12">
-        <p>
-          This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
-        </p>
-        <p>
-          Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into the <a href="/central/#/Applications/54">System Information</a> (aka: Central Monitor) application which actively monitors the health of servers as well as the daemonized services of applications.
-        </p>
-        {{#if info}}
-        <div class="text-warning"><br><br>{{info}}<br><br></div>
-        {{/if}}
-      </div>
-    </div>
+  </div>
+  <div class="row">
+    <p>
+      This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
+    </p>
+    <p>
+      Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into the <a href="/central/#/Applications/54">System Information</a> (aka: Central Monitor) application which actively monitors the health of servers as well as the daemonized services of applications.
+    </p>
+    {{#if info}}
+    <div class="text-warning"><br><br>{{info}}<br><br></div>
+    {{/if}}
   </div>
   <div class="row">
     <div class="col-md-5">
-      <!-- {{{ Front Door -->
       <div class="panel panel-success" style="display: table; box-shadow: 3px 3px 4px black;">
         <div class="panel-heading" style="font-weight:bold;">
           Front Door
@@ -87,10 +85,8 @@ export default
           </p>
         </div>
       </div>
-      <!-- }}} -->
     </div>
     <div class="col-md-7">
-      <!-- {{{ Workload -->
       <div class="panel panel-warning" style="display: table; box-shadow: 3px 3px 4px black;">
         <div class="panel-heading" style="font-weight:bold;">
           Workload
@@ -104,7 +100,6 @@ export default
           </p>
         </div>
       </div>
-      <!-- }}} -->
     </div>
   </div>
   `
