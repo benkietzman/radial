@@ -2618,14 +2618,17 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
 bool Central::footer(radialUser &d, string &e)
 {
   bool b = true;
-  int nYear;
-  stringstream ssYear;
   Json *i = d.p->m["i"], *o;
 
   d.p->i("o", i);
   o = d.p->m["o"];
-  ssYear << m_date.getYear(nYear);
-  o->i("year", ssYear.str(), 'n');
+  if (!empty(i, "year"))
+  {
+    int nYear;
+    stringstream ssYear;
+    ssYear << m_date.getYear(nYear);
+    o->i("year", ssYear.str(), 'n');
+  }
   if (!empty(i, "userid"))
   {
     radialUser a;
