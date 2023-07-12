@@ -35,23 +35,23 @@ export default
   <div class="row">
     <div class="page-header row" style="margin-top: 0px;">
       <div class="col-md-6">
-        <h3 style="margin-top: 0px;"><small>Welcome to</small><br>Central<small> of AT&amp;T</small></h3>
+        <h3 style="margin-top: 0px;"><small>Welcome to</small><br>Central<small></small></h3>
       </div>
       <div class="col-md-6">
         <div class="row">
           <div class="col-md-4">
             <div ng-show="store.numApplications" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-warning" href="#/Applications"><b>Applications:</b> {{store.numApplications | number}}</a>
+              <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications}}</a>
             </div>
           </div>
           <div class="col-md-4">
             <div ng-show="store.numServers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-success" href="#/Servers"><b>Servers:</b> {{store.numServers | number}}</a>
+              <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers}}</a>
             </div>
           </div>
           <div class="col-md-4">
             <div ng-show="store.numUsers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-info" href="#/Users"><b>Users:</b> {{store.numUsers | number}}</a>
+              <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers}}</a>
             </div>
           </div>
         </div>
@@ -73,7 +73,6 @@ export default
   </div>
   <div class="row">
     <div class="col-md-5">
-      <!-- {{{ Front Door -->
       <div class="panel panel-success" style="display: table; box-shadow: 3px 3px 4px black;">
         <div class="panel-heading" style="font-weight:bold;">
           Front Door
@@ -87,10 +86,8 @@ export default
           </p>
         </div>
       </div>
-      <!-- }}} -->
     </div>
     <div class="col-md-7">
-      <!-- {{{ Workload -->
       <div class="panel panel-warning" style="display: table; box-shadow: 3px 3px 4px black;">
         <div class="panel-heading" style="font-weight:bold;">
           Workload
@@ -104,7 +101,6 @@ export default
           </p>
         </div>
       </div>
-      <!-- }}} -->
     </div>
   </div>
   `

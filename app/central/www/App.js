@@ -40,6 +40,18 @@ class App
     });
   }
   // }}}
+  // {{{ ready()
+  ready(response, error)
+  {
+    if (!this.m_bReady && this.m_bCommonAuthReady && this.m_bCommonFooterReady && this.m_bCommonWsReady)
+    {
+      this.m_bReady = true;
+      this.c.dispatchEvent('appReady', null);
+    }
+
+    return this.m_bReady;
+  }
+  // }}}
   // {{{ resetMenu()
   resetMenu()
   {
