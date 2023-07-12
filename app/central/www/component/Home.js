@@ -22,7 +22,10 @@ export default
       // }}}
       a: a,
       c: c,
-      message: null
+      message: null,
+      numApplications: 0,
+      numServers: 0,
+      numUsers: 0
     });
     c.setMenu('Home', null);
   },
@@ -41,17 +44,17 @@ export default
         <div class="row">
           <div class="col-md-4">
             <div ng-show="store.numApplications" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications}}</a>
+              <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
             </div>
           </div>
           <div class="col-md-4">
             <div ng-show="store.numServers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers}}</a>
+              <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers 0}}</a>
             </div>
           </div>
           <div class="col-md-4">
             <div ng-show="store.numUsers" class="well" style="padding: 10px; text-align: center;">
-              <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers}}</a>
+              <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
             </div>
           </div>
         </div>
