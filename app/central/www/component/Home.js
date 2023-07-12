@@ -35,7 +35,7 @@ export default
   <div class="row">
     <div class="page-header row" style="margin-top: 0px;">
       <div class="col-md-6">
-        <h3 style="margin-top: 0px;"><small>Welcome to</small><br>Central<small></small></h3>
+        <h4 style="margin-top: 0px;">Welcome to Central</h4>
       </div>
       <div class="col-md-6">
         <div class="row">
