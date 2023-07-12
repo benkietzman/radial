@@ -2115,7 +2115,10 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
                   if (exist(i, "notify") && !empty(i->m["notify"], "value"))
                   {
                     string id, q;
+                    i->i("admin", i->m["admin"]->m["value"]->v);
                     i->i("contact_id", f.p->m["o"]->m["id"]->v);
+                    i->i("locked", i->m["locked"]->m["value"]->v);
+                    i->i("notify", i->m["notify"]->m["value"]->v);
                     i->i("type_id", h.p->m["o"]->m["id"]->v);
                     if (db("dbCentralApplicationUserAdd", i, id, q, e))
                     {
@@ -2228,7 +2231,10 @@ bool Central::applicationUserEdit(radialUser &d, string &e)
                   {
                     if (exist(i, "notify") && !empty(i->m["notify"], "value"))
                     {
+                      i->i("admin", i->m["admin"]->m["value"]->v);
                       i->i("contact_id", h.p->m["o"]->m["id"]->v);
+                      i->i("locked", i->m["locked"]->m["value"]->v);
+                      i->i("notify", i->m["notify"]->m["value"]->v);
                       i->i("type_id", k.p->m["o"]->m["id"]->v);
                       b = db("dbCentralApplicationUserUpdate", i, e);
                     }
