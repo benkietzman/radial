@@ -42,19 +42,25 @@ export default
     <div class="col-md-6">
       <div class="row">
         <div class="col-md-4">
-          <div ng-show="store.numApplications" class="well" style="padding: 10px; text-align: center;">
+          {{#if numApplications}}
+          <div class="card card-body card-inverse" style="text-align: center;">
             <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
           </div>
+          {{/if}}
         </div>
         <div class="col-md-4">
-          <div ng-show="store.numServers" class="well" style="padding: 10px; text-align: center;">
+          {{#if numServers}}
+          <div class="card card-body card-inverse" style="text-align: center;">
             <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers 0}}</a>
           </div>
+          {{/if}}
         </div>
         <div class="col-md-4">
-          <div ng-show="store.numUsers" class="well" style="padding: 10px; text-align: center;">
+          {{#if numUsers}}
+          <div class="card card-body card-inverse" style="text-align: center;">
             <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
           </div>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -72,11 +78,11 @@ export default
   </div>
   <div class="row">
     <div class="col-md-5">
-      <div class="panel panel-success" style="display: table; box-shadow: 3px 3px 4px black;">
-        <div class="panel-heading" style="font-weight:bold;">
+      <div class="card"">
+        <div class="card-header bg-success text-white" style="font-weight: bold;">
           Front Door
         </div>
-        <div class="panel-body">
+        <div class="card-body">
           <p>
             Please use the <a href="/central/#/Home/FrontDoor">Front Door</a> when creating a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.
           </p>
@@ -87,11 +93,11 @@ export default
       </div>
     </div>
     <div class="col-md-7">
-      <div class="panel panel-warning" style="display: table; box-shadow: 3px 3px 4px black;">
-        <div class="panel-heading" style="font-weight:bold;">
+      <div class="card ">
+        <div class="card-header bg-warning text-white" style="font-weight: bold;">
           Workload
         </div>
-        <div class="panel-body">
+        <div class="card-body">
           <p>
             Developers may access the <a href="/central/#/Applications/Workload">Workload</a> section of Central in order to view their list of open application issues for which they are registered as a primary/backup developer.  The Workload displays issues sorted by priority, due date, and open date.  This helps to keep developers organized in how they tackle their daily issues.
           </p>

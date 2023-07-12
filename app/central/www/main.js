@@ -10,9 +10,10 @@ let common = new Common(
   application: 'Central',
   footer:
   {
+    server: 'kietzman.org',
     subject: 'Central',
-    userid: 'ben', // TODO
-    version: '2.0'
+    userid: 'ben',
+    version: '3.0'
   },
   loads:
   {
