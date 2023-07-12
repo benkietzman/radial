@@ -2622,7 +2622,7 @@ bool Central::footer(radialUser &d, string &e)
 
   d.p->i("o", i);
   o = d.p->m["o"];
-  if (!empty(i, "year"))
+  if (!exist(i, "year"))
   {
     int nYear;
     stringstream ssYear;
