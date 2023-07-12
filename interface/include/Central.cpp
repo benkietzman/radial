@@ -73,6 +73,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationUsersByApplicationID"] = &Central::applicationUsersByApplicationID;
   m_functions["contactType"] = &Central::contactType;
   m_functions["dependentsByApplicationID"] = &Central::dependentsByApplicationID;
+  m_functions["footer"] = &Central::loginType;
   m_functions["isApplicationDeveloper"] = &Central::isApplicationDeveloper;
   m_functions["isServerAdmin"] = &Central::isServerAdmin;
   m_functions["loginType"] = &Central::loginType;
@@ -2606,6 +2607,45 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
           o->m["dependents"]->pb(j);
           delete j;
         }
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ footer()
+bool Central::footer(radialUser &d, string &e)
+{
+  bool b = false;
+  int nYear;
+  stringstream ssYear;
+  Json *i = d.p->m["i"], *o;
+
+  d.p->i("o", i);
+  o = d.p->m["o"];
+  ssYear << m_date.getYear(nYear);
+  o->i("year", ssYear.str(), 'n');
+  if (!empty(i, "userid"))
+  {
+    map<string, string> r;
+    if (db("dbCentralUsers", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        o->i("engineer", r);
+        if (!empty(i, "server"))
+        {
+          stringstream ssLink;
+          ssLink << "https://" << i->m["server"]->v << "/central/#/Users/" << r["id"];
+          o->m["engineer"]->i("link", ssLink.str());
+        }
+        o->m["engineer"]->i("target", "_blank");
+      }
+      else
+      {
+        e = "No results returned.";
       }
     }
   }

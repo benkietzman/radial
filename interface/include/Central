@@ -79,6 +79,7 @@ class Central : public Interface
   bool dbu(const string strQuery, string &strID, string &e);
   bool dep(const list<string> fs, Json *i, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
+  bool footer(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
