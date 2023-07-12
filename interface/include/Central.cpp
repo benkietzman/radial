@@ -2622,21 +2622,17 @@ bool Central::footer(radialUser &d, string &e)
   stringstream ssYear;
   Json *i = d.p->m["i"], *o;
 
-string j;
-chat("#radial", i->j(j));
   d.p->i("o", i);
   o = d.p->m["o"];
   ssYear << m_date.getYear(nYear);
   o->i("year", ssYear.str(), 'n');
-chat("#radial", o->j(j));
   if (!empty(i, "userid"))
   {
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("userid", i->m["userid"]->v);
-    if (users(a, e) && !empty(a.p->m["o"], "id"))
+    if (user(a, e) && !empty(a.p->m["o"], "id"))
     {
-chat("#radial", a.p->j(j));
       if (!empty(i, "server"))
       {
         stringstream ssLink;
@@ -2648,7 +2644,6 @@ chat("#radial", a.p->j(j));
     }
     userDeinit(a);
   }
-chat("#radial", o->j(j));
 
   return b;
 }
