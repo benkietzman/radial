@@ -2617,7 +2617,7 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
 // {{{ footer()
 bool Central::footer(radialUser &d, string &e)
 {
-  bool b = false;
+  bool b = true;
   int nYear;
   stringstream ssYear;
   Json *i = d.p->m["i"], *o;
@@ -2628,26 +2628,21 @@ bool Central::footer(radialUser &d, string &e)
   o->i("year", ssYear.str(), 'n');
   if (!empty(i, "userid"))
   {
-    map<string, string> r;
-    if (db("dbCentralUsers", i, r, e))
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("userid", i->m["userid"]->v);
+    if (users(a, e) && !empty(a.p->m["o"], "id"))
     {
-      if (!r.empty())
+      o->i("engineer", a.p->m["o"]);
+      if (!empty(i, "server"))
       {
-        b = true;
-        o->i("engineer", r);
-        if (!empty(i, "server"))
-        {
-          stringstream ssLink;
-          ssLink << "https://" << i->m["server"]->v << "/central/#/Users/" << r["id"];
-          o->m["engineer"]->i("link", ssLink.str());
-        }
-        o->m["engineer"]->i("target", "_blank");
+        stringstream ssLink;
+        ssLink << "https://" << i->m["server"]->v << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
+        o->m["engineer"]->i("link", ssLink.str());
       }
-      else
-      {
-        e = "No results returned.";
-      }
+      o->m["engineer"]->i("target", "_blank");
     }
+    userDeinit(a);
   }
 
   return b;
