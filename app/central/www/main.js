@@ -53,7 +53,7 @@ let common = new Common(
 });
 common.enableJwt(true);
 common.enableJwtInclusion(true);
-common.setRedirectPath('https://kietzman.org/finance'); // TODO
+common.setRedirectPath('https://kietzman.org/central'); // TODO
 common.setSecureLogin(true);
 common.wsCreate('radial', 'kietzman.org', '7797', true, 'radial'); // TODO
 let app = new App(

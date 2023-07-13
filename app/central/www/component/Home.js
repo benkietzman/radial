@@ -28,6 +28,55 @@ export default
       numUsers: 0
     });
     c.setMenu('Home', null);
+    // {{{ load()
+    let load = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'applications', Request: {count: 1}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.numApplications = response.Response[0].num;
+          c.render(id, 'Home', this);
+        }
+      });
+      request = {Interface: 'central', 'Function': 'servers', Request: {count: 1}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.numServers = response.Response[0].num;
+          c.render(id, 'Home', this);
+        }
+      });
+      request = {Interface: 'central', 'Function': 'users', Request: {count: 1}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.numUsers = response.Response[0].num;
+          c.render(id, 'Home', this);
+        }
+      });
+    };
+    // }}}
+    if (a.ready())
+    {
+      load();
+    }
+    else
+    {
+      s.info = 'Authenticating session...';
+    }
+    c.attachEvent('appReady', (data) =>
+    {
+      s.info = null
+      c.render(id, 'Home', this);
+      load();
+    });
   },
   // }}}
   // {{{ template
