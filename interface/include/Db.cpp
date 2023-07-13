@@ -606,7 +606,16 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
   }
   else
   {
-    qs << "select id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, highlight, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki from application where 1";
+    qs << "select";
+    if (!empty(i, "count") && i->m["count"]->v == "1")
+    {
+      qs << " count(id) num";
+    }
+    else
+    {
+      qs << " id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, highlight, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki";
+    }
+    qs << " from application where 1";
     if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
     {
       qs << " and dependable = 1";
@@ -1182,7 +1191,16 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
   }
   else
   {
-    qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory from server where 1";
+    qs << "select";
+    if (!empty(i, "count") && i->m["count"]->v == "1")
+    {
+      qs << " count(id) num";
+    }
+    else
+    {
+      qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory";
+    }
+    qs << " from server where 1";
     if (!empty(i, "id"))
     {
       qs << " and id = " << v(i->m["id"]->v);
@@ -1372,7 +1390,16 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  qs << "select id, active, admin, email, first_name, last_name, locked, pager, userid from person where 1";
+  qs << "select";
+  if (!empty(i, "count") && i->m["count"]->v == "1")
+  {
+    qs << " count(id) num";
+  }
+  else
+  {
+    qs << " id, active, admin, email, first_name, last_name, locked, pager, userid";
+  }
+  qs << " from person where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
