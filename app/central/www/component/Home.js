@@ -21,12 +21,7 @@ export default
       },
       // }}}
       a: a,
-      c: c,
-      centralMonitor: null,
-      message: null,
-      numApplications: 0,
-      numServers: 0,
-      numUsers: 0
+      c: c
     });
     c.setMenu('Home', null);
     // {{{ load()
