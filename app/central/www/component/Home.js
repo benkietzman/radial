@@ -22,11 +22,11 @@ export default
       // }}}
       a: a,
       c: c,
+      centralMonitor: null,
       message: null,
       numApplications: 0,
       numServers: 0,
-      numUsers: 0,
-      systemInformation: null
+      numUsers: 0
     });
     c.setMenu('Home', null);
     // {{{ load()
@@ -62,14 +62,27 @@ export default
           c.render(id, 'Home', this);
         }
       });
-      request = {Interface: 'central', 'Function': 'application', Request: {name: 'System Information'}};
+      request = {Interface: 'central', 'Function': 'application', Request: {name: 'Central Monitor'}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.systemInformation = response.Response;
+          s.centralMonitor = response.Response;
           c.render(id, 'Home', this);
+        }
+        else if (error.message == 'No results returned.');
+        {
+          let request = {Interface: 'central', 'Function': 'application', Request: {name: 'System Information'}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              s.centralMonitor = response.Response;
+              c.render(id, 'Home', this);
+            }
+          });
         }
       });
     };
@@ -130,7 +143,7 @@ export default
       This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
     </p>
     <p>
-      Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into the <a href="/central/#/Applications/{{{systemInformation.id}}}">System Information</a> (aka: Central Monitor) application which actively monitors the health of servers as well as the daemonized services of applications.
+      Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into the <a href="/central/#/Applications/{{{centralMonitor.id}}}">Central Monitor</a> application which actively monitors the health of servers as well as the daemonized services of applications.
     </p>
     {{#if info}}
     <div class="text-warning"><br><br>{{info}}<br><br></div>
