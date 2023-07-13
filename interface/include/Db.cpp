@@ -627,9 +627,17 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
         qs << " upper(name) like '" << i->m["letter"]->v << "%'";
       }
     }
+    if (!empty(i, "menu") && i->m["menu"]->v == "1")
+    {
+      qs << " and menu_id > 0";
+    }
     if (!empty(i, "name"))
     {
       qs << " and name = " << v(i->m["name"]->v);
+    }
+    if (!empty(i, "retired"))
+    {
+      qs << " and retirement_date is" << ((i->m["retired"]->v == "1")?" not":"") << " null";
     }
     qs << " order by name";
     if (!empty(i, "page"))
