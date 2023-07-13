@@ -174,12 +174,21 @@ export default
     {
       if (c.isObject(s.narrow))
       {
+        let selectApplication = document.getElementById("selectApplication");
+        while (selectApplication.length > 0)
+        {
+          selectApplication.remove(0);
+        }
         for (let i = 0; i < s.applications.length; i++)
         {
-          s.applications[i].display = ((s.narrow.v == '' || s.applications[i].name.search(new RegExp(s.narrow.v, 'i')) != -1)?true:false);
+          if (s.narrow.v == '' || s.applications[i].name.search(new RegExp(s.narrow.v, 'i')) != -1)
+          {
+            let option = document.createElement("option");
+            option.text = s.applications[i].name;
+            option.value = s.applications[i].id;
+            selectApplication.add(option);
+          }
         }
-        s.u();
-        document.getElementById('narrow').focus();
       }
     }
     // }}}
@@ -196,6 +205,10 @@ export default
       s.info = null;
       s.u();
       s.loadApplications();
+    });
+    c.attachEvent('render', (data) =>
+    {
+      s.narrowApplications();
     });
   },
   // }}}
@@ -214,12 +227,10 @@ export default
       <div class="row">
         <div class="col-md-3" style="padding-top: 10px;">
           {{#if ../applications}}
-          <div class="input-group"><span class="input-group-text">App</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-keyup="narrowApplications()" placeholder="Narrow"></div>
-          <select class="form-control" c-model="selectApplication" c-change="loadApplication()" size="2" style="height: 200px;">
+          <div class="input-group"><span class="input-group-text">App</span><input type="text" class="form-control" c-model="narrow" c-keyup="narrowApplications()" placeholder="Narrow"></div>
+          <select class="form-control" id="selectApplication" c-model="selectApplication" c-change="loadApplication()" size="2" style="height: 200px;">
             {{#each ../applications}}
-              {{#if ./display}}
-              <option value="{{./id}}">{{./name}}</option>
-              {{/if}}
+            <option value="{{./id}}">{{./name}}</option>
             {{/each}}
           </select>
           {{/if}}
