@@ -24,11 +24,11 @@ export default
       c: c
     });
     c.setMenu('Home', 'FrontDoor');
+    s.u();
     // {{{ addIssue()
     s.addIssue = () =>
     {
-      s.info = 'Adding issue...';
-      s.u();
+      s.info.v = 'Adding issue...';
       let request = {Interface: 'central', 'Function': 'applicationIssueAdd'};
       request.Request = {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary, due_date: s.issue.due_date, priority: s.issue.priority, assigned_userid: s.issue.assigned_userid, comments: s.issue.comments, server: 'kietzman.org'};
       c.wsRequest('radial', request).then((response) =>
@@ -36,15 +36,13 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.info = 'Redirecting...';
+          s.info.v = 'Redirecting...';
           document.location.href = '#/Applications/' + s.application.id + '/Issues/' + response.Response.id;
         }
         else
         {
-          s.info = null;
-          s.message = error.message;
+          s.message.v = error.message;
         }
-        s.u();
       });
     };
     // }}}
@@ -53,8 +51,7 @@ export default
     {
       if (c.isValid() && s.selectApplication)
       {
-        s.info = 'Retrieving application...';
-        s.u();
+        s.info.v = 'Retrieving application...';
         let request = {Interface: 'central', 'Function': 'application'};
         request.Request = {id: s.selectApplication.v};
         c.wsRequest('radial', request).then((response) =>
@@ -62,17 +59,17 @@ export default
           let error = {};
           s.application = null;
           s.issue = null;
-          s.info = null;
+          s.info.v = null;
           if (c.wsResponse(response, error))
           {
             s.application = response.Response;
             s.issue = {priority: '1'};
+            s.u();
           }
           else
           {
-            s.message = error.message;
+            s.message.v = error.message;
           }
-          s.u();
         });
       }
       else
@@ -80,7 +77,6 @@ export default
         s.application = null;
         s.issue = null;
       }
-      s.u();
     };
     // }}}
     // {{{ loadApplications()
@@ -88,20 +84,19 @@ export default
     {
       if (c.isValid())
       {
-        s.info = 'Retrieving applications...';
+        s.info.v = 'Retrieving applications...';
         let request = {Interface: 'central', 'Function': 'applications', Request: {}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.info = null;
+            s.info.v = null;
             s.applications = response.Response;
             for (let i = 0; i < s.applications.length; i++)
             {
               s.applications[i].display = true;
             }
-            s.narrowApplications();
             if (c.isObject(nav.data) && c.isDefined(nav.data.id))
             {
               let bFound = false; 
@@ -120,13 +115,13 @@ export default
             }
             else if (c.isObject(nav.data) && c.isDefined(nav.data.application))
             {
-              s.info = 'Retrieving application...';
+              s.info.v = 'Retrieving application...';
               let request = {Interface: 'central', 'Function': 'application'};
               request.Request = {name: $routeParams.application};
               c.wsRequest('radial', request).then((response) =>
               {
                 let error = {};
-                s.info = null;
+                s.info.v = null;
                 if (c.wsResponse(response, error))
                 {
                   let bFound = false;
@@ -145,52 +140,27 @@ export default
                 }
                 else
                 {
-                  s.message = error.message;
+                  s.message.v = error.message;
                 }
-                s.u();
               });
             }
             else
             {
-              s.info = 'Please select the appropriate Application.';
+              s.info.v = 'Please select the appropriate Application.';
             }
+            s.u();
           }
           else
           {
-            s.message = error.message;
+            s.message.v = error.message;
           }
-          s.u()
         });
       }
       else
       {
-        s.info = 'Please login to create an application issue.';
+        s.info.v = 'Please login to create an application issue.';
       }
-      s.u();
     };
-    // }}}
-    // {{{ narrowApplications()
-    s.narrowApplications = () =>
-    {
-      if (c.isObject(s.narrow))
-      {
-        let selectApplication = document.getElementById("selectApplication");
-        while (selectApplication.length > 0)
-        {
-          selectApplication.remove(0);
-        }
-        for (let i = 0; i < s.applications.length; i++)
-        {
-          if (s.narrow.v == '' || s.applications[i].name.search(new RegExp(s.narrow.v, 'i')) != -1)
-          {
-            let option = document.createElement("option");
-            option.text = s.applications[i].name;
-            option.value = s.applications[i].id;
-            selectApplication.add(option);
-          }
-        }
-      }
-    }
     // }}}
     if (a.ready())
     {
@@ -198,47 +168,38 @@ export default
     }
     else
     {
-      s.info = 'Authenticating session...';
+      s.info.v = 'Authenticating session...';
     }
     c.attachEvent('appReady', (data) =>
     {
-      s.info = null;
-      s.u();
+      s.info.v = null;
       s.loadApplications();
-    });
-    c.attachEvent('render', (data) =>
-    {
-      s.narrowApplications();
     });
   },
   // }}}
   // {{{ template
   template: `
-  <h3 class="page-header">Front Door - Create an Application Issue</h3>
-  {{#if message}}
-  <div class="text-danger" style="font-weight:bold;"><br><br>{{message}}<br><br></div>
-  {{/if}}
+  <h3 class="page-header">Create an Application Issue</h3>
   <p>
     The Front Door provides a comprehensive list of applications from which to choose.  You can use the App field to narrow the list of applications.  The primary/backup developers of the given application will be notified of the newly created issue and will receive a weekly <a href="/central/#/Applications/Workload">Workload</a> reminder of all of their outstanding open issues.
   </p>
   <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-8">
+      <div c-model="info" class="text-warning"></div>
+      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#isValid}}
       <div class="row">
         <div class="col-md-3" style="padding-top: 10px;">
           {{#if ../applications}}
-          <div class="input-group"><span class="input-group-text">App</span><input type="text" class="form-control" c-model="narrow" c-keyup="narrowApplications()" placeholder="Narrow"></div>
+          <div class="input-group"><span class="input-group-text">App</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow"></div>
           <select class="form-control" id="selectApplication" c-model="selectApplication" c-change="loadApplication()" size="2" style="height: 200px;">
-            {{#each ../applications}}
-            <option value="{{./id}}">{{./name}}</option>
-            {{/each}}
+            {{#eachFilter ../applications 'name' ../narrow}}
+            <option value="{{./id}}"{{#ifCond ../selectApplication '==' ./id}} selected{{/ifCond}}>{{./name}}</option>
+            {{/eachFilter}}
           </select>
           {{/if}}
         </div>
         <div class="col-md-9">
-          {{#if ../info}}
-          <div class="text-warning"><br>{{../info}}<br></div>
-          {{/if}}
           {{#if ../application}}
           {{#if ../issue}}
           <div class="card">
@@ -269,7 +230,7 @@ export default
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success float-end" c-click="addIssue()">Add Issue</button>
+                  <button class="btn btn-success float-end" c-click="addIssue()">Create Issue</button>
                 </div>
               </div>
             </div>

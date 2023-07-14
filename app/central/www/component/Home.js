@@ -23,7 +23,8 @@ export default
       a: a,
       c: c
     });
-    c.setMenu('Home', null);
+    c.setMenu('Home');
+    s.u();
     // {{{ load()
     let load = () =>
     {
@@ -88,21 +89,17 @@ export default
     }
     else
     {
-      s.info = 'Authenticating session...';
+      s.info.v = 'Authenticating session...';
     }
     c.attachEvent('appReady', (data) =>
     {
-      s.info = null;
-      s.u();
+      s.info.v = null;
       load();
     });
   },
   // }}}
   // {{{ template
   template: `
-  {{#if message}}
-  <div class="text-danger" style="font-weight:bold;"><br><br>{{message}}<br><br></div>
-  {{/if}}
   <div class="page-header row" style="margin-top: 0px;">
     <div class="col-md-6">
       <h4 style="margin-top: 0px;">Welcome to Central</h4>
@@ -140,10 +137,9 @@ export default
     <p>
       Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into <a href="/central/#/Applications/{{centralMonitor.id}}">Central Monitor</a> which actively monitors the health of servers as well as the daemonized services of applications.
     </p>
-    {{#if info}}
-    <div class="text-warning"><br><br>{{info}}<br><br></div>
-    {{/if}}
   </div>
+  <div c-model="info" class="text-warning"></div>
+  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="row">
     <div class="col-md-5">
       <div class="card"">
