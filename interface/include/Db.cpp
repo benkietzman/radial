@@ -1137,7 +1137,7 @@ bool Db::dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e)
   if (dep({"name"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"cpu_usage", "description", "disk_size", "main_memory", "name", "processes", "swap_memory"};
+    list<string> ks = {"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes", "state", "swap_memory", "zipcode"};
     stringstream qs;
     qs << "insert into server (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -1198,7 +1198,7 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
     }
     else
     {
-      qs << "select id, cpu_usage, description, disk_size, main_memory, name, processes, swap_memory";
+      qs << "select id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, state, swap_memory, zipcode";
     }
     qs << " from server where 1";
     if (!empty(i, "id"))
@@ -1220,6 +1220,10 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
     {
       qs << " and name = " << v(i->m["name"]->v);
     } 
+    if (!empty(i, "parent_id"))
+    {
+      qs << " and parent_id = " << v(i->m["parent_id"]->v);
+    }
     qs << " order by name";
     if (!empty(i, "page"))
     {
@@ -1244,7 +1248,7 @@ bool Db::dbCentralServerUpdate(Json *i, Json *o, string &id, string &q, string &
   {
     bool f = true;
     stringstream qs;
-    qs << "update server set" << u({"cpu_usage", "description", "disk_size", "main_memory", "name", "processes", "swap_memory"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update server set" << u({"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes", "state", "swap_memory", "zipcode"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
@@ -1288,7 +1292,7 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
 {
   stringstream qs;
 
-  qs << "select a.id, c.email, c.first_name, c.last_name, a.notify, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  qs << "select a.id, c.email, c.first_name, c.last_name, a.notify, a.physical_access, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
   if (!empty(i, "id"))
   {
     qs << " and a.id = " << v(i->m["id"]->v);

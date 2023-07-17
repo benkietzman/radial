@@ -99,6 +99,7 @@ class Central : public Interface
   bool serverRemove(radialUser &d, string &e);
   bool servers(radialUser &d, string &e);
   bool serversByApplicationID(radialUser &d, string &e);
+  bool serversByParentID(radialUser &d, string &e);
   bool serversByUserID(radialUser &d, string &e);
   bool serverUser(radialUser &d, string &e);
   bool serverUserAdd(radialUser &d, string &e);

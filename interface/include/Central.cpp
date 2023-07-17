@@ -92,6 +92,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["serverRemove"] = &Central::serverRemove;
   m_functions["servers"] = &Central::servers;
   m_functions["serversByApplicationID"] = &Central::serversByApplicationID;
+  m_functions["serversByParentID"] = &Central::serversByParentID;
   m_functions["serversByUserID"] = &Central::serversByUserID;
   m_functions["serverUser"] = &Central::serverUser;
   m_functions["serverUserAdd"] = &Central::serverUserAdd;
@@ -3022,6 +3023,10 @@ bool Central::serverEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
+      if (exist(i, "parent") && !empty(i->m["parent"], "id"))
+      {
+        i->i("parent_id", i->m["parent"]->m["id"]->v);
+      }
       b = db("dbCentralServerUpdate", i, e);
     }
     else
@@ -3429,6 +3434,28 @@ bool Central::serversByApplicationID(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ serversByParentID()
+bool Central::serversByParentID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  
+  if (dep({"parent_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralServers", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        o->pb(r);
+      }
+    } 
+  } 
+
+  return b;
+} 
+// }}}
 // {{{ serversByUserID()
 bool Central::serversByUserID(radialUser &d, string &e)
 {
@@ -3713,6 +3740,7 @@ bool Central::serverUsersByServerID(radialUser &d, string &e)
         radialUser a;
         Json *j = new Json(r);
         ny(j, "notify");
+        ny(j, "physical_access");
         userInit(d, a);
         a.p->m["i"]->i("id", r["type_id"]);
         if (contactType(a, e))
