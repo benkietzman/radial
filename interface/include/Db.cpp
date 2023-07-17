@@ -358,7 +358,7 @@ bool Db::dbCentralApplicationAdd(Json *i, Json *o, string &id, string &q, string
   if (dep({"name"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"account_check", "auto_register", "dependable", "description", "highlight", "login_type_id", "menu_id", "name", "notify_priority_id", "package_type_id", "retirement_date", "secure_port", "website", "wiki"};
+    list<string> ks = {"account_check", "auto_register", "dependable", "description", "login_type_id", "menu_id", "name", "notify_priority_id", "package_type_id", "retirement_date", "secure_port", "website", "wiki"};
     stringstream qs;
     i->i("creation_date", "now()");
     qs << "insert into application (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
@@ -613,7 +613,7 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
     }
     else
     {
-      qs << " id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, highlight, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki";
+      qs << " id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website, wiki";
     }
     qs << " from application where 1";
     if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
@@ -782,7 +782,7 @@ bool Db::dbCentralApplicationUpdate(Json *i, Json *o, string &id, string &q, str
   {
     bool f = true;
     stringstream qs;
-    qs << "update application set" << u({"account_check", "auto_register", "dependable", "description", "highlight", "login_type_id", "menu_id", "name", "notify_priority_id", "retirement_date", "secure_port", "website", "wiki"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update application set" << u({"account_check", "auto_register", "dependable", "description", "login_type_id", "menu_id", "name", "notify_priority_id", "retirement_date", "secure_port", "website", "wiki"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
