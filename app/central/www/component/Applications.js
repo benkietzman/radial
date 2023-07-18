@@ -677,183 +677,182 @@ export default
     </table>
   </div>
   {{else}}
-  <h3 class="page-header">{{store.application.name}}<small ng-show="store.application.retirement_date" class="text-danger"> --- RETIRED</small></h3>
+  <h3 class="page-header">{{s.application.name}}{{#if s.application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
   <div c-model="info" class="text-warning">{{info}}</div>
   <div c-model="message" class="text-danger" style="font-weight:bold;">{{store.message}}</div>
-  <div class="navbar navbar-default" role="navigation">
-    <div class="container-fluid" id="navfluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#nmanavigationbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-      </div>
-      <div class="collapse navbar-collapse" id="nmanavigationbar">
-        <ul class="nav navbar-nav">
-          <li ng-repeat="form in store.application.forms_order" class="{{store.application.forms[form].active}}" style="font-weight:bold;"><a href="#/Applications/{{store.application.id}}/{{form}}">{{form}}</a></li>
+  <nav class="container navbar navbar-dark bg-dark bg-gradient">
+    <div class="container-fluid">
+      <button type="button" class="navbar-toggle" data-bs-toggle="collapse" data-bs-target="#appnavigationbar" aria-control="appnavigationbar" aria-expanded="false", aria-lable="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="appnavigationbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {{#each s.application.forms_order}}
+          <li class="nav-item"><a class="nav-link {{s.application.forms[.].active}}" href="#/Applications/{{s.application.id}}/{{.}}">{{.}}</a></li>
+          {{/each}}
         </ul>
       </div>
     </div>
-  </div>
-  <div ng-show="store.application.forms.General.active && store.application">
-    <div ng-show="common.isGlobalAdmin() || store.application.bDeveloper" class="pull-right">
-      <div ng-show="!store.application.bEdit" style="white-space: nowrap;">
-        <button class="btn btn-xs btn-warning glyphicon glyphicon-pencil" ng-click="store.application.bEdit = true"></button>
-        <button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeApplication(store.application.id)" style="margin-left: 10px;"></button>
-      </div>
-      <div ng-show="store.application.bEdit" style="white-space: nowrap;">
-        <button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="store.application.bEdit = false"></button>
-        <button class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editApplication()" style="margin-left: 10px;"></button>
-      </div>
+  </nav>
+  {{#if s.application.forms.General.active}}
+  {{#if s.application}}
+  <div ng-show="common.isGlobalAdmin() || store.application.bDeveloper" class="pull-right">
+    <div ng-show="!store.application.bEdit" style="white-space: nowrap;">
+      <button class="btn btn-xs btn-warning glyphicon glyphicon-pencil" ng-click="store.application.bEdit = true"></button>
+      <button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeApplication(store.application.id)" style="margin-left: 10px;"></button>
     </div>
-    <table class="table table-condensed">
-      <tr>
-        <th style="white-space: nowrap;">
-          Application ID:
-        </th>
-        <td>
-          {{store.application.id}}
-        </td>
-      </tr>
-      <tr>
-        <th style="white-space: nowrap;">
-          Application Name:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.name}}</span>
-          <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.name">
-        </td>
-      </tr>
-      <tr>
-        <th style="white-space: nowrap;">
-          Creation Date:
-        </th>
-        <td>
-          {{store.application.creation_date}}
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.retirement_date">
-        <th style="white-space: nowrap;">
-          Retirement Date:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.retirement_date}}</span>
-          <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.retirement_date" placeholder="YYYY-MM-DD">
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.notify_priority_id">
-        <th style="white-space: nowrap;">
-          Notify Priority:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.notify_priority.priority}}</span>
-          <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities"></select>
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.website">
-        <th>
-          Website:
-        </th>
-        <td>
-          <a ng-show="!store.application.bEdit" href="{{store.application.website}}" target="_blank">{{store.application.website}}</a>
-          <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.website">
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.login_type_id">
-        <th style="white-space: nowrap;">
-          Login Type:
-        </th>
-        <td>
-          <div ng-show="!store.application.bEdit" style="white-space: nowrap;">
-            {{store.application.login_type.type}}
-            <br>
-            Secure: {{store.application.secure_port.name}}
-            <br>
-            Auto-Register: {{store.application.auto_register.name}}
-            <br>
-            Account Check: {{store.application.account_check.name}}
-          </div>
-          <div ng-show="store.application.bEdit">
-            <select class="form-control" ng-model="store.application.login_type" ng-options="login_type.type for login_type in store.login_types"></select>
-            <div class="form-inline">
-              <div class="form-group"><div class="input-group"><div class="input-group-addon">Secure</div><select class="form-control" ng-model="store.application.secure_port" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-              <div class="form-group"><div class="input-group"><div class="input-group-addon">Auto-Register</div><select class="form-control" ng-model="store.application.auto_register" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-              <div class="form-group"><div class="input-group"><div class="input-group-addon">Account Check</div><select class="form-control" ng-model="store.application.account_check" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.package_type_id">
-        <th style="white-space: nowrap;">
-          Package Type:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.package_type.type}}</span>
-          <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.package_type" ng-options="package_type.type for package_type in store.package_types"></select>
-        </td>
-      </tr>
-      <tr>
-        <th>
-          Dependable:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.dependable.name}}</span>
-          <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.dependable" ng-options="noyes.name for noyes in central.m_noyes"></select>
-        </td>
-      </tr>
-      <tr ng-show="store.application.bEdit || store.application.menu_id">
-        <th style="white-space: nowrap;">
-          Menu Availability:
-        </th>
-        <td>
-          <span ng-show="!store.application.bEdit">{{store.application.menu_access.type}}</span>
-          <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.menu_access" ng-options="menu_access.type for menu_access in store.menu_accesses"></select>
-        </td>
-      </tr>
-      <tr ng-if="store.application.bEdit || store.application.wiki.value == 1">
-        <th>
-          WIKI:
-        </th>
-        <td>
-          <a ng-show="!store.application.bEdit" href="/wiki/index.php/{{store.application.name | commonURLEncode}}" target="_blank">/wiki/index.php/{{store.application.name}}</a>
-          <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.wiki" ng-options="noyes.name for noyes in central.m_noyes"></select>
-        </td>
-      </tr>
-      <tr>
-        <th>
-          Description:
-        </th>
-        <td>
-          <pre ng-show="!store.application.bEdit" style="background: inherit; color: inherit; white-space: pre-wrap;">{{store.application.description}}</pre>
-          <textarea ng-show="store.application.bEdit" class="form-control" ng-model="store.application.description"></textarea>
-        </td>
-      </tr>
-    </table>
-    <table ng-show="store.application.sysInfo" class="table table-condensed table-striped">
-      <tr>
-        <th>Server</th>
-        <th>Daemon</th>
-        <th>Start Time</th>
-        <th>Owner</th>
-        <th>Processes</th>
-        <th>Image (KB)</th>
-        <th>Resident (KB)</th>
-        <th>Current Alarms</th>
-      </tr>
-      <tr ng-repeat="info in store.application.sysInfo | orderBy:info.Server">
-        <td><a href="#/Servers/{{info.ServerID}}">{{info.Server}}</a></td>
-        <td>{{info.Daemon}}</td>
-        <td>{{info.data.StartTime}}</td>
-        <td>{{info.data.Owners}}</td>
-        <td>{{info.data.NumberOfProcesses | number}}</td>
-        <td>{{info.data.ImageSize | number}}</td>
-        <td>{{info.data.ResidentSize | number}}</td>
-        <td class="text-danger">{{info.data.Alarms}}</td>
-      </tr>
-    </table>
+    <div ng-show="store.application.bEdit" style="white-space: nowrap;">
+      <button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="store.application.bEdit = false"></button>
+      <button class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editApplication()" style="margin-left: 10px;"></button>
+    </div>
   </div>
+  <table class="table table-condensed">
+    <tr>
+      <th style="white-space: nowrap;">
+        Application ID:
+      </th>
+      <td>
+        {{store.application.id}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Application Name:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.name}}</span>
+        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.name">
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Creation Date:
+      </th>
+      <td>
+        {{store.application.creation_date}}
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.retirement_date">
+      <th style="white-space: nowrap;">
+        Retirement Date:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.retirement_date}}</span>
+        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.retirement_date" placeholder="YYYY-MM-DD">
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.notify_priority_id">
+      <th style="white-space: nowrap;">
+        Notify Priority:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.notify_priority.priority}}</span>
+        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities"></select>
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.website">
+      <th>
+        Website:
+      </th>
+      <td>
+        <a ng-show="!store.application.bEdit" href="{{store.application.website}}" target="_blank">{{store.application.website}}</a>
+        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.website">
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.login_type_id">
+      <th style="white-space: nowrap;">
+        Login Type:
+      </th>
+      <td>
+        <div ng-show="!store.application.bEdit" style="white-space: nowrap;">
+          {{store.application.login_type.type}}
+          <br>
+          Secure: {{store.application.secure_port.name}}
+          <br>
+          Auto-Register: {{store.application.auto_register.name}}
+          <br>
+          Account Check: {{store.application.account_check.name}}
+        </div>
+        <div ng-show="store.application.bEdit">
+          <select class="form-control" ng-model="store.application.login_type" ng-options="login_type.type for login_type in store.login_types"></select>
+          <div class="form-inline">
+            <div class="form-group"><div class="input-group"><div class="input-group-addon">Secure</div><select class="form-control" ng-model="store.application.secure_port" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
+            <div class="form-group"><div class="input-group"><div class="input-group-addon">Auto-Register</div><select class="form-control" ng-model="store.application.auto_register" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
+            <div class="form-group"><div class="input-group"><div class="input-group-addon">Account Check</div><select class="form-control" ng-model="store.application.account_check" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.package_type_id">
+      <th style="white-space: nowrap;">
+        Package Type:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.package_type.type}}</span>
+        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.package_type" ng-options="package_type.type for package_type in store.package_types"></select>
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Dependable:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.dependable.name}}</span>
+        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.dependable" ng-options="noyes.name for noyes in central.m_noyes"></select>
+      </td>
+    </tr>
+    <tr ng-show="store.application.bEdit || store.application.menu_id">
+      <th style="white-space: nowrap;">
+        Menu Availability:
+      </th>
+      <td>
+        <span ng-show="!store.application.bEdit">{{store.application.menu_access.type}}</span>
+        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.menu_access" ng-options="menu_access.type for menu_access in store.menu_accesses"></select>
+      </td>
+    </tr>
+    <tr ng-if="store.application.bEdit || store.application.wiki.value == 1">
+      <th>
+        WIKI:
+      </th>
+      <td>
+        <a ng-show="!store.application.bEdit" href="/wiki/index.php/{{store.application.name | commonURLEncode}}" target="_blank">/wiki/index.php/{{store.application.name}}</a>
+        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.wiki" ng-options="noyes.name for noyes in central.m_noyes"></select>
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Description:
+      </th>
+      <td>
+        <pre ng-show="!store.application.bEdit" style="background: inherit; color: inherit; white-space: pre-wrap;">{{store.application.description}}</pre>
+        <textarea ng-show="store.application.bEdit" class="form-control" ng-model="store.application.description"></textarea>
+      </td>
+    </tr>
+  </table>
+  <table ng-show="store.application.sysInfo" class="table table-condensed table-striped">
+    <tr>
+      <th>Server</th>
+      <th>Daemon</th>
+      <th>Start Time</th>
+      <th>Owner</th>
+      <th>Processes</th>
+      <th>Image (KB)</th>
+      <th>Resident (KB)</th>
+      <th>Current Alarms</th>
+    </tr>
+    <tr ng-repeat="info in store.application.sysInfo | orderBy:info.Server">
+      <td><a href="#/Servers/{{info.ServerID}}">{{info.Server}}</a></td>
+      <td>{{info.Daemon}}</td>
+      <td>{{info.data.StartTime}}</td>
+      <td>{{info.data.Owners}}</td>
+      <td>{{info.data.NumberOfProcesses | number}}</td>
+      <td>{{info.data.ImageSize | number}}</td>
+      <td>{{info.data.ResidentSize | number}}</td>
+      <td class="text-danger">{{info.data.Alarms}}</td>
+    </tr>
+  </table>
+  {{/if}}
+  {{/if}}
   <div ng-show="store.application.forms.Accounts.active && (common.isGlobalAdmin() || store.application.bDeveloper)" class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
