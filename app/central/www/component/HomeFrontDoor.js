@@ -10,6 +10,7 @@ export default
   // {{{ controller()
   controller(id, nav)
   {
+    // {{{ prep work
     let a = app;
     let c = common;
     let s = c.scope('HomeFrontDoor',
@@ -23,14 +24,13 @@ export default
       a: a,
       c: c
     });
-    c.setMenu('Home', 'FrontDoor');
-    s.u();
+    // }}}
     // {{{ addIssue()
     s.addIssue = () =>
     {
       s.info.v = 'Adding issue...';
       let request = {Interface: 'central', 'Function': 'applicationIssueAdd'};
-      request.Request = {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary, due_date: s.issue.due_date, priority: s.issue.priority, assigned_userid: s.issue.assigned_userid, comments: s.issue.comments, server: 'kietzman.org'};
+      request.Request = {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary, due_date: s.issue.due_date, priority: s.issue.priority, assigned_userid: s.issue.assigned_userid, comments: s.issue.comments, server: location.host};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -162,6 +162,9 @@ export default
       }
     };
     // }}}
+    // {{{ main
+    c.setMenu('Home', 'FrontDoor');
+    s.u();
     if (a.ready())
     {
       s.loadApplications();
@@ -175,6 +178,7 @@ export default
       s.info.v = null;
       s.loadApplications();
     });
+    // }}}
   },
   // }}}
   // {{{ template

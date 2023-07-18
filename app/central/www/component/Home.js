@@ -10,6 +10,7 @@ export default
   // {{{ controller()
   controller(id, nav)
   {
+    // {{{ prep work
     let a = app;
     let c = common;
     let s = c.scope('Home',
@@ -23,8 +24,7 @@ export default
       a: a,
       c: c
     });
-    c.setMenu('Home');
-    s.u();
+    // }}}
     // {{{ load()
     let load = () =>
     {
@@ -83,6 +83,9 @@ export default
       });
     };
     // }}}
+    // {{{ main
+    c.setMenu('Home');
+    s.u();
     if (a.ready())
     {
       load();
@@ -96,6 +99,7 @@ export default
       s.info.v = null;
       load();
     });
+    // }}}
   },
   // }}}
   // {{{ template
