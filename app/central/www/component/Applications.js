@@ -576,7 +576,7 @@ export default
                   s.message.v = error.message;
                 }
               });
-              let request = {Interface: 'central', 'Function': 'serversByApplicationID', Request: {application_id: s.applications[i].id, i: i}};
+              request = {Interface: 'central', 'Function': 'serversByApplicationID', Request: {application_id: s.applications[i].id, i: i}};
               c.wsRequest('radial', request).then((response) =>
               {
                 let error = {};
