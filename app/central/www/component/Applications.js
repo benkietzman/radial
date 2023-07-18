@@ -254,8 +254,12 @@ export default
     };
     // }}}
     // {{{ editIssue()
-    s.editIssue = () =>
+    s.editIssue = (bOpen) =>
     {
+      if (c.isDefined(bOpen) && bOpen)
+      {
+        s.application.issue.close_date = null;
+      }
       let request = {Interface: 'central', 'Function': 'applicationIssueEdit', Request: s.application.issue};
       c.wsRequest('radial', request).then((response) =>
       {
@@ -602,6 +606,24 @@ export default
       {
         s.loadApplication();
       }
+    };
+    // }}}
+    // {{{ preEditAccount()
+    s.preEditAccount = (account, bEdit) =>
+    {
+      account.bEdit = bEdit;
+    };
+    // }}}
+    // {{{ preEditApplication()
+    s.preEditApplication = (bEdit) =>
+    {
+      s.application.bEdit = bEdit;
+    };
+    // }}}
+    // {{{ preEditContact()
+    s.preEditContact = (contact, bEdit) =>
+    {
+      contact.bEdit = bEdit;
     };
     // }}}
     // {{{ removeAccount()
@@ -1303,18 +1325,18 @@ export default
     </div>
     {{/if}}
     <div ng-show="store.application.bEdit" style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="store.application.bEdit = false"></button>
+      <button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="preEditApplication(false)"></button>
       <button class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editApplication()" style="margin-left: 10px;"></button>
     </div>
   </div>
-  {{/ifConf}}
+  {{/ifCond}}
   <table class="table table-condensed">
     <tr>
       <th style="white-space: nowrap;">
         Application ID:
       </th>
       <td>
-        {{store.application.id}}
+        {{s.application.id}}
       </td>
     </tr>
     <tr>
@@ -1322,8 +1344,11 @@ export default
         Application Name:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.name}}</span>
-        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.name">
+        {{#if s.application.bEdit}}
+        <input type="text" class="form-control" c-model="s.application.name">
+        {{else}}
+        {{s.application.name}}
+        {{/if}}
       </td>
     </tr>
     <tr>
@@ -1331,107 +1356,145 @@ export default
         Creation Date:
       </th>
       <td>
-        {{store.application.creation_date}}
+        {{s.application.creation_date}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.retirement_date">
+    {{#ifCond s.application.bEdit '||' s.application.retirement_date}}
+    <tr>
       <th style="white-space: nowrap;">
         Retirement Date:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.retirement_date}}</span>
-        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.retirement_date" placeholder="YYYY-MM-DD">
+        {{#if s.application.bEdit}}
+        <input type="text" class="form-control" c-model="s.application.retirement_date" placeholder="YYYY-MM-DD">
+        {{else}}
+        {{s.application.retirement_date}}
+        {{/if}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.notify_priority_id">
+    {{/ifCond}}
+    {{ifCond s.application.bEdit '||' s.application.notify_priority_id}}
+    <tr>
       <th style="white-space: nowrap;">
         Notify Priority:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.notify_priority.priority}}</span>
-        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities"></select>
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities">{{#each s.notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
+        {{else}}
+        {{s.application.notify_priority.priority}}
+        {{/if}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.website">
+    {{/ifCond}}
+    {{#ifCond s.application.bEdit '||' s.application.website}}
+    <tr>
       <th>
         Website:
       </th>
       <td>
-        <a ng-show="!store.application.bEdit" href="{{store.application.website}}" target="_blank">{{store.application.website}}</a>
-        <input ng-show="store.application.bEdit" type="text" class="form-control" ng-model="store.application.website">
+        {{#if s.application.bEdit}}
+        <input type="text" class="form-control" c-model="s.application.website">
+        {{else}}
+        <a href="{{s.application.website}}" target="_blank">{{s.application.website}}</a>
+        {{/if}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.login_type_id">
+    {{/ifCond}}
+    {{#ifCond s.application.bedit '||' s.application.login_type_id}}
+    <tr>
       <th style="white-space: nowrap;">
         Login Type:
       </th>
-      <td>
-        <div ng-show="!store.application.bEdit" style="white-space: nowrap;">
-          {{store.application.login_type.type}}
-          <br>
-          Secure: {{store.application.secure_port.name}}
-          <br>
-          Auto-Register: {{store.application.auto_register.name}}
-          <br>
-          Account Check: {{store.application.account_check.name}}
+      <td style="white-space: nowrap;">
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.login_type">{{#each s.login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <div class="form-inline">
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="s.application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="s.application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="s.application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
         </div>
-        <div ng-show="store.application.bEdit">
-          <select class="form-control" ng-model="store.application.login_type" ng-options="login_type.type for login_type in store.login_types"></select>
-          <div class="form-inline">
-            <div class="form-group"><div class="input-group"><div class="input-group-addon">Secure</div><select class="form-control" ng-model="store.application.secure_port" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-            <div class="form-group"><div class="input-group"><div class="input-group-addon">Auto-Register</div><select class="form-control" ng-model="store.application.auto_register" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-            <div class="form-group"><div class="input-group"><div class="input-group-addon">Account Check</div><select class="form-control" ng-model="store.application.account_check" ng-options="noyes.name for noyes in central.m_noyes"></select></div></div>
-          </div>
-        </div>
+        {{else}}
+        {{s.application.login_type.type}}
+        <br>
+        Secure: {{s.application.secure_port.name}}
+        <br>
+        Auto-Register: {{s.application.auto_register.name}}
+        <br>
+        Account Check: {{s.application.account_check.name}}
+        {{/if}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.package_type_id">
+    {{/ifCond}}
+    {{#ifCond s.application.bEdit '||' s.application.package_type_id}}
+    <tr>
       <th style="white-space: nowrap;">
         Package Type:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.package_type.type}}</span>
-        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.package_type" ng-options="package_type.type for package_type in store.package_types"></select>
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.package_type">{{#each s.package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{else}}
+        {{s.application.package_type.type}}
+        {{/if}}
       </td>
     </tr>
+    {{/ifCond}}
     <tr>
       <th>
         Dependable:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.dependable.name}}</span>
-        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.dependable" ng-options="noyes.name for noyes in central.m_noyes"></select>
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{s.application.dependable.name}}
+        {{/if}}
       </td>
     </tr>
-    <tr ng-show="store.application.bEdit || store.application.menu_id">
+    {{/ifCond s.application.bEdit '||' s.application.menu_id}}
+    <tr>
       <th style="white-space: nowrap;">
         Menu Availability:
       </th>
       <td>
-        <span ng-show="!store.application.bEdit">{{store.application.menu_access.type}}</span>
-        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.menu_access" ng-options="menu_access.type for menu_access in store.menu_accesses"></select>
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.menu_access">{{#each s.menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{else}}
+        {{s.application.menu_access.type}}
+        {{/if}}
       </td>
     </tr>
-    <tr ng-if="store.application.bEdit || store.application.wiki.value == 1">
+    {{/ifCond}}
+    {{#ifCond s.application.bEdit '||' (ifCond s.application.wiki.value '==' 1)}}
+    <tr>
       <th>
         WIKI:
       </th>
       <td>
-        <a ng-show="!store.application.bEdit" href="/wiki/index.php/{{store.application.name | commonURLEncode}}" target="_blank">/wiki/index.php/{{store.application.name}}</a>
-        <select ng-show="store.application.bEdit" class="form-control" ng-model="store.application.wiki" ng-options="noyes.name for noyes in central.m_noyes"></select>
+        {{#if s.application.bEdit}}
+        <select class="form-control" c-model="s.application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        <a href="/wiki/index.php/{{urlEncode s.application.name}}" target="_blank">/wiki/index.php/{{s.application.name}}</a>
+        {{/if}}
       </td>
     </tr>
+    {{/ifCond}}
     <tr>
       <th>
         Description:
       </th>
       <td>
-        <pre ng-show="!store.application.bEdit" style="background: inherit; color: inherit; white-space: pre-wrap;">{{store.application.description}}</pre>
-        <textarea ng-show="store.application.bEdit" class="form-control" ng-model="store.application.description"></textarea>
+        {{#if s.application.bEdit}}
+        <textarea class="form-control" c-model="s.application.description"></textarea>
+        {{else}}
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{s.application.description}}</pre>
+        {{/if}}
       </td>
     </tr>
   </table>
-  <table ng-show="store.application.sysInfo" class="table table-condensed table-striped">
+  {{#if s.application.sysInfo}}
+  <table class="table table-condensed table-striped">
     <tr>
       <th>Server</th>
       <th>Daemon</th>
@@ -1442,19 +1505,23 @@ export default
       <th>Resident (KB)</th>
       <th>Current Alarms</th>
     </tr>
-    <tr ng-repeat="info in store.application.sysInfo | orderBy:info.Server">
-      <td><a href="#/Servers/{{info.ServerID}}">{{info.Server}}</a></td>
-      <td>{{info.Daemon}}</td>
-      <td>{{info.data.StartTime}}</td>
-      <td>{{info.data.Owners}}</td>
-      <td>{{info.data.NumberOfProcesses | number}}</td>
-      <td>{{info.data.ImageSize | number}}</td>
-      <td>{{info.data.ResidentSize | number}}</td>
-      <td class="text-danger">{{info.data.Alarms}}</td>
+    {{#each s.application.sysInfo}}
+    <tr>
+      <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
+      <td>{{Daemon}}</td>
+      <td>{{data.StartTime}}</td>
+      <td>{{data.Owners}}</td>
+      <td>{{numberShort data.NumberOfProcesses}}</td>
+      <td>{{numberShort data.ImageSize}}</td>
+      <td>{{numberShort data.ResidentSize}}</td>
+      <td class="text-danger">{{data.Alarms}}</td>
     </tr>
+    {{/each}}
   </table>
+  {{/if}}
   {{/ifCond}}
-  <div ng-show="store.application.forms.Accounts.active && (common.isGlobalAdmin() || store.application.bDeveloper)" class="table-responsive">
+  {{#ifCond s.application.forms.Accounts.active '&&' (ifCond isGlobalAdmin '||' s.application.bDeveloper)}}
+  <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th>User ID</th>
@@ -1462,45 +1529,73 @@ export default
         <th>Password</th>
         <th>Type</th>
         <th>Description</th>
-        <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
+        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        <th></th>
+        {{/ifCond}}
       </tr>
-      <tr ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-        <td><input type="text" class="form-control" ng-model="store.account.user_id" placeholder="User ID"></td>
-        <td><select class="form-control" ng-model="store.account.encrypt" ng-options="noyes.name for noyes in central.m_noyes"></select></td>
-        <td><input type="password" class="form-control" ng-model="store.account.password" placeholder="Password"></td>
-        <td><select class="form-control" ng-model="store.account.type" ng-options="type.type for type in store.account.types"></select></td>
-        <td><input type="text" class="form-control" ng-model="store.account.description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success glyphicon glyphicon-plus" ng-click="addAccount()"></button></td>
+      {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+      <tr>
+        <td><input type="text" class="form-control" c-model="s.account.user_id" placeholder="User ID"></td>
+        <td><select class="form-control" c-model="s.account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="password" class="form-control" c-model="s.account.password" placeholder="Password"></td>
+        <td><select class="form-control" c-model="s.account.type">{{#each s.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="s.account.description" placeholder="Description"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addAccount()">Add</button></td>
       </tr>
-      <tr ng-repeat="account in store.application.accounts">
+      {{/ifCond}}
+      {{#each s.application.accounts}}
+      <tr>
         <td>
-          <span ng-show="!account.bEdit">{{account.user_id}}</span>
-          <input ng-show="account.bEdit" type="text" class="form-control" ng-model="account.user_id" placeholder="User ID">
-        </td>
-        <td>
-          <span ng-show="!account.bEdit">{{account.encrypt.name}}</span>
-          <select ng-show="account.bEdit" class="form-control" ng-model="account.encrypt" ng-options="noyes.name for noyes in central.m_noyes"></select>
-        </td>
-        <td>
-          <span ng-show="!account.bEdit">{{account.password}}</span>
-          <input ng-show="account.bEdit" type="text" class="form-control" ng-model="account.password" placeholder="Password">
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="s.application.accounts.[{{@key}}].user_id" placeholder="User ID">
+          {{else}}
+          {{user_id}}
+          {{/if}}
         </td>
         <td>
-          <span ng-show="!account.bEdit">{{account.type.type}}</span>
-          <select ng-show="account.bEdit" class="form-control" ng-model="account.type" ng-options="type.type for type in store.account.types"></select>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.accounts.[{{@key}}].encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          {{else}}
+          {{encrypt.name}}
+          {{/if}}
         </td>
         <td>
-          <pre ng-show="!account.bEdit && account.description" style="background: inherit; color: inherit; white-space: pre-wrap;">{{account.description}}</pre>
-          <textarea ng-show="account.bEdit" class="form-control" ng-model="account.description" placeholder="Description"></textarea>
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="s.application.accounts.[{{@key}}].password" placeholder="Password">
+          {{else}}
+          {{password}}
+          {{/if}}
         </td>
-        <td ng-show="common.isGlobalAdmin() || store.application.bDeveloper" style="white-space: nowrap;">
-          <div ng-show="!account.bEdit"><button class="btn btn-xs btn-warning glyphicon glyphicon-pencil" ng-click="account.bEdit = true"></button><button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeAccount(account.id)" style="margin-left: 10px;"></button></div>
-          <div ng-show="account.bEdit"><button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="account.bEdit = false"></button><button class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editAccount(account)" style="margin-left: 10px;"></button></div>
+        <td>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.accounts.[{{@key}}].type">{{#each s.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          {{else}}
+          {{type.type}}
+          {{/if}}
         </td>
+        <td>
+          {{#if bEdit}}
+          <textarea class="form-control" c-model="s.application.accounts.[{{@key}}].description" placeholder="Description"></textarea>
+          {{else if description}}
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
+          {{/if}}
+        </td>
+        {{#ifCond isGlobalAdmin '|| s.application.bDeveloper}}
+        <td style="white-space: nowrap;">
+          {{#if bEdit}}
+          <button class="btn btn-xs btn-warning" c-click="preEditAccount({{.}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editAccount({{account}})" style="margin-left: 10px;">Save</button>
+          {{else}}
+          <button class="btn btn-xs btn-warning" ng-click="preEditAccount({{.}}, true)"></button><button class="btn btn-xs btn-danger" c-click="removeAccount({{id}})" style="margin-left: 10px;">Remove</button>
+          {{/if}}
+        </td>
+        {{/ifCond}}
       </tr>
+      {{/each}}
     </table>
   </div>
-  <div ng-show="store.application.forms.Contacts.active" class="table-responsive">
+  {{/ifCond}}
+  {{#if s.application.forms.Contacts.active}}
+  <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th>User</th>
@@ -1509,170 +1604,233 @@ export default
         <th>Locked</th>
         <th>Notify</th>
         <th>Description</th>
-        <th ng-show="common.isLocalAdmin(store.application.name) || store.application.bDeveloper"></th>
+        {{#ifCond (isLocalAdmin s.application.name) '||' s.application.bDeveloper}}
+        <th></th>
+        {{/ifCond}}
       </tr>
-      <tr ng-show="common.isLocalAdmin(store.application.name) || store.application.bDeveloper">
-        <td><input type="text" class="form-control" ng-model="store.contact[contactType.type].userid" placeholder="User ID"></td>
-        <td><select class="form-control" ng-model="store.contact[contactType.type].type" ng-options="type.type for type in store.contactTypeOrder"></select></td>
-        <td><select class="form-control" ng-model="store.contact[contactType.type].admin" ng-options="noyes.name for noyes in central.m_noyes"></select></td>
-        <td><select class="form-control" ng-model="store.contact[contactType.type].locked" ng-options="noyes.name for noyes in central.m_noyes"></select></td>
-        <td><select class="form-control" ng-model="store.contact[contactType.type].notify" ng-options="noyes.name for noyes in central.m_noyes"></select></td>
-        <td><input type="text" class="form-control" ng-model="store.contact[contactType.type].description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success glyphicon glyphicon-plus" ng-click="addContact(contactType.type)"></button></td>
+      {{#ifCond (isLocalAdmin s.application.name) '||' s.application.bDeveloper}}
+      <tr>
+        <td><input type="text" class="form-control" c-model="s.contact.[contactType.type].userid" placeholder="User ID"></td>
+        <td><select class="form-control" ng-model="s.contact.[contactType.type].type">{{#each s.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="s.contact.[contactType.type].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="s.contact.[contactType.type].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="s.contact.[contactType.type].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" ng-model="s.contact.[contactType.type].description" placeholder="Description"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addContact({{contactType.type}})">Add</button></td>
       </tr>
-      <tr ng-repeat="contact in store.application.contacts">
+      {{/ifCond}}
+      {{#each s.application.contacts}}
+      <tr>
         <td style="white-space:nowrap;">
-          <a ng-show="!contact.bEdit" href="#/Users/{{contact.user_id}}">{{contact.last_name}}, {{contact.first_name}}</a> <small>({{contact.userid}})</small>
-          <div ng-show="contact.bEdit"><input type="text" class="form-control" ng-model="contact.userid" placeholder="User ID"></div>
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="s.application.contacts.[{{@key}}].userid" placeholder="User ID">
+          {{else}}
+          <a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small>
+          {{/if}}
         </td>
         <td style="white-space:nowrap;">
-          <span ng-show="!contact.bEdit">{{contact.type.type}}</span>
-          <select ng-show="contact.bEdit" class="form-control" ng-model="contact.type" ng-options="type.type for type in store.contactTypeOrder"></select>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.contacts.[{{@key}}].type">{{#each s.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          {{else}}
+          {{type.type}}
+          {{/if}}
         </td>
         <td>
-          <span ng-show="!contact.bEdit">{{contact.admin.name}}</span>
-          <select ng-show="contact.bEdit" class="form-control" ng-model="contact.admin" ng-options="noyes.name for noyes in central.m_noyes"></select>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          {{else}}
+          {{admin.name}}
+          {{/if}}
         </td>
         <td>
-          <span ng-show="!contact.bEdit">{{contact.locked.name}}</span>
-          <select ng-show="contact.bEdit" class="form-control" ng-model="contact.locked" ng-options="noyes.name for noyes in central.m_noyes"></select>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          {{else}}
+          {{locked.name}}
+          {{/if}}
         </td>
         <td>
-          <span ng-show="!contact.bEdit">{{contact.notify.name}}</span>
-          <select ng-show="contact.bEdit" class="form-control" ng-model="contact.notify" ng-options="noyes.name for noyes in central.m_noyes"></select>
+          {{#if bEdit}}
+          <select class="form-control" c-model="s.application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          {{else}}
+          {{notify.name}}
+          {{/if}}
         </td>
         <td>
-          <pre ng-show="!contact.bEdit && contact.description" style="background: inherit; color: inherit; white-space: pre-wrap;">{{contact.description}}</pre>
-          <input ng-show="contact.bEdit" type="text" class="form-control" ng-model="contact.description" placeholder="Description">
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="s.application.contacts.[{{@key}}].description" placeholder="Description">
+          {{else if description}}
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
+          {{/if}}
         </td>
         <td ng-show="common.isLocalAdmin() || store.application.bDeveloper" style="white-space: nowrap;">
-          <div ng-show="!contact.bEdit"><button class="btn btn-xs btn-warning glyphicon glyphicon-pencil" ng-click="contact.bEdit = true"></button><button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeContact(contact.id)" style="margin-left: 10px;"></button></div>
-          <div ng-show="contact.bEdit"><button class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="contact.bEdit = false"></button><button class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editContact(contact)" style="margin-left: 10px;"></button></div>
+          {{#if bEdit}}
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{.}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{.}})" style="margin-left: 10px;">Save</button>
+          {{else}}
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{.}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;"></button>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  {{#if s.application.forms.Depend.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Application</th>
+        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        <th></th>
+        {{/ifCond}}
+      </tr>
+      {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+      <tr>
+        <td><select class="form-control" c-model="s.depend">{{#each s.dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><button class="btn btn-xs btn-success" c-click="addDepend()">Add</button></td>
+      </tr>
+      {{/ifCond}}
+      {{#each s.application.depends}}
+      <tr>
+        <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        <td><button class="btn btn-xs btn-danger" c-click="removeDepend({{id}})">Remove</button></td>
+        {{/ifCond}}
+      </tr>
+      {{/each}}
+    </table>
+    <h4 class="page-header">Depend Upon {{s.application.name}}</h4>
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Application</th>
+      </tr>
+      {{#each s.application.dependents}}
+      <tr>
+        <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  {{#if s.application.forms.Issues.active}}
+  <div class="table-responsive">
+    {{#if s.issue}}
+    {{#if s.application.issue}}
+    {{#ifCond isValid '&&' s.application.issue.close_date}}
+    <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
+    {{/ifCond}}
+    <div class="row">
+      <div class="col-md-3">
+        <table class="table table-condensed card card-body card-inverse">
+          <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{s.application.issue.id}}</td></tr>
+          <tr ng-show="store.application.issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{store.application.issue.open_date}}</td></tr>
+          <tr ng-show="store.application.issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{store.application.issue.close_date}}</td></tr>
+          {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+          {{^if s.application.issue.close_date}}
+          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="s.application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
+          <tr><th>Priority</th><td><select c-model="s.application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+          <tr><th>Due</th><td><input type="text" class="form-control" c-model="s.application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Release</th><td><input type="text" class="form-control" c-model="s.application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="s.application.issue.assigned_userid" placeholder="User ID"></td></tr>
+          <tr><th>Transfer</th><td><select class="form-control" c-model="s.application.issue.transfer">{{#each s.applications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td></tr>
+          {{/if}}
+          {{else}}
+          {{#ifCond s.application.issue.hold '==' 1}}
+          <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
+          {{/ifCond}}
+          {{#ifCond s.application.issue.priority '>=' 1}}
+          <tr><th>Priority</th><td>{{#ifCond s.application.issue.priority '==' 1}}Low{{else ifCond s.application.issue.priority '==' 2}}<span style="color: orange;">Medium</span>{{else ifCond s.application.issue.priority '==' 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
+          {{/ifCond}}
+          {{#if s.application.issue.due_date}}
+          <tr><th>Due</th><td style="white-space: nowrap;">{{s.application.issue.due_date}}</td></tr>
+          {{/if}}
+          {{#if s.application.issue.release_date}}
+          <tr><th>Release</th><td style="white-space: nowrap;">{{s.application.issue.release_date}}</td></tr>
+          {{/if}}
+          {{#if s.application.issue.assigned}}
+          <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{s.application.issue.assigned.id}}">{{s.application.issue.assigned.last_name}}, {{s.application.issue.assigned.first_name}}</a> <small>({{s.application.issue.assigned.userid}})</small></td></tr>
+          {{/if}}
+          {{/ifCond}}
+        </table>
+        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
+        {{/ifCond}}
+      </div>
+TODO
+      <div class="col-md-9">
+        <p ng-show="store.application.issue.summary && ((!common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date)" style="font-weight: bold;">{{store.application.issue.summary}}</p>
+        <input ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date" type="text" class="form-control" ng-model="store.application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
+        <table class="table table-condensed table-striped" style="margin-top: 10px;">
+          <tr ng-repeat="comment in store.application.issue.comments">
+            <td>
+              <table class="table table-condensed" style="background: inherit;">
+                <tr><td style="white-space: nowrap;">{{comment.entry_date}}</td></tr>
+                <tr><td style="white-space: nowrap;"><a href="#/Users/{{comment.user_id}}">{{comment.last_name}}, {{comment.first_name}}</a> <small>({{comment.userid}})</small></td></tr>
+                <tr ng-show="!store.application.issue.close_date && !comment.bEdit && comment.userid == common.getUserID()"><td><button class="btn btn-sm btn-default glyphicon glyphicon-pencil float-end" ng-click="comment.bEdit = true"></button></td></tr>
+              </table>
+            </td>
+            <td>
+              <pre ng-show="!store.application.issue.close_date || !comment.bEdit || comment.userid != common.getUserID()" style="background: inherit; color: inherit; white-space: pre-wrap;">{{comment.comments}}</pre>
+              <textarea ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" ng-model="comment.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comment.comments}}</textarea>
+              <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="editIssueComment(comment)" style="margin: 10px 0px 0px 10px;">Save</button>
+              <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="comment.bEdit = false" style="margin: 10px 0px 0px 0px;">Cancel</button>
+            </td>
+          </tr>
+          <tr ng-show="!store.application.issue.close_date && common.isValid(null)">
+            <td></td>
+            <td>
+              <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+              <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('close', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('update', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 0px;">Add Comments</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    {{else}}
+    <table class="table table-condensed table-striped">
+      <tr ng-show="common.isValid(null)">
+        <td style="width:25%;">
+          <table class="table table-condensed" style="background: inherit;">
+            <tr><th>Due</th><td><input type="text" ng-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+            <tr><th>Priority</th><td><select ng-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+            <tr><th>Assigned</th><td><input type="text" ng-model="issue.assigned_userid" placeholder="User ID"></td></tr>
+          </table>
+        </td>
+        <td style="width:75%;">
+          <input type="text" class="form-control" ng-model="issue.summary" placeholder="enter summary" style="width: 100%;">
+          <br>
+          <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+          <button class="btn btn-sm btn-default float-end" ng-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
         </td>
       </tr>
     </table>
-  </div>
-  <div ng-show="store.application.forms.Depend.active" class="table-responsive">
+    <button class="btn btn-sm btn-default float-end" ng-click="toggleClosedIssues()"><span ng-if="store.onlyOpenIssues == 0">Hide</span><span ng-if="store.onlyOpenIssues == 1">Show</span> Closed Issues</button>
     <table class="table table-condensed table-striped">
-      <tr>
-        <th>Application</th>
-        <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
-      </tr>
-      <tr ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-        <td><select class="form-control" ng-model="store.depend" ng-options="depend.name for depend in store.dependApplications"></select></td>
-        <td><button class="btn btn-xs btn-success glyphicon glyphicon-plus" ng-click="addDepend()"></button></td>
-      </tr>
-      <tr ng-repeat="depend in store.application.depends">
-        <td><a href="#/Applications/{{depend.application_id}}">{{depend.name}}</a></td>
-        <td ng-show="common.isGlobalAdmin() || store.application.bDeveloper"><button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeDepend(depend.id)"></button></td>
+      <tr ng-repeat="issue in store.application.issues">
+        <td>
+          <table class="table table-condensed" style="background: inherit;">
+            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{store.application.id}}/Issues/{{issue.id}}">{{issue.id}}</a><span ng-if="issue.hold == 1" style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span></td></tr>
+            <tr ng-show="issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{issue.open_date}}</td></tr>
+            <tr ng-show="issue.due_date"><th>Due</th><td style="white-space: nowrap;">{{issue.due_date}}</td></tr>
+            <tr ng-show="issue.release_date"><th>Release</th><td style="white-space: nowrap;">{{issue.release_date}}</td></tr>
+            <tr ng-show="issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{issue.close_date}}</td></tr>
+            <tr ng-if="issue.priority >= 1"><th>Priority</th><td ng-if="issue.priority == 1">Low</td><td ng-if="issue.priority == 2" style="color: orange;">Medium</td><td ng-if="issue.priority == 3" style="color: red;">High</td><td ng-if="issue.priority > 3" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td></tr>
+            <tr ng-show="issue.comments"><td colspan="2"><a href="#/Users/{{issue.comments[0].user_id}}">{{issue.comments[0].last_name}}, {{issue.comments[0].first_name}}</a> <small>({{issue.comments[0].userid}})</small></td></tr>
+            <tr ng-show="issue.assigned"><td colspan="2"><a href="#/Users/{{issue.assigned.id}}">{{issue.assigned.last_name}}, {{issue.assigned.first_name}}</a> <small>({{issue.assigned.userid}})</small></td></tr>
+          </table>
+        </td>
+        <td>
+          <p ng-show="issue.summary" style="font-weight: bold;">{{issue.summary}}</p>
+          <pre ng-show="issue.comments" style="background: inherit; color: inherit; white-space: pre-wrap;">{{issue.comments[0].comments}}</pre>
+        </td>
       </tr>
     </table>
-    <h4 class="page-header">Depend Upon {{store.application.name}}</h4>
-    <table class="table table-condensed table-striped">
-      <tr>
-        <th>Application</th>
-      </tr>
-      <tr ng-repeat="dependent in store.application.dependents">
-        <td><a href="#/Applications/{{dependent.application_id}}">{{dependent.name}}</a></td>
-      </tr>
-    </table>
+    {{/if}}
   </div>
-  <div ng-show="store.application.forms.Issues.active" class="table-responsive">
-    <div ng-show="!store.issue">
-      <table class="table table-condensed table-striped">
-        <tr ng-show="common.isValid(null)">
-          <td style="width:25%;">
-            <table class="table table-condensed" style="background: inherit;">
-              <tr><th>Due</th><td><input type="text" ng-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-              <tr><th>Priority</th><td><select ng-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-              <tr><th>Assigned</th><td><input type="text" ng-model="issue.assigned_userid" placeholder="User ID"></td></tr>
-            </table>
-          </td>
-          <td style="width:75%;">
-            <input type="text" class="form-control" ng-model="issue.summary" placeholder="enter summary" style="width: 100%;">
-            <br>
-            <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-            <button class="btn btn-sm btn-default float-end" ng-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
-          </td>
-        </tr>
-      </table>
-      <button class="btn btn-sm btn-default float-end" ng-click="toggleClosedIssues()"><span ng-if="store.onlyOpenIssues == 0">Hide</span><span ng-if="store.onlyOpenIssues == 1">Show</span> Closed Issues</button>
-      <table class="table table-condensed table-striped">
-        <tr ng-repeat="issue in store.application.issues">
-          <td>
-            <table class="table table-condensed" style="background: inherit;">
-              <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{store.application.id}}/Issues/{{issue.id}}">{{issue.id}}</a><span ng-if="issue.hold == 1" style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span></td></tr>
-              <tr ng-show="issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{issue.open_date}}</td></tr>
-              <tr ng-show="issue.due_date"><th>Due</th><td style="white-space: nowrap;">{{issue.due_date}}</td></tr>
-              <tr ng-show="issue.release_date"><th>Release</th><td style="white-space: nowrap;">{{issue.release_date}}</td></tr>
-              <tr ng-show="issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{issue.close_date}}</td></tr>
-              <tr ng-if="issue.priority >= 1"><th>Priority</th><td ng-if="issue.priority == 1">Low</td><td ng-if="issue.priority == 2" style="color: orange;">Medium</td><td ng-if="issue.priority == 3" style="color: red;">High</td><td ng-if="issue.priority > 3" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td></tr>
-              <tr ng-show="issue.comments"><td colspan="2"><a href="#/Users/{{issue.comments[0].user_id}}">{{issue.comments[0].last_name}}, {{issue.comments[0].first_name}}</a> <small>({{issue.comments[0].userid}})</small></td></tr>
-              <tr ng-show="issue.assigned"><td colspan="2"><a href="#/Users/{{issue.assigned.id}}">{{issue.assigned.last_name}}, {{issue.assigned.first_name}}</a> <small>({{issue.assigned.userid}})</small></td></tr>
-            </table>
-          </td>
-          <td>
-            <p ng-show="issue.summary" style="font-weight: bold;">{{issue.summary}}</p>
-            <pre ng-show="issue.comments" style="background: inherit; color: inherit; white-space: pre-wrap;">{{issue.comments[0].comments}}</pre>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div ng-show="store.issue && store.application.issue">
-      <button ng-show="common.isValid(null) && store.application.issue.close_date" class="btn btn-sm btn-success glyphicon glyphicon-refresh float-end" ng-click="store.application.issue.close_date = null; editIssue(store.application.issue.id)"></button>
-      <div class="row">
-        <div class="col-md-3">
-          <table class="table table-condensed well">
-            <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{store.application.issue.id}}</td></tr>
-            <tr ng-show="store.application.issue.hold == 1 && !common.isGlobalAdmin() && !store.application.bDeveloper"><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th style="white-space: nowrap;">On Hold</th><td><select ng-model="store.application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
-            <tr ng-show="(store.application.issue.priority >= 1 && !common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date"><th>Priority</th><td><span ng-if="store.application.issue.priority == 1">Low</span><span ng-if="store.application.issue.priority == 2" style="color: orange;">Medium</span><span ng-if="store.application.issue.priority == 3" style="color: red;">High</span><span ng-if="store.application.issue.priority > 3" style="padding: 0px 2px; background: red; color: white;">Critical</span></td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th>Priority</th><td><select ng-model="store.application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-            <tr ng-show="store.application.issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{store.application.issue.open_date}}</td></tr>
-            <tr ng-show="(store.application.issue.due_date && !common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date"><th>Due</th><td style="white-space: nowrap;">{{store.application.issue.due_date}}</td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th>Due</th><td><input type="text" class="form-control" ng-model="store.application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-            <tr ng-show="(store.application.issue.release_date && !common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date"><th>Release</th><td style="white-space: nowrap;">{{store.application.issue.release_date}}</td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th>Release</th><td><input type="text" class="form-control" ng-model="store.application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
-            <tr ng-show="store.application.issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{store.application.issue.close_date}}</td></tr>
-            <tr ng-show="(store.application.issue.assigned && !common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date"><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{store.application.issue.assigned.id}}">{{store.application.issue.assigned.last_name}}, {{store.application.issue.assigned.first_name}}</a> <small>({{store.application.issue.assigned.userid}})</small></td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th>Assigned</th><td><input type="text" class="form-control" ng-model="store.application.issue.assigned_userid" placeholder="User ID"></td></tr>
-            <tr ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date"><th>Transfer</th><td><select class="form-control" ng-model="store.application.issue.transfer" ng-options="application.name for application in store.applications"></select></td></tr>
-          </table>
-          <button ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date" class="btn btn-warning float-end" ng-click="editIssue()">Save</button>
-        </div>
-        <div class="col-md-9">
-          <p ng-show="store.application.issue.summary && ((!common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date)" style="font-weight: bold;">{{store.application.issue.summary}}</p>
-          <input ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date" type="text" class="form-control" ng-model="store.application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
-          <table class="table table-condensed table-striped" style="margin-top: 10px;">
-            <tr ng-repeat="comment in store.application.issue.comments">
-              <td>
-                <table class="table table-condensed" style="background: inherit;">
-                  <tr><td style="white-space: nowrap;">{{comment.entry_date}}</td></tr>
-                  <tr><td style="white-space: nowrap;"><a href="#/Users/{{comment.user_id}}">{{comment.last_name}}, {{comment.first_name}}</a> <small>({{comment.userid}})</small></td></tr>
-                  <tr ng-show="!store.application.issue.close_date && !comment.bEdit && comment.userid == common.getUserID()"><td><button class="btn btn-sm btn-default glyphicon glyphicon-pencil float-end" ng-click="comment.bEdit = true"></button></td></tr>
-                </table>
-              </td>
-              <td>
-                <pre ng-show="!store.application.issue.close_date || !comment.bEdit || comment.userid != common.getUserID()" style="background: inherit; color: inherit; white-space: pre-wrap;">{{comment.comments}}</pre>
-                <textarea ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" ng-model="comment.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comment.comments}}</textarea>
-                <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="editIssueComment(comment)" style="margin: 10px 0px 0px 10px;">Save</button>
-                <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="comment.bEdit = false" style="margin: 10px 0px 0px 0px;">Cancel</button>
-              </td>
-            </tr>
-            <tr ng-show="!store.application.issue.close_date && common.isValid(null)">
-              <td></td>
-              <td>
-                <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-                <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('close', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 10px;">Close Issue</button>
-                <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('update', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 0px;">Add Comments</button>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div ng-show="store.application.forms.Notify.active && (common.isGlobalAdmin() || store.application.bDeveloper)" class="table-responsive">
+  {{/if}}
+  {{#ifCond s.application.forms.Notify.active '&&' (ifCond isGlobalAdmin '||' s.application.bDeveloper)}}
+  <div class="table-responsive">
     <textarea ng-model="store.notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
     <button class="btn btn-sm btn-default float-end" ng-click="sendNotification()">Send Notification</button>
     <div ng-show="contacts">
@@ -1686,7 +1844,9 @@ export default
       </ul>
     </div>
   </div>
-  <div ng-show="store.application.forms.Servers.active" class="table-responsive">
+  {{/ifCond}}
+  {{#if s.application.forms.Servers.active}}
+  <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th style="width: 100%;">Server</th>
@@ -1832,6 +1992,7 @@ export default
       </div>
     </div>
   </div>
+  {{/if}}
   {{/if}}
   `
   // }}}
