@@ -606,7 +606,7 @@ export default
     // }}}
     // {{{ main
     c.setMenu('Applications');
-    if (c.isDefined(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application))
+    if (c.isDefined(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
     {
       s.list = false;
     }
