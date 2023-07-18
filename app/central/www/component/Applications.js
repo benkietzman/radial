@@ -644,7 +644,7 @@ export default
       <tr>
         <th>Application</th><th>Primary Developers</th><th>Servers</th>
       </tr>
-      {{#isValid 'Central'>
+      {{#isValid 'Central'}}
       <tr>
         <td><input type="text" class="form-control" c-model="application.name" placeholder="Application Name"></td>
         <td><button class="btn btn-default" c-click="addApplication()">Add Application</button></td>
