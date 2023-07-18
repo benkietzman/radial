@@ -438,7 +438,7 @@ export default
         s.contactTypeOrder = [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}];
         for (let i = 0; i < s.contactTypeOrder.length; i++)
         {
-          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contactTypeOrder[i].type, i: i};
+          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contactTypeOrder[i].type, i: i}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
