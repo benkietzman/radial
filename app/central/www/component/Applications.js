@@ -357,7 +357,7 @@ export default
     // {{{ loadApplication()
     s.loadApplication = () =>
     {
-      if (c.isDefined(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
+      if (c.isObject(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
       {
         let strForm = ((c.isDefined(nav.data.form))?nav.data.form:'General');
         if (c.isDefined(s.application) && s.application != null && (nav.data.id == s.application.id || nav.data.application == s.application.name))
@@ -529,7 +529,7 @@ export default
       // }}}
       if (s.list)
       {
-        if (c.isDefined(nav.data) && c.isDefined(nav.data.letter))
+        if (c.isObject(nav.data) && c.isDefined(nav.data.letter))
         {
           s.letter = nav.data.letter;
         }
@@ -606,7 +606,7 @@ export default
     // }}}
     // {{{ main
     c.setMenu('Applications');
-    if (c.isDefined(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
+    if (c.isObject(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
     {
       s.list = false;
     }
