@@ -265,11 +265,11 @@ export default
           if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.id) && s.application.issue.transfer.id != s.application.id)
           {
             s.info.v = 'Emailing issue...';
-            var request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id, server: location.host};
+            let request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id, server: location.host}};
             c.wsRequest('radial', request).then((response) =>
             {
               s.info.v = null;
-              var error = {};
+              let error = {};
               if (c.wsResponse(response, error))
               {
                 s.info.v = 'Transfering issue...';
@@ -368,7 +368,7 @@ export default
         {
           s.info.v = 'Retrieving application...';
           s.application.v = null;
-          var request = {Interface: 'central', 'Function': 'application', Request: {form: strForm}};
+          let request = {Interface: 'central', 'Function': 'application', Request: {form: strForm}};
           if (c.isDefined(nav.data.id))
           {
             request.Request.id = nav.data.id;
@@ -458,7 +458,7 @@ export default
       // {{{ get login types
       if (!c.isDefined(s.login_types))
       {
-        var request = {Interface: 'central', 'Function': 'loginTypes', Request: {}};
+        let request = {Interface: 'central', 'Function': 'loginTypes', Request: {}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
