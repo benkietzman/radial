@@ -1198,7 +1198,7 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
     }
     else
     {
-      qs << "select id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, state, swap_memory, zipcode";
+      qs << " id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, state, swap_memory, zipcode";
     }
     qs << " from server where 1";
     if (!empty(i, "id"))
