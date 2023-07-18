@@ -688,7 +688,7 @@ export default
       <div class="collapse navbar-collapse" id="appnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each s.application.forms_order}}
-          <li class="nav-item"><a class="nav-link {{s.application.forms[.].active}}" href="#/Applications/{{s.application.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{s.application.forms[this].active}}" href="#/Applications/{{s.application.id}}/{{.}}">{{.}}</a></li>
           {{/each}}
         </ul>
       </div>
