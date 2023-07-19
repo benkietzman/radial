@@ -1303,6 +1303,7 @@ export default
           </table>
         </td>
       </tr>
+      {{/eachFilter}}
     </table>
   </div>
   {{else}}
