@@ -490,7 +490,7 @@ export default
           }
           else
           {
-            s.message = error.message;
+            s.message.v = error.message;
           }
         });
       }
@@ -552,7 +552,7 @@ export default
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
-          s.info = null;
+          s.info.v = null;
           if (c.wsResponse(response, error))
           {
             let appList = [];
@@ -994,7 +994,7 @@ export default
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
-            s.info = null;
+            s.info.v = null;
             if (c.wsResponse(response, error))
             {
               s.application.depends = response.Response.depends;
@@ -1118,7 +1118,7 @@ export default
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
-            s.info = null;
+            s.info.v = null;
             if (c.wsResponse(response, error))
             {
               s.application.servers = response.Response;
@@ -1263,10 +1263,10 @@ export default
   <h3 class="page-header">Applications</h3>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
-  {{#each c.m_letters}}
+  {{#each a.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
-      <button class="btn btn-{{#ifCond . "==" letter}}warning{{else}}default{{/ifCond}}" style="margin: 2px;">{{../.}}</button>
+      <button class="btn btn-{{#ifCond . "==" letter}}warning{{else}}default{{/ifCond}}" style="margin: 2px;">{{.}}</button>
     </a>
   </div>
   {{/each}}
