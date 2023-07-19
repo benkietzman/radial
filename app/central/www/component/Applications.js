@@ -1282,22 +1282,22 @@ export default
       {{#eachFilter applications 'name' narrow}}
       <tr style="{{application.style}}">
         <td valign="top">
-          <a href="#/Applications/{{./id}}">{{./name}}</a>
+          <a href="#/Applications/{{id}}">{{name}}</a>
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">
-            {{#each ./application.contacts}}
+            {{#each contacts}}
             <tr>
-              <td><a href="#/Users/{{./user_id}}">{{./last_name}}, {{./first_name}}</a> <small>({{./userid}})</small></td>
+              <td><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
             </tr>
             {{/each}}
           </table>
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">
-            {{#each ./servers}}
+            {{#each servers}}
             <tr>
-              <td><a href="#/Servers/{{./server_id}}">{{./name}}</a></td>
+              <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
             </tr>
             {{/each}}
           </table>
