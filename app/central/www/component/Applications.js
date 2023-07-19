@@ -23,13 +23,14 @@ export default
       // }}}
       a: a,
       c: c,
+      d: {},
       onlyOpenIssues: 1
     });
     // }}}
     // {{{ addAccount()
     s.addAccount = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationAccountAdd', Request: s.account};
+      let request = {Interface: 'central', 'Function': 'applicationAccountAdd', Request: c.simplify(s.account)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -48,13 +49,13 @@ export default
     // {{{ addApplication()
     s.addApplication = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationAdd', Request: s.application};
+      let request = {Interface: 'central', 'Function': 'applicationAdd', Request: c.simplify(s.d.application)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
         if (c.wsResponse(response, error))
         {
-          document.location.href = '#/Applications/?application=' + encodeURIComponent(s.application.name);
+          document.location.href = '#/Applications/?application=' + encodeURIComponent(s.d.application.name);
         }
         else
         {
@@ -67,7 +68,7 @@ export default
     s.addContact = (strType) =>
     {
       s.contact[strType].application_id = s.application.id;
-      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: s.contact[strType]};
+      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: c.simplify(s.contact[strType])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -107,7 +108,7 @@ export default
     s.addIssue = () =>
     {
       s.info.v = 'Adding issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueAdd', Request: {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary, due_date: s.issue.due_date, priority: s.issue.priority, assigned_userid: s.issue.assigned_userid, comments: s.issue.comments, server: location.host}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueAdd', Request: {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary.v, due_date: s.issue.due_date.v, priority: s.issue.priority.v, assigned_userid: s.issue.assigned_userid.v, comments: s.issue.comments.v, server: location.host}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -132,7 +133,7 @@ export default
     s.addIssueComment = (strAction, nIssueID, nApplicationID) =>
     {
       s.info.v = 'Adding comment...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueCommentAdd', Request: {issue_id: nIssueID, comments: s.issue.comments, action: strAction, application_id: nApplicationID, server: location.host}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueCommentAdd', Request: {issue_id: nIssueID, comments: s.issue.comments.v, action: strAction, application_id: nApplicationID, server: location.host}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -178,7 +179,7 @@ export default
     // {{{ addServer(Detail)
     s.addServerDetail = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationServerDetailAdd', Request: s.serverDetail};
+      let request = {Interface: 'central', 'Function': 'applicationServerDetailAdd', Request: c.simplify(s.serverDetail)};
       request.Request.application_server_id = s.modalServer.id;
       c.wsRequest('radial', request).then((response) =>
       {
@@ -196,9 +197,9 @@ export default
     };
     // }}}
     // {{{ editAccount()
-    s.editAccount = (account) =>
+    s.editAccount = (nIndex) =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationAccountEdit', Request: account};
+      let request = {Interface: 'central', 'Function': 'applicationAccountEdit', Request: c.simplify(s.application.accounts[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -217,14 +218,14 @@ export default
     // {{{ editApplication()
     s.editApplication = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationEdit', Request: s.application};
+      let request = {Interface: 'central', 'Function': 'applicationEdit', Request: c.simplify(s.application)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
         if (c.wsResponse(response, error))
         {
           s.application = null;
-          s.loadApplication()
+          s.loadApplication();
         }
         else
         {
@@ -234,9 +235,9 @@ export default
     };
     // }}}
     // {{{ editContact()
-    s.editContact = (contact) =>
+    s.editContact = (nIndex) =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationUserEdit', Request: contact};
+      let request = {Interface: 'central', 'Function': 'applicationUserEdit', Request: c.simplify(s.application.contacts[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -259,7 +260,7 @@ export default
       {
         s.application.issue.close_date = null;
       }
-      let request = {Interface: 'central', 'Function': 'applicationIssueEdit', Request: s.application.issue};
+      let request = {Interface: 'central', 'Function': 'applicationIssueEdit', Request: c.simplify(s.application.issue)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -299,17 +300,18 @@ export default
     };
     // }}}
     // {{{ editIssueComment()
-    s.editIssueComment = (comment) =>
+    s.editIssueComment = (nIndex) =>
     {
       s.info.v = 'Updating issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: {id: comment.id, comments: comment.comments}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: {id: comment.id, comments: s.application.issue.comments[nIndex].comments.v}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
         s.info.v = null;
         if (c.wsResponse(response, error))
         {
-          comment.bEdit = false;
+          s.application.issue.comments[nIndex].bEdit = false;
+          s.u();
         }
         else
         {
@@ -319,9 +321,9 @@ export default
     };
     // }}}
     // {{{ editServerDetail()
-    s.editServerDetail = (detail) =>
+    s.editServerDetail = (nIndex) =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationServerDetailEdit', Request: detail};
+      let request = {Interface: 'central', 'Function': 'applicationServerDetailEdit', Request: c.simplify(s.modalServer.details[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -389,6 +391,7 @@ export default
               let strForm = response.Request.form;
               s.application = response.Response;
               s.application.bDeveloper = c.isGlobalAdmin();
+              s.application.bLocalAdmin = c.isLocalAdmin(s.application.name);
               s.initForms();
               s.showForm(strForm);
               if (s.application.bDeveloper)
@@ -409,6 +412,7 @@ export default
                   {
                     let strForm = response.Request.form;
                     s.application.bDeveloper = true;
+                    s.application.bLocalAdmin = true;
                     s.application.forms.Accounts = {value: 'Accounts', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
                     s.application.forms.Notify = {value: 'Notify', active: null};
@@ -612,33 +616,58 @@ export default
     };
     // }}}
     // {{{ preEditAccount()
-    s.preEditAccount = (account, bEdit) =>
+    s.preEditAccount = (nIndex, bEdit) =>
     {
-      account.bEdit = bEdit;
+      s.application.accounts[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application.accounts[nIndex] = c.simplify(s.application.accounts[nIndex]);
+      }
+      s.u();
     };
     // }}}
     // {{{ preEditApplication()
     s.preEditApplication = (bEdit) =>
     {
       s.application.bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application = c.simplify(s.application);
+      }
+      s.u();
     };
     // }}}
     // {{{ preEditContact()
-    s.preEditContact = (contact, bEdit) =>
+    s.preEditContact = (nIndex, bEdit) =>
     {
-      contact.bEdit = bEdit;
+      s.application.contacts[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application.contacts[nIndex] = c.simplify(s.application.contacts[nIndex]);
+      }
+      s.u();
     };
     // }}}
     // {{{ preEditIssueComment()
-    s.preEditIssueComment = (comment, bEdit) =>
+    s.preEditIssueComment = (nIndex, bEdit) =>
     {
-      comment.bEdit = bEdit;
+      s.application.issue.comments[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application.issue.comments[nIndex] = c.simplify(s.application.issue.comments[nIndex]);
+      }
+      s.u();
     };
     // }}}
     // {{{ preEditServerDetail()
-    s.preEditServerDetail = (detail, bEdit) =>
+    s.preEditServerDetail = (nIndex, bEdit) =>
     {
-      detail.bEdit = bEdit;
+      s.modalServer.details[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.modalServer.details[nIndex] = c.simplify(s.modalServer.details[nIndex]);
+      }
+      s.u();
     };
     // }}}
     // {{{ removeAccount()
@@ -796,9 +825,9 @@ export default
     };
     // }}}
     // {{{ serverDetails()
-    s.serverDetails = (server) =>
+    s.serverDetails = (nID) =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationServerDetails', Request: {application_server_id: server.id}};
+      let request = {Interface: 'central', 'Function': 'applicationServerDetails', Request: {application_server_id: nID}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -876,6 +905,7 @@ export default
             s.account = {application_id: s.application.id, encrypt: a.m_noyes[0]};
             s.application.accounts = null;
             s.application.accounts = [];
+            s.u();
             s.info.v = 'Retrieving accounts...';
             let request = {Interface: 'central', 'Function': 'applicationAccountsByApplicationID', Request: {application_id: s.application.id}};
             c.wsRequest('radial', request).then((response) =>
@@ -913,12 +943,14 @@ export default
                         }
                       }
                     }
+                    s.u();
                   }
                   else
                   {
                     s.message.v = error.message;
                   }
                 });
+                s.u();
               }
               else
               {
@@ -945,6 +977,7 @@ export default
           }
           s.application.contacts = null;
           s.application.contacts = [];
+          s.u();
           s.info.v = 'Retrieving contacts...';
           let request = {Interface: 'central', 'Function': 'applicationUsersByApplicationID', Request: {application_id: s.application.id}};
           c.wsRequest('radial', request).then((response) =>
@@ -979,6 +1012,7 @@ export default
                 }
                 s.application.contacts.push(response.Response[i]);
               }
+              s.u();
             }
             else
             {
@@ -1012,6 +1046,7 @@ export default
                   if (c.wsResponse(response, error))
                   {
                     s.dependApplications = response.Response;
+                    s.u();
                   }
                   else
                   {
@@ -1019,6 +1054,7 @@ export default
                   }
                 });
               }
+              s.u();
             }
             else
             {
@@ -1067,6 +1103,7 @@ export default
                           s.application.issue.transfer = s.applications[i];
                         }
                       }
+                      s.u();
                     }
                     else
                     {
@@ -1074,6 +1111,7 @@ export default
                     }
                   });
                 }
+                s.u();
               }
               else
               {
@@ -1097,6 +1135,7 @@ export default
               if (c.wsResponse(response, error))
               {
                 s.application.issues = response.Response;
+                s.u();
               }
               else
               {
@@ -1105,6 +1144,7 @@ export default
             });
           }
         }
+        s.u();
       }
       // }}}
       // {{{ Notify
@@ -1135,6 +1175,7 @@ export default
                   if (c.wsResponse(response, error))
                   {
                     s.servers = response.Response;
+                    s.u();
                   }
                   else
                   {
@@ -1142,6 +1183,7 @@ export default
                   }
                 });
               }
+              s.u();
             }
             else
             {
@@ -1284,7 +1326,7 @@ export default
       </tr>
       {{#isValid "Central"}}
       <tr>
-        <td><input type="text" class="form-control" c-model="application.name" placeholder="Application Name"></td>
+        <td><input type="text" class="form-control" c-model="d.application.name" placeholder="Application Name"></td>
         <td><button class="btn btn-default" c-click="addApplication()">Add Application</button></td>
       </tr>
       {{/isValid}}
@@ -1334,21 +1376,21 @@ export default
     </div>
   </nav>
   {{#ifCond application.forms.General.active "&&" application}}
-  {{#ifCond ../isGlobalAdmin "||" ../application.bDeveloper}}
+  {{#if application.bDeveloper}}
   <div class="float-end">
     {{#if ../application.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditApplication(false)"></button>
-      <button class="btn btn-xs btn-success" c-click="editApplication()" style="margin-left: 10px;"></button>
+      <button class="btn btn-xs btn-warning" c-click="preEditApplication(false)">Cancel</button>
+      <button class="btn btn-xs btn-success" c-click="editApplication()" style="margin-left: 10px;">Save</button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="editApplication()">Edit</button>
+      <button class="btn btn-xs btn-warning" c-click="preEditApplication(true)">Edit</button>
       <button class="btn btn-xs btn-danger" c-click="removeApplication()" style="margin-left: 10px;">Remove</button>
     </div>
     {{/if}}
   </div>
-  {{/ifCond}}
+  {{/if}}
   <table class="table table-condensed">
     <tr>
       <th style="white-space: nowrap;">
@@ -1399,7 +1441,7 @@ export default
       </th>
       <td>
         {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.notify_priority">{{#each ../notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.notify_priority">{{#each ../notify_priorities}}<option value="{{.}}">{{priority}}</option>{{/each}}</select>
         {{else}}
         {{../application.notify_priority.priority}}
         {{/if}}
@@ -1542,7 +1584,7 @@ export default
   {{/if}}
   {{/ifCond}}
   {{#if application.forms.Accounts.active}}
-  {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+  {{#if application.bDeveloper}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -1551,11 +1593,8 @@ export default
         <th>Password</th>
         <th>Type</th>
         <th>Description</th>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
         <th></th>
-        {{/ifCond}}
       </tr>
-      {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
       <tr>
         <td><input type="text" class="form-control" c-model="account.user_id" placeholder="User ID"></td>
         <td><select class="form-control" c-model="account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
@@ -1564,7 +1603,6 @@ export default
         <td><input type="text" class="form-control" c-model="account.description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addAccount()">Add</button></td>
       </tr>
-      {{/ifCond}}
       {{#each application.accounts}}
       <tr>
         <td>
@@ -1576,7 +1614,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{encrypt.name}}
           {{/if}}
@@ -1590,7 +1628,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each ../account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
@@ -1602,20 +1640,18 @@ export default
           <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
           {{/if}}
         </td>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning" c-click="preEditAccount({{.}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editAccount({{account}})" style="margin-left: 10px;">Save</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditAccount({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editAccount({{@key}})" style="margin-left: 10px;">Save</button>
           {{else}}
-          <button class="btn btn-xs btn-warning" c-click="preEditAccount({{.}}, true)"></button><button class="btn btn-xs btn-danger" c-click="removeAccount({{id}})" style="margin-left: 10px;">Remove</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditAccount({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeAccount({{id}})" style="margin-left: 10px;">Remove</button>
           {{/if}}
         </td>
-        {{/ifCond}}
       </tr>
       {{/each}}
     </table>
   </div>
-  {{/ifCond}}
+  {{/if}}
   {{/if}}
   {{#if application.forms.Contacts.active}}
   <div class="table-responsive">
@@ -1627,11 +1663,11 @@ export default
         <th>Locked</th>
         <th>Notify</th>
         <th>Description</th>
-        {{#ifCond (isLocalAdmin application.name) "||" application.bDeveloper}}
+        {{#if application.bLocalAdmin}}
         <th></th>
-        {{/ifCond}}
+        {{/if}}
       </tr>
-      {{#ifCond (isLocalAdmin application.name) "||" application.bDeveloper}}
+      {{#if application.bLocalAdmin}}
       <tr>
         <td><input type="text" class="form-control" c-model="contact.[contactType.type].userid" placeholder="User ID"></td>
         <td><select class="form-control" c-model="contact.[contactType.type].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
@@ -1641,7 +1677,7 @@ export default
         <td><input type="text" class="form-control" c-model="contact.[contactType.type].description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addContact({{contactType.type}})">Add</button></td>
       </tr>
-      {{/ifCond}}
+      {{/if}}
       {{#each application.contacts}}
       <tr>
         {{#if bEdit}}
@@ -1659,15 +1695,15 @@ export default
           <td style="white-space:nowrap;">{{notify.name}}</td>
           <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
         {{/if}}
-        {{#ifCond isLocalAdmin "||" application.bDeveloper}}
+        {{#if application.bLocalAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning" c-click="preEditContact({{.}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{.}})" style="margin-left: 10px;">Save</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{@key}})" style="margin-left: 10px;">Save</button>
           {{else}}
-          <button class="btn btn-xs btn-warning" c-click="preEditContact({{.}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;"></button>
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;"></button>
           {{/if}}
         </td>
-        {{/ifCond}}
+        {{/if}}
       </tr>
       {{/each}}
     </table>
@@ -1678,22 +1714,22 @@ export default
     <table class="table table-condensed table-striped">
       <tr>
         <th>Application</th>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+        {{#if application.bDeveloper}}
         <th></th>
-        {{/ifCond}}
+        {{/if}}
       </tr>
-      {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+      {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="depend">{{#each dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addDepend()">Add</button></td>
       </tr>
-      {{/ifCond}}
+      {{/if}}
       {{#each application.depends}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+        {{#if application.bDeveloper}}
         <td><button class="btn btn-xs btn-danger" c-click="removeDepend({{id}})">Remove</button></td>
-        {{/ifCond}}
+        {{/if}}
       </tr>
       {{/each}}
     </table>
@@ -1727,7 +1763,7 @@ export default
           {{#if appllication.issue.close_date}}
           <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
           {{/if}}
-          {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+          {{#if application.bDeveloper}}
           {{^if application.issue.close_date}}
           <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
           <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
@@ -1752,18 +1788,18 @@ export default
           {{#if application.issue.assigned}}
           <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{application.issue.assigned.id}}">{{application.issue.assigned.last_name}}, {{application.issue.assigned.first_name}}</a> <small>({{application.issue.assigned.userid}})</small></td></tr>
           {{/if}}
-          {{/ifCond}}
+          {{/if}}
         </table>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+        {{#if application.bDeveloper}}
         <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
-        {{/ifCond}}
+        {{/if}}
       </div>
       <div class="col-md-9">
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+        {{#if application.bDeveloper}}
         <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
         {{else}}
         <p style="font-weight: bold;">{{application.issue.summary}}</p>
-        {{/ifCond}}
+        {{/if}}
         <table class="table table-condensed table-striped" style="margin-top: 10px;">
           {{#each application.issue.comments}}
           <tr>
@@ -1772,15 +1808,15 @@ export default
                 <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
                 <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
                 {{^ifCond bEdit "||" (ifCond userid "!=" getUserID)}}
-                <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{.}}, true)"></button></td></tr>
+                <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
                 {{/ifCond}}
               </table>
             </td>
             <td>
               {{#ifCond bEdit "&&" (ifCond userid "==" getUserID)}}
               <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{comment}})" style="margin: 10px 0px 0px 10px;">Save</button>
-              <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{.}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
+              <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
+              <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
               {{else}}
               <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
               {{/ifCond}}
@@ -1866,7 +1902,7 @@ export default
   </div>
   {{/if}}
   {{#if application.forms.Notify.active}}
-  {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+  {{#if application.bDeveloper}}
   <div class="table-responsive">
     <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
     <button class="btn btn-sm btn-default float-end" c-click="sendNotification()">Send Notification</button>
@@ -1891,29 +1927,29 @@ export default
     </div>
     {{/if}}
   </div>
-  {{/ifCond}}
+  {{/if}}
   {{/if}}
   {{#if application.forms.Servers.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th style="width: 100%;">Server</th>
-        {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+        {{#if application.bDeveloper}}
         <th colspan="2"></th>
-        {{/ifCond}}
+        {{/if}}
       </tr>
-      {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+      {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="server">{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addServer()">Add</button></td>
       </tr>
-      {{/ifCond}}
+      {{/if}}
       {{#each application.servers}}
       <tr>
         <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-        {{#ifCond isGlobalAdimin "||" application.bDeveloper}}
-        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#serverModal" c-click="serverDetails({{.}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
-        {{/ifCond}}
+        {{#if application.bDeveloper}}
+        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
+        {{/if}}
       </tr>
       {{/each}}
     </table>
@@ -1931,9 +1967,9 @@ export default
                 <th colspan="2">Processes</th>
                 <th colspan="2">Image</th>
                 <th colspan="2">Resident</th>
-                {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+                {{#if application.bDeveloper}}
                 <th colspan="2"></th>
-                {{/ifCond}}
+                {{/if}}
               </tr>
               <tr>
                 <th>Daemon</th>
@@ -1947,9 +1983,9 @@ export default
                 <th>Max</th>
                 <th>Min</th>
                 <th>Max</th>
-                {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+                {{#if application.bDeveloper}}
                 <th colspan="2"></th>
-                {{/ifCond}}
+                {{/if}}
               </tr>
               {{#each modalServer.details}}
               <tr>
@@ -1965,8 +2001,8 @@ export default
                   <td><input type="text" class="form-control" c-model="max_image"></td>
                   <td><input type="text" class="form-control" c-model="min_resident"></td>
                   <td><input type="text" class="form-control" c-model="max_resident"></td>
-                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{.}}, false)">Cancel</button></td>
-                  <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{.}})">Save</button></td>
+                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
+                  <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
                 {{else}}
                   <td>{{daemon}}</td>
                   <td>{{version}}</td>
@@ -1984,7 +2020,7 @@ export default
                 {{/if}}
               </tr>
               {{/each}}
-              {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+              {{#if application.bDeveloper}}
               <tr>
                 <td><input type="text" class="form-control" c-model="serverDetail.daemon"></td>
                 <td><input type="text" class="form-control" c-model="serverDetail.version"></td>
@@ -1999,7 +2035,7 @@ export default
                 <td><input type="text" class="form-control" c-model="serverDetail.max_resident"></td>
                 <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success" c-click="addServerDetail()">Add</button>{{/if}}</td>
               </tr>
-              {{/ifCond}}
+              {{/if}}
             </table>
           </div>
         </div>
