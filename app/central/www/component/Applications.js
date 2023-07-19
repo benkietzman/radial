@@ -1464,7 +1464,7 @@ export default
         {{/if}}
       </td>
     </tr>
-    {{/ifCond application.bEdit '||' application.menu_id}}
+    {{#ifCond application.bEdit '||' application.menu_id}}
     <tr>
       <th style="white-space: nowrap;">
         Menu Availability:
