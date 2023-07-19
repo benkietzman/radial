@@ -361,10 +361,10 @@ export default
     // {{{ loadApplication()
     s.loadApplication = () =>
     {
-      if (c.isObject(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
+      if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
       {
-        let strForm = ((c.isDefined(nav.data.form))?nav.data.form:'General');
-        if (c.isDefined(s.application) && s.application != null && (nav.data.id == s.application.id || nav.data.application == s.application.name))
+        let strForm = ((c.isParam(nav, 'form'))?c.getParam(nav, 'form'):'General');
+        if (c.isDefined(s.application) && s.application != null && (c.getParam(nav, 'id') == s.application.id || c.getParam(nav, 'application') == s.application.name))
         {
           s.showForm(strForm);
         }
@@ -373,13 +373,13 @@ export default
           s.info.v = 'Retrieving application...';
           s.application.v = null;
           let request = {Interface: 'central', 'Function': 'application', Request: {form: strForm}};
-          if (c.isDefined(nav.data.id))
+          if (c.isParam(nav, 'id'))
           {
-            request.Request.id = nav.data.id;
+            request.Request.id = c.getParam(nav, 'id');
           }
           else
           {
-            request.Request.name = nav.data.application;
+            request.Request.name = c.getParam(nav, 'application');
           }
           c.wsRequest('radial', request).then((response) =>
           {
@@ -533,9 +533,9 @@ export default
       // }}}
       if (s.list)
       {
-        if (c.isObject(nav.data) && c.isDefined(nav.data.letter))
+        if (c.isParam(nav, 'letter'))
         {
-          s.letter = nav.data.letter;
+          s.letter = c.getParam(nav, 'letter');
         }
         else if (!c.isDefined(s.letter))
         {
@@ -543,6 +543,7 @@ export default
         }
         s.applications = null;
         s.applications = [];
+        s.u();
         s.info.v = 'Retrieving applications...';
         let request = {Interface: 'central', 'Function': 'applications', Request: {}};
         if (s.letter != 'ALL')
@@ -574,6 +575,7 @@ export default
                 {
                   let i = response.Request.i;
                   s.applications[i].contacts = response.Response;
+                  s.u();
                 }
                 else
                 {
@@ -588,6 +590,7 @@ export default
                 {
                   let i = response.Request.i;
                   s.applications[i].servers = response.Response;
+                  s.u();
                 }
                 else
                 {
@@ -595,6 +598,7 @@ export default
                 }
               });
             }
+            s.u();
           }
           else
           {
@@ -1027,14 +1031,14 @@ export default
       // {{{ Issues
       else if (strForm == 'Issues')
       {
-        if (c.isObject(nav.data) && c.isDefined(nav.data.issue_id))
+        if (c.isParam(nav, 'issue_id'))
         {
           s.issue = true;
-          if (!c.isDefined(s.application.issue) || s.application.issue == null || nav.data.issue_id != s.application.issue.id)
+          if (!c.isDefined(s.application.issue) || s.application.issue == null || c.getParam(nav, 'issue_id') != s.application.issue.id)
           {
             s.application.issue = null;
             s.info.v = 'Retrieving issue...';
-            let request = {Interface: 'central', 'Function': 'applicationIssue', Request: {id: nav.data.issue_id, comments: 1}};
+            let request = {Interface: 'central', 'Function': 'applicationIssue', Request: {id: c.getParam(nav, 'issue_id'), comments: 1}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
@@ -1235,7 +1239,7 @@ export default
     // }}}
     // {{{ main
     c.setMenu('Applications');
-    if (c.isObject(nav.data) && (c.isDefined(nav.data.id) || c.isDefined(nav.data.application)))
+    if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
     {
       s.list = false;
     }
@@ -1259,17 +1263,17 @@ export default
   // {{{ template
   template: `
   {{#if list}}
-  <div class="input-group float-end"><span class="input-group-text">Narrow</div><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
   <h3 class="page-header">Applications</h3>
-  <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  <div class="input-group float-end"><span class="input-group-text">Narrow</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
   {{#each a.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
-      <button class="btn btn-{{#ifCond . "==" letter}}warning{{else}}default{{/ifCond}}" style="margin: 2px;">{{.}}</button>
+      <button class="btn btn-sm btn-{{#ifCond . "==" ../letter}}warning{{else}}default{{/ifCond}}">{{.}}</button>
     </a>
   </div>
   {{/each}}
+  <div c-model="info" class="text-warning"></div>
+  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
