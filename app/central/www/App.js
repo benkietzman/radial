@@ -83,4 +83,26 @@ class App
     this.c.resetMenu();
   }
   // }}}
+  // {{{ setNoYes()
+  setNoYes(item)
+  {
+    let bFound = false;;
+    let nIndex = 0
+
+    for (nIndex = 0; !bFound && nIndex < this.m_noyes.length; nIndex++)
+    {
+      if (item.value == this.m_noyes[nIndex].value)
+      {
+        bFound = true;
+      }
+    }
+    nIndex--;
+    if (!bFound)
+    {
+      nIndex = 0;
+    }
+
+    return this.m_noyes[nIndex];
+  }
+  // }}}
 }

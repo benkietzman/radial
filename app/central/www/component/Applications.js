@@ -23,7 +23,6 @@ export default
       // }}}
       a: a,
       c: c,
-      list: true,
       onlyOpenIssues: 1
     });
     // }}}
@@ -371,7 +370,7 @@ export default
         else
         {
           s.info.v = 'Retrieving application...';
-          s.application.v = null;
+          s.application = null;
           let request = {Interface: 'central', 'Function': 'application', Request: {form: strForm}};
           if (c.isParam(nav, 'id'))
           {
@@ -823,11 +822,12 @@ export default
       {
         strForm = 'General';
       }
-      s.application.forms.forEach((value, key) =>
+      for (let key of Object.keys(s.application.forms))
       {
-        value.active = null;
-      });
+        s.application.forms[key].active = null;
+      }
       s.application.forms[strForm].active = 'active';
+      s.u();
       // {{{ General
       if (strForm == 'General')
       {
@@ -1198,6 +1198,7 @@ export default
                         s.application.sysInfo[nIndex] = info;
                       }
                       s.application.sysInfo[nIndex].data = response.Response[1];
+                      s.u();
                     }
                     else
                     {
@@ -1207,6 +1208,7 @@ export default
                 }
               }
             }
+            s.u();
           }
           else
           {
@@ -1239,6 +1241,7 @@ export default
     // }}}
     // {{{ main
     c.setMenu('Applications');
+    s.list = true;
     if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
     {
       s.list = false;
@@ -1316,37 +1319,32 @@ export default
   <h3 class="page-header">{{application.name}}{{#if application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
-  <nav class="container navbar navbar-dark bg-dark bg-gradient">
+  <nav class="container navbar navbar-expand-lg navbar-dark bg-dark bg-gradient">
     <div class="container-fluid">
-      <button type="button" class="navbar-toggle" data-bs-toggle="collapse" data-bs-target="#appnavigationbar" aria-control="appnavigationbar" aria-expanded="false", aria-lable="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appnavigationbar" aria-controls="appnavigationbar" aria-expanded="false", aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="appnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each application.forms_order}}
-          {{#each application.forms}}
-          {{#ifCond @key "==" ../.}}
-          <li class="nav-item"><a class="nav-link {{../active}}" href="#/Applications/{{../id}}/{{../../.}}">{{../../.}}</a></li>
-          {{/ifCond}}
-          {{/each}}
+          <li class="nav-item"><a class="nav-link {{../application.forms.[.].active}}" href="#/Applications/{{../application.id}}/{{.}}">{{.}}</a></li>
           {{/each}}
         </ul>
       </div>
     </div>
   </nav>
   {{#ifCond application.forms.General.active "&&" application}}
-  {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
+  {{#ifCond ../isGlobalAdmin "||" ../application.bDeveloper}}
   <div class="float-end">
-    {{^if application.bEdit}}
-    <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="editApplication()">Edit</button>
-      <button class="btn btn-xs btn-danger" c-click="removeApplication()" style="margin-left: 10px;">Remove</button>
-    </div>
-    {{/if}}
-    {{#if application.bEdit}}
+    {{#if ../application.bEdit}}
     <div style="white-space: nowrap;">
       <button class="btn btn-xs btn-warning" c-click="preEditApplication(false)"></button>
       <button class="btn btn-xs btn-success" c-click="editApplication()" style="margin-left: 10px;"></button>
+    </div>
+    {{else}}
+    <div style="white-space: nowrap;">
+      <button class="btn btn-xs btn-warning" c-click="editApplication()">Edit</button>
+      <button class="btn btn-xs btn-danger" c-click="removeApplication()" style="margin-left: 10px;">Remove</button>
     </div>
     {{/if}}
   </div>
@@ -1357,7 +1355,7 @@ export default
         Application ID:
       </th>
       <td>
-        {{application.id}}
+        {{../application.id}}
       </td>
     </tr>
     <tr>
@@ -1365,10 +1363,10 @@ export default
         Application Name:
       </th>
       <td>
-        {{#if application.bEdit}}
+        {{#if ../application.bEdit}}
         <input type="text" class="form-control" c-model="application.name">
         {{else}}
-        {{application.name}}
+        {{../application.name}}
         {{/if}}
       </td>
     </tr>
@@ -1377,86 +1375,86 @@ export default
         Creation Date:
       </th>
       <td>
-        {{application.creation_date}}
+        {{../application.creation_date}}
       </td>
     </tr>
-    {{#ifCond application.bEdit "||" application.retirement_date}}
+    {{#ifCond ../application.bEdit "||" ../application.retirement_date}}
     <tr>
       <th style="white-space: nowrap;">
         Retirement Date:
       </th>
       <td>
-        {{#if application.bEdit}}
+        {{#if ../application.bEdit}}
         <input type="text" class="form-control" c-model="application.retirement_date" placeholder="YYYY-MM-DD">
         {{else}}
-        {{application.retirement_date}}
+        {{../application.retirement_date}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond application.bEdit "||" application.notify_priority_id}}
+    {{#ifCond ../application.bEdit "||" ../application.notify_priority_id}}
     <tr>
       <th style="white-space: nowrap;">
         Notify Priority:
       </th>
       <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.notify_priority">{{#each notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.notify_priority">{{#each ../notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
         {{else}}
-        {{application.notify_priority.priority}}
+        {{../application.notify_priority.priority}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond application.bEdit "||" application.website}}
+    {{#ifCond ../application.bEdit "||" ../application.website}}
     <tr>
       <th>
         Website:
       </th>
       <td>
-        {{#if application.bEdit}}
+        {{#if ../application.bEdit}}
         <input type="text" class="form-control" c-model="application.website">
         {{else}}
-        <a href="{{application.website}}" target="_blank">{{application.website}}</a>
+        <a href="{{../application.website}}" target="_blank">{{../application.website}}</a>
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond application.bedit "||" application.login_type_id}}
+    {{#ifCond ../application.bedit "||" ../application.login_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Login Type:
       </th>
       <td style="white-space: nowrap;">
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.login_type">{{#each ../login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
-        {{application.login_type.type}}
+        {{../application.login_type.type}}
         <br>
-        Secure: {{application.secure_port.name}}
+        Secure: {{../application.secure_port.name}}
         <br>
-        Auto-Register: {{application.auto_register.name}}
+        Auto-Register: {{../application.auto_register.name}}
         <br>
-        Account Check: {{application.account_check.name}}
+        Account Check: {{../application.account_check.name}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond application.bEdit "||" application.package_type_id}}
+    {{#ifCond ../application.bEdit "||" ../application.package_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Package Type:
       </th>
       <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.package_type">{{#each package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.package_type">{{#each ../package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{application.package_type.type}}
+        {{../application.package_type.type}}
         {{/if}}
       </td>
     </tr>
@@ -1466,55 +1464,57 @@ export default
         Dependable:
       </th>
       <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.dependable">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        {{application.dependable.name}}
+        {{../application.dependable.name}}
         {{/if}}
       </td>
     </tr>
-    {{#ifCond application.bEdit "||" application.menu_id}}
+    {{#ifCond ../application.bEdit "||" ../application.menu_id}}
     <tr>
       <th style="white-space: nowrap;">
         Menu Availability:
       </th>
       <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.menu_access">{{#each menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.menu_access">{{#each ../menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{application.menu_access.type}}
+        {{../application.menu_access.type}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond application.bEdit "||" (ifCond application.wiki.value "==" 1)}}
+    {{#if ../application.bEdit}}
+    {{#ifCond ../application.wiki.value "==" 1}}
     <tr>
       <th>
         WIKI:
       </th>
       <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if ../application.bEdit}}
+        <select class="form-control" c-model="application.wiki">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        <a href="/wiki/index.php/{{urlEncode application.name}}" target="_blank">/wiki/index.php/{{application.name}}</a>
+        <a href="/wiki/index.php/{{urlEncode ../application.name}}" target="_blank">/wiki/index.php/{{../application.name}}</a>
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
+    {{/if}}
     <tr>
       <th>
         Description:
       </th>
       <td>
-        {{#if application.bEdit}}
+        {{#if ../application.bEdit}}
         <textarea class="form-control" c-model="application.description"></textarea>
         {{else}}
-        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{application.description}}</pre>
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{../application.description}}</pre>
         {{/if}}
       </td>
     </tr>
   </table>
-  {{#if application.sysInfo}}
+  {{#if ../application.sysInfo}}
   <table class="table table-condensed table-striped">
     <tr>
       <th>Server</th>
@@ -1526,7 +1526,7 @@ export default
       <th>Resident (KB)</th>
       <th>Current Alarms</th>
     </tr>
-    {{#each application.sysInfo}}
+    {{#each ../application.sysInfo}}
     <tr>
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
@@ -1541,7 +1541,8 @@ export default
   </table>
   {{/if}}
   {{/ifCond}}
-  {{#ifCond application.forms.Accounts.active "&&" (ifCond isGlobalAdmin "||" application.bDeveloper)}}
+  {{#if application.forms.Accounts.active}}
+  {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -1615,6 +1616,7 @@ export default
     </table>
   </div>
   {{/ifCond}}
+  {{/if}}
   {{#if application.forms.Contacts.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
@@ -1642,48 +1644,21 @@ export default
       {{/ifCond}}
       {{#each application.contacts}}
       <tr>
-        <td style="white-space:nowrap;">
-          {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID">
-          {{else}}
-          <a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small>
-          {{/if}}
-        </td>
-        <td style="white-space:nowrap;">
-          {{#if bEdit}}
-          <select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
-          {{else}}
-          {{type.type}}
-          {{/if}}
-        </td>
-        <td>
-          {{#if bEdit}}
-          <select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
-          {{else}}
-          {{admin.name}}
-          {{/if}}
-        </td>
-        <td>
-          {{#if bEdit}}
-          <select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
-          {{else}}
-          {{locked.name}}
-          {{/if}}
-        </td>
-        <td>
-          {{#if bEdit}}
-          <select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
-          {{else}}
-          {{notify.name}}
-          {{/if}}
-        </td>
-        <td>
-          {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description">
-          {{else if description}}
+        {{#if bEdit}}
+          <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID"></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description"></td>
+        {{else}}
+          <td style="white-space:nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
+          <td style="white-space:nowrap;">{{type.type}}</td>
+          <td style="white-space:nowrap;">{{admin.name}}</td>
+          <td style="white-space:nowrap;">{{locked.name}}</td>
+          <td style="white-space:nowrap;">{{notify.name}}</td>
           <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
-          {{/if}}
-        </td>
+        {{/if}}
         {{#ifCond isLocalAdmin "||" application.bDeveloper}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
@@ -1890,7 +1865,8 @@ export default
     {{/if}}
   </div>
   {{/if}}
-  {{#ifCond application.forms.Notify.active "&&" (ifCond isGlobalAdmin "||" application.bDeveloper)}}
+  {{#if application.forms.Notify.active}}
+  {{#ifCond isGlobalAdmin "||" application.bDeveloper}}
   <div class="table-responsive">
     <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
     <button class="btn btn-sm btn-default float-end" c-click="sendNotification()">Send Notification</button>
@@ -1916,6 +1892,7 @@ export default
     {{/if}}
   </div>
   {{/ifCond}}
+  {{/if}}
   {{#if application.forms.Servers.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
