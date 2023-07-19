@@ -1261,6 +1261,8 @@ export default
   {{#if list}}
   <div class="input-group float-end"><span class="input-group-text">Narrow</div><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
   <h3 class="page-header">Applications</h3>
+  <div c-model="info" class="text-warning">{{info}}</div>
+  <div c-model="message" class="text-danger" style="font-weight:bold;">{{store.message}}</div>
   {{#each c.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
