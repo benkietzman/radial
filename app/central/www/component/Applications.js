@@ -626,6 +626,18 @@ export default
       contact.bEdit = bEdit;
     };
     // }}}
+    // {{{ preEditIssueComment()
+    s.preEditIssueComment = (comment, bEdit) =>
+    {
+      comment.bEdit = bEdit;
+    };
+    // }}}
+    // {{{ preEditServerDetail()
+    s.preEditServerDetail = (detail, bEdit) =>
+    {
+      detail.bEdit = bEdit;
+    };
+    // }}}
     // {{{ removeAccount()
     s.removeAccount = (nID) =>
     {
@@ -1294,7 +1306,7 @@ export default
     </table>
   </div>
   {{else}}
-  <h3 class="page-header">{{s.application.name}}{{#if s.application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
+  <h3 class="page-header">{{application.name}}{{#if application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
   <div c-model="info" class="text-warning">{{info}}</div>
   <div c-model="message" class="text-danger" style="font-weight:bold;">{{store.message}}</div>
   <nav class="container navbar navbar-dark bg-dark bg-gradient">
@@ -1304,8 +1316,8 @@ export default
       </button>
       <div class="collapse navbar-collapse" id="appnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          {{#each s.application.forms_order}}
-          {{#each s.application.forms}}
+          {{#each application.forms_order}}
+          {{#each application.forms}}
           {{#ifCond @key '==' ../.}}
           <li class="nav-item"><a class="nav-link {{../active}}" href="#/Applications/{{../id}}/{{../../.}}">{{../../.}}</a></li>
           {{/ifCond}}
@@ -1315,10 +1327,10 @@ export default
       </div>
     </div>
   </nav>
-  {{#ifCond s.application.forms.General.active '&&' s.application}}
-  {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+  {{#ifCond application.forms.General.active '&&' application}}
+  {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
   <div class="float-end">
-    {{^if s.application.bEdit}}
+    {{^if application.bEdit}}
     <div style="white-space: nowrap;">
       <button class="btn btn-xs btn-warning" c-click="editApplication()">Edit</button>
       <button class="btn btn-xs btn-danger" c-click="removeApplication()" style="margin-left: 10px;">Remove</button>
@@ -1336,7 +1348,7 @@ export default
         Application ID:
       </th>
       <td>
-        {{s.application.id}}
+        {{application.id}}
       </td>
     </tr>
     <tr>
@@ -1344,10 +1356,10 @@ export default
         Application Name:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <input type="text" class="form-control" c-model="s.application.name">
+        {{#if application.bEdit}}
+        <input type="text" class="form-control" c-model="application.name">
         {{else}}
-        {{s.application.name}}
+        {{application.name}}
         {{/if}}
       </td>
     </tr>
@@ -1356,86 +1368,86 @@ export default
         Creation Date:
       </th>
       <td>
-        {{s.application.creation_date}}
+        {{application.creation_date}}
       </td>
     </tr>
-    {{#ifCond s.application.bEdit '||' s.application.retirement_date}}
+    {{#ifCond application.bEdit '||' application.retirement_date}}
     <tr>
       <th style="white-space: nowrap;">
         Retirement Date:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <input type="text" class="form-control" c-model="s.application.retirement_date" placeholder="YYYY-MM-DD">
+        {{#if application.bEdit}}
+        <input type="text" class="form-control" c-model="application.retirement_date" placeholder="YYYY-MM-DD">
         {{else}}
-        {{s.application.retirement_date}}
+        {{application.retirement_date}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{ifCond s.application.bEdit '||' s.application.notify_priority_id}}
+    {{ifCond application.bEdit '||' application.notify_priority_id}}
     <tr>
       <th style="white-space: nowrap;">
         Notify Priority:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities">{{#each s.notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.notify_priority" ng-options="notify_priority.priority for notify_priority in store.notify_priorities">{{#each notify_priorities}}<option value="{{priority}}">{{.}}</option>{{/each}}</select>
         {{else}}
-        {{s.application.notify_priority.priority}}
+        {{application.notify_priority.priority}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond s.application.bEdit '||' s.application.website}}
+    {{#ifCond application.bEdit '||' application.website}}
     <tr>
       <th>
         Website:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <input type="text" class="form-control" c-model="s.application.website">
+        {{#if application.bEdit}}
+        <input type="text" class="form-control" c-model="application.website">
         {{else}}
-        <a href="{{s.application.website}}" target="_blank">{{s.application.website}}</a>
+        <a href="{{application.website}}" target="_blank">{{application.website}}</a>
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond s.application.bedit '||' s.application.login_type_id}}
+    {{#ifCond application.bedit '||' application.login_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Login Type:
       </th>
       <td style="white-space: nowrap;">
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.login_type">{{#each s.login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="s.application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="s.application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="s.application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
-        {{s.application.login_type.type}}
+        {{application.login_type.type}}
         <br>
-        Secure: {{s.application.secure_port.name}}
+        Secure: {{application.secure_port.name}}
         <br>
-        Auto-Register: {{s.application.auto_register.name}}
+        Auto-Register: {{application.auto_register.name}}
         <br>
-        Account Check: {{s.application.account_check.name}}
+        Account Check: {{application.account_check.name}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond s.application.bEdit '||' s.application.package_type_id}}
+    {{#ifCond application.bEdit '||' application.package_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Package Type:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.package_type">{{#each s.package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.package_type">{{#each package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{s.application.package_type.type}}
+        {{application.package_type.type}}
         {{/if}}
       </td>
     </tr>
@@ -1445,37 +1457,37 @@ export default
         Dependable:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        {{s.application.dependable.name}}
+        {{application.dependable.name}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond s.application.bEdit '||' s.application.menu_id}}
+    {{/ifCond application.bEdit '||' application.menu_id}}
     <tr>
       <th style="white-space: nowrap;">
         Menu Availability:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.menu_access">{{#each s.menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.menu_access">{{#each menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{s.application.menu_access.type}}
+        {{application.menu_access.type}}
         {{/if}}
       </td>
     </tr>
     {{/ifCond}}
-    {{#ifCond s.application.bEdit '||' (ifCond s.application.wiki.value '==' 1)}}
+    {{#ifCond application.bEdit '||' (ifCond application.wiki.value '==' 1)}}
     <tr>
       <th>
         WIKI:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <select class="form-control" c-model="s.application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        <a href="/wiki/index.php/{{urlEncode s.application.name}}" target="_blank">/wiki/index.php/{{s.application.name}}</a>
+        <a href="/wiki/index.php/{{urlEncode application.name}}" target="_blank">/wiki/index.php/{{application.name}}</a>
         {{/if}}
       </td>
     </tr>
@@ -1485,15 +1497,15 @@ export default
         Description:
       </th>
       <td>
-        {{#if s.application.bEdit}}
-        <textarea class="form-control" c-model="s.application.description"></textarea>
+        {{#if application.bEdit}}
+        <textarea class="form-control" c-model="application.description"></textarea>
         {{else}}
-        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{s.application.description}}</pre>
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{application.description}}</pre>
         {{/if}}
       </td>
     </tr>
   </table>
-  {{#if s.application.sysInfo}}
+  {{#if application.sysInfo}}
   <table class="table table-condensed table-striped">
     <tr>
       <th>Server</th>
@@ -1505,7 +1517,7 @@ export default
       <th>Resident (KB)</th>
       <th>Current Alarms</th>
     </tr>
-    {{#each s.application.sysInfo}}
+    {{#each application.sysInfo}}
     <tr>
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
@@ -1520,7 +1532,7 @@ export default
   </table>
   {{/if}}
   {{/ifCond}}
-  {{#ifCond s.application.forms.Accounts.active '&&' (ifCond isGlobalAdmin '||' s.application.bDeveloper)}}
+  {{#ifCond application.forms.Accounts.active '&&' (ifCond isGlobalAdmin '||' application.bDeveloper)}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -1529,58 +1541,58 @@ export default
         <th>Password</th>
         <th>Type</th>
         <th>Description</th>
-        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
         <th></th>
         {{/ifCond}}
       </tr>
-      {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+      {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
       <tr>
-        <td><input type="text" class="form-control" c-model="s.account.user_id" placeholder="User ID"></td>
-        <td><select class="form-control" c-model="s.account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><input type="password" class="form-control" c-model="s.account.password" placeholder="Password"></td>
-        <td><select class="form-control" c-model="s.account.type">{{#each s.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="s.account.description" placeholder="Description"></td>
+        <td><input type="text" class="form-control" c-model="account.user_id" placeholder="User ID"></td>
+        <td><select class="form-control" c-model="account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="password" class="form-control" c-model="account.password" placeholder="Password"></td>
+        <td><select class="form-control" c-model="account.type">{{#each account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="account.description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addAccount()">Add</button></td>
       </tr>
       {{/ifCond}}
-      {{#each s.application.accounts}}
+      {{#each application.accounts}}
       <tr>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="s.application.accounts.[{{@key}}].user_id" placeholder="User ID">
+          <input type="text" class="form-control" c-model="application.accounts.[{{@key}}].user_id" placeholder="User ID">
           {{else}}
           {{user_id}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.accounts.[{{@key}}].encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{encrypt.name}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="s.application.accounts.[{{@key}}].password" placeholder="Password">
+          <input type="text" class="form-control" c-model="application.accounts.[{{@key}}].password" placeholder="Password">
           {{else}}
           {{password}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.accounts.[{{@key}}].type">{{#each s.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <textarea class="form-control" c-model="s.application.accounts.[{{@key}}].description" placeholder="Description"></textarea>
+          <textarea class="form-control" c-model="application.accounts.[{{@key}}].description" placeholder="Description"></textarea>
           {{else if description}}
           <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
           {{/if}}
         </td>
-        {{#ifCond isGlobalAdmin '|| s.application.bDeveloper}}
+        {{#ifCond isGlobalAdmin '|| application.bDeveloper}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
           <button class="btn btn-xs btn-warning" c-click="preEditAccount({{.}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editAccount({{account}})" style="margin-left: 10px;">Save</button>
@@ -1594,7 +1606,7 @@ export default
     </table>
   </div>
   {{/ifCond}}
-  {{#if s.application.forms.Contacts.active}}
+  {{#if application.forms.Contacts.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -1604,61 +1616,61 @@ export default
         <th>Locked</th>
         <th>Notify</th>
         <th>Description</th>
-        {{#ifCond (isLocalAdmin s.application.name) '||' s.application.bDeveloper}}
+        {{#ifCond (isLocalAdmin application.name) '||' application.bDeveloper}}
         <th></th>
         {{/ifCond}}
       </tr>
-      {{#ifCond (isLocalAdmin s.application.name) '||' s.application.bDeveloper}}
+      {{#ifCond (isLocalAdmin application.name) '||' application.bDeveloper}}
       <tr>
-        <td><input type="text" class="form-control" c-model="s.contact.[contactType.type].userid" placeholder="User ID"></td>
-        <td><select class="form-control" ng-model="s.contact.[contactType.type].type">{{#each s.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-        <td><select class="form-control" ng-model="s.contact.[contactType.type].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" ng-model="s.contact.[contactType.type].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" ng-model="s.contact.[contactType.type].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" ng-model="s.contact.[contactType.type].description" placeholder="Description"></td>
+        <td><input type="text" class="form-control" c-model="contact.[contactType.type].userid" placeholder="User ID"></td>
+        <td><select class="form-control" ng-model="contact.[contactType.type].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="contact.[contactType.type].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="contact.[contactType.type].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" ng-model="contact.[contactType.type].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" ng-model="contact.[contactType.type].description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addContact({{contactType.type}})">Add</button></td>
       </tr>
       {{/ifCond}}
-      {{#each s.application.contacts}}
+      {{#each application.contacts}}
       <tr>
         <td style="white-space:nowrap;">
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="s.application.contacts.[{{@key}}].userid" placeholder="User ID">
+          <input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID">
           {{else}}
           <a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small>
           {{/if}}
         </td>
         <td style="white-space:nowrap;">
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.contacts.[{{@key}}].type">{{#each s.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{admin.name}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{locked.name}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="s.application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{notify.name}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="s.application.contacts.[{{@key}}].description" placeholder="Description">
+          <input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description">
           {{else if description}}
           <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
           {{/if}}
@@ -1675,36 +1687,36 @@ export default
     </table>
   </div>
   {{/if}}
-  {{#if s.application.forms.Depend.active}}
+  {{#if application.forms.Depend.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th>Application</th>
-        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
         <th></th>
         {{/ifCond}}
       </tr>
-      {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+      {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
       <tr>
-        <td><select class="form-control" c-model="s.depend">{{#each s.dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="depend">{{#each dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addDepend()">Add</button></td>
       </tr>
       {{/ifCond}}
-      {{#each s.application.depends}}
+      {{#each application.depends}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
-        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
         <td><button class="btn btn-xs btn-danger" c-click="removeDepend({{id}})">Remove</button></td>
         {{/ifCond}}
       </tr>
       {{/each}}
     </table>
-    <h4 class="page-header">Depend Upon {{s.application.name}}</h4>
+    <h4 class="page-header">Depend Upon {{application.name}}</h4>
     <table class="table table-condensed table-striped">
       <tr>
         <th>Application</th>
       </tr>
-      {{#each s.application.dependents}}
+      {{#each application.dependents}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
       </tr>
@@ -1712,155 +1724,203 @@ export default
     </table>
   </div>
   {{/if}}
-  {{#if s.application.forms.Issues.active}}
+  {{#if application.forms.Issues.active}}
   <div class="table-responsive">
-    {{#if s.issue}}
-    {{#if s.application.issue}}
-    {{#ifCond isValid '&&' s.application.issue.close_date}}
+    {{#if issue}}
+    {{#if application.issue}}
+    {{#ifCond isValid '&&' application.issue.close_date}}
     <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
     {{/ifCond}}
     <div class="row">
       <div class="col-md-3">
         <table class="table table-condensed card card-body card-inverse">
-          <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{s.application.issue.id}}</td></tr>
+          <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{application.issue.id}}</td></tr>
           <tr ng-show="store.application.issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{store.application.issue.open_date}}</td></tr>
           <tr ng-show="store.application.issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{store.application.issue.close_date}}</td></tr>
-          {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
-          {{^if s.application.issue.close_date}}
-          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="s.application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
-          <tr><th>Priority</th><td><select c-model="s.application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-          <tr><th>Due</th><td><input type="text" class="form-control" c-model="s.application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-          <tr><th>Release</th><td><input type="text" class="form-control" c-model="s.application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
-          <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="s.application.issue.assigned_userid" placeholder="User ID"></td></tr>
-          <tr><th>Transfer</th><td><select class="form-control" c-model="s.application.issue.transfer">{{#each s.applications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td></tr>
+          {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+          {{^if application.issue.close_date}}
+          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
+          <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+          <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
+          <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer">{{#each applications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td></tr>
           {{/if}}
           {{else}}
-          {{#ifCond s.application.issue.hold '==' 1}}
+          {{#ifCond application.issue.hold '==' 1}}
           <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
           {{/ifCond}}
-          {{#ifCond s.application.issue.priority '>=' 1}}
-          <tr><th>Priority</th><td>{{#ifCond s.application.issue.priority '==' 1}}Low{{else ifCond s.application.issue.priority '==' 2}}<span style="color: orange;">Medium</span>{{else ifCond s.application.issue.priority '==' 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
+          {{#ifCond application.issue.priority '>=' 1}}
+          <tr><th>Priority</th><td>{{#ifCond application.issue.priority '==' 1}}Low{{else ifCond application.issue.priority '==' 2}}<span style="color: orange;">Medium</span>{{else ifCond application.issue.priority '==' 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
           {{/ifCond}}
-          {{#if s.application.issue.due_date}}
-          <tr><th>Due</th><td style="white-space: nowrap;">{{s.application.issue.due_date}}</td></tr>
+          {{#if application.issue.due_date}}
+          <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
           {{/if}}
-          {{#if s.application.issue.release_date}}
-          <tr><th>Release</th><td style="white-space: nowrap;">{{s.application.issue.release_date}}</td></tr>
+          {{#if application.issue.release_date}}
+          <tr><th>Release</th><td style="white-space: nowrap;">{{application.issue.release_date}}</td></tr>
           {{/if}}
-          {{#if s.application.issue.assigned}}
-          <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{s.application.issue.assigned.id}}">{{s.application.issue.assigned.last_name}}, {{s.application.issue.assigned.first_name}}</a> <small>({{s.application.issue.assigned.userid}})</small></td></tr>
+          {{#if application.issue.assigned}}
+          <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{application.issue.assigned.id}}">{{application.issue.assigned.last_name}}, {{application.issue.assigned.first_name}}</a> <small>({{application.issue.assigned.userid}})</small></td></tr>
           {{/if}}
           {{/ifCond}}
         </table>
-        {{#ifCond isGlobalAdmin '||' s.application.bDeveloper}}
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
         <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
         {{/ifCond}}
       </div>
-TODO
       <div class="col-md-9">
-        <p ng-show="store.application.issue.summary && ((!common.isGlobalAdmin() && !store.application.bDeveloper) || store.application.issue.close_date)" style="font-weight: bold;">{{store.application.issue.summary}}</p>
-        <input ng-show="(common.isGlobalAdmin() || store.application.bDeveloper) && !store.application.issue.close_date" type="text" class="form-control" ng-model="store.application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+        <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
+        {{else}}
+        <p style="font-weight: bold;">{{application.issue.summary}}</p>
+        {{/ifCond}}
         <table class="table table-condensed table-striped" style="margin-top: 10px;">
-          <tr ng-repeat="comment in store.application.issue.comments">
+          {{#each application.issue.comments}}
+          <tr>
             <td>
               <table class="table table-condensed" style="background: inherit;">
-                <tr><td style="white-space: nowrap;">{{comment.entry_date}}</td></tr>
-                <tr><td style="white-space: nowrap;"><a href="#/Users/{{comment.user_id}}">{{comment.last_name}}, {{comment.first_name}}</a> <small>({{comment.userid}})</small></td></tr>
-                <tr ng-show="!store.application.issue.close_date && !comment.bEdit && comment.userid == common.getUserID()"><td><button class="btn btn-sm btn-default glyphicon glyphicon-pencil float-end" ng-click="comment.bEdit = true"></button></td></tr>
+                <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
+                <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
+                {{#ifCond !bEdit '&&' (ifCond userid '==' getUserID)}}
+                <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{.}}, true)"></button></td></tr>
+                {{/ifCond}}
               </table>
             </td>
             <td>
-              <pre ng-show="!store.application.issue.close_date || !comment.bEdit || comment.userid != common.getUserID()" style="background: inherit; color: inherit; white-space: pre-wrap;">{{comment.comments}}</pre>
-              <textarea ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" ng-model="comment.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comment.comments}}</textarea>
-              <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="editIssueComment(comment)" style="margin: 10px 0px 0px 10px;">Save</button>
-              <button ng-show="!store.application.issue.close_date && comment.bEdit && comment.userid == common.getUserID()" class="btn btn-sm btn-default float-end" ng-click="comment.bEdit = false" style="margin: 10px 0px 0px 0px;">Cancel</button>
+              {{#ifCond bEdit '&&' (ifCond userid '==' getUserID)}}
+              <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
+              <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{comment}})" style="margin: 10px 0px 0px 10px;">Save</button>
+              <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{.}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
+              {{else}}
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
+              {{/ifCond}}
             </td>
           </tr>
-          <tr ng-show="!store.application.issue.close_date && common.isValid(null)">
+          {{/each}}
+          {{#if isValid}}
+          <tr>
             <td></td>
             <td>
-              <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('close', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 10px;">Close Issue</button>
-              <button class="btn btn-sm btn-default float-end" ng-click="addIssueComment('update', store.application.issue.id, store.application.id)" style="margin: 10px 0px 0px 0px;">Add Comments</button>
+              <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('close', {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('update', {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
             </td>
           </tr>
+          {{/if}}
         </table>
       </div>
     </div>
     {{else}}
     <table class="table table-condensed table-striped">
-      <tr ng-show="common.isValid(null)">
+      {{#if isValid}}
+      <tr">
         <td style="width:25%;">
           <table class="table table-condensed" style="background: inherit;">
-            <tr><th>Due</th><td><input type="text" ng-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-            <tr><th>Priority</th><td><select ng-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-            <tr><th>Assigned</th><td><input type="text" ng-model="issue.assigned_userid" placeholder="User ID"></td></tr>
+            <tr><th>Due</th><td><input type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+            <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+            <tr><th>Assigned</th><td><input type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
           </table>
         </td>
         <td style="width:75%;">
-          <input type="text" class="form-control" ng-model="issue.summary" placeholder="enter summary" style="width: 100%;">
+          <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;">
           <br>
-          <textarea ng-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-          <button class="btn btn-sm btn-default float-end" ng-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
+          <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+          <button class="btn btn-sm btn-default float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
         </td>
       </tr>
+      {{/if}}
     </table>
-    <button class="btn btn-sm btn-default float-end" ng-click="toggleClosedIssues()"><span ng-if="store.onlyOpenIssues == 0">Hide</span><span ng-if="store.onlyOpenIssues == 1">Show</span> Closed Issues</button>
+    <button class="btn btn-sm btn-default float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues '==' 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
     <table class="table table-condensed table-striped">
-      <tr ng-repeat="issue in store.application.issues">
+      {{#each application.issues}}
+      <tr>
         <td>
           <table class="table table-condensed" style="background: inherit;">
-            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{store.application.id}}/Issues/{{issue.id}}">{{issue.id}}</a><span ng-if="issue.hold == 1" style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span></td></tr>
-            <tr ng-show="issue.open_date"><th>Open</th><td style="white-space: nowrap;">{{issue.open_date}}</td></tr>
-            <tr ng-show="issue.due_date"><th>Due</th><td style="white-space: nowrap;">{{issue.due_date}}</td></tr>
-            <tr ng-show="issue.release_date"><th>Release</th><td style="white-space: nowrap;">{{issue.release_date}}</td></tr>
-            <tr ng-show="issue.close_date"><th>Close</th><td style="white-space: nowrap;">{{issue.close_date}}</td></tr>
-            <tr ng-if="issue.priority >= 1"><th>Priority</th><td ng-if="issue.priority == 1">Low</td><td ng-if="issue.priority == 2" style="color: orange;">Medium</td><td ng-if="issue.priority == 3" style="color: red;">High</td><td ng-if="issue.priority > 3" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td></tr>
-            <tr ng-show="issue.comments"><td colspan="2"><a href="#/Users/{{issue.comments[0].user_id}}">{{issue.comments[0].last_name}}, {{issue.comments[0].first_name}}</a> <small>({{issue.comments[0].userid}})</small></td></tr>
-            <tr ng-show="issue.assigned"><td colspan="2"><a href="#/Users/{{issue.assigned.id}}">{{issue.assigned.last_name}}, {{issue.assigned.first_name}}</a> <small>({{issue.assigned.userid}})</small></td></tr>
+            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold '==' 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
+            {{#if open_date}}
+            <tr><th>Open</th><td style="white-space: nowrap;">{{open_date}}</td></tr>
+            {{/if}}
+            {{#if due_date}}
+            <tr><th>Due</th><td style="white-space: nowrap;">{{due_date}}</td></tr>
+            {{/if}}
+            {{#if release_date}}
+            <tr><th>Release</th><td style="white-space: nowrap;">{{release_date}}</td></tr>
+            {{/if}}
+            {{#if close_date}}
+            <tr><th>Close</th><td style="white-space: nowrap;">{{close_date}}</td></tr>
+            {{/if}}
+            {{#ifCond priority '>=' 1}}
+            <tr><th>Priority</th>{{#ifCond priority '==' 1}}<td>Low</td>{{else ifCond priority '==' 2}}<td style="color: orange;">Medium</td>{{else ifCond priority '==' 3}}<td style="color: red;">High</td>{{else ifCond priority '>' 3}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
+            {{/ifCond}}
+            {{#if comments}}
+            <tr><td colspan="2"><a href="#/Users/{{comments[0].user_id}}">{{comments[0].last_name}}, {{comments[0].first_name}}</a> <small>({{comments[0].userid}})</small></td></tr>
+            {{/if}}
+            {{#if assigned}}
+            <tr><td colspan="2"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
+            {{/if}}
           </table>
         </td>
         <td>
-          <p ng-show="issue.summary" style="font-weight: bold;">{{issue.summary}}</p>
-          <pre ng-show="issue.comments" style="background: inherit; color: inherit; white-space: pre-wrap;">{{issue.comments[0].comments}}</pre>
+          {{#if summary}}
+          <p style="font-weight: bold;">{{summary}}</p>
+          {{/if}}
+          {{#if comments}}
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments[0].comments}}</pre>
+          {{/if}}
         </td>
       </tr>
+      {{/each}}
     </table>
     {{/if}}
   </div>
   {{/if}}
-  {{#ifCond s.application.forms.Notify.active '&&' (ifCond isGlobalAdmin '||' s.application.bDeveloper)}}
+  {{#ifCond application.forms.Notify.active '&&' (ifCond isGlobalAdmin '||' application.bDeveloper)}}
   <div class="table-responsive">
-    <textarea ng-model="store.notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
-    <button class="btn btn-sm btn-default float-end" ng-click="sendNotification()">Send Notification</button>
+    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
+    <button class="btn btn-sm btn-default float-end" c-click="sendNotification()">Send Notification</button>
     <div ng-show="contacts">
       <h4 class="page-header">Sent Successfully</h4>
       <ul>
-        <li ng-show="contact.sent" ng-repeat="(userid, contact) in contacts"><a href="#/Users/?userid={{userid}}">{{contact.name}}</a> <small>({{contact.userid}})</small></li>
+        {{#each contacts}}
+        {{#if sent}}
+        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
+        {{/if}}
+        {{/each}}
       </ul>
       <h4 class="page-header">Sent Unsuccessfully</h4>
       <ul>
-        <li ng-show="!contact.sent" ng-repeat="(userid, contact) in contacts"><a href="#/Users/?userid={{userid}}">{{contact.name}}</a> <small>({{contact.userid}})</small></li>
+        {{#each contacts}}
+        {{^if sent}}
+        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
+        {{/if}}
+        {{/each}}
       </ul>
     </div>
   </div>
   {{/ifCond}}
-  {{#if s.application.forms.Servers.active}}
+  {{#if application.forms.Servers.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th style="width: 100%;">Server</th>
-        <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
-        <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
+        {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+        <th colspan="2"></th>
+        {{/ifCond}}
       </tr>
-      <tr ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-        <td><select class="form-control" ng-model="store.server" ng-options="server.name for server in store.servers"></select></td>
-        <td><button class="btn btn-xs btn-success glyphicon glyphicon-plus" ng-click="addServer()"></button></td>
+      {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+      <tr>
+        <td><select class="form-control" c-model="server">{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><button class="btn btn-xs btn-success" c-click="addServer()">Add</button></td>
       </tr>
-      <tr ng-repeat="server in store.application.servers">
-        <td><a href="#/Servers/{{server.server_id}}">{{server.name}}</a></td>
-        <td ng-show="common.isGlobalAdmin() || store.application.bDeveloper" style="white-space: nowrap;"><button class="btn btn-xs btn-warning glyphicon glyphicon-pencil" data-toggle="modal" data-target="#serverModal" ng-click="serverDetails(server)"></button><button class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeServer(server.id)"></button></td>
+      {{/ifCond}}
+      {{#each application.servers}}
+      <tr>
+        <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
+        {{#ifCond isGlobalAdimin '||' application.bDeveloper}}
+        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#serverModal" c-click="serverDetails({{.}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
+        {{/ifCond}}
       </tr>
+      {{/each}}
     </table>
     <div id="serverModal" class="modal fad" role="dialog">
       <div class="modal-dialog">
@@ -1876,8 +1936,9 @@ TODO
                 <th colspan="2">Processes</th>
                 <th colspan="2">Image</th>
                 <th colspan="2">Resident</th>
-                <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
-                <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
+                {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+                <th colspan="2"></th>
+                {{/ifCond}}
               </tr>
               <tr>
                 <th>Daemon</th>
@@ -1891,101 +1952,59 @@ TODO
                 <th>Max</th>
                 <th>Min</th>
                 <th>Max</th>
-                <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
-                <th ng-show="common.isGlobalAdmin() || store.application.bDeveloper"></th>
+                {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+                <th colspan="2"></th>
+                {{/ifCond}}
               </tr>
-              <tr ng-repeat="detail in modalServer.details">
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.daemon}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.daemon">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.version}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.version">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.owner}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.owner">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.script}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.script">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.delay}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.delay">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.min_processes}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.min_processes">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.max_processes}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.max_processes">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.min_image}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.min_image">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.max_image}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.max_image">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.min_resident}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.min_resident">
-                </td>
-                <td>
-                  <span ng-show="!detail.bEdit">{{detail.max_resident}}</span>
-                  <input ng-show="detail.bEdit" type="text" class="form-control" ng-model="detail.max_resident">
-                </td>
-                <td ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-                  <button ng-show="!detail.bEdit" class="btn btn-xs btn-warning glyphicon glyphicon-pencil" ng-click="detail.bEdit = true"></button>
-                  <button ng-show="detail.bEdit" class="btn btn-xs btn-warning glyphicon glyphicon-arrow-left" ng-click="detail.bEdit = false"></button>
-                </td>
-                <td ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-                  <button ng-show="!detail.bEdit" class="btn btn-xs btn-danger glyphicon glyphicon-remove" ng-click="removeServerDetail(detail.id)"></button>
-                  <button ng-show="detail.bEdit" class="btn btn-xs btn-success glyphicon glyphicon-ok" ng-click="editServerDetail(detail)"></button>
-                </td>
+              {{#each modalServer.details}}
+              <tr>
+                {{#if bEdit}}
+                  <td><input type="text" class="form-control" ng-model="daemon"></td>
+                  <td><input type="text" class="form-control" ng-model="version"></td>
+                  <td><input type="text" class="form-control" ng-model="owner"></td>
+                  <td><input type="text" class="form-control" ng-model="script"></td>
+                  <td><input type="text" class="form-control" ng-model="delay"></td>
+                  <td><input type="text" class="form-control" ng-model="min_processes"></td>
+                  <td><input type="text" class="form-control" ng-model="max_processes"></td>
+                  <td><input type="text" class="form-control" ng-model="min_image"></td>
+                  <td><input type="text" class="form-control" ng-model="max_image"></td>
+                  <td><input type="text" class="form-control" ng-model="min_resident"></td>
+                  <td><input type="text" class="form-control" ng-model="max_resident"></td>
+                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{.}}, false)">Cancel</button></td>
+                  <td><button class="btn btn-xs btn-success" ng-click="editServerDetail({{.}})">Save</button></td>
+                {{else}}
+                  <td>{{daemon}}</td>
+                  <td>{{version}}</td>
+                  <td>{{owner}}</td>
+                  <td>{{script}}</td>
+                  <td>{{delay}}</td>
+                  <td>{{min_processes}}</td>
+                  <td>{{max_processes}}</td>
+                  <td>{{min_image}}</td>
+                  <td>{{max_image}}</td>
+                  <td>{{min_resident}}</td>
+                  <td>{{max_resident}}</td>
+                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{.}}, true)">Edit</button></td>
+                  <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
+                {{/if}}
               </tr>
-              <tr ng-show="common.isGlobalAdmin() || store.application.bDeveloper">
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.daemon">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.version">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.owner">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.script">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.delay">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.min_processes">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.max_processes">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.min_image">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.max_image">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.min_resident">
-                </td>
-                <td>
-                  <input type="text" class="form-control" ng-model="serverDetail.max_resident">
-                </td>
-                <td colspan="2">
-                  <button ng-show="!detail.bEdit" class="btn btn-xs btn-success glyphicon glyphicon-plus" ng-click="addServerDetail()"></button>
-                </td>
+              {{/each}}
+              {{#ifCond isGlobalAdmin '||' application.bDeveloper}}
+              <tr>
+                <td><input type="text" class="form-control" c-model="serverDetail.daemon"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.version"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.owner"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.script"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.delay"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.min_processes"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.max_processes"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.min_image"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.max_image"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.min_resident"></td>
+                <td><input type="text" class="form-control" c-model="serverDetail.max_resident"></td>
+                <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success" c-click="addServerDetail()">Add</button>{{/if}}</td>
               </tr>
+              {{/ifCond}}
             </table>
           </div>
         </div>
