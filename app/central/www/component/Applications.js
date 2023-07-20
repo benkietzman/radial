@@ -1375,7 +1375,7 @@ export default
       </div>
     </div>
   </nav>
-  {{#ifCond application.forms.General.active "&&" application}}
+  {{#if application.forms.General.active}}
   {{#if application.bDeveloper}}
   <div class="float-end">
     {{#if application.bEdit}}
@@ -1397,7 +1397,7 @@ export default
         Application ID:
       </th>
       <td>
-        {{../application.id}}
+        {{application.id}}
       </td>
     </tr>
     <tr>
@@ -1405,10 +1405,10 @@ export default
         Application Name:
       </th>
       <td>
-        {{#if ../application.bEdit}}
+        {{#if application.bEdit}}
         <input type="text" class="form-control" c-model="application.name">
         {{else}}
-        {{../application.name}}
+        {{application.name}}
         {{/if}}
       </td>
     </tr>
@@ -1417,146 +1417,132 @@ export default
         Creation Date:
       </th>
       <td>
-        {{../application.creation_date}}
+        {{application.creation_date}}
       </td>
     </tr>
-    {{#ifCond ../application.bEdit "||" ../application.retirement_date}}
     <tr>
       <th style="white-space: nowrap;">
         Retirement Date:
       </th>
       <td>
-        {{#if ../application.bEdit}}
+        {{#if application.bEdit}}
         <input type="text" class="form-control" c-model="application.retirement_date" placeholder="YYYY-MM-DD">
         {{else}}
-        {{../application.retirement_date}}
+        {{application.retirement_date}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{#ifCond ../application.bEdit "||" ../application.notify_priority_id}}
     <tr>
       <th style="white-space: nowrap;">
         Notify Priority:
       </th>
       <td>
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.notify_priority">{{#each ../notify_priorities}}<option value="{{.}}">{{priority}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.notify_priority">{{#each notify_priorities}}<option value="{{.}}">{{priority}}</option>{{/each}}</select>
         {{else}}
-        {{../application.notify_priority.priority}}
+        {{application.notify_priority.priority}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{#ifCond ../application.bEdit "||" ../application.website}}
     <tr>
       <th>
         Website:
       </th>
       <td>
-        {{#if ../application.bEdit}}
+        {{#if application.bEdit}}
         <input type="text" class="form-control" c-model="application.website">
         {{else}}
-        <a href="{{../application.website}}" target="_blank">{{../application.website}}</a>
+        <a href="{{application.website}}" target="_blank">{{application.website}}</a>
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{#ifCond ../application.bedit "||" ../application.login_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Login Type:
       </th>
       <td style="white-space: nowrap;">
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.login_type">{{#each ../login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
-        {{../application.login_type.type}}
+        {{application.login_type.type}}
         <br>
-        Secure: {{../application.secure_port.name}}
+        Secure: {{application.secure_port.name}}
         <br>
-        Auto-Register: {{../application.auto_register.name}}
+        Auto-Register: {{application.auto_register.name}}
         <br>
-        Account Check: {{../application.account_check.name}}
+        Account Check: {{application.account_check.name}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{#ifCond ../application.bEdit "||" ../application.package_type_id}}
     <tr>
       <th style="white-space: nowrap;">
         Package Type:
       </th>
       <td>
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.package_type">{{#each ../package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.package_type">{{#each package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{../application.package_type.type}}
+        {{application.package_type.type}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
     <tr>
       <th>
         Dependable:
       </th>
       <td>
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.dependable">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        {{../application.dependable.name}}
+        {{application.dependable.name}}
         {{/if}}
       </td>
     </tr>
-    {{#ifCond ../application.bEdit "||" ../application.menu_id}}
     <tr>
       <th style="white-space: nowrap;">
         Menu Availability:
       </th>
       <td>
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.menu_access">{{#each ../menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.menu_access">{{#each menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         {{else}}
-        {{../application.menu_access.type}}
+        {{application.menu_access.type}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{#if ../application.bEdit}}
-    {{#ifCond ../application.wiki.value "==" 1}}
     <tr>
       <th>
         WIKI:
       </th>
       <td>
-        {{#if ../application.bEdit}}
-        <select class="form-control" c-model="application.wiki">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{#if application.bEdit}}
+        <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
+        {{#ifCond application.wiki.value "==" 1}}
         <a href="/wiki/index.php/{{urlEncode ../application.name}}" target="_blank">/wiki/index.php/{{../application.name}}</a>
+        {{/ifCond}}
         {{/if}}
       </td>
     </tr>
-    {{/ifCond}}
-    {{/if}}
     <tr>
       <th>
         Description:
       </th>
       <td>
-        {{#if ../application.bEdit}}
+        {{#if application.bEdit}}
         <textarea class="form-control" c-model="application.description"></textarea>
         {{else}}
-        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{../application.description}}</pre>
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{application.description}}</pre>
         {{/if}}
       </td>
     </tr>
   </table>
-  {{#if ../application.sysInfo}}
+  {{#if application.sysInfo}}
   <table class="table table-condensed table-striped">
     <tr>
       <th>Server</th>
@@ -1568,7 +1554,7 @@ export default
       <th>Resident (KB)</th>
       <th>Current Alarms</th>
     </tr>
-    {{#each ../application.sysInfo}}
+    {{#each application.sysInfo}}
     <tr>
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
@@ -1582,7 +1568,7 @@ export default
     {{/each}}
   </table>
   {{/if}}
-  {{/ifCond}}
+  {{/if}}
   {{#if application.forms.Accounts.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
