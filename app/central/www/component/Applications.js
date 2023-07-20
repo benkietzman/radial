@@ -1378,7 +1378,7 @@ export default
   {{#ifCond application.forms.General.active "&&" application}}
   {{#if application.bDeveloper}}
   <div class="float-end">
-    {{#if ../application.bEdit}}
+    {{#if application.bEdit}}
     <div style="white-space: nowrap;">
       <button class="btn btn-xs btn-warning" c-click="preEditApplication(false)">Cancel</button>
       <button class="btn btn-xs btn-success" c-click="editApplication()" style="margin-left: 10px;">Save</button>
