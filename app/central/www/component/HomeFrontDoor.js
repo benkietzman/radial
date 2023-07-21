@@ -1,4 +1,4 @@
-// vim600: fdm=marker
+// vim: fmr=[[[,]]]
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2023-07-13
@@ -7,25 +7,25 @@
 ///////////////////////////////////////////
 export default
 {
-  // {{{ controller()
+  // [[[ controller()
   controller(id, nav)
   {
-    // {{{ prep work
+    // [[[ prep work
     let a = app;
     let c = common;
     let s = c.scope('HomeFrontDoor',
     {
-      // {{{ u()
+      // [[[ u()
       u: () =>
       {
         c.render(id, 'HomeFrontDoor', this);
       },
-      // }}}
+      // ]]]
       a: a,
       c: c
     });
-    // }}}
-    // {{{ addIssue()
+    // ]]]
+    // [[[ addIssue()
     s.addIssue = () =>
     {
       s.info.v = 'Adding issue...';
@@ -45,8 +45,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ loadApplication()
+    // ]]]
+    // [[[ loadApplication()
     s.loadApplication = () =>
     {
       if (c.isValid() && s.selectApplication)
@@ -78,8 +78,8 @@ export default
         s.issue = null;
       }
     };
-    // }}}
-    // {{{ loadApplications()
+    // ]]]
+    // [[[ loadApplications()
     s.loadApplications = () =>
     {
       if (c.isValid())
@@ -161,8 +161,8 @@ export default
         s.info.v = 'Please login to create an application issue.';
       }
     };
-    // }}}
-    // {{{ main
+    // ]]]
+    // [[[ main
     c.setMenu('Home', 'FrontDoor');
     s.u();
     if (a.ready())
@@ -178,10 +178,10 @@ export default
       s.info.v = null;
       s.loadApplications();
     });
-    // }}}
+    // ]]]
   },
-  // }}}
-  // {{{ template
+  // ]]]
+  // [[[ template
   template: `
   <h3 class="page-header">Create an Application Issue</h3>
   <p>
@@ -259,5 +259,5 @@ export default
     </div>
   </div>
   `
-  // }}}
+  // ]]]
 }
