@@ -1338,19 +1338,19 @@ void Interface::ny(Json *ptJson, const string strField)
       if (ptJson->m[strField]->v == "1")
       {
         ptJson->m[strField]->i("name", "Yes");
-        ptJson->m[strField]->i("value", "1", 1);
+        ptJson->m[strField]->i("value", "1", 'n');
       }
       else
       {
         ptJson->m[strField]->i("name", "No");
-        ptJson->m[strField]->i("value", "0", 0);
+        ptJson->m[strField]->i("value", "0", 'n');
       }
     }
     else
     {
       ptJson->m[strField] = new Json;
       ptJson->m[strField]->i("name", "No");
-      ptJson->m[strField]->i("value", "0", 0);
+      ptJson->m[strField]->i("value", "0", 'n');
     }
   }
 }
