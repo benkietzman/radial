@@ -24,7 +24,12 @@ export default
       a: a,
       c: c,
       d: {},
-      onlyOpenIssues: 1
+      contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+      login_types: [],
+      menu_accesses: [],
+      notify_priorities: [],
+      onlyOpenIssues: 1,
+      package_types: []
     });
     // ]]]
     // [[[ addAccount()
@@ -65,10 +70,10 @@ export default
     };
     // ]]]
     // [[[ addContact()
-    s.addContact = (strType) =>
+    s.addContact = () =>
     {
-      s.contact[strType].application_id = s.application.id;
-      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: c.simplify(s.contact[strType])};
+      s.contact.application_id = s.application.id;
+      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: c.simplify(s.contact)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -87,7 +92,7 @@ export default
     // [[[ addDepend()
     s.addDepend = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationDependAdd', Request: {application_id: s.application.id, dependant_id: s.depend.id}};
+      let request = {Interface: 'central', 'Function': 'applicationDependAdd', Request: {application_id: s.application.id, dependant_id: s.depend.v.id}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -440,19 +445,18 @@ export default
     s.loadApplications = () =>
     {
       // [[[ get contact types
-      if (!c.isDefined(s.contactTypeOrder))
+      if (!c.isDefined(s.contact_types))
       {
-        s.contactTypeOrder = [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}];
-        for (let i = 0; i < s.contactTypeOrder.length; i++)
+        for (let i = 0; i < s.contact_types.length; i++)
         {
-          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contactTypeOrder[i].type, i: i}};
+          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contact_types[i].type, i: i}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
             if (c.wsResponse(response, error))
             {
               let i = response.Request.i;
-              s.contactTypeOrder[i] = response.Response;
+              s.contact_types[i] = response.Response;
             }
             else
             {
@@ -969,11 +973,7 @@ export default
       {
         if (!c.isDefined(s.application.contacts) || s.application.contacts == null)
         {
-          s.contact = {};
-          for (let i = 0; i < s.contactTypeOrder.length; i++)
-          {
-            s.contact[s.contactTypeOrder[i]] = {application_id: s.application.id, type: s.contactTypeOrder[i], admin: a.m_noyes[0], locked: a.m_noyes[0], notify: a.m_noyes[1]};
-          }
+          s.contact = {application_id: s.application.id, type: s.contact_types[3], admin: a.m_noyes[0], locked: a.m_noyes[0], notify: a.m_noyes[1]};
           s.application.contacts = null;
           s.application.contacts = [];
           s.u();
@@ -987,11 +987,11 @@ export default
             {
               for (let i = 0; i < response.Response.length; i++)
               {
-                for (let j = 0; j < s.contactTypeOrder.length; j++)
+                for (let j = 0; j < s.contact_types.length; j++)
                 {
-                  if (response.Response[i].type.type == s.contactTypeOrder[j].type)
+                  if (response.Response[i].type.type == s.contact_types[j].type)
                   {
-                    response.Response[i].type = s.contactTypeOrder[j];
+                    response.Response[i].type = s.contact_types[j];
                   }
                 }
                 for (let j = 0; j < a.m_noyes.length; j++)
@@ -1121,7 +1121,6 @@ export default
         }
         else
         {
-          s.issue.v = false;
           s.issue = {priority: '1'};
           if (!c.isDefined(s.application.issues) || s.application.issues == null)
           {
@@ -1442,7 +1441,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.notify_priority">{{#each notify_priorities}}<option value="{{.}}">{{priority}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.notify_priority" c-json>{{#each notify_priorities}}<option value="{{json .}}">{{priority}}</option>{{/each}}</select>
         {{else}}
         {{application.notify_priority.priority}}
         {{/if}}
@@ -1466,12 +1465,11 @@ export default
       </th>
       <td style="white-space: nowrap;">
         {{#if application.bEdit}}
-        {{json application.login_type}}
-        <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.login_type" c-json>{{#each login_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
         {{application.login_type.type}}
@@ -1490,7 +1488,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.package_type">{{#each package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.package_type" c-json>{{#each package_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         {{else}}
         {{application.package_type.type}}
         {{/if}}
@@ -1502,7 +1500,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.dependable" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{application.dependable.name}}
         {{/if}}
@@ -1514,7 +1512,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.menu_access">{{#each menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.menu_access" c-json>{{#each menu_accesses}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         {{else}}
         {{application.menu_access.type}}
         {{/if}}
@@ -1526,7 +1524,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.wiki" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{#ifCond application.wiki.value "==" 1}}
         <a href="/wiki/index.php/{{urlEncode @root.application.name}}" target="_blank">/wiki/index.php/{{@root.application.name}}</a>
@@ -1590,9 +1588,9 @@ export default
       </tr>
       <tr>
         <td><input type="text" class="form-control" c-model="account.user_id" placeholder="User ID"></td>
-        <td><select class="form-control" c-model="account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="account.encrypt" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><input type="password" class="form-control" c-model="account.password" placeholder="Password"></td>
-        <td><select class="form-control" c-model="account.type">{{#each account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="account.type" c-json>{{#each account.types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="account.description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addAccount()">Add</button></td>
       </tr>
@@ -1607,7 +1605,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{encrypt.name}}
           {{/if}}
@@ -1621,7 +1619,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each @root.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].type" c-json>{{#each @root.account.types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
@@ -1664,23 +1662,23 @@ export default
       </tr>
       {{#if application.bLocalAdmin}}
       <tr>
-        <td><input type="text" class="form-control" c-model="contact.[contactType.type].userid" placeholder="User ID"></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="contact.[contactType.type].description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success" c-click="addContact({{contactType.type}})">Add</button></td>
+        <td><input type="text" class="form-control" c-model="contact.userid" placeholder="User ID"></td>
+        <td><select class="form-control" c-model="contact.type" c-json>{{#each contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="contact.description" placeholder="Description"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addContact()">Add</button></td>
       </tr>
       {{/if}}
       {{#each application.contacts}}
       <tr>
         {{#if bEdit}}
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID"></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each @root.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type" c-json>{{#each @root.contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description"></td>
         {{else}}
           <td style="white-space:nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
@@ -1717,14 +1715,14 @@ export default
       </tr>
       {{#if application.bDeveloper}}
       <tr>
-        <td><select class="form-control" c-model="depend">{{#each dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="depend" c-json>{{#each dependApplications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addDepend()">Add</button></td>
       </tr>
       {{/if}}
       {{#each application.depends}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
-        {{#if application.bDeveloper}}
+        {{#if @root.application.bDeveloper}}
         <td><button class="btn btn-xs btn-danger" c-click="removeDepend({{id}})">Remove</button></td>
         {{/if}}
       </tr>
@@ -1770,7 +1768,7 @@ export default
           <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
-          <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer">{{#each applications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td></tr>
+          <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer" c-json>{{#each applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td></tr>
           {{/if}}
           {{else}}
           {{#ifCond application.issue.hold "==" 1}}
@@ -1947,7 +1945,7 @@ export default
       </tr>
       {{#if application.bDeveloper}}
       <tr>
-        <td><select class="form-control" c-model="server">{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="server" c-json>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addServer()">Add</button></td>
       </tr>
       {{/if}}
