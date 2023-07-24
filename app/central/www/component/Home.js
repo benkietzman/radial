@@ -1,4 +1,4 @@
-// vim600: fdm=marker
+// vim: fmr=[[[,]]]
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2023-07-12
@@ -7,25 +7,25 @@
 ///////////////////////////////////////////
 export default
 {
-  // {{{ controller()
+  // [[[ controller()
   controller(id, nav)
   {
-    // {{{ prep work
+    // [[[ prep work
     let a = app;
     let c = common;
     let s = c.scope('Home',
     {
-      // {{{ u()
+      // [[[ u()
       u: () =>
       {
         c.render(id, 'Home', this);
       },
-      // }}}
+      // ]]]
       a: a,
       c: c
     });
-    // }}}
-    // {{{ load()
+    // ]]]
+    // [[[ load()
     let load = () =>
     {
       let request = {Interface: 'central', 'Function': 'applications', Request: {count: 1}};
@@ -82,8 +82,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ main
+    // ]]]
+    // [[[ main
     c.setMenu('Home');
     s.u();
     if (a.ready())
@@ -99,10 +99,10 @@ export default
       s.info.v = null;
       load();
     });
-    // }}}
+    // ]]]
   },
-  // }}}
-  // {{{ template
+  // ]]]
+  // [[[ template
   template: `
   <div class="page-header row" style="margin-top: 0px;">
     <div class="col-md-6">
@@ -177,5 +177,5 @@ export default
     </div>
   </div>
   `
-  // }}}
+  // ]]]
 }

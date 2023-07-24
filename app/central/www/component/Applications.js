@@ -1,4 +1,4 @@
-// vim600: fdm=marker
+// vim: fmr=[[[,]]]
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2023-07-17
@@ -7,27 +7,27 @@
 ///////////////////////////////////////////
 export default
 {
-  // {{{ controller()
+  // [[[ controller()
   controller(id, nav)
   {
-    // {{{ prep work
+    // [[[ prep work
     let a = app;
     let c = common;
     let s = c.scope('Applications',
     {
-      // {{{ u()
+      // [[[ u()
       u: () =>
       {
         c.render(id, 'Applications', this);
       },
-      // }}}
+      // ]]]
       a: a,
       c: c,
       d: {},
       onlyOpenIssues: 1
     });
-    // }}}
-    // {{{ addAccount()
+    // ]]]
+    // [[[ addAccount()
     s.addAccount = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationAccountAdd', Request: c.simplify(s.account)};
@@ -45,8 +45,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addApplication()
+    // ]]]
+    // [[[ addApplication()
     s.addApplication = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationAdd', Request: c.simplify(s.d.application)};
@@ -63,8 +63,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addContact()
+    // ]]]
+    // [[[ addContact()
     s.addContact = (strType) =>
     {
       s.contact[strType].application_id = s.application.id;
@@ -83,8 +83,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addDepend()
+    // ]]]
+    // [[[ addDepend()
     s.addDepend = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationDependAdd', Request: {application_id: s.application.id, dependant_id: s.depend.id}};
@@ -103,8 +103,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addIssue()
+    // ]]]
+    // [[[ addIssue()
     s.addIssue = () =>
     {
       s.info.v = 'Adding issue...';
@@ -128,8 +128,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addIssueComment()
+    // ]]]
+    // [[[ addIssueComment()
     s.addIssueComment = (strAction, nIssueID, nApplicationID) =>
     {
       s.info.v = 'Adding comment...';
@@ -156,8 +156,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addServer()
+    // ]]]
+    // [[[ addServer()
     s.addServer = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationServerAdd', Request: {application_id: s.application.id, server_id: s.server_id}};
@@ -175,8 +175,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ addServer(Detail)
+    // ]]]
+    // [[[ addServer(Detail)
     s.addServerDetail = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationServerDetailAdd', Request: c.simplify(s.serverDetail)};
@@ -195,8 +195,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editAccount()
+    // ]]]
+    // [[[ editAccount()
     s.editAccount = (nIndex) =>
     {
       let request = {Interface: 'central', 'Function': 'applicationAccountEdit', Request: c.simplify(s.application.accounts[nIndex])};
@@ -214,8 +214,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editApplication()
+    // ]]]
+    // [[[ editApplication()
     s.editApplication = () =>
     {
       let request = {Interface: 'central', 'Function': 'applicationEdit', Request: c.simplify(s.application)};
@@ -233,8 +233,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editContact()
+    // ]]]
+    // [[[ editContact()
     s.editContact = (nIndex) =>
     {
       let request = {Interface: 'central', 'Function': 'applicationUserEdit', Request: c.simplify(s.application.contacts[nIndex])};
@@ -252,8 +252,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editIssue()
+    // ]]]
+    // [[[ editIssue()
     s.editIssue = (bOpen) =>
     {
       if (c.isDefined(bOpen) && bOpen)
@@ -298,8 +298,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editIssueComment()
+    // ]]]
+    // [[[ editIssueComment()
     s.editIssueComment = (nIndex) =>
     {
       s.info.v = 'Updating issue...';
@@ -319,8 +319,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ editServerDetail()
+    // ]]]
+    // [[[ editServerDetail()
     s.editServerDetail = (nIndex) =>
     {
       let request = {Interface: 'central', 'Function': 'applicationServerDetailEdit', Request: c.simplify(s.modalServer.details[nIndex])};
@@ -338,8 +338,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ initForms()
+    // ]]]
+    // [[[ initForms()
     s.initForms = () =>
     {
       if (!c.isDefined(s.application.forms))
@@ -358,8 +358,8 @@ export default
         s.application.forms_order = ['General', 'Contacts', 'Depend', 'Issues', 'Servers'];
       }
     };
-    // }}}
-    // {{{ loadApplication()
+    // ]]]
+    // [[[ loadApplication()
     s.loadApplication = () =>
     {
       if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
@@ -435,11 +435,11 @@ export default
         }
       }
     };
-    // }}}
-    // {{{ loadApplications()
+    // ]]]
+    // [[[ loadApplications()
     s.loadApplications = () =>
     {
-      // {{{ get contact types
+      // [[[ get contact types
       if (!c.isDefined(s.contactTypeOrder))
       {
         s.contactTypeOrder = [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}];
@@ -461,8 +461,8 @@ export default
           });
         }
       }
-      // }}}
-      // {{{ get login types
+      // ]]]
+      // [[[ get login types
       if (!c.isDefined(s.login_types))
       {
         let request = {Interface: 'central', 'Function': 'loginTypes', Request: {}};
@@ -479,8 +479,8 @@ export default
           }
         });
       }
-      // }}}
-      // {{{ get menu accesses
+      // ]]]
+      // [[[ get menu accesses
       if (!c.isDefined(s.menu_accesses))
       {
         let request = {Interface: 'central', 'Function': 'menuAccesses', Request: {}};
@@ -497,8 +497,8 @@ export default
           }
         });
       }
-      // }}}
-      // {{{ get notify priorities
+      // ]]]
+      // [[[ get notify priorities
       if (!c.isDefined(s.notify_priorities))
       {
         let request = {Interface: 'central', 'Function': 'notifyPriorities', Request: {}};
@@ -515,8 +515,8 @@ export default
           }
         });
       }
-      // }}}
-      // {{{ get package types
+      // ]]]
+      // [[[ get package types
       if (!c.isDefined(s.package_types))
       {
         let request = {Interface: 'central', 'Function': 'packageTypes', Request: {}};
@@ -533,7 +533,7 @@ export default
           }
         });
       }
-      // }}}
+      // ]]]
       if (s.list)
       {
         if (c.isParam(nav, 'letter'))
@@ -614,8 +614,8 @@ export default
         s.loadApplication();
       }
     };
-    // }}}
-    // {{{ preEditAccount()
+    // ]]]
+    // [[[ preEditAccount()
     s.preEditAccount = (nIndex, bEdit) =>
     {
       s.application.accounts[nIndex].bEdit = bEdit;
@@ -625,8 +625,8 @@ export default
       }
       s.u();
     };
-    // }}}
-    // {{{ preEditApplication()
+    // ]]]
+    // [[[ preEditApplication()
     s.preEditApplication = (bEdit) =>
     {
       s.application.bEdit = bEdit;
@@ -636,8 +636,8 @@ export default
       }
       s.u();
     };
-    // }}}
-    // {{{ preEditContact()
+    // ]]]
+    // [[[ preEditContact()
     s.preEditContact = (nIndex, bEdit) =>
     {
       s.application.contacts[nIndex].bEdit = bEdit;
@@ -647,8 +647,8 @@ export default
       }
       s.u();
     };
-    // }}}
-    // {{{ preEditIssueComment()
+    // ]]]
+    // [[[ preEditIssueComment()
     s.preEditIssueComment = (nIndex, bEdit) =>
     {
       s.application.issue.comments[nIndex].bEdit = bEdit;
@@ -658,8 +658,8 @@ export default
       }
       s.u();
     };
-    // }}}
-    // {{{ preEditServerDetail()
+    // ]]]
+    // [[[ preEditServerDetail()
     s.preEditServerDetail = (nIndex, bEdit) =>
     {
       s.modalServer.details[nIndex].bEdit = bEdit;
@@ -669,8 +669,8 @@ export default
       }
       s.u();
     };
-    // }}}
-    // {{{ removeAccount()
+    // ]]]
+    // [[[ removeAccount()
     s.removeAccount = (nID) =>
     {
       if (confirm('Are you sure you want to remove this application account?'))
@@ -691,8 +691,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ removeApplication()
+    // ]]]
+    // [[[ removeApplication()
     s.removeApplication = () =>
     {
       if (confirm('Are you sure you want to remove this application?'))
@@ -713,8 +713,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ removeContact()
+    // ]]]
+    // [[[ removeContact()
     s.removeContact = (nID) =>
     {
       if (confirm('Are you sure you want to remove this application contact?'))
@@ -735,8 +735,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ removeDepend()
+    // ]]]
+    // [[[ removeDepend()
     s.removeDepend = (nID) =>
     {
       if (confirm('Are you sure you want to remove this application depend?'))
@@ -758,8 +758,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ removeServer()
+    // ]]]
+    // [[[ removeServer()
     s.removeServer = (nID) =>
     {
       if (confirm('Are you sure you want to remove this application server?'))
@@ -780,8 +780,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ removeServerDetail()
+    // ]]]
+    // [[[ removeServerDetail()
     s.removeServerDetail = (nID) =>
     {
       if (confirm('Are you sure you want to remove this application server detail?'))
@@ -802,8 +802,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ sendNotification()
+    // ]]]
+    // [[[ sendNotification()
     s.sendNotification = () =>
     {
       if (confirm('Are you sure you want to send this application notification?'))
@@ -823,8 +823,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ serverDetails()
+    // ]]]
+    // [[[ serverDetails()
     s.serverDetails = (nID) =>
     {
       let request = {Interface: 'central', 'Function': 'applicationServerDetails', Request: {application_server_id: nID}};
@@ -841,8 +841,8 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ showForm()
+    // ]]]
+    // [[[ showForm()
     s.showForm = (strForm) =>
     {
       s.info.v = null;
@@ -856,8 +856,7 @@ export default
         s.application.forms[key].active = null;
       }
       s.application.forms[strForm].active = 'active';
-      s.u();
-      // {{{ General
+      // [[[ General
       if (strForm == 'General')
       {
         for (let i = 0; i < s.login_types.length; i++)
@@ -894,8 +893,8 @@ export default
         s.application.secure_port = a.setNoYes(s.application.secure_port);
         s.application.wiki = a.setNoYes(s.application.wiki);
       }
-      // }}}
-      // {{{ Accounts
+      // ]]]
+      // [[[ Accounts
       else if (strForm == 'Accounts')
       {
         if (c.isGlobalAdmin() || s.application.bDeveloper)
@@ -964,8 +963,8 @@ export default
           s.message.v = 'You are not authorized to view this data.';
         }
       }
-      // }}}
-      // {{{ Contacts
+      // ]]]
+      // [[[ Contacts
       else if (strForm == 'Contacts')
       {
         if (!c.isDefined(s.application.contacts) || s.application.contacts == null)
@@ -1021,8 +1020,8 @@ export default
           });
         }
       }
-      // }}}
-      // {{{ Depend
+      // ]]]
+      // [[[ Depend
       else if (strForm == 'Depend')
       {
         if (!c.isDefined(s.application.depends) || s.application.depends == null || !c.isDefined(s.application.dependents) || s.application.dependents == null)
@@ -1063,8 +1062,8 @@ export default
           });
         }
       }
-      // }}}
-      // {{{ Issues
+      // ]]]
+      // [[[ Issues
       else if (strForm == 'Issues')
       {
         if (c.isParam(nav, 'issue_id'))
@@ -1146,13 +1145,13 @@ export default
         }
         s.u();
       }
-      // }}}
-      // {{{ Notify
+      // ]]]
+      // [[[ Notify
       else if (strForm == 'Notify')
       {
       }
-      // }}}
-      // {{{ Servers
+      // ]]]
+      // [[[ Servers
       else if (strForm == 'Servers')
       {
         if (!c.isDefined(s.application.servers) || s.application.servers == null)
@@ -1192,10 +1191,11 @@ export default
           });
         }
       }
-      // }}}
+      // ]]]
+      s.u();
     };
-    // }}}
-    // {{{ sysInfoStatus()
+    // ]]]
+    // [[[ sysInfoStatus()
     s.sysInfoStatus = () =>
     {
       if (s.application && s.application.id)
@@ -1259,8 +1259,8 @@ export default
         });
       }
     };
-    // }}}
-    // {{{ sysInfoUpdate()
+    // ]]]
+    // [[[ sysInfoUpdate()
     s.sysInfoUpdate = () =>
     {
       c.wsRequest('radial', {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'update'}]}).then((response) =>
@@ -1272,16 +1272,16 @@ export default
         }
       });
     };
-    // }}}
-    // {{{ toggleClosedIssues()
+    // ]]]
+    // [[[ toggleClosedIssues()
     s.toggleClosedIssues = () =>
     {
       s.application.issues = null;
       s.onlyOpenIssues = ((s.onlyOpenIssues == 1)?0:1);
       s.showForm('Issues');
     };
-    // }}}
-    // {{{ main
+    // ]]]
+    // [[[ main
     c.setMenu('Applications');
     s.list = true;
     if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
@@ -1302,18 +1302,19 @@ export default
       s.info.v = null;
       s.loadApplications();
     });
-    // }}}
+    // ]]]
   },
-  // }}}
-  // {{{ template
+  // ]]]
+  // [[[ template
   template: `
+  <!-- [[[ applications -->
   {{#if list}}
   <h3 class="page-header">Applications</h3>
   <div class="input-group float-end"><span class="input-group-text">Narrow</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
   {{#each a.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
-      <button class="btn btn-sm btn-{{#ifCond . "==" ../letter}}warning{{else}}default{{/ifCond}}">{{.}}</button>
+      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}default{{/ifCond}}">{{.}}</button>
     </a>
   </div>
   {{/each}}
@@ -1357,6 +1358,8 @@ export default
       {{/eachFilter}}
     </table>
   </div>
+  <!-- ]]] -->
+  <!-- [[[ application -->
   {{else}}
   <h3 class="page-header">{{application.name}}{{#if application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
   <div c-model="info" class="text-warning"></div>
@@ -1369,12 +1372,13 @@ export default
       <div class="collapse navbar-collapse" id="appnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each application.forms_order}}
-          <li class="nav-item"><a class="nav-link {{../application.forms.[.].active}}" href="#/Applications/{{../application.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.application.forms .)}}{{active}}{{/with}}" href="#/Applications/{{@root.application.id}}/{{.}}">{{.}}</a></li>
           {{/each}}
         </ul>
       </div>
     </div>
   </nav>
+  <!-- [[[ general -->
   {{#if application.forms.General.active}}
   {{#if application.bDeveloper}}
   <div class="float-end">
@@ -1462,6 +1466,7 @@ export default
       </th>
       <td style="white-space: nowrap;">
         {{#if application.bEdit}}
+        {{json application.login_type}}
         <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
           <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
@@ -1524,7 +1529,7 @@ export default
         <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{#ifCond application.wiki.value "==" 1}}
-        <a href="/wiki/index.php/{{urlEncode ../application.name}}" target="_blank">/wiki/index.php/{{../application.name}}</a>
+        <a href="/wiki/index.php/{{urlEncode @root.application.name}}" target="_blank">/wiki/index.php/{{@root.application.name}}</a>
         {{/ifCond}}
         {{/if}}
       </td>
@@ -1569,6 +1574,8 @@ export default
   </table>
   {{/if}}
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ accounts -->
   {{#if application.forms.Accounts.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
@@ -1600,7 +1607,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each ../a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{encrypt.name}}
           {{/if}}
@@ -1614,7 +1621,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each ../account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each @root.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
@@ -1639,6 +1646,8 @@ export default
   </div>
   {{/if}}
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ contacts -->
   {{#if application.forms.Contacts.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
@@ -1668,10 +1677,10 @@ export default
       <tr>
         {{#if bEdit}}
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID"></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each @root.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description"></td>
         {{else}}
           <td style="white-space:nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
@@ -1679,14 +1688,14 @@ export default
           <td style="white-space:nowrap;">{{admin.name}}</td>
           <td style="white-space:nowrap;">{{locked.name}}</td>
           <td style="white-space:nowrap;">{{notify.name}}</td>
-          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
+          <td><pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre></td>
         {{/if}}
-        {{#if application.bLocalAdmin}}
+        {{#if @root.application.bLocalAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
           <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{@key}})" style="margin-left: 10px;">Save</button>
           {{else}}
-          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;"></button>
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;">Remove</button>
           {{/if}}
         </td>
         {{/if}}
@@ -1695,6 +1704,8 @@ export default
     </table>
   </div>
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ dependents -->
   {{#if application.forms.Depend.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
@@ -1732,8 +1743,11 @@ export default
     </table>
   </div>
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ issues -->
   {{#if application.forms.Issues.active}}
   <div class="table-responsive">
+    <!-- [[[ issue -->
     {{#if issue}}
     {{#if application.issue}}
     {{#ifCond isValid "&&" application.issue.close_date}}
@@ -1823,6 +1837,8 @@ export default
       </div>
     </div>
     {{/if}}
+    <!-- ]]] -->
+    <!-- [[[ issues -->
     {{else}}
     <table class="table table-condensed table-striped">
       {{#if isValid}}
@@ -1885,8 +1901,11 @@ export default
       {{/each}}
     </table>
     {{/if}}
+    <!-- ]]] -->
   </div>
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ notify -->
   {{#if application.forms.Notify.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
@@ -1915,6 +1934,8 @@ export default
   </div>
   {{/if}}
   {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ servers -->
   {{#if application.forms.Servers.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
@@ -2029,7 +2050,9 @@ export default
     </div>
   </div>
   {{/if}}
+  <!-- ]]] -->
   {{/if}}
+  <!-- ]]] -->
   `
-  // }}}
+  // ]]]
 }
