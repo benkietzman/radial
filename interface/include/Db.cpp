@@ -884,7 +884,7 @@ bool Db::dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q,
   {
     bool f = true;
     stringstream qs;
-    qs << "update application_contact set" << u({"admin", "contact_id", "description", "locked", "notifyf", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update application_contact set" << u({"admin", "contact_id", "description", "locked", "notify", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
