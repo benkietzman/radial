@@ -25,6 +25,8 @@ export default
       c: c,
       d: {},
       contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+      issue: {priority: '1'},
+      issueList: true,
       login_types: [],
       menu_accesses: [],
       notify_priorities: [],
@@ -1068,7 +1070,11 @@ export default
       {
         if (c.isParam(nav, 'issue_id'))
         {
-          s.issue = true;
+          if (s.issueList && c.isDefined(s.issue))
+          {
+            delete s.issue;
+          }
+          s.issueList = false;
           if (!c.isDefined(s.application.issue) || s.application.issue == null || c.getParam(nav, 'issue_id') != s.application.issue.id)
           {
             s.application.issue = null;
@@ -1121,7 +1127,12 @@ export default
         }
         else
         {
-          s.issue = {priority: '1'};
+          if (!s.issueList && c.isDefined(s.issue))
+          {
+            delete s.issue;
+            s.issue = {priority: '1'};
+          }
+          s.issueList = true;
           if (!c.isDefined(s.application.issues) || s.application.issues == null)
           {
             s.info.v = 'Retrieving issues...';
@@ -1745,12 +1756,77 @@ export default
   <!-- [[[ issues -->
   {{#if application.forms.Issues.active}}
   <div class="table-responsive">
+    <!-- [[[ issues -->
+    {{#if issueList}}
+    <table class="table table-condensed table-striped">
+      {{#isValid}}
+      <tr>
+        <td style="width:25%;">
+          <table class="table table-condensed" style="background: inherit;">
+            <tr><th>Due</th><td><input class="form-control" type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+            <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+            <tr><th>Assigned</th><td><input class="form-control" type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
+          </table>
+        </td>
+        <td style="width:75%;">
+          <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;" autofocus>
+          <br>
+          <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+          <button class="btn btn-sm btn-default float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
+        </td>
+      </tr>
+      {{/isValid}}
+    </table>
+    <button class="btn btn-sm btn-default float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
+    <table class="table table-condensed table-striped">
+      {{#each application.issues}}
+      <tr>
+        <td>
+          <table class="table table-condensed" style="background: inherit;">
+            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{@root.application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
+            {{#if open_date}}
+            <tr><th>Open</th><td style="white-space: nowrap;">{{open_date}}</td></tr>
+            {{/if}}
+            {{#if due_date}}
+            <tr><th>Due</th><td style="white-space: nowrap;">{{due_date}}</td></tr>
+            {{/if}}
+            {{#if release_date}}
+            <tr><th>Release</th><td style="white-space: nowrap;">{{release_date}}</td></tr>
+            {{/if}}
+            {{#if close_date}}
+            <tr><th>Close</th><td style="white-space: nowrap;">{{close_date}}</td></tr>
+            {{/if}}
+            {{#ifCond priority ">=" 1}}
+            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond priority "==" 3}}<td style="color: red;">High</td>{{else ifCond priority ">" 3}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
+            {{/ifCond}}
+            {{#if comments}}
+            <tr><td colspan="2"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
+            {{/if}}
+            {{#if assigned}}
+            <tr><td colspan="2"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
+            {{/if}}
+          </table>
+        </td>
+        <td>
+          {{#if summary}}
+          <p style="font-weight: bold;">{{summary}}</p>
+          {{/if}}
+          {{#if comments}}
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments.[0].comments}}</pre>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    <!-- ]]] -->
     <!-- [[[ issue -->
-    {{#if issue}}
+    {{else}}
     {{#if application.issue}}
-    {{#ifCond isValid "&&" application.issue.close_date}}
+    {{#isValid}}
+    {{#if application.issue.close_date}}
     <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
-    {{/ifCond}}
+    {{/if}}
+    {{/isValid}}
     <div class="row">
       <div class="col-md-3">
         <table class="table table-condensed card card-body card-inverse">
@@ -1805,99 +1881,42 @@ export default
               <table class="table table-condensed" style="background: inherit;">
                 <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
                 <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
-                {{^ifCond bEdit "||" (ifCond userid "!=" getUserID)}}
+                {{#if bEdit}}
+                {{#ifCond userid "==" getUserID}}
                 <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
                 {{/ifCond}}
+                {{/if}}
               </table>
             </td>
             <td>
-              {{#ifCond bEdit "&&" (ifCond userid "==" getUserID)}}
+              {{#if bEdit}}
+              {{#ifCond userid "==" getUserID}}
               <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
               <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
               <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
               {{else}}
               <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
               {{/ifCond}}
+              {{else}}
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
+              {{/if}}
             </td>
           </tr>
           {{/each}}
-          {{#if isValid}}
+          {{#isValid}}
           <tr>
             <td></td>
             <td>
               <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment(\\"close\\", {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment(\\"update\\", {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
+              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
             </td>
           </tr>
-          {{/if}}
+          {{/isValid}}
         </table>
       </div>
     </div>
     {{/if}}
-    <!-- ]]] -->
-    <!-- [[[ issues -->
-    {{else}}
-    <table class="table table-condensed table-striped">
-      {{#if isValid}}
-      <tr">
-        <td style="width:25%;">
-          <table class="table table-condensed" style="background: inherit;">
-            <tr><th>Due</th><td><input type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-            <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-            <tr><th>Assigned</th><td><input type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
-          </table>
-        </td>
-        <td style="width:75%;">
-          <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;">
-          <br>
-          <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-          <button class="btn btn-sm btn-default float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
-        </td>
-      </tr>
-      {{/if}}
-    </table>
-    <button class="btn btn-sm btn-default float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
-    <table class="table table-condensed table-striped">
-      {{#each application.issues}}
-      <tr>
-        <td>
-          <table class="table table-condensed" style="background: inherit;">
-            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
-            {{#if open_date}}
-            <tr><th>Open</th><td style="white-space: nowrap;">{{open_date}}</td></tr>
-            {{/if}}
-            {{#if due_date}}
-            <tr><th>Due</th><td style="white-space: nowrap;">{{due_date}}</td></tr>
-            {{/if}}
-            {{#if release_date}}
-            <tr><th>Release</th><td style="white-space: nowrap;">{{release_date}}</td></tr>
-            {{/if}}
-            {{#if close_date}}
-            <tr><th>Close</th><td style="white-space: nowrap;">{{close_date}}</td></tr>
-            {{/if}}
-            {{#ifCond priority ">=" 1}}
-            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond priority "==" 3}}<td style="color: red;">High</td>{{else ifCond priority ">" 3}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
-            {{/ifCond}}
-            {{#if comments}}
-            <tr><td colspan="2"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
-            {{/if}}
-            {{#if assigned}}
-            <tr><td colspan="2"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
-            {{/if}}
-          </table>
-        </td>
-        <td>
-          {{#if summary}}
-          <p style="font-weight: bold;">{{summary}}</p>
-          {{/if}}
-          {{#if comments}}
-          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments.[0].comments}}</pre>
-          {{/if}}
-        </td>
-      </tr>
-      {{/each}}
-    </table>
     {{/if}}
     <!-- ]]] -->
   </div>
