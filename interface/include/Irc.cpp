@@ -1028,7 +1028,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (db(strFunction, ptIn, ptOut, strID, strQuery, strError))
           {
             ssText << ":  Request sent.";
-            if (strID.empty())
+            if (!strID.empty())
             {
               ssText << endl << "ID:  " << strID;
             }
