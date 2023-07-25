@@ -411,7 +411,7 @@ export default
                 s.application.forms.Accounts = {value: 'Accounts', active: null};
                 s.application.forms_order.splice(1, 0, 'Accounts');
                 s.application.forms.Notify = {value: 'Notify', active: null};
-                s.application.forms_order.splice(6, 0, 'Notify');
+                s.application.forms_order.splice(5, 0, 'Notify');
                 s.showForm(strForm);
               }
               else if (c.isValid())
@@ -428,7 +428,7 @@ export default
                     s.application.forms.Accounts = {value: 'Accounts', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
                     s.application.forms.Notify = {value: 'Notify', active: null};
-                    s.application.forms_order.splice(6, 0, 'Notify');
+                    s.application.forms_order.splice(5, 0, 'Notify');
                     s.showForm(strForm);
                   }
                   else
@@ -826,13 +826,14 @@ export default
     {
       if (confirm('Are you sure you want to send this application notification?'))
       {
-        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification, server: location.host}};
+        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification.v, server: location.host}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.application.contacts  = response.Response;
+            s.bNotified = true;
+            s.u();
           }
           else
           {
@@ -1361,7 +1362,7 @@ export default
   {{#each a.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
-      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}default{{/ifCond}}">{{.}}</button>
+      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}primary{{/ifCond}}">{{.}}</button>
     </a>
   </div>
   {{/each}}
@@ -1375,7 +1376,7 @@ export default
       {{#isValid "Central"}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.application.name" placeholder="Application Name"></td>
-        <td><button class="btn btn-default" c-click="addApplication()">Add Application</button></td>
+        <td><button class="btn btn-primary" c-click="addApplication()">Add Application</button></td>
       </tr>
       {{/isValid}}
       {{#eachFilter applications "name" narrow}}
@@ -1809,12 +1810,12 @@ export default
           <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;" autofocus>
           <br>
           <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-          <button class="btn btn-sm btn-default float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
+          <button class="btn btn-primary float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
         </td>
       </tr>
       {{/isValid}}
     </table>
-    <button class="btn btn-sm btn-default float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
+    <button class="btn btn-primary float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
     <table class="table table-condensed table-striped">
       {{#each application.issues}}
       <tr>
@@ -1861,7 +1862,7 @@ export default
     {{#if application.issue}}
     {{#if application.bDeveloper}}
     {{#if application.issue.close_date}}
-    <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
+    <button class="btn btn-success float-end" c-click="editIssue(true)">Open</button>
     {{/if}}
     {{/if}}
     <div class="row">
@@ -1918,7 +1919,7 @@ export default
                 <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
                 {{#if bEdit}}
                 {{#ifCond userid "==" getUserID}}
-                <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
+                <tr><td><button class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
                 {{/ifCond}}
                 {{/if}}
               </table>
@@ -1927,8 +1928,8 @@ export default
               {{#if bEdit}}
               {{#ifCond userid "==" getUserID}}
               <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
-              <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
+              <button class="btn btn-primary float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
+              <button  class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
               {{else}}
               <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
               {{/ifCond}}
@@ -1943,8 +1944,8 @@ export default
             <td></td>
             <td>
               <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
+              <button class="btn btn-primary float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-primary float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
             </td>
           </tr>
           {{/if}}
@@ -1961,27 +1962,10 @@ export default
   {{#if application.forms.Notify.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
-    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
-    <button class="btn btn-sm btn-default float-end" c-click="sendNotification()">Send Notification</button>
-    {{#if contacts}}
-    <div>
-      <h4 class="page-header">Sent Successfully</h4>
-      <ul>
-        {{#each contacts}}
-        {{#if sent}}
-        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
-        {{/if}}
-        {{/each}}
-      </ul>
-      <h4 class="page-header">Sent Unsuccessfully</h4>
-      <ul>
-        {{#each contacts}}
-        {{^if sent}}
-        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
-        {{/if}}
-        {{/each}}
-      </ul>
-    </div>
+    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
+    <button class="btn btn-primary float-end" c-click="sendNotification()">Send Notification</button>
+    {{#if bNotified}}
+    <span class="text-success">Notification has been sent.</span>
     {{/if}}
   </div>
   {{/if}}
