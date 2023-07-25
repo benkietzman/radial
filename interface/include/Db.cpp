@@ -518,19 +518,19 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
   }
   if (!strOpenDateStart.empty())
   {
-    qs << " and date_format(open_date, '%Y-%m-%d') >= '" << strOpenDateStart << "'";
+    qs << " and date_format(open_date, '%Y-%m-%d') >= '" << esc(strOpenDateStart) << "'";
   }
   if (!strOpenDateEnd.empty())
   {
-    qs << " and date_format(open_date, '%Y-%m-%d') < '" << strOpenDateEnd << "'";
+    qs << " and date_format(open_date, '%Y-%m-%d') < '" << esc(strOpenDateEnd) << "'";
   }
   if (!strCloseDateStart.empty())
   {
-    qs << " and date_format(close_date, '%Y-%m-%d') >= '" << strCloseDateStart << "'";
+    qs << " and date_format(close_date, '%Y-%m-%d') >= '" << esc(strCloseDateStart) << "'";
   }
   if (!strCloseDateEnd.empty())
   {
-    qs << " and date_format(close_date, '%Y-%m-%d') < '" << strCloseDateEnd << "'";
+    qs << " and date_format(close_date, '%Y-%m-%d') < '" << esc(strCloseDateEnd) << "'";
   }
   if (bRelease)
   {
