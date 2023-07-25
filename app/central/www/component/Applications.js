@@ -24,7 +24,15 @@ export default
       a: a,
       c: c,
       d: {},
-      onlyOpenIssues: 1
+      contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+      issue: {priority: '1'},
+      issueList: true,
+      login_types: [],
+      menu_accesses: [],
+      notify_priorities: [],
+      onlyOpenIssues: 1,
+      package_types: [],
+      serverDetail: {delay: 0, min_processes: 0, max_processes: 0, min_image: 0, max_image: 0, min_resident: 0, max_resident: 0}
     });
     // ]]]
     // [[[ addAccount()
@@ -65,10 +73,10 @@ export default
     };
     // ]]]
     // [[[ addContact()
-    s.addContact = (strType) =>
+    s.addContact = () =>
     {
-      s.contact[strType].application_id = s.application.id;
-      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: c.simplify(s.contact[strType])};
+      s.contact.application_id = s.application.id;
+      let request = {Interface: 'central', 'Function': 'applicationUserAdd', Request: c.simplify(s.contact)};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -87,7 +95,7 @@ export default
     // [[[ addDepend()
     s.addDepend = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationDependAdd', Request: {application_id: s.application.id, dependant_id: s.depend.id}};
+      let request = {Interface: 'central', 'Function': 'applicationDependAdd', Request: {application_id: s.application.id, dependant_id: s.depend.v.id}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -146,7 +154,7 @@ export default
           {
             s.application.issue = null;
           }
-          document.location.href = '#/Applications/' + s.application.id + '/Issues/' + nIssueID;
+          document.location.href = '#/Applications/' + nApplicationID + '/Issues/' + nIssueID;
           s.showForm('Issues');
         }
         else
@@ -160,7 +168,7 @@ export default
     // [[[ addServer()
     s.addServer = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationServerAdd', Request: {application_id: s.application.id, server_id: s.server_id}};
+      let request = {Interface: 'central', 'Function': 'applicationServerAdd', Request: {application_id: s.application.id, server_id: s.server.v.id}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -176,22 +184,24 @@ export default
       });
     };
     // ]]]
-    // [[[ addServer(Detail)
+    // [[[ addServerDetail()
     s.addServerDetail = () =>
     {
+      s.modalServerInfo.v = 'Adding server detail...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetailAdd', Request: c.simplify(s.serverDetail)};
       request.Request.application_server_id = s.modalServer.id;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
-          s.serverDetails(s.modalServer);
+          s.serverDetails(s.modalServer.id);
           s.sysInfoUpdate();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -266,7 +276,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.id) && s.application.issue.transfer.id != s.application.id)
+          if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.v) && c.isDefined(s.application.issue.transfer.v.id) && s.application.issue.transfer.v.id != s.application.id)
           {
             s.info.v = 'Emailing issue...';
             let request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id, server: location.host}};
@@ -277,7 +287,7 @@ export default
               if (c.wsResponse(response, error))
               {
                 s.info.v = 'Transfering issue...';
-                document.location.href = '/central/#/Applications/?application=' + encodeURIComponent(s.application.issue.transfer.name) + '&form=Issues&issue_id=' + s.application.issue.id;
+                document.location.href = '/central/#/Applications/?application=' + encodeURIComponent(s.application.issue.transfer.v.name) + '&form=Issues&issue_id=' + s.application.issue.id;
               }
               else
               {
@@ -323,18 +333,20 @@ export default
     // [[[ editServerDetail()
     s.editServerDetail = (nIndex) =>
     {
+      s.modalServerInfo.v = 'Updating server detail...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetailEdit', Request: c.simplify(s.modalServer.details[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
-          s.serverDetails(s.modalServer);
+          s.serverDetails(s.modalServer.id);
           s.sysInfoUpdate();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -399,7 +411,7 @@ export default
                 s.application.forms.Accounts = {value: 'Accounts', active: null};
                 s.application.forms_order.splice(1, 0, 'Accounts');
                 s.application.forms.Notify = {value: 'Notify', active: null};
-                s.application.forms_order.splice(6, 0, 'Notify');
+                s.application.forms_order.splice(5, 0, 'Notify');
                 s.showForm(strForm);
               }
               else if (c.isValid())
@@ -416,7 +428,7 @@ export default
                     s.application.forms.Accounts = {value: 'Accounts', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
                     s.application.forms.Notify = {value: 'Notify', active: null};
-                    s.application.forms_order.splice(6, 0, 'Notify');
+                    s.application.forms_order.splice(5, 0, 'Notify');
                     s.showForm(strForm);
                   }
                   else
@@ -440,19 +452,18 @@ export default
     s.loadApplications = () =>
     {
       // [[[ get contact types
-      if (!c.isDefined(s.contactTypeOrder))
+      if (!c.isDefined(s.contact_types))
       {
-        s.contactTypeOrder = [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}];
-        for (let i = 0; i < s.contactTypeOrder.length; i++)
+        for (let i = 0; i < s.contact_types.length; i++)
         {
-          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contactTypeOrder[i].type, i: i}};
+          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contact_types[i].type, i: i}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
             if (c.wsResponse(response, error))
             {
               let i = response.Request.i;
-              s.contactTypeOrder[i] = response.Response;
+              s.contact_types[i] = response.Response;
             }
             else
             {
@@ -668,6 +679,11 @@ export default
         s.modalServer.details[nIndex] = c.simplify(s.modalServer.details[nIndex]);
       }
       s.u();
+      let e = document.querySelector('div.modal-backdrop');
+      e.parentNode.removeChild(e);
+      document.querySelector('body').style.overflow = 'auto';
+      let modal = new bootstrap.Modal(document.getElementById('serverModal'));
+      modal.show();
     };
     // ]]]
     // [[[ removeAccount()
@@ -786,18 +802,20 @@ export default
     {
       if (confirm('Are you sure you want to remove this application server detail?'))
       {
+        s.modalServerInfo.v = 'Removing server detail...';
         let request = {Interface: 'central', 'Function': 'applicationServerDetailRemove', Request: {id: nID}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
+          s.modalServerInfo.v = null;
           if (c.wsResponse(response, error))
           {
-            s.serverDetails(s.modalServer);
+            s.serverDetails(s.modalServer.id);
             s.sysInfoUpdate();
           }
           else
           {
-            s.message.v = error.message;
+            s.modalServerMessage.v = error.message;
           }
         });
       }
@@ -808,13 +826,14 @@ export default
     {
       if (confirm('Are you sure you want to send this application notification?'))
       {
-        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification, server: location.host}};
+        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification.v, server: location.host}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.application.contacts  = response.Response;
+            s.bNotified = true;
+            s.u();
           }
           else
           {
@@ -827,17 +846,33 @@ export default
     // [[[ serverDetails()
     s.serverDetails = (nID) =>
     {
+      s.modalServer = null;
+      for (let i = 0; i < s.application.servers.length; i++)
+      {
+        if (s.application.servers[i].id == nID)
+        {
+          s.modalServer = s.application.servers[i];
+        }
+      }
+      s.modalServerInfo.v = 'Retrieving server details...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetails', Request: {application_server_id: nID}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
           s.modalServer.details = response.Response;
+          s.u();
+          let e = document.querySelector('div.modal-backdrop');
+          e.parentNode.removeChild(e);
+          document.querySelector('body').style.overflow = 'auto';
+          let modal = new bootstrap.Modal(document.getElementById('serverModal'));
+          modal.show();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -897,7 +932,7 @@ export default
       // [[[ Accounts
       else if (strForm == 'Accounts')
       {
-        if (c.isGlobalAdmin() || s.application.bDeveloper)
+        if (s.application.bDeveloper)
         {
           if (!c.isDefined(s.application.accounts) || s.application.accounts == null)
           {
@@ -969,11 +1004,7 @@ export default
       {
         if (!c.isDefined(s.application.contacts) || s.application.contacts == null)
         {
-          s.contact = {};
-          for (let i = 0; i < s.contactTypeOrder.length; i++)
-          {
-            s.contact[s.contactTypeOrder[i]] = {application_id: s.application.id, type: s.contactTypeOrder[i], admin: a.m_noyes[0], locked: a.m_noyes[0], notify: a.m_noyes[1]};
-          }
+          s.contact = {application_id: s.application.id, type: s.contact_types[3], admin: a.m_noyes[0], locked: a.m_noyes[0], notify: a.m_noyes[1]};
           s.application.contacts = null;
           s.application.contacts = [];
           s.u();
@@ -987,11 +1018,11 @@ export default
             {
               for (let i = 0; i < response.Response.length; i++)
               {
-                for (let j = 0; j < s.contactTypeOrder.length; j++)
+                for (let j = 0; j < s.contact_types.length; j++)
                 {
-                  if (response.Response[i].type.type == s.contactTypeOrder[j].type)
+                  if (response.Response[i].type.type == s.contact_types[j].type)
                   {
-                    response.Response[i].type = s.contactTypeOrder[j];
+                    response.Response[i].type = s.contact_types[j];
                   }
                 }
                 for (let j = 0; j < a.m_noyes.length; j++)
@@ -1036,7 +1067,7 @@ export default
             {
               s.application.depends = response.Response.depends;
               s.application.dependents = response.Response.dependents;
-              if (c.isGlobalAdmin() || s.application.bDeveloper)
+              if (s.application.bDeveloper)
               {
                 let request = {Interface: 'central', 'Function': 'applications', Request: {dependable: 1}};
                 c.wsRequest('radial', request).then((response) =>
@@ -1068,7 +1099,11 @@ export default
       {
         if (c.isParam(nav, 'issue_id'))
         {
-          s.issue = true;
+          if (s.issueList && c.isDefined(s.issue))
+          {
+            delete s.issue;
+          }
+          s.issueList = false;
           if (!c.isDefined(s.application.issue) || s.application.issue == null || c.getParam(nav, 'issue_id') != s.application.issue.id)
           {
             s.application.issue = null;
@@ -1085,8 +1120,16 @@ export default
                 {
                   s.application.issue.assigned_userid = s.application.issue.assigned.userid;
                 }
-                if (c.isGlobalAdmin() || s.application.bDeveloper)
+                if (c.isValid() && s.application.issue.close_date == '')
                 {
+                  s.application.issue.bIsValidOpen = true;
+                }
+                if (s.application.bDeveloper)
+                {
+                  if (s.application.issue.close_date == '')
+                  {
+                    s.application.issue.bDeveloperOpen = true;
+                  }
                   s.applications = null;
                   let request = {Interface: 'central', 'Function': 'applications', Request: {}};
                   c.wsRequest('radial', request).then((response) =>
@@ -1121,8 +1164,12 @@ export default
         }
         else
         {
-          s.issue.v = false;
-          s.issue = {priority: '1'};
+          if (!s.issueList && c.isDefined(s.issue))
+          {
+            delete s.issue;
+            s.issue = {priority: '1'};
+          }
+          s.issueList = true;
           if (!c.isDefined(s.application.issues) || s.application.issues == null)
           {
             s.info.v = 'Retrieving issues...';
@@ -1165,7 +1212,7 @@ export default
             if (c.wsResponse(response, error))
             {
               s.application.servers = response.Response;
-              if (c.isGlobalAdmin() || s.application.bDeveloper)
+              if (s.application.bDeveloper)
               {
                 let request = {Interface: 'central', 'Function': 'servers', Request: {}};
                 c.wsRequest('radial', request).then((response) =>
@@ -1174,6 +1221,7 @@ export default
                   if (c.wsResponse(response, error))
                   {
                     s.servers = response.Response;
+                    s.server = s.servers[0];
                     s.u();
                   }
                   else
@@ -1314,7 +1362,7 @@ export default
   {{#each a.m_letters}}
   <div style="display: inline-block;">
     <a href="#/Applications/?letter={{urlEncode .}}">
-      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}default{{/ifCond}}">{{.}}</button>
+      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}primary{{/ifCond}}">{{.}}</button>
     </a>
   </div>
   {{/each}}
@@ -1328,7 +1376,7 @@ export default
       {{#isValid "Central"}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.application.name" placeholder="Application Name"></td>
-        <td><button class="btn btn-default" c-click="addApplication()">Add Application</button></td>
+        <td><button class="btn btn-primary" c-click="addApplication()">Add Application</button></td>
       </tr>
       {{/isValid}}
       {{#eachFilter applications "name" narrow}}
@@ -1442,7 +1490,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.notify_priority">{{#each notify_priorities}}<option value="{{.}}">{{priority}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.notify_priority" c-json>{{#each notify_priorities}}<option value="{{json .}}">{{priority}}</option>{{/each}}</select>
         {{else}}
         {{application.notify_priority.priority}}
         {{/if}}
@@ -1466,12 +1514,11 @@ export default
       </th>
       <td style="white-space: nowrap;">
         {{#if application.bEdit}}
-        {{json application.login_type}}
-        <select class="form-control" c-model="application.login_type">{{#each login_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.login_type" c-json>{{#each login_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
         {{application.login_type.type}}
@@ -1490,7 +1537,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.package_type">{{#each package_types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.package_type" c-json>{{#each package_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         {{else}}
         {{application.package_type.type}}
         {{/if}}
@@ -1502,7 +1549,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.dependable">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.dependable" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{application.dependable.name}}
         {{/if}}
@@ -1514,7 +1561,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.menu_access">{{#each menu_accesses}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.menu_access" c-json>{{#each menu_accesses}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         {{else}}
         {{application.menu_access.type}}
         {{/if}}
@@ -1526,7 +1573,7 @@ export default
       </th>
       <td>
         {{#if application.bEdit}}
-        <select class="form-control" c-model="application.wiki">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="application.wiki" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{#ifCond application.wiki.value "==" 1}}
         <a href="/wiki/index.php/{{urlEncode @root.application.name}}" target="_blank">/wiki/index.php/{{@root.application.name}}</a>
@@ -1590,9 +1637,9 @@ export default
       </tr>
       <tr>
         <td><input type="text" class="form-control" c-model="account.user_id" placeholder="User ID"></td>
-        <td><select class="form-control" c-model="account.encrypt">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="account.encrypt" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><input type="password" class="form-control" c-model="account.password" placeholder="Password"></td>
-        <td><select class="form-control" c-model="account.type">{{#each account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="account.type" c-json>{{#each account.types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="account.description" placeholder="Description"></td>
         <td><button class="btn btn-xs btn-success" c-click="addAccount()">Add</button></td>
       </tr>
@@ -1607,7 +1654,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].encrypt" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
           {{else}}
           {{encrypt.name}}
           {{/if}}
@@ -1621,7 +1668,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.accounts.[{{@key}}].type">{{#each @root.account.types}}<option value="{{.}}">{{type}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.accounts.[{{@key}}].type" c-json>{{#each @root.account.types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
           {{else}}
           {{type.type}}
           {{/if}}
@@ -1664,23 +1711,23 @@ export default
       </tr>
       {{#if application.bLocalAdmin}}
       <tr>
-        <td><input type="text" class="form-control" c-model="contact.[contactType.type].userid" placeholder="User ID"></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].type">{{#each contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].admin">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].locked">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.[contactType.type].notify">{{#each a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="contact.[contactType.type].description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success" c-click="addContact({{contactType.type}})">Add</button></td>
+        <td><input type="text" class="form-control" c-model="contact.userid" placeholder="User ID"></td>
+        <td><select class="form-control" c-model="contact.type" c-json>{{#each contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="contact.description" placeholder="Description"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addContact()">Add</button></td>
       </tr>
       {{/if}}
       {{#each application.contacts}}
       <tr>
         {{#if bEdit}}
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID"></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type">{{#each @root.contactTypeOrder}}<option value="{{.}}">{{type}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify">{{#each @root.a.m_noyes}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type" c-json>{{#each @root.contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
           <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description"></td>
         {{else}}
           <td style="white-space:nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
@@ -1717,14 +1764,14 @@ export default
       </tr>
       {{#if application.bDeveloper}}
       <tr>
-        <td><select class="form-control" c-model="depend">{{#each dependApplications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="depend" c-json>{{#each dependApplications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addDepend()">Add</button></td>
       </tr>
       {{/if}}
       {{#each application.depends}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
-        {{#if application.bDeveloper}}
+        {{#if @root.application.bDeveloper}}
         <td><button class="btn btn-xs btn-danger" c-click="removeDepend({{id}})">Remove</button></td>
         {{/if}}
       </tr>
@@ -1747,125 +1794,34 @@ export default
   <!-- [[[ issues -->
   {{#if application.forms.Issues.active}}
   <div class="table-responsive">
-    <!-- [[[ issue -->
-    {{#if issue}}
-    {{#if application.issue}}
-    {{#ifCond isValid "&&" application.issue.close_date}}
-    <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
-    {{/ifCond}}
-    <div class="row">
-      <div class="col-md-3">
-        <table class="table table-condensed card card-body card-inverse">
-          <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{application.issue.id}}</td></tr>
-          {{#if application.issue.open_date}}
-          <tr><th>Open</th><td style="white-space: nowrap;">{{application.issue.open_date}}</td></tr>
-          {{/if}}
-          {{#if appllication.issue.close_date}}
-          <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
-          {{/if}}
-          {{#if application.bDeveloper}}
-          {{^if application.issue.close_date}}
-          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
-          <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-          <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-          <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
-          <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
-          <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer">{{#each applications}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td></tr>
-          {{/if}}
-          {{else}}
-          {{#ifCond application.issue.hold "==" 1}}
-          <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
-          {{/ifCond}}
-          {{#ifCond application.issue.priority ">=" 1}}
-          <tr><th>Priority</th><td>{{#ifCond application.issue.priority "==" 1}}Low{{else ifCond application.issue.priority "==" 2}}<span style="color: orange;">Medium</span>{{else ifCond application.issue.priority "==" 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
-          {{/ifCond}}
-          {{#if application.issue.due_date}}
-          <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
-          {{/if}}
-          {{#if application.issue.release_date}}
-          <tr><th>Release</th><td style="white-space: nowrap;">{{application.issue.release_date}}</td></tr>
-          {{/if}}
-          {{#if application.issue.assigned}}
-          <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{application.issue.assigned.id}}">{{application.issue.assigned.last_name}}, {{application.issue.assigned.first_name}}</a> <small>({{application.issue.assigned.userid}})</small></td></tr>
-          {{/if}}
-          {{/if}}
-        </table>
-        {{#if application.bDeveloper}}
-        <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
-        {{/if}}
-      </div>
-      <div class="col-md-9">
-        {{#if application.bDeveloper}}
-        <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
-        {{else}}
-        <p style="font-weight: bold;">{{application.issue.summary}}</p>
-        {{/if}}
-        <table class="table table-condensed table-striped" style="margin-top: 10px;">
-          {{#each application.issue.comments}}
-          <tr>
-            <td>
-              <table class="table table-condensed" style="background: inherit;">
-                <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
-                <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
-                {{^ifCond bEdit "||" (ifCond userid "!=" getUserID)}}
-                <tr><td><button class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
-                {{/ifCond}}
-              </table>
-            </td>
-            <td>
-              {{#ifCond bEdit "&&" (ifCond userid "==" getUserID)}}
-              <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
-              <button  class="btn btn-sm btn-default float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
-              {{else}}
-              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
-              {{/ifCond}}
-            </td>
-          </tr>
-          {{/each}}
-          {{#if isValid}}
-          <tr>
-            <td></td>
-            <td>
-              <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment(\\"close\\", {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
-              <button class="btn btn-sm btn-default float-end" c-click="addIssueComment(\\"update\\", {{application.issue.id}}, {{application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
-            </td>
-          </tr>
-          {{/if}}
-        </table>
-      </div>
-    </div>
-    {{/if}}
-    <!-- ]]] -->
     <!-- [[[ issues -->
-    {{else}}
+    {{#if issueList}}
     <table class="table table-condensed table-striped">
-      {{#if isValid}}
-      <tr">
+      {{#isValid}}
+      <tr>
         <td style="width:25%;">
           <table class="table table-condensed" style="background: inherit;">
-            <tr><th>Due</th><td><input type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+            <tr><th>Due</th><td><input class="form-control" type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
             <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
-            <tr><th>Assigned</th><td><input type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
+            <tr><th>Assigned</th><td><input class="form-control" type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
           </table>
         </td>
         <td style="width:75%;">
-          <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;">
+          <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;" autofocus>
           <br>
           <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-          <button class="btn btn-sm btn-default float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
+          <button class="btn btn-primary float-end" c-click="addIssue()" style="margin-top: 10px;">Add Issue</button>
         </td>
       </tr>
-      {{/if}}
+      {{/isValid}}
     </table>
-    <button class="btn btn-sm btn-default float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
+    <button class="btn btn-primary float-end" c-click="toggleClosedIssues()">{{#ifCond onlyOpenIssues "==" 0}}Hide{{else}}Show{{/ifCond}} Closed Issues</button>
     <table class="table table-condensed table-striped">
       {{#each application.issues}}
       <tr>
         <td>
           <table class="table table-condensed" style="background: inherit;">
-            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
+            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{@root.application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
             {{#if open_date}}
             <tr><th>Open</th><td style="white-space: nowrap;">{{open_date}}</td></tr>
             {{/if}}
@@ -1900,6 +1856,103 @@ export default
       </tr>
       {{/each}}
     </table>
+    <!-- ]]] -->
+    <!-- [[[ issue -->
+    {{else}}
+    {{#if application.issue}}
+    {{#if application.bDeveloper}}
+    {{#if application.issue.close_date}}
+    <button class="btn btn-success float-end" c-click="editIssue(true)">Open</button>
+    {{/if}}
+    {{/if}}
+    <div class="row">
+      <div class="col-md-4">
+        <table class="table table-condensed card card-body card-inverse">
+          <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{application.issue.id}}</td></tr>
+          {{#if application.issue.open_date}}
+          <tr><th>Open</th><td style="white-space: nowrap;">{{application.issue.open_date}}</td></tr>
+          {{/if}}
+          {{#if application.issue.close_date}}
+          <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
+          {{/if}}
+          {{#if application.issue.bDeveloperOpen}}
+          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
+          <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+          <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
+          <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
+          <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer" c-json>{{#each applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td></tr>
+          {{else}}
+          {{#ifCond application.issue.hold "==" 1}}
+          <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
+          {{/ifCond}}
+          {{#if application.issue.priority}}
+          <tr><th>Priority</th><td>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<span style="color: orange;">Medium</span>{{else ifCond @root.application.issue.priority "==" 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
+          {{/if}}
+          {{#if application.issue.due_date}}
+          <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
+          {{/if}}
+          {{#if application.issue.release_date}}
+          <tr><th>Release</th><td style="white-space: nowrap;">{{application.issue.release_date}}</td></tr>
+          {{/if}}
+          {{#if application.issue.assigned}}
+          <tr><th>Assigned</th><td style="white-space: nowrap;"><a href="#/Users/{{application.issue.assigned.id}}">{{application.issue.assigned.last_name}}, {{application.issue.assigned.first_name}}</a> <small>({{application.issue.assigned.userid}})</small></td></tr>
+          {{/if}}
+          {{/if}}
+        </table>
+        {{#if application.issue.bDeveloperOpen}}
+        <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
+        {{/if}}
+      </div>
+      <div class="col-md-8">
+        {{#if application.issue.bDeveloperOpen}}
+        <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
+        {{else}}
+        <p style="font-weight: bold;">{{application.issue.summary}}</p>
+        {{/if}}
+        <table class="table table-condensed table-striped" style="margin-top: 10px;">
+          {{#each application.issue.comments}}
+          <tr>
+            <td>
+              <table class="table table-condensed" style="background: inherit;">
+                <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
+                <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
+                {{#if bEdit}}
+                {{#ifCond userid "==" getUserID}}
+                <tr><td><button class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
+                {{/ifCond}}
+                {{/if}}
+              </table>
+            </td>
+            <td>
+              {{#if bEdit}}
+              {{#ifCond userid "==" getUserID}}
+              <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
+              <button class="btn btn-primary float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
+              <button  class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
+              {{else}}
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
+              {{/ifCond}}
+              {{else}}
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
+              {{/if}}
+            </td>
+          </tr>
+          {{/each}}
+          {{#if application.issue.bIsValidOpen}}
+          <tr>
+            <td></td>
+            <td>
+              <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+              <button class="btn btn-primary float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-primary float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
+            </td>
+          </tr>
+          {{/if}}
+        </table>
+      </div>
+    </div>
+    {{/if}}
     {{/if}}
     <!-- ]]] -->
   </div>
@@ -1909,27 +1962,10 @@ export default
   {{#if application.forms.Notify.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
-    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5"></textarea>
-    <button class="btn btn-sm btn-default float-end" c-click="sendNotification()">Send Notification</button>
-    {{#if contacts}}
-    <div>
-      <h4 class="page-header">Sent Successfully</h4>
-      <ul>
-        {{#each contacts}}
-        {{#if sent}}
-        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
-        {{/if}}
-        {{/each}}
-      </ul>
-      <h4 class="page-header">Sent Unsuccessfully</h4>
-      <ul>
-        {{#each contacts}}
-        {{^if sent}}
-        <li><a href="#/Users/?userid={{userid}}">{{name}}</a> <small>({{userid}})</small></li>
-        {{/if}}
-        {{/each}}
-      </ul>
-    </div>
+    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
+    <button class="btn btn-primary float-end" c-click="sendNotification()">Send Notification</button>
+    {{#if bNotified}}
+    <span class="text-success">Notification has been sent.</span>
     {{/if}}
   </div>
   {{/if}}
@@ -1947,27 +1983,29 @@ export default
       </tr>
       {{#if application.bDeveloper}}
       <tr>
-        <td><select class="form-control" c-model="server">{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="server" c-json>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addServer()">Add</button></td>
       </tr>
       {{/if}}
       {{#each application.servers}}
       <tr>
         <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-        {{#if application.bDeveloper}}
-        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
+        {{#if @root.application.bDeveloper}}
+        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-bs-toggle="modal" data-bs-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
         {{/if}}
       </tr>
       {{/each}}
     </table>
-    <div id="serverModal" class="modal fad" role="dialog">
+    <div id="serverModal" class="modal modal-xl">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Edit Monitoring Details - {{modalServer.name}}</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body table-responsive">
+            <div c-model="modalServerInfo" class="text-warning"></div>
+            <div c-model="modalServermessage" class="text-danger" style="font-weight:bold;"></div>
             <table class="table table-condensed table-striped">
               <tr>
                 <th colspan="5"></th>
@@ -1994,39 +2032,6 @@ export default
                 <th colspan="2"></th>
                 {{/if}}
               </tr>
-              {{#each modalServer.details}}
-              <tr>
-                {{#if bEdit}}
-                  <td><input type="text" class="form-control" c-model="daemon"></td>
-                  <td><input type="text" class="form-control" c-model="version"></td>
-                  <td><input type="text" class="form-control" c-model="owner"></td>
-                  <td><input type="text" class="form-control" c-model="script"></td>
-                  <td><input type="text" class="form-control" c-model="delay"></td>
-                  <td><input type="text" class="form-control" c-model="min_processes"></td>
-                  <td><input type="text" class="form-control" c-model="max_processes"></td>
-                  <td><input type="text" class="form-control" c-model="min_image"></td>
-                  <td><input type="text" class="form-control" c-model="max_image"></td>
-                  <td><input type="text" class="form-control" c-model="min_resident"></td>
-                  <td><input type="text" class="form-control" c-model="max_resident"></td>
-                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
-                  <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
-                {{else}}
-                  <td>{{daemon}}</td>
-                  <td>{{version}}</td>
-                  <td>{{owner}}</td>
-                  <td>{{script}}</td>
-                  <td>{{delay}}</td>
-                  <td>{{min_processes}}</td>
-                  <td>{{max_processes}}</td>
-                  <td>{{min_image}}</td>
-                  <td>{{max_image}}</td>
-                  <td>{{min_resident}}</td>
-                  <td>{{max_resident}}</td>
-                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{.}}, true)">Edit</button></td>
-                  <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
-                {{/if}}
-              </tr>
-              {{/each}}
               {{#if application.bDeveloper}}
               <tr>
                 <td><input type="text" class="form-control" c-model="serverDetail.daemon"></td>
@@ -2043,7 +2048,43 @@ export default
                 <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success" c-click="addServerDetail()">Add</button>{{/if}}</td>
               </tr>
               {{/if}}
+              {{#each modalServer.details}}
+              <tr>
+                {{#if bEdit}}
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].daemon"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].version"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].owner"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].script"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].delay"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_processes"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_processes"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_image"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_image"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_resident"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_resident"></td>
+                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
+                <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
+                {{else}}
+                <td>{{daemon}}</td>
+                <td>{{version}}</td>
+                <td>{{owner}}</td>
+                <td>{{script}}</td>
+                <td>{{delay}}</td>
+                <td>{{min_processes}}</td>
+                <td>{{max_processes}}</td>
+                <td>{{min_image}}</td>
+                <td>{{max_image}}</td>
+                <td>{{min_resident}}</td>
+                <td>{{max_resident}}</td>
+                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, true)">Edit</button></td>
+                <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
+                {{/if}}
+              </tr>
+              {{/each}}
             </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>

@@ -30,7 +30,10 @@ export default
     {
       s.info.v = 'Adding issue...';
       let request = {Interface: 'central', 'Function': 'applicationIssueAdd'};
-      request.Request = {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary, due_date: s.issue.due_date, priority: s.issue.priority, assigned_userid: s.issue.assigned_userid, comments: s.issue.comments, server: location.host};
+      request.Request = c.simplify(s.issue);
+      request.Request.application_id = s.application.id;
+      request.Request.application_name = s.application.name;
+      request.Request.server = location.host;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
