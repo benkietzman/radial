@@ -31,7 +31,8 @@ export default
       menu_accesses: [],
       notify_priorities: [],
       onlyOpenIssues: 1,
-      package_types: []
+      package_types: [],
+      serverDetail: {delay: 0, min_processes: 0, max_processes: 0, min_image: 0, max_image: 0, min_resident: 0, max_resident: 0}
     });
     // ]]]
     // [[[ addAccount()
@@ -153,7 +154,7 @@ export default
           {
             s.application.issue = null;
           }
-          document.location.href = '#/Applications/' + s.application.id + '/Issues/' + nIssueID;
+          document.location.href = '#/Applications/' + nApplicationID + '/Issues/' + nIssueID;
           s.showForm('Issues');
         }
         else
@@ -167,7 +168,7 @@ export default
     // [[[ addServer()
     s.addServer = () =>
     {
-      let request = {Interface: 'central', 'Function': 'applicationServerAdd', Request: {application_id: s.application.id, server_id: s.server_id}};
+      let request = {Interface: 'central', 'Function': 'applicationServerAdd', Request: {application_id: s.application.id, server_id: s.server.v.id}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -183,22 +184,24 @@ export default
       });
     };
     // ]]]
-    // [[[ addServer(Detail)
+    // [[[ addServerDetail()
     s.addServerDetail = () =>
     {
+      s.modalServerInfo.v = 'Adding server detail...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetailAdd', Request: c.simplify(s.serverDetail)};
       request.Request.application_server_id = s.modalServer.id;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
-          s.serverDetails(s.modalServer);
+          s.serverDetails(s.modalServer.id);
           s.sysInfoUpdate();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -273,7 +276,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.id) && s.application.issue.transfer.id != s.application.id)
+          if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.v) && c.isDefined(s.application.issue.transfer.v.id) && s.application.issue.transfer.v.id != s.application.id)
           {
             s.info.v = 'Emailing issue...';
             let request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id, server: location.host}};
@@ -284,7 +287,7 @@ export default
               if (c.wsResponse(response, error))
               {
                 s.info.v = 'Transfering issue...';
-                document.location.href = '/central/#/Applications/?application=' + encodeURIComponent(s.application.issue.transfer.name) + '&form=Issues&issue_id=' + s.application.issue.id;
+                document.location.href = '/central/#/Applications/?application=' + encodeURIComponent(s.application.issue.transfer.v.name) + '&form=Issues&issue_id=' + s.application.issue.id;
               }
               else
               {
@@ -330,18 +333,20 @@ export default
     // [[[ editServerDetail()
     s.editServerDetail = (nIndex) =>
     {
+      s.modalServerInfo.v = 'Updating server detail...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetailEdit', Request: c.simplify(s.modalServer.details[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
-          s.serverDetails(s.modalServer);
+          s.serverDetails(s.modalServer.id);
           s.sysInfoUpdate();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -674,6 +679,11 @@ export default
         s.modalServer.details[nIndex] = c.simplify(s.modalServer.details[nIndex]);
       }
       s.u();
+      let e = document.querySelector('div.modal-backdrop');
+      e.parentNode.removeChild(e);
+      document.querySelector('body').style.overflow = 'auto';
+      let modal = new bootstrap.Modal(document.getElementById('serverModal'));
+      modal.show();
     };
     // ]]]
     // [[[ removeAccount()
@@ -792,18 +802,20 @@ export default
     {
       if (confirm('Are you sure you want to remove this application server detail?'))
       {
+        s.modalServerInfo.v = 'Removing server detail...';
         let request = {Interface: 'central', 'Function': 'applicationServerDetailRemove', Request: {id: nID}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
+          s.modalServerInfo.v = null;
           if (c.wsResponse(response, error))
           {
-            s.serverDetails(s.modalServer);
+            s.serverDetails(s.modalServer.id);
             s.sysInfoUpdate();
           }
           else
           {
-            s.message.v = error.message;
+            s.modalServerMessage.v = error.message;
           }
         });
       }
@@ -833,17 +845,33 @@ export default
     // [[[ serverDetails()
     s.serverDetails = (nID) =>
     {
+      s.modalServer = null;
+      for (let i = 0; i < s.application.servers.length; i++)
+      {
+        if (s.application.servers[i].id == nID)
+        {
+          s.modalServer = s.application.servers[i];
+        }
+      }
+      s.modalServerInfo.v = 'Retrieving server details...';
       let request = {Interface: 'central', 'Function': 'applicationServerDetails', Request: {application_server_id: nID}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.modalServerInfo.v = null;
         if (c.wsResponse(response, error))
         {
           s.modalServer.details = response.Response;
+          s.u();
+          let e = document.querySelector('div.modal-backdrop');
+          e.parentNode.removeChild(e);
+          document.querySelector('body').style.overflow = 'auto';
+          let modal = new bootstrap.Modal(document.getElementById('serverModal'));
+          modal.show();
         }
         else
         {
-          s.message.v = error.message;
+          s.modalServerMessage.v = error.message;
         }
       });
     };
@@ -903,7 +931,7 @@ export default
       // [[[ Accounts
       else if (strForm == 'Accounts')
       {
-        if (c.isGlobalAdmin() || s.application.bDeveloper)
+        if (s.application.bDeveloper)
         {
           if (!c.isDefined(s.application.accounts) || s.application.accounts == null)
           {
@@ -1038,7 +1066,7 @@ export default
             {
               s.application.depends = response.Response.depends;
               s.application.dependents = response.Response.dependents;
-              if (c.isGlobalAdmin() || s.application.bDeveloper)
+              if (s.application.bDeveloper)
               {
                 let request = {Interface: 'central', 'Function': 'applications', Request: {dependable: 1}};
                 c.wsRequest('radial', request).then((response) =>
@@ -1091,8 +1119,16 @@ export default
                 {
                   s.application.issue.assigned_userid = s.application.issue.assigned.userid;
                 }
-                if (c.isGlobalAdmin() || s.application.bDeveloper)
+                if (c.isValid() && s.application.issue.close_date == '')
                 {
+                  s.application.issue.bIsValidOpen = true;
+                }
+                if (s.application.bDeveloper)
+                {
+                  if (s.application.issue.close_date == '')
+                  {
+                    s.application.issue.bDeveloperOpen = true;
+                  }
                   s.applications = null;
                   let request = {Interface: 'central', 'Function': 'applications', Request: {}};
                   c.wsRequest('radial', request).then((response) =>
@@ -1175,7 +1211,7 @@ export default
             if (c.wsResponse(response, error))
             {
               s.application.servers = response.Response;
-              if (c.isGlobalAdmin() || s.application.bDeveloper)
+              if (s.application.bDeveloper)
               {
                 let request = {Interface: 'central', 'Function': 'servers', Request: {}};
                 c.wsRequest('radial', request).then((response) =>
@@ -1184,6 +1220,7 @@ export default
                   if (c.wsResponse(response, error))
                   {
                     s.servers = response.Response;
+                    s.server = s.servers[0];
                     s.u();
                   }
                   else
@@ -1828,7 +1865,7 @@ export default
     {{/if}}
     {{/if}}
     <div class="row">
-      <div class="col-md-3">
+      <div class="col-md-4">
         <table class="table table-condensed card card-body card-inverse">
           <tr><th style="white-space: nowrap;">Issue #</th><td style="white-space: nowrap;">{{application.issue.id}}</td></tr>
           {{#if application.issue.open_date}}
@@ -1837,22 +1874,20 @@ export default
           {{#if application.issue.close_date}}
           <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
           {{/if}}
-          {{#if application.bDeveloper}}
-          {{^if application.issue.close_date}}
+          {{#if application.issue.bDeveloperOpen}}
           <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
           <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
           <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
           <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer" c-json>{{#each applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td></tr>
-          {{/if}}
           {{else}}
           {{#ifCond application.issue.hold "==" 1}}
           <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
           {{/ifCond}}
-          {{#ifCond application.issue.priority ">=" 1}}
-          <tr><th>Priority</th><td>{{#ifCond application.issue.priority "==" 1}}Low{{else ifCond application.issue.priority "==" 2}}<span style="color: orange;">Medium</span>{{else ifCond application.issue.priority "==" 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
-          {{/ifCond}}
+          {{#if application.issue.priority}}
+          <tr><th>Priority</th><td>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<span style="color: orange;">Medium</span>{{else ifCond @root.application.issue.priority "==" 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
+          {{/if}}
           {{#if application.issue.due_date}}
           <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
           {{/if}}
@@ -1864,19 +1899,13 @@ export default
           {{/if}}
           {{/if}}
         </table>
-        {{#if application.bDeveloper}}
-        {{^if application.issue.close_date}}
+        {{#if application.issue.bDeveloperOpen}}
         <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
         {{/if}}
-        {{/if}}
       </div>
-      <div class="col-md-9">
-        {{#if application.bDeveloper}}
-        {{^if application.issue.close_date}}
+      <div class="col-md-8">
+        {{#if application.issue.bDeveloperOpen}}
         <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
-        {{else}}
-        <p style="font-weight: bold;">{{application.issue.summary}}</p>
-        {{/if}}
         {{else}}
         <p style="font-weight: bold;">{{application.issue.summary}}</p>
         {{/if}}
@@ -1909,8 +1938,7 @@ export default
             </td>
           </tr>
           {{/each}}
-          {{#isValid}}
-          {{^if application.issue.close_date}}
+          {{#if application.issue.bIsValidOpen}}
           <tr>
             <td></td>
             <td>
@@ -1920,7 +1948,6 @@ export default
             </td>
           </tr>
           {{/if}}
-          {{/isValid}}
         </table>
       </div>
     </div>
@@ -1979,20 +2006,22 @@ export default
       {{#each application.servers}}
       <tr>
         <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-        {{#if application.bDeveloper}}
-        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
+        {{#if @root.application.bDeveloper}}
+        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-bs-toggle="modal" data-bs-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
         {{/if}}
       </tr>
       {{/each}}
     </table>
-    <div id="serverModal" class="modal fad" role="dialog">
+    <div id="serverModal" class="modal modal-xl">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Edit Monitoring Details - {{modalServer.name}}</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body table-responsive">
+            <div c-model="modalServerInfo" class="text-warning"></div>
+            <div c-model="modalServermessage" class="text-danger" style="font-weight:bold;"></div>
             <table class="table table-condensed table-striped">
               <tr>
                 <th colspan="5"></th>
@@ -2019,39 +2048,6 @@ export default
                 <th colspan="2"></th>
                 {{/if}}
               </tr>
-              {{#each modalServer.details}}
-              <tr>
-                {{#if bEdit}}
-                  <td><input type="text" class="form-control" c-model="daemon"></td>
-                  <td><input type="text" class="form-control" c-model="version"></td>
-                  <td><input type="text" class="form-control" c-model="owner"></td>
-                  <td><input type="text" class="form-control" c-model="script"></td>
-                  <td><input type="text" class="form-control" c-model="delay"></td>
-                  <td><input type="text" class="form-control" c-model="min_processes"></td>
-                  <td><input type="text" class="form-control" c-model="max_processes"></td>
-                  <td><input type="text" class="form-control" c-model="min_image"></td>
-                  <td><input type="text" class="form-control" c-model="max_image"></td>
-                  <td><input type="text" class="form-control" c-model="min_resident"></td>
-                  <td><input type="text" class="form-control" c-model="max_resident"></td>
-                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
-                  <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
-                {{else}}
-                  <td>{{daemon}}</td>
-                  <td>{{version}}</td>
-                  <td>{{owner}}</td>
-                  <td>{{script}}</td>
-                  <td>{{delay}}</td>
-                  <td>{{min_processes}}</td>
-                  <td>{{max_processes}}</td>
-                  <td>{{min_image}}</td>
-                  <td>{{max_image}}</td>
-                  <td>{{min_resident}}</td>
-                  <td>{{max_resident}}</td>
-                  <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{.}}, true)">Edit</button></td>
-                  <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
-                {{/if}}
-              </tr>
-              {{/each}}
               {{#if application.bDeveloper}}
               <tr>
                 <td><input type="text" class="form-control" c-model="serverDetail.daemon"></td>
@@ -2068,7 +2064,43 @@ export default
                 <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success" c-click="addServerDetail()">Add</button>{{/if}}</td>
               </tr>
               {{/if}}
+              {{#each modalServer.details}}
+              <tr>
+                {{#if bEdit}}
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].daemon"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].version"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].owner"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].script"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].delay"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_processes"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_processes"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_image"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_image"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_resident"></td>
+                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_resident"></td>
+                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
+                <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
+                {{else}}
+                <td>{{daemon}}</td>
+                <td>{{version}}</td>
+                <td>{{owner}}</td>
+                <td>{{script}}</td>
+                <td>{{delay}}</td>
+                <td>{{min_processes}}</td>
+                <td>{{max_processes}}</td>
+                <td>{{min_image}}</td>
+                <td>{{max_image}}</td>
+                <td>{{min_resident}}</td>
+                <td>{{max_resident}}</td>
+                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, true)">Edit</button></td>
+                <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
+                {{/if}}
+              </tr>
+              {{/each}}
             </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
