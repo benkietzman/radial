@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
-  list<string> actions = {"central", "centralmon", "database", "interface", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -242,6 +242,24 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strQuery.empty())
           {
             ptRequest->i("Query", strQuery);
+          }
+        }
+      }
+      // }}}
+      // {{{ db
+      else if (strAction == "db")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          string strRequest;
+          ptRequest->i("Function", strFunction);
+          getline(ssData, strRequest);
+          m_manip.trim(strRequest, strRequest);
+          if (!strRequest.empty())
+          {
+            ptRequest->i("Request", strRequest);
           }
         }
       }
@@ -991,6 +1009,54 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << " error:  You are not authorized to access database.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
+  // {{{ db
+  else if (strAction == "db")
+  {
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    {
+      string strFunction = var("Function", ptData);
+      if (!strFunction.empty())
+      {
+        string strRequest = var("Request", ptData);
+        if (!strRequest.empty())
+        {
+          string strID, strQuery;
+          Json *ptIn = new Json(strRequest), *ptOut = new Json;
+          if (db(strFunction, ptIn, ptOut, strID, strQuery, strError))
+          {
+            ssText << ":  Request sent.";
+            if (strID.empty())
+            {
+              ssText << endl << "ID:  " << strID;
+            }
+            for (auto &row : ptOut->l)
+            {
+              Json *ptRow = new Json(row);
+              ssText << endl << ptRow;
+              delete ptRow;
+            }
+          }
+          else
+          {
+            ssText << ":  " << strError;
+          }
+        }
+        else
+        {
+          ssText << ":  Please provide a Request immediately following the Function.";
+        }
+      }
+      else
+      {
+        ssText << ":  The db action is used to call a to call a database function.  Please provide a Function immediately following the action.";
+      }
+    }
+    else
+    {
+      ssText << " error:  You are not authorized to access db.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
