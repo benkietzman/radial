@@ -1822,11 +1822,11 @@ export default
     <!-- [[[ issue -->
     {{else}}
     {{#if application.issue}}
-    {{#isValid}}
+    {{#if application.bDeveloper}}
     {{#if application.issue.close_date}}
     <button class="btn btn-sm btn-success float-end" c-click="editIssue(true)">Open</button>
     {{/if}}
-    {{/isValid}}
+    {{/if}}
     <div class="row">
       <div class="col-md-3">
         <table class="table table-condensed card card-body card-inverse">
@@ -1834,7 +1834,7 @@ export default
           {{#if application.issue.open_date}}
           <tr><th>Open</th><td style="white-space: nowrap;">{{application.issue.open_date}}</td></tr>
           {{/if}}
-          {{#if appllication.issue.close_date}}
+          {{#if application.issue.close_date}}
           <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
           {{/if}}
           {{#if application.bDeveloper}}
@@ -1865,12 +1865,18 @@ export default
           {{/if}}
         </table>
         {{#if application.bDeveloper}}
+        {{^if application.issue.close_date}}
         <button class="btn btn-warning float-end" c-click="editIssue()">Save</button>
+        {{/if}}
         {{/if}}
       </div>
       <div class="col-md-9">
         {{#if application.bDeveloper}}
+        {{^if application.issue.close_date}}
         <input type="text" class="form-control" c-model="application.issue.summary" placeholder="enter summary" style="width: 100%; font-weight: bold;">
+        {{else}}
+        <p style="font-weight: bold;">{{application.issue.summary}}</p>
+        {{/if}}
         {{else}}
         <p style="font-weight: bold;">{{application.issue.summary}}</p>
         {{/if}}
@@ -1904,6 +1910,7 @@ export default
           </tr>
           {{/each}}
           {{#isValid}}
+          {{^if application.issue.close_date}}
           <tr>
             <td></td>
             <td>
@@ -1912,6 +1919,7 @@ export default
               <button class="btn btn-sm btn-default float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Add Comments</button>
             </td>
           </tr>
+          {{/if}}
           {{/isValid}}
         </table>
       </div>
