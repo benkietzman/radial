@@ -1611,7 +1611,7 @@ export default
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
       <td>{{data.StartTime}}</td>
-      <td>{{data.Owners}}</td>
+      <td>{{json data.Owners}}</td>
       <td>{{numberShort data.NumberOfProcesses}}</td>
       <td>{{numberShort data.ImageSize}}</td>
       <td>{{numberShort data.ResidentSize}}</td>
