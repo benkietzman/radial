@@ -1588,6 +1588,7 @@ void Interface::process(string strPrefix)
                     if (strName != m_strName)
                     {
                       Json *ptLive = new Json;
+                      ptLive->i("wsRequestID", ptJson->m["wsRequestID"]->v);
                       ptLive->i("radialProcess", m_strName);
                       ptLive->i("radialPrefix", strPrefix);
                       ptLive->i("radialPurpose", "status");
