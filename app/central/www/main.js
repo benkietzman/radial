@@ -9,7 +9,7 @@ let common = new Common(
   application: 'Central',
   footer:
   {
-    server: 'kietzman.org',
+    server: location.host,
     subject: 'Central',
     userid: 'ben',
     version: '3.0'
@@ -51,9 +51,9 @@ let common = new Common(
 });
 common.enableJwt(true);
 common.enableJwtInclusion(true);
-common.setRedirectPath('https://kietzman.org/central'); // TODO
+common.setRedirectPath('https://'+location.host.'/central'); // TODO
 common.setSecureLogin(true);
-common.wsCreate('radial', 'kietzman.org', '7797', true, 'radial'); // TODO
+common.wsCreate('radial', location.host, '7797', true, 'radial'); // TODO
 let app = new App(
 {
   common: common
