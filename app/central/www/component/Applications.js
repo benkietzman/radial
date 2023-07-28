@@ -63,7 +63,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          document.location.href = '#/Applications/?application=' + encodeURIComponent(s.d.application.name);
+          document.location.href = '#/Applications/?application=' + encodeURIComponent(s.d.application.name.v);
         }
         else
         {

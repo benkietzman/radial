@@ -56,7 +56,7 @@ export default
     };
     // ]]]
     // [[[ addServer()
-    s.addApplication = () =>
+    s.addServer = () =>
     {
       let request = {Interface: 'central', 'Function': 'serverAdd', Request: c.simplify(s.d.server)};
       c.wsRequest('radial', request).then((response) =>
@@ -64,7 +64,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          document.location.href = '#/Servers/?server=' + encodeURIComponent(s.d.server.name);
+          document.location.href = '#/Servers/?server=' + encodeURIComponent(s.d.server.name.v);
         }
         else
         {
@@ -461,6 +461,47 @@ export default
       // [[[ General
       if (strForm == 'General')
       {
+        if (s.server.bAdmin)
+        {
+          let request = {Interface: 'central', 'Function': 'servers', Request: {}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              s.servers = response.Response;
+              if (s.server.parent_id != null && s.server.parent_id > 0 && !c.isDefined(s.server['parent']))
+              {
+                let request = {Interface: 'central', 'Function': 'server', Request: {id: s.server.parent_id}};
+                c.wsRequest('radial', request).then((response) =>
+                {
+                  let error = {};
+                  if (c.wsResponse(response, error))
+                  {
+                    s.server['parent'] = response.Response;
+                    for (let i = 0; i < s.servers.length; i++)
+                    {
+                      if (s.server['parent'].id == s.servers[i].id)
+                      {
+                        s.server['parent'] = s.servers[i];
+                      }
+                    }
+                    s.u();
+                  }
+                  else
+                  {
+                    s.message.v = error.message;
+                  }
+                });
+              }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
       }
       // ]]]
       // [[[ Applications
@@ -694,7 +735,7 @@ export default
       <div class="collapse navbar-collapse" id="srvnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each server.forms_order}}
-          <li class="nav-item"><a class="nav-link {{#with (lookup @root.server.forms .)}}{{active}}{{/with}}" href="#/Applications/{{@root.server.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.server.forms .)}}{{active}}{{/with}}" href="#/Servers/{{@root.server.id}}/{{.}}">{{.}}</a></li>
           {{/each}}
         </ul>
       </div>
@@ -758,7 +799,7 @@ export default
       </th>
       <td>
         {{#if server.bEdit}}
-        <select c-model="server.['parent']" c-json>{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="server.['parent']" c-json><option value="">-- none --</option>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         <a href="#/Servers/{{server.['parent'].id}}">{{server.['parent'].name}}</a>
         {{/if}}
