@@ -25,14 +25,9 @@ export default
       c: c,
       d: {},
       bNotified: false,
-      contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
       issue: {priority: '1'},
       issueList: true,
-      login_types: [],
-      menu_accesses: [],
-      notify_priorities: [],
       onlyOpenIssues: 1,
-      package_types: [],
       serverDetail: {delay: 0, min_processes: 0, max_processes: 0, min_image: 0, max_image: 0, min_resident: 0, max_resident: 0}
     });
     // ]]]
@@ -375,6 +370,7 @@ export default
     // [[[ loadApplication()
     s.loadApplication = () =>
     {
+      s.preLoad();
       if (c.isParam(nav, 'id') || c.isParam(nav, 'application'))
       {
         let strForm = ((c.isParam(nav, 'form'))?c.getParam(nav, 'form'):'General');
@@ -452,100 +448,7 @@ export default
     // [[[ loadApplications()
     s.loadApplications = () =>
     {
-      // [[[ get contact types
-      if (!c.isDefined(s.contact_types))
-      {
-        for (let i = 0; i < s.contact_types.length; i++)
-        {
-          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contact_types[i].type, i: i}};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            if (c.wsResponse(response, error))
-            {
-              let i = response.Request.i;
-              s.contact_types[i] = response.Response;
-            }
-            else
-            {
-              s.message.v = error.message;
-            }
-          });
-        }
-      }
-      // ]]]
-      // [[[ get login types
-      if (!c.isDefined(s.login_types))
-      {
-        let request = {Interface: 'central', 'Function': 'loginTypes', Request: {}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.login_types = response.Response;
-          }
-          else
-          {
-            s.message.v = error.message;
-          }
-        });
-      }
-      // ]]]
-      // [[[ get menu accesses
-      if (!c.isDefined(s.menu_accesses))
-      {
-        let request = {Interface: 'central', 'Function': 'menuAccesses', Request: {}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.menu_accesses = response.Response;
-          }
-          else
-          {
-            s.message.v = error.message;
-          }
-        });
-      }
-      // ]]]
-      // [[[ get notify priorities
-      if (!c.isDefined(s.notify_priorities))
-      {
-        let request = {Interface: 'central', 'Function': 'notifyPriorities', Request: {}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.notify_priorities = response.Response;
-          }
-          else
-          {
-            s.message.v = error.message;
-          }
-        });
-      }
-      // ]]]
-      // [[[ get package types
-      if (!c.isDefined(s.package_types))
-      {
-        let request = {Interface: 'central', 'Function': 'packageTypes', Request: {}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.package_types = response.Response;
-          }
-          else
-          {
-            s.message.v = error.message;
-          }
-        });
-      }
-      // ]]]
+      s.preLoad();
       if (s.list)
       {
         if (c.isParam(nav, 'letter'))
@@ -682,6 +585,110 @@ export default
       document.querySelector('body').style.overflow = 'auto';
       let modal = new bootstrap.Modal(document.getElementById('serverModal'));
       modal.show();
+    };
+    // ]]]
+    // [[[ preLoad()
+    s.preLoad = () =>
+    {
+      // [[[ get contact types
+      if (!c.isDefined(s.contact_types))
+      {
+        s.contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+        for (let i = 0; i < s.contact_types.length; i++)
+        {
+          let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contact_types[i].type, i: i}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              let i = response.Request.i;
+              s.contact_types[i] = response.Response;
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ get login types
+      if (!c.isDefined(s.login_types))
+      {
+        s.login_types = [];
+        let request = {Interface: 'central', 'Function': 'loginTypes', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.login_types = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
+      // [[[ get menu accesses
+      if (!c.isDefined(s.menu_accesses))
+      {
+        s.menu_accesses = [];
+        let request = {Interface: 'central', 'Function': 'menuAccesses', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.menu_accesses = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
+      // [[[ get notify priorities
+      if (!c.isDefined(s.notify_priorities))
+      {
+        s.notify_priorities = [];
+        let request = {Interface: 'central', 'Function': 'notifyPriorities', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.notify_priorities = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
+      // [[[ get package types
+      if (!c.isDefined(s.package_types))
+      {
+        s.package_types = [];
+        let request = {Interface: 'central', 'Function': 'packageTypes', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.package_types = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
     };
     // ]]]
     // [[[ removeAccount()
