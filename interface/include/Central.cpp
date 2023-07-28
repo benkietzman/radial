@@ -3196,6 +3196,7 @@ bool Central::serverNotify(radialUser &d, string &e)
               if (applicationsByServerID(h, e))
               {
                 map<string, map<string, map<string, string> > > developer;
+                stringstream s;
                 for (auto &app : h.p->m["o"]->l)
                 {
                   if (!empty(app, "application_id"))
@@ -3213,7 +3214,6 @@ bool Central::serverNotify(radialUser &d, string &e)
                       l.p->m["i"]->i("Contact", "1", 'n');
                       if (applicationUsersByApplicationID(l, e))
                       {
-                        stringstream s;
                         for (auto &contact : l.p->m["o"]->l)
                         {
                           if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
@@ -3242,83 +3242,83 @@ bool Central::serverNotify(radialUser &d, string &e)
                             }
                           }
                         }
-                        s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
-                        for (auto &n : developer)
-                        {
-                          list<string> to;
-                          stringstream m;
-                          m << "<html><body>";
-                          m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-                          m << "<h3><b>Server Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
-                          m << strNotification;
-                          m << "<br><br>";
-                          m << "<b>You are associated with the following applications that depend upon this server:</b>";
-                          m << "<br><br>";
-                          m << "<ul>";
-                          for (auto &p : n.second)
-                          {
-                            to.push_back(p.second["email"]);
-                            m << "<li><a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << p.first << "\">" << p.second["application"] << "</a>";
-                            if (p.second.find("primary") != p.second.end())
-                            {
-                              m << ":  You are a Primary Developer for this application.";
-                            }
-                            else if (p.second.find("backup") != p.second.end())
-                            {
-                              m << ":  You are a Backup Developer for this application.";
-                            }
-                            m << "</li>";
-                          }
-                          m << "</ul>";
-                          if (!admin["primary"].empty())
-                          {
-                            bool bFirst = true;
-                            m << "<br><br>";
-                            m << "<b>Primary Admin(s):</b><br>";
-                            for (auto &ad : admin["primary"])
-                            {
-                              if (bFirst)
-                              {
-                                bFirst = false;
-                              }
-                              else
-                              {
-                                m << ", ";
-                              }
-                              m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
-                            }
-                          }
-                          if (!admin["backup"].empty())
-                          {
-                            bool bFirst = true;
-                            m << "<br><br>";
-                            m << "<b>Backup Admin(s):</b><br>";
-                            for (auto &ad : admin["backup"])
-                            {
-                              if (bFirst)
-                              {
-                                bFirst = false;
-                              }
-                              else
-                              {
-                                m << ", ";
-                              }
-                              m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
-                            }
-                          }
-                          m << "<br><br>";
-                          m << "If you have any questions or concerns, please contact your server contacts.";
-                          m << "</div>";
-                          m << "</body></html>";
-                          to.sort();
-                          to.unique();
-                          email(getUserEmail(d), to, s.str(), "", m.str(), e);
-                        }
                       }
                       userDeinit(l);
                     }
                     userDeinit(k);
                   }
+                }
+                s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+                for (auto &n : developer)
+                {
+                  list<string> to;
+                  stringstream m;
+                  m << "<html><body>";
+                  m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
+                  m << "<h3><b>Server Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+                  m << strNotification;
+                  m << "<br><br>";
+                  m << "<b>You are associated with the following applications that depend upon this server:</b>";
+                  m << "<br><br>";
+                  m << "<ul>";
+                  for (auto &p : n.second)
+                  {
+                    to.push_back(p.second["email"]);
+                    m << "<li><a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << p.first << "\">" << p.second["application"] << "</a>";
+                    if (p.second.find("primary") != p.second.end())
+                    {
+                      m << ":  You are a Primary Developer for this application.";
+                    }
+                    else if (p.second.find("backup") != p.second.end())
+                    {
+                      m << ":  You are a Backup Developer for this application.";
+                    }
+                    m << "</li>";
+                  }
+                  m << "</ul>";
+                  if (!admin["primary"].empty())
+                  {
+                    bool bFirst = true;
+                    m << "<br><br>";
+                    m << "<b>Primary Admin(s):</b><br>";
+                    for (auto &ad : admin["primary"])
+                    {
+                      if (bFirst)
+                      {
+                        bFirst = false;
+                      }
+                      else
+                      {
+                        m << ", ";
+                      }
+                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                    }
+                  }
+                  if (!admin["backup"].empty())
+                  {
+                    bool bFirst = true;
+                    m << "<br><br>";
+                    m << "<b>Backup Admin(s):</b><br>";
+                    for (auto &ad : admin["backup"])
+                    {
+                      if (bFirst)
+                      {
+                        bFirst = false;
+                      }
+                      else
+                      {
+                        m << ", ";
+                      }
+                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                    }
+                  }
+                  m << "<br><br>";
+                  m << "If you have any questions or concerns, please contact your server contacts.";
+                  m << "</div>";
+                  m << "</body></html>";
+                  to.sort();
+                  to.unique();
+                  email(getUserEmail(d), to, s.str(), "", m.str(), e);
                 }
               }
               userDeinit(h);
