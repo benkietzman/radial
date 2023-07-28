@@ -3224,7 +3224,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                               if (developer[contact->m["userid"]->v].find(app->m["application_id"]->v) == developer[contact->m["userid"]->v].end())
                               {
                                 developer[contact->m["userid"]->v][app->m["application_id"]->v] = {};
-                                developer[contact->m["userid"]->v][app->m["application_id"]->v]["name"] = k.p->m["o"]->m["name"]->v;
+                                developer[contact->m["userid"]->v][app->m["application_id"]->v]["application"] = k.p->m["o"]->m["name"]->v;
                               }
                               developer[contact->m["userid"]->v][app->m["application_id"]->v]["email"] = contact->m["email"]->v;
                               developer[contact->m["userid"]->v][app->m["application_id"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
