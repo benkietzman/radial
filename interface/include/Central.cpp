@@ -3023,7 +3023,7 @@ bool Central::serverEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      if (exist(i, "parent") && !empty(i->m["parent"], "id"))
+      if (exist(i, "parent") && exist(i->m["parent"], "id"))
       {
         i->i("parent_id", i->m["parent"]->m["id"]->v);
       }
