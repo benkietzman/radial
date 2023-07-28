@@ -512,7 +512,7 @@ export default
       // [[[ Applications
       else if (strForm == 'Applications')
       {
-        if (!c.isDefined(s.application.applications) || s.application.applications == null)
+        if (!c.isDefined(s.server.applications) || s.server.applications == null)
         {
           s.info.v = 'Retrieving applications...';
           let request = {Interface: 'central', 'Function': 'applicationsByServerID', Request: {server_id: s.server.id}};
@@ -538,7 +538,7 @@ export default
       {
         if (!c.isDefined(s.server.contacts) || s.server.contacts == null)
         {
-          s.contact = {server_id: s.server.id, type: s.contact_types[3], admin: a.m_noyes[0], locked: a.m_noyes[0], notify: a.m_noyes[1]};
+          s.contact = {server_id: s.server.id, type: s.contact_types[3], notify: a.m_noyes[1], physical_access: a.m_noyes[0]};
           s.server.contacts = null;
           s.server.contacts = [];
           s.u();
@@ -561,10 +561,6 @@ export default
                 }
                 for (let j = 0; j < a.m_noyes.length; j++)
                 {
-                  if (response.Response[i].admin.value == a.m_noyes[j].value)
-                  {
-                    response.Response[i].admin = a.m_noyes[j];
-                  }
                   if (response.Response[i].notify.value == a.m_noyes[j].value)
                   {
                     response.Response[i].notify = a.m_noyes[j];
@@ -574,7 +570,7 @@ export default
                     response.Response[i].physical_access = a.m_noyes[j];
                   }
                 }
-                s.application.contacts.push(response.Response[i]);
+                s.server.contacts.push(response.Response[i]);
               }
               s.u();
             }
@@ -630,14 +626,6 @@ export default
           s.message.v = error.message;
         }
       });
-    };
-    // ]]]
-    // [[[ toggleClosedIssues()
-    s.toggleClosedIssues = () =>
-    {
-      s.application.issues = null;
-      s.onlyOpenIssues = ((s.onlyOpenIssues == 1)?0:1);
-      s.showForm('Issues');
     };
     // ]]]
     // [[[ main
@@ -1081,7 +1069,7 @@ export default
       <tr>
         <th>Application</td>
       </tr>
-      {{#each server.aplications}}
+      {{#each server.applications}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
       </tr>

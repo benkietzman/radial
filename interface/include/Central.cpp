@@ -3564,14 +3564,22 @@ bool Central::serverUserAdd(radialUser &d, string &e)
           {
             if (exist(i, "notify") && !empty(i->m["notify"], "value"))
             {
-              string id, q;
-              i->i("contact_id", c.p->m["o"]->m["id"]->v);
-              i->i("notify", i->m["notify"]->m["value"]->v);
-              i->i("type_id", f.p->m["o"]->m["id"]->v);
-              if (db("dbCentralServerUserAdd", i, id, q, e))
+              if (exist(i, "physical_access") && !empty(i->m["physical_access"], "value"))
               {
-                b = true;
-                o->i("id", id);
+                string id, q;
+                i->i("contact_id", c.p->m["o"]->m["id"]->v);
+                i->i("notify", i->m["notify"]->m["value"]->v);
+                i->i("physical_access", i->m["physical_access"]->m["value"]->v);
+                i->i("type_id", f.p->m["o"]->m["id"]->v);
+                if (db("dbCentralServerUserAdd", i, id, q, e))
+                {
+                  b = true;
+                  o->i("id", id);
+                }
+              }
+              else
+              {
+                e = "Please provide the physical_access.";
               }
             }
             else
@@ -3656,10 +3664,18 @@ bool Central::serverUserEdit(radialUser &d, string &e)
             {
               if (exist(i, "notify") && !empty(i->m["notify"], "value"))
               {
-                i->i("contact_id", f.p->m["o"]->m["id"]->v);
-                i->i("notify", i->m["notify"]->m["value"]->v);
-                i->i("type_id", h.p->m["o"]->m["id"]->v);
-                b = db("dbCentralServerUserUpdate", i, e);
+                if (exist(i, "physical_access") && !empty(i->m["physical_access"], "value"))
+                {
+                  i->i("contact_id", f.p->m["o"]->m["id"]->v);
+                  i->i("notify", i->m["notify"]->m["value"]->v);
+                  i->i("physical_access", i->m["physical_access"]->m["value"]->v);
+                  i->i("type_id", h.p->m["o"]->m["id"]->v);
+                  b = db("dbCentralServerUserUpdate", i, e);
+                }
+                else
+                {
+                  e = "Please provide the physical_access.";
+                }
               }
               else
               {
