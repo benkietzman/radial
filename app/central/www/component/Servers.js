@@ -801,7 +801,7 @@ export default
         {{#if server.bEdit}}
         <select class="form-control" c-model="server.['parent']" c-json><option value="">-- none --</option>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
-        <a href="#/Servers/{{server.['parent'].id}}">{{server.['parent'].name}}</a>
+        {{#with (lookup server 'parent')}}<a href="#/Servers/{{id}}">{{name}}</a>{{/with}}
         {{/if}}
       </td>
       <th style="white-space: nowrap;">
