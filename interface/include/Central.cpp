@@ -3222,22 +3222,22 @@ bool Central::serverNotify(radialUser &d, string &e)
                             {
                               developer[contact->m["userid"]->v] = {};
                             }
-                            if (developer[contact->m["userid"]->v].find(app->m["application_id"]->v) == developer[contact->m["userid"]->v].end())
+                            if (developer[contact->m["userid"]->v].find(k.p->m["o"]->m["name"]->v) == developer[contact->m["userid"]->v].end())
                             {
-                              developer[contact->m["userid"]->v][app->m["application_id"]->v] = {};
-                              developer[contact->m["userid"]->v][app->m["application_id"]->v]["application"] = k.p->m["o"]->m["name"]->v;
+                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v] = {};
+                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["application_id"] = app->m["application_id"]->v;
                             }
-                            developer[contact->m["userid"]->v][app->m["application_id"]->v]["email"] = contact->m["email"]->v;
-                            developer[contact->m["userid"]->v][app->m["application_id"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["email"] = contact->m["email"]->v;
+                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
                             if (exist(contact, "type") && !empty(contact->m["type"], "type"))
                             {
                               if (contact->m["type"]->m["type"]->v == "Primary Developer")
                               {
-                                developer[contact->m["userid"]->v][app->m["application_id"]->v]["primary"] = "1";
+                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["primary"] = "1";
                               }
                               else if (contact->m["type"]->m["type"]->v == "Primary Developer")
                               {
-                                developer[contact->m["userid"]->v][app->m["application_id"]->v]["backup"] = "1";
+                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["backup"] = "1";
                               }
                             }
                           }
@@ -3264,7 +3264,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                   for (auto &p : n.second)
                   {
                     to.push_back(p.second["email"]);
-                    m << "<li><a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << p.first << "\">" << p.second["application"] << "</a>";
+                    m << "<li><a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << p.second["application_id"] << "\">" << p.first << "</a>";
                     if (p.second.find("primary") != p.second.end())
                     {
                       m << ":  You are a Primary Developer for this application.";
