@@ -593,7 +593,7 @@ export default
       // [[[ get contact types
       if (!c.isDefined(s.contact_types))
       {
-        s.contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+        s.contact_types = [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}];
         for (let i = 0; i < s.contact_types.length; i++)
         {
           let request = {Interface: 'central', 'Function': 'contactType', Request: {type: s.contact_types[i].type, i: i}};
