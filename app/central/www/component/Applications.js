@@ -572,10 +572,7 @@ export default
           if (c.wsResponse(response, error))
           {
             let appList = [];
-            for (let i = 0; i < response.Response.length; i++)
-            {
-              s.applications.push(response.Response[i]);
-            }
+            s.applications = response.Response;
             for (let i = 0; i < s.applications.length; i++)
             {
               if (s.applications[i].retirement_date)

@@ -1,0 +1,527 @@
+// vim: fmr=[[[,]]]
+///////////////////////////////////////////
+// author     : Ben Kietzman
+// begin      : 2023-07-28
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+///////////////////////////////////////////
+export default
+{
+  // [[[ controller()
+  controller(id, nav)
+  {
+    // [[[ prep work
+    let a = app;
+    let c = common;
+    let s = c.scope('Users',
+    {
+      // [[[ u()
+      u: () =>
+      {
+        c.render(id, 'Users', this);
+      },
+      // ]]]
+      a: a,
+      c: c,
+      d: {}
+    });
+    // ]]]
+    // [[[ addUser()
+    s.addUser = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'userAdd', Request: c.simplify(s.d.user)};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          document.location.href = '#/Users/?userid=' + encodeURIComponent(s.d.user.userid.v);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
+    // [[[ editUser()
+    s.editUser = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'userEdit', Request: c.simplify(s.user)};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.user = null;
+          s.loadUser();
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
+    // [[[ initForms()
+    s.initForms = () =>
+    {
+      if (!c.isDefined(s.user.forms))
+      {
+        s.user.forms =
+        {
+          General:      {value: 'General',      active: null},
+          Applications: {value: 'Applications', active: null},
+          Servers:     {value: 'Servers',     active: null},
+        };
+      }
+      if (!c.isDefined(s.user.forms_order))
+      {
+        s.user.forms_order = ['General', 'Applications', 'Servers'];
+      }
+    };
+    // ]]]
+    // [[[ loadUser()
+    s.loadUser = () =>
+    {
+      if (c.isParam(nav, 'id') || c.isParam(nav, 'userid'))
+      {
+        let strForm = ((c.isParam(nav, 'form'))?c.getParam(nav, 'form'):'General');
+        if (c.isDefined(s.user) && s.user != null && (c.getParam(nav, 'id') == s.user.id || c.getParam(nav, 'userid') == s.user.userid))
+        {
+          s.showForm(strForm);
+        }
+        else
+        {
+          s.info.v = 'Retrieving user...';
+          s.user = null;
+          let request = {Interface: 'central', 'Function': 'user', Request: {form: strForm}};
+          if (c.isParam(nav, 'id'))
+          {
+            request.Request.id = c.getParam(nav, 'id');
+          }
+          else
+          {
+            request.Request.userid = c.getParam(nav, 'userid');
+          }
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              let strForm = response.Request.form;
+              s.user = response.Response;
+              s.user.bAdmin = ((c.isGlobalAdmin() || c.getUserID() == s.user.userid)?true:false);
+              s.initForms();
+              s.showForm(strForm);
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+    };
+    // ]]]
+    // [[[ loadUsers()
+    s.loadUsers = () =>
+    {
+      if (s.list)
+      {
+        if (c.isParam(nav, 'letter'))
+        {
+          s.letter = c.getParam(nav, 'letter');
+        }
+        else if (!c.isDefined(s.letter))
+        {
+          s.letter = '#';
+        }
+        s.users = null;
+        s.users = [];
+        s.u();
+        s.info.v = 'Retrieving users...';
+        let request = {Interface: 'central', 'Function': 'users', Request: {}};
+        if (s.letter != 'ALL')
+        {
+          request.Request.letter = s.letter;
+        }
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.info.v = null;
+          if (c.wsResponse(response, error))
+          {
+            let appList = [];
+            s.users = response.Response;
+            s.u();
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      else
+      {
+        s.loadUser();
+      }
+    };
+    // ]]]
+    // [[[ preEditUser()
+    s.preEditUser = (bEdit) =>
+    {
+      s.user.bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.user = c.simplify(s.user);
+      }
+      s.u();
+    };
+    // ]]]
+    // [[[ removeUser()
+    s.removeUser = () =>
+    {
+      if (confirm('Are you sure you want to remove this user?'))
+      {
+        let request = {Interface: 'central', 'Function': 'userRemove', Request: {id: s.user.id}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.user = null;
+            document.location.href = '#/Users';
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+    };
+    // ]]]
+    // [[[ showForm()
+    s.showForm = (strForm) =>
+    {
+      s.info.v = null;
+      s.initForms();
+      if (!c.isDefined(s.user.forms[strForm]))
+      {
+        strForm = 'General';
+      }
+      for (let key of Object.keys(s.user.forms))
+      {
+        s.user.forms[key].active = null;
+      }
+      s.user.forms[strForm].active = 'active';
+      // [[[ General
+      if (strForm == 'General')
+      {
+        s.user.active = a.setNoYes(s.user.active);
+        s.user.admin = a.setNoYes(s.user.admin);
+        s.user.locked = a.setNoYes(s.user.locked);
+      }
+      // ]]]
+      // [[[ Applications
+      else if (strForm == 'Applications')
+      {
+        if (!c.isDefined(s.user.applications) || s.user.applications == null)
+        {
+          s.info.v = 'Retrieving applications...';
+          let request = {Interface: 'central', 'Function': 'applicationsByUserID', Request: {contact_id: s.user.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.user.applications = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Servers
+      else if (strForm == 'Servers')
+      {
+        if (!c.isDefined(s.user.servers) || s.user.servers == null)
+        {
+          s.info.v = 'Retrieving serverss...';
+          let request = {Interface: 'central', 'Function': 'serversByUserID', Request: {contact_id: s.user.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.user.servers = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      s.u();
+    };
+    // ]]]
+    // [[[ main
+    c.setMenu('Users');
+    s.list = true;
+    if (c.isParam(nav, 'id') || c.isParam(nav, 'userid'))
+    {
+      s.list = false;
+    }
+    s.u();
+    if (a.ready())
+    {
+      s.loadUsers();
+    }
+    else
+    {
+      s.info.v = 'Authenticating session...';
+    }
+    c.attachEvent('appReady', (data) =>
+    {
+      s.info.v = null;
+      s.loadUsers();
+    });
+    // ]]]
+  },
+  // ]]]
+  // [[[ template
+  template: `
+  <!-- [[[ users -->
+  {{#if list}}
+  <h3 class="page-header">Users</h3>
+  <div class="input-group float-end"><span class="input-group-text">Narrow</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
+  {{#each a.m_letters}}
+  <div style="display: inline-block;">
+    <a href="#/Users/?letter={{urlEncode .}}">
+      <button class="btn btn-sm btn-{{#ifCond . "==" @root.letter}}warning{{else}}primary{{/ifCond}}">{{.}}</button>
+    </a>
+  </div>
+  {{/each}}
+  <div c-model="info" class="text-warning"></div>
+  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>User</th><th>Email</th><th>Pager</th><th>Active</th><th>Admin</th><th>locked</th>
+      </tr>
+      {{#isValid "Central"}}
+      <tr>
+        <td><input type="text" class="form-control" c-model="d.user.userid" placeholder="User ID"></td>
+        <td><button class="btn btn-primary" c-click="addUser()">Add User</button></td>
+      </tr>
+      {{/isValid}}
+      {{#eachFilter users "first_name,last_name,userid" narrow}}
+      <tr>
+        <td><a href="#/Users/{{id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
+        <td><a href="mailto:{{email}}">{{email}})</td>
+        <td><a href="mailto:{{pager}}">{{pager}})</td>
+        <td>{{#if active}}Yes{{else}}No{{/if}}</td>
+        <td>{{#if admin}}Yes{{else}}No{{/if}}</td>
+        <td>{{#if locked}}Yes{{else}}No{{/if}}</td>
+      </tr>
+      {{/eachFilter}}
+    </table>
+  </div>
+  <!-- ]]] -->
+  <!-- [[[ user -->
+  {{else}}
+  <h3 class="page-header">{{user.last_name}}, {{user.first_name}} ({{user.userid}})</h3>
+  <div c-model="info" class="text-warning"></div>
+  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  <nav class="container navbar navbar-expand-lg navbar-dark bg-dark bg-gradient">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#usrnavigationbar" aria-controls="usrnavigationbar" aria-expanded="false", aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="usrnavigationbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {{#each user.forms_order}}
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.user.forms .)}}{{active}}{{/with}}" href="#/Users/{{@root.user.id}}/{{.}}">{{.}}</a></li>
+          {{/each}}
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- [[[ general -->
+  {{#if user.forms.General.active}}
+  {{#if user.bAdmin}}
+  <div class="float-end">
+    {{#if user.bEdit}}
+    <div style="white-space: nowrap;">
+      <button class="btn btn-xs btn-warning" c-click="preEditUser(false)">Cancel</button>
+      <button class="btn btn-xs btn-success" c-click="editUser()" style="margin-left: 10px;">Save</button>
+    </div>
+    {{else}}
+    <div style="white-space: nowrap;">
+      <button class="btn btn-xs btn-warning" c-click="preEditUser(true)">Edit</button>
+      <button class="btn btn-xs btn-danger" c-click="removeUser()" style="margin-left: 10px;">Remove</button>
+    </div>
+    {{/if}}
+  </div>
+  {{/if}}
+  <table class="table table-condensed">
+    <tr>
+      <th style="white-space: nowrap;">
+        User ID:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.userid">
+        {{else}}
+        {{user.userid}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Active:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.active" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.active.name}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        First Name:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.first_name">
+        {{else}}
+        {{user.first_name}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Admin:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.admin.name}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Last Name:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.last_name">
+        {{else}}
+        {{user.last_name}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Locked:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.locked.name}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Email:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.email">
+        {{else}}
+        {{user.email}}
+        {{/if}}
+      </td>
+      <td colspan="2">
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Pager:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.pager">
+        {{else}}
+        {{user.pager}}
+        {{/if}}
+      </td>
+      <td colspan="2">
+      </td>
+    </tr>
+    {{#if user.bAdmin}}
+    <tr>
+      <th style="white-space: nowrap;">
+        Password:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="password" class="form-control" c-model="user.password">
+        {{else}}
+        *** CLICK EDIT TO MODIFY ***
+        {{/if}}
+      </td>
+      <td colspan="2">
+      </td>
+    </tr>
+    {{/if}}
+  </table>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ applications -->
+  {{#if user.forms.Applications.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Application</td>
+      </tr>
+      {{#each user.applications}}
+      <tr>
+        <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ servers -->
+  {{#if user.forms.Servers.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Server</td>
+      </tr>
+      {{#each user.servers}}
+      <tr>
+        <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  {{/if}}
+  <!-- ]]] -->
+  `
+  // ]]]
+}

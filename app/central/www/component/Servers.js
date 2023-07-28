@@ -288,10 +288,7 @@ export default
           if (c.wsResponse(response, error))
           {
             let appList = [];
-            for (let i = 0; i < response.Response.length; i++)
-            {
-              s.servers.push(response.Response[i]);
-            }
+            s.servers = response.Response;
             for (let i = 0; i < s.servers.length; i++)
             {
               let request = {Interface: 'central', 'Function': 'serverUsersByServerID', Request: {server_id: s.servers[i].id, 'Primary Admin': 1, i: i}};
@@ -685,7 +682,7 @@ export default
       </tr>
       {{/isValid}}
       {{#eachFilter servers "name" narrow}}
-      <tr style="{{application.style}}">
+      <tr>
         <td valign="top">
           <a href="#/Servers/{{id}}">{{name}}</a>
         </td>
