@@ -1407,10 +1407,10 @@ bool Central::applicationNotify(radialUser &d, string &e)
         if (applicationUsersByApplicationID(f, e))
         {
           map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
+          stringstream s;
           b = true;
           for (auto &contact : f.p->m["o"]->l)
           {
-            stringstream s;
             radialUser h;
             if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
             {
@@ -1476,88 +1476,88 @@ bool Central::applicationNotify(radialUser &d, string &e)
               }
             }
             userDeinit(h);
-            s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
-            for (auto &k : o->m)
+          }
+          s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
+          for (auto &k : o->m)
+          {
+            list<string> to;
+            stringstream m;
+            to.push_back(k.second->m["email"]->v);
+            m << "<html><body>";
+            m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
+            m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+            m << strNotification;
+            m << "<br><br>";
+            m << "<b>You are receiving this application notification for the following reason(s):</b>";
+            m << "<br><br>";
+            m << "<ul>";
+            if (exist(k.second, "primary"))
             {
-              list<string> to;
-              stringstream m;
-              to.push_back(k.second->m["email"]->v);
-              m << "<html><body>";
-              m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-              m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
-              m << strNotification;
-              m << "<br><br>";
-              m << "<b>You are receiving this application notification for the following reason(s):</b>";
-              m << "<br><br>";
+              m << "<li>You are a Primary Developer for this application.</li>";
+            }
+            else if (exist(k.second, "backup"))
+            {
+              m << "<li>You are a Backup Developer for this application.</li>";
+            }
+            else if (exist(k.second, "contact"))
+            {
+              m << "<li>You are a Contact for this application.</li>";
+            }
+            if (exist(k.second, "depend"))
+            {
+              m << "<li>";
+              m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
               m << "<ul>";
-              if (exist(k.second, "primary"))
+              for (auto &depend : k.second->m["depend"]->l)
               {
-                m << "<li>You are a Primary Developer for this application.</li>";
-              }
-              else if (exist(k.second, "backup"))
-              {
-                m << "<li>You are a Backup Developer for this application.</li>";
-              }
-              else if (exist(k.second, "contact"))
-              {
-                m << "<li>You are a Contact for this application.</li>";
-              }
-              if (exist(k.second, "depend"))
-              {
-                m << "<li>";
-                m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
-                m << "<ul>";
-                for (auto &depend : k.second->m["depend"]->l)
-                {
-                  m << "<li>" << depend->v << "</li>";
-                }
-                m << "</ul>";
-                m << "</li>";
+                m << "<li>" << depend->v << "</li>";
               }
               m << "</ul>";
-              if (!developer["primary"].empty())
-              {
-                bool bFirst = true;
-                m << "<br><br>";
-                m << "<b>Primary Developer(s):</b><br>";
-                for (auto &dev : developer["primary"])
-                {
-                  if (bFirst)
-                  {
-                    bFirst = false;
-                  }
-                  else
-                  {
-                    m << ", ";
-                  }
-                  m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
-                }
-              }
-              if (!developer["backup"].empty())
-              {
-                bool bFirst = true;
-                m << "<br><br>";
-                m << "<b>Backup Developer(s):</b><br>";
-                for (auto &dev : developer["backup"])
-                {
-                  if (bFirst)
-                  {
-                    bFirst = false;
-                  }
-                  else
-                  {
-                    m << ", ";
-                  }
-                  m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
-                }
-              }
-              m << "<br><br>";
-              m << "If you have any questions or concerns, please contact your application contacts.";
-              m << "</div>";
-              m << "</body></html>";
-              email(getUserEmail(d), to, s.str(), "", m.str(), e);
-              k.second->i("sent", "1", 'n');
+              m << "</li>";
             }
+            m << "</ul>";
+            if (!developer["primary"].empty())
+            {
+              bool bFirst = true;
+              m << "<br><br>";
+              m << "<b>Primary Developer(s):</b><br>";
+              for (auto &dev : developer["primary"])
+              {
+                if (bFirst)
+                {
+                  bFirst = false;
+                }
+                else
+                {
+                  m << ", ";
+                }
+                m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+              }
+            }
+            if (!developer["backup"].empty())
+            {
+              bool bFirst = true;
+              m << "<br><br>";
+              m << "<b>Backup Developer(s):</b><br>";
+              for (auto &dev : developer["backup"])
+              {
+                if (bFirst)
+                {
+                  bFirst = false;
+                }
+                else
+                {
+                  m << ", ";
+                }
+                m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+              }
+            }
+            m << "<br><br>";
+            m << "If you have any questions or concerns, please contact your application contacts.";
+            m << "</div>";
+            m << "</body></html>";
+            email(getUserEmail(d), to, s.str(), "", m.str(), e);
+            k.second->i("sent", "1", 'n');
           }
         }
         userDeinit(f);
