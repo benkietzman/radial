@@ -3495,6 +3495,7 @@ bool Central::serverUser(radialUser &d, string &e)
         Json *j = new Json(r);
         b = true;
         ny(j, "notify");
+        ny(j, "physical_access");
         userInit(d, a);
         a.p->m["i"]->i("id", r["type_id"]);
         if (contactType(a, e))

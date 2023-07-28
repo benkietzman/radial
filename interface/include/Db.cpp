@@ -1137,7 +1137,7 @@ bool Db::dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e)
   if (dep({"name"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes", "physical_access", "state", "swap_memory", "zipcode"};
+    list<string> ks = {"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes" "state", "swap_memory", "zipcode"};
     stringstream qs;
     qs << "insert into server (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -1198,7 +1198,7 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
     }
     else
     {
-      qs << " id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, physical_access, state, swap_memory, zipcode";
+      qs << " id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, state, swap_memory, zipcode";
     }
     qs << " from server where 1";
     if (!empty(i, "id"))
@@ -1248,7 +1248,7 @@ bool Db::dbCentralServerUpdate(Json *i, Json *o, string &id, string &q, string &
   {
     bool f = true;
     stringstream qs;
-    qs << "update server set" << u({"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes", "physical_access", "state", "swap_memory", "zipcode"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update server set" << u({"address", "city", "cpu_usage", "description", "disk_size", "location", "main_memory", "name", "parent_id", "processes", "state", "swap_memory", "zipcode"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
@@ -1260,10 +1260,10 @@ bool Db::dbCentralServerUserAdd(Json *i, Json *o, string &id, string &q, string 
 {
   bool b = false;
 
-  if (dep({"contact_id", "notify", "server_id", "type_id"}, i, e))
+  if (dep({"contact_id", "notify", "physical_access", "server_id", "type_id"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"contact_id", "notify", "server_id", "type_id"};
+    list<string> ks = {"contact_id", "notify", "physical_access", "server_id", "type_id"};
     stringstream qs;
     qs << "insert into server_contact (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -1346,11 +1346,11 @@ bool Db::dbCentralServerUserUpdate(Json *i, Json *o, string &id, string &q, stri
 {
   bool b = false;
 
-  if (dep({"contact_id", "id", "notify", "type_id"}, i, e))
+  if (dep({"contact_id", "id", "notify", "physical_access", "type_id"}, i, e))
   {
     bool f = true;
     stringstream qs;
-    qs << "update server_contact set" << u({"contact_id", "notify", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update server_contact set" << u({"contact_id", "notify", "physical_access", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
