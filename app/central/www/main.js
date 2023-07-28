@@ -51,9 +51,9 @@ let common = new Common(
 });
 common.enableJwt(true);
 common.enableJwtInclusion(true);
-common.setRedirectPath('https://'+location.host.'/central'); // TODO
+common.setRedirectPath('https://'+location.host+'/central');
 common.setSecureLogin(true);
-common.wsCreate('radial', location.host, '7797', true, 'radial'); // TODO
+common.wsCreate('radial', location.host, '7797', true, 'radial');
 let app = new App(
 {
   common: common
