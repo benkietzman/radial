@@ -24,6 +24,7 @@ export default
       a: a,
       c: c,
       d: {},
+      bNotified: false,
       contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
       issue: {priority: '1'},
       issueList: true,
@@ -425,6 +426,11 @@ export default
     // [[[ sendNotification()
     s.sendNotification = () =>
     {
+      if (s.bNotified)
+      {
+        s.bNotified = false;
+        s.u();
+      }
       if (confirm('Are you sure you want to send this server notification?'))
       {
         let request = {Interface: 'central', 'Function': 'serverNotify', Request: {id: s.server.id, notification: s.notification.v, server: location.host}};
