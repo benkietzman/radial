@@ -469,7 +469,12 @@ export default
             let error = {};
             if (c.wsResponse(response, error))
             {
-              s.servers = response.Response;
+              s.servers = null;
+              s.servers = [{id: null, name: '-- none --'}];
+              for (let i = 0; i < response.Response.length; i++)
+              {
+                s.servers.push(response.Response[i]);
+              }
               if (s.server.parent_id != null && s.server.parent_id > 0 && !c.isDefined(s.server['parent']))
               {
                 let request = {Interface: 'central', 'Function': 'server', Request: {id: s.server.parent_id}};
@@ -799,7 +804,7 @@ export default
       </th>
       <td>
         {{#if server.bEdit}}
-        <select class="form-control" c-model="server.['parent']" c-json><option value="">-- none --</option>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        <select class="form-control" c-model="server.['parent']" c-json>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{#with (lookup server 'parent')}}<a href="#/Servers/{{id}}">{{name}}</a>{{/with}}
         {{/if}}
