@@ -328,8 +328,8 @@ export default
       {{#eachFilter users "first_name,last_name,userid" narrow}}
       <tr>
         <td><a href="#/Users/{{id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
-        <td><a href="mailto:{{email}}">{{email}})</td>
-        <td><a href="mailto:{{pager}}">{{pager}})</td>
+        <td><a href="mailto:{{email}}">{{email}}</a></td>
+        <td><a href="mailto:{{pager}}">{{pager}}</a></td>
         <td>{{#if active}}Yes{{else}}No{{/if}}</td>
         <td>{{#if admin}}Yes{{else}}No{{/if}}</td>
         <td>{{#if locked}}Yes{{else}}No{{/if}}</td>
