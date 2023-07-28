@@ -725,6 +725,14 @@ export default
       <td>
         {{server.id}}
       </td>
+      <th style="white-space: nowrap;">
+        IP Address:
+      </th>
+      <td>
+        {{#each server.ips}}
+        {{.}}<br>
+        {{/each}}
+      </td>
     </tr>
     <tr>
       <th style="white-space: nowrap;">
@@ -737,201 +745,341 @@ export default
         {{server.name}}
         {{/if}}
       </td>
+      <th style="white-space: nowrap;">
+        Operating System:
+      </th>
+      <td>
+        {{server.sysInfo.OperatingSystem}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Parent Server:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <select c-model="server.['parent']" c-json>{{#each servers}}<option value="{{.}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        <a href="#/Servers/{{server.['parent'].id}}">{{server.['parent'].name}}</a>
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        System Release:
+      </th>
+      <td>
+        {{server.sysInfo.SystemRelease}}
+      </td>
+    </tr>
+    <tr>
+      <th style="white-space: nowrap;">
+        Children Servers:
+      </th>
+      <td>
+        {{#each server.children}}
+        <a href="#/Servers/{{id}}">{{name}}</a>
+        {{/each}}
+      </td>
+      <th>
+        Processors:
+      </th>
+      <td>
+        {{server.sysInfo.NumberOfProcessors}}@{{numberShort server.sysInfo.CpuSpeed 0}} MHz
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Address:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.address">
+        {{else}}
+        {{server.address}}
+        {{/if}}
+      </td>
+      <th>
+        Processes:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.processes">
+        {{else}}
+        {{server.processes}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th>
+        City:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.city">
+        {{else}}
+        {{server.city}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        CPU Usage:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.cpu_usage">
+        {{else}}
+        {{server.cpu_usage}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th>
+        State:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.state">
+        {{else}}
+        {{server.state}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Main Memory:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.main_memory">
+        {{else}}
+        {{server.main_memory}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Zipcode:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.zipcode">
+        {{else}}
+        {{server.zipcode}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Swap Memory:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.swap_memory">
+        {{else}}
+        {{server.swap_memory}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Location:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.location">
+        {{else}}
+        {{server.location}}
+        {{/if}}
+      </td>
+      <th style="white-space: nowrap;">
+        Disk Size:
+      </th>
+      <td>
+        {{#if server.bEdit}}
+        <input type="text" class="form-control" c-model="server.disk_size">
+        {{else}}
+        {{server.disk_size}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <th colspan="4">
+        Description:
+      </th>
+    </tr>
+    <tr>
+      <td colspan="4">
+        {{#if server.bEdit}}
+        <textarea class="form-control" c-model="server.description"></textarea>
+        {{else}}
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{server.description}}</pre>
+        {{/if}}
+      </td>
     </tr>
   </table>
-  {{#if application.sysInfo}}
-  <table class="table table-condensed table-striped">
-    <tr>
-      <th>Server</th>
-      <th>Daemon</th>
-      <th>Start Time</th>
-      <th>Owner</th>
-      <th>Processes</th>
-      <th>Image (KB)</th>
-      <th>Resident (KB)</th>
-      <th>Current Alarms</th>
-    </tr>
-    {{#each application.sysInfo}}
-    <tr>
-      <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
-      <td>{{Daemon}}</td>
-      <td>{{data.StartTime}}</td>
-      <td>{{json data.Owners}}</td>
-      <td>{{numberShort data.NumberOfProcesses}}</td>
-      <td>{{numberShort data.ImageSize}}</td>
-      <td>{{numberShort data.ResidentSize}}</td>
-      <td class="text-danger">{{data.Alarms}}</td>
-    </tr>
-    {{/each}}
-  </table>
-  {{/if}}
+  <div class="row">
+  <div class="card col-md-6">
+    <div class="card-header bg-primary text-white" style="font-weight: bold;">
+      Statistics
+    </div>
+    <div class="card-body">
+      <table class="table table-condensed table-striped">
+        <tr>
+          <th>
+            # Processes:
+          </th>
+          <td>
+            {{server.sysInfo.NumberOfProcesses}}
+          </td>
+        </tr>
+        <tr>
+          <th>
+            CPU Usage:
+          </th>
+          <td>
+            <div class="progress" style="width: 200px;">
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.CpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{server.sysInfo.CpuUsage}}%;">
+                {{numberShort server.sysInfo.CpuUsage 0}}%
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            Uptime:
+          </th>
+          <td>
+            {{server.sysInfo.UpTime}} days
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="card col-md-6">
+    <div class="card-header bg-primary text-white" style="font-weight: bold;">
+      Memory
+    </div>
+    <div class="card-body">
+      <table class="table table-condensed table-striped">
+        <tr>
+          <th></th>
+          <th>Used (MB)</th>
+          <th>Total (MB)</th>
+          <th></th>
+        </tr>
+        <tr>
+          <th>Main</th>
+          <td>{{numberShort server.sysInfo.MainUsed 0}}</td>
+          <td>{{numberShort server.sysInfo.MainTotal 0}}</td>
+          <td>
+            <div class="progress" style="width: 200px;">
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.MainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.sysInfo.MainUsage 0}}%;">
+                {{numberShort server.sysInfo.MainUsage 0}}%
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th>Swap</th>
+          <td>{{numberShort server.sysInfo.SwapUsed 0}}</td>
+          <td>{{numberShort server.sysInfo.SwapTotal 0}}</td>
+          <td>
+            <div class="progress" style="width: 200px;">
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.SwapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.sysInfo.SwapUsage 0}}%;">
+                {{numberShort server.sysInfo.SwapUsage 0}}%
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="card col-md-6">
+    <div class="card-header bg-primary text-white" style="font-weight: bold;">
+      Partitions
+    </div>
+    <div class="card-body">
+      <table class="table table-condensed table-striped">
+        {{#each server.sysInfo.Partitions}}
+        <tr>
+          <th>{{@key}}</td>
+          <td>
+            <div class="progress" style="width: 200px;">
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{.}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort . 0}}%;">
+                {{numberShort . 0}}%
+              </div>
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      </table>
+    </div>
+  </div>
+  <div class="card col-md-6">
+    <div class="card-header bg-primary text-white" style="font-weight: bold;">
+      Alarms
+    </div>
+    <div class="card-body">
+      <table class="table table-condensed table-striped">
+        {{#each server.sysInfo.Alarms}}
+        <tr>
+          <td class="text-danger">{{.}}</td>
+        </tr>
+        {{/each}}
+      </table>
+    </div>
+  </div>
+  </div>
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ applications -->
-  {{#if application.forms.Servers.active}}
+  {{#if server.forms.Applications.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th style="width: 100%;">Server</th>
-        {{#if application.bDeveloper}}
-        <th colspan="2"></th>
-        {{/if}}
+        <th>Application</td>
       </tr>
-      {{#if application.bDeveloper}}
+      {{#each server.aplications}}
       <tr>
-        <td><select class="form-control" c-model="server" c-json>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-xs btn-success" c-click="addServer()">Add</button></td>
-      </tr>
-      {{/if}}
-      {{#each application.servers}}
-      <tr>
-        <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-        {{#if @root.application.bDeveloper}}
-        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning" data-bs-toggle="modal" data-bs-target="#serverModal" c-click="serverDetails({{id}})">Edit</button><button class="btn btn-xs btn-danger" c-click="removeServer({{id}})">Remove</button></td>
-        {{/if}}
+        <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
       </tr>
       {{/each}}
     </table>
-    <div id="serverModal" class="modal modal-xl">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Edit Monitoring Details - {{modalServer.name}}</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body table-responsive">
-            <div c-model="modalServerInfo" class="text-warning"></div>
-            <div c-model="modalServermessage" class="text-danger" style="font-weight:bold;"></div>
-            <table class="table table-condensed table-striped">
-              <tr>
-                <th colspan="5"></th>
-                <th colspan="2">Processes</th>
-                <th colspan="2">Image</th>
-                <th colspan="2">Resident</th>
-                {{#if application.bDeveloper}}
-                <th colspan="2"></th>
-                {{/if}}
-              </tr>
-              <tr>
-                <th>Daemon</th>
-                <th>Version</th>
-                <th>Owner</th>
-                <th>Script</th>
-                <th>Delay</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th>Min</th>
-                <th>Max</th>
-                {{#if application.bDeveloper}}
-                <th colspan="2"></th>
-                {{/if}}
-              </tr>
-              {{#if application.bDeveloper}}
-              <tr>
-                <td><input type="text" class="form-control" c-model="serverDetail.daemon"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.version"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.owner"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.script"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.delay"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.min_processes"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.max_processes"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.min_image"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.max_image"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.min_resident"></td>
-                <td><input type="text" class="form-control" c-model="serverDetail.max_resident"></td>
-                <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success" c-click="addServerDetail()">Add</button>{{/if}}</td>
-              </tr>
-              {{/if}}
-              {{#each modalServer.details}}
-              <tr>
-                {{#if bEdit}}
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].daemon"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].version"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].owner"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].script"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].delay"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_processes"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_processes"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_image"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_image"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_resident"></td>
-                <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_resident"></td>
-                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, false)">Cancel</button></td>
-                <td><button class="btn btn-xs btn-success" c-click="editServerDetail({{@key}})">Save</button></td>
-                {{else}}
-                <td>{{daemon}}</td>
-                <td>{{version}}</td>
-                <td>{{owner}}</td>
-                <td>{{script}}</td>
-                <td>{{delay}}</td>
-                <td>{{min_processes}}</td>
-                <td>{{max_processes}}</td>
-                <td>{{min_image}}</td>
-                <td>{{max_image}}</td>
-                <td>{{min_resident}}</td>
-                <td>{{max_resident}}</td>
-                <td><button class="btn btn-xs btn-warning" c-click="preEditServerDetail({{@key}}, true)">Edit</button></td>
-                <td><button class="btn btn-xs btn-danger" c-click="removeServerDetail({{id}})">Remove</button></td>
-                {{/if}}
-              </tr>
-              {{/each}}
-            </table>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ contacts -->
-  {{#if application.forms.Contacts.active}}
+  {{#if server.forms.Contacts.active}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th>User</th>
         <th>Type</th>
-        <th>Admin</th>
-        <th>Locked</th>
         <th>Notify</th>
-        <th>Description</th>
-        {{#if application.bLocalAdmin}}
+        <th style="white-space: nowrap;">Physical Access</th>
+        {{#if server.bAdmin}}
         <th></th>
         {{/if}}
       </tr>
-      {{#if application.bLocalAdmin}}
+      {{#if server.bAdmin}}
       <tr>
         <td><input type="text" class="form-control" c-model="contact.userid" placeholder="User ID"></td>
         <td><select class="form-control" c-model="contact.type" c-json>{{#each contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><select class="form-control" c-model="contact.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="contact.description" placeholder="Description"></td>
+        <td><select class="form-control" c-model="contact.physical_access" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><button class="btn btn-xs btn-success" c-click="addContact()">Add</button></td>
       </tr>
       {{/if}}
-      {{#each application.contacts}}
+      {{#each server.contacts}}
       <tr>
         {{#if bEdit}}
-          <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].userid" placeholder="User ID"></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].type" c-json>{{#each @root.contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].admin" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].locked" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-          <td><select class="form-control" c-model="application.contacts.[{{@key}}].notify" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-          <td><input type="text" class="form-control" c-model="application.contacts.[{{@key}}].description" placeholder="Description"></td>
+          <td><input type="text" class="form-control" c-model="server.contacts.[{{@key}}].userid" placeholder="User ID"></td>
+          <td><select class="form-control" c-model="server.contacts.[{{@key}}].type" c-json>{{#each @root.contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="server.contacts.[{{@key}}].notify" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+          <td><select class="form-control" c-model="server.contacts.[{{@key}}].physical_access" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         {{else}}
           <td style="white-space:nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
           <td style="white-space:nowrap;">{{type.type}}</td>
-          <td style="white-space:nowrap;">{{admin.name}}</td>
-          <td style="white-space:nowrap;">{{locked.name}}</td>
           <td style="white-space:nowrap;">{{notify.name}}</td>
-          <td><pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre></td>
+          <td style="white-space:nowrap;">{{physical_access.name}}</td>
         {{/if}}
-        {{#if @root.application.bLocalAdmin}}
+        {{#if @root.server.bAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
           <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{@key}})" style="margin-left: 10px;">Save</button>
@@ -947,8 +1095,8 @@ export default
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ notify -->
-  {{#if application.forms.Notify.active}}
-  {{#if application.bDeveloper}}
+  {{#if server.forms.Notify.active}}
+  {{#if server.bAdmin}}
   <div class="table-responsive">
     <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
     <button class="btn btn-primary float-end" c-click="sendNotification()">Send Notification</button>
