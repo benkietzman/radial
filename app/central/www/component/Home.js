@@ -135,12 +135,28 @@ export default
     </div>
   </div>
   <div class="row">
-    <p>
-      This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
-    </p>
-    <p>
-      Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into <a href="/central/#/Applications/{{centralMonitor.id}}">Central Monitor</a> which actively monitors the health of servers as well as the daemonized services of applications.
-    </p>
+    <div class="col-md-5">
+      <p>
+        This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
+      </p>
+      <p>
+        Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into <a href="/central/#/Applications/{{centralMonitor.id}}">Central Monitor</a> which actively monitors the health of servers as well as the daemonized services of applications.
+      </p>
+    </div>
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header bg-info text-white" style="font-weight: bold;">
+          Useful Tools
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            {{#each usefulTools}}
+            <li class="list-group-item">{{.}}</li>
+            {{/each}}
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
