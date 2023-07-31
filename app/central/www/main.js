@@ -11,7 +11,6 @@ let common = new Common(
   {
     server: location.host,
     subject: 'Central',
-    userid: 'ben',
     version: '3.0'
   },
   loads:
