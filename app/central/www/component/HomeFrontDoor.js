@@ -18,7 +18,7 @@ export default
       // [[[ u()
       u: () =>
       {
-        c.render(id, 'HomeFrontDoor', this);
+        c.update('HomeFrontDoor');
       },
       // ]]]
       a: a,

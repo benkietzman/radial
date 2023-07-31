@@ -18,7 +18,7 @@ export default
       // [[[ u()
       u: () =>
       {
-        c.render(id, 'Users', this);
+        c.update('Users');
       },
       // ]]]
       a: a,
