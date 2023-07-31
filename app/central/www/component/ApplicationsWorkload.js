@@ -33,72 +33,86 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         if (c.wsResponse(response, error))
         {
           s.issues = null;
           s.issues = [];
-          for (let i = 0; i < response.Response.length; i++)
+          if (response.Response.length > 0)
           {
-            s.info.v = 'Retrieving issues...';
-            let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: response.Response[i].id, open: 1}};
-            c.wsRequest('radial', request).then((response) =>
+            for (let i = 0; i < response.Response.length; i++)
             {
-              let error = {};
-              s.info.v = null;
-              if (c.wsResponse(response, error))
+              s.info.v = 'Retrieving issues...';
+              let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: response.Response[i].id, open: 1}};
+              c.wsRequest('radial', request).then((response) =>
               {
-                for (let i = 0; i < response.Response.length; i++)
+                let error = {};
+                if (c.wsResponse(response, error))
                 {
-                  response.Response[i].application_id = response.Request.application_id;
-                  s.issues.push(response.Response[i]);
-                  let j = s.issues.length - 1;
-                  let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
-                  c.wsRequest('radial', request).then((response) =>
+                  if (response.Response.length > 0)
                   {
-                    let error = {};
-                    if (c.wsResponse(response, error))
+                    for (let i = 0; i < response.Response.length; i++)
                     {
-                      let i = response.Request.i;
-                      s.issues[i].application = response.Response;
-                      s.u();
+                      s.info.v = 'Retrieving issue comments...';
+                      response.Response[i].application_id = response.Request.application_id;
+                      s.issues.push(response.Response[i]);
+                      let j = s.issues.length - 1;
+                      let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
+                      c.wsRequest('radial', request).then((response) =>
+                      {
+                        let error = {};
+                        if (c.wsResponse(response, error))
+                        {
+                          let i = response.Request.i;
+                          s.issues[i].application = response.Response;
+                          s.u();
+                        }
+                        else
+                        {
+                          s.message.v = error.message;
+                        }
+                      });
+                      request = null;
+                      request = {Interface: 'central', 'Function': 'applicationIssueComments', Request: {issue_id: s.issues[j].id, limit: 1, i: j}};
+                      c.wsRequest('radial', request).then((response) =>
+                      {
+                        let error = {};
+                        s.info.v = null;
+                        if (c.wsResponse(response, error))
+                        {
+                          let i = response.Request.i;
+                          s.issues[i].comments = response.Response;
+                          s.u();
+                        }
+                        else
+                        {
+                          s.message.v = error.message;
+                        }
+                      });
                     }
-                    else
-                    {
-                      s.message.v = error.message;
-                    }
-                  });
-                  s.info.v = 'Retrieving issue comments...';
-                  request = null;
-                  request = {Interface: 'central', 'Function': 'applicationIssueComments', Request: {issue_id: s.issues[j].id, limit: 1, i: j}};
-                  c.wsRequest('radial', request).then((response) =>
+                  }
+                  else
                   {
-                    let error = {};
                     s.info.v = null;
-                    if (c.wsResponse(response, error))
-                    {
-                      let i = response.Request.i;
-                      s.issues[i].comments = response.Response;
-                      s.u();
-                    }
-                    else
-                    {
-                      s.message.v = error.message;
-                    }
-                  });
+                  }
+                  s.u();
                 }
-                s.u();
-              }
-              else
-              {
-                s.message.v = error.message;
-              }
-            });
+                else
+                {
+                  s.info.v = null;
+                  s.message.v = error.message;
+                }
+              });
+            }
+          }
+          else
+          {
+            s.info.v = null;
           }
           s.u();
         }
         else
         {
+          s.info.v = null;
           s.message.v = error.message;
         }
       });
