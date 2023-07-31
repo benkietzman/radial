@@ -53,12 +53,10 @@ export default
                   response.Response[i].application_id = response.Request.application_id;
                   s.issues.push(response.Response[i]);
                   let j = s.issues.length - 1;
-                  s.info.v = 'Retrieving application...';
                   let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
                   c.wsRequest('radial', request).then((response) =>
                   {
                     let error = {};
-                    s.info.v = null;
                     if (c.wsResponse(response, error))
                     {
                       let i = response.Request.i;
