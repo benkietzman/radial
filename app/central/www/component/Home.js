@@ -81,7 +81,7 @@ export default
           });
         }
       });
-      request = {Interface: 'central', 'Function': 'usefulTools'};
+      request = {Interface: 'central', 'Function': 'homeUsefulTools'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
