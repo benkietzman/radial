@@ -931,11 +931,11 @@ bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
   qs << "select a.id, b.id application_id, b.name from application_dependant a, application b where";
   if (!empty(i, "dependant_id"))
   {
-    qs << "  a.application_id = b.id and a.dependant_id = " << v(i->m["dependant_id"]->v);
+    qs << " a.application_id = b.id and a.dependant_id = " << v(i->m["dependant_id"]->v);
   }
   else if (!empty(i, "application_id"))
   {
-    qs << " a.dependant_id = b.id and and a.application_id = " << v(i->m["application_id"]->v);
+    qs << " a.dependant_id = b.id and a.application_id = " << v(i->m["application_id"]->v);
   }
   qs << " order by b.name";
 
