@@ -40,10 +40,12 @@ export default
           s.issues = [];
           for (let i = 0; i < response.Response.length; i++)
           {
+            s.info.v = 'Retrieving issues...';
             let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: response.Response[i].id, open: 1}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
+              s.info.v = null;
               if (c.wsResponse(response, error))
               {
                 for (let i = 0; i < response.Response.length; i++)
@@ -51,10 +53,12 @@ export default
                   response.Response[i].application_id = response.Request.application_id;
                   s.issues.push(response.Response[i]);
                   let j = s.issues.length - 1;
+                  s.info.v = 'Retrieving application...';
                   let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
                   c.wsRequest('radial', request).then((response) =>
                   {
                     let error = {};
+                    s.info.v = null;
                     if (c.wsResponse(response, error))
                     {
                       let i = response.Request.i;
@@ -66,11 +70,13 @@ export default
                       s.message.v = error.message;
                     }
                   });
+                  s.info.v = 'Retrieving issue comments...';
                   request = null;
                   request = {Interface: 'central', 'Function': 'applicationIssueComments', Request: {issue_id: s.issues[j].id, limit: 1, i: j}};
                   c.wsRequest('radial', request).then((response) =>
                   {
                     let error = {};
+                    s.info.v = null;
                     if (c.wsResponse(response, error))
                     {
                       let i = response.Request.i;
