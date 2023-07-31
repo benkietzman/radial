@@ -81,6 +81,16 @@ export default
           });
         }
       });
+      request = {Interface: 'central', 'Function': 'usefulTools'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.usefulTools = response.Response;
+          s.u();
+        }
+      });
     };
     // ]]]
     // [[[ main
