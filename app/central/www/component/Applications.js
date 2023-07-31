@@ -1872,7 +1872,7 @@ export default
     {{#if application.issue}}
     {{#if application.bDeveloper}}
     {{#if application.issue.close_date}}
-    <button class="btn btn-primary float-end" c-click="editIssue(true)">Reopen</button>
+    <button class="btn btn-sm btn-primary float-end" c-click="editIssue(true)">Reopen</button>
     {{/if}}
     {{/if}}
     <div class="row">
