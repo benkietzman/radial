@@ -145,7 +145,7 @@ export default
     </div>
   </div>
   <div class="row">
-    <div class="col-md-5">
+    <div class="col-md-7">
       <p>
         This website organizes and tracks <a href="/central/#/Applications">application</a>, <a href="/central/#/Servers">server</a>, and <a href="/central/#/Users">user</a> information.  This website offers many different areas of value for automation teams.  It keeps software engineers and server administrators more efficient by providing a central location to store associated information.
       </p>
@@ -153,7 +153,7 @@ export default
         Central provides many useful and vital capabilities at a more detailed level.  For instance, Central provides the ability to manage application issues which allows developers the ability to organize and prioritize their workload.  Central provides a front-end to the centralized web-based security modules allowing applications to easily switch between various authentication mechanisms for their websites.  Central has hooks into <a href="/central/#/Applications/{{centralMonitor.id}}">Central Monitor</a> which actively monitors the health of servers as well as the daemonized services of applications.
       </p>
     </div>
-    <div class="col-md-7">
+    <div class="col-md-5">
       <div class="card">
         <div class="card-header bg-info text-white" style="font-weight: bold;">
           Useful Tools
