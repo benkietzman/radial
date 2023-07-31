@@ -161,7 +161,7 @@ export default
         <div class="card-body">
           <ul class="list-group">
             {{#each usefulTools}}
-            <li class="list-group-item">{{.}}</li>
+            <li class="list-group-item">{{{.}}}</li>
             {{/each}}
           </ul>
         </div>
