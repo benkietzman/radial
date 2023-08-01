@@ -502,7 +502,23 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
   qs << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where 1";
   if (!empty(i, "application_id"))
   {
-    qs << " and application_id = " << v(i->m["application_id"]->v);
+    bool bFirst = true;
+    stringstream ssApplicationIDs(i->m["application_id"]->v);
+    string strApplicationID;
+    qs << " and application_id in (";
+    while (getline(ssApplicationIDs, strApplicationID, ','))
+    {
+      if (bFirst)
+      {
+        bFirst = false;
+      }
+      else
+      {
+        qs << ", ";
+      }
+      qs << v(strApplicationID);
+    }
+    qs << ")";
   }
   if ((bOpen || bRelease) && strDisplay != "all")
   {
