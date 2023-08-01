@@ -33,7 +33,6 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         if (c.wsResponse(response, error))
         {
           s.issues = null;
@@ -47,10 +46,12 @@ export default
             }
             ids += response.Response[i].id;
           }
+          s.info.v = 'Retrieving issues...';
           let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: ids, open: 1}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
+            s.info.v = null;
             if (c.wsResponse(response, error))
             {
               for (let i = 0; i < response.Response.length; i++)
