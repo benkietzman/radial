@@ -47,7 +47,7 @@ export default
             }
             ids += response.Response[i].id;
           }
-          let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: ids open: 1}};
+          let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: ids, open: 1}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
