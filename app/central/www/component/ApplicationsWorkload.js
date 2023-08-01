@@ -38,59 +38,64 @@ export default
         {
           s.issues = null;
           s.issues = [];
+          let ids = null;
           for (let i = 0; i < response.Response.length; i++)
           {
-            let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: response.Response[i].id, open: 1}};
-            c.wsRequest('radial', request).then((response) =>
+            if (applications != '')
             {
-              let error = {};
-              if (c.wsResponse(response, error))
-              {
-                for (let i = 0; i < response.Response.length; i++)
-                {
-                  response.Response[i].application_id = response.Request.application_id;
-                  s.issues.push(response.Response[i]);
-                  let j = s.issues.length - 1;
-                  let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
-                  c.wsRequest('radial', request).then((response) =>
-                  {
-                    let error = {};
-                    if (c.wsResponse(response, error))
-                    {
-                      let i = response.Request.i;
-                      s.issues[i].application = response.Response;
-                      s.u();
-                    }
-                    else
-                    {
-                      s.message.v = error.message;
-                    }
-                  });
-                  request = null;
-                  request = {Interface: 'central', 'Function': 'applicationIssueComments', Request: {issue_id: s.issues[j].id, limit: 1, i: j}};
-                  c.wsRequest('radial', request).then((response) =>
-                  {
-                    let error = {};
-                    if (c.wsResponse(response, error))
-                    {
-                      let i = response.Request.i;
-                      s.issues[i].comments = response.Response;
-                      s.u();
-                    }
-                    else
-                    {
-                      s.message.v = error.message;
-                    }
-                  });
-                }
-                s.u();
-              }
-              else
-              {
-                s.message.v = error.message;
-              }
-            });
+              ids += ',';
+            }
+            ids += response.Response[i].id;
           }
+          let request = {Interface: 'central', 'Function': 'applicationIssuesByApplicationID', Request: {application_id: ids open: 1}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              for (let i = 0; i < response.Response.length; i++)
+              {
+                s.issues.push(response.Response[i]);
+                let j = s.issues.length - 1;
+                let request = {Interface: 'central', 'Function': 'application', Request: {id: s.issues[j].application_id, i: j}};
+                c.wsRequest('radial', request).then((response) =>
+                {
+                  let error = {};
+                  if (c.wsResponse(response, error))
+                  {
+                    let i = response.Request.i;
+                    s.issues[i].application = response.Response;
+                    s.u();
+                  }
+                  else
+                  {
+                    s.message.v = error.message;
+                  }
+                });
+                request = null;
+                request = {Interface: 'central', 'Function': 'applicationIssueComments', Request: {issue_id: s.issues[j].id, limit: 1, i: j}};
+                c.wsRequest('radial', request).then((response) =>
+                {
+                  let error = {};
+                  if (c.wsResponse(response, error))
+                  {
+                    let i = response.Request.i;
+                    s.issues[i].comments = response.Response;
+                    s.u();
+                  }
+                  else
+                  {
+                    s.message.v = error.message;
+                  }
+                });
+              }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
           s.u();
         }
         else
