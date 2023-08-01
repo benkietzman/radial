@@ -38,7 +38,7 @@ export default
         {
           s.issues = null;
           s.issues = [];
-          let ids = null;
+          let ids = '';
           for (let i = 0; i < response.Response.length; i++)
           {
             if (ids != '')
