@@ -33,6 +33,7 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.info.v = null;
         if (c.wsResponse(response, error))
         {
           s.issues = null;
