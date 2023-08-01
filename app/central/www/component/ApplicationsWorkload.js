@@ -41,7 +41,7 @@ export default
           let ids = null;
           for (let i = 0; i < response.Response.length; i++)
           {
-            if (applications != '')
+            if (ids != '')
             {
               ids += ',';
             }
