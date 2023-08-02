@@ -1927,8 +1927,8 @@ export default
               <table class="table table-condensed" style="background: inherit;">
                 <tr><td style="white-space: nowrap;">{{entry_date}}</td></tr>
                 <tr><td style="white-space: nowrap;"><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td></tr>
-                {{#if bEdit}}
-                {{#ifCond userid "==" getUserID}}
+                {{^if bEdit}}
+                {{#ifCond userid "==" (getUserID)}}
                 <tr><td><button class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, true)">Edit</button></td></tr>
                 {{/ifCond}}
                 {{/if}}
@@ -1936,7 +1936,7 @@ export default
             </td>
             <td>
               {{#if bEdit}}
-              {{#ifCond userid "==" getUserID}}
+              {{#ifCond userid "==" (getUserID)}}
               <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
               <button class="btn btn-primary float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
               <button  class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
