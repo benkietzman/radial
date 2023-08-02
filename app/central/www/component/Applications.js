@@ -309,7 +309,7 @@ export default
     s.editIssueComment = (nIndex) =>
     {
       s.info.v = 'Updating issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: {id: comment.id, comments: s.application.issue.comments[nIndex].comments.v}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: Request: c.simplify(s.application.issue.comments[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -317,6 +317,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.application.issue.comments[nIndex].bEdit = false;
+          s.application.issue.comments[nIndex] = c.simplify(s.application.issue.comments[nIndex]);
           s.u();
         }
         else
@@ -1937,7 +1938,7 @@ export default
             <td>
               {{#if bEdit}}
               {{#ifCond userid "==" (getUserID)}}
-              <textarea c-model="comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments">{{comments}}</textarea>
+              <textarea c-model="application.issue.comments.[{{@key}}].comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
               <button class="btn btn-primary float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;">Save</button>
               <button  class="btn btn-primary float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;">Cancel</button>
               {{else}}
