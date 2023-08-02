@@ -309,7 +309,7 @@ export default
     s.editIssueComment = (nIndex) =>
     {
       s.info.v = 'Updating issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: Request: c.simplify(s.application.issue.comments[nIndex])};
+      let request = {Interface: 'central', 'Function': 'applicationIssueCommentEdit', Request: c.simplify(s.application.issue.comments[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
