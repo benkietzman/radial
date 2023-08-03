@@ -441,7 +441,7 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
       }
       ssCc << *i;
     }
-    ptReq->i("Cc", ssCc.str());
+    ptReq->i("CC", ssCc.str());
   }
   if (!bcc.empty())
   {
@@ -454,7 +454,7 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
       }
       ssBcc << *i;
     }
-    ptReq->i("Bcc", ssBcc.str());
+    ptReq->i("BCC", ssBcc.str());
   }
   if (!strSubject.empty())
   {
