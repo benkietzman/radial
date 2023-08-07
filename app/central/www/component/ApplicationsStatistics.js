@@ -244,7 +244,6 @@ export default
     </div>
     <div class="col-md-9">
       <h3 class="page-header">Statistics</h3>
-      <div class="input-group float-end"><span class="input-group-text">Narrow</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
       <div c-model="info" class="text-warning"></div>
       <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#if statistics}}
@@ -257,13 +256,13 @@ export default
             <th>Name</th>
             <th>Count</th>
           </tr>
-          {{#eachFilter @root.statistics "name" narrow}}
+          {{#each @root.statistics}}
           <tr>
             <td style="white-space: nowrap;">{{date}}</td>
             <td>{{name}}</td>
             <td>{{count}}</td>
           </tr>
-          {{/eachFilter}}
+          {{/each}}
           <tr>
             <th>Total</td>
             <td></td>
