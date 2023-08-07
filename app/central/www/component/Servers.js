@@ -25,7 +25,7 @@ export default
       c: c,
       d: {},
       bNotified: false,
-      contact_types: [{type: 'Primary Developer'}, {type: 'Backup Developer'}, {type: 'Primary Contact'}, {type: 'Contact'}],
+      contact_types: [{type: 'Primary Admin'}, {type: 'Backup Admin'}, {type: 'Primary Contact'}, {type: 'Contact'}],
       issue: {priority: '1'},
       issueList: true,
       login_types: [],

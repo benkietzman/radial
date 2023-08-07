@@ -29,6 +29,7 @@ let common = new Common(
     {path: '/Applications/Issues', name: 'ApplicationsIssues', component: '/central/component/ApplicationsIssues.js'},
     {path: '/Applications/Issues/:id', name: 'ApplicationsIssues', component: '/central/component/ApplicationsIssues.js'},
     {path: '/Applications/Schedule', name: 'ApplicationsSchedule', component: '/central/component/ApplicationsSchedule.js'},
+    {path: '/Applications/Statistics', name: 'ApplicationsStatistics', component: '/central/component/ApplicationsStatistics.js'},
     {path: '/Applications/Workload', name: 'ApplicationsWorkload', component: '/central/component/ApplicationsWorkload.js'},
     {path: '/Applications/:id/:form/:issue_id', name: 'Applications', component: '/central/component/Applications.js'},
     {path: '/Applications/:id/:form', name: 'Applications', component: '/central/component/Applications.js'},
