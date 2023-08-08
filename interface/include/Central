@@ -27,6 +27,8 @@ class Central : public Interface
   protected:
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
+  string m_strEmail;
+  string m_strServer;
   Json *m_ptCred;
 
   bool accountType(radialUser &d, string &e);

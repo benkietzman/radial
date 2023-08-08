@@ -2882,8 +2882,8 @@ bool Central::sa(const string strKey, Json *ptData, string &strError)
 void Central::schedule(string strPrefix)
 {
   string strError;
-  stringstream ssMessage;
-  time_t CTime[3] = {0, 0, 0};
+  stringstream ssMessage, ssQuery;
+  time_t CTime[4] = {0, 0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
@@ -2915,6 +2915,268 @@ void Central::schedule(string strPrefix)
           storageAdd({"central"}, ptJson, strError);
         }
         delete ptJson;
+      }
+      if (CTime[3] == 0)
+      {
+        struct tm tTime;
+        time(&(CTime[3]));
+        localtime_r(&(CTime[3]), &tTime);
+        if (tTime.tm_wday == 0)
+        {
+          tTime.tm_wday = 7;
+        }
+        if (tTime.tm_wday > 1)
+        {
+          CTime[3] += (8 - tTime.tm_wday) * 84600;
+        }
+        CTime[3] += (4 - tTime.tm_hour) * 3600;
+        CTime[3] -= tTime.tm_min * 60;
+        CTime[3] -= tTime.tm_sec;
+      }
+      if (CTime[1] > CTime[3])
+      {
+        CTime[3] = 0;
+        ssQuery.str("");
+        ssQuery << "select a.name application_name, b.id, b.application_id, b.assigned_id, date_format(b.close_date, '%Y-%m-%d') close_date, date_format(b.due_date, '%Y-%m-%d') due_date, b.hold, date_format(b.open_date, '%Y-%m-%d') open_date, b.priority, date_format(b.release_date, '%Y-%m-%d') release_date, b.summary from application a, application_issue b where a.id = b.application_id and b.close_date is null order by b.priority desc, b.due_date, b.open_date";
+        auto getApplicationIssue = dbquery("central_r", ssQuery.str(), strError);
+        if (getApplicationIssue != NULL)
+        {
+          for (auto &getApplicationIssueRow : *getApplicationIssue)
+          {
+            list<string> assigns;
+            if (!getApplicationIssueRow["assigned_id"].empty())
+            {
+              ssQuery.str("");
+              ssQuery << "select first_name, last_name, userid from person where id = " << getApplicationIssueRow["assigned_id"];
+              auto getAssigned = dbquery("central_r", ssQuery.str(), strError);
+              if (getAssigned != NULL)
+              {
+                if (!getAssigned->empty())
+                {
+                  auto getAssignedRow = getAssigned->front();
+                  getApplicationIssueRow["assigned_first_name"] = getAssignedRow["first_name"];
+                  getApplicationIssueRow["assigned_last_name"] = getAssignedRow["last_name"];
+                  getApplicationIssueRow["assigned_userid"] = getAssignedRow["userid"];
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error [" << getApplicationIssueRow["id"] << "]:  No results returned.";
+                  log(ssMessage.str());
+                }
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error [" << getApplicationIssueRow["id"] << "]:  " << strError;
+                log(ssMessage.str());
+              }
+              dbfree(getAssigned);
+            }
+            ssQuery.str("");
+            ssQuery << "select id, comments, user_id from issue_comment where issue_id = " << getApplicationIssueRow["id"] << " order by entry_date, id limit 1";
+            auto getIssueComment = dbquery("central_r", ssQuery.str(), strError);
+            if (getIssueComment != NULL)
+            {
+              if (!getIssueComment->empty())
+              {
+                auto getIssueCommentRow = getIssueComment->front();
+                getApplicationIssueRow["comments"] = getIssueCommentRow["comments"];
+                if (!getIssueCommentRow["user_id"].empty())
+                {
+                  getApplicationIssueRow["requester_id"] = getIssueCommentRow["user_id"];
+                  ssQuery.str("");
+                  ssQuery << "select first_name, last_name, userid from person where id = " << getIssueCommentRow["user_id"];
+                  auto getRequester = dbquery("central_r", ssQuery.str(), strError);
+                  if (getRequester != NULL)
+                  {
+                    if (!getRequester->empty())
+                    {
+                      auto getRequesterRow = getRequester->front();
+                      getApplicationIssueRow["requester_first_name"] = getRequesterRow["first_name"];
+                      getApplicationIssueRow["requester_last_name"] = getRequesterRow["last_name"];
+                      getApplicationIssueRow["requester_userid"] = getRequesterRow["userid"];
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error [" << getApplicationIssueRow["id"] << "]:  No results returned.";
+                      log(ssMessage.str());
+                    }
+                  }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error [" << getApplicationIssueRow["id"] << "]:  " << strError;
+                    log(ssMessage.str());
+                  }
+                  dbfree(getRequester);
+                }
+              }
+            }
+            else
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error [" << getApplicationIssueRow["id"] << "]:  " << strError;
+              log(ssMessage.str());
+            }
+            dbfree(getIssueComment);
+            if (!getApplicationIssueRow["assigned_id"].empty())
+            {
+              assigns.push_back(getApplicationIssueRow["assigned_id"]);
+            }
+            else
+            {
+              ssQuery.str("");
+              ssQuery << "select a.contact_id from application_contact a, contact_type b where a.type_id = b.id and a.application_id = " << getApplicationIssueRow["application_id"] << " and b.type in ('Primary Developer', 'Backup Developer')";
+              auto getDeveloper = dbquery("central_r", ssQuery.str(), strError);
+              if (getDeveloper != NULL)
+              {
+                for (auto &getDeveloperRow : *getDeveloper)
+                {
+                  assigns.push_back(getDeveloperRow["contact_id"]);
+                }
+              }
+              dbfree(getDeveloper);
+            }
+            assigns.sort();
+            assigns.unique();
+            for (auto &assign : assigns)
+            {
+              if (people.find(assign) == people.end())
+              {
+                people[assign] = {};
+              }
+              people[assign].push_back(getApplicationIssueRow);
+            }
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error:  " << strError;
+          log(ssMessage.str());
+        }
+        dbfree(getApplicationIssue);
+        for (auto &person : people)
+        {
+          ssQuery.str("");
+          ssQuery << "select first_name, last_name, userid, email from person where id = " << person.first;
+          auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+          if (getPerson != NULL)
+          {
+            if (!getPerson->empty())
+            {
+              auto getPersonRow = getPerson->front();
+              list<string> to, cc, bcc;
+              map<string, string> file;
+              string strSubject = "Central:  Workload";
+              stringstream ssText, ssHtml;
+              to.push_back(getPersonRow["email"]);
+              ssText << "NOTICE:  You are viewing this email in plain-text mode.  This email contains much more information when viewed in HTML mode." << endl << endl;
+              ssText << "OPEN APPLICATION ISSUES (" << person.second.size() << ")" << endl << endl;
+              ssHtml << "<html>";
+              ssHtml << "<body style='background:#f3f3f3;padding:10px;'>";
+              ssHtml << "<h3>Open Application Issues (" << person.second.size() << ")</h3>";
+              ssHtml << "<p>";
+              ssHtml << "This is the weekly <a href='http://" << m_strServer << "/central/#/Applications/Workload'>Workload</a> email.  It provides your personalized workload of open application issues.  The open issues listed below are being pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.";
+              ssHtml << "</p>";
+              for (auto &issue : person.second)
+              {
+                ssText << "Issue #" << issue["id"] << ":  http://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << endl;
+                ssHtml << "<div style='margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;'>";
+                ssHtml << "<table>";
+                ssHtml << "<tr>";
+                ssHtml << "<td valign='top'>";
+                ssHtml << "<a href='http://" << m_strServer << "/central/#/Applications/" << issue["application_id"] << "' style='font-weight: bold;'>" << issue["application_name"] << "</a>";
+                ssHtml << "<table>";
+                ssHtml << "<tr><td style='white-space: nowrap;'>Issue #:</td><td><a href='http://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << "'>" << issue["id"] << "</a>" << ((issue["hold"] == "1")?"<span style='margin-left: 20px; padding: 0px 2px; background: green; color: white;'>HOLD</span>":"") << "</td></tr>";
+                ssHtml << "<tr><td style='white-space: nowrap;'>Open:</td><td>" << issue["open_date"] << "</td></tr>";
+                if (!issue["due_date"].empty())
+                {
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Due:</td><td>" << issue["due_date"] << "</td></tr>";
+                }
+                if (!issue["release_date"].empty())
+                {
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Release:</td><td>" << issue["release_date"] << "</td></tr>";
+                }
+                if (!issue["priority"].empty())
+                {
+                  ssHtml << "<tr>";
+                  ssHtml << "<td style='white-space: nowrap;'>Priority:</td>";
+                  ssHtml << "<td>";
+                  if (issue["priority"] == "4")
+                  {
+                    ssHtml << "<span style='color: red; font-weight: bold;'>CRITICAL</span>";
+                  }
+                  else if (issue["priority"] == "3")
+                  {
+                    ssHtml << "<span style='color: red;'>High</span>";
+                  }
+                  else if (issue["priority"] == "2")
+                  {
+                    ssHtml << "<span style='color: orange;'>Medium</span>";
+                  }
+                  else if (issue["priority"] == "1")
+                  {
+                    ssHtml << "<span>Low</span>";
+                  }
+                  else
+                  {
+                    ssHtml << "<span>none</span>";
+                  }
+                  ssHtml << "</td>";
+                  ssHtml << "</tr>";
+                }
+                if (!issue["requester_userid"].empty())
+                {
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Requester:</td><td style='white-space: nowrap;'><a href='http://" << m_strServer << "/central/#/Users/" << issue["requester_id"] << "'>" << issue["requester_last_name"] << ", " << issue["requester_first_name"] << "</a> <small>(" << issue["requester_userid"] << ")</small></td></tr>";
+                }
+                if (!issue["assigned_userid"].empty())
+                {
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Assigned:</td><td style='white-space: nowrap;'><a href='http://" << m_strServer << "/central/#/Users/" << issue["assigned_id"] << "'>" << issue["assigned_last_name"] << ", " << issue["assigned_first_name"] << "</a> <small>(" << issue["assigned_userid"] << ")</small></td></tr>";
+                }
+                ssHtml << "</table>";
+                ssHtml << "</td>";
+                ssHtml << "<td valign='top'>";
+                if (!issue["summary"].empty())
+                {
+                  ssHtml << "<p style='margin: 0px 20px 20px 20px; font-weight: bold;'>" << issue["summary"] << "</p>";
+                }
+                if (!issue["comments"].empty())
+                {
+                  ssHtml << "<pre style='margin: 0px 20px 20px 20px; white-space: pre-wrap;'>" << issue["comments"] << "</pre>";
+                }
+                ssHtml << "</td>";
+                ssHtml << "</tr>";
+                ssHtml << "</table>";
+                ssHtml << "</div>";
+              }
+              ssHtml << "<p>";
+              ssHtml << "Please use the <a href='http://" << m_strServer << "/central/#/Home/FrontDoor'>Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.";
+              ssHtml << "</p>";
+              ssHtml << "<p>";
+              ssHtml << "This message was sent by <a href='http://" << m_strServer << "/central' style='text-decoration:none;'>Central</a>";
+              ssHtml << "</p>";
+              ssHtml << "</body>";
+              ssHtml << "</html>";
+              email(m_strEmail, to, cc, bcc, strSubject, ssText.str(), ssHtml.str(), file, strError);
+            }
+            else
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error:  No results returned.";
+              log(ssMessage.str());
+            }
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error:  " << strError;
+            log(ssMessage.str());
+          }
+          gpCentral->free(getPerson);
+        }
       }
     }
     msleep(2000);
