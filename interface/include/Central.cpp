@@ -2935,6 +2935,7 @@ void Central::schedule(string strPrefix)
       }
       if (CTime[1] > CTime[3])
       {
+        map<string, list<map<string, string> > > people;
         CTime[3] = 0;
         ssQuery.str("");
         ssQuery << "select a.name application_name, b.id, b.application_id, b.assigned_id, date_format(b.close_date, '%Y-%m-%d') close_date, date_format(b.due_date, '%Y-%m-%d') due_date, b.hold, date_format(b.open_date, '%Y-%m-%d') open_date, b.priority, date_format(b.release_date, '%Y-%m-%d') release_date, b.summary from application a, application_issue b where a.id = b.application_id and b.close_date is null order by b.priority desc, b.due_date, b.open_date";
@@ -3175,7 +3176,7 @@ void Central::schedule(string strPrefix)
             ssMessage << strPrefix << "->Interface::dbquery(" << ssQuery.str() << ") error:  " << strError;
             log(ssMessage.str());
           }
-          gpCentral->free(getPerson);
+          dbfree(getPerson);
         }
       }
     }
