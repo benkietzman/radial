@@ -83,19 +83,27 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
+    bool bInvalid = true;
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
     userInit(ptJson, d);
-    if (m_functions.find(strFunction) != m_functions.end())
+    if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, d, strError, bInvalid))
     {
-      if ((this->*m_functions[strFunction])(d, strError))
-      {
-        bResult = true;
-      }
+      bResult = true;
     }
-    else
+    else if (bInvalid)
     {
-      strError = "Please provide a valid Function.";
+      if (m_functions.find(strFunction) != m_functions.end())
+      {
+        if ((this->*m_functions[strFunction])(d, strError))
+        {
+          bResult = true;
+        }
+      }
+      else
+      {
+        strError = "Please provide a valid Function.";
+      }
     }
     if (bResult)
     {
