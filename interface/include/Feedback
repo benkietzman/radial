@@ -25,7 +25,9 @@ namespace radial
 class Feedback : public Interface
 {
   protected:
+  bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
+  string m_strEmail;
   string m_strServer;
 
   bool answers(radialUser &d, string &e);
@@ -43,6 +45,7 @@ class Feedback : public Interface
   Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Feedback();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}
 }

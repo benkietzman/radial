@@ -391,6 +391,12 @@ bool Feedback::resultAdd(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ setCallbackAddon()
+void Feedback::setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &))
+{
+  m_pCallbackAddon = pCallback;
+}
+// }}}
 // {{{ survey()
 bool Feedback::survey(radialUser &d, string &e)
 {
