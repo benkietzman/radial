@@ -26,6 +26,7 @@ class Feedback : public Interface
 {
   protected:
   map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
+  string m_strServer;
 
   bool answers(radialUser &d, string &e);
   bool questions(radialUser &d, string &e);
