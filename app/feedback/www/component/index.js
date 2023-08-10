@@ -372,7 +372,7 @@ export default
     s.surveyEdit = () =>
     {
       s.survey.disabled = true;
-      s.u();
+      s.u('loadModalSurvey', true);
       s.survey.error.v = null;
       s.survey.info.v = 'Saving survey...';
       if (c.isDefined(s.survey.questions) && c.isArray(s.survey.questions))
@@ -404,7 +404,7 @@ export default
             s.survey.error.v = error.message;
             s.survey.disabled = false;
           }
-          s.u();
+          s.u('loadModalSurvey', true);
         });
       }
       else

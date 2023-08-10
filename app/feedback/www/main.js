@@ -33,7 +33,7 @@ let common = new Common(
 });
 common.enableJwt(true);
 common.enableJwtInclusion(true);
-common.setRedirectPath('https://'+location.host+'/central');
+common.setRedirectPath('https://'+location.host+'/feedback');
 common.setSecureLogin(true);
 common.wsCreate('radial', location.host, '7797', true, 'radial');
 let app = new App(
