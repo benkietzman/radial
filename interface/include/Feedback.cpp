@@ -357,7 +357,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
             {
               for (auto j = i->m["survey"]->m["questions"]->l.begin(); bGood && j != i->m["survey"]->m["questions"]->l.end(); j++)
               {
-                if (!empty((*j), "required") && (*j)->m["required"]->v == "1" && (!exist((*j), "answer") || (empty((*j), "answer") && (*j)->m["answer"]->m.empty())))
+                if (!empty((*j), "required") && (*j)->m["required"]->v == "1" && (!exist((*j), "answer") || (empty((*j), "answer") && (*j)->m["answer"]->l.empty() && (*j)->m["answer"]->m.empty())))
                 {
                   bGood = false;
                 }
