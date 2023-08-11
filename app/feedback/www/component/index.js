@@ -469,7 +469,7 @@ export default
   <div class="card-group">
   {{#each surveys}}
   {{#showClosedOrOpen ../showClosed open}}
-  <div class="card" style="margin: 10px; max-width: 600px;">
+  <div class="card" style="margin: 10px; min-width: 300px; max-width: 600px;">
     <div class="card-header text-white">
       <div class="row">
         <div class="col-md-2">
