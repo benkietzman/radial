@@ -129,7 +129,6 @@ export default
                         {
                           let bFoundType = false;
                           let i = response.Request.i;
-                          s.survey.questions[i].info.v = 'Fetching answers...';
                           s.survey.questions[i].type = response.Response;
                           for (let j = 0; !bFoundType && j < s.types.length; j++)
                           {
@@ -139,6 +138,7 @@ export default
                               s.survey.questions[i].type = s.types[j];
                             }
                           }
+                          s.survey.questions[i].info.v = 'Fetching answers...';
                           let request = {Interface: 'feedback', 'Function': 'answers', Request: {i: i, 'question_id': s.survey.questions[i].id}};
                           c.wsRequest('radial', request).then((response) =>
                           {
