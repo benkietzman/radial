@@ -272,6 +272,14 @@ bool Feedback::results(radialUser &d, string &e)
                 }
               }
               ro = new Json(r);
+              for (auto &i : ro->m)
+              {
+                if (i.second->v.size() > 11 && i.second->v.substr(0, 11) == "___JSON___|")
+                {
+                  delete i.second;
+                  i.second = new Json(i.second->v.substr(11, (i.second->v.size() - 11)));
+                }
+              }
               if (s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
               {
                 q.str("");
@@ -380,6 +388,11 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                       else if (!empty(j->m["answer"], "id"))
                       {
                         strAnswer = j->m["answer"]->m["id"]->v;
+                      }
+                      else if (!j->m["answer"]->l.empty())
+                      {
+                        j->m["answer"]->j(strAnswer);
+                        strAnswer = (string)"___JSON___|" + strAnswer;
                       }
                       if (!strAnswer.empty())
                       {
