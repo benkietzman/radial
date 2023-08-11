@@ -491,7 +491,7 @@ export default
       <div class="row">
         <div class="col-md-6 text-center">
           {{#if ../viewResults}}
-          <button class="btn btn-sm btn-info" c-click="getSurvey('results', '{{../hash}}')">View Results</button>
+          <button class="btn btn-sm btn-info" c-click="getSurvey('results', '{{../hash}}')">View Results ({{numberShort ../numResults 0}})</button>
           <br>
           <a href="#/results/{{../hash}}">external link</a>
           {{/if}}
