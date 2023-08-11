@@ -227,62 +227,7 @@ bool Feedback::results(radialUser &d, string &e)
             b = true;
             for (auto &r : *g)
             {
-              Json *ro;
-              /*
-              if (exist(i, "type") && !empty(i->m["type"], "name") && exist(i, "answers"))
-              {
-                if (i->m["type"]->m["name"]->v == "checkbox")
-                {
-                  string strA;
-                  stringstream ssA(r["answers"]);
-                  r["answer"].clear();
-                  while (getline(ssA, strA, ','))
-                  {
-                    bool bFound = false;
-                    for (auto a = i->m["answers"]->l.begin(); !bFound && a != i->m["answers"]->l.end(); a++)
-                    {
-                      if (!empty((*a), "id") && strA == (*a)->m["id"]->v)
-                      {
-                        bFound = true;
-                        if (!empty((*a), "answer"))
-                        {
-                          if (r["answer"].empty())
-                          {
-                            r["answer"] += ", ";
-                          }
-                          r["answer"] += (*a)->m["answer"]->v;
-                        }
-                      }
-                    }
-                  }
-                }
-                else if (i->m["type"]->m["name"]->v == "radio" || i->m["type"]->m["name"]->v == "select")
-                {
-                  bool bFound = false;
-                  for (auto a = i->m["answers"]->l.begin(); !bFound && a != i->m["answers"]->l.end(); a++)
-                  {
-                    if (!empty((*a), "id") && r["answer"] == (*a)->m["id"]->v)
-                    {
-                      bFound = true;
-                      if (!empty((*a), "answer"))
-                      {
-                        r["answer"] = (*a)->m["answer"]->v;
-                      }
-                    }
-                  }
-                }
-              }
-              */
-              ro = new Json(r);
-              for (auto &i : ro->m)
-              {
-                if (i.second->v.size() > 11 && i.second->v.substr(0, 11) == "___JSON___|")
-                {
-                  Json *ptOld = i.second;
-                  i.second = new Json(ptOld->v.substr(11, (ptOld->v.size() - 11)));
-                  delete ptOld;
-                }
-              }
+              Json *ro = new Json(r);
               if (s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
               {
                 q.str("");
@@ -394,8 +339,14 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                       }
                       else if (!j->m["answer"]->l.empty())
                       {
-                        j->m["answer"]->j(strAnswer);
-                        strAnswer = (string)"___JSON___|" + strAnswer;
+                        for (auto k = j->m["answer"]->l.begin; k != j->m["answer"]->l.end(); k++)
+                        {
+                          if (k != j->m["answer"]->l.begin())
+                          {
+                            strAnswer += ", ";
+                          }
+                          strAnswer += (*k)->v;
+                        }
                       }
                       if (!strAnswer.empty())
                       {
