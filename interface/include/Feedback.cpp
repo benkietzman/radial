@@ -339,7 +339,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                       }
                       else if (!j->m["answer"]->l.empty())
                       {
-                        for (auto k = j->m["answer"]->l.begin; k != j->m["answer"]->l.end(); k++)
+                        for (auto k = j->m["answer"]->l.begin(); k != j->m["answer"]->l.end(); k++)
                         {
                           if (k != j->m["answer"]->l.begin())
                           {
