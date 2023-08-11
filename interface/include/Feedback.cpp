@@ -228,6 +228,7 @@ bool Feedback::results(radialUser &d, string &e)
             for (auto &r : *g)
             {
               Json *ro;
+              /*
               if (exist(i, "type") && !empty(i->m["type"], "name") && exist(i, "answers"))
               {
                 if (i->m["type"]->m["name"]->v == "checkbox")
@@ -271,6 +272,7 @@ bool Feedback::results(radialUser &d, string &e)
                   }
                 }
               }
+              */
               ro = new Json(r);
               for (auto &i : ro->m)
               {
