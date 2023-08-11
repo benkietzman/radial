@@ -469,7 +469,7 @@ export default
   <div class="card-group">
   {{#each surveys}}
   {{#showClosedOrOpen ../showClosed open}}
-  <div class="card" style="margin: 10px; min-width: 300px; max-width: 600px;">
+  <div class="card" style="margin: 10px; min-width: 400px; max-width: 600px;">
     <div class="card-header text-white">
       <div class="row">
         <div class="col-md-2">
@@ -512,7 +512,7 @@ export default
     <div class="card-footer">
       <div class="row">
         <div class="col-md-7">
-          survey {{#ifCond ../open "==" 1}}open {{#haveDate ../end_date}}until {{../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../end_date}} as of {{../../end_date}}{{/haveDate}}{{/ifCond}}
+          survey {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
         </div>
         <div class="col-md-5" style="text-align: right;">
           {{#ifCond @../key "==" "Public Surveys"}}
