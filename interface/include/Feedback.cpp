@@ -278,8 +278,9 @@ bool Feedback::results(radialUser &d, string &e)
               {
                 if (i.second->v.size() > 11 && i.second->v.substr(0, 11) == "___JSON___|")
                 {
-                  delete i.second;
-                  i.second = new Json(i.second->v.substr(11, (i.second->v.size() - 11)));
+                  Json *ptOld = i.second;
+                  i.second = new Json(ptOld->v.substr(11, (ptOld->v.size() - 11)));
+                  delete ptOld;
                 }
               }
               if (s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
