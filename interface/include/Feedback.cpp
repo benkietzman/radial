@@ -343,7 +343,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                         {
                           if (k != j->m["answer"]->l.begin())
                           {
-                            strAnswer += ", ";
+                            strAnswer += ",";
                           }
                           strAnswer += (*k)->v;
                         }
