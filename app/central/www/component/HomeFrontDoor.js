@@ -33,7 +33,6 @@ export default
       request.Request = c.simplify(s.issue);
       request.Request.application_id = s.application.id;
       request.Request.application_name = s.application.name;
-      request.Request.server = location.host;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};

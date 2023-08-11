@@ -9,7 +9,6 @@ let common = new Common(
   application: 'Central',
   footer:
   {
-    server: location.host,
     subject: 'Central',
     version: '3.0'
   },

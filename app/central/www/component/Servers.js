@@ -430,7 +430,7 @@ export default
       }
       if (confirm('Are you sure you want to send this server notification?'))
       {
-        let request = {Interface: 'central', 'Function': 'serverNotify', Request: {id: s.server.id, notification: s.notification.v, server: location.host}};
+        let request = {Interface: 'central', 'Function': 'serverNotify', Request: {id: s.server.id, notification: s.notification.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};

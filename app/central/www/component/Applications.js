@@ -112,7 +112,7 @@ export default
     s.addIssue = () =>
     {
       s.info.v = 'Adding issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueAdd', Request: {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary.v, due_date: s.issue.due_date.v, priority: s.issue.priority.v, assigned_userid: s.issue.assigned_userid.v, comments: s.issue.comments.v, server: location.host}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueAdd', Request: {application_id: s.application.id, application_name: s.application.name, summary: s.issue.summary.v, due_date: s.issue.due_date.v, priority: s.issue.priority.v, assigned_userid: s.issue.assigned_userid.v, comments: s.issue.comments.v}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -137,7 +137,7 @@ export default
     s.addIssueComment = (strAction, nIssueID, nApplicationID) =>
     {
       s.info.v = 'Adding comment...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueCommentAdd', Request: {issue_id: nIssueID, comments: s.issue.comments.v, action: strAction, application_id: nApplicationID, server: location.host}};
+      let request = {Interface: 'central', 'Function': 'applicationIssueCommentAdd', Request: {issue_id: nIssueID, comments: s.issue.comments.v, action: strAction, application_id: nApplicationID}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -275,7 +275,7 @@ export default
           if (c.isDefined(s.application.issue.transfer) && c.isDefined(s.application.issue.transfer.v) && c.isDefined(s.application.issue.transfer.v.id) && s.application.issue.transfer.v.id != s.application.id)
           {
             s.info.v = 'Emailing issue...';
-            let request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id, server: location.host}};
+            let request = {Interface: 'central', 'Function':  'applicationIssueEmail', Request: {id: s.application.issue.id, action: 'transfer', application_id: s.application.id}};
             c.wsRequest('radial', request).then((response) =>
             {
               s.info.v = null;
@@ -837,7 +837,7 @@ export default
       }
       if (confirm('Are you sure you want to send this application notification?'))
       {
-        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification.v, server: location.host}};
+        let request = {Interface: 'central', 'Function': 'applicationNotify', Request: {id: s.application.id, notification: s.notification.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};

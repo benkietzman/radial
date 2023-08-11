@@ -768,12 +768,9 @@ bool Central::applicationIssueAdd(radialUser &d, string &e)
           string sube;
           radialUser a;
           userInit(d, a);
-          if (!empty(i, "server"))
-          {
-            a.p->m["i"]->i("action", "add");
-            a.p->m["i"]->i("application_id", i->m["application_id"]->v);
-            a.p->m["i"]->i("server", i->m["server"]->v);
-          }
+          a.p->m["i"]->i("action", "add");
+          a.p->m["i"]->i("application_id", i->m["application_id"]->v);
+          a.p->m["i"]->i("server", m_strServer);
           a.p->m["i"]->i("issue_id", id);
           a.p->m["i"]->i("comments", i->m["comments"]->v);
           if (applicationIssueCommentAdd(a, sube))
@@ -890,7 +887,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
             }
             userDeinit(c);
           }
-          if (!empty(i, "application_id") && !empty(i, "server"))
+          if (!empty(i, "application_id"))
           {
             string sube;
             radialUser c;
@@ -898,7 +895,7 @@ bool Central::applicationIssueCommentAdd(radialUser &d, string &e)
             c.p->m["i"]->i("id", i->m["issue_id"]->v);
             c.p->m["i"]->i("action", ((!empty(i, "action"))?i->m["action"]->v:"update"));
             c.p->m["i"]->i("application_id", i->m["application_id"]->v);
-            c.p->m["i"]->i("server", i->m["server"]->v);
+            c.p->m["i"]->i("server", m_strServer);
             if (applicationIssueEmail(c, sube))
             {
               o->i("EmailStatus", "okay");
@@ -1036,7 +1033,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
 
   if (!d.u.empty())
   {
-    if (dep({"action", "id", "server"}, i, e))
+    if (dep({"action", "id"}, i, e))
     {
       if (i->m["action"]->v == "add" || i->m["action"]->v == "close" || i->m["action"]->v == "transfer" || i->m["action"]->v == "update")
       {
@@ -1128,23 +1125,23 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
               }
               if (i->m["action"]->v == "add")
               {
-                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
-                m[1] << "Issue #" << i->m["id"]->v << " has been <b>created</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                m[0] << "<a href=\"https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>created</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>created</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v;
               }
               else if (i->m["action"]->v == "close")
               {
-                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>closed</b> by " << strName << ".";
-                m[1] << "Issue #" << i->m["id"]->v << " has been <b>closed</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                m[0] << "<a href=\"https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>closed</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>closed</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v;
               }
               else if (i->m["action"]->v == "transfer")
               {
-                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << ".";
-                m[1] << "Issue #" << i->m["id"]->v << " has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                m[0] << "<a href=\"https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>transferred</b> from " << strApplication << " to " << c.p->m["o"]->m["name"]->v << " by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v;
               }
               else if (i->m["action"]->v == "update")
               {
-                m[0] << "<a href=\"https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
-                m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << i->m["server"]->v << "/central/#/Applications/Issues/" << i->m["id"]->v;
+                m[0] << "<a href=\"https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
+                m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v;
               }
               if (exist(a.p->m["o"], "comments") && !a.p->m["o"]->m["comments"]->l.empty())
               {
@@ -1179,13 +1176,13 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                 }
                 m[0] << "</div>";
               }
-              m[0] << "<p>Viewing your <a href=\"http://" << i->m["server"]->v << "/central/#/Applications/Workload\">Workload</a> provides you with your personalized list of open application issues.  The issues provided on the Workload are pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>";
-              m[0] << "<p>Please use the <a href=\"http://" << i->m["server"]->v << "/central/#/Home/FrontDoor\">Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.</p>";
-              m[0] << "This message was sent by <a href=\"https://" << i->m["server"]->v << "/central\" style=\"text-decoration:none;\">Central</a>.";
+              m[0] << "<p>Viewing your <a href=\"https://" << m_strServer << "/central/#/Applications/Workload\">Workload</a> provides you with your personalized list of open application issues.  The issues provided on the Workload are pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>";
+              m[0] << "<p>Please use the <a href=\"https://" << m_strServer << "/central/#/Home/FrontDoor\">Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.</p>";
+              m[0] << "This message was sent by <a href=\"https://" << m_strServer << "/central\" style=\"text-decoration:none;\">Central</a>.";
               m[0] << "</body></html>";
               to.sort();
               to.unique();
-              email(getUserEmail(d), to, s.str(), m[1].str(), m[0].str(), e);
+              email(m_strEmail, to, s.str(), m[1].str(), m[0].str(), e);
               b = true;
             }
             userDeinit(f);
@@ -1372,7 +1369,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"id", "notification", "server"}, i, e))
+  if (dep({"id", "notification"}, i, e))
   {
     string strNotification = i->m["notification"]->v;
     size_t unPosition;
@@ -1485,7 +1482,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
             to.push_back(k.second->m["email"]->v);
             m << "<html><body>";
             m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-            m << "<h3><b>Application Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+            m << "<h3><b>Application Notification:  <a href=\"https://" << m_strServer << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
             m << strNotification;
             m << "<br><br>";
             m << "<b>You are receiving this application notification for the following reason(s):</b>";
@@ -1531,7 +1528,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << ", ";
                 }
-                m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
               }
             }
             if (!developer["backup"].empty())
@@ -1549,14 +1546,14 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << ", ";
                 }
-                m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
               }
             }
             m << "<br><br>";
             m << "If you have any questions or concerns, please contact your application contacts.";
             m << "</div>";
             m << "</body></html>";
-            email(getUserEmail(d), to, s.str(), "", m.str(), e);
+            email(m_strEmail, to, s.str(), "", m.str(), e);
             k.second->i("sent", "1", 'n');
           }
         }
@@ -2637,12 +2634,9 @@ bool Central::footer(radialUser &d, string &e)
     a.p->m["i"]->i("userid", i->m["userid"]->v);
     if (user(a, e) && !empty(a.p->m["o"], "id"))
     {
-      if (!empty(i, "server"))
-      {
-        stringstream ssLink;
-        ssLink << "https://" << i->m["server"]->v << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
-        a.p->m["o"]->i("link", ssLink.str());
-      }
+      stringstream ssLink;
+      ssLink << "https://" << m_strServer << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
+      a.p->m["o"]->i("link", ssLink.str());
       a.p->m["o"]->i("target", "_blank");
       o->i("engineer", a.p->m["o"]);
     }
@@ -3080,18 +3074,18 @@ void Central::schedule(string strPrefix)
               ssHtml << "<body style='background:#f3f3f3;padding:10px;'>";
               ssHtml << "<h3>Open Application Issues (" << person.second.size() << ")</h3>";
               ssHtml << "<p>";
-              ssHtml << "This is the weekly <a href='http://" << m_strServer << "/central/#/Applications/Workload'>Workload</a> email.  It provides your personalized workload of open application issues.  The open issues listed below are being pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.";
+              ssHtml << "This is the weekly <a href='https://" << m_strServer << "/central/#/Applications/Workload'>Workload</a> email.  It provides your personalized workload of open application issues.  The open issues listed below are being pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.";
               ssHtml << "</p>";
               for (auto &issue : person.second)
               {
-                ssText << "Issue #" << issue["id"] << ":  http://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << endl;
+                ssText << "Issue #" << issue["id"] << ":  https://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << endl;
                 ssHtml << "<div style='margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;'>";
                 ssHtml << "<table>";
                 ssHtml << "<tr>";
                 ssHtml << "<td valign='top'>";
-                ssHtml << "<a href='http://" << m_strServer << "/central/#/Applications/" << issue["application_id"] << "' style='font-weight: bold;'>" << issue["application_name"] << "</a>";
+                ssHtml << "<a href='https://" << m_strServer << "/central/#/Applications/" << issue["application_id"] << "' style='font-weight: bold;'>" << issue["application_name"] << "</a>";
                 ssHtml << "<table>";
-                ssHtml << "<tr><td style='white-space: nowrap;'>Issue #:</td><td><a href='http://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << "'>" << issue["id"] << "</a>" << ((issue["hold"] == "1")?"<span style='margin-left: 20px; padding: 0px 2px; background: green; color: white;'>HOLD</span>":"") << "</td></tr>";
+                ssHtml << "<tr><td style='white-space: nowrap;'>Issue #:</td><td><a href='https://" << m_strServer << "/central/#/Applications/Issues/" << issue["id"] << "'>" << issue["id"] << "</a>" << ((issue["hold"] == "1")?"<span style='margin-left: 20px; padding: 0px 2px; background: green; color: white;'>HOLD</span>":"") << "</td></tr>";
                 ssHtml << "<tr><td style='white-space: nowrap;'>Open:</td><td>" << issue["open_date"] << "</td></tr>";
                 if (!issue["due_date"].empty())
                 {
@@ -3131,11 +3125,11 @@ void Central::schedule(string strPrefix)
                 }
                 if (!issue["requester_userid"].empty())
                 {
-                  ssHtml << "<tr><td style='white-space: nowrap;'>Requester:</td><td style='white-space: nowrap;'><a href='http://" << m_strServer << "/central/#/Users/" << issue["requester_id"] << "'>" << issue["requester_last_name"] << ", " << issue["requester_first_name"] << "</a> <small>(" << issue["requester_userid"] << ")</small></td></tr>";
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Requester:</td><td style='white-space: nowrap;'><a href='https://" << m_strServer << "/central/#/Users/" << issue["requester_id"] << "'>" << issue["requester_last_name"] << ", " << issue["requester_first_name"] << "</a> <small>(" << issue["requester_userid"] << ")</small></td></tr>";
                 }
                 if (!issue["assigned_userid"].empty())
                 {
-                  ssHtml << "<tr><td style='white-space: nowrap;'>Assigned:</td><td style='white-space: nowrap;'><a href='http://" << m_strServer << "/central/#/Users/" << issue["assigned_id"] << "'>" << issue["assigned_last_name"] << ", " << issue["assigned_first_name"] << "</a> <small>(" << issue["assigned_userid"] << ")</small></td></tr>";
+                  ssHtml << "<tr><td style='white-space: nowrap;'>Assigned:</td><td style='white-space: nowrap;'><a href='https://" << m_strServer << "/central/#/Users/" << issue["assigned_id"] << "'>" << issue["assigned_last_name"] << ", " << issue["assigned_first_name"] << "</a> <small>(" << issue["assigned_userid"] << ")</small></td></tr>";
                 }
                 ssHtml << "</table>";
                 ssHtml << "</td>";
@@ -3154,10 +3148,10 @@ void Central::schedule(string strPrefix)
                 ssHtml << "</div>";
               }
               ssHtml << "<p>";
-              ssHtml << "Please use the <a href='http://" << m_strServer << "/central/#/Home/FrontDoor'>Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.";
+              ssHtml << "Please use the <a href='https://" << m_strServer << "/central/#/Home/FrontDoor'>Front Door</a> to create a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.";
               ssHtml << "</p>";
               ssHtml << "<p>";
-              ssHtml << "This message was sent by <a href='http://" << m_strServer << "/central' style='text-decoration:none;'>Central</a>";
+              ssHtml << "This message was sent by <a href='https://" << m_strServer << "/central' style='text-decoration:none;'>Central</a>";
               ssHtml << "</p>";
               ssHtml << "</body>";
               ssHtml << "</html>";
@@ -3315,6 +3309,7 @@ bool Central::serverNotify(radialUser &d, string &e)
     {
       string strNotification = i->m["notification"]->v;
       size_t unPosition;
+      radialUser a;
       while ((unPosition = strNotification.find("<")) != string::npos)
       {
         strNotification.replace(unPosition, 1, "&lt;");
@@ -3327,88 +3322,213 @@ bool Central::serverNotify(radialUser &d, string &e)
       {
         strNotification.replace(unPosition, 1, "<br>");
       }
-      if (!empty(i, "server"))
+      userInit(d, a);
+      a.p->m["i"]->i("id", i->m["id"]->v);
+      if (d.g || isServerAdmin(a, e))
       {
-        radialUser a;
-        userInit(d, a);
-        a.p->m["i"]->i("id", i->m["id"]->v);
-        if (d.g || isServerAdmin(a, e))
+        radialUser c;
+        userInit(d, c);
+        c.p->m["i"]->i("id", i->m["id"]->v);
+        if (server(c, e) && !empty(c.p->m["o"], "name"))
         {
-          radialUser c;
-          userInit(d, c);
-          c.p->m["i"]->i("id", i->m["id"]->v);
-          if (server(c, e) && !empty(c.p->m["o"], "name"))
+          radialUser f;
+          userInit(d, f);
+          f.p->m["i"]->i("server_id", i->m["id"]->v);
+          f.p->m["i"]->i("Primary Admin", "1", 'n');
+          f.p->m["i"]->i("Backup Admin", "1", 'n');
+          f.p->m["i"]->i("Primary Contact", "1", 'n');
+          if (serverUsersByServerID(f, e))
           {
-            radialUser f;
-            userInit(d, f);
-            f.p->m["i"]->i("server_id", i->m["id"]->v);
-            f.p->m["i"]->i("Primary Admin", "1", 'n');
-            f.p->m["i"]->i("Backup Admin", "1", 'n');
-            f.p->m["i"]->i("Primary Contact", "1", 'n');
-            if (serverUsersByServerID(f, e))
+            map<string, map<string, string> > admin = {{"primary", {}}, {"backup", {}} };
+            stringstream s;
+            radialUser h;
+            b = true;
+            for (auto &contact : f.p->m["o"]->l)
             {
-              map<string, map<string, string> > admin = {{"primary", {}}, {"backup", {}} };
-              stringstream s;
-              radialUser h;
-              b = true;
-              for (auto &contact : f.p->m["o"]->l)
+              if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
               {
-                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                if (!exist(o, contact->m["userid"]->v))
                 {
-                  if (!exist(o, contact->m["userid"]->v))
+                  o->m[contact->m["userid"]->v] = new Json;
+                }
+                o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
+                o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Admin")
+                {
+                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                   {
-                    o->m[contact->m["userid"]->v] = new Json;
+                    o->m[contact->m["userid"]->v]->i("primary", "1", 1);
                   }
-                  o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                  o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
-                  o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Admin")
+                  admin["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                }
+                else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Admin")
+                {
+                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    o->m[contact->m["userid"]->v]->i("backup", "1", 1);
+                  }
+                  admin["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                }
+                else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                {
+                  o->m[contact->m["userid"]->v]->i("contact", "1", 1);
+                }
+              }
+            }
+            s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+            for (auto &k : o->m)
+            {
+              list<string> to;
+              stringstream m;
+              to.push_back(k.second->m["email"]->v);
+              m << "<html><body>";
+              m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
+              m << "<h3><b>Server Notification:  <a href=\"https://" << m_strServer << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+              m << strNotification;
+              m << "<br><br>";
+              m << "<b>You are receiving this server notification for the following reason(s):</b>";
+              m << "<br><br>";
+              m << "<ul>";
+              if (exist(k.second, "primary"))
+              {
+                m << "<li>You are a Primary Admin for this server.</li>";
+              }
+              else if (exist(k.second, "backup"))
+              {
+                m << "<li>You are a Backup Admin for this server.</li>";
+              }
+              else if (exist(k.second, "contact"))
+              {
+                m << "<li>You are a Contact for this server.</li>";
+              }
+              m << "</ul>";
+              if (!admin["primary"].empty())
+              {
+                bool bFirst = true;
+                m << "<br><br>";
+                m << "<b>Primary Admin(s):</b><br>";
+                for (auto &ad : admin["primary"])
+                {
+                  if (bFirst)
+                  {
+                    bFirst = false;
+                  }
+                  else
+                  {
+                    m << ", ";
+                  }
+                  m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                }
+              }
+              if (!admin["backup"].empty())
+              {
+                bool bFirst = true;
+                m << "<br><br>";
+                m << "<b>Backup Admin(s):</b><br>";
+                for (auto &ad : admin["backup"])
+                {
+                  if (bFirst)
+                  {
+                    bFirst = false;
+                  }
+                  else
+                  {
+                    m << ", ";
+                  }
+                  m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                }
+              }
+              m << "<br><br>";
+              m << "If you have any questions or concerns, please contact your server contacts.";
+              m << "</div>";
+              m << "</body></html>";
+              email(m_strEmail, to, s.str(), "", m.str(), e);
+              k.second->i("sent", "1", 'n');
+            }
+            userInit(d, h);
+            h.p->m["i"]->i("server_id", i->m["id"]->v);
+            if (applicationsByServerID(h, e))
+            {
+              map<string, map<string, map<string, string> > > developer;
+              stringstream s;
+              for (auto &app : h.p->m["o"]->l)
+              {
+                if (!empty(app, "application_id"))
+                {
+                  radialUser k;
+                  userInit(d, k);
+                  k.p->m["i"]->i("id", app->m["application_id"]->v);
+                  if (application(k, e) && !empty(k.p->m["o"], "name") && empty(k.p->m["o"], "retirement_date"))
+                  {
+                    radialUser l;
+                    userInit(d, l);
+                    l.p->m["i"]->i("application_id", app->m["application_id"]->v);
+                    l.p->m["i"]->i("Primary Developer", "1", 'n');
+                    l.p->m["i"]->i("Backup Developer", "1", 'n');
+                    l.p->m["i"]->i("Contact", "1", 'n');
+                    if (applicationUsersByApplicationID(l, e))
                     {
-                      o->m[contact->m["userid"]->v]->i("primary", "1", 1);
+                      for (auto &contact : l.p->m["o"]->l)
+                      {
+                        if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                        {
+                          if (developer.find(contact->m["userid"]->v) == developer.end())
+                          {
+                            developer[contact->m["userid"]->v] = {};
+                          }
+                          if (developer[contact->m["userid"]->v].find(k.p->m["o"]->m["name"]->v) == developer[contact->m["userid"]->v].end())
+                          {
+                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v] = {};
+                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["application_id"] = app->m["application_id"]->v;
+                          }
+                          developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["email"] = contact->m["email"]->v;
+                          developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                          if (exist(contact, "type") && !empty(contact->m["type"], "type"))
+                          {
+                            if (contact->m["type"]->m["type"]->v == "Primary Developer")
+                            {
+                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["primary"] = "1";
+                            }
+                            else if (contact->m["type"]->m["type"]->v == "Primary Developer")
+                            {
+                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["backup"] = "1";
+                            }
+                          }
+                        }
+                      }
                     }
-                    admin["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                    userDeinit(l);
                   }
-                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Admin")
-                  {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                    {
-                      o->m[contact->m["userid"]->v]->i("backup", "1", 1);
-                    }
-                    admin["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
-                  }
-                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                  {
-                    o->m[contact->m["userid"]->v]->i("contact", "1", 1);
-                  }
+                  userDeinit(k);
                 }
               }
               s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
-              for (auto &k : o->m)
+              for (auto &n : developer)
               {
                 list<string> to;
                 stringstream m;
-                to.push_back(k.second->m["email"]->v);
                 m << "<html><body>";
                 m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-                m << "<h3><b>Server Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+                m << "<h3><b>Server Notification:  <a href=\"https://" << m_strServer << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
                 m << strNotification;
                 m << "<br><br>";
-                m << "<b>You are receiving this server notification for the following reason(s):</b>";
+                m << "<b>You are associated with the following applications that depend upon this server:</b>";
                 m << "<br><br>";
                 m << "<ul>";
-                if (exist(k.second, "primary"))
+                for (auto &p : n.second)
                 {
-                  m << "<li>You are a Primary Admin for this server.</li>";
-                }
-                else if (exist(k.second, "backup"))
-                {
-                  m << "<li>You are a Backup Admin for this server.</li>";
-                }
-                else if (exist(k.second, "contact"))
-                {
-                  m << "<li>You are a Contact for this server.</li>";
+                  to.push_back(p.second["email"]);
+                  m << "<li><a href=\"https://" << m_strServer << "/central/#/Applications/" << p.second["application_id"] << "\">" << p.first << "</a>";
+                  if (p.second.find("primary") != p.second.end())
+                  {
+                    m << ":  You are a Primary Developer for this application.";
+                  }
+                  else if (p.second.find("backup") != p.second.end())
+                  {
+                    m << ":  You are a Backup Developer for this application.";
+                  }
+                  m << "</li>";
                 }
                 m << "</ul>";
                 if (!admin["primary"].empty())
@@ -3426,7 +3546,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                     {
                       m << ", ";
                     }
-                    m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                    m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
                   }
                 }
                 if (!admin["backup"].empty())
@@ -3444,162 +3564,29 @@ bool Central::serverNotify(radialUser &d, string &e)
                     {
                       m << ", ";
                     }
-                    m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
+                    m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
                   }
                 }
                 m << "<br><br>";
                 m << "If you have any questions or concerns, please contact your server contacts.";
                 m << "</div>";
                 m << "</body></html>";
-                email(getUserEmail(d), to, s.str(), "", m.str(), e);
-                k.second->i("sent", "1", 'n');
+                to.sort();
+                to.unique();
+                email(m_strEmail, to, s.str(), "", m.str(), e);
               }
-              userInit(d, h);
-              h.p->m["i"]->i("server_id", i->m["id"]->v);
-              if (applicationsByServerID(h, e))
-              {
-                map<string, map<string, map<string, string> > > developer;
-                stringstream s;
-                for (auto &app : h.p->m["o"]->l)
-                {
-                  if (!empty(app, "application_id"))
-                  {
-                    radialUser k;
-                    userInit(d, k);
-                    k.p->m["i"]->i("id", app->m["application_id"]->v);
-                    if (application(k, e) && !empty(k.p->m["o"], "name") && empty(k.p->m["o"], "retirement_date"))
-                    {
-                      radialUser l;
-                      userInit(d, l);
-                      l.p->m["i"]->i("application_id", app->m["application_id"]->v);
-                      l.p->m["i"]->i("Primary Developer", "1", 'n');
-                      l.p->m["i"]->i("Backup Developer", "1", 'n');
-                      l.p->m["i"]->i("Contact", "1", 'n');
-                      if (applicationUsersByApplicationID(l, e))
-                      {
-                        for (auto &contact : l.p->m["o"]->l)
-                        {
-                          if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
-                          {
-                            if (developer.find(contact->m["userid"]->v) == developer.end())
-                            {
-                              developer[contact->m["userid"]->v] = {};
-                            }
-                            if (developer[contact->m["userid"]->v].find(k.p->m["o"]->m["name"]->v) == developer[contact->m["userid"]->v].end())
-                            {
-                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v] = {};
-                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["application_id"] = app->m["application_id"]->v;
-                            }
-                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["email"] = contact->m["email"]->v;
-                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
-                            if (exist(contact, "type") && !empty(contact->m["type"], "type"))
-                            {
-                              if (contact->m["type"]->m["type"]->v == "Primary Developer")
-                              {
-                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["primary"] = "1";
-                              }
-                              else if (contact->m["type"]->m["type"]->v == "Primary Developer")
-                              {
-                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["backup"] = "1";
-                              }
-                            }
-                          }
-                        }
-                      }
-                      userDeinit(l);
-                    }
-                    userDeinit(k);
-                  }
-                }
-                s << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
-                for (auto &n : developer)
-                {
-                  list<string> to;
-                  stringstream m;
-                  m << "<html><body>";
-                  m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-                  m << "<h3><b>Server Notification:  <a href=\"https://" << i->m["server"]->v << "/central/#/Servers/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
-                  m << strNotification;
-                  m << "<br><br>";
-                  m << "<b>You are associated with the following applications that depend upon this server:</b>";
-                  m << "<br><br>";
-                  m << "<ul>";
-                  for (auto &p : n.second)
-                  {
-                    to.push_back(p.second["email"]);
-                    m << "<li><a href=\"https://" << i->m["server"]->v << "/central/#/Applications/" << p.second["application_id"] << "\">" << p.first << "</a>";
-                    if (p.second.find("primary") != p.second.end())
-                    {
-                      m << ":  You are a Primary Developer for this application.";
-                    }
-                    else if (p.second.find("backup") != p.second.end())
-                    {
-                      m << ":  You are a Backup Developer for this application.";
-                    }
-                    m << "</li>";
-                  }
-                  m << "</ul>";
-                  if (!admin["primary"].empty())
-                  {
-                    bool bFirst = true;
-                    m << "<br><br>";
-                    m << "<b>Primary Admin(s):</b><br>";
-                    for (auto &ad : admin["primary"])
-                    {
-                      if (bFirst)
-                      {
-                        bFirst = false;
-                      }
-                      else
-                      {
-                        m << ", ";
-                      }
-                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
-                    }
-                  }
-                  if (!admin["backup"].empty())
-                  {
-                    bool bFirst = true;
-                    m << "<br><br>";
-                    m << "<b>Backup Admin(s):</b><br>";
-                    for (auto &ad : admin["backup"])
-                    {
-                      if (bFirst)
-                      {
-                        bFirst = false;
-                      }
-                      else
-                      {
-                        m << ", ";
-                      }
-                      m << "<a href=\"https://" << i->m["server"]->v << "/central/#/Users/" << ad.first << "\">" << ad.second << "</a>";
-                    }
-                  }
-                  m << "<br><br>";
-                  m << "If you have any questions or concerns, please contact your server contacts.";
-                  m << "</div>";
-                  m << "</body></html>";
-                  to.sort();
-                  to.unique();
-                  email(getUserEmail(d), to, s.str(), "", m.str(), e);
-                }
-              }
-              userDeinit(h);
             }
-            userDeinit(f);
+            userDeinit(h);
           }
-          userDeinit(c);
+          userDeinit(f);
         }
-        else
-        {
-          e = "You are not authorized to perform this action.";
-        }
-        userDeinit(a);
+        userDeinit(c);
       }
       else
       {
-        e = "Please provide the server.";
+        e = "You are not authorized to perform this action.";
       }
+      userDeinit(a);
     }
     else
     {
