@@ -41,6 +41,7 @@ export default
       // ]]]
       a: a,
       c: c,
+      bLoadedSurveys: {'Public Surveys': false, 'Your Surveys': false},
       categories: {},
       survey: {questions: []},
       types: []
@@ -271,6 +272,8 @@ export default
             }
           }
           s.u();
+          s.bLoadedSurveys[strType] = true;
+          c.dispatchEvent('loadedSurveys', null);
         }
         else
         {
@@ -290,14 +293,6 @@ export default
         {
           s.types = response.Response;
           s.loadSurveys();
-          if (c.isParam(nav, 'hash'))
-          {
-            let loc = location.hash.split('/');
-            if (loc.length >= 3)
-            {
-              s.getSurvey(loc[1], c.getParam(nav, 'hash'));
-            }
-          }
         }
         else
         {
@@ -312,6 +307,10 @@ export default
       if (c.isValid('Feedback'))
       {
         s.getSurveys('Your Surveys');
+      }
+      else
+      {
+        c.bLoadedSurveys['Your Surveys'] = true;
       }
       s.getSurveys('Public Surveys');
     }
@@ -473,6 +472,17 @@ export default
     {
       s.info.v = null;
       s.init();
+    });
+    c.attachEvent('loadedSurveys', (data) =>
+    {
+      if (s.bLoadedSurveys['Public Surveys'] && s.bLoadedSurveys['Your Surveys'] && c.isParam(nav, 'hash'))
+      {
+        let loc = location.hash.split('/');
+        if (loc.length >= 3)
+        {
+          s.getSurvey(loc[1], c.getParam(nav, 'hash'));
+        }
+      }
     });
     // ]]]
   },
