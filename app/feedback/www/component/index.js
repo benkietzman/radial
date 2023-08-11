@@ -102,7 +102,7 @@ export default
               bUnique = true;
             }
             s.u('loadModalSurvey', true);
-            if (strAction == 'results' || bUnique)
+            if (strAction != 'survey' || bUnique)
             {
               s.survey.info.v = 'Fetching questions...';
               var request = {Interface: 'feedback', 'Function': 'questions', Request: {'survey_id': s.survey.id}};
