@@ -166,6 +166,30 @@ export default
                                     let i = response.Request.i;
                                     s.survey.questions[i].info.v = null;
                                     s.survey.questions[i].results = response.Response;
+                                    if (s.survey.questions[i].type.name != 'text')
+                                    {
+                                      for (let j = 0; j < s.survey.questions[i].results.length; j++)
+                                      {
+                                        let answers = s.survey.questions[i].results[j].answer.split(',');
+                                        s.survey.questions[i].results[j].answer = '';
+                                        for (let k = 0; k < answers.length; k++)
+                                        {
+                                          let bFound = false;
+                                          if (k > 0)
+                                          {
+                                            s.survey.questions[i].results[j].answer += ', ';
+                                          }
+                                          for (let l = 0; !bFound && l < s.survey.questions[i].answers.length; l++)
+                                          {
+                                            if (answers[k] == s.survey.questions[i].answers[l].id)
+                                            {
+                                              bFound = true;
+                                              s.survey.questions[i].results[j].answer += s.survey.questions[i].answers[l].answer;
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
                                     s.u('loadModalSurvey', true);
                                   }
                                   else
@@ -629,16 +653,16 @@ export default
                 {{else}}
                 {{#ifCond ../type.name "==" "checkbox"}}
                 {{#each ../answers}}
-                <label class="checkbox-inline"><input type="checkbox" c-model="survey.questions.[{{@../index}}].answer" value="{{answer}}"{{#if @root.survey.disabled}} disabled{{/if}}> {{answer}}</label>
+                <label class="checkbox-inline"><input type="checkbox" c-model="survey.questions.[{{@../index}}].answer" value="{{id}}"{{#if @root.survey.disabled}} disabled{{/if}}> {{answer}}</label>
                 {{/each}}
                 {{/ifCond}}
                 {{#ifCond ../type.name "==" "radio"}}
                 {{#each ../answers}}
-                <label class="radio-inline"><input type="radio" c-model="survey.questions.[{{@../index}}].answer" value="{{answer}}"{{#if @root.survey.disabled}} disabled{{/if}}> {{answer}}</label>
+                <label class="radio-inline"><input type="radio" c-model="survey.questions.[{{@../index}}].answer" value="{{id}}"{{#if @root.survey.disabled}} disabled{{/if}}> {{answer}}</label>
                 {{/each}}
                 {{/ifCond}}
                 {{#ifCond ../type.name "==" "select"}}
-                <select class="form-control" c-model="survey.questions.[{{@index}}].answer"{{#if @root.survey.disabled}} disabled{{/if}}>{{#each ../answers}}<option value="{{answer}}">{{answer}}</option>{{/each}}</select>
+                <select class="form-control" c-model="survey.questions.[{{@index}}].answer"{{#if @root.survey.disabled}} disabled{{/if}}>{{#each ../answers}}<option value="{{id}}">{{answer}}</option>{{/each}}</select>
                 {{/ifCond}}
                 {{#ifCond ../type.name "==" "text"}}
                 <textarea class="form-control" c-model="survey.questions.[{{@index}}].answer" cols="60" rows="3"{{#if @root.survey.disabled}} disabled{{/if}}></textarea>
