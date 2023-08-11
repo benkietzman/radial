@@ -73,7 +73,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationUsersByApplicationID"] = &Central::applicationUsersByApplicationID;
   m_functions["contactType"] = &Central::contactType;
   m_functions["dependentsByApplicationID"] = &Central::dependentsByApplicationID;
-  m_functions["footer"] = &Central::loginType;
+  m_functions["footer"] = &Central::footer;
   m_functions["isApplicationDeveloper"] = &Central::isApplicationDeveloper;
   m_functions["isServerAdmin"] = &Central::isServerAdmin;
   m_functions["loginType"] = &Central::loginType;

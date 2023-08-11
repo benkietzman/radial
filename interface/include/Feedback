@@ -31,6 +31,7 @@ class Feedback : public Interface
   string m_strServer;
 
   bool answers(radialUser &d, string &e);
+  bool footer(radialUser &d, string &e);
   bool questions(radialUser &d, string &e);
   bool results(radialUser &d, string &e);
   bool resultAdd(radialUser &d, string &e);

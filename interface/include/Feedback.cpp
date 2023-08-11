@@ -23,6 +23,7 @@ namespace radial
 Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "feedback", argc, argv, pCallback)
 {
   m_functions["answers"] = &Feedback::answers;
+  m_functions["footer"] = &Footer::footer;
   m_functions["questions"] = &Feedback::questions;
   m_functions["results"] = &Feedback::results;
   m_functions["resultAdd"] = &Feedback::resultAdd;
@@ -131,6 +132,40 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ footer()
+bool Feedback::footer(radialUser &d, string &e)
+{
+  bool b = true;
+  Json *i = d.p->m["i"], *o;
+
+  d.p->i("o", i);
+  o = d.p->m["o"];
+  if (!exist(i, "year"))
+  {
+    int nYear;
+    stringstream ssYear;
+    ssYear << m_date.getYear(nYear);
+    o->i("year", ssYear.str(), 'n');
+  }
+  if (!empty(i, "userid"))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("userid", i->m["userid"]->v);
+    if (user(a, e) && !empty(a.p->m["o"], "id"))
+    {
+      stringstream ssLink;
+      ssLink << "https://" << m_strServer << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
+      a.p->m["o"]->i("link", ssLink.str());
+      a.p->m["o"]->i("target", "_blank");
+      o->i("engineer", a.p->m["o"]);
+    }
+    userDeinit(a);
+  }
+
+  return b;
 }
 // }}}
 // {{{ questions()
