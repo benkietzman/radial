@@ -512,12 +512,12 @@ export default
     <div class="card-footer">
       <div class="row">
         <div class="col-md-7">
-          <small>survey {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}</small>
+          {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
         </div>
         <div class="col-md-5" style="text-align: right;">
           {{#ifCond @../key "==" "Public Surveys"}}
           {{#if ../../owner}}
-          <small>{{../../owner.first_name}} {{../../owner.last_name}}</small>
+          {{../../owner.first_name}} {{../../owner.last_name}}
           {{/if}}
           {{/ifCond}}
         </div>
