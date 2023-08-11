@@ -512,7 +512,7 @@ export default
     <div class="card-footer">
       <div class="row">
         <div class="col-md-7">
-          survey {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
+          <small>survey {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}</small>
         </div>
         <div class="col-md-5" style="text-align: right;">
           {{#ifCond @../key "==" "Public Surveys"}}
