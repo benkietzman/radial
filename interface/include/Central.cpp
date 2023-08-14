@@ -2912,24 +2912,6 @@ void Central::schedule(string strPrefix)
       }
       if (CTime[3] == 0)
       {
-        struct tm tTime;
-        time(&(CTime[3]));
-        localtime_r(&(CTime[3]), &tTime);
-        if (tTime.tm_wday == 0)
-        {
-          tTime.tm_wday = 7;
-        }
-        if (tTime.tm_wday > 1)
-        {
-          CTime[3] += (8 - tTime.tm_wday) * 86400;
-        }
-        else if (tTime.tm_hour >= 4)
-        {
-          CTime[3] += 604800;
-        }
-        CTime[3] += (4 - tTime.tm_hour) * 3600;
-        CTime[3] -= tTime.tm_min * 60;
-        CTime[3] -= tTime.tm_sec;
         ssMessage.str("");
         ssMessage << strPrefix << "->Interface::cron()";
         if (cron(CTime[3], "0 4 * * 1", strError))
