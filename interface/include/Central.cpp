@@ -2923,7 +2923,7 @@ void Central::schedule(string strPrefix)
         {
           CTime[3] += (8 - tTime.tm_wday) * 86400;
         }
-        else (tTime.tm_hour >= 4)
+        else if (tTime.tm_hour >= 4)
         {
           CTime[3] += 604800;
         }
