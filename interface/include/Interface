@@ -110,7 +110,7 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
-  bool scheduleCron(time_t &CTime, const string strCron, string &strError);
+  bool scheduleCron(time_t &CTime, const string strValue, string &strError);
   bool scheduleParse(const size_t unType, const string strValue, list<int> &value, string &strError);
   bool scheduleParseComma(const size_t unType, const string strValue, list<int> &value, string &strError);
   bool scheduleParseDow(string &strValue, string &strError);

@@ -1793,7 +1793,7 @@ void Interface::process(string strPrefix)
 // }}}
 // {{{ schedule
 // {{{ scheduleCron()
-bool Interface::scheduleCron(time_t &CTime, string strCron, string &strError)
+bool Interface::scheduleCron(time_t &CTime, string strValue, string &strError)
 {
   bool bResult = false;
   list<string> cron;
@@ -1874,7 +1874,7 @@ bool Interface::scheduleCron(time_t &CTime, string strCron, string &strError)
   }
   else
   {
-    strError = "Please provide a list of five values in the cron in the following order:  minute, hour, day of month, month, day of week.";
+    strError = "Please provide a value in the same time format used by cron:  minute hour dom month dow.";
   }
 
   return bResult;
