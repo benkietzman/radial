@@ -2930,6 +2930,11 @@ void Central::schedule(string strPrefix)
         CTime[3] += (10 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
+stringstream ssTemp;
+ssTemp << CTime[3];
+ssMessage.str("");
+ssMessage << strPrefix << ":  WORKLOAD TIME - " << ssTemp.str();
+log(ssMessage.str());
       }
       if (CTime[1] > CTime[3])
       {
