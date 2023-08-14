@@ -2923,11 +2923,11 @@ void Central::schedule(string strPrefix)
         {
           CTime[3] += (8 - tTime.tm_wday) * 86400;
         }
-        else if (tTime.tm_hour >= 10)
+        else if (tTime.tm_hour >= 11)
         {
           CTime[3] += 604800;
         }
-        CTime[3] += (10 - tTime.tm_hour) * 3600;
+        CTime[3] += (11 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
 stringstream ssTemp;
