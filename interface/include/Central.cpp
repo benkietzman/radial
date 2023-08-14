@@ -2923,18 +2923,13 @@ void Central::schedule(string strPrefix)
         {
           CTime[3] += (8 - tTime.tm_wday) * 86400;
         }
-        else if (tTime.tm_hour >= 11)
+        else if (tTime.tm_hour >= 4)
         {
           CTime[3] += 604800;
         }
-        CTime[3] += (11 - tTime.tm_hour) * 3600;
+        CTime[3] += (4 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
-stringstream ssTemp;
-ssTemp << CTime[3];
-ssMessage.str("");
-ssMessage << strPrefix << ":  WORKLOAD TIME - " << ssTemp.str();
-log(ssMessage.str());
       }
       if (CTime[1] > CTime[3])
       {
