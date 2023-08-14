@@ -2932,7 +2932,8 @@ void Central::schedule(string strPrefix)
         CTime[3] -= tTime.tm_sec;
         ssMessage.str("");
         ssMessage << strPrefix << "->Interface::cron()";
-        if (cron(CTime[3], "0 4 * * 1", strError))
+        //if (cron(CTime[3], "0 4 * * 1", strError))
+        if (cron(CTime[3], "54 15 * * 1", strError))
         {
           ssMessage << ":  Workload email scheduled for " << CTime[3] << ".";
         }
