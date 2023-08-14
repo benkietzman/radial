@@ -1791,9 +1791,9 @@ void Interface::process(string strPrefix)
   setShutdown();
 }
 // }}}
-// {{{ schedule
-// {{{ scheduleCron()
-bool Interface::scheduleCron(time_t &CTime, string strValue, string &strError)
+// {{{ cron
+// {{{ cron()
+bool Interface::cron(time_t &CTime, string strValue, string &strError)
 {
   bool bResult = false;
   list<string> cron;
@@ -1815,7 +1815,7 @@ bool Interface::scheduleCron(time_t &CTime, string strValue, string &strError)
     bResult = true;
     for (auto i = cron.begin(); bResult && i != cron.end(); i++)
     {
-      if (!scheduleParse(unIndex, (*i), value[unIndex], strError))
+      if (!cronParse(unIndex, (*i), value[unIndex], strError))
       {
         bResult = false;
       }
@@ -1880,8 +1880,8 @@ bool Interface::scheduleCron(time_t &CTime, string strValue, string &strError)
   return bResult;
 }
 // }}}
-// {{{ scheduleParse()
-bool Interface::scheduleParse(const size_t unType, const string strValue, list<int> &value, string &strError)
+// {{{ cronParse()
+bool Interface::cronParse(const size_t unType, const string strValue, list<int> &value, string &strError)
 {
   bool bResult = false;
 
@@ -1890,7 +1890,7 @@ bool Interface::scheduleParse(const size_t unType, const string strValue, list<i
   {
     if (!strValue.empty())
     {
-      if (scheduleParseComma(unType, strValue, value, strError))
+      if (cronParseComma(unType, strValue, value, strError))
       {
         bResult = true;
       }
@@ -1908,8 +1908,8 @@ bool Interface::scheduleParse(const size_t unType, const string strValue, list<i
   return bResult;
 }
 // }}}
-// {{{ scheduleParseComma()
-bool Interface::scheduleParseComma(const size_t unType, const string strValue, list<int> &value, string &strError)
+// {{{ cronParseComma()
+bool Interface::cronParseComma(const size_t unType, const string strValue, list<int> &value, string &strError)
 {
   bool bResult = false;
 
@@ -1923,7 +1923,7 @@ bool Interface::scheduleParseComma(const size_t unType, const string strValue, l
       m_manip.trim(strItem, strItem);
       if (!strItem.empty())
       {
-        if (!scheduleParseHyphen(unType, strItem, value, strError))
+        if (!cronParseHyphen(unType, strItem, value, strError))
         {
           bResult = false;
         }
@@ -1943,8 +1943,8 @@ bool Interface::scheduleParseComma(const size_t unType, const string strValue, l
   return bResult;
 }
 // }}}
-// {{{ scheduleParseDow()
-bool Interface::scheduleParseDow(string &strValue, string &strError)
+// {{{ cronParseDow()
+bool Interface::cronParseDow(string &strValue, string &strError)
 {
   bool bResult = true;
 
@@ -2002,8 +2002,8 @@ bool Interface::scheduleParseDow(string &strValue, string &strError)
   return bResult;
 }
 // }}}
-// {{{ scheduleParseHyphen()
-bool Interface::scheduleParseHyphen(const size_t unType, string strValue, list<int> &value, string &strError)
+// {{{ cronParseHyphen()
+bool Interface::cronParseHyphen(const size_t unType, string strValue, list<int> &value, string &strError)
 {
   bool bResult = false;
 
@@ -2040,7 +2040,7 @@ bool Interface::scheduleParseHyphen(const size_t unType, string strValue, list<i
           case 4: strItem = "6"; break;
         }
       }
-      if (scheduleParseValue(unType, strValue, nValue, strError) && (strItem.empty() || scheduleParseValue(unType, strItem, nItem, strError)))
+      if (cronParseValue(unType, strValue, nValue, strError) && (strItem.empty() || cronParseValue(unType, strItem, nItem, strError)))
       {
         if (nItem == -1 || nValue <= nItem)
         {
@@ -2069,8 +2069,8 @@ bool Interface::scheduleParseHyphen(const size_t unType, string strValue, list<i
   return bResult;
 }
 // }}}
-// {{{ scheduleParseMonth()
-bool Interface::scheduleParseMonth(string &strValue, string &strError)
+// {{{ cronParseMonth()
+bool Interface::cronParseMonth(string &strValue, string &strError)
 {
   bool bResult = true;
 
@@ -2144,14 +2144,14 @@ bool Interface::scheduleParseMonth(string &strValue, string &strError)
   return bResult;
 }
 // }}}
-// {{{ scheduleParseValue()
-bool Interface::scheduleParseValue(const size_t unType, string strValue, int &nValue, string &strError)
+// {{{ cronParseValue()
+bool Interface::cronParseValue(const size_t unType, string strValue, int &nValue, string &strError)
 {
   bool bResult = false;
 
   if (!strValue.empty())
   {
-    if ((unType != 3 || scheduleParseMonth(strValue, strError)) && (unType != 4 || scheduleParseDow(strValue, strError)))
+    if ((unType != 3 || cronParseMonth(strValue, strError)) && (unType != 4 || cronParseDow(strValue, strError)))
     {
       if (m_manip.isNumeric(strValue))
       {

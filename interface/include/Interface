@@ -58,6 +58,13 @@ class Interface : public Base
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
+  bool cron(time_t &CTime, const string strValue, string &strError);
+  bool cronParse(const size_t unType, const string strValue, list<int> &value, string &strError);
+  bool cronParseComma(const size_t unType, const string strValue, list<int> &value, string &strError);
+  bool cronParseDow(string &strValue, string &strError);
+  bool cronParseHyphen(const size_t unType, string strValue, list<int> &value, string &strError);
+  bool cronParseMonth(string &strValue, string &strError);
+  bool cronParseValue(const size_t unType, string strValue, int &nValue, string &strError);
   bool db(const string f, Json *d, string &e);
   bool db(const string f, Json *d, string &q, string &e);
   bool db(const string f, Json *d, string &id, string &q, string &e);
@@ -110,13 +117,6 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
-  bool scheduleCron(time_t &CTime, const string strValue, string &strError);
-  bool scheduleParse(const size_t unType, const string strValue, list<int> &value, string &strError);
-  bool scheduleParseComma(const size_t unType, const string strValue, list<int> &value, string &strError);
-  bool scheduleParseDow(string &strValue, string &strError);
-  bool scheduleParseHyphen(const size_t unType, string strValue, list<int> &value, string &strError);
-  bool scheduleParseMonth(string &strValue, string &strError);
-  bool scheduleParseValue(const size_t unType, string strValue, int &nValue, string &strError);
   bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
   bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
   bool storageRemove(const list<string> keys, string &strError);
