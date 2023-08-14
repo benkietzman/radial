@@ -2923,11 +2923,11 @@ void Central::schedule(string strPrefix)
         {
           CTime[3] += (8 - tTime.tm_wday) * 86400;
         }
-        else if (tTime.tm_hour >= 4)
+        else if (tTime.tm_hour >= 12)
         {
           CTime[3] += 604800;
         }
-        CTime[3] += (4 - tTime.tm_hour) * 3600;
+        CTime[3] += (12 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
       }
@@ -3159,6 +3159,7 @@ void Central::schedule(string strPrefix)
               ssHtml << "</p>";
               ssHtml << "</body>";
               ssHtml << "</html>";
+chat("#radial", "Sent email.");
               email(m_strEmail, to, cc, bcc, strSubject, ssText.str(), ssHtml.str(), file, strError);
             }
             else
