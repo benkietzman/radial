@@ -2927,6 +2927,7 @@ void Central::schedule(string strPrefix)
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
       }
+      /*
       if (CTime[1] > CTime[3])
       {
         map<string, list<map<string, string> > > people;
@@ -3173,6 +3174,7 @@ void Central::schedule(string strPrefix)
           dbfree(getPerson);
         }
       }
+      */
     }
     msleep(2000);
   }
