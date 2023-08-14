@@ -2921,13 +2921,16 @@ void Central::schedule(string strPrefix)
         }
         if (tTime.tm_wday > 1)
         {
-          CTime[3] += (8 - tTime.tm_wday) * 84600;
+          CTime[3] += (8 - tTime.tm_wday) * 86400;
+        }
+        else (tTime.tm_hour >= 4)
+        {
+          CTime[3] += 604800;
         }
         CTime[3] += (4 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
       }
-      /*
       if (CTime[1] > CTime[3])
       {
         map<string, list<map<string, string> > > people;
@@ -3174,7 +3177,6 @@ void Central::schedule(string strPrefix)
           dbfree(getPerson);
         }
       }
-      */
     }
     msleep(2000);
   }
