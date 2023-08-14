@@ -1865,6 +1865,11 @@ bool Interface::scheduleCron(time_t &CTime, string strCron, string &strError)
           }
         }
       }
+      if (!bFound)
+      {
+        bResult = false;
+        strError = "Failed to schedule cron within a one year span.";
+      }
     }
   }
   else
