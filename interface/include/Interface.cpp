@@ -1791,6 +1791,393 @@ void Interface::process(string strPrefix)
   setShutdown();
 }
 // }}}
+// {{{ schedule
+// {{{ scheduleCron()
+bool Interface::scheduleCron(time_t &CTime, string strCron, string &strError)
+{
+  bool bResult = false;
+  list<string> cron;
+  string strItem;
+  stringstream ssCron(strCron);
+
+  while (getline(ssCron, strItem, ' '))
+  {
+    m_manip.trim(strItem, strItem);
+    if (!strItem.empty())
+    {
+      cron.push_back(strItem);
+    }
+  }
+  if (cron.size() == 5)
+  {
+    map<size_t, list<int> > value;
+    size_t unIndex = 0;
+    bResult = true;
+    for (auto i = cron.begin(); bResult && i != cron.end(); i++)
+    {
+      if (!scheduleParse(unIndex, (*i), value[unIndex], strError))
+      {
+        bResult = false;
+      }
+      unIndex++;
+    }
+    if (bResult)
+    {
+      bool bFound = false;
+      struct tm tTime;
+      time_t CMaxTime;
+      time(&CTime);
+      CTime += 60 - (CTime % 60);
+      CMaxTime = CTime + 31536000;
+      for (time_t i = CTime; !bFound && i < CMaxTime; i += 60)
+      {
+        localtime_r(&i, &tTime);
+        for (auto min = value[0].begin(); !bFound && min != value[0].end(); min++)
+        {
+          if (tTime.tm_min == (*min))
+          {
+            for (auto hour = value[1].begin(); !bFound && hour != value[1].end(); hour++)
+            {
+              if (tTime.tm_hour == (*hour))
+              {
+                for (auto dom = value[2].begin(); !bFound && dom != value[2].end(); dom++)
+                {
+                  if (tTime.tm_mday == (*dom))
+                  {
+                    for (auto month = value[3].begin(); !bFound && month != value[3].end(); month++)
+                    {
+                      if ((tTime.tm_mon + 1) == (*month))
+                      {
+                        for (auto dow = value[4].begin(); !bFound && dow != value[4].end(); dow++)
+                        {
+                          if (tTime.tm_wday == (*dow))
+                          {
+                            bFound = true;
+                            CTime = i;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    strError = "Please provide a list of five values in the cron in the following order:  minute, hour, day of month, month, day of week.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParse()
+bool Interface::scheduleParse(const size_t unType, const string strValue, list<int> &value, string &strError)
+{
+  bool bResult = false;
+
+  value.clear();
+  if (unType <= 4)
+  {
+    if (!strValue.empty())
+    {
+      if (scheduleParseComma(unType, strValue, value, strError))
+      {
+        bResult = true;
+      }
+    }
+    else
+    {
+      strError = "Please provide the value.";
+    }
+  }
+  else
+  {
+    strError = "Please provide a valid type:  0 (minute), 1 (hour), 2 (dom), 3 (month), 4 (dow).";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParseComma()
+bool Interface::scheduleParseComma(const size_t unType, const string strValue, list<int> &value, string &strError)
+{
+  bool bResult = false;
+
+  if (!strValue.empty())
+  {
+    string strItem;
+    stringstream ssValue(strValue);
+    bResult = true;
+    while (bResult && getline(ssValue, strItem, ','))
+    {
+      m_manip.trim(strItem, strItem);
+      if (!strItem.empty())
+      {
+        if (!scheduleParseHyphen(unType, strItem, value, strError))
+        {
+          bResult = false;
+        }
+      }
+      else
+      {
+        bResult = false;
+        strError = "Please provide the value.";
+      }
+    }
+  }
+  else
+  {
+    strError = "Please provide the value.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParseDow()
+bool Interface::scheduleParseDow(string &strValue, string &strError)
+{
+  bool bResult = true;
+
+  if (!strValue.empty())
+  {
+    if (!m_manip.isNumeric(strValue))
+    {
+      string strLower;
+      m_manip.toLower(strLower, strValue);
+      if (strLower == "sun" || strLower == "sunday")
+      {
+        strValue = "0";
+      }
+      else if (strLower == "mon" || strLower == "monday")
+      {
+        strValue = "1";
+      }
+      else if (strLower == "tue" || strLower == "tuesday")
+      {
+        strValue = "2";
+      }
+      else if (strLower == "wed" || strLower == "wednesday")
+      {
+        strValue = "3";
+      }
+      else if (strLower == "thu" || strLower == "thursday")
+      {
+        strValue = "4";
+      }
+      else if (strLower == "fri" || strLower == "friday")
+      {
+        strValue = "5";
+      }
+      else if (strLower == "sat" || strLower == "saturday")
+      {
+        strValue = "6";
+      }
+      else
+      {
+        bResult = false;
+        strError = "Please provide a valid day of the week.";
+      }
+    }
+    if (strValue == "7")
+    {
+      strValue = "0";
+    }
+  }
+  else
+  {
+    bResult = false;
+    strError = "Please provide a day of the week.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParseHyphen()
+bool Interface::scheduleParseHyphen(const size_t unType, string strValue, list<int> &value, string &strError)
+{
+  bool bResult = false;
+
+  if (!strValue.empty())
+  {
+    size_t unPosition;
+    string strItem;
+    if ((unPosition = strValue.find("-")) != string::npos)
+    {
+      strItem = strValue.substr((unPosition + 1), (strValue.size() - (unPosition + 1)));
+      strValue.erase(unPosition);
+    }
+    m_manip.trim(strValue, strValue);
+    m_manip.trim(strItem, strItem);
+    if (!strValue.empty())
+    {
+      int nValue, nItem = -1;
+      if (strValue == "*")
+      {
+        if (strItem.empty())
+        {
+          strItem = "*";
+        }
+        strValue = ((unType == 0 || unType == 1 || unType == 4)?"0":"1");
+      }
+      if (strItem == "*")
+      {
+        switch (unType)
+        {
+          case 0: strItem = "59"; break;
+          case 1: strItem = "23"; break;
+          case 2: strItem = "31"; break;
+          case 3: strItem = "12"; break;
+          case 4: strItem = "6"; break;
+        }
+      }
+      if (scheduleParseValue(unType, strValue, nValue, strError) && (strItem.empty() || scheduleParseValue(unType, strItem, nItem, strError)))
+      {
+        if (nItem == -1 || nValue <= nItem)
+        {
+          bResult = true;
+          if (nItem == -1)
+          {
+            nItem = nValue;
+          }
+          for (int i = nValue; i <= nItem; i++)
+          {
+            value.push_back(i);
+          }
+        }
+      }
+    }
+    else
+    {
+      strError = "Please provide a value.";
+    }
+  }
+  else
+  {
+    strError = "Please provide a value.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParseMonth()
+bool Interface::scheduleParseMonth(string &strValue, string &strError)
+{
+  bool bResult = true;
+
+  if (!strValue.empty())
+  {
+    if (!m_manip.isNumeric(strValue))
+    {
+      string strLower;
+      m_manip.toLower(strLower, strValue);
+      if (strLower == "jan" || strLower == "january")
+      {
+        strValue = "1";
+      }
+      else if (strLower == "feb" || strLower == "february")
+      {
+        strValue = "2";
+      }
+      else if (strLower == "mar" || strLower == "march")
+      {
+        strValue = "3";
+      }
+      else if (strLower == "apr" || strLower == "april")
+      {
+        strValue = "4";
+      }
+      else if (strLower == "may")
+      {
+        strValue = "5";
+      }
+      else if (strLower == "jun" || strLower == "june")
+      {
+        strValue = "6";
+      }
+      else if (strLower == "jul" || strLower == "july")
+      {
+        strValue = "7";
+      }
+      else if (strLower == "aug" || strLower == "august")
+      {
+        strValue = "8";
+      }
+      else if (strLower == "sep" || strLower == "september")
+      {
+        strValue = "9";
+      }
+      else if (strLower == "oct" || strLower == "october")
+      {
+        strValue = "10";
+      }
+      else if (strLower == "nov" || strLower == "november")
+      {
+        strValue = "11";
+      }
+      else if (strLower == "dec" || strLower == "december")
+      {
+        strValue = "12";
+      }
+      else
+      {
+        bResult = false;
+        strError = "Please provide a valid month.";
+      }
+    }
+  }
+  else
+  {
+    bResult = false;
+    strError = "Please provide a day of the week.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ scheduleParseValue()
+bool Interface::scheduleParseValue(const size_t unType, string strValue, int &nValue, string &strError)
+{
+  bool bResult = false;
+
+  if (!strValue.empty())
+  {
+    if ((unType != 3 || scheduleParseMonth(strValue, strError)) && (unType != 4 || scheduleParseDow(strValue, strError)))
+    {
+      if (m_manip.isNumeric(strValue))
+      {
+        int nItem;
+        stringstream ssItem(strValue);
+        ssItem >> nItem;
+        if ((unType == 0 && nItem >= 0 && nItem <= 59) || (unType == 1 && nItem >= 0 && nItem <= 23) || (unType == 2 && nItem >= 1 && nItem <= 31) || (unType == 3 && nItem >= 1 && nItem <= 12) || (unType == 4 && nItem >= 0 && nItem <= 6))
+        {
+          bResult = true;
+          nValue = nItem;
+        }
+        else
+        {
+          strError = "Please provide a valid numeric value.";
+        }
+      }
+      else
+      {
+        strError = "Please provide a numeric value.";
+      }
+    }
+  }
+  else
+  {
+    strError = "Please provide a value.";
+  }
+
+  return bResult;
+}
+// }}}
+// }}}
 // {{{ setAutoMode()
 void Interface::setAutoMode(void (*pCallback)(string, const string, const string))
 {

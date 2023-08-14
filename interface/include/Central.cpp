@@ -2930,6 +2930,17 @@ void Central::schedule(string strPrefix)
         CTime[3] += (4 - tTime.tm_hour) * 3600;
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->Interface::schedule()";
+        if (scheduleCron(CTime[3], "0 4 * * 1", strError))
+        {
+          ssMessage << ":  Workload email scheduled for " << CTime[3] << ".";
+        }
+        else
+        {
+          ssMessage << " error:  " << strError;
+        }
+        chat("#radial", ssMessage.str());
       }
       if (CTime[1] > CTime[3])
       {
