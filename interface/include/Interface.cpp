@@ -1798,7 +1798,7 @@ bool Interface::scheduleCron(time_t &CTime, string strValue, string &strError)
   bool bResult = false;
   list<string> cron;
   string strItem;
-  stringstream ssCron(strCron);
+  stringstream ssCron(strValue);
 
   while (getline(ssCron, strItem, ' '))
   {
