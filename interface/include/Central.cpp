@@ -2931,7 +2931,7 @@ void Central::schedule(string strPrefix)
         CTime[3] -= tTime.tm_min * 60;
         CTime[3] -= tTime.tm_sec;
         ssMessage.str("");
-        ssMessage << strPrefix << "->Interface::schedule()";
+        ssMessage << strPrefix << "->Interface::scheduleCron()";
         //if (scheduleCron(CTime[3], "0 4 * * 1", strError))
         if (scheduleCron(CTime[3], "45 15 * * 1", strError))
         {
