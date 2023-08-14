@@ -195,36 +195,28 @@ export default
       <tr>
         <td valign="top"><a href="#/Servers/{{id}}">{{name}}</a></td>
         <td valign="top">
-          {{#if sysInfo.NumberOfProcesses}}
           {{numberShort sysInfo.NumberOfProcesses 0}}
-          {{/if}}
         </td>
         <td valign="top">
-          {{#if sysInfo.CpuUsage}}
           <div class="progress" style="width: 100px;">
             <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.CpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.CpuUsage 0}}%;">
               {{numberShort sysInfo.CpuUsage 0}}%
             </div>
           </div>
-          {{/if}}
         </td>
         <td valign="top">
-          {{#if sysInfo.MainUsage}}
           <div class="progress" style="width: 100px;">
             <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.MainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.MainUsage 0}}%;">
               {{numberShort sysInfo.MainUsage 0}}%
             </div>
           </div>
-          {{/if}}
         </td>
         <td valign="top">
-          {{#if sysInfo.SwapUsage}}
           <div class="progress" style="width: 100px;">
             <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.SwapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.SwapUsage 0}}%;">
               {{numberShort sysInfo.SwapUsage 0}}%
             </div>
           </div>
-          {{/if}}
         </td>
         <td valign="top" class="text-danger">
           {{#if alarms}}
