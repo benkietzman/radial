@@ -509,7 +509,7 @@ export default
             }
           });
         }
-        c.addInterval('Servers', 'sysInfoStatus', s.sysInfoStatus, 30000);
+        c.addInterval('Servers', 'sysInfoStatus', s.sysInfoStatus, 60000);
         s.sysInfoStatus();
       }
       // ]]]

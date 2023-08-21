@@ -40,7 +40,7 @@ export default
         {
           s.servers = response.Response;
           s.u();
-          c.addInterval('ServersStatus', 'sysInfo', s.sysInfo, 30000);
+          c.addInterval('ServersStatus', 'sysInfo', s.sysInfo, 60000);
           s.sysInfo();
         }
         else
