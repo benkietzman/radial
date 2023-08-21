@@ -435,7 +435,6 @@ export default
                   }
                 });
               }
-              s.sysInfoStatus();
             }
             else
             {
@@ -938,6 +937,8 @@ export default
         s.application.dependable = a.setNoYes(s.application.dependable);
         s.application.secure_port = a.setNoYes(s.application.secure_port);
         s.application.wiki = a.setNoYes(s.application.wiki);
+        c.addInterval('Applications', 'sysInfoStatus', s.sysInfoStatus, 60000);
+        s.sysInfoStatus();
       }
       // ]]]
       // [[[ Accounts

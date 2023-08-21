@@ -248,7 +248,6 @@ export default
                   s.message.v = error.message;
                 }
               });
-              s.sysInfoStatus();
             }
             else
             {
@@ -510,6 +509,8 @@ export default
             }
           });
         }
+        c.addInterval('Servers', 'sysInfoStatus', s.sysInfoStatus, 30000);
+        s.sysInfoStatus();
       }
       // ]]]
       // [[[ Applications
