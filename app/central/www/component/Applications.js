@@ -579,12 +579,7 @@ export default
       {
         s.modalServer.details[nIndex] = c.simplify(s.modalServer.details[nIndex]);
       }
-      s.u();
-      let e = document.querySelector('div.modal-backdrop');
-      e.parentNode.removeChild(e);
-      document.querySelector('body').style.overflow = 'auto';
-      let modal = new bootstrap.Modal(document.getElementById('serverModal'));
-      modal.show();
+      c.loadModal('Applications', 'serverModal', true);
     };
     // ]]]
     // [[[ preLoad()
@@ -873,12 +868,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.modalServer.details = response.Response;
-          s.u();
-          let e = document.querySelector('div.modal-backdrop');
-          e.parentNode.removeChild(e);
-          document.querySelector('body').style.overflow = 'auto';
-          let modal = new bootstrap.Modal(document.getElementById('serverModal'));
-          modal.show();
+          c.loadModal('Applications', 'serverModal', true);
         }
         else
         {

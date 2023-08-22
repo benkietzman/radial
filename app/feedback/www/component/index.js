@@ -16,27 +16,9 @@ export default
     let s = c.scope('index',
     {
       // [[[ u()
-      u: (strModal, bShow) =>
+      u: () =>
       {
         c.update('index');
-        if (strModal)
-        {
-          let e = document.querySelector('div.modal-backdrop');
-          if (e)
-          {
-            e.parentNode.removeChild(e);
-            document.querySelector('body').style.overflow = 'auto';
-          }
-          let modal = new bootstrap.Modal(document.getElementById(strModal));
-          if (bShow)
-          {
-            modal.show();
-          }
-          else
-          {
-            modal.hide();
-          }
-        }
       },
       // ]]]
       a: a,
@@ -52,7 +34,7 @@ export default
     {
       let answer = {nIndex: s.survey.questions[nQ].answers.length};
       s.survey.questions[nQ].answers.push(answer);
-      s.u('loadModalSurvey', true);
+      c.loadModal('index', 'loadModalSurvey', true);
     };
     // ]]]
     // [[[ addQuestion()
@@ -60,7 +42,7 @@ export default
     {
       let question = {nIndex: s.survey.questions.length, type: s.types[2], required: 0, answers: []};
       s.survey.questions.push(question);
-      s.u('loadModalSurvey', true);
+      c.loadModal('index', 'loadModalSurvey', true);
     };
     // ]]]
     // [[[ getSurvey()
@@ -69,7 +51,7 @@ export default
       s.survey = {action: strAction, title: null, info: null, error: null, 'public': 0, anonymous: 0, unique: 0, restrict: 0, questions: [], disabled: true};
       if (strHash != null)
       {
-        s.u('loadModalSurvey', true);
+        c.loadModal('index', 'loadModalSurvey', true);
         s.survey.info.v = 'Fetching survey...';
         let request = {Interface: 'feedback', 'Function': 'survey', Request: {action: strAction, hash: strHash}};
         c.wsRequest('radial', request).then((response) =>
@@ -102,7 +84,7 @@ export default
             {
               bUnique = true;
             }
-            s.u('loadModalSurvey', true);
+            c.loadModal('index', 'loadModalSurvey', true);
             if (strAction != 'survey' || bUnique)
             {
               s.survey.info.v = 'Fetching questions...';
@@ -117,7 +99,7 @@ export default
                   s.survey.questions = response.Response;
                   if (s.survey.questions.length > 0)
                   {
-                    s.u('loadModalSurvey', true);
+                    c.loadModal('index', 'loadModalSurvey', true);
                     for (let i = 0; i < s.survey.questions.length; i++)
                     {
                       s.survey.questions[i].nIndex = i;
@@ -156,7 +138,7 @@ export default
                               s.survey.disabled = ((++s.survey.nQuestionCounter < s.survey.questions.length || s.survey.action == 'results')?true:false);
                               if (s.survey.action == 'results')
                               {
-                                s.u('loadModalSurvey', true);
+                                c.loadModal('index', 'loadModalSurvey', true);
                                 s.survey.questions[i].info.v = 'Fetching results...';
                                 let request = {Interface: 'feedback', 'Function': 'results', Request: {i: i, 'survey_id': s.survey.id, 'question_id': s.survey.questions[i].id, type: s.survey.questions[i].type, answers: s.survey.questions[i].answers}};
                                 c.wsRequest('radial', request).then((response) =>
@@ -191,7 +173,7 @@ export default
                                         }
                                       }
                                     }
-                                    s.u('loadModalSurvey', true);
+                                    c.loadModal('index', 'loadModalSurvey', true);
                                   }
                                   else
                                   {
@@ -199,14 +181,14 @@ export default
                                   }
                                 });
                               }
-                              s.u('loadModalSurvey', true);
+                              c.loadModal('index', 'loadModalSurvey', true);
                             }
                             else
                             {
                               s.survey.error.v = error.message;
                             }
                           });
-                          s.u('loadModalSurvey', true);
+                          c.loadModal('index', 'loadModalSurvey', true);
                         }
                         else
                         {
@@ -219,7 +201,7 @@ export default
                   {
                     s.survey.disabled = false;
                   }
-                  s.u('loadModalSurvey', true);
+                  c.loadModal('index', 'loadModalSurvey', true);
                 }
                 else
                 {
@@ -231,7 +213,7 @@ export default
             {
               s.survey.error.v = 'You cannot submit feedback more than once for this survey.';
             }
-            s.u('loadModalSurvey', true);
+            c.loadModal('index', 'loadModalSurvey', true);
           }
           else
           {
@@ -243,7 +225,7 @@ export default
       {
         s.survey.anonymous = 1;
         s.survey.disabled = false;
-        s.u('loadModalSurvey', true);
+        c.loadModal('index', 'loadModalSurvey', true);
       }
     };
     // ]]]
@@ -323,7 +305,7 @@ export default
       {
         s.survey.questions[nQ].answers[i].nIndex = i;
       }
-      s.u('loadModalSurvey', true);
+      c.loadModal('index', 'loadModalSurvey', true);
     };
     // ]]]
     // [[[ removeQuestion()
@@ -334,7 +316,7 @@ export default
       {
         s.survey.questions[i].nIndex = i;
       }
-      s.u('loadModalSurvey', true);
+      c.loadModal('index', 'loadModalSurvey', true);
     };
     // ]]]
     // [[[ resultAdd()
@@ -343,7 +325,7 @@ export default
       if (c.isDefined(s.survey.questions) && c.isArray(s.survey.questions))
       {
         s.survey.disabled = true;
-        s.u('loadModalSurvey', true);
+        c.loadModal('index', 'loadModalSurvey', true);
         s.survey.error.v = null;
         s.survey.info.v = 'Submitting feedback...';
         let request = {Interface: 'feedback', 'Function': 'resultAdd', Request: {survey: c.simplify(s.survey)}};
@@ -365,13 +347,13 @@ export default
               c.setCookie('fb_unique', cookies.join(','));
             }
             alert("Feedback has been submitted.");
-            s.u('loadModalSurvey', false);
+            c.loadModal('index', 'loadModalSurvey', false);
           }
           else
           {
             s.survey.error.v = error.message;
             s.survey.disabled = false;
-            s.u('loadModalSurvey', true);
+            c.loadModal('index', 'loadModalSurvey', true);
           }
         });
       }
@@ -395,7 +377,7 @@ export default
     s.surveyEdit = () =>
     {
       s.survey.disabled = true;
-      s.u('loadModalSurvey', true);
+      c.loadModal('index', 'loadModalSurvey', true);
       s.survey.error.v = null;
       s.survey.info.v = 'Saving survey...';
       if (c.isDefined(s.survey.questions) && c.isArray(s.survey.questions))
@@ -419,7 +401,7 @@ export default
             else
             {
               alert("Survey has been saved.");
-              s.u('loadModalSurvey', false);
+              c.loadModal('index', 'loadModalSurvey', false);
             }
           }
           else
@@ -427,7 +409,7 @@ export default
             s.survey.error.v = error.message;
             s.survey.disabled = false;
           }
-          s.u('loadModalSurvey', true);
+          c.loadModal('index', 'loadModalSurvey', true);
         });
       }
       else
