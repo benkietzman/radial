@@ -2385,7 +2385,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
   if (!empty(ptJson, "Function"))
   {
     bool bInvalid = true;
-    string strFunction = ptJson->m["Function"]->v, strJwt;
+    string strFunction = ptJson->m["Function"]->v;
     radialUser d;
     userInit(ptJson, d);
     if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, d, strError, bInvalid))
@@ -2503,25 +2503,6 @@ bool Central::dbu(const string strQuery, string &e)
 bool Central::dbu(const string strQuery, string &strID, string &e)
 {
   return dbupdate("central", strQuery, strID, e);
-}
-// }}}
-// {{{ dep()
-bool Central::dep(const list<string> fs, Json *i, string &e)
-{
-  bool bResult = true;
-  stringstream es;
-
-  for (auto fi = fs.begin(); bResult && fi != fs.end(); fi++)
-  {
-    if (!exist(i, *fi) || empty(i, *fi))
-    {
-      bResult = false;
-      es << "Please provide the " << *fi;
-      e = es.str();
-    }
-  }
-
-  return bResult;
 }
 // }}}
 // {{{ dependentsByApplicationID()

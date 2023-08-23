@@ -86,7 +86,6 @@ class Db : public Interface
   list<map<string, string> > *dbq(const string d, stringstream &qs, string &q, const list<string> k, string &e);
   bool dbu(const string d, stringstream &qs, string &q, string &e);
   bool dbu(const string d, stringstream &qs, string &q, string &id, string &e);
-  bool dep(const list<string> fs, Json *i, string &e);
   string ia(const list<string> ks, Json *i);
   string ia(const list<string> ks, Json *i, bool &f);
   string ia(const string k, Json *i);

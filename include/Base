@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <bzlib.h>
 #include <cerrno>
+#include <cmath>
 #include <cstring>
 #include <deque>
 #include <fstream>
@@ -148,6 +149,7 @@ class Base
   public:
   Base(int argc, char **argv);
   ~Base();
+  bool dep(const list<string> fs, Json *i, string &e);
   bool empty(Json *ptJson, const string strField);
   string esc(const string strValue);
   bool exist(Json *ptJson, const string strField);

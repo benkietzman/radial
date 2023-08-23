@@ -79,7 +79,6 @@ class Central : public Interface
   list<map<string, string> > *dbq(const string strQuery, string &e);
   bool dbu(const string strQuery, string &e);
   bool dbu(const string strQuery, string &strID, string &e);
-  bool dep(const list<string> fs, Json *i, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
   bool footer(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);

@@ -157,6 +157,25 @@ Base::~Base()
   }
 }
 // }}}
+// {{{ dep()
+bool Base::dep(const list<string> fs, Json *i, string &e)
+{
+  bool bResult = true;
+  stringstream es;
+
+  for (auto fi = fs.begin(); bResult && fi != fs.end(); fi++)
+  {
+    if (!exist(i, *fi) || empty(i, *fi))
+    {
+      bResult = false;
+      es << "Please provide the " << *fi;
+      e = es.str();
+    }
+  }
+
+  return bResult;
+}
+// }}}
 // {{{ empty()
 bool Base::empty(Json *ptJson, const string strField)
 {
