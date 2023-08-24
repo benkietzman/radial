@@ -168,7 +168,7 @@ bool Base::dep(const list<string> fs, Json *i, string &e)
     if (!exist(i, *fi) || empty(i, *fi))
     {
       bResult = false;
-      es << "Please provide the " << *fi;
+      es << "Please provide the " << *fi << ".";
       e = es.str();
     }
   }
