@@ -738,7 +738,7 @@ bool Central::applicationInventoriesByApplicationID(radialUser &d, string &e)
           radialUser a;
           userInit(d, a);
           a.p->m["i"]->i("id", j->m["inventory_id"]->v);
-          if (inventories(a, e))
+          if (inventory(a, e))
           {
             j->i("inventory", a.p->m["o"]);
           }
