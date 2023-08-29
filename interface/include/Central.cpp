@@ -732,7 +732,20 @@ bool Central::applicationInventoriesByApplicationID(radialUser &d, string &e)
       b = true;
       for (auto &r : rs)
       {
-        o->pb(r);
+        Json *j = new Json(r);
+        if (!empty(j, "inventory_id"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", j->m["inventory_id"]->v);
+          if (inventories(a, e))
+          {
+            j->i("inventory", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
+        o->pb(j);
+        delete j;
       }
     }
   }
@@ -753,8 +766,21 @@ bool Central::applicationInventory(radialUser &d, string &e)
     {
       if (!r.empty())
       {
+        Json *j = new Json(r);
         b = true;
-        d.p->i("o", r);
+        if (!empty(j, "inventory_id"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", j->m["inventory_id"]->v);
+          if (inventories(a, e))
+          {
+            j->i("inventory", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
+        d.p->i("o", j);
+        delete j;
       }
       else
       {
