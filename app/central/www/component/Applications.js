@@ -108,6 +108,25 @@ export default
       });
     };
     // ]]]
+    // [[[ addInventory()
+    s.addInventory = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'applicationInventoryAdd', Request: c.simplify(s.inventory)};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.application.inventories = null;
+          s.showForm('Inventories');
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
     // [[[ addIssue()
     s.addIssue = () =>
     {
@@ -259,6 +278,25 @@ export default
       });
     };
     // ]]]
+    // [[[ editInventory()
+    s.editInventory = (nIndex) =>
+    {
+      let request = {Interface: 'central', 'Function': 'applicationInventoryEdit', Request: c.simplify(s.application.inventories[nIndex])};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.application.inventories = null;
+          s.showForm('Inventories');
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
     // [[[ editIssue()
     s.editIssue = (bOpen) =>
     {
@@ -355,16 +393,17 @@ export default
       {
         s.application.forms =
         {
-          General:  {value: 'General',  active: null},
-          Contacts: {value: 'Contacts', active: null},
-          Depend:   {value: 'Depend',   active: null},
-          Issues:   {value: 'Issues',   active: null},
-          Servers:  {value: 'Servers',  active: null}
+          General:   {value: 'General',   active: null},
+          Contacts:  {value: 'Contacts',  active: null},
+          Depend:    {value: 'Depend',    active: null},
+          Inventory: {value: 'Inventory', active: null},
+          Issues:    {value: 'Issues',    active: null},
+          Servers:   {value: 'Servers',   active: null}
         };
       }
       if (!c.isDefined(s.application.forms_order))
       {
-        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Issues', 'Servers'];
+        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Inventory', 'Issues', 'Servers'];
       }
     };
     // ]]]
@@ -556,6 +595,17 @@ export default
       if (!bEdit)
       {
         s.application.contacts[nIndex] = c.simplify(s.application.contacts[nIndex]);
+      }
+      s.u();
+    };
+    // ]]]
+    // [[[ preEditInventory()
+    s.preEditInventory = (nIndex, bEdit) =>
+    {
+      s.application.inventories[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application.inventories[nIndex] = c.simplify(s.application.inventories[nIndex]);
       }
       s.u();
     };
@@ -766,6 +816,28 @@ export default
             s.application.depends  = null;
             s.application.dependents  = null;
             s.showForm('Depend');
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+    };
+    // ]]]
+    // [[[ removeInventory()
+    s.removeInventory = (nID) =>
+    {
+      if (confirm('Are you sure you want to remove this application inventory?'))
+      {
+        let request = {Interface: 'central', 'Function': 'applicationInventoryRemove', Request: {id: nID}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.application.inventories = null;
+            s.showForm('Inventories');
           }
           else
           {
@@ -1086,6 +1158,62 @@ export default
                   }
                 });
               }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Inventory
+      else if (strForm == 'Inventory')
+      {
+        if (!c.isDefined(s.application.inventories) || s.application.inventories == null)
+        {
+          s.inventory = {application_id: s.application.id};
+          s.application.inventories = null;
+          s.application.inventories = [];
+          s.u();
+          s.info.v = 'Retrieving inventories...';
+          let request = {Interface: 'central', 'Function': 'applicationInventoriesByApplicationID', Request: {application_id: s.application.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              for (let i = 0; i < response.Response.length; i++)
+              {
+                s.application.inventories.push(response.Response[i]);
+              }
+              let request = {Interface: 'central', 'Function': 'inventories', Request: {}};
+              c.wsRequest('radial', request).then((response) =>
+              {
+                let error = {};
+                if (c.wsResponse(response, error))
+                {
+                  s.inventory.inventories = response.Response;
+                  s.inventory.inventory = s.inventory.inventories[0];
+                  for (let i = 0; i < s.application.inventories.length; i++)
+                  {
+                    for (let j = 0; j < s.inventory.inventories.length; j++)
+                    {
+                      if (s.application.inventories[i].inventory.id == s.inventory.inventories[j].id)
+                      {
+                        s.application.inventories[i].inventory = s.inventory.inventories[j];
+                      }
+                    }
+                  }
+                  s.u();
+                }
+                else
+                {
+                  s.message.v = error.message;
+                }
+              });
               s.u();
             }
             else
@@ -1791,6 +1919,60 @@ export default
       {{/each}}
     </table>
   </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ inventory -->
+  {{#if application.forms.Inventory.active}}
+  {{#if application.bDeveloper}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Inventory</th>
+        <th>Identifier</th>
+        <th>Website</th>
+        <th></th>
+      </tr>
+      <tr>
+        <td><select class="form-control" c-model="inventory.inventory" c-json>{{#each inventory.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="inventory.identifier"></td>
+        <td><input type="text" class="form-control" c-model="inventory.website"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addInventory()">Add</button></td>
+      </tr>
+      {{#each application.inventories}}
+      <tr>
+        <td>
+          {{#if bEdit}}
+          <select class="form-control" c-model="application.inventories.[{{@key}}].inventory" c-json>{{#each @root.inventory.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select>
+          {{else}}
+          {{inventory.inventory}}
+          {{/if}}
+        </td>
+        <td>
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="application.inventories.[{{@key}}].identifier">
+          {{else}}
+          {{identifier}}
+          {{/if}}
+        </td>
+        <td>
+          {{#if bEdit}}
+          <input type="text" class="form-control" c-model="application.inventories.[{{@key}}].website">
+          {{else}}
+          <a href="{{website}}" target="_blank">{{website}}</a>
+          {{/if}}
+        </td>
+        <td style="white-space: nowrap;">
+          {{#if bEdit}}
+          <button class="btn btn-xs btn-warning" c-click="preEditInventory({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editInventory({{@key}})" style="margin-left: 10px;">Save</button>
+          {{else}}
+          <button class="btn btn-xs btn-warning" c-click="preEditInventory({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeInventory({{id}})" style="margin-left: 10px;">Remove</button>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ issues -->
