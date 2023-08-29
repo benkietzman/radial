@@ -424,7 +424,7 @@ bool Db::dbCentralApplicationInventories(Json *i, Json *o, string &id, string &q
 {
   stringstream qs;
 
-  qs << "select a.id, a.application_id, a.identifier, a.website, b.inventory, b.inventory_id from application_inventory a, inventory b where a.inventory_id = b.id";
+  qs << "select a.id, a.application_id, a.identifier, a.inventory_id, a.website, b.inventory from application_inventory a, inventory b where a.inventory_id = b.id";
   if (!empty(i, "id"))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
