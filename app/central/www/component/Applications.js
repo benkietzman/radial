@@ -1204,35 +1204,7 @@ export default
             s.info.v = null;
             if (c.wsResponse(response, error))
             {
-              for (let i = 0; i < response.Response.length; i++)
-              {
-                s.application.inventories.push(response.Response[i]);
-              }
-              let request = {Interface: 'central', 'Function': 'inventories', Request: {}};
-              c.wsRequest('radial', request).then((response) =>
-              {
-                let error = {};
-                if (c.wsResponse(response, error))
-                {
-                  s.inventories = response.Response;
-                  s.inventory.inventory = s.inventories[0];
-                  for (let i = 0; i < s.application.inventories.length; i++)
-                  {
-                    for (let j = 0; j < s.inventories.length; j++)
-                    {
-                      if (s.application.inventories[i].inventory.id == s.inventories[j].id)
-                      {
-                        s.application.inventories[i].inventory = s.inventories[j];
-                      }
-                    }
-                  }
-                  s.u();
-                }
-                else
-                {
-                  s.message.v = error.message;
-                }
-              });
+              s.application.inventories = response.Response;
               s.u();
             }
             else
