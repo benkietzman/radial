@@ -37,6 +37,10 @@ class Db : public Interface
   bool dbCentralApplicationDependAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDependRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationInventories(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationInventoryAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationInventoryRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationInventoryUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueCommentAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueComments(Json *i, Json *o, string &id, string &q, string &e);
@@ -59,6 +63,7 @@ class Db : public Interface
   bool dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralInventories(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e);

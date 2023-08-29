@@ -44,6 +44,11 @@ class Central : public Interface
   bool applicationDependAdd(radialUser &d, string &e);
   bool applicationDependRemove(radialUser &d, string &e);
   bool applicationEdit(radialUser &d, string &e);
+  bool applicationInventoriesByApplicationID(radialUser &d, string &e);
+  bool applicationInventory(radialUser &d, string &e);
+  bool applicationInventoryAdd(radialUser &d, string &e);
+  bool applicationInventoryEdit(radialUser &d, string &e);
+  bool applicationInventoryRemove(radialUser &d, string &e);
   bool applicationIssue(radialUser &d, string &e);
   bool applicationIssueAdd(radialUser &d, string &e);
   bool applicationIssueClose(radialUser &d, string &e);
@@ -81,6 +86,8 @@ class Central : public Interface
   bool dbu(const string strQuery, string &strID, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
   bool footer(radialUser &d, string &e);
+  bool inventory(radialUser &d, string &e);
+  bool inventories(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
