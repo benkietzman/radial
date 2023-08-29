@@ -118,7 +118,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.application.inventories = null;
-          s.showForm('Inventories');
+          s.showForm('Inventory');
         }
         else
         {
@@ -288,7 +288,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.application.inventories = null;
-          s.showForm('Inventories');
+          s.showForm('Inventory');
         }
         else
         {
@@ -658,6 +658,25 @@ export default
         }
       }
       // ]]]
+      // [[[ get inventories
+      if (!c.isDefined(s.login_types))
+      {
+        s.inventories = [];
+        let request = {Interface: 'central', 'Function': 'inventories', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.inventories = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
       // [[[ get login types
       if (!c.isDefined(s.login_types))
       {
@@ -837,7 +856,7 @@ export default
           if (c.wsResponse(response, error))
           {
             s.application.inventories = null;
-            s.showForm('Inventories');
+            s.showForm('Inventory');
           }
           else
           {
@@ -1195,15 +1214,15 @@ export default
                 let error = {};
                 if (c.wsResponse(response, error))
                 {
-                  s.inventory.inventories = response.Response;
-                  s.inventory.inventory = s.inventory.inventories[0];
+                  s.inventories = response.Response;
+                  s.inventory.inventory = s.inventories[0];
                   for (let i = 0; i < s.application.inventories.length; i++)
                   {
-                    for (let j = 0; j < s.inventory.inventories.length; j++)
+                    for (let j = 0; j < s.inventories.length; j++)
                     {
-                      if (s.application.inventories[i].inventory.id == s.inventory.inventories[j].id)
+                      if (s.application.inventories[i].inventory.id == s.inventories[j].id)
                       {
-                        s.application.inventories[i].inventory = s.inventory.inventories[j];
+                        s.application.inventories[i].inventory = s.inventories[j];
                       }
                     }
                   }
@@ -1933,7 +1952,7 @@ export default
         <th></th>
       </tr>
       <tr>
-        <td><select class="form-control" c-model="inventory.inventory" c-json>{{#each inventory.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select></td>
+        <td><select class="form-control" c-model="inventory.inventory" c-json>{{#each inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="inventory.identifier"></td>
         <td><input type="text" class="form-control" c-model="inventory.website"></td>
         <td><button class="btn btn-xs btn-success" c-click="addInventory()">Add</button></td>
@@ -1942,7 +1961,7 @@ export default
       <tr>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.inventories.[{{@key}}].inventory" c-json>{{#each @root.inventory.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.inventories.[{{@key}}].inventory" c-json>{{#each @root.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select>
           {{else}}
           {{inventory.inventory}}
           {{/if}}
