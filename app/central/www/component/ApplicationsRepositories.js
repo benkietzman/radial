@@ -41,7 +41,6 @@ export default
           {
             s.repos = response.Response;
             s.params();
-            s.u();
           }
           else
           {
