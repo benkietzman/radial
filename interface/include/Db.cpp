@@ -31,10 +31,6 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationDependAdd"] = &Db::dbCentralApplicationDependAdd;
   m_functions["dbCentralApplicationDependRemove"] = &Db::dbCentralApplicationDependRemove;
   m_functions["dbCentralApplicationDepends"] = &Db::dbCentralApplicationDepends;
-  m_functions["dbCentralApplicationInventories"] = &Db::dbCentralApplicationInventories;
-  m_functions["dbCentralApplicationInventoryAdd"] = &Db::dbCentralApplicationInventoryAdd;
-  m_functions["dbCentralApplicationInventoryRemove"] = &Db::dbCentralApplicationInventoryRemove;
-  m_functions["dbCentralApplicationInventoryUpdate"] = &Db::dbCentralApplicationInventoryUpdate;
   m_functions["dbCentralApplicationIssueAdd"] = &Db::dbCentralApplicationIssueAdd;
   m_functions["dbCentralApplicationIssueCommentAdd"] = &Db::dbCentralApplicationIssueCommentAdd;
   m_functions["dbCentralApplicationIssueComments"] = &Db::dbCentralApplicationIssueComments;
@@ -42,6 +38,10 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationIssues"] = &Db::dbCentralApplicationIssues;
   m_functions["dbCentralApplicationIssueUpdate"] = &Db::dbCentralApplicationIssueUpdate;
   m_functions["dbCentralApplicationRemove"] = &Db::dbCentralApplicationRemove;
+  m_functions["dbCentralApplicationRepoAdd"] = &Db::dbCentralApplicationRepoAdd;
+  m_functions["dbCentralApplicationRepoRemove"] = &Db::dbCentralApplicationRepoRemove;
+  m_functions["dbCentralApplicationRepos"] = &Db::dbCentralApplicationRepos;
+  m_functions["dbCentralApplicationRepoUpdate"] = &Db::dbCentralApplicationRepoUpdate;
   m_functions["dbCentralApplications"] = &Db::dbCentralApplications;
   m_functions["dbCentralApplicationServerAdd"] = &Db::dbCentralApplicationServerAdd;
   m_functions["dbCentralApplicationServerDetailAdd"] = &Db::dbCentralApplicationServerDetailAdd;
@@ -57,7 +57,6 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationUserUpdate"] = &Db::dbCentralApplicationUserUpdate;
   m_functions["dbCentralContactTypes"] = &Db::dbCentralContactTypes;
   m_functions["dbCentralDependents"] = &Db::dbCentralDependents;
-  m_functions["dbCentralInventories"] = &Db::dbCentralInventories;
   m_functions["dbCentralLoginTypes"] = &Db::dbCentralLoginTypes;
   m_functions["dbCentralMenuAccesses"] = &Db::dbCentralMenuAccesses;
   m_functions["dbCentralNotifyPriorities"] = &Db::dbCentralNotifyPriorities;
@@ -65,6 +64,7 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralPhpSession"] = &Db::dbCentralPhpSession;
   m_functions["dbCentralPhpSessionAdd"] = &Db::dbCentralPhpSessionAdd;
   m_functions["dbCentralPhpSessionRemove"] = &Db::dbCentralPhpSessionRemove;
+  m_functions["dbCentralRepos"] = &Db::dbCentralRepos;
   m_functions["dbCentralServerAdd"] = &Db::dbCentralServerAdd;
   m_functions["dbCentralServerDetails"] = &Db::dbCentralServerDetails;
   m_functions["dbCentralServerRemove"] = &Db::dbCentralServerRemove;
@@ -419,82 +419,6 @@ bool Db::dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, st
   return dbq("central_r", qs, q, o, e);
 }
 // }}}
-// {{{ dbCentralApplicationInventories()
-bool Db::dbCentralApplicationInventories(Json *i, Json *o, string &id, string &q, string &e)
-{
-  stringstream qs;
-
-  qs << "select a.id, a.application_id, a.identifier, a.inventory_id, a.website, b.inventory from application_inventory a, inventory b where a.inventory_id = b.id";
-  if (!empty(i, "id"))
-  {
-    qs << " and a.id = " << v(i->m["id"]->v);
-  }
-  if (!empty(i, "application_id"))
-  {
-    qs << " and a.application_id = " << v(i->m["application_id"]->v);
-  }
-  qs << " order by b.inventory";
-  if (exist(i, "page"))
-  {
-    size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
-    ssNumPerPage >> unNumPerPage;
-    ssPage >> unPage;
-    unOffset = unPage * unNumPerPage;
-    qs << " limit " << unNumPerPage << " offset " << unOffset;
-  }
-
-  return dbq("central_r", qs, q, o, e);
-}
-// }}}
-// {{{ dbCentralApplicationInventoryAdd()
-bool Db::dbCentralApplicationInventoryAdd(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  if (dep({"application_id", "inventory_id"}, i, e))
-  {
-    bool fa = true, fb = true;
-    list<string> ks = {"application_id", "identifier", "inventory_id", "website"};
-    stringstream qs;
-    qs << "insert into application_inventory (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
-    b = dbu("central", qs, q, id, e);
-  }
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationInventoryRemove()
-bool Db::dbCentralApplicationInventoryRemove(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  if (dep({"id"}, i, e))
-  {
-    stringstream qs;
-    qs << "delete from application_inventory where id = " << v(i->m["id"]->v);
-    b = dbu("central", qs, q, e);
-  }
-
-  return b;
-}
-// }}}
-// {{{ dbCentralApplicationInventoryUpdate()
-bool Db::dbCentralApplicationInventoryUpdate(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-
-  if (dep({"id"}, i, e))
-  {
-    bool f = true;
-    stringstream qs;
-    qs << "update application_inventory set" << u({"identifier", "inventory_id", "website"}, i, f) << " where id = " << v(i->m["id"]->v);
-    b = dbu("central", qs, q, e);
-  }
-
-  return b;
-}
-// }}}
 // {{{ dbCentralApplicationIssueAdd()
 bool Db::dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, string &e)
 {
@@ -677,6 +601,82 @@ bool Db::dbCentralApplicationRemove(Json *i, Json *o, string &id, string &q, str
   {
     stringstream qs;
     qs << "delete from application where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationRepoAdd()
+bool Db::dbCentralApplicationRepoAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"application_id", "repo_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"application_id", "identifier", "repo_id"};
+    stringstream qs;
+    qs << "insert into application_repo (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationRepoRemove()
+bool Db::dbCentralApplicationRepoRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application_repo where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationRepos()
+bool Db::dbCentralApplicationRepos(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select a.id, a.application_id, a.identifier, a.repo_id, b.pattern, b.repo from application_repo a, repo b where a.repo_id = b.id";
+  if (!empty(i, "id"))
+  {
+    qs << " and a.id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "application_id"))
+  {
+    qs << " and a.application_id = " << v(i->m["application_id"]->v);
+  }
+  qs << " order by b.repo";
+  if (exist(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    qs << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationRepoUpdate()
+bool Db::dbCentralApplicationRepoUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update application_repo set" << u((list<string>){"identifier", "repo_id"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
@@ -1039,38 +1039,6 @@ bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
   return dbq("central_r", qs, q, o, e);
 }
 // }}}
-// {{{ dbCentralInventories()
-bool Db::dbCentralInventories(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-  list<string> k = {"db", "central", "inventory"};
-  stringstream qs;
-
-  qs << "select id, inventory from inventory order by inventory";
-  auto g = dbq("central_r", qs, q, k, e);
-  if (g != NULL)
-  {
-    b = true;
-    for (auto &r : *g)
-    {
-      if (!empty(i, "id") || !empty(i, "inventory"))
-      {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "inventory") && r["inventory"] == i->m["inventory"]->v))
-        {
-          o->pb(r);
-        }
-      }
-      else
-      {
-        o->pb(r);
-      }
-    }
-  }
-  dbf(g);
-
-  return b;
-}
-// }}}
 // {{{ dbCentralLoginTypes()
 bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
 {
@@ -1254,6 +1222,38 @@ bool Db::dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, stri
     qs << "delete from php_session where session_id = " << v(i->m["ID"]->v);
     b = dbu("central", qs, q, e);
   }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralRepos()
+bool Db::dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+  list<string> k = {"db", "central", "repo"};
+  stringstream qs;
+
+  qs << "select id, pattern, repo from repo order by repo";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "repo"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "repo") && r["repo"] == i->m["repo"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
 
   return b;
 }

@@ -43,11 +43,6 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationDependAdd"] = &Central::applicationDependAdd;
   m_functions["applicationDependRemove"] = &Central::applicationDependRemove;
   m_functions["applicationEdit"] = &Central::applicationEdit;
-  m_functions["applicationInventoriesByApplicationID"] = &Central::applicationInventoriesByApplicationID;
-  m_functions["applicationInventory"] = &Central::applicationInventory;
-  m_functions["applicationInventoryAdd"] = &Central::applicationInventoryAdd;
-  m_functions["applicationInventoryEdit"] = &Central::applicationInventoryEdit;
-  m_functions["applicationInventoryRemove"] = &Central::applicationInventoryRemove;
   m_functions["applicationIssue"] = &Central::applicationIssue;
   m_functions["applicationIssueAdd"] = &Central::applicationIssueAdd;
   m_functions["applicationIssueClose"] = &Central::applicationIssueClose;
@@ -60,6 +55,11 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationIssuesByApplicationID"] = &Central::applicationIssuesByApplicationID;
   m_functions["applicationNotify"] = &Central::applicationNotify;
   m_functions["applicationRemove"] = &Central::applicationRemove;
+  m_functions["applicationRepo"] = &Central::applicationRepo;
+  m_functions["applicationRepoAdd"] = &Central::applicationRepoAdd;
+  m_functions["applicationRepoEdit"] = &Central::applicationRepoEdit;
+  m_functions["applicationRepoRemove"] = &Central::applicationRepoRemove;
+  m_functions["applicationReposByApplicationID"] = &Central::applicationReposByApplicationID;
   m_functions["applications"] = &Central::applications;
   m_functions["applicationsByServerID"] = &Central::applicationsByServerID;
   m_functions["applicationsByUserID"] = &Central::applicationsByUserID;
@@ -79,8 +79,6 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["contactType"] = &Central::contactType;
   m_functions["dependentsByApplicationID"] = &Central::dependentsByApplicationID;
   m_functions["footer"] = &Central::footer;
-  m_functions["inventory"] = &Central::inventory;
-  m_functions["inventories"] = &Central::inventories;
   m_functions["isApplicationDeveloper"] = &Central::isApplicationDeveloper;
   m_functions["isServerAdmin"] = &Central::isServerAdmin;
   m_functions["loginType"] = &Central::loginType;
@@ -91,6 +89,8 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["notifyPriority"] = &Central::notifyPriority;
   m_functions["packageType"] = &Central::packageType;
   m_functions["packageTypes"] = &Central::packageTypes;
+  m_functions["repo"] = &Central::repo;
+  m_functions["repos"] = &Central::repos;
   m_functions["server"] = &Central::server;
   m_functions["serverAdd"] = &Central::serverAdd;
   m_functions["serverDetailsByApplicationID"] = &Central::serverDetailsByApplicationID;
@@ -711,185 +711,6 @@ bool Central::applicationEdit(radialUser &d, string &e)
     else
     {
       e = "You are not authorized to perform this action.";
-    }
-    userDeinit(a);
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationInventoriesByApplicationID()
-bool Central::applicationInventoriesByApplicationID(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (dep({"application_id"}, i, e))
-  {
-    list<map<string, string> > rs;
-    if (db("dbCentralApplicationInventories", i, rs, e))
-    {
-      b = true;
-      for (auto &r : rs)
-      {
-        Json *j = new Json(r);
-        if (!empty(j, "inventory_id"))
-        {
-          radialUser a;
-          userInit(d, a);
-          a.p->m["i"]->i("id", j->m["inventory_id"]->v);
-          if (inventory(a, e))
-          {
-            j->i("inventory", a.p->m["o"]);
-          }
-          userDeinit(a);
-        }
-        o->pb(j);
-        delete j;
-      }
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationInventory()
-bool Central::applicationInventory(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (dep({"id"}, i, e))
-  {
-    map<string, string> r;
-    if (db("dbCentralApplicationInventories", i, r, e))
-    {
-      if (!r.empty())
-      {
-        Json *j = new Json(r);
-        b = true;
-        if (!empty(j, "inventory_id"))
-        {
-          radialUser a;
-          userInit(d, a);
-          a.p->m["i"]->i("id", j->m["inventory_id"]->v);
-          if (inventories(a, e))
-          {
-            j->i("inventory", a.p->m["o"]);
-          }
-          userDeinit(a);
-        }
-        d.p->i("o", j);
-        delete j;
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationInventoryAdd()
-bool Central::applicationInventoryAdd(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (exist(i, "inventory") && !empty(i->m["inventory"], "id"))
-  {
-    i->i("inventory_id", i->m["inventory"]->m["id"]->v);
-  }
-  if (dep({"application_id", "identifier", "inventory_id", "website"}, i, e))
-  {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["application_id"]->v);
-    if (d.g || isApplicationDeveloper(a, e))
-    {
-      string id, q;
-      if (db("dbCentralApplicationInventoryAdd", i, id, q, e))
-      {
-        b = true;
-        o->i("id", id);
-      }
-    }
-    else
-    {
-      e = "You are not authorized to perform this action.";
-    }
-    userDeinit(a);
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationInventoryEdit()
-bool Central::applicationInventoryEdit(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (exist(i, "inventory") && !empty(i->m["inventory"], "id"))
-  {
-    i->i("inventory_id", i->m["inventory"]->m["id"]->v);
-  }
-  if (dep({"id", "identifier", "inventory_id", "website"}, i, e))
-  {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    if (applicationInventory(a, e) && !empty(a.p->m["o"], "application_id"))
-    {
-      radialUser c;
-      userInit(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
-      if (d.g || isApplicationDeveloper(c, e))
-      {
-        b = db("dbCentralApplicationInventoryUpdate", i, e);
-      }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
-      userDeinit(c);
-    }
-    userDeinit(a);
-  }
-
-  return b;
-}
-// }}}
-// {{{ applicationInventoryRemove()
-bool Central::applicationInventoryRemove(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (dep({"id"}, i, e))
-  {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    if (applicationInventory(a, e) && !empty(a.p->m["o"], "application_id"))
-    {
-      radialUser c;
-      userInit(d, c);
-      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
-      if (d.g || isApplicationDeveloper(c, e))
-      {
-        if (db("dbCentralApplicationInventoryRemove", i, e))
-        {
-          b = true;
-        }
-      }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
-      userDeinit(c);
     }
     userDeinit(a);
   }
@@ -1802,6 +1623,185 @@ bool Central::applicationRemove(radialUser &d, string &e)
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationRepo()
+bool Central::applicationRepo(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    map<string, string> r;
+    if (db("dbCentralApplicationRepos", i, r, e))
+    {
+      if (!r.empty())
+      {
+        Json *j = new Json(r);
+        b = true;
+        if (!empty(j, "repo_id"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", j->m["repo_id"]->v);
+          if (repos(a, e))
+          {
+            j->i("repo", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
+        d.p->i("o", j);
+        delete j;
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationRepoAdd()
+bool Central::applicationRepoAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (exist(i, "repo") && !empty(i->m["repo"], "id"))
+  {
+    i->i("repo_id", i->m["repo"]->m["id"]->v);
+  }
+  if (dep({"application_id", "identifier", "repo_id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      string id, q;
+      if (db("dbCentralApplicationRepoAdd", i, id, q, e))
+      {
+        b = true;
+        o->i("id", id);
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationRepoEdit()
+bool Central::applicationRepoEdit(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (exist(i, "repo") && !empty(i->m["repo"], "id"))
+  {
+    i->i("repo_id", i->m["repo"]->m["id"]->v);
+  }
+  if (dep({"id", "identifier", "repo_id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (applicationRepo(a, e) && !empty(a.p->m["o"], "application_id"))
+    {
+      radialUser c;
+      userInit(d, c);
+      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (d.g || isApplicationDeveloper(c, e))
+      {
+        b = db("dbCentralApplicationRepoUpdate", i, e);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      userDeinit(c);
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationRepoRemove()
+bool Central::applicationRepoRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (applicationRepo(a, e) && !empty(a.p->m["o"], "application_id"))
+    {
+      radialUser c;
+      userInit(d, c);
+      c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      if (d.g || isApplicationDeveloper(c, e))
+      {
+        if (db("dbCentralApplicationRepoRemove", i, e))
+        {
+          b = true;
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      userDeinit(c);
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationReposByApplicationID()
+bool Central::applicationReposByApplicationID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"application_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralApplicationRepos", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        Json *j = new Json(r);
+        if (!empty(j, "repo_id"))
+        {
+          radialUser a;
+          userInit(d, a);
+          a.p->m["i"]->i("id", j->m["repo_id"]->v);
+          if (repo(a, e))
+          {
+            j->i("repo", a.p->m["o"]);
+          }
+          userDeinit(a);
+        }
+        o->pb(j);
+        delete j;
+      }
+    }
   }
 
   return b;
@@ -2838,55 +2838,6 @@ bool Central::footer(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ inventory()
-bool Central::inventory(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "inventory"))
-  {
-    map<string, string> r;
-    if (db("dbCentralInventories", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or inventory.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ inventories()
-bool Central::inventories(radialUser &d, string &e)
-{
-  bool b = false;
-  list<map<string, string> > rs;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (db("dbCentralInventories", i, rs, e))
-  {
-    b = true;
-    for (auto &r : rs)
-    {
-      o->pb(r);
-    }
-  }
-
-  return b;
-}
-// }}}
 // {{{ loginType()
 bool Central::loginType(radialUser &d, string &e)
 {
@@ -3078,6 +3029,55 @@ bool Central::packageTypes(radialUser &d, string &e)
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (db("dbCentralPackageTypes", i, rs, e))
+  {
+    b = true;
+    for (auto &r : rs)
+    {
+      o->pb(r);
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ repo()
+bool Central::repo(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "repo"))
+  {
+    map<string, string> r;
+    if (db("dbCentralRepos", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id or repo.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ repos()
+bool Central::repos(radialUser &d, string &e)
+{
+  bool b = false;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (db("dbCentralRepos", i, rs, e))
   {
     b = true;
     for (auto &r : rs)

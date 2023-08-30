@@ -44,11 +44,6 @@ class Central : public Interface
   bool applicationDependAdd(radialUser &d, string &e);
   bool applicationDependRemove(radialUser &d, string &e);
   bool applicationEdit(radialUser &d, string &e);
-  bool applicationInventoriesByApplicationID(radialUser &d, string &e);
-  bool applicationInventory(radialUser &d, string &e);
-  bool applicationInventoryAdd(radialUser &d, string &e);
-  bool applicationInventoryEdit(radialUser &d, string &e);
-  bool applicationInventoryRemove(radialUser &d, string &e);
   bool applicationIssue(radialUser &d, string &e);
   bool applicationIssueAdd(radialUser &d, string &e);
   bool applicationIssueClose(radialUser &d, string &e);
@@ -62,6 +57,11 @@ class Central : public Interface
   bool applicationIssuesByApplicationID(radialUser &d, string &e);
   bool applicationNotify(radialUser &d, string &e);
   bool applicationRemove(radialUser &d, string &e);
+  bool applicationRepo(radialUser &d, string &e);
+  bool applicationRepoAdd(radialUser &d, string &e);
+  bool applicationRepoEdit(radialUser &d, string &e);
+  bool applicationRepoRemove(radialUser &d, string &e);
+  bool applicationReposByApplicationID(radialUser &d, string &e);
   bool applications(radialUser &d, string &e);
   bool applicationsByServerID(radialUser &d, string &e);
   bool applicationsByUserID(radialUser &d, string &e);
@@ -86,8 +86,6 @@ class Central : public Interface
   bool dbu(const string strQuery, string &strID, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
   bool footer(radialUser &d, string &e);
-  bool inventory(radialUser &d, string &e);
-  bool inventories(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
@@ -97,6 +95,8 @@ class Central : public Interface
   bool notifyPriority(radialUser &d, string &e);
   bool packageType(radialUser &d, string &e);
   bool packageTypes(radialUser &d, string &e);
+  bool repo(radialUser &d, string &e);
+  bool repos(radialUser &d, string &e);
   void rm(Json *ptJson, const string strField);
   bool sa(const string strKey, Json *ptData, string &strError);
   bool server(radialUser &d, string &e);

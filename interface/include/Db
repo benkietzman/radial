@@ -37,10 +37,6 @@ class Db : public Interface
   bool dbCentralApplicationDependAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDependRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralApplicationInventories(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralApplicationInventoryAdd(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralApplicationInventoryRemove(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralApplicationInventoryUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueCommentAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueComments(Json *i, Json *o, string &id, string &q, string &e);
@@ -48,6 +44,10 @@ class Db : public Interface
   bool dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationRepoAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationRepoRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationRepos(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationRepoUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplications(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationServerDetailAdd(Json *i, Json *o, string &id, string &q, string &e);
@@ -63,7 +63,6 @@ class Db : public Interface
   bool dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralInventories(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e);
@@ -71,6 +70,7 @@ class Db : public Interface
   bool dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerRemove(Json *i, Json *o, string &id, string &q, string &e);
