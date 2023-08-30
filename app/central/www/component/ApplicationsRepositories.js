@@ -96,7 +96,10 @@ export default
     // [[[ params()
     s.params = () =>
     {
-      s.repo = s.repos[0];
+      if (!s.repo.v)
+      {
+        s.repo.v = s.repos[0];
+      }
       if (c.isParam(nav, 'repo'))
       {
         let bFound = false;
