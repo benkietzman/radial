@@ -22,14 +22,44 @@ export default
       },
       // ]]]
       a: a,
-      c: c
+      c: c,
+      repos: null
     });
+    // ]]]
+    // [[[ init()
+    s.init = () =>
+    {
+      if (!s.repos)
+      {
+        s.info.v = 'Retrieving repositories...';
+        let request = {Interface: 'central', 'Function': 'repos'};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.info.v = null;
+          if (c.wsResponse(response, error))
+          {
+            s.repos = response.Response;
+            s.params();
+            s.u();
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      else
+      {
+        s.params();
+      }
+    };
     // ]]]
     // [[[ loadApplications()
     s.loadApplications = () =>
     {
       s.info.v = 'Retrieving applications...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, c.repo from application a, application_repo b, repo c where a.id = b.application_id and b.repo_id = c.id and lower(b.identifier) = lower(\''+c.esc(s.identifier.v)+'\') order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.identifier, c.pattern, c.repo from application a, application_repo b, repo c where a.id = b.application_id and b.repo_id = c.id and c.id = \''+c.esc(s.repo.v.id)+'\''+((s.identifier.v != '')?' and lower(b.identifier) = lower(\''+c.esc(s.identifier.v)+'\')':'')+' order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -39,6 +69,7 @@ export default
           s.applications = response.Response;
           for (let i = 0; i < s.applications.length; i++)
           {
+            s.applications[i].website = s.applications[i].pattern.replace('[IDENTIFIER]', s.applications[i].identifier);
             let request = {Interface: 'central', 'Function': 'applicationUsersByApplicationID', Request: {application_id: s.applications[i].id, 'Primary Developer': 1, 'Backup Developer': 1, i: i}};
             c.wsRequest('radial', request).then((response) =>
             {
@@ -63,6 +94,31 @@ export default
       });
     };
     // ]]]
+    // [[[ params()
+    s.params = () =>
+    {
+      s.repo = s.repos[0];
+      if (c.isParam(nav, 'repo'))
+      {
+        let bFound = false;
+        let repo = c.getParam(nav, 'repo');
+        for (let i = 0; !bFound && i < s.repos.length; i++)
+        {
+          if (s.repos[i].id == repo || s.repos[i].repo == repo)
+          {
+            bFound = true;
+            s.repo.v = s.repos[i];
+          }
+        }
+        if (c.isParam(nav, 'id'))
+        {
+          s.identifier.v = c.getParam(nav, 'id');
+        }
+        s.loadApplications();
+      }
+      s.u();
+    };
+    // ]]]
     // [[[ search()
     s.search = () =>
     {
@@ -75,11 +131,7 @@ export default
     s.u();
     if (a.ready())
     {
-      if (c.isParam(nav, 'identifier'))
-      {
-        s.identifier.v = c.getParam(nav, 'identifier');
-        s.loadApplications();
-      }
+      s.init();
     }
     else
     {
@@ -88,11 +140,7 @@ export default
     c.attachEvent('appReady', (data) =>
     {
       s.info.v = null;
-      if (c.isParam(nav, 'user'))
-      {
-        s.identifier.v = c.getParam(nav, 'identifier');
-        s.loadApplications();
-      }
+      s.init();
     });
     // ]]]
   },
@@ -102,6 +150,7 @@ export default
   <div class="row">
     <div class="col-md-3">
       <h5 class="page-header">Search Options</h5>
+      <div class="input-group"><span class="input-group-text">Repository</span><select c-model="repo" class="form-control" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></div>
       <div class="input-group"><span class="input-group-text">Identifier</span><input type="text" c-model="identifier" class="form-control"></div>
       <button class="btn btn-primary float-end" c-click="search()">Search</button>
     </div>
@@ -116,6 +165,7 @@ export default
           <th>Application</th>
           <th>Developer(s)</th>
           <th>Repository</th>
+          <th>Identifier</th>
         </tr>
         {{#eachFilter applications "name" narrow}}
         <tr>
@@ -145,6 +195,7 @@ export default
             </table>
           </td>
           <td valign="top">{{repo}}</td>
+          <td valign="top"><a href="{{website}}" target="_blank">{{identifier}}</a></td>
         </tr>
         {{/eachFilter}}
       </table>
