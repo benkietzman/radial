@@ -67,8 +67,8 @@ class App
     this.c.menu.left[unIndex].submenu = {left: [], right: []};
     unSubIndex = 0;
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Accounts', href: '/Applications/Accounts', active: null};
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Inventory', href: '/Applications/Inventory', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Issues', href: '/Applications/Issues', active: null};
+    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Repositories', href: '/Applications/Repositories', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Schedule', href: '/Applications/Schedule', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Statistics', href: '/Applications/Statistics', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Workload', href: '/Applications/Workload', active: null};

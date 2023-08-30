@@ -108,25 +108,6 @@ export default
       });
     };
     // ]]]
-    // [[[ addInventory()
-    s.addInventory = () =>
-    {
-      let request = {Interface: 'central', 'Function': 'applicationInventoryAdd', Request: c.simplify(s.inventory)};
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.application.inventories = null;
-          s.showForm('Inventory');
-        }
-        else
-        {
-          s.message.v = error.message;
-        }
-      });
-    };
-    // ]]]
     // [[[ addIssue()
     s.addIssue = () =>
     {
@@ -175,6 +156,25 @@ export default
         else
         {
           s.info.v = null;
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
+    // [[[ addRepo()
+    s.addRepo = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'applicationRepoAdd', Request: c.simplify(s.repo)};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.application.repos = null;
+          s.showForm('Repositories');
+        }
+        else
+        {
           s.message.v = error.message;
         }
       });
@@ -278,25 +278,6 @@ export default
       });
     };
     // ]]]
-    // [[[ editInventory()
-    s.editInventory = (nIndex) =>
-    {
-      let request = {Interface: 'central', 'Function': 'applicationInventoryEdit', Request: c.simplify(s.application.inventories[nIndex])};
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.application.inventories = null;
-          s.showForm('Inventory');
-        }
-        else
-        {
-          s.message.v = error.message;
-        }
-      });
-    };
-    // ]]]
     // [[[ editIssue()
     s.editIssue = (bOpen) =>
     {
@@ -365,6 +346,25 @@ export default
       });
     };
     // ]]]
+    // [[[ editRepo()
+    s.editRepo = (nIndex) =>
+    {
+      let request = {Interface: 'central', 'Function': 'applicationRepoEdit', Request: c.simplify(s.application.repos[nIndex])};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.application.repos = null;
+          s.showForm('Repositories');
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
     // [[[ editServerDetail()
     s.editServerDetail = (nIndex) =>
     {
@@ -393,17 +393,17 @@ export default
       {
         s.application.forms =
         {
-          General:   {value: 'General',   active: null},
-          Contacts:  {value: 'Contacts',  active: null},
-          Depend:    {value: 'Depend',    active: null},
-          Inventory: {value: 'Inventory', active: null},
-          Issues:    {value: 'Issues',    active: null},
-          Servers:   {value: 'Servers',   active: null}
+          General:      {value: 'General',      active: null},
+          Contacts:     {value: 'Contacts',     active: null},
+          Depend:       {value: 'Depend',       active: null},
+          Issues:       {value: 'Issues',       active: null},
+          Repositories: {value: 'Repositories', active: null},
+          Servers:      {value: 'Servers',      active: null}
         };
       }
       if (!c.isDefined(s.application.forms_order))
       {
-        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Inventory', 'Issues', 'Servers'];
+        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Issues', 'Repositories', 'Servers'];
       }
     };
     // ]]]
@@ -599,17 +599,6 @@ export default
       s.u();
     };
     // ]]]
-    // [[[ preEditInventory()
-    s.preEditInventory = (nIndex, bEdit) =>
-    {
-      s.application.inventories[nIndex].bEdit = bEdit;
-      if (!bEdit)
-      {
-        s.application.inventories[nIndex] = c.simplify(s.application.inventories[nIndex]);
-      }
-      s.u();
-    };
-    // ]]]
     // [[[ preEditIssueComment()
     s.preEditIssueComment = (nIndex, bEdit) =>
     {
@@ -617,6 +606,17 @@ export default
       if (!bEdit)
       {
         s.application.issue.comments[nIndex] = c.simplify(s.application.issue.comments[nIndex]);
+      }
+      s.u();
+    };
+    // ]]]
+    // [[[ preEditRepo()
+    s.preEditRepo = (nIndex, bEdit) =>
+    {
+      s.application.repos[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.application.repos[nIndex] = c.simplify(s.application.repos[nIndex]);
       }
       s.u();
     };
@@ -656,25 +656,6 @@ export default
             }
           });
         }
-      }
-      // ]]]
-      // [[[ get inventories
-      if (!c.isDefined(s.login_types))
-      {
-        s.inventories = [];
-        let request = {Interface: 'central', 'Function': 'inventories', Request: {}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.inventories = response.Response;
-          }
-          else
-          {
-            s.message.v = error.message;
-          }
-        });
       }
       // ]]]
       // [[[ get login types
@@ -745,6 +726,25 @@ export default
           if (c.wsResponse(response, error))
           {
             s.package_types = response.Response;
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+      // ]]]
+      // [[[ get repos
+      if (!c.isDefined(s.repos))
+      {
+        s.repos = [];
+        let request = {Interface: 'central', 'Function': 'repos', Request: {}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.repos = response.Response;
           }
           else
           {
@@ -844,19 +844,19 @@ export default
       }
     };
     // ]]]
-    // [[[ removeInventory()
-    s.removeInventory = (nID) =>
+    // [[[ removeRepo()
+    s.removeRepo = (nID) =>
     {
-      if (confirm('Are you sure you want to remove this application inventory?'))
+      if (confirm('Are you sure you want to remove this application repository?'))
       {
-        let request = {Interface: 'central', 'Function': 'applicationInventoryRemove', Request: {id: nID}};
+        let request = {Interface: 'central', 'Function': 'applicationRepoRemove', Request: {id: nID}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.application.inventories = null;
-            s.showForm('Inventory');
+            s.application.repos = null;
+            s.showForm('Repositories');
           }
           else
           {
@@ -1187,34 +1187,6 @@ export default
         }
       }
       // ]]]
-      // [[[ Inventory
-      else if (strForm == 'Inventory')
-      {
-        if (!c.isDefined(s.application.inventories) || s.application.inventories == null)
-        {
-          s.inventory = {application_id: s.application.id};
-          s.application.inventories = null;
-          s.application.inventories = [];
-          s.u();
-          s.info.v = 'Retrieving inventories...';
-          let request = {Interface: 'central', 'Function': 'applicationInventoriesByApplicationID', Request: {application_id: s.application.id}};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            s.info.v = null;
-            if (c.wsResponse(response, error))
-            {
-              s.application.inventories = response.Response;
-              s.u();
-            }
-            else
-            {
-              s.message.v = error.message;
-            }
-          });
-        }
-      }
-      // ]]]
       // [[[ Issues
       else if (strForm == 'Issues')
       {
@@ -1317,6 +1289,38 @@ export default
       // [[[ Notify
       else if (strForm == 'Notify')
       {
+      }
+      // ]]]
+      // [[[ Repositories
+      else if (strForm == 'Repositories')
+      {
+        if (!c.isDefined(s.application.repos) || s.application.repos == null)
+        {
+          s.repo = {application_id: s.application.id};
+          s.application.repos = null;
+          s.application.repos = [];
+          s.u();
+          s.info.v = 'Retrieving repositories...';
+          let request = {Interface: 'central', 'Function': 'applicationReposByApplicationID', Request: {application_id: s.application.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.application.repos = response.Response;
+              for (let i = 0; i < s.application.repos.length; i++)
+              {
+                s.application.repos[i].website = s.application.repos[i].pattern.replace('[IDENTIFIER]', s.application.repos[i].identifier);
+              }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
       }
       // ]]]
       // [[[ Servers
@@ -1912,51 +1916,42 @@ export default
   </div>
   {{/if}}
   <!-- ]]] -->
-  <!-- [[[ inventory -->
-  {{#if application.forms.Inventory.active}}
+  <!-- [[[ repositories -->
+  {{#if application.forms.Repositories.active}}
   {{#if application.bDeveloper}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th>Inventory</th>
+        <th>Repository</th>
         <th>Identifier</th>
-        <th>Website</th>
         <th></th>
       </tr>
       <tr>
-        <td><select class="form-control" c-model="inventory.inventory" c-json>{{#each inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="inventory.identifier"></td>
-        <td><input type="text" class="form-control" c-model="inventory.website"></td>
-        <td><button class="btn btn-xs btn-success" c-click="addInventory()">Add</button></td>
+        <td><select class="form-control" c-model="repo.repo" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></td>
+        <td><input type="text" class="form-control" c-model="repo.identifier"></td>
+        <td><button class="btn btn-xs btn-success" c-click="addRepo()">Add</button></td>
       </tr>
-      {{#each application.inventories}}
+      {{#each application.repos}}
       <tr>
         <td>
           {{#if bEdit}}
-          <select class="form-control" c-model="application.inventories.[{{@key}}].inventory" c-json>{{#each @root.inventories}}<option value="{{json .}}">{{inventory}}</option>{{/each}}</select>
+          <select class="form-control" c-model="application.repos.[{{@key}}].repo" c-json>{{#each @root.repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select>
           {{else}}
-          {{inventory.inventory}}
+          {{repo.repo}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.inventories.[{{@key}}].identifier">
+          <input type="text" class="form-control" c-model="application.repos.[{{@key}}].identifier">
           {{else}}
-          {{identifier}}
-          {{/if}}
-        </td>
-        <td>
-          {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.inventories.[{{@key}}].website">
-          {{else}}
-          <a href="{{website}}" target="_blank">{{website}}</a>
+          <a href="{{website}}" target="_blank">{{identifier}}</a>
           {{/if}}
         </td>
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning" c-click="preEditInventory({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editInventory({{@key}})" style="margin-left: 10px;">Save</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditRepo({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editRepo({{@key}})" style="margin-left: 10px;">Save</button>
           {{else}}
-          <button class="btn btn-xs btn-warning" c-click="preEditInventory({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeInventory({{id}})" style="margin-left: 10px;">Remove</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditRepo({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeRepo({{id}})" style="margin-left: 10px;">Remove</button>
           {{/if}}
         </td>
       </tr>
