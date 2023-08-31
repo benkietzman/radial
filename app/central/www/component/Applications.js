@@ -1310,7 +1310,10 @@ export default
               s.application.repos = response.Response;
               for (let i = 0; i < s.application.repos.length; i++)
               {
-                s.application.repos[i].website = s.application.repos[i].pattern.replace('[IDENTIFIER]', s.application.repos[i].identifier);
+                if (s.application.repos[i].pattern != '')
+                {
+                  s.application.repos[i].website = s.application.repos[i].pattern.replace('[IDENTIFIER]', s.application.repos[i].identifier);
+                }
               }
               s.u();
             }
@@ -1929,7 +1932,7 @@ export default
           {{#if bEdit}}
           <input type="text" class="form-control" c-model="application.repos.[{{@key}}].identifier">
           {{else}}
-          <a href="{{website}}" target="_blank">{{identifier}}</a>
+          {{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}
           {{/if}}
         </td>
         <td style="white-space: nowrap;">

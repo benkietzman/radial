@@ -68,7 +68,10 @@ export default
           s.applications = response.Response;
           for (let i = 0; i < s.applications.length; i++)
           {
-            s.applications[i].website = s.applications[i].pattern.replace('[IDENTIFIER]', s.applications[i].identifier);
+            if (s.applications[i].pattern != '')
+            {
+              s.applications[i].website = s.applications[i].pattern.replace('[IDENTIFIER]', s.applications[i].identifier);
+            }
             let request = {Interface: 'central', 'Function': 'applicationUsersByApplicationID', Request: {application_id: s.applications[i].id, 'Primary Developer': 1, 'Backup Developer': 1, i: i}};
             c.wsRequest('radial', request).then((response) =>
             {
@@ -197,7 +200,7 @@ export default
             </table>
           </td>
           <td valign="top">{{repo}}</td>
-          <td valign="top"><a href="{{website}}" target="_blank">{{identifier}}</a></td>
+          <td valign="top">{{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}</td>
         </tr>
         {{/eachFilter}}
       </table>
