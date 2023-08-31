@@ -290,21 +290,6 @@ export default
             s.servers = response.Response;
             for (let i = 0; i < s.servers.length; i++)
             {
-              let request = {Interface: 'central', 'Function': 'serverUsersByServerID', Request: {server_id: s.servers[i].id, 'Primary Admin': 1, i: i}};
-              c.wsRequest('radial', request).then((response) =>
-              {
-                let error = {};
-                if (c.wsResponse(response, error))
-                {
-                  let i = response.Request.i;
-                  s.servers[i].contacts = response.Response;
-                  s.u();
-                }
-                else
-                {
-                  s.message.v = error.message;
-                }
-              });
               if (s.servers[i].parent_id)
               {
                 request = {Interface: 'central', 'Function': 'server', Request: {id: s.servers[i].parent_id, i: i}};
@@ -674,7 +659,7 @@ export default
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th>Server</th><th>Primary Admins</th><th>Parent</th><th>Children</th>
+        <th>Server</th><th>Parent</th><th>Children</th>
       </tr>
       {{#isValid "Central"}}
       <tr>
@@ -686,15 +671,6 @@ export default
       <tr>
         <td valign="top">
           <a href="#/Servers/{{id}}">{{name}}</a>
-        </td>
-        <td valign="top">
-          <table class="table table-condensed" style="background: inherit;">
-            {{#each contacts}}
-            <tr>
-              <td><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
-            </tr>
-            {{/each}}
-          </table>
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">

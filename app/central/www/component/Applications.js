@@ -521,36 +521,6 @@ export default
               {
                 s.applications[i].style = 'opacity:0.4;filter:alpha(opacity=40);';
               }
-              let request = {Interface: 'central', 'Function': 'applicationUsersByApplicationID', Request: {application_id: s.applications[i].id, 'Primary Developer': 1, i: i}};
-              c.wsRequest('radial', request).then((response) =>
-              {
-                let error = {};
-                if (c.wsResponse(response, error))
-                {
-                  let i = response.Request.i;
-                  s.applications[i].contacts = response.Response;
-                  s.u();
-                }
-                else
-                {
-                  s.message.v = error.message;
-                }
-              });
-              request = {Interface: 'central', 'Function': 'serversByApplicationID', Request: {application_id: s.applications[i].id, i: i}};
-              c.wsRequest('radial', request).then((response) =>
-              {
-                let error = {};
-                if (c.wsResponse(response, error))
-                {
-                  let i = response.Request.i;
-                  s.applications[i].servers = response.Response;
-                  s.u();
-                }
-                else
-                {
-                  s.message.v = error.message;
-                }
-              });
             }
             s.u();
           }
@@ -1498,7 +1468,7 @@ export default
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th>Application</th><th>Primary Developers</th><th>Servers</th>
+        <th>Application</th><th>Website</th>
       </tr>
       {{#isValid "Central"}}
       <tr>
@@ -1512,22 +1482,7 @@ export default
           <a href="#/Applications/{{id}}">{{name}}</a>
         </td>
         <td valign="top">
-          <table class="table table-condensed" style="background: inherit;">
-            {{#each contacts}}
-            <tr>
-              <td><a href="#/Users/{{user_id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
-            </tr>
-            {{/each}}
-          </table>
-        </td>
-        <td valign="top">
-          <table class="table table-condensed" style="background: inherit;">
-            {{#each servers}}
-            <tr>
-              <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-            </tr>
-            {{/each}}
-          </table>
+          <a href="{{website}}" target="_blank">{{website}}</a>
         </td>
       </tr>
       {{/eachFilter}}
