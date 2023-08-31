@@ -255,7 +255,6 @@ bool Central::application(radialUser &d, string &e)
           }
         }
         ny(j, "secure_port");
-        ny(j, "wiki");
         d.p->i("o", j);
         delete j;
       }
@@ -694,10 +693,6 @@ bool Central::applicationEdit(radialUser &d, string &e)
   if (exist(i, "secure_port") && !empty(i->m["secure_port"], "value"))
   {
     i->i("secure_port", i->m["secure_port"]->m["value"]->v);
-  }
-  if (exist(i, "wiki") && !empty(i->m["wiki"], "value"))
-  {
-    i->i("wiki", i->m["wiki"]->m["value"]->v);
   }
   if (dep({"id", "name"}, i, e))
   {
@@ -1917,7 +1912,6 @@ bool Central::applications(radialUser &d, string &e)
         }
         userDeinit(a);
       }
-      ny(j, "wiki");
       o->pb(j);
       delete j;
     }
