@@ -1017,7 +1017,6 @@ export default
         s.application.auto_register = a.setNoYes(s.application.auto_register);
         s.application.dependable = a.setNoYes(s.application.dependable);
         s.application.secure_port = a.setNoYes(s.application.secure_port);
-        s.application.wiki = a.setNoYes(s.application.wiki);
         c.addInterval('Applications', 'sysInfoStatus', s.sysInfoStatus, 60000);
         s.sysInfoStatus();
       }
@@ -1689,20 +1688,6 @@ export default
         <select class="form-control" c-model="application.menu_access" c-json>{{#each menu_accesses}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
         {{else}}
         {{application.menu_access.type}}
-        {{/if}}
-      </td>
-    </tr>
-    <tr>
-      <th>
-        WIKI:
-      </th>
-      <td>
-        {{#if application.bEdit}}
-        <select class="form-control" c-model="application.wiki" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{#ifCond application.wiki.value "==" 1}}
-        <a href="/wiki/index.php/{{urlEncode @root.application.name}}" target="_blank">/wiki/index.php/{{@root.application.name}}</a>
-        {{/ifCond}}
         {{/if}}
       </td>
     </tr>
