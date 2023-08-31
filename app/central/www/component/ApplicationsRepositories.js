@@ -169,7 +169,7 @@ export default
           <th>Repository</th>
           <th>Identifier</th>
         </tr>
-        {{#eachFilter applications ["identifier", "name"] narrow}}
+        {{#eachFilter applications "name" narrow}}
         <tr>
           <td valign="top"><a href="#/Applications/{{id}}">{{name}}</a></td>
           <td valign="top">
