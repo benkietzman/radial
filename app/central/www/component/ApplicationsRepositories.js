@@ -73,20 +73,6 @@ export default
             {
               s.applications[i].website = s.applications[i].pattern.replace('[IDENTIFIER]', s.applications[i].identifier);
             }
-            let request = {Interface: 'central', 'Function': 'applicationUsersByApplicationID', Request: {application_id: s.applications[i].id, 'Primary Developer': 1, 'Backup Developer': 1, i: i}};
-            c.wsRequest('radial', request).then((response) =>
-            {
-              var error = {};
-              if (c.wsResponse(response, error))
-              {
-                s.applications[response.Request.i].contacts = response.Response;
-                s.u();
-              }
-              else
-              {
-                s.message.v = error.message;
-              }
-            });
           }
           s.u();
         }
@@ -169,37 +155,12 @@ export default
       <table class="table table-condensed table-striped">
         <tr>
           <th>Application</th>
-          <th>Developer(s)</th>
           <th>Repository</th>
           <th>Identifier</th>
         </tr>
         {{#eachFilter applications filter narrow}}
         <tr>
           <td valign="top"><a href="#/Applications/{{id}}">{{name}}</a></td>
-          <td valign="top">
-            <table class="table table-condensed" style="background: inherit;">
-              <tr>
-                <th class="bg-primary" style="white-space: nowrap;">Primary Developers</th>
-              </tr>
-              {{#each contacts}}
-              {{#ifCond type.type "==" 'Primary Developer'}}
-              <tr>
-                <td style="white-space: nowrap;"><a href="#/Users/{{../user_id}}">{{../last_name}}, {{../first_name}}</a> <small>({{../userid}})</small></td>
-              </tr>
-              {{/ifCond}}
-              {{/each}}
-              <tr>
-                <th class="bg-primary" style="white-space: nowrap;">Backup Developers</th>
-              </tr>
-              {{#each contacts}}
-              {{#ifCond type.type "==" 'Backup Developer'}}
-              <tr>
-                <td style="white-space: nowrap;"><a href="#/Users/{{../user_id}}">{{../last_name}}, {{../first_name}}</a> <small>({{../userid}})</small></td>
-              </tr>
-              {{/ifCond}}
-              {{/each}}
-            </table>
-          </td>
           <td valign="top">{{repo}}</td>
           <td valign="top">{{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}</td>
         </tr>
