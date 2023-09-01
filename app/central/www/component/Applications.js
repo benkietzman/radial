@@ -1477,7 +1477,7 @@ export default
       </tr>
       {{/isValid}}
       {{#eachFilter applications "name" narrow}}
-      <tr style="{{application.style}}">
+      <tr style="{{style}}">
         <td valign="top">
           <a href="#/Applications/{{id}}">{{name}}</a>
         </td>
