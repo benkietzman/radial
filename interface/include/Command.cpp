@@ -219,6 +219,16 @@ void Command::process(string strPrefix)
                     close(readpipe[1]);
                     ptCommand->bJson = false;
                     ptCommand->bProcessed = false;
+                    ptCommand->CTimeout = 1800;
+                    if (!empty(ptJson, "Timeout"))
+                    {
+                      stringstream ssTimeout(ptJson->m["Timeout"]->v);
+                      ssTimeout >> ptCommand->CTimeout;
+                    }
+                    if (ptCommand->CTimeout <= 0 || ptCommand->CTimeout > 1800)
+                    {
+                      ptCommand->CTimeout = 1800;
+                    }
                     ptCommand->fdRead = readpipe[0];
                     ptCommand->fdWrite = writepipe[1];
                     if ((lArg = fcntl(ptCommand->fdRead, F_GETFL, NULL)) >= 0)
@@ -251,16 +261,6 @@ void Command::process(string strPrefix)
                     {
                       close(ptCommand->fdWrite);
                       ptCommand->fdWrite = -1;
-                    }
-                    ptCommand->unTimeout = 1800;
-                    if (!empty(ptJson, "Timeout"))
-                    {
-                      stringstream ssTimeout(ptJson->m["Timeout"]->v);
-                      ssTimeout >> ptCommand->unTimeout;
-                    }
-                    if (ptCommand->unTimeout <= 0 || ptCommand->unTimeout > 1800)
-                    {
-                      ptCommand->unTimeout = 1800;
                     }
                     clock_gettime(CLOCK_REALTIME, &(ptCommand->start));
                     ptJson->j(p.p);
@@ -396,7 +396,7 @@ void Command::process(string strPrefix)
             }
           }
           clock_gettime(CLOCK_REALTIME, &((*j)->stop));
-          if (!bRemoved && ((*j)->stop.tv_sec - (*j)->start.tv_sec) > (*j)->unTimeout)
+          if (!bRemoved && ((*j)->stop.tv_sec - (*j)->start.tv_sec) > (*j)->CTimeout)
           {
             (*j)->strError = "Timeout exceeded.";
             removals.push_back(j);

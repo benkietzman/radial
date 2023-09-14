@@ -152,7 +152,7 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
 }
 // }}}
 // {{{ command()
-bool Interface::command(const string strCommand, list<string> arguments, const string strFormat, const string strInput, const size_t unTimeout, size_t &unDuration, string &strOutput, string &strError)
+bool Interface::command(const string strCommand, list<string> arguments, const string strFormat, const string strInput, const time_t CTimeout, size_t &unDuration, string &strOutput, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -170,10 +170,10 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
   {
     ptJson->i("Input", strInput);
   }
-  if (unTimeout > 0)
+  if (CTimeout > 0)
   {
     stringstream ssTimeout;
-    ssTimeout << unTimeout;
+    ssTimeout << CTimeout;
     ptJson->i("Timeout", ssTimeout.str(), 'n');
   }
   unDuration = 0;

@@ -30,10 +30,10 @@ struct radialCommand
   pid_t execPid;
   int fdRead;
   int fdWrite;
-  size_t unTimeout;
   string strBuffer[2];
   string strError;
   string strPacket;
+  time_t CTimeout;
   timespec start;
   timespec stop;
 };
