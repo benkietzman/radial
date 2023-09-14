@@ -151,6 +151,44 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
   return bResult;
 }
 // }}}
+// {{{ command()
+bool Interface::command(const string strCommand, list<string> arguments, const string strFormat, const string strInput, size_t &unDuration, string &strOutput, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Command", strCommand);
+  if (!arguments.empty())
+  {
+    ptJson->i("Arguments", arguments);
+  }
+  if (!strFormat.empty())
+  {
+    ptJson->i("Format", strFormat);
+  }
+  if (!strInput.empty())
+  {
+    ptJson->i("Input", strInput);
+  }
+  unDuration = 0;
+  if (hub("command", ptJson, strError))
+  {
+    bResult = true;
+    if (!empty(ptJson, "Duration"))
+    {
+      stringstream ssDuration(ptJson->m["Duration"]->v);
+      ssDuration >> unDuration;
+    }
+    if (!empty(ptJson, "Output"))
+    {
+      strOutput = ptJson->m["Output"]->v;
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ cron
 // {{{ cron()
 bool Interface::cron(time_t &CTime, string strValue, string &strError)
