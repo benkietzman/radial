@@ -152,7 +152,7 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
 }
 // }}}
 // {{{ command()
-bool Interface::command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, const time_t CTimeout, size_t &unDuration, string &strError)
+bool Interface::command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, size_t &unDuration, string &strError, const time_t CTimeout)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -190,7 +190,7 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
 
   return bResult;
 }
-bool Interface::command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, const time_t CTimeout, size_t &unDuration, string &strError)
+bool Interface::command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, size_t &unDuration, string &strError, const time_t CTimeout)
 {
   bool bResult = false;
   Json *ptJson = new Json;
