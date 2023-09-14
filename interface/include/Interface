@@ -58,7 +58,8 @@ class Interface : public Base
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
-  bool command(const string strCommand, list<string> arguments, const string strFormat, const string strInput, const time_t CTimeout, size_t &unDuration, string &strOutput, string &strError);
+  bool command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, const time_t CTimeout, size_t &unDuration, string &strError);
+  bool command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, const time_t CTimeout, size_t &unDuration, string &strError);
   bool cron(time_t &CTime, const string strValue, string &strError);
   bool cronParse(const size_t unType, const string strValue, list<int> &value, string &strError);
   bool cronParseComma(const size_t unType, const string strValue, list<int> &value, string &strError);

@@ -152,7 +152,7 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
 }
 // }}}
 // {{{ command()
-bool Interface::command(const string strCommand, list<string> arguments, const string strFormat, const string strInput, const time_t CTimeout, size_t &unDuration, string &strOutput, string &strError)
+bool Interface::command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, const time_t CTimeout, size_t &unDuration, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -161,10 +161,6 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
   if (!arguments.empty())
   {
     ptJson->i("Arguments", arguments);
-  }
-  if (!strFormat.empty())
-  {
-    ptJson->i("Format", strFormat);
   }
   if (!strInput.empty())
   {
@@ -188,6 +184,45 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
     if (!empty(ptJson, "Output"))
     {
       strOutput = ptJson->m["Output"]->v;
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+bool Interface::command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, const time_t CTimeout, size_t &unDuration, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Command", strCommand);
+  if (!arguments.empty())
+  {
+    ptJson->i("Arguments", arguments);
+  }
+  ptJson->i("Format", "json");
+  if (ptInput != NULL)
+  {
+    ptJson->i("Input", ptInput);
+  }
+  if (CTimeout > 0)
+  {
+    stringstream ssTimeout;
+    ssTimeout << CTimeout;
+    ptJson->i("Timeout", ssTimeout.str(), 'n');
+  }
+  unDuration = 0;
+  if (hub("command", ptJson, strError))
+  {
+    bResult = true;
+    if (!empty(ptJson, "Duration"))
+    {
+      stringstream ssDuration(ptJson->m["Duration"]->v);
+      ssDuration >> unDuration;
+    }
+    if (ptOutput != NULL && exist(ptJson, "Output"))
+    {
+      ptOutput->merge(ptJson->m["Output"], true, false);
     }
   }
   delete ptJson;
