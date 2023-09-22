@@ -1939,7 +1939,7 @@ bool Interface::page(const string strType, const string strTarget, const string 
   list<Json *> in, out;
   Json *ptJson = new Json;
 
-  ptJson->i("Service", "page");
+  ptJson->i("Service", "pager");
   ptJson->i(strType, strTarget);
   ptJson->i("Message", strMessage);
   in.push_back(ptJson);
