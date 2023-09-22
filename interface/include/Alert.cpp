@@ -22,6 +22,7 @@ namespace radial
 // {{{ Alert()
 Alert::Alert(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "alert", argc, argv, pCallback)
 {
+  m_pAnalyzeCallback = NULL;
 }
 // }}}
 // {{{ ~Alert()
@@ -83,25 +84,35 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             }
           }
           ssName << strFirstName << strLastName;
-          if (!chat(ssName.str(), strMessage, strError))
+          if (m_pAnalyzeCallback != NULL)
           {
-            errors.push_back((string)"Interface::chat() " + strError);
+            if (!m_pAnalyzeCallback(strPrefix, strMessage, ssName.str(), user, strError))
+            {
+              errors.push_back(strError);
+            }
           }
-          if (!user["email"].empty())
+          else
           {
-            email(user["email"], user["email"], "Alert", strMessage, "");
-          }
-          if (!live("", strUser, {{"Action", "audio"}, {"Media", "/media/alert.mp3"}}, strError))
-          {
-            errors.push_back((string)"Interface::live(audio) " + strError);
-          }
-          if (!live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
-          {
-            errors.push_back((string)"Interface::live(message) " + strError);
-          }
-          if (!pageUser(strUser, strMessage, strError))
-          {
-            errors.push_back((string)"Interface::pageUser() " + strError);
+            if (!chat(ssName.str(), strMessage, strError))
+            {
+              errors.push_back((string)"Interface::chat() " + strError);
+            }
+            if (!user["email"].empty())
+            {
+              email(user["email"], user["email"], "Alert", strMessage, "");
+            }
+            if (!live("", strUser, {{"Action", "audio"}, {"Media", "/media/alert.mp3"}}, strError))
+            {
+              errors.push_back((string)"Interface::live(audio) " + strError);
+            }
+            if (!live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
+            {
+              errors.push_back((string)"Interface::live(message) " + strError);
+            }
+            if (!pageUser(strUser, strMessage, strError))
+            {
+              errors.push_back((string)"Interface::pageUser() " + strError);
+            }
           }
           if (errors.empty())
           {
@@ -152,6 +163,12 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ setAnalyze()
+void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, map<string, string>, string &))
+{
+  m_pAnalyzeCallback = pCallback;
 }
 // }}}
 }
