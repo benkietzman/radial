@@ -622,6 +622,111 @@ bool Interface::cronParseValue(const size_t unType, string strValue, int &nValue
 }
 // }}}
 // }}}
+// {{{ curl()
+bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Json *ptGet, Json *ptPost, Json *ptPut, const string strProxy, string &strCookies, string &strHeader, string &strContent, string &strError, const string strUserAgent, const bool bMobile, const bool bFailOnError, const string strCustomRequest)
+{
+  bool bResult = false;
+  list<Json *> in, out;
+  Json *ptJson = new Json;
+
+  ptJson->i("Service", "curl");
+  in.push_back(ptJson);
+  ptJson = new Json;
+  ptJson->insert("URL", strURL);
+  ptJson->insert("Display", "Content,Cookies,Header");
+  if (!strCookies.empty())
+  {
+    ptJson->insert("Cookies", strCookies);
+    strCookies.clear();
+  }
+  if (ptAuth != NULL)
+  {
+    ptJson->m["Auth"] = new Json(ptAuth);
+  }
+  if (!strContent.empty())
+  {
+    ptJson->insert("Content", strContent);
+  }
+  ptJson->insert("FailOnError", ((bFailOnError)?"yes":"no"));
+  if (!strCustomRequest.empty())
+  {
+    ptJson->insert("CustomRequest", strCustomRequest);
+  }
+  if (ptGet != NULL)
+  {
+    ptJson->m["Get"] = new Json(ptGet);
+  }
+  if (!strHeader.empty())
+  {
+    ptJson->insert("Header", strHeader);
+  }
+  if (!strUserAgent.empty())
+  {
+    ptJson->insert("UserAgent", strUserAgent);
+  }
+  ptJson->insert("Mobile", ((bMobile)?"yes":"no"));
+  if (ptPost != NULL)
+  {
+    ptJson->m["Post"] = new Json(ptPost);
+  }
+  if (ptPut != NULL)
+  {
+    ptJson->m["Put"] = new Json(ptPut);
+  }
+  if (!strProxy.empty())
+  {
+    ptJson->insert("Proxy", strProxy);
+  }
+  if (!strType.empty())
+  {
+    ptJson->insert("Type", strType);
+  }
+  in.push_back(ptJson);
+  if (junction(in, out, strError))
+  {
+    map<string, string> requestResponse;
+    out.front()->flatten(requestResponse, true);
+    if (out.size() == 2)
+    {
+      if (out.back()->m.find("Cookies") != out.back()->m.end())
+      {
+        strCookies = out.back()->m["Cookies"]->v;
+      }
+      if (out.back()->m.find("Header") != out.back()->m.end())
+      {
+        strHeader = out.back()->m["Header"]->v;
+      }
+      if (out.back()->m.find("Content") != out.back()->m.end())
+      {
+        strContent = out.back()->m["Content"]->v;
+      }
+    }
+    if (requestResponse.find("Status") != requestResponse.end() && requestResponse["Status"] == "okay")
+    {
+      bResult = true;
+    }
+    else if (requestResponse.find("Error") != requestResponse.end() && !requestResponse["Error"].empty())
+    {
+      strError = requestResponse["Error"];
+    }
+    else
+    {
+      strError = "Encountered an unknown error.";
+    }
+    requestResponse.clear();
+  }
+  for (auto &i : in)
+  {
+    delete i;
+  }
+  for (auto &i : out)
+  {
+    delete i;
+  }
+
+  return bResult;
+}
+// }}}
 // {{{ db
 // {{{ db()
 bool Interface::db(const string f, Json *d, string &e)
