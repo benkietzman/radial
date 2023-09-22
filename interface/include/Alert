@@ -25,13 +25,13 @@ namespace radial
 class Alert : public Interface
 {
   protected:
-  bool (*m_pAnalyzeCallback)(string, const string, const string, map<string, string>, string &);
+  bool (*m_pAnalyzeCallback)(string, const string, const string, const string, map<string, string>, string &);
 
   public:
   Alert(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Alert();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void setAnalyze(bool (*)(string, const string, const string, map<string, string>, string &));
+  void setAnalyze(bool (*)(string, const string, const string, const string, map<string, string>, string &));
 };
 // }}}
 }

@@ -86,7 +86,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
           ssName << strFirstName << strLastName;
           if (m_pAnalyzeCallback != NULL)
           {
-            if (!m_pAnalyzeCallback(strPrefix, strMessage, ssName.str(), user, strError))
+            if (!m_pAnalyzeCallback(strPrefix, strUser, ssName.str(), strMessage, user, strError))
             {
               errors.push_back(strError);
             }
@@ -166,7 +166,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
 }
 // }}}
 // {{{ setAnalyze()
-void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, map<string, string>, string &))
+void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, const string, map<string, string>, string &))
 {
   m_pAnalyzeCallback = pCallback;
 }
