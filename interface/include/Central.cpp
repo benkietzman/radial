@@ -1209,7 +1209,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
               m[0] << "</body></html>";
               to.sort();
               to.unique();
-              email(m_strEmail, to, s.str(), m[1].str(), m[0].str(), e);
+              email(m_strEmail, to, s.str(), m[1].str(), m[0].str());
               b = true;
             }
             userDeinit(f);
@@ -1580,7 +1580,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
             m << "If you have any questions or concerns, please contact your application contacts.";
             m << "</div>";
             m << "</body></html>";
-            email(m_strEmail, to, s.str(), "", m.str(), e);
+            email(m_strEmail, to, s.str(), "", m.str());
             k.second->i("sent", "1", 'n');
           }
         }
@@ -3387,7 +3387,7 @@ void Central::schedule(string strPrefix)
               ssHtml << "</p>";
               ssHtml << "</body>";
               ssHtml << "</html>";
-              email(m_strEmail, to, cc, bcc, strSubject, ssText.str(), ssHtml.str(), file, strError);
+              email(m_strEmail, to, cc, bcc, strSubject, ssText.str(), ssHtml.str(), file);
             }
             else
             {
@@ -3675,7 +3675,7 @@ bool Central::serverNotify(radialUser &d, string &e)
               m << "If you have any questions or concerns, please contact your server contacts.";
               m << "</div>";
               m << "</body></html>";
-              email(m_strEmail, to, s.str(), "", m.str(), e);
+              email(m_strEmail, to, s.str(), "", m.str());
               k.second->i("sent", "1", 'n');
             }
             userInit(d, h);
@@ -3805,7 +3805,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                 m << "</body></html>";
                 to.sort();
                 to.unique();
-                email(m_strEmail, to, s.str(), "", m.str(), e);
+                email(m_strEmail, to, s.str(), "", m.str());
               }
             }
             userDeinit(h);

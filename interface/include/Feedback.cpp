@@ -287,7 +287,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                     stringstream ssSubject, ssText;
                     ssSubject << "Feedback Received:  " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"");
                     ssText << "Feedback has been received for the " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"") << " survey." << endl << endl << "https://" << m_strServer << "/feedback/#/results/" << i->m["survey"]->m["hash"]->v;
-                    email("", i->m["survey"]->m["owner"]->m["email"]->v, ssSubject.str(), ssText.str(), "", e);
+                    email("", i->m["survey"]->m["owner"]->m["email"]->v, ssSubject.str(), ssText.str(), "");
                   }
                   for (auto &j : i->m["survey"]->m["questions"]->l)
                   {
