@@ -2010,6 +2010,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
             else
             {
               Json *ptLink = new Json(ptJson);
+              ptLink->i("Interface", "irc");
               ptLink->i("Node", master());
               if (hub("link", ptLink, strError))
               {
