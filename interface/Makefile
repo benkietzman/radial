@@ -7,8 +7,9 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket
-install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket
+install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket $(prefix)/radial/interface
+	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/centralmon $(prefix)/radial/interface/
@@ -31,6 +32,16 @@ install: bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin
 	install --mode=775 bin/websocket $(prefix)/radial/interface/
 # }}}
 
+# {{{ alert
+alert: bin/alert $(prefix)/radial/interface
+	install --mode=775 bin/alert $(prefix)/radial/interface/
+bin/alert: ../../common/libcommon.a obj/alert.o obj/Base.o obj/Interface.o obj/Alert.o bin
+	g++ -o bin/alert obj/alert.o obj/Base.o obj/Interface.o obj/Alert.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/alert.o: alert.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c alert.cpp -o obj/alert.o $(CPPFLAGS) -I../../common
+obj/Alert.o: include/Alert.cpp obj
+	g++ -ggdb -Wall -c include/Alert.cpp -o obj/Alert.o $(CPPFLAGS) -I../../common
+# }}}
 # {{{ auth
 auth: bin/auth $(prefix)/radial/interface
 	install --mode=775 bin/auth $(prefix)/radial/interface/
