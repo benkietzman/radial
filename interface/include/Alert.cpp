@@ -84,34 +84,31 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             }
           }
           ssName << strFirstName << strLastName;
-          if (m_pAnalyzeCallback != NULL)
+          if (!chat(ssName.str(), strMessage, strError))
           {
-            if (!m_pAnalyzeCallback(strPrefix, strUser, ssName.str(), strMessage, user, strError))
+            errors.push_back((string)"Interface::chat() " + strError);
+          }
+          if (!user["email"].empty())
+          {
+            email(user["email"], user["email"], "Alert", strMessage, "");
+            if (!user["pager"].empty())
             {
-              errors.push_back(strError);
+              email(user["email"], user["pager"], "Alert", strMessage, "");
             }
           }
-          else
+          if (!live("", strUser, {{"Action", "audio"}, {"Media", "/media/alert.mp3"}}, strError))
           {
-            if (!chat(ssName.str(), strMessage, strError))
+            errors.push_back((string)"Interface::live(audio) " + strError);
+          }
+          if (!live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
+          {
+            errors.push_back((string)"Interface::live(message) " + strError);
+          }
+          if (m_pAnalyzeCallback != NULL)
+          {
+            if (!m_pAnalyzeCallback(strPrefix, strUser, strMessage, strError))
             {
-              errors.push_back((string)"Interface::chat() " + strError);
-            }
-            if (!user["email"].empty())
-            {
-              email(user["email"], user["email"], "Alert", strMessage, "");
-            }
-            if (!live("", strUser, {{"Action", "audio"}, {"Media", "/media/alert.mp3"}}, strError))
-            {
-              errors.push_back((string)"Interface::live(audio) " + strError);
-            }
-            if (!live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
-            {
-              errors.push_back((string)"Interface::live(message) " + strError);
-            }
-            if (!pageUser(strUser, strMessage, strError))
-            {
-              errors.push_back((string)"Interface::pageUser() " + strError);
+              errors.push_back(strError);
             }
           }
           if (errors.empty())
@@ -166,7 +163,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
 }
 // }}}
 // {{{ setAnalyze()
-void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, const string, map<string, string>, string &))
+void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, string &))
 {
   m_pAnalyzeCallback = pCallback;
 }
