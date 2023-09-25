@@ -47,7 +47,12 @@ export default
     // [[[ editUser()
     s.editUser = () =>
     {
-      let request = {Interface: 'central', 'Function': 'userEdit', Request: c.simplify(s.user)};
+      let user = c.simplify(s.user);
+      if (user.password == '')
+      {
+        delete user.password;
+      }
+      let request = {Interface: 'central', 'Function': 'userEdit', Request: user};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
