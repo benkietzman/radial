@@ -442,7 +442,7 @@ export default
             <table class="table table-condensed table-striped">
               <tr>
                 <th>
-                  Chat:
+                  <span title="Sends a private chat message to the user on IRC.">Chat:</span>
                 </th>
                 <td>
                   {{#if user.bEdit}}
@@ -452,7 +452,7 @@ export default
                   {{/if}}
                 </td>
                 <th style="white-space: nowrap;">
-                  Live Audio:
+                  <span title="Plays audio to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Audio:</span>
                 </th>
                 <td>
                   {{#if user.bEdit}}
@@ -464,7 +464,7 @@ export default
               </tr>
               <tr>
                 <th>
-                  Email:
+                  <span title="Sends an email to the email address.">Email:</span>
                 </th>
                 <td>
                   {{#if user.bEdit}}
@@ -474,7 +474,7 @@ export default
                   {{/if}}
                 </td>
                 <th style="white-space: nowrap;">
-                  Live Message:
+                  <span title="Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Message:</span>
                 </th>
                 <td>
                   {{#if user.bEdit}}
@@ -486,7 +486,7 @@ export default
               </tr>
               <tr>
                 <th>
-                  Pager:
+                  <span title="Sends an email to the pager address.">Pager:</span>
                 </th>
                 <td>
                   {{#if user.bEdit}}

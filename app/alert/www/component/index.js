@@ -83,8 +83,8 @@ export default
         That interface will attempt to send the alert to the following devices:
       </p>
       <ul>
-        <li><b>email</b>:  Sends an email to the email address defined within Central.</li>
         <li><b>chat</b>:  Sends a private chat message to the user on IRC.</li>
+        <li><b>email</b>:  Sends an email to the email address defined within Central.</li>
         <li><b>live</b>:  Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.
         <li><b>text</b>:  Sends an email to the pager address defined within Central.</li>
       </ul>
