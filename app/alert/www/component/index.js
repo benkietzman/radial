@@ -77,7 +77,7 @@ export default
   <div class="row">
     <div class="col-md-6">
       <p>
-        Use the form on the right to send an alert message to a given user.  The message will be processed by the alert interface within Radial.
+        Use the provided form to send an alert message to a given user.  The message will be processed by the alert interface within Radial.
       </p>
       <p>
         That interface will attempt to send to the following devices:
