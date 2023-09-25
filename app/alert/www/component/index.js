@@ -21,8 +21,40 @@ export default
       },
       // ]]]
       a: a,
-      c: c
+      c: c,
+      users: []
     });
+    // [[[ load
+    let load = () =>
+    {
+      if (s.users.length == 0)
+      {
+        s.info.v = 'Retrieving users...';
+        let request = {Interface: 'central', 'Function': 'users'};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.info.v = null;
+          if (c.wsResponse(response, error))
+          {
+            let users = response.Response;
+            for (let i = 0; i < users.length; i++)
+            {
+              if (users[i].alert_chat.value == 1 || (users[i].alert_email.value == 1 && users[i].email != '') || users[i].alert_live_audio.value == 1 || users[i].alert_live_message.value == 1 || (users[i].alert_pager.value == 1 && users[i].pager != ''))
+              {
+                s.users.push({first_name: users[i].first_name, last_name: users[i].last_name, userid: users[i].userid});
+              }
+            }
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+          s.u();
+        });
+      }
+    };
+    // ]]]
     // [[[ send()
     s.send = () =>
     {
@@ -58,7 +90,11 @@ export default
     };
     // ]]]
     s.u();
-    if (!a.ready())
+    if (a.ready())
+    {
+      load();
+    }
+    else
     {
       s.info.v = 'Authenticating session...';
     }
@@ -66,6 +102,7 @@ export default
     {
       s.info.v = null;
       s.u();
+      load();
     });
   },
   // ]]]
@@ -91,8 +128,10 @@ export default
     </div>
     <div class="col-md-6">
       {{#isValid}}
-      <div class="form-group"><div class="input-group"><input type="text" class="form-control" c-model="user" placeholder="User" value="User"></div></div>
-      <div class="form-group"><div class="input-group"><textarea class="form-control" c-model="message" placeholder="Type message here..."></textarea></div></div>
+      <select class="form-control" c-model="user"><option value="">-- Select User --</option>{{#each @root.users}}<option value="{{userid}}">{{last_name}}, {{first_name}} ({{userid}})</option>{{/each}}</select>
+      <br>
+      <textarea class="form-control" c-model="message" placeholder="Type message here..."></textarea>
+      <br>
       <button class="btn btn-success float-end" c-click="send()">Send</button>
       {{else}}
       <b class="text-warning">Please login in order to use this form.</b>
