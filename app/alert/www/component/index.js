@@ -28,10 +28,10 @@ export default
     {
       if (s.user.v)
       {
-        if (s.message.v)
+        if (s.mess.v)
         {
           s.info.v = 'Sending alert...';
-          let request = {Interface: 'alert', Request: {User: s.user.v, Message: s.message.v + ' - Sent by: ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'}};
+          let request = {Interface: 'alert', Request: {User: s.user.v, Message: s.mess.v + ' - Sent by: ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
@@ -71,8 +71,6 @@ export default
   // ]]]
   // [[[ template
   template: `
-  <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <h3 class="page-header">Send Alert Message</h3>
   <div class="row">
     <div class="col-md-6">
@@ -91,12 +89,16 @@ export default
     </div>
     <div class="col-md-6">
       {{#isValid}}
-      <div class="form-group"><div class="input-group"><input type="text" class="form-control" c-model="user" placeholder="User" value="User"></div></div>
-      <div class="form-group"><div class="input-group"><textarea class="form-control" c-model="message" placeholder="Type message here..."></textarea></div></div>
+      <div class="input-group"><span class="input-group-text">User</span><input type="text" class="form-control" c-model="user"></div>
+      <br>
+      <textarea class="form-control" c-model="mess" placeholder="Type message here..."></textarea>
+      <br>
       <button class="btn btn-success float-end" c-click="send()">Send</button>
       {{else}}
       <b class="text-warning">Please login in order to use this form.</b>
       {{/isValid}}
+      <div c-model="info" class="text-warning"></div>
+      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
     </div>
   </div>
   `
