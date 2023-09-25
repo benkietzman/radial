@@ -89,7 +89,7 @@ export default
     </div>
     <div class="col-md-6">
       {{#isValid}}
-      <input type="text" class="form-control" c-model="user" placeholder="Enter user...">
+      <div class="input-group"><span class="input-group-text">User</span><input type="text" class="form-control" c-model="user"></div>
       <br>
       <textarea class="form-control" c-model="mess" placeholder="Type message here..."></textarea>
       <br>
