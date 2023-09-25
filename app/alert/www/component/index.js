@@ -31,6 +31,7 @@ export default
         if (s.mess.v)
         {
           s.message.v = null;
+          s.success.v = null;
           s.info.v = 'Sending alert...';
           let request = {Interface: 'alert', Request: {User: s.user.v, Message: s.mess.v + ' - Sent by: ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'}};
           c.wsRequest('radial', request).then((response) =>
@@ -39,7 +40,7 @@ export default
             s.info.v = null;
             if (c.wsResponse(response, error))
             {
-              alert('The alert has been sent.');
+              s.success.v = 'The alert has been sent.';
             }
             else
             {
@@ -100,6 +101,7 @@ export default
       {{/isValid}}
       <div c-model="info" class="text-warning"></div>
       <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+      <div c-model="success" class="text-success"></div>
     </div>
   </div>
   `
