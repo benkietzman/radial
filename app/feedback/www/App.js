@@ -74,7 +74,6 @@ class App
   // {{{ resetMenu()
   resetMenu()
   {
-    let unIndex, unSubIndex;
     this.c.clearMenu();
     this.c.resetMenu();
   }
