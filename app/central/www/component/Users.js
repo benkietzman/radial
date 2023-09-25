@@ -435,7 +435,7 @@ export default
       </td>
       <td colspan="6" rowspan="5">
         <div class="card">
-          <div class="card-header bg-warning text-white">
+          <div class="card-header bg-info text-white">
             Alert Settings
           </div>
           <div class="card-body">
