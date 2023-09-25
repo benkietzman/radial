@@ -73,7 +73,7 @@ export default
   template: `
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
-  <h3 class="page-header">Alert Notification</h3>
+  <h3 class="page-header">Send Alert Message</h3>
   <div class="row">
     <div class="col-md-6">
       <p>
