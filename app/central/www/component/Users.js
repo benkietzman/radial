@@ -221,6 +221,11 @@ export default
       {
         s.user.active = a.setNoYes(s.user.active);
         s.user.admin = a.setNoYes(s.user.admin);
+        s.user.alert_chat = a.setNoYes(s.user.alert_chat);
+        s.user.alert_email = a.setNoYes(s.user.alert_email);
+        s.user.alert_pager = a.setNoYes(s.user.alert_pager);
+        s.user.alert_live_audio = a.setNoYes(s.user.alert_live_audio);
+        s.user.alert_live_message = a.setNoYes(s.user.alert_live_message);
         s.user.locked = a.setNoYes(s.user.locked);
       }
       // ]]]
@@ -452,7 +457,15 @@ export default
         {{user.email}}
         {{/if}}
       </td>
-      <td colspan="2">
+      <th style="white-space: nowrap;">
+        Alert Email:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.alert_email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.alert_email.name}}
+        {{/if}}
       </td>
     </tr>
     <tr>
@@ -466,10 +479,17 @@ export default
         {{user.pager}}
         {{/if}}
       </td>
-      <td colspan="2">
+      <th style="white-space: nowrap;">
+        Alert Pager:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.alert_pager" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.alert_pager.name}}
+        {{/if}}
       </td>
     </tr>
-    {{#if user.bAdmin}}
     <tr>
       <th style="white-space: nowrap;">
         Password:
@@ -477,14 +497,49 @@ export default
       <td>
         {{#if user.bEdit}}
         <input type="password" class="form-control" c-model="user.password">
-        {{else}}
+        {{else if user.bAdmin}}
         *** CLICK EDIT TO MODIFY ***
         {{/if}}
       </td>
-      <td colspan="2">
+      <th style="white-space: nowrap;">
+        Alert Chat:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.alert_chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.alert_chat.name}}
+        {{/if}}
       </td>
     </tr>
-    {{/if}}
+    <tr>
+      <td colspan="2">
+      </td>
+      <th style="white-space: nowrap;">
+        Alert Live Audio:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.alert_live_audio" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.alert_live_audio.name}}
+        {{/if}}
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+      </td>
+      <th style="white-space: nowrap;">
+        Alert Live Message:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.alert_live_message" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.alert_live_message.name}}
+        {{/if}}
+      </td>
+    </tr>
   </table>
   {{/if}}
   <!-- ]]] -->

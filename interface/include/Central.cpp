@@ -4367,6 +4367,26 @@ bool Central::userEdit(radialUser &d, string &e)
       {
         i->i("admin", i->m["admin"]->m["value"]->v);
       }
+      if (exist(i, "alert_chat") && !empty(i->m["alert_chat"], "value"))
+      {
+        i->i("alert_chat", i->m["alert_chat"]->m["value"]->v);
+      }
+      if (exist(i, "alert_email") && !empty(i->m["alert_email"], "value"))
+      {
+        i->i("alert_email", i->m["alert_email"]->m["value"]->v);
+      }
+      if (exist(i, "alert_live_audio") && !empty(i->m["alert_live_audio"], "value"))
+      {
+        i->i("alert_live_audio", i->m["alert_live_audio"]->m["value"]->v);
+      }
+      if (exist(i, "alert_live_message") && !empty(i->m["alert_live_message"], "value"))
+      {
+        i->i("alert_live_message", i->m["alert_live_message"]->m["value"]->v);
+      }
+      if (exist(i, "alert_pager") && !empty(i->m["alert_pager"], "value"))
+      {
+        i->i("alert_pager", i->m["alert_pager"]->m["value"]->v);
+      }
       if (exist(i, "locked") && !empty(i->m["locked"], "value"))
       {
         i->i("locked", i->m["locked"]->m["value"]->v);
@@ -4424,6 +4444,11 @@ bool Central::users(radialUser &d, string &e)
       b = true; 
       ny(j, "active");
       ny(j, "admin");
+      ny(j, "alert_chat");
+      ny(j, "alert_email");
+      ny(j, "alert_live_audio");
+      ny(j, "alert_live_message");
+      ny(j, "alert_pager");
       ny(j, "locked");
       o->pb(j);
       delete j;
