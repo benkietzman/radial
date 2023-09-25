@@ -100,7 +100,7 @@ export default
       <b class="text-warning">Please login in order to use this form.</b>
       {{/isValid}}
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+      <div c-model="message" class="text-danger"></div>
       <div c-model="success" class="text-success"></div>
     </div>
   </div>
