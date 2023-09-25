@@ -96,7 +96,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
               email(user["email"], user["pager"], "Alert", strMessage, "");
             }
           }
-          if (!live("", strUser, {{"Action", "audio"}, {"Media", "/media/alert.mp3"}}, strError))
+          if (!live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
           {
             errors.push_back((string)"Interface::live(audio) " + strError);
           }
