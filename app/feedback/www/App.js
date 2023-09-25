@@ -12,17 +12,11 @@ class App
     this.c = options.common;
     this.m_bReady = false;
     this.m_bCommonAuthReady = false;
-    this.m_bCommonFooterReady = false;
     this.m_bCommonWsReady = false;
     this.m_strApplication = null;
     this.c.attachEvent('commonAuthReady', (data) =>
     {
       this.m_bCommonAuthReady = true;
-      this.ready();
-    });
-    this.c.attachEvent('commonFooterReady', (data) =>
-    {
-      this.m_bCommonFooterReady = true;
       this.ready();
     });
     this.c.attachEvent('commonWsReady_Feedback', (data) =>
