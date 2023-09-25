@@ -56,76 +56,118 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
         ptUser->i("userid", strUser);
         if (db("dbCentralUsers", ptUser, user, strError))
         {
-          list<string> errors;
-          string strFirstName, strLastName;
-          stringstream ssFirstName(user["first_name"]), ssLastName(user["last_name"]), ssName;
-          ssFirstName >> strFirstName;
-          for (size_t i = 0; i < strFirstName.size(); i++)
+          if (!user.empty())
           {
-            if (i == 0)
+            bool bAlerted = false;
+            list<string> errors;
+            string strFirstName, strLastName;
+            stringstream ssFirstName(user["first_name"]), ssLastName(user["last_name"]), ssName;
+            ssFirstName >> strFirstName;
+            for (size_t i = 0; i < strFirstName.size(); i++)
             {
-              strFirstName[i] = toupper(strFirstName[i]);
+              if (i == 0)
+              {
+                strFirstName[i] = toupper(strFirstName[i]);
+              }
+              else
+              {
+                strFirstName[i] = tolower(strFirstName[i]);
+              }
+            }
+            ssLastName >> strLastName;
+            for (size_t i = 0; i < strLastName.size(); i++)
+            {
+              if (i == 0)
+              {
+                strLastName[i] = toupper(strLastName[i]);
+              }
+              else
+              {
+                strLastName[i] = tolower(strLastName[i]);
+              }
+            }
+            ssName << strFirstName << strLastName;
+            if (user["alert_chat"] == "1")
+            {
+              if (chat(ssName.str(), strMessage, strError))
+              {
+                bAlerted = true;
+              }
+              else
+              {
+                errors.push_back((string)"Interface::chat() " + strError);
+              }
+            }
+            if (!user["email"].empty())
+            {
+              if (user["alert_email"] == "1")
+              {
+                bAlerted = true;
+                email(user["email"], user["email"], "Alert", strMessage, "");
+              }
+              if (user["alert_pager"] == "1" && !user["pager"].empty())
+              {
+                bAlerted = true;
+                email(user["email"], user["pager"], "Alert", strMessage, "");
+              }
+            }
+            if (user["alert_live_audio"] == "1")
+            {
+              if (live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
+              {
+                bAlerted = true;
+              }
+              else
+              {
+                errors.push_back((string)"Interface::live(audio) " + strError);
+              }
+            }
+            if (user["alert_live_message"] == "1")
+            {
+              if (live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
+              {
+                bAlerted = true;
+              }
+              else
+              {
+                errors.push_back((string)"Interface::live(message) " + strError);
+              }
+            }
+            if (m_pAnalyzeCallback != NULL)
+            {
+              if (m_pAnalyzeCallback(strPrefix, strUser, strMessage, strError))
+              {
+                bAlerted = true;
+              }
+              else
+              {
+                errors.push_back(strError);
+              }
+            }
+            if (bAlerted)
+            {
+              bResult = true;
+            }
+            else if (!errors.empty())
+            {
+              strError.clear();
+              for (auto error = errors.begin(); error != errors.end(); error++)
+              {
+                if (error != errors.begin())
+                {
+                  strError += ", ";
+                }
+                strError += (*error);
+              }
             }
             else
             {
-              strFirstName[i] = tolower(strFirstName[i]);
+              strError = "User does not have any alerting enabled.";
             }
-          }
-          ssLastName >> strLastName;
-          for (size_t i = 0; i < strLastName.size(); i++)
-          {
-            if (i == 0)
-            {
-              strLastName[i] = toupper(strLastName[i]);
-            }
-            else
-            {
-              strLastName[i] = tolower(strLastName[i]);
-            }
-          }
-          ssName << strFirstName << strLastName;
-          if (user["alert_chat"] == "1" && !chat(ssName.str(), strMessage, strError))
-          {
-            errors.push_back((string)"Interface::chat() " + strError);
-          }
-          if (user["alert_email"] == "1" && !user["email"].empty())
-          {
-            email(user["email"], user["email"], "Alert", strMessage, "");
-            if (user["alert_pager"] == "1" && !user["pager"].empty())
-            {
-              email(user["email"], user["pager"], "Alert", strMessage, "");
-            }
-          }
-          if (user["alert_live_audio"] == "1" && !live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
-          {
-            errors.push_back((string)"Interface::live(audio) " + strError);
-          }
-          if (user["alert_live_message"] == "1" && !live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
-          {
-            errors.push_back((string)"Interface::live(message) " + strError);
-          }
-          if (m_pAnalyzeCallback != NULL)
-          {
-            if (!m_pAnalyzeCallback(strPrefix, strUser, strMessage, strError))
-            {
-              errors.push_back(strError);
-            }
-          }
-          if (errors.empty())
-          {
-            bResult = true;
           }
           else
           {
-            strError.clear();
-            for (auto error = errors.begin(); error != errors.end(); error++)
-            {
-              if (error != errors.begin())
-              {
-                strError += ", ";
-              }
-              strError += (*error);
-            }
+            strError = "Please provide a valid User that is registered within Central.";
           }
         }
         else
