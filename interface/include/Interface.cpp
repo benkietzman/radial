@@ -2482,6 +2482,11 @@ bool Interface::user(radialUser &d, string &e)
         b = true;
         ny(j, "active");
         ny(j, "admin");
+        ny(j, "alert_chat");
+        ny(j, "alert_email");
+        ny(j, "alert_live_audio");
+        ny(j, "alert_live_message");
+        ny(j, "alert_pager");
         ny(j, "locked");
         d.p->i("o", j);
         delete j;
