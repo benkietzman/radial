@@ -1494,7 +1494,7 @@ bool Db::dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e)
   if (dep({"userid"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"active", "admin", "email", "first_name", "last_name", "locked", "pager", "userid"};
+    list<string> ks = {"active", "admin", "alert_chat", "alert_email", "alert_live_audio", "alert_live_message", "alert_pager", "email", "first_name", "last_name", "locked", "pager", "userid"};
     stringstream qs;
     qs << "insert into person (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);

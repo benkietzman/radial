@@ -4328,6 +4328,11 @@ bool Central::userAdd(radialUser &d, string &e)
         string id, q;
         i->i("active", "1", 'n');
         i->i("admin", "0", 'n');
+        i->i("alert_chat", "0", 'n');
+        i->i("alert_email", "1", 'n');
+        i->i("alert_live_audio", "0", 'n');
+        i->i("alert_live_message", "0", 'n');
+        i->i("alert_live_pager", "0", 'n');
         i->i("locked", "0", 'n');
         if (db("dbCentralUserAdd", i, id, q, e))
         {
