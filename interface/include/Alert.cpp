@@ -84,23 +84,23 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             }
           }
           ssName << strFirstName << strLastName;
-          if (!chat(ssName.str(), strMessage, strError))
+          if (user["alert_chat"] == "1" && !chat(ssName.str(), strMessage, strError))
           {
             errors.push_back((string)"Interface::chat() " + strError);
           }
-          if (!user["email"].empty())
+          if (user["alert_email"] == "1" && !user["email"].empty())
           {
             email(user["email"], user["email"], "Alert", strMessage, "");
-            if (!user["pager"].empty())
+            if (user["alert_pager"] == "1" && !user["pager"].empty())
             {
               email(user["email"], user["pager"], "Alert", strMessage, "");
             }
           }
-          if (!live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
+          if (user["alert_live_audio"] == "1" && !live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
           {
             errors.push_back((string)"Interface::live(audio) " + strError);
           }
-          if (!live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
+          if (user["alert_live_message"] == "1" && !live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
           {
             errors.push_back((string)"Interface::live(message) " + strError);
           }
