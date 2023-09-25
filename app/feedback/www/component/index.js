@@ -292,7 +292,7 @@ export default
       }
       else
       {
-        c.bLoadedSurveys['Your Surveys'] = true;
+        s.bLoadedSurveys['Your Surveys'] = true;
       }
       s.getSurveys('Public Surveys');
     }
