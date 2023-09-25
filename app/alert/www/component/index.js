@@ -77,10 +77,10 @@ export default
   <div class="row">
     <div class="col-md-6">
       <p>
-        Use the form on the right in order to send an alert message to the given user.  The alert will be sent through and processed by the alert interface within Radial.
+        Use the form on the right to send an alert message to a given user.  The message will be processed by the alert interface within Radial.
       </p>
       <p>
-        That interface will attempt to send the alert to the following devices:
+        That interface will attempt to send to the following devices:
       </p>
       <ul>
         <li><b>chat</b>:  Sends a private chat message to the user on IRC.</li>
