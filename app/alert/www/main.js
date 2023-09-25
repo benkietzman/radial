@@ -24,7 +24,6 @@ let common = new Common(
   routes:
   [
     {path: '/', name: 'index', component: '/alert/component/index.js'},
-    {path: '/:user', name: 'index', component: '/alert/component/index.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
     {default: '/'}
@@ -32,7 +31,7 @@ let common = new Common(
 });
 common.enableJwt(true);
 common.enableJwtInclusion(true);
-common.setRedirectPath('https://'+location.host+'/alert/#/');
+common.setRedirectPath('https://'+location.host+'/alert');
 common.setSecureLogin(true);
 common.wsCreate('radial', location.host, '7797', true, 'radial');
 let app = new App(
