@@ -22,7 +22,6 @@ namespace radial
 // {{{ Alert()
 Alert::Alert(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "alert", argc, argv, pCallback)
 {
-  m_pAnalyzeCallback = NULL;
 }
 // }}}
 // {{{ ~Alert()
@@ -133,16 +132,69 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 errors.push_back((string)"Interface::live(message) " + strError);
               }
             }
-            if (m_pAnalyzeCallback != NULL)
+            if (m_pWarden != NULL)
             {
-              if (m_pAnalyzeCallback(strPrefix, strUser, strMessage, strError))
+              Json *ptAlertAddons = new Json;
+              if (m_pWarden->vaultRetrieve({"alert", strUser}, ptAlertAddons, strError) && !empty(ptAlertAddons, "URL"))
               {
-                bAlerted = true;
+                string strContent, strCookies, strHeader, strProxy;
+                Json *ptPost = new Json;
+                ptPost->i("Interface", "alert");
+                if (!empty(ptAlertAddons, "Proxy"))
+                {
+                  strProxy = ptAlertAddons->m["Proxy"]->v;
+                }
+                if (!empty(ptAlertAddons, "RadialUser"))
+                {
+                  ptPost->i("User", ptAlertAddons->m["RadialUser"]->v);
+                }
+                if (!empty(ptAlertAddons, "RadialPassword"))
+                {
+                  ptPost->i("Password", ptAlertAddons->m["RadialPassword"]->v);
+                }
+                ptPost->m["Request"] = new Json;
+                if (!empty(ptAlertAddons, "User"))
+                {
+                  ptPost->m["Request"]->insert("User", ptAlertAddons->m["User"]->v);
+                }
+                ptPost->m["Request"]->insert("Message", strMessage);
+                if (curl(ptAlertAddons->m["URL"]->v, "json", NULL, NULL, ptPost, NULL, strProxy, strCookies, strHeader, strContent, strError))
+                {
+                  Json *ptContent = new Json(strContent);
+                  if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
+                  {
+                    bAlerted = true;
+                  }
+                  else
+                  {
+                    if (ptContent->m.find("Error") != ptContent->m.end())
+                    {
+                      if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
+                      {
+                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
+                      }
+                      else if (!ptContent->m["Error"]->v.empty())
+                      {
+                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
+                      }
+                      else
+                      {
+                        errors.push_back("Interface::curl() Encountered an unknown error.");
+                      }
+                    }
+                    else
+                    {
+                      errors.push_back("Interface::curl() Encountered an unknown error.");
+                    }
+                  }
+                  delete ptContent;
+                }
+                else
+                {
+                  errors.push_back((string)"Interface::curl() " + strError);
+                }
               }
-              else
-              {
-                errors.push_back(strError);
-              }
+              delete ptAlertAddons;
             }
             if (bAlerted)
             {
@@ -202,12 +254,6 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   }
   delete ptJson;
   threadDecrement();
-}
-// }}}
-// {{{ setAnalyze()
-void Alert::setAnalyze(bool (*pCallback)(string, const string, const string, string &))
-{
-  m_pAnalyzeCallback = pCallback;
 }
 // }}}
 }
