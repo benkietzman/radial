@@ -1608,6 +1608,7 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
       }
     }
     qs << " where id = " << v(i->m["id"]->v);
+log(qs.str());
     b = dbu("central", qs, q, e);
   }
 
