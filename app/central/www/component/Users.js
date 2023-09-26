@@ -331,7 +331,7 @@ export default
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th>User</th><th>Email</th><th>Pager</th><th>Active</th><th>Admin</th><th>locked</th>
+        <th>User</th><th>Email</th><th>Text</th><th>Active</th><th>Admin</th><th>locked</th>
       </tr>
       {{#isValid "Central"}}
       <tr>
@@ -400,7 +400,17 @@ export default
         {{user.userid}}
         {{/if}}
       </td>
-      <th style="white-space: nowrap;">
+      <th>
+        Email:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.email">
+        {{else}}
+        {{user.email}}
+        {{/if}}
+      </td>
+      <th>
         Active:
       </th>
       <td>
@@ -408,26 +418,6 @@ export default
         <select class="form-control" c-model="user.active" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{else}}
         {{user.active.name}}
-        {{/if}}
-      </td>
-      <th style="white-space: nowrap;">
-        Admin:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <select class="form-control" c-model="user.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{user.admin.name}}
-        {{/if}}
-      </td>
-      <th style="white-space: nowrap;">
-        Locked:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <select class="form-control" c-model="user.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{user.locked.name}}
         {{/if}}
       </td>
     </tr>
@@ -442,133 +432,25 @@ export default
         {{user.first_name}}
         {{/if}}
       </td>
-      <td colspan="6" rowspan="5">
-        <div class="card">
-          <div class="card-header bg-info text-white">
-            Alert Settings
-          </div>
-          <div class="card-body">
-            <table class="table table-condensed table-striped">
-              <tr>
-                <th>
-                  <span title="Sends a private chat message to the user on IRC.">Chat:</span>
-                </th>
-                <td>
-                  {{#if user.bEdit}}
-                  <select class="form-control" c-model="user.alert_chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-                  {{else}}
-                  {{user.alert_chat.name}}
-                  {{/if}}
-                </td>
-                <th style="white-space: nowrap;">
-                  <span title="Plays audio to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Audio:</span>
-                </th>
-                <td>
-                  {{#if user.bEdit}}
-                  <select class="form-control" c-model="user.alert_live_audio" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-                  {{else}}
-                  {{user.alert_live_audio.name}}
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="Sends an email to the email address.">Email:</span>
-                </th>
-                <td>
-                  {{#if user.bEdit}}
-                  <select class="form-control" c-model="user.alert_email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-                  {{else}}
-                  {{user.alert_email.name}}
-                  {{/if}}
-                </td>
-                <th style="white-space: nowrap;">
-                  <span title="Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Message:</span>
-                </th>
-                <td>
-                  {{#if user.bEdit}}
-                  <select class="form-control" c-model="user.alert_live_message" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-                  {{else}}
-                  {{user.alert_live_message.name}}
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="Sends an email to the pager address.">Pager:</span>
-                </th>
-                <td>
-                  {{#if user.bEdit}}
-                  <select class="form-control" c-model="user.alert_pager" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-                  {{else}}
-                  {{user.alert_pager.name}}
-                  {{/if}}
-                </td>
-                <td colspan="2"></td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="">Remote URL:</span>
-                </th>
-                <td colspan="3">
-                  {{#if user.bEdit}}
-                  <input type="text" class="form-control" c-model="user.alert_remote_url">
-                  {{else}}
-                  {{user.alert_remote_url}}
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="">Remote Proxy:</span>
-                </th>
-                <td colspan="3">
-                  {{#if user.bEdit}}
-                  <input type="text" class="form-control" c-model="user.alert_remote_proxy">
-                  {{else}}
-                  {{user.alert_remote_proxy}}
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="">Remote Auth User:</span>
-                </th>
-                <td colspan="3">
-                  {{#if user.bEdit}}
-                  <input type="text" class="form-control" c-model="user.alert_remote_auth_user">
-                  {{else}}
-                  {{user.alert_remote_auth_user}}
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="">Remote Auth Password:</span>
-                </th>
-                <td colspan="3">
-                  {{#if user.bEdit}}
-                  <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
-                  {{else if user.bAdmin}}
-                  *** CLICK EDIT TO MODIFY ***
-                  {{/if}}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  <span title="">Remote User:</span>
-                </th>
-                <td colspan="3">
-                  {{#if user.bEdit}}
-                  <input type="text" class="form-control" c-model="user.alert_remote_user">
-                  {{else}}
-                  {{user.alert_remote_user}}
-                  {{/if}}
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>
+      <th>
+        Text:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <input type="text" class="form-control" c-model="user.pager">
+        {{else}}
+        {{user.pager}}
+        {{/if}}
+      </td>
+      <th>
+        Admin:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.admin.name}}
+        {{/if}}
       </td>
     </tr>
     <tr>
@@ -582,33 +464,7 @@ export default
         {{user.last_name}}
         {{/if}}
       </td>
-    </tr>
-    <tr>
-      <th style="white-space: nowrap;">
-        Email:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.email">
-        {{else}}
-        {{user.email}}
-        {{/if}}
-      </td>
-    </tr>
-    <tr>
-      <th style="white-space: nowrap;">
-        Pager:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.pager">
-        {{else}}
-        {{user.pager}}
-        {{/if}}
-      </td>
-    </tr>
-    <tr>
-      <th style="white-space: nowrap;">
+      <th>
         Password:
       </th>
       <td>
@@ -618,8 +474,155 @@ export default
         *** CLICK EDIT TO MODIFY ***
         {{/if}}
       </td>
+      <th>
+        Locked:
+      </th>
+      <td>
+        {{#if user.bEdit}}
+        <select class="form-control" c-model="user.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.locked.name}}
+        {{/if}}
+      </td>
     </tr>
   </table>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header text-white">
+          Alert Settings
+        </div>
+        <div class="card-body">
+          <table class="table table-condensed">
+            <tr>
+              <th>
+                <span title="Sends a private chat message to the user on IRC.">Chat:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.alert_chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.alert_chat.name}}
+                {{/if}}
+              </td>
+              <th style="white-space: nowrap;">
+                <span title="Plays audio to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Audio:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.alert_live_audio" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.alert_live_audio.name}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <span title="Sends an email to the email address.">Email:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.alert_email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.alert_email.name}}
+                {{/if}}
+              </td>
+              <th style="white-space: nowrap;">
+                <span title="Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Message:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.alert_live_message" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.alert_live_message.name}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <span title="Sends an email to the text address.">Text:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.alert_pager" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.alert_pager.name}}
+                {{/if}}
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header text-white">
+          Alert - Remote Connection
+        </div>
+        <div class="card-body">
+          <table class="table table-condensed table-striped">
+            <tr>
+              <th>
+                <span title="RESTful URL for the remote Radial instance.">URL:</span>
+              </th>
+              <td colspan="3">
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_url">
+                {{else}}
+                {{user.alert_remote_url}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th style="white-space: nowrap;">
+                <span title="User for the remote Radial instance.">Auth User:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_auth_user">
+                {{else}}
+                {{user.alert_remote_auth_user}}
+                {{/if}}
+              </td>
+              <th style="white-space: nowrap;">
+                <span title="Password for the remote Radial instance.">Auth Password:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
+                {{else if user.bAdmin}}
+                *** CLICK EDIT TO MODIFY ***
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <span title="Remote user to receive alert.">User:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_user">
+                {{else}}
+                {{user.alert_remote_user}}
+                {{/if}}
+              </td>
+              <th>
+                <span title="Optional server:port for proxying the connection out of the local network.">Proxy:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_proxy">
+                {{else}}
+                {{user.alert_remote_proxy}}
+                {{/if}}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ applications -->
