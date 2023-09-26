@@ -70,9 +70,33 @@ void Log::callback(string strPrefix, const string strPacket, const bool bRespons
     {
       if (ptJson->m["Function"]->v == "alert")
       {
-        if (m_pCentral->alert(ptJson->m["Message"]->v, strError))
+        if (m_pCentral->notify("", ptJson->m["Message"]->v, strError))
         {
-          bResult = true;
+          if (m_alert.empty())
+          {
+            stringstream ssQuery;
+            ssQuery << "select distinct d.userid from application a, application_contact b, contact_type c, person d where a.id=b.application_id and b.type_id=c.id and b.contact_id=d.id and a.name = 'Radial' and b.notify = 1 and (c.type = 'Primary Developer' or c.type = 'Backup Developer') and d.userid is not null";
+            auto getUser = dbquery("central_r", ssQuery.str(), strError);
+            if (getUser != NULL)
+            {
+              for (auto &getUserRow : *getUser)
+              {
+                m_alert.push_back(getUserRow["userid"]);
+              }
+            }
+            dbfree(getUser);
+          }
+          if (!m_alert.empty())
+          {
+            bResult = true;
+            for (auto &i : m_alert)
+            {
+              if (!alert(i, (string)"Radial:  " + ptJson->m["Message"]->v, strError))
+              {
+                bResult = false;
+              }
+            }
+          }
         }
       }
       else if (ptJson->m["Function"]->v == "log")

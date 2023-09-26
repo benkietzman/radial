@@ -54,6 +54,7 @@ class Interface : public Base
   void (*m_pCallback)(string, const string, const bool);
 
   void alert(const string strMessage);
+  bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);

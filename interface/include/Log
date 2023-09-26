@@ -25,6 +25,7 @@ namespace radial
 class Log : public Interface
 {
   protected:
+  list<string> m_alert;
   string m_strEmail;
 
   public:

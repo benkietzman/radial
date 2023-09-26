@@ -42,205 +42,197 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (exist(ptJson, "Request"))
+  if (!empty(ptJson, "Message"))
   {
-    if (!empty(ptJson->m["Request"], "Message"))
+    string strMessage = ptJson->m["Message"]->v;
+    if (!empty(ptJson, "User"))
     {
-      string strMessage = ptJson->m["Request"]->m["Message"]->v;
-      if (!empty(ptJson->m["Request"], "User"))
+      map<string, string> user;
+      string strUser = ptJson->m["User"]->v;
+      Json *ptUser = new Json;
+      ptUser->i("userid", strUser);
+      if (db("dbCentralUsers", ptUser, user, strError))
       {
-        map<string, string> user;
-        string strUser = ptJson->m["Request"]->m["User"]->v;
-        Json *ptUser = new Json;
-        ptUser->i("userid", strUser);
-        if (db("dbCentralUsers", ptUser, user, strError))
+        if (!user.empty())
         {
-          if (!user.empty())
+          bool bAlerted = false;
+          list<string> errors;
+          string strFirstName, strLastName;
+          stringstream ssFirstName(user["first_name"]), ssLastName(user["last_name"]), ssName;
+          ssFirstName >> strFirstName;
+          for (size_t i = 0; i < strFirstName.size(); i++)
           {
-            bool bAlerted = false;
-            list<string> errors;
-            string strFirstName, strLastName;
-            stringstream ssFirstName(user["first_name"]), ssLastName(user["last_name"]), ssName;
-            ssFirstName >> strFirstName;
-            for (size_t i = 0; i < strFirstName.size(); i++)
+            if (i == 0)
             {
-              if (i == 0)
-              {
-                strFirstName[i] = toupper(strFirstName[i]);
-              }
-              else
-              {
-                strFirstName[i] = tolower(strFirstName[i]);
-              }
+              strFirstName[i] = toupper(strFirstName[i]);
             }
-            ssLastName >> strLastName;
-            for (size_t i = 0; i < strLastName.size(); i++)
+            else
             {
-              if (i == 0)
-              {
-                strLastName[i] = toupper(strLastName[i]);
-              }
-              else
-              {
-                strLastName[i] = tolower(strLastName[i]);
-              }
+              strFirstName[i] = tolower(strFirstName[i]);
             }
-            ssName << strFirstName << strLastName;
-            if (user["alert_chat"] == "1")
+          }
+          ssLastName >> strLastName;
+          for (size_t i = 0; i < strLastName.size(); i++)
+          {
+            if (i == 0)
             {
-              if (chat(ssName.str(), strMessage, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::chat() " + strError);
-              }
+              strLastName[i] = toupper(strLastName[i]);
             }
-            if (!user["email"].empty())
+            else
             {
-              if (user["alert_email"] == "1")
-              {
-                bAlerted = true;
-                email(user["email"], user["email"], "Alert", strMessage, "");
-              }
-              if (user["alert_pager"] == "1" && !user["pager"].empty())
-              {
-                bAlerted = true;
-                email(user["email"], user["pager"], "Alert", strMessage, "");
-              }
+              strLastName[i] = tolower(strLastName[i]);
             }
-            if (user["alert_live_audio"] == "1")
+          }
+          ssName << strFirstName << strLastName;
+          if (user["alert_chat"] == "1")
+          {
+            if (chat(ssName.str(), strMessage, strError))
             {
-              if (live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::live(audio) " + strError);
-              }
+              bAlerted = true;
             }
-            if (user["alert_live_message"] == "1")
+            else
             {
-              if (live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::live(message) " + strError);
-              }
+              errors.push_back((string)"Interface::chat() " + strError);
             }
-            if (m_pWarden != NULL)
+          }
+          if (!user["email"].empty())
+          {
+            if (user["alert_email"] == "1")
             {
-              Json *ptAlertAddons = new Json;
-              if (m_pWarden->vaultRetrieve({"alert", strUser}, ptAlertAddons, strError) && !empty(ptAlertAddons, "URL"))
+              bAlerted = true;
+              email(user["email"], user["email"], "Alert", strMessage, "");
+            }
+            if (user["alert_pager"] == "1" && !user["pager"].empty())
+            {
+              bAlerted = true;
+              email(user["email"], user["pager"], "Alert", strMessage, "");
+            }
+          }
+          if (user["alert_live_audio"] == "1")
+          {
+            if (live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
+            {
+              bAlerted = true;
+            }
+            else
+            {
+              errors.push_back((string)"Interface::live(audio) " + strError);
+            }
+          }
+          if (user["alert_live_message"] == "1")
+          {
+            if (live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
+            {
+              bAlerted = true;
+            }
+            else
+            {
+              errors.push_back((string)"Interface::live(message) " + strError);
+            }
+          }
+          if (m_pWarden != NULL)
+          {
+            Json *ptAlertAddons = new Json;
+            if (m_pWarden->vaultRetrieve({"alert", strUser}, ptAlertAddons, strError) && !empty(ptAlertAddons, "URL"))
+            {
+              string strContent, strCookies, strHeader, strProxy;
+              Json *ptPost = new Json;
+              ptPost->i("Interface", "alert");
+              if (!empty(ptAlertAddons, "Proxy"))
               {
-                string strContent, strCookies, strHeader, strProxy;
-                Json *ptPost = new Json;
-                ptPost->i("Interface", "alert");
-                if (!empty(ptAlertAddons, "Proxy"))
+                strProxy = ptAlertAddons->m["Proxy"]->v;
+              }
+              if (!empty(ptAlertAddons, "RadialUser"))
+              {
+                ptPost->i("User", ptAlertAddons->m["RadialUser"]->v);
+              }
+              if (!empty(ptAlertAddons, "RadialPassword"))
+              {
+                ptPost->i("Password", ptAlertAddons->m["RadialPassword"]->v);
+              }
+              if (!empty(ptAlertAddons, "User"))
+              {
+                ptPost->insert("User", ptAlertAddons->m["User"]->v);
+              }
+              ptPost->insert("Message", strMessage);
+              if (curl(ptAlertAddons->m["URL"]->v, "json", NULL, NULL, ptPost, NULL, strProxy, strCookies, strHeader, strContent, strError))
+              {
+                Json *ptContent = new Json(strContent);
+                if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
                 {
-                  strProxy = ptAlertAddons->m["Proxy"]->v;
+                  bAlerted = true;
                 }
-                if (!empty(ptAlertAddons, "RadialUser"))
+                else
                 {
-                  ptPost->i("User", ptAlertAddons->m["RadialUser"]->v);
-                }
-                if (!empty(ptAlertAddons, "RadialPassword"))
-                {
-                  ptPost->i("Password", ptAlertAddons->m["RadialPassword"]->v);
-                }
-                ptPost->m["Request"] = new Json;
-                if (!empty(ptAlertAddons, "User"))
-                {
-                  ptPost->m["Request"]->insert("User", ptAlertAddons->m["User"]->v);
-                }
-                ptPost->m["Request"]->insert("Message", strMessage);
-                if (curl(ptAlertAddons->m["URL"]->v, "json", NULL, NULL, ptPost, NULL, strProxy, strCookies, strHeader, strContent, strError))
-                {
-                  Json *ptContent = new Json(strContent);
-                  if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
+                  if (ptContent->m.find("Error") != ptContent->m.end())
                   {
-                    bAlerted = true;
-                  }
-                  else
-                  {
-                    if (ptContent->m.find("Error") != ptContent->m.end())
+                    if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
                     {
-                      if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
-                      {
-                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
-                      }
-                      else if (!ptContent->m["Error"]->v.empty())
-                      {
-                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
-                      }
-                      else
-                      {
-                        errors.push_back("Interface::curl() Encountered an unknown error.");
-                      }
+                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
+                    }
+                    else if (!ptContent->m["Error"]->v.empty())
+                    {
+                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
                     }
                     else
                     {
                       errors.push_back("Interface::curl() Encountered an unknown error.");
                     }
                   }
-                  delete ptContent;
+                  else
+                  {
+                    errors.push_back("Interface::curl() Encountered an unknown error.");
+                  }
                 }
-                else
-                {
-                  errors.push_back((string)"Interface::curl() " + strError);
-                }
+                delete ptContent;
               }
-              delete ptAlertAddons;
-            }
-            if (bAlerted)
-            {
-              bResult = true;
-            }
-            else if (!errors.empty())
-            {
-              strError.clear();
-              for (auto error = errors.begin(); error != errors.end(); error++)
+              else
               {
-                if (error != errors.begin())
-                {
-                  strError += ", ";
-                }
-                strError += (*error);
+                errors.push_back((string)"Interface::curl() " + strError);
               }
             }
-            else
+            delete ptAlertAddons;
+          }
+          if (bAlerted)
+          {
+            bResult = true;
+          }
+          else if (!errors.empty())
+          {
+            strError.clear();
+            for (auto error = errors.begin(); error != errors.end(); error++)
             {
-              strError = "User does not have any alerting enabled.";
+              if (error != errors.begin())
+              {
+                strError += ", ";
+              }
+              strError += (*error);
             }
           }
           else
           {
-            strError = "Please provide a valid User that is registered within Central.";
+            strError = "User does not have any alerting enabled.";
           }
         }
         else
         {
-          strError = (string)"db(centralUsers) " + strError;
+          strError = "Please provide a valid User that is registered within Central.";
         }
-        delete ptUser;
       }
       else
       {
-        strError = "Please provide the User within the Request.";
+        strError = (string)"db(centralUsers) " + strError;
       }
+      delete ptUser;
     }
     else
     {
-      strError = "Please provide the Message within the Request.";
+      strError = "Please provide the User.";
     }
   }
   else
   {
-    strError = "Please provide the Request.";
+    strError = "Please provide the Message.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())

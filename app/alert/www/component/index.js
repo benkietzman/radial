@@ -33,7 +33,7 @@ export default
           s.message.v = null;
           s.success.v = null;
           s.info.v = 'Sending alert...';
-          let request = {Interface: 'alert', Request: {User: s.user.v, Message: s.mess.v + ' - Sent by: ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'}};
+          let request = {Interface: 'alert', User: s.user.v, Message: s.mess.v + ' - Sent by: ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};

@@ -68,6 +68,21 @@ void Interface::alert(const string strMessage)
 {
   log("alert", strMessage);
 }
+bool Interface::alert(const string strUser, const string strMessage, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("User", strUser);
+  ptJson->i("Message", strMessage);
+  if (hub("alert", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
 // }}}
 // {{{ auth()
 bool Interface::auth(Json *ptJson, string &strError)
