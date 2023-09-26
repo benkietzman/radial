@@ -1581,13 +1581,13 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
     bool f = true;
     stringstream qs;
     qs << "update person set" << u({"active", "admin", "alert_chat", "alert_email", "alert_live_audio", "alert_live_message", "alert_pager", "alert_remote_url", "alert_remote_auth_user", "alert_remote_user", "alert_remote_proxy", "email", "first_name", "last_name", "locked", "pager", "userid"}, i, f);
-    if (exist(i, "alert_auth_remote_password"))
+    if (exist(i, "alert_remote_auth_password"))
     {
-      qs << ((f)?"":",") << " `alert_auth_remote_password` = ";
+      qs << ((f)?"":",") << " `alert_remote_auth_password` = ";
       f = false;
-      if (!m_strAesSecret.empty() && !empty(i, "alert_auth_remote_password"))
+      if (!m_strAesSecret.empty() && !empty(i, "alert_remote_auth_password"))
       {
-        qs << "to_base64(aes_encrypt(" << v(i->m["alert_auth_remote_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
+        qs << "to_base64(aes_encrypt(" << v(i->m["alert_remote_auth_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
       }
       else
       {
