@@ -118,6 +118,10 @@ export default
               let strForm = response.Request.form;
               s.user = response.Response;
               s.user.bAdmin = ((c.isGlobalAdmin() || c.getUserID() == s.user.userid)?true:false);
+              if (c.isDefined(s.user.alert_remote_auth_decrypted_password))
+              {
+                s.user.alert_remote_auth_password = s.user.alert_remote_auth_decrypted_password;
+              }
               s.initForms();
               s.showForm(strForm);
             }
@@ -501,6 +505,66 @@ export default
                   {{/if}}
                 </td>
                 <td colspan="2"></td>
+              </tr>
+              <tr>
+                <th>
+                  <span title="">Remote URL:</span>
+                </th>
+                <td colspan="3">
+                  {{#if user.bEdit}}
+                  <input type="text" class="form-control" c-model="user.alert_remote_url">
+                  {{else}}
+                  {{user.alert_remote_url}}
+                  {{/if}}
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <span title="">Remote Proxy:</span>
+                </th>
+                <td colspan="3">
+                  {{#if user.bEdit}}
+                  <input type="text" class="form-control" c-model="user.alert_remote_proxy">
+                  {{else}}
+                  {{user.alert_remote_proxy}}
+                  {{/if}}
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <span title="">Remote Auth User:</span>
+                </th>
+                <td colspan="3">
+                  {{#if user.bEdit}}
+                  <input type="text" class="form-control" c-model="user.alert_remote_auth_user">
+                  {{else}}
+                  {{user.alert_remote_auth_user}}
+                  {{/if}}
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <span title="">Remote Auth Password:</span>
+                </th>
+                <td colspan="3">
+                  {{#if user.bEdit}}
+                  <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
+                  {{else if user.bAdmin}}
+                  *** CLICK EDIT TO MODIFY ***
+                  {{/if}}
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <span title="">Remote User:</span>
+                </th>
+                <td colspan="3">
+                  {{#if user.bEdit}}
+                  <input type="text" class="form-control" c-model="user.alert_remote_user">
+                  {{else}}
+                  {{user.alert_remote_user}}
+                  {{/if}}
+                </td>
               </tr>
             </table>
           </div>
