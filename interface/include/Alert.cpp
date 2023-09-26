@@ -152,11 +152,12 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 {
                   ptPost->i("Password", ptAlertAddons->m["RadialPassword"]->v);
                 }
+                ptPost->m["Request"] = new Json;
                 if (!empty(ptAlertAddons, "User"))
                 {
-                  ptPost->insert("User", ptAlertAddons->m["User"]->v);
+                  ptPost->m["Request"]->i("User", ptAlertAddons->m["User"]->v);
                 }
-                ptPost->insert("Message", strMessage);
+                ptPost->m["Request"]->i("Message", strMessage);
                 if (curl(ptAlertAddons->m["URL"]->v, "json", NULL, NULL, ptPost, NULL, strProxy, strCookies, strHeader, strContent, strError))
                 {
                   Json *ptContent = new Json(strContent);
