@@ -132,69 +132,60 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 errors.push_back((string)"Interface::live(message) " + strError);
               }
             }
-            if (m_pWarden != NULL)
+            if (!user["alert_remote_url"].empty())
             {
-              Json *ptAlertAddons = new Json;
-              if (m_pWarden->vaultRetrieve({"alert", strUser}, ptAlertAddons, strError) && !empty(ptAlertAddons, "URL"))
+              string strContent, strCookies, strHeader;
+              Json *ptPost = new Json;
+              ptPost->i("Interface", "alert");
+              if (!user["alert_remote_auth_user"].empty())
               {
-                string strContent, strCookies, strHeader, strProxy;
-                Json *ptPost = new Json;
-                ptPost->i("Interface", "alert");
-                if (!empty(ptAlertAddons, "Proxy"))
+                ptPost->i("User", user["alert_remote_auth_user"]);
+              }
+              if (!user["alert_remote_auth_password"].empty())
+              {
+                ptPost->i("Password", user["alert_remote_auth_password"]);
+              }
+              ptPost->m["Request"] = new Json;
+              if (!user["alert_remote_user"].empty())
+              {
+                ptPost->m["Request"]->i("User", user["alert_remote_user"]);
+              }
+              ptPost->m["Request"]->i("Message", strMessage);
+              if (curl(user["alert_remote_url"], "json", NULL, NULL, ptPost, NULL, user["alert_remote_proxy"], strCookies, strHeader, strContent, strError))
+              {
+                Json *ptContent = new Json(strContent);
+                if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
                 {
-                  strProxy = ptAlertAddons->m["Proxy"]->v;
+                  bAlerted = true;
                 }
-                if (!empty(ptAlertAddons, "RadialUser"))
+                else
                 {
-                  ptPost->i("User", ptAlertAddons->m["RadialUser"]->v);
-                }
-                if (!empty(ptAlertAddons, "RadialPassword"))
-                {
-                  ptPost->i("Password", ptAlertAddons->m["RadialPassword"]->v);
-                }
-                ptPost->m["Request"] = new Json;
-                if (!empty(ptAlertAddons, "User"))
-                {
-                  ptPost->m["Request"]->i("User", ptAlertAddons->m["User"]->v);
-                }
-                ptPost->m["Request"]->i("Message", strMessage);
-                if (curl(ptAlertAddons->m["URL"]->v, "json", NULL, NULL, ptPost, NULL, strProxy, strCookies, strHeader, strContent, strError))
-                {
-                  Json *ptContent = new Json(strContent);
-                  if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
+                  if (ptContent->m.find("Error") != ptContent->m.end())
                   {
-                    bAlerted = true;
-                  }
-                  else
-                  {
-                    if (ptContent->m.find("Error") != ptContent->m.end())
+                    if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
                     {
-                      if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
-                      {
-                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
-                      }
-                      else if (!ptContent->m["Error"]->v.empty())
-                      {
-                        errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
-                      }
-                      else
-                      {
-                        errors.push_back("Interface::curl() Encountered an unknown error.");
-                      }
+                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
                     }
-                      else
+                    else if (!ptContent->m["Error"]->v.empty())
+                    {
+                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
+                    }
+                    else
                     {
                       errors.push_back("Interface::curl() Encountered an unknown error.");
                     }
                   }
-                  delete ptContent;
+                    else
+                  {
+                    errors.push_back("Interface::curl() Encountered an unknown error.");
+                  }
                 }
-                else
-                {
-                  errors.push_back((string)"Interface::curl() " + strError);
-                }
+                delete ptContent;
               }
-              delete ptAlertAddons;
+              else
+              {
+                errors.push_back((string)"Interface::curl() " + strError);
+              }
             }
             if (bAlerted)
             {
