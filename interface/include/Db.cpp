@@ -1585,6 +1585,7 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
     {
       qs << ((f)?"":",") << " `alert_remote_auth_password` = ";
       f = false;
+log((string)"AES:  " + m_strAesSecret);
       if (!m_strAesSecret.empty() && !empty(i, "alert_remote_auth_password"))
       {
         qs << "to_base64(aes_encrypt(" << v(i->m["alert_remote_auth_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
@@ -1608,7 +1609,6 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
       }
     }
     qs << " where id = " << v(i->m["id"]->v);
-log(qs.str());
     b = dbu("central", qs, q, e);
   }
 
