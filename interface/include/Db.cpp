@@ -1530,7 +1530,12 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
   }
   else
   {
-    qs << " id, active, admin, alert_chat, alert_email, alert_live_audio, alert_live_message, alert_pager, email, first_name, last_name, locked, pager, userid";
+    qs << " id, active, admin, alert_chat, alert_email, alert_live_audio, alert_live_message, alert_pager, alert_remote_url, ";
+    if (!m_strAesSecret.empty())
+    {
+      qs << "aes_decrypt(from_base64(alert_remote_auth_password), sha2(" << v(m_strAesSecret) << ", 512)) alert_remote_auth_decrypted_password, ";
+    }
+    qs << "alert_remote_auth_user, alert_remote_user, alert_remote_proxy, email, first_name, last_name, locked, pager, userid";
   }
   qs << " from person where 1";
   if (!empty(i, "id"))
@@ -1575,7 +1580,20 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
   {
     bool f = true;
     stringstream qs;
-    qs << "update person set" << u({"active", "admin", "alert_chat", "alert_email", "alert_live_audio", "alert_live_message", "alert_pager", "email", "first_name", "last_name", "locked", "pager", "userid"}, i, f);
+    qs << "update person set" << u({"active", "admin", "alert_chat", "alert_email", "alert_live_audio", "alert_live_message", "alert_pager", "alert_remote_url", "alert_remote_auth_user", "alert_remote_user", "alert_remote_proxy", "email", "first_name", "last_name", "locked", "pager", "userid"}, i, f);
+    if (exist(i, "alert_auth_remote_password"))
+    {
+      qs << ((f)?"":",") << " `alert_auth_remote_password` = ";
+      f = false;
+      if (!m_strAesSecret.empty() && !empty(i, "alert_auth_remote_password"))
+      {
+        qs << "to_base64(aes_encrypt(" << v(i->m["alert_auth_remote_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
+      }
+      else
+      {
+        qs << "null";
+      }
+    }
     if (exist(i, "password"))
     {
       qs << ((f)?"":",") << " `password` = ";
