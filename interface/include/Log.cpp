@@ -80,7 +80,6 @@ void Log::callback(string strPrefix, const string strPacket, const bool bRespons
             bResult = true;
             for (auto &getUserRow : *getUser)
             {
-              m_alert.push_back(getUserRow["userid"]);
               if (!alert(getUserRow["userid"], (string)"Radial:  " + ptJson->m["Message"]->v, strError))
               {
                 bResult = false;
