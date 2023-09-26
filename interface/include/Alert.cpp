@@ -141,9 +141,9 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
               {
                 ptPost->i("User", user["alert_remote_auth_user"]);
               }
-              if (!user["alert_remote_auth_password"].empty())
+              if (!user["alert_remote_auth_decrypted_password"].empty())
               {
-                ptPost->i("Password", user["alert_remote_auth_password"]);
+                ptPost->i("Password", user["alert_remote_auth_decrypted_password"]);
               }
               ptPost->m["Request"] = new Json;
               if (!user["alert_remote_user"].empty())
