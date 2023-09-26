@@ -73,8 +73,9 @@ bool Interface::alert(const string strUser, const string strMessage, string &str
   bool bResult = false;
   Json *ptJson = new Json;
 
-  ptJson->i("User", strUser);
-  ptJson->i("Message", strMessage);
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("User", strUser);
+  ptJson->m["Request"]->i("Message", strMessage);
   if (hub("alert", ptJson, strError))
   {
     bResult = true;
