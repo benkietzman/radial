@@ -468,7 +468,7 @@ export default
         <input type="password" class="form-control" c-model="user.password">
         {{else if user.bAdmin}}
         {{#ifCond user.password "!=" ""}}
-        *** EDIT TO MODIFY ***
+        ******
         {{/ifCond}}
         {{/if}}
       </td>
@@ -591,7 +591,7 @@ export default
                 <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
                 {{else if user.bAdmin}}
                 {{#ifCond user.alert_remote_auth_password "!=" ""}}
-                *** EDIT TO MODIFY ***
+                ******
                 {{/ifCond}}
                 {{/if}}
               </td>
