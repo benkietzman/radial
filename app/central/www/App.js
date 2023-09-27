@@ -68,7 +68,7 @@ class App
     unSubIndex = 0;
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Accounts', href: '/Applications/Accounts', icon: 'wallet2', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Issues', href: '/Applications/Issues', icon: 'ticket', active: null};
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Repositories', href: '/Applications/Repositories', icon: 'file', active: null};
+    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Repositories', href: '/Applications/Repositories', icon: 'inbox', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Schedule', href: '/Applications/Schedule', icon: 'calendar', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Statistics', href: '/Applications/Statistics', icon: 'graph-up', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Workload', href: '/Applications/Workload', icon: 'person-workspace', active: null};
