@@ -4454,6 +4454,7 @@ bool Central::users(radialUser &d, string &e)
       ny(j, "alert_live_audio");
       ny(j, "alert_live_message");
       ny(j, "alert_pager");
+      rm(j, "alert_remote_auth_decrypted_password");
       rm(j, "alert_remote_auth_password");
       ny(j, "locked");
       o->pb(j);
