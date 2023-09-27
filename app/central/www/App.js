@@ -78,8 +78,12 @@ class App
     unSubIndex = 0;
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Status', href: '/Servers/Status', icon: 'stopwatch', active: null};
     unIndex++;
-    this.c.menu.left[unIndex] = {value: 'Users', href: '/Users', icon: 'person', active: null};
-    this.c.menu.left[unIndex].submenu = {left: [], right: []};
+    this.c.menu.left[unIndex] = {value: 'Users', href: '/Users', icon: 'people', active: null};
+    if (c.isValid())
+    {
+      unIndex = 0;
+      this.c.menu.right[unIndex] = {value: 'Profile', href: '/Users/'+c.getUserID(), icon: 'person', active: null};
+    }
     this.c.resetMenu();
   }
   // }}}
