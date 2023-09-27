@@ -4454,11 +4454,7 @@ bool Central::users(radialUser &d, string &e)
       ny(j, "alert_live_audio");
       ny(j, "alert_live_message");
       ny(j, "alert_pager");
-      if (exist(j, "alert_remote_auth_password"))
-      {
-        delete j->m["alert_remote_auth_password"];
-        j->m.erase("alert_remote_auth_password");
-      }
+      rm(j, "alert_remote_auth_password");
       ny(j, "locked");
       o->pb(j);
       delete j;
