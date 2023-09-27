@@ -118,10 +118,6 @@ export default
               let strForm = response.Request.form;
               s.user = response.Response;
               s.user.bAdmin = ((c.isGlobalAdmin() || c.getUserID() == s.user.userid)?true:false);
-              if (c.isDefined(s.user.alert_remote_auth_decrypted_password))
-              {
-                s.user.alert_remote_auth_password = s.user.alert_remote_auth_decrypted_password;
-              }
               s.initForms();
               s.showForm(strForm);
             }
@@ -471,7 +467,9 @@ export default
         {{#if user.bEdit}}
         <input type="password" class="form-control" c-model="user.password">
         {{else if user.bAdmin}}
-        *** CLICK EDIT TO MODIFY ***
+        {{#ifCond user.password "!=" ""}}
+        *** EDIT TO MODIFY ***
+        {{/ifCond}}
         {{/if}}
       </td>
       <th>
@@ -592,7 +590,9 @@ export default
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
                 {{else if user.bAdmin}}
-                *** CLICK EDIT TO MODIFY ***
+                {{#ifCond user.alert_remote_auth_password "!=" ""}}
+                *** EDIT TO MODIFY ***
+                {{/ifCond}}
                 {{/if}}
               </td>
             </tr>
