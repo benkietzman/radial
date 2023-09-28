@@ -332,7 +332,7 @@ export default
       {{#isValid "Central"}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.user.userid" placeholder="User ID"></td>
-        <td><button class="btn btn-primary" c-click="addUser()">Add User</button></td>
+        <td><button class="btn btn-primary" c-click="addUser()" title="Add User"><i class="bi bi-plus-circle"></i></button></td>
       </tr>
       {{/isValid}}
       {{#eachFilter users "first_name,last_name,userid" narrow}}
@@ -373,13 +373,13 @@ export default
   <div class="float-end">
     {{#if user.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditUser(false)">Cancel</button>
-      <button class="btn btn-xs btn-success" c-click="editUser()" style="margin-left: 10px;">Save</button>
+      <button class="btn btn-xs btn-warning" c-click="preEditUser(false)" title="Cancel"><i class="bi bi-x-circle"></i></button>
+      <button class="btn btn-xs btn-success" c-click="editUser()" style="margin-left: 10px;" title="Save"><i class="bi bi-save"></i></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditUser(true)">Edit</button>
-      <button class="btn btn-xs btn-danger" c-click="removeUser()" style="margin-left: 10px;">Remove</button>
+      <button class="btn btn-xs btn-warning" c-click="preEditUser(true)" title="Edit"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-xs btn-danger" c-click="removeUser()" style="margin-left: 10px;" class="Remove"><i class="bi bi-trash"></i></button>
     </div>
     {{/if}}
   </div>

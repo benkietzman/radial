@@ -239,7 +239,7 @@ export default
       <div class="card card-body card-inverse">
         <div class="input-group"><span class="input-group-text">Start</span><input type="text" c-model="date_start" class="form-control" placeholder="YYYY-MM-DD"></div>
         <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
-        <button class="btn btn-primary float-end" c-click="loadStatistics()">Search</button>
+        <button class="btn btn-primary float-end" c-click="loadStatistics()" title="Search"><i class="bi bi-search"></i></button>
       </div>
     </div>
     <div class="col-md-9">

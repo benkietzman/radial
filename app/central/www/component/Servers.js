@@ -664,7 +664,7 @@ export default
       {{#isValid "Central"}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.server.name" placeholder="Server Name"></td>
-        <td><button class="btn btn-primary" c-click="addServer()">Add Server</button></td>
+        <td><button class="btn btn-primary" c-click="addServer()" title="Add Server"><i class="bi bi-plus-circle"></i></button></td>
       </tr>
       {{/isValid}}
       {{#eachFilter servers "name" narrow}}
@@ -720,13 +720,13 @@ export default
   <div class="float-end">
     {{#if server.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditServer(false)">Cancel</button>
-      <button class="btn btn-xs btn-success" c-click="editServer()" style="margin-left: 10px;">Save</button>
+      <button class="btn btn-xs btn-warning" c-click="preEditServer(false)" title="Cancel"><i class="bi bi-x-circle"></i></button>
+      <button class="btn btn-xs btn-success" c-click="editServer()" style="margin-left: 10px;" title="Save"><i class="bi bi-save"></i></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditServer(true)">Edit</button>
-      <button class="btn btn-xs btn-danger" c-click="removeServer()" style="margin-left: 10px;">Remove</button>
+      <button class="btn btn-xs btn-warning" c-click="preEditServer(true)" title="Edit"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-xs btn-danger" c-click="removeServer()" style="margin-left: 10px;" title="Remove"><i class="bi bi-trash"></i></button>
     </div>
     {{/if}}
   </div>
@@ -1077,7 +1077,7 @@ export default
         <td><select class="form-control" c-model="contact.type" c-json>{{#each contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.physical_access" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-xs btn-success" c-click="addContact()">Add</button></td>
+        <td><button class="btn btn-xs btn-success" c-click="addContact()" title="Add"><i class="bi bi-plus-circle"></i></button></td>
       </tr>
       {{/if}}
       {{#each server.contacts}}
@@ -1096,9 +1096,9 @@ export default
         {{#if @root.server.bAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, false)">Cancel</button><button class="btn btn-xs btn-success" c-click="editContact({{@key}})" style="margin-left: 10px;">Save</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, false)" title="Cancel"><i class="bi bi-x-circle"></i></button><button class="btn btn-xs btn-success" c-click="editContact({{@key}})" style="margin-left: 10px;" title="Save"><i class="bi bi-save"></i></button>
           {{else}}
-          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, true)">Edit</button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;">Remove</button>
+          <button class="btn btn-xs btn-warning" c-click="preEditContact({{@key}}, true)" title="Edit"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-danger" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"><i class="bi bi-trash"></i></button>
           {{/if}}
         </td>
         {{/if}}
@@ -1113,7 +1113,7 @@ export default
   {{#if server.bAdmin}}
   <div class="table-responsive">
     <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
-    <button class="btn btn-primary float-end" c-click="sendNotification()">Send Notification</button>
+    <button class="btn btn-primary float-end" c-click="sendNotification()" title="Send Notification"><i class="bi bi-send"></i></button>
     {{#if bNotified}}
     <span class="text-success">Notification has been sent.</span>
     {{/if}}
