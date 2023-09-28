@@ -490,7 +490,7 @@ export default
       <div class="row">
         <div class="col-md-2">
           {{#ifCond @../key "==" "Your Surveys"}}
-          <button class="btn btn-sm btn-warning" c-click="getSurvey('edit', '{{../../hash}}')">Edit</button>
+          <button class="btn btn-sm btn-warning" c-click="getSurvey('edit', '{{../../hash}}')" title="Edit"><i class="bi bi-pencil"></i></button>
           {{/ifCond}}
         </div>
         <div class="col-md-8" style="text-align: center;">
@@ -498,7 +498,7 @@ export default
         </div>
         <div class="col-md-2">
           {{#ifCond @../key "==" "Your Surveys"}}
-          <button class="btn btn-sm btn-danger float-end" c-click="surveyRemove('{{../../id}}')">Remove</button>
+          <button class="btn btn-sm btn-danger float-end" c-click="surveyRemove('{{../../id}}')" title="Remove"><i class="bi bi-trash"></i></button>
           {{/ifCond}}
         </div>
       </div>
@@ -615,7 +615,7 @@ export default
               <div class="row">
                 <div class="col-md-3"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the question appear.')" style="cursor:help;">#</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@index}}].sequence" placeholder="0"></div></div>
                 <div class="col-md-7"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the question.')" style="cursor:help;">?</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@index}}].question"></div></div>
-                <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger" c-click="removeQuestion({{@index}})">Remove</button></div></div>
+                <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger" c-click="removeQuestion({{@index}})" title="Remove"><i class="bi bi-trash"></i></button></div></div>
               </div>
               <div class="row">
                 <div class="col-md-6"><div class="input-group"><span class="input-group-text">Type</span><select class="form-control input-sm" c-model="survey.questions.[{{@index}}].type" c-json>{{#each @root.types}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div></div>
@@ -634,7 +634,7 @@ export default
                     <div class="row">
                       <div class="col-md-3"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the answers appear.')" style="cursor:help;">#</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].sequence" placeholder="0"></div></div>
                       <div class="col-md-7"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the answer.')" style="cursor:help;">&gt;</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].answer"></div></div>
-                      <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger" c-click="removeAnswer({{@../index}}, {{@index}})">Remove</button></div></div>
+                      <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger" c-click="removeAnswer({{@../index}}, {{@index}})" title="Remove"><i class="bi bi-trash"></i></button></div></div>
                     </div>
                   </li>
                   {{/each}}
@@ -696,11 +696,11 @@ export default
           <span style="color:red;">* required</span>
           {{/ifCond}}
           {{#ifCond @root.survey.action "==" "survey"}}
-          <button class="float-end btn btn-primary" c-click="resultAdd()"{{#if @root.survey.disabled}} disabled{{/if}}>Submit Feedback</button>
+          <button class="float-end btn btn-primary" c-click="resultAdd()"{{#if @root.survey.disabled}} disabled{{/if}} title="Submit Feedback"><i class="bi bi-check-circle"></i></button>
           <br><br>
           {{/ifCond}}
           {{#ifCond @root.survey.action "==" "edit"}}
-          <button class="float-end btn btn-primary" c-click="surveyEdit()"{{#if @root.survey.disabled}} disabled{{/if}}>Save Survey</button>
+          <button class="float-end btn btn-primary" c-click="surveyEdit()"{{#if @root.survey.disabled}} disabled{{/if}} title="Save Survey"><i class="bi bi-save"></i></button>
           <br><br>
           {{/ifCond}}
         </div>
