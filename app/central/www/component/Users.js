@@ -556,7 +556,7 @@ export default
     <div class="col-md-8">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network" style="margin-right: 4px;"></i>Alert - Remote Connection/span>
+          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network" style="margin-right: 4px;"></i>Alert - Remote Connection</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed table-striped">
