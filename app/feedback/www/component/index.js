@@ -551,7 +551,7 @@ export default
       <div class="modal-content">
         <div class="modal-header">
           {{#ifCond @root.survey.action "==" "edit"}}
-          <div class="input-group"><span class="input-group-text">Title</span><input type="text" class="form-control input-sm" c-model="survey.title"></div>
+          <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control" c-model="survey.title"></div>
           {{else}}
           <b>{{@root.survey.title}}</b>
           {{/ifCond}}
@@ -569,21 +569,21 @@ export default
           {{#ifCond @root.survey.action "==" "edit"}}
           {{#ifCond @root.survey.entry_date "||" @root.survey.modified_date}}
           <div class="row">
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text">Created</span><input type="text" class="form-control input-sm" c-model="survey.entry_date" disabled></div></div>
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text">Modified</span><input type="text" class="form-control input-sm" c-model="survey.modified_date" disabled></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text">Created</span><input type="text" class="form-control" c-model="survey.entry_date" disabled></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text">Modified</span><input type="text" class="form-control" c-model="survey.modified_date" disabled></div></div>
           </div>
           {{/ifCond}}
           <div class="row">
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Surveys can be set to be open for input between a specified start and end date/time.')" style="cursor:help;">Start</span><input type="text" class="form-control input-sm" c-model="survey.start_date" placeholder="YYYY-MM-DD HH:MM"></div></div>
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Surveys can be set to be open for input between a specified start and end date/time.')" style="cursor:help;">End</span><input type="text" class="form-control input-sm" c-model="survey.end_date" placeholder="YYYY-MM-DD HH:MM"></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Surveys can be set to be open for input between a specified start and end date/time.')" style="cursor:help;">Start</span><input type="text" class="form-control" c-model="survey.start_date" placeholder="YYYY-MM-DD HH:MM"></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Surveys can be set to be open for input between a specified start and end date/time.')" style="cursor:help;">End</span><input type="text" class="form-control" c-model="survey.end_date" placeholder="YYYY-MM-DD HH:MM"></div></div>
           </div>
           <div class="row">
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Surveys can be registered as public in order to list them in the Public Surveys section of this main page.')" style="cursor:help;">Public</span><select class="form-control input-sm" c-model="survey.public"><option value="0">no</option><option value="1">yes</option></select></div></div>
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Surveys can be registered as anonymous so that all provided feedback is obtained and stored anonymously.')" style="cursor:help;">Anonymous</span><select class="form-control input-sm" c-model="survey.anonymous"><option value="0">no</option><option value="1">yes</option></select></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Surveys can be registered as public in order to list them in the Public Surveys section of this main page.')" style="cursor:help;">Public</span><select class="form-control" c-model="survey.public"><option value="0">no</option><option value="1">yes</option></select></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Surveys can be registered as anonymous so that all provided feedback is obtained and stored anonymously.')" style="cursor:help;">Anonymous</span><select class="form-control" c-model="survey.anonymous"><option value="0">no</option><option value="1">yes</option></select></div></div>
           </div>
           <div class="row">
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Survey results can only be viewed by the owner of the survey.')" style="cursor:help;">Restrict</span><select class="form-control input-sm" c-model="survey.restrict"><option value="0">no</option><option value="1">yes</option></select></div></div>
-            <div class="col-md-6"><div class="input-group"><span class="input-group-text" onclick="alert('Surveys can be registered as unique so that multiple entries by the same person are restricted.  Anonymous surveys are restricted using a cookie pushed to the client\'s browser while maintaining user anonymity.  Non-anonymous surveys are restricted via the user ID of the person logged in.')" style="cursor:help;">Unique</span><select class="form-control input-sm" c-model="survey.unique"><option value="0">no</option><option value="1">yes</option></select></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Survey results can only be viewed by the owner of the survey.')" style="cursor:help;">Restrict</span><select class="form-control" c-model="survey.restrict"><option value="0">no</option><option value="1">yes</option></select></div></div>
+            <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Surveys can be registered as unique so that multiple entries by the same person are restricted.  Anonymous surveys are restricted using a cookie pushed to the client\'s browser while maintaining user anonymity.  Non-anonymous surveys are restricted via the user ID of the person logged in.')" style="cursor:help;">Unique</span><select class="form-control" c-model="survey.unique"><option value="0">no</option><option value="1">yes</option></select></div></div>
           </div>
           {{else}}
           This survey was created by
@@ -613,13 +613,13 @@ export default
             <li class="list-group-item" style="border-style: none;">
               {{#ifCond @root.survey.action "==" "edit"}}
               <div class="row">
-                <div class="col-md-3"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the question appear.')" style="cursor:help;">#</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@index}}].sequence" placeholder="0"></div></div>
-                <div class="col-md-7"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the question.')" style="cursor:help;">?</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@index}}].question"></div></div>
-                <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeQuestion({{@index}})" title="Remove"></button></div></div>
+                <div class="col-md-3"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the question appear.')" style="cursor:help;">#</span><input type="text" class="form-control" c-model="survey.questions.[{{@index}}].sequence" placeholder="0"></div></div>
+                <div class="col-md-7"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Contains the question.')" style="cursor:help;">?</span><input type="text" class="form-control" c-model="survey.questions.[{{@index}}].question"></div></div>
+                <div class="col-md-2"><div class="input-group input-group-sm"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeQuestion({{@index}})" title="Remove"></button></div></div>
               </div>
               <div class="row">
-                <div class="col-md-6"><div class="input-group"><span class="input-group-text">Type</span><select class="form-control input-sm" c-model="survey.questions.[{{@index}}].type" c-json>{{#each @root.types}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div></div>
-                <div class="col-md-6"><div class="input-group"><span class="input-group-text">Required</span><select class="form-control input-sm" c-model="survey.questions.[{{@index}}].required"><option value="0">no</option><option value="1">yes</option></select></div></div>
+                <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text">Type</span><select class="form-control" c-model="survey.questions.[{{@index}}].type" c-json>{{#each @root.types}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div></div>
+                <div class="col-md-6"><div class="input-group input-group-sm"><span class="input-group-text">Required</span><select class="form-control" c-model="survey.questions.[{{@index}}].required"><option value="0">no</option><option value="1">yes</option></select></div></div>
               </div>
               {{else}}
               {{../question}}{{#ifCond ../required "==" "1"}}<span style="color:red;"> *</span>{{/ifCond}}
@@ -632,9 +632,9 @@ export default
                   {{#each ../answers}}
                   <li class="list-group-item" style="border-style: none;">
                     <div class="row">
-                      <div class="col-md-3"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the answers appear.')" style="cursor:help;">#</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].sequence" placeholder="0"></div></div>
-                      <div class="col-md-7"><div class="input-group"><span class="input-group-text" onclick="alert('Contains the answer.')" style="cursor:help;">&gt;</span><input type="text" class="form-control input-sm" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].answer"></div></div>
-                      <div class="col-md-2"><div class="input-group"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeAnswer({{@../index}}, {{@index}})" title="Remove"></button></div></div>
+                      <div class="col-md-3"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Contains the sequence number which determines the order in which the answers appear.')" style="cursor:help;">#</span><input type="text" class="form-control" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].sequence" placeholder="0"></div></div>
+                      <div class="col-md-7"><div class="input-group input-group-sm"><span class="input-group-text" onclick="alert('Contains the answer.')" style="cursor:help;">&gt;</span><input type="text" class="form-control" c-model="survey.questions.[{{@../index}}].answers.[{{@index}}].answer"></div></div>
+                      <div class="col-md-2"><div class="input-group input-group-sm"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeAnswer({{@../index}}, {{@index}})" title="Remove"></button></div></div>
                     </div>
                   </li>
                   {{/each}}
@@ -696,11 +696,11 @@ export default
           <span style="color:red;">* required</span>
           {{/ifCond}}
           {{#ifCond @root.survey.action "==" "survey"}}
-          <button class="float-end btn btn-primary bi bi-check-circle" c-click="resultAdd()"{{#if @root.survey.disabled}} disabled{{/if}} title="Submit Feedback"></button>
+          <button class="float-end btn btn-success bi bi-check-circle" c-click="resultAdd()"{{#if @root.survey.disabled}} disabled{{/if}} title="Submit Feedback"></button>
           <br><br>
           {{/ifCond}}
           {{#ifCond @root.survey.action "==" "edit"}}
-          <button class="float-end btn btn-primary bi bi-save" c-click="surveyEdit()"{{#if @root.survey.disabled}} disabled{{/if}} title="Save Survey"></button>
+          <button class="float-end btn btn-success bi bi-save" c-click="surveyEdit()"{{#if @root.survey.disabled}} disabled{{/if}} title="Save Survey"></button>
           <br><br>
           {{/ifCond}}
         </div>
