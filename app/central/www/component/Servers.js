@@ -119,9 +119,9 @@ export default
       {
         s.server.forms =
         {
-          General:      {value: 'General',      active: null},
-          Applications: {value: 'Applications', active: null},
-          Contacts:     {value: 'Contacts',     active: null},
+          General:      {value: 'General',      icon: 'info-circle', active: null},
+          Applications: {value: 'Applications', icon: 'window',      active: null},
+          Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
         };
       }
       if (!c.isDefined(s.server.forms_order))
@@ -166,7 +166,7 @@ export default
               s.showForm(strForm);
               if (s.server.bAdmin)
               {
-                s.server.forms.Notify = {value: 'Notify', active: null};
+                s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                 s.server.forms_order.splice(5, 0, 'Notify');
                 s.showForm(strForm);
               }
@@ -180,7 +180,7 @@ export default
                   {
                     let strForm = response.Request.form;
                     s.server.bAdmin = true;
-                    s.server.forms.Notify = {value: 'Notify', active: null};
+                    s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                     s.server.forms_order.splice(5, 0, 'Notify');
                     s.showForm(strForm);
                   }
@@ -708,7 +708,7 @@ export default
       <div class="collapse navbar-collapse" id="srvnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each server.forms_order}}
-          <li class="nav-item"><a class="nav-link {{#with (lookup @root.server.forms .)}}{{active}}{{/with}}" href="#/Servers/{{@root.server.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.server.forms .)}}{{active}}{{/with}}" href="#/Servers/{{@root.server.id}}/{{.}}"><i class="bi bi-{{#with (lookup @root.server.forms .)}}{{icon}}{{/with}}"></i> {{.}}</a></li>
           {{/each}}
         </ul>
       </div>
@@ -720,13 +720,13 @@ export default
   <div class="float-end">
     {{#if server.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditServer(false)" title="Cancel"></button>
-      <button class="btn btn-xs btn-success bi bi-save" c-click="editServer()" style="margin-left: 10px;" title="Save"></button>
+      <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditServer(false)" title="Cancel"></button>
+      <button class="btn btn-sm btn-success bi bi-save" c-click="editServer()" style="margin-left: 10px;" title="Save"></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditServer(true)" title="Edit"></button>
-      <button class="btn btn-xs btn-danger bi bi-trash" c-click="removeServer()" style="margin-left: 10px;" title="Remove"></button>
+      <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditServer(true)" title="Edit"></button>
+      <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeServer()" style="margin-left: 10px;" title="Remove"></button>
     </div>
     {{/if}}
   </div>
@@ -1077,7 +1077,7 @@ export default
         <td><select class="form-control" c-model="contact.type" c-json>{{#each contact_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.physical_access" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addContact()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addContact()" title="Add"></button></td>
       </tr>
       {{/if}}
       {{#each server.contacts}}
@@ -1096,9 +1096,9 @@ export default
         {{#if @root.server.bAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditContact({{@key}}, false)" title="Cancel"></button><button class="btn btn-xs btn-success bi bi-save" c-click="editContact({{@key}})" style="margin-left: 10px;" title="Save"></button>
+          <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditContact({{@key}}, false)" title="Cancel"></button><button class="btn btn-sm btn-success bi bi-save" c-click="editContact({{@key}})" style="margin-left: 10px;" title="Save"></button>
           {{else}}
-          <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditContact({{@key}}, true)" title="Edit"></button><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"></button>
+          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditContact({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
         {{/if}}

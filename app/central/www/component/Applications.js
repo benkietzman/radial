@@ -393,12 +393,12 @@ export default
       {
         s.application.forms =
         {
-          General:      {value: 'General',      active: null},
-          Contacts:     {value: 'Contacts',     active: null},
-          Depend:       {value: 'Depend',       active: null},
-          Issues:       {value: 'Issues',       active: null},
-          Repositories: {value: 'Repositories', active: null},
-          Servers:      {value: 'Servers',      active: null}
+          General:      {value: 'General',      icon: 'info-circle', active: null},
+          Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
+          Depend:       {value: 'Depend',       icon: 'bezier',      active: null},
+          Issues:       {value: 'Issues',       icon: 'ticket',      active: null},
+          Repositories: {value: 'Repositories', icon: 'inbox',       active: null},
+          Servers:      {value: 'Servers',      icon: 'server',      active: null}
         };
       }
       if (!c.isDefined(s.application.forms_order))
@@ -445,9 +445,9 @@ export default
               s.showForm(strForm);
               if (s.application.bDeveloper)
               {
-                s.application.forms.Accounts = {value: 'Accounts', active: null};
+                s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet', active: null};
                 s.application.forms_order.splice(1, 0, 'Accounts');
-                s.application.forms.Notify = {value: 'Notify', active: null};
+                s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                 s.application.forms_order.splice(5, 0, 'Notify');
                 s.showForm(strForm);
               }
@@ -462,9 +462,9 @@ export default
                     let strForm = response.Request.form;
                     s.application.bDeveloper = true;
                     s.application.bLocalAdmin = true;
-                    s.application.forms.Accounts = {value: 'Accounts', active: null};
+                    s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
-                    s.application.forms.Notify = {value: 'Notify', active: null};
+                    s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                     s.application.forms_order.splice(5, 0, 'Notify');
                     s.showForm(strForm);
                   }
@@ -1502,7 +1502,7 @@ export default
       <div class="collapse navbar-collapse" id="appnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each application.forms_order}}
-          <li class="nav-item"><a class="nav-link {{#with (lookup @root.application.forms .)}}{{active}}{{/with}}" href="#/Applications/{{@root.application.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.application.forms .)}}{{active}}{{/with}}" href="#/Applications/{{@root.application.id}}/{{.}}"><i class="bi bi-{{#with (lookup @root.application.forms .)}}{{icon}}{{/with}}"></i> {{.}}</a></li>
           {{/each}}
         </ul>
       </div>
@@ -1514,13 +1514,13 @@ export default
   <div class="float-end">
     {{#if application.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditApplication(false)" title="Cancel"></button>
-      <button class="btn btn-xs btn-success bi bi-save" c-click="editApplication()" style="margin-left: 10px;" title="Save"></button>
+      <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditApplication(false)" title="Cancel"></button>
+      <button class="btn btn-sm btn-success bi bi-save" c-click="editApplication()" style="margin-left: 10px;" title="Save"></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditApplication(true)" title="Edit"></button>
-      <button class="btn btn-xs btn-danger bi bi-trash" c-click="removeApplication()" style="margin-left: 10px;" title="Remove"></button>
+      <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditApplication(true)" title="Edit"></button>
+      <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeApplication()" style="margin-left: 10px;" title="Remove"></button>
     </div>
     {{/if}}
   </div>
@@ -1709,7 +1709,7 @@ export default
         <td><input type="password" class="form-control" c-model="account.password" placeholder="Password"></td>
         <td><select class="form-control" c-model="account.type" c-json>{{#each account.types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="account.description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addAccount()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addAccount()" title="Add"></button></td>
       </tr>
       {{#each application.accounts}}
       <tr>
@@ -1750,9 +1750,9 @@ export default
         </td>
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditAccount({{@key}}, false)" title="Cancel"></button><button class="btn btn-xs btn-success bi bi-save" c-click="editAccount({{@key}})" style="margin-left: 10px;" title="Save"></button>
+          <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditAccount({{@key}}, false)" title="Cancel"></button><button class="btn btn-sm btn-success bi bi-save" c-click="editAccount({{@key}})" style="margin-left: 10px;" title="Save"></button>
           {{else}}
-          <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditAccount({{@key}}, true)" title="Edit"></button><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeAccount({{id}})" style="margin-left: 10px;" title="Remove"></button>
+          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditAccount({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeAccount({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
       </tr>
@@ -1785,7 +1785,7 @@ export default
         <td><select class="form-control" c-model="contact.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><select class="form-control" c-model="contact.notify" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="contact.description" placeholder="Description"></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addContact()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addContact()" title="Add"></button></td>
       </tr>
       {{/if}}
       {{#each application.contacts}}
@@ -1808,9 +1808,9 @@ export default
         {{#if @root.application.bLocalAdmin}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditContact({{@key}}, false)" title="Cancel"></button><button class="btn btn-xs btn-success bi bi-save" c-click="editContact({{@key}})" style="margin-left: 10px;" title="Save"></button>
+          <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditContact({{@key}}, false)" title="Cancel"></button><button class="btn btn-sm btn-success bi bi-save" c-click="editContact({{@key}})" style="margin-left: 10px;" title="Save"></button>
           {{else}}
-          <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditContact({{@key}}, true)" title="Edit"></button><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"></button>
+          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditContact({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
         {{/if}}
@@ -1833,14 +1833,14 @@ export default
       {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="depend" c-json>{{#each dependApplications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addDepend()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addDepend()" title="Add"></button></td>
       </tr>
       {{/if}}
       {{#each application.depends}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
         {{#if @root.application.bDeveloper}}
-        <td><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeDepend({{id}})" title="Remove"></button></td>
+        <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeDepend({{id}})" title="Remove"></button></td>
         {{/if}}
       </tr>
       {{/each}}
@@ -2052,7 +2052,7 @@ export default
       <tr>
         <td><select class="form-control" c-model="repo.repo" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="repo.identifier"></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addRepo()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addRepo()" title="Add"></button></td>
       </tr>
       {{#each application.repos}}
       <tr>
@@ -2072,9 +2072,9 @@ export default
         </td>
         <td style="white-space: nowrap;">
           {{#if bEdit}}
-          <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditRepo({{@key}}, false)" title="Cancel"></button><button class="btn btn-xs btn-success bi bi-save" c-click="editRepo({{@key}})" style="margin-left: 10px;" title="Save"></button>
+          <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditRepo({{@key}}, false)" title="Cancel"></button><button class="btn btn-sm btn-success bi bi-save" c-click="editRepo({{@key}})" style="margin-left: 10px;" title="Save"></button>
           {{else}}
-          <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditRepo({{@key}}, true)" title="Edit"></button><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeRepo({{id}})" style="margin-left: 10px;" title="Remove"></button>
+          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditRepo({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeRepo({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
       </tr>
@@ -2097,14 +2097,14 @@ export default
       {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="server" c-json>{{#each servers}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addServer()" title="Add"></button></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addServer()" title="Add"></button></td>
       </tr>
       {{/if}}
       {{#each application.servers}}
       <tr>
         <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
         {{#if @root.application.bDeveloper}}
-        <td style="white-space: nowrap;"><button class="btn btn-xs btn-warning bi bi-pencil" data-bs-toggle="modal" data-bs-target="#serverModal" c-click="serverDetails({{id}})" title="Edit"></button><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeServer({{id}})" title="Remove"></button></td>
+        <td style="white-space: nowrap;"><button class="btn btn-sm btn-warning bi bi-pencil" data-bs-toggle="modal" data-bs-target="#serverModal" c-click="serverDetails({{id}})" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeServer({{id}})" title="Remove"></button></td>
         {{/if}}
       </tr>
       {{/each}}
@@ -2158,7 +2158,7 @@ export default
                 <td><input type="text" class="form-control" c-model="serverDetail.max_image"></td>
                 <td><input type="text" class="form-control" c-model="serverDetail.min_resident"></td>
                 <td><input type="text" class="form-control" c-model="serverDetail.max_resident"></td>
-                <td colspan="2">{{^if bEdit}}<button class="btn btn-xs btn-success bi bi-plus-circle" c-click="addServerDetail()" title="Add"></button>{{/if}}</td>
+                <td colspan="2">{{^if bEdit}}<button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addServerDetail()" title="Add"></button>{{/if}}</td>
               </tr>
               {{/if}}
               {{#each modalServer.details}}
@@ -2175,8 +2175,8 @@ export default
                 <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_image"></td>
                 <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].min_resident"></td>
                 <td><input type="text" class="form-control" c-model="modalServer.details.[{{@key}}].max_resident"></td>
-                <td><button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditServerDetail({{@key}}, false)" title="Cancel"></button></td>
-                <td><button class="btn btn-xs btn-success bi bi-save" c-click="editServerDetail({{@key}})" title="Save"></button></td>
+                <td><button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditServerDetail({{@key}}, false)" title="Cancel"></button></td>
+                <td><button class="btn btn-sm btn-success bi bi-save" c-click="editServerDetail({{@key}})" title="Save"></button></td>
                 {{else}}
                 <td>{{daemon}}</td>
                 <td>{{version}}</td>
@@ -2189,8 +2189,8 @@ export default
                 <td>{{max_image}}</td>
                 <td>{{min_resident}}</td>
                 <td>{{max_resident}}</td>
-                <td><button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditServerDetail({{@key}}, true)" title="Edit"></button></td>
-                <td><button class="btn btn-xs btn-danger bi bi-trash" c-click="removeServerDetail({{id}})" title="Remove"></button></td>
+                <td><button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditServerDetail({{@key}}, true)" title="Edit"></button></td>
+                <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeServerDetail({{id}})" title="Remove"></button></td>
                 {{/if}}
               </tr>
               {{/each}}

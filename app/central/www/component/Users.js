@@ -75,9 +75,9 @@ export default
       {
         s.user.forms =
         {
-          General:      {value: 'General',      active: null},
-          Applications: {value: 'Applications', active: null},
-          Servers:     {value: 'Servers',     active: null},
+          General:      {value: 'General',      icon: 'info-circle', active: null},
+          Applications: {value: 'Applications', icon: 'window',      active: null},
+          Servers:      {value: 'Servers',      icon: 'servers',     active: null},
         };
       }
       if (!c.isDefined(s.user.forms_order))
@@ -361,7 +361,7 @@ export default
       <div class="collapse navbar-collapse" id="usrnavigationbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {{#each user.forms_order}}
-          <li class="nav-item"><a class="nav-link {{#with (lookup @root.user.forms .)}}{{active}}{{/with}}" href="#/Users/{{@root.user.id}}/{{.}}">{{.}}</a></li>
+          <li class="nav-item"><a class="nav-link {{#with (lookup @root.user.forms .)}}{{active}}{{/with}}" href="#/Users/{{@root.user.id}}/{{.}}"><i class="bi bi-{{#with (lookup @root.user.forms .)}}{{icon}}{{/with}}"></i> {{.}}</a></li>
           {{/each}}
         </ul>
       </div>
@@ -373,13 +373,13 @@ export default
   <div class="float-end">
     {{#if user.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditUser(false)" title="Cancel"></button>
-      <button class="btn btn-xs btn-success bi bi-save" c-click="editUser()" style="margin-left: 10px;" title="Save"></button>
+      <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditUser(false)" title="Cancel"></button>
+      <button class="btn btn-sm btn-success bi bi-save" c-click="editUser()" style="margin-left: 10px;" title="Save"></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditUser(true)" title="Edit"></button>
-      <button class="btn btn-xs btn-danger bi bi-trash" c-click="removeUser()" style="margin-left: 10px;" class="Remove"></button>
+      <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditUser(true)" title="Edit"></button>
+      <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeUser()" style="margin-left: 10px;" class="Remove"></button>
     </div>
     {{/if}}
   </div>
