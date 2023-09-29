@@ -95,7 +95,7 @@ export default
       <br>
       <textarea class="form-control" c-model="mess" placeholder="Type message here..."></textarea>
       <br>
-      <button class="btn btn-success float-end" c-click="send()" title="Send"><i class="bi bi-send"></i></button>
+      <button class="btn btn-success bi bi-send float-end" c-click="send()" title="Send"></button>
       {{else}}
       <b class="text-warning">Please login in order to use this form.</b>
       {{/isValid}}
