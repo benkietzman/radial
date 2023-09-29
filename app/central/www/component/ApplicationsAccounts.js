@@ -86,7 +86,7 @@ export default
     <div class="col-md-3">
       <h5 class="page-header">Search Options</h5>
       <div class="input-group"><span class="input-group-text">Account</span><input type="text" c-model="user" class="form-control" placeholder="user_id"></div>
-      <button class="btn btn-primary float-end" c-click="search()" title="Search"><i class="bi bi-search"></i></button>
+      <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
     <div class="col-md-9 table-responsive">
       <h3 class="page-header">Applications</h3>

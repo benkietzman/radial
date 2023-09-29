@@ -332,7 +332,7 @@ export default
       {{#isValid "Central"}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.user.userid" placeholder="User ID"></td>
-        <td><button class="btn btn-primary" c-click="addUser()" title="Add User"><i class="bi bi-plus-circle"></i></button></td>
+        <td><button class="btn btn-primary bi bi-plus-circle" c-click="addUser()" title="Add User"></button></td>
       </tr>
       {{/isValid}}
       {{#eachFilter users "first_name,last_name,userid" narrow}}
@@ -373,13 +373,13 @@ export default
   <div class="float-end">
     {{#if user.bEdit}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditUser(false)" title="Cancel"><i class="bi bi-x-circle"></i></button>
-      <button class="btn btn-xs btn-success" c-click="editUser()" style="margin-left: 10px;" title="Save"><i class="bi bi-save"></i></button>
+      <button class="btn btn-xs btn-warning bi bi-x-circle" c-click="preEditUser(false)" title="Cancel"></button>
+      <button class="btn btn-xs btn-success bi bi-save" c-click="editUser()" style="margin-left: 10px;" title="Save"></button>
     </div>
     {{else}}
     <div style="white-space: nowrap;">
-      <button class="btn btn-xs btn-warning" c-click="preEditUser(true)" title="Edit"><i class="bi bi-pencil"></i></button>
-      <button class="btn btn-xs btn-danger" c-click="removeUser()" style="margin-left: 10px;" class="Remove"><i class="bi bi-trash"></i></button>
+      <button class="btn btn-xs btn-warning bi bi-pencil" c-click="preEditUser(true)" title="Edit"></button>
+      <button class="btn btn-xs btn-danger bi bi-trash" c-click="removeUser()" style="margin-left: 10px;" class="Remove"></button>
     </div>
     {{/if}}
   </div>
@@ -488,7 +488,7 @@ export default
     <div class="col-md-4">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for receiving alert messages."><i class="bi bi-lightning" style="margin-right: 4px;"></i>Alert Settings</span>
+          <span title="Configuration settings for receiving alert messages."><i class="bi bi-lightning"></i> Alert Settings</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed">
@@ -556,7 +556,7 @@ export default
     <div class="col-md-8">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network" style="margin-right: 4px;"></i>Alert - Remote Connection</span>
+          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network"></i> Alert - Remote Connection</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed table-striped">

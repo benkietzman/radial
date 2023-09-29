@@ -156,7 +156,7 @@ export default
     <div class="col-md-5">
       <div class="card">
         <div class="card-header bg-info text-white" style="font-weight: bold;">
-          <i class="bi bi-info-circle" style="margin-right: 4px;"></i>Useful Tools
+          <i class="bi bi-info-circle"></i> Useful Tools
         </div>
         <div class="card-body">
           <ul class="list-group">
@@ -174,7 +174,7 @@ export default
     <div class="col-md-5">
       <div class="card"">
         <div class="card-header bg-success text-white" style="font-weight: bold;">
-          <i class="bi bi-door-open" style="margin-right: 4px;"></i>Front Door
+          <i class="bi bi-door-open"></i> Front Door
         </div>
         <div class="card-body">
           <p>
@@ -189,7 +189,7 @@ export default
     <div class="col-md-7">
       <div class="card ">
         <div class="card-header bg-warning text-white" style="font-weight: bold;">
-          <i class="bi bi-person-workspace" style="margin-right: 4px;"></i>Workload
+          <i class="bi bi-person-workspace"></i> Workload
         </div>
         <div class="card-body">
           <p>

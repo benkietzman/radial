@@ -191,7 +191,7 @@ export default
         <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="close_date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
       </div>
       {{/if}}
-      <button class="btn btn-primary float-end" c-click="search()" title="Search"><i class="bi bi-search"></i></button>
+      <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
     <div class="col-md-9 table-responsive">
       <h3 class="page-header">Issues</h3>

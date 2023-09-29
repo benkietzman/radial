@@ -236,7 +236,7 @@ export default
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success float-end" c-click="addIssue()" title="Create Issue"><i class="bi bi-check-circle"></i></button>
+                  <button class="btn btn-success bi bi-check-circle float-end" c-click="addIssue()" title="Create Issue"></button>
                 </div>
               </div>
             </div>
