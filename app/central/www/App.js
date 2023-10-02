@@ -61,7 +61,7 @@ class App
     this.c.menu.left[unIndex] = {value: 'Home', href: '/Home', icon: 'house', active: null};
     this.c.menu.left[unIndex].submenu = {left: [], right: []};
     unSubIndex = 0;
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'FrontDoor', href: '/Home/FrontDoor', icon: 'door-open', active: null};
+    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Front Door', href: '/Home/FrontDoor', icon: 'door-open', active: null};
     unIndex++;
     this.c.menu.left[unIndex] = {value: 'Applications', href: '/Applications', icon: 'window', active: null};
     this.c.menu.left[unIndex].submenu = {left: [], right: []};
