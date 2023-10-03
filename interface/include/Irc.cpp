@@ -497,7 +497,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
             ssQuery.str("");
-            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, website, wiki, date_format(retirement_date, '%Y-%m-%d') retirement_date, description from application where id = " << strApplicationID;
+            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, website, date_format(retirement_date, '%Y-%m-%d') retirement_date, description from application where id = " << strApplicationID;
             list<map<string, string> > *getApplication = dbquery("central_r", ssQuery.str(), strError);
             if (getApplication != NULL)
             {
@@ -506,10 +506,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 map<string, string> getApplicationRow = getApplication->front();
                 ssText << " Application:  " << getApplicationRow["name"];
                 ssText << ", Website:  " << getApplicationRow["website"];
-                if (getApplicationRow["wiki"] == "1")
-                {
-                  ssText << ", WIKI:  https://kietzman.org/wiki/index.php/" << getApplicationRow["name"];
-                }
                 if (!getApplicationRow["retirement_date"].empty())
                 {
                   ssText << ", Retired:  " << getApplicationRow["retirement_date"];
