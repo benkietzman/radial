@@ -2810,10 +2810,17 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strUse
           // }}}
           if (!bExit)
           {
+            size_t unCol = pTerminal->col(), unRow = pTerminal->row();
             pTerminal->screen(vecScreen);
             ssTexts.str("");
             for (size_t i = 0; i < vecScreen.size(); i++)
             {
+              if (i == unRow && unCol < vecScreen.size())
+              {
+                stringstream ssCursor;
+                ssCursor << char(3) << "08,03" << vecScreen[i][unCol] << char(3);
+                vecScreen[i].replace(unCol, 1, ssCursor.str());
+              }
               ssTexts << vecScreen[i] << endl;
             }
             vecScreen.clear();
