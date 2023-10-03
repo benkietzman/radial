@@ -429,6 +429,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // }}}
     }
   }
+  else if (m_pAnalyzeCallback1 != NULL)
+  {
+    m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest);
+  }
   analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, ptRequest);
   delete ptRequest;
 }
