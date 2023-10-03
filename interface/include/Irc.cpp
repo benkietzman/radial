@@ -339,7 +339,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ ssh
+      // {{{ ssh || s
       else if (strAction == "ssh" || strAction == "s")
       {
         string strFunction;
