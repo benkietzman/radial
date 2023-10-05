@@ -1174,6 +1174,7 @@ void Hub::process(string strPrefix)
                 ssMessage << strPrefix << "->Hub::load() error:  " << strError;
                 log(ssMessage.str());
               }
+              interfaces();
             }
             if ((CTime - CThroughput) >= 3600)
             {
