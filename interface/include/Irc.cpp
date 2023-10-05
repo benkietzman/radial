@@ -1120,6 +1120,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   }
                   delete ptJson;
                 }
+                else if (strInterface == "irc" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
+                {
+                  setShutdown();
+                }
                 else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
                   bool bStopped = true;
