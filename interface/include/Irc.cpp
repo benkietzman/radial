@@ -1122,8 +1122,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 }
                 else if (strInterface == "irc" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
                 {
-                  ssSubText << node << ":  done";
-                  chat(strTarget, ssSubText.str());
+                  bSubResult = true;
                   setShutdown();
                 }
                 else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
