@@ -1127,46 +1127,49 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 }
                 else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
                 {
-                  bool bStopped = true;
-                  if (strFunction == "restart" || strFunction == "stop")
+                  bool bStopped = false;
+                  time_t CTime[2];
+                  time(&(CTime[0]));
+                  CTime[1] = CTime[0];
+                  while (!bStopped && (CTime[1] - CTime[0]) < 40)
                   {
-                    time_t CTime[2];
-                    bStopped = false;
-                    time(&(CTime[0]));
-                    CTime[1] = CTime[0];
-                    while (!bStopped && (CTime[1] - CTime[0]) < 40)
+                    m_mutexShare.lock();
+                    if (node == m_strNode)
                     {
-                      m_mutexShare.lock();
-                      if (node == m_strNode)
+                      if (m_i.find(strInterface) == m_i.end())
                       {
-                        if (m_i.find(strInterface) == m_i.end())
+                        bStopped = true;
+                      }
+                    }
+                    else
+                    {
+                      auto linkIter = m_l.end();
+                      for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
+                      {
+                        if ((*i)->strNode == node)
+                        {
+                          linkIter = i;
+                        }
+                      }
+                      if (linkIter != m_l.end())
+                      {
+                        if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
                         {
                           bStopped = true;
                         }
                       }
                       else
                       {
-                        auto linkIter = m_l.end();
-                        for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
-                        {
-                          if ((*i)->strNode == node)
-                          {
-                            linkIter = i;
-                          }
-                        }
-                        if (linkIter != m_l.end())
-                        {
-                          if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
-                          {
-                            bStopped = true;
-                          }
-                        }
-                        else
-                        {
-                          bStopped = true;
-                        }
+                        bStopped = true;
                       }
-                      m_mutexShare.unlock();
+                    }
+                    m_mutexShare.unlock();
+                    if (strFunction == "start")
+                    {
+                      CTime[1] += 40;
+                    }
+                    else
+                    {
                       msleep(250);
                       time(&(CTime[1]));
                     }
@@ -1177,6 +1180,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     {
                       bSubResult = true;
                     }
+                  }
+                  else if (strFunction == "start")
+                  {
+                    strError = "Already started.";
                   }
                   else
                   {
