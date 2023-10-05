@@ -1122,7 +1122,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 }
                 else if (strInterface == "irc" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
                 {
-                  ssSubText << node << ":  " << strResult;
+                  ssSubText << node << ":  done";
                   chat(strTarget, ssSubText.str());
                   setShutdown();
                 }
