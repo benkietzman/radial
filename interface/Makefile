@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket
-install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/status bin/storage bin/websocket
+install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/status bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
@@ -28,6 +28,7 @@ install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database 
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
 	install --mode=775 bin/session $(prefix)/radial/interface/
+	install --mode=775 bin/status $(prefix)/radial/interface/
 	install --mode=775 bin/storage $(prefix)/radial/interface/
 	install --mode=775 bin/websocket $(prefix)/radial/interface/
 # }}}
@@ -221,6 +222,16 @@ obj/session.o: session.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c session.cpp -o obj/session.o $(CPPFLAGS) -I../../common
 obj/Session.o: include/Session.cpp obj
 	g++ -ggdb -Wall -c include/Session.cpp -o obj/Session.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ status
+status: bin/status $(prefix)/radial/interface
+	install --mode=775 bin/status $(prefix)/radial/interface/
+bin/status: ../../common/libcommon.a obj/status.o obj/Base.o obj/Interface.o obj/Status.o bin
+	g++ -o bin/status obj/status.o obj/Base.o obj/Interface.o obj/Status.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+obj/status.o: status.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c status.cpp -o obj/status.o $(CPPFLAGS) -I../../common
+obj/Status.o: include/Status.cpp obj
+	g++ -ggdb -Wall -c include/Status.cpp -o obj/Status.o $(CPPFLAGS) -I/usr/local/include -I../../common
 # }}}
 # {{{ storage
 storage: bin/storage $(prefix)/radial/interface
