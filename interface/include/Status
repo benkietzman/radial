@@ -25,6 +25,7 @@ namespace radial
 class Status : public Interface
 {
   protected:
+  void pushStatus();
 
   public:
   Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
