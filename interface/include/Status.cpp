@@ -82,9 +82,9 @@ void Status::schedule(string strPrefix)
         stringstream ssPid;
         ssPid << i.second->nPid;
         ptMessage->m["Nodes"]->m[m_strNode]->m[i.first] = new Json;
-        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("PID", ssPid, 'n');
-        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1","0"), ((i.second->bRespawn)?1:0));
-        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1","0"), ((i.second->bRestricted)?1:0));
+        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("PID", ssPid.str(), 'n');
+        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?1:0));
+        ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?1:0));
         ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
         ptMessage->m["Nodes"]->m[m_strNode]->m[i.first]->i("Command", i.second->strCommand);
       }
@@ -98,9 +98,9 @@ void Status::schedule(string strPrefix)
             stringstream ssPid;
             ssPid << i.second->nPid;
             ptMessage->m["Nodes"]->m[l->strNode]->m[i.first] = new Json;
-            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("PID", ssPid, 'n');
-            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1","0"), ((i.second->bRespawn)?1:0));
-            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1","0"), ((i.second->bRestricted)?1:0));
+            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("PID", ssPid.str(), 'n');
+            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?1:0));
+            ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?1:0));
             ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
             ptMessage->m["Nodes"]->m[l->strNode]->m[i.first]->i("Command", i.second->strCommand);
           }
