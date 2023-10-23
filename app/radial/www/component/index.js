@@ -22,12 +22,31 @@ export default
       },
       // ]]]
       a: a,
-      c: c
+      c: c,
+      nodes: null
     });
     // ]]]
     // [[[ init()
     s.init = () =>
     {
+      let request = {Interface: 'status', 'Function': 'status'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          if (response.Response && response.Response.Nodes)
+          {
+            s.nodes = null;
+            s.nodes = response.Response.Nodes;
+            s.u();
+          }
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
     };
     // ]]]
     // [[[ main
@@ -45,6 +64,15 @@ export default
       s.info.v = null;
       s.init();
     });
+    c.attachEvent('commonWsMessage_Radial', (data) =>
+    {
+      if (data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Nodes)
+      {
+        s.nodes = null;
+        s.nodes = data.detail.Nodes;
+        s.u();
+      }
+    });
     // ]]]
   },
   // ]]]
@@ -52,6 +80,39 @@ export default
   template: `
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  {{#each nodes}}
+  <div class="card">
+    <div class="card-header bg-info text-white" style="font-weight: bold;">
+      {{@key}}
+    </div>
+    <div class="card-body">
+      <table class="table table-condensed table-striped">
+        <thead>
+          <tr>
+            <th>Interface</th>
+            <th>Command</th>
+            <th style="white-space: nowrap;">Access Function</th>
+            <th>PID</th>
+            <th>Respawn</th>
+            <th>Restricted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each .}}
+          <tr>
+            <td>{{@key}}</td>
+            <td>{{Command}}</td>
+            <td>{{AccessFunction}}</td>
+            <td>{{PID}}</td>
+            <td>{{#if Respawn}}yes{{else}}no{{/if}}</td>
+            <td>{{#if Restricted}}yes{{else}}no{{/if}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{/each}}
   `
   // ]]]
 }
