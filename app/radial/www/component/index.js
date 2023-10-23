@@ -23,7 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
-      nodes: null
+      stat: null
     });
     // ]]]
     // [[[ init()
@@ -37,9 +37,7 @@ export default
         {
           if (response.Response && response.Response.Nodes)
           {
-            s.nodes = null;
-            s.nodes = response.Response.Nodes;
-            s.u();
+            s.org(response.Response);
           }
         }
         else
@@ -47,6 +45,13 @@ export default
           s.message.v = error.message;
         }
       });
+    };
+    // ]]]
+    // [[[ org()
+    s.org = (stat) =>
+    {
+      s.stat = stat;
+      s.u();
     };
     // ]]]
     // [[[ main
@@ -68,9 +73,7 @@ export default
     {
       if (data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Nodes)
       {
-        s.nodes = null;
-        s.nodes = data.detail.Nodes;
-        s.u();
+        s.org(data.detail);
       }
     });
     // ]]]
@@ -80,7 +83,7 @@ export default
   template: `
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
-  {{#each nodes}}
+  {{#each stat.Nodes}}
   <div class="card">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{@key}}
