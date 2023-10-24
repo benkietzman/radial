@@ -45,10 +45,8 @@ export default
           s.info.v = null;
           if (c.wsResponse(response, error))
           {
-            if (response.Response && response.Response.Nodes)
-            {
-              alert('The '+strInterface+' has been '+((strAction == 'restart')?'restarted':'stopped')+((strNode != '')?' on '+strNode:' across all nodes')+'.');
-            }
+            s.stat();
+            alert('The '+strInterface+' has been '+((strAction == 'restart')?'restarted':'stopped')+((strNode != '')?' on '+strNode:' across all nodes')+'.');
           }
           else
           {
@@ -95,22 +93,7 @@ export default
           }
         });
       }
-      let request = {Interface: 'status', 'Function': 'status'};
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          if (response.Response && response.Response.Nodes)
-          {
-            s.org(response.Response);
-          }
-        }
-        else
-        {
-          s.message.v = error.message;
-        }
-      });
+      s.stat();
     };
     // ]]]
     // [[[ org()
@@ -132,6 +115,27 @@ export default
         }
       }
       s.u();
+    };
+    // ]]]
+    // [[[ stat()
+    s.stat = () =>
+    {
+      let request = {Interface: 'status', 'Function': 'status'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          if (response.Response && response.Response.Nodes)
+          {
+            s.org(response.Response);
+          }
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
     };
     // ]]]
     // [[[ main
