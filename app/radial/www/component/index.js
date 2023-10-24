@@ -168,8 +168,10 @@ export default
   <div class="col">
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
+      {{#if @root.bDeveloper}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" style="margin-left: 10px;" c-click="action('stop', '{{@key}}', '')" title="stop"></button>
       <button class="btn btn-sm btn-success bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" title="restart"></button>
+      {{/if}}
       {{@key}}
     </div>
     <div class="card-body">
