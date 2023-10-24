@@ -2579,12 +2579,12 @@ void Interface::userInit(Json *ptJson, radialUser &d)
     {
       strPayload = strJwt;
     }
-stringstream ssMessage;
-ssMessage.str("");
-ssMessage << ":  " << strPayload;
-chat("#radial", ssMessage.str());
     if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
     {
+stringstream ssMessage;
+ssMessage.str("");
+ssMessage << ":  " << ptJwt;
+chat("#radial", ssMessage.str());
       if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
       {
         d.g = true;
@@ -2601,6 +2601,13 @@ chat("#radial", ssMessage.str());
         d.u = ptJwt->m["sl_login"]->v;
       }
     }
+else
+{
+stringstream ssMessage;
+ssMessage.str("");
+ssMessage << ":  " << strError;
+chat("#radial", ssMessage.str());
+}
     delete ptJwt;
   }
 }
