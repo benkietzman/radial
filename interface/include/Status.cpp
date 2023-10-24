@@ -34,6 +34,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
 {
   bool bResult = false;
   string strError;
+  stringstream ssMessage;
   Json *ptJson;
   radialPacket p;
 
@@ -86,6 +87,18 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
               if (!nodes.empty())
               {
                 bResult = true;
+                ssMessage.str("");
+                ssMessage << ":  " << getUserName(d) << " (" << d.u << ") requested a " << strFunction " of the " << strInterface << " interface ";
+                if (!strNode.empty())
+                {
+                  ssMessage << "on the " << strNode << " node";
+                }
+                else
+                {
+                  ssMessage << "across all nodes";
+                }
+                ssMessage << ".";
+                chat("#radial", ssMessage.str());
                 for (auto &node : nodes)
                 {
                   if (strInterface == "status" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
@@ -157,7 +170,13 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
                       strError = "Failed to stop.";
                     }
                   }
+                  ssMessage.str("");
+                  ssMessage << node << ":  " << ((bSubResult)?strResult:strError);
+                  chat("#radial", ssMessage.str());
                 }
+                ssMessage.str("");
+                ssMessage << ":  done";
+                chat("#radial", ssMessage.str());
               }
               else
               {
