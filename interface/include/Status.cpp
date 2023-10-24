@@ -223,7 +223,6 @@ void Status::status(Json *ptStatus)
 
   ptStatus->m["Nodes"] = new Json;
   ptStatus->m["Nodes"]->m[m_strNode] = new Json;
-  m_mutexShare.lock();
   for (auto &i : m_i)
   {
     stringstream ssPid;
@@ -275,7 +274,6 @@ void Status::status(Json *ptStatus)
       }
     }
   }
-  m_mutexShare.unlock();
 }
 // }}}
 // {{{ schedule()
