@@ -194,7 +194,7 @@ export default
           <tr>
             <td>{{@key}}</td>
             <td>{{PID}}</td>
-            <td>{{numberShort (multiply Memory.Resident 1024) 0}}B</td>
+            <td>{{byteShort (multiply Memory.Resident 1024) 0}}</td>
             {{#if @root.bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
             {{/if}}
