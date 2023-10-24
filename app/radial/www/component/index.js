@@ -46,7 +46,7 @@ export default
           if (c.wsResponse(response, error))
           {
             s.stat();
-            alert('The '+strInterface+' has been '+((strAction == 'restart')?'restarted':'stopped')+((strNode != '')?' on '+strNode:' across all nodes')+'.');
+            alert('The '+strInterface+' has been '+((strAction == 'restart')?'restarted':((strAction == 'start')?'started':'stopped'))+((strNode != '')?' on '+strNode:' across all nodes')+'.');
           }
           else
           {
@@ -173,7 +173,6 @@ export default
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{#if @root.bDeveloper}}
-      <button class="btn btn-sm btn-danger bi bi-x-circle float-end" style="margin-left: 10px;" c-click="action('stop', '{{@key}}', '')" title="stop"></button>
       <button class="btn btn-sm btn-success bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" title="restart"></button>
       {{/if}}
       {{@key}}
@@ -186,7 +185,7 @@ export default
             <td>PID</td>
             <td>Mem</td>
             {{#if @root.bDeveloper}}
-            <td colspan="2">Actions</td>
+            <td></td>
             {{/if}}
           </tr>
         </thead>
@@ -198,7 +197,6 @@ export default
             <td>{{numberShort (multiply Memory.Resident 1024) 0}}B</td>
             {{#if @root.bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
-            <td><button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"></button></td>
             {{/if}}
           </tr>
           {{/each}}
