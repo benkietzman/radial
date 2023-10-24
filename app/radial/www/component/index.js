@@ -23,6 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
+      bDeveloper: false,
       interfaces: null,
       nodes: null
     });
@@ -30,7 +31,7 @@ export default
     // [[[ action()
     s.action = (strAction, strInterface, strNode) =>
     {
-      if (c.isLocalAdmin('Radial'))
+      if (s.bDeveloper)
       {
         let request = {Interface: 'status', 'Function': strAction, Request: {Interface: strInterface}};
         if (strNode != '')
@@ -64,6 +65,36 @@ export default
     // [[[ init()
     s.init = () =>
     {
+      s.bDeveloper = c.isGlobalAdmin();
+      if (s.bDeveloper)
+      {
+        s.u();
+      }
+      else if (c.isValid())
+      {
+        let request = {Interface: 'central', 'Function': 'application', Request: {name: 'Radial'}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            let request = {Interface: 'central', 'Function': 'isApplicationDeveloper', Request: {id: response.Response.id}};
+            c.wsRequest('radial', request).then((response) =>
+            {
+              let error = {};
+              if (c.wsResponse(response, error))
+              {
+                s.application.bDeveloper = true;
+                s.u();
+              }
+            });
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
       let request = {Interface: 'status', 'Function': 'status'};
       c.wsRequest('radial', request).then((response) =>
       {
@@ -147,9 +178,9 @@ export default
           <tr>
             <td>Node</td>
             <td>PID</td>
-            {{#isLocalAdmin "Radial"}}
+            {{#if bDeveloper}}
             <td colspan="2">Actions</td>
-            {{/isLocalAdmin}}
+            {{/if}}
           </tr>
         </thead>
         <tbody>
@@ -157,10 +188,10 @@ export default
           <tr>
             <td>{{@key}}</td>
             <td>{{PID}}</td>
-            {{#isLocalAdmin "Radial"}}
+            {{#if bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
             <td><button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"></button></td>
-            {{/isLocalAdmin}}
+            {{/if}}
           </tr>
           {{/each}}
         </tbody>
