@@ -88,7 +88,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
               {
                 bResult = true;
                 ssMessage.str("");
-                ssMessage << ":  " << getUserName(d) << " (" << d.u << ") requested a " << strFunction " of the " << strInterface << " interface ";
+                ssMessage << ":  " << getUserName(d) << " (" << d.u << ") requested a " << strFunction << " of the " << strInterface << " interface ";
                 if (!strNode.empty())
                 {
                   ssMessage << "on the " << strNode << " node";
@@ -101,8 +101,10 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
                 chat("#radial", ssMessage.str());
                 for (auto &node : nodes)
                 {
+                  bool bSubResult = false;
                   if (strInterface == "status" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
                   {
+                    bSubResult = true;
                     setShutdown();
                   }
                   else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
@@ -156,9 +158,9 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
                     }
                     if (bStopped)
                     {
-                      if (strFunction == "stop")
+                      if (strFunction == "stop" || interfaceAdd(node, strInterface, strError))
                       {
-                        interfaceAdd(node, strInterface, strError);
+                        bSubResult = true;
                       }
                     }
                     else if (strFunction == "start")
@@ -171,7 +173,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
                     }
                   }
                   ssMessage.str("");
-                  ssMessage << node << ":  " << ((bSubResult)?strResult:strError);
+                  ssMessage << node << ":  " << ((bSubResult)?"done":strError);
                   chat("#radial", ssMessage.str());
                 }
                 ssMessage.str("");
