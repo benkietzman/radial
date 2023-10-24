@@ -2570,6 +2570,10 @@ void Interface::userInit(Json *ptJson, radialUser &d)
   {
     strJwt = ptJson->m["wsJwt"]->v;
   }
+stringstream ssMessage;
+ssMessage.str("");
+ssMessage << ":  " << strJwt;
+chat("#radial", ssMessage.str());
   if (!strJwt.empty())
   {
     string strPayload, strValue;
