@@ -178,7 +178,8 @@ export default
           <tr>
             <td>Node</td>
             <td>PID</td>
-            {{#if bDeveloper}}
+            <td>Mem</td>
+            {{#if @root.bDeveloper}}
             <td colspan="2">Actions</td>
             {{/if}}
           </tr>
@@ -188,7 +189,8 @@ export default
           <tr>
             <td>{{@key}}</td>
             <td>{{PID}}</td>
-            {{#if bDeveloper}}
+            <td>{{numberShort (multiply Memory.Resident 1024) 0}}B</td>
+            {{#if @root.bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
             <td><button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"></button></td>
             {{/if}}
