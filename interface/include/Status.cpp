@@ -52,9 +52,6 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
       Json *ptApplication = new Json;
       radialUser d;
       userInit(ptJson, d);
-ssMessage.str("");
-ssMessage << ":  " << d.u << " | " << d.g;
-chat("#radial", ssMessage.str());
       ptApplication->i("name", "Radial");
       if (d.g || db("dbCentralApplications", ptApplication, getApplicationRow, strError))
       {
