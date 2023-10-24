@@ -219,25 +219,21 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
 // {{{ status()
 void Status::status(Json *ptStatus)
 {
+  map<string, map<string, Json *> > stats;
   string strError;
 
   ptStatus->m["Nodes"] = new Json;
   ptStatus->m["Nodes"]->m[m_strNode] = new Json;
+  m_mutexShare.lock();
+  stats[m_strNode] = {};
   for (auto &i : m_i)
   {
     stringstream ssPid;
     Json *ptStat = new Json;
     ssPid << i.second->nPid;
     ptStat->i("|function", "status");
-    if (hub(i.first, ptStat, strError) && exist(ptStat, "Response"))
-    {
-      ptStatus->m["Nodes"]->m[m_strNode]->m[i.first] = new Json(ptStat->m["Response"]);
-    }
-    else
-    {
-      ptStatus->m["Nodes"]->m[m_strNode]->m[i.first] = new Json;
-    }
-    delete ptStat;
+    stats[m_strNode][i.first] = ptStat;
+    ptStatus->m["Nodes"]->m[m_strNode]->m[i.first] = new Json;
     ptStatus->m["Nodes"]->m[m_strNode]->m[i.first]->i("PID", ssPid.str(), 'n');
     ptStatus->m["Nodes"]->m[m_strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?1:0));
     ptStatus->m["Nodes"]->m[m_strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?1:0));
@@ -246,32 +242,42 @@ void Status::status(Json *ptStatus)
   }
   for (auto &l : m_l)
   {
-    if (!l->strNode.empty())
+    stats[l->strNode] = {};
+    ptStatus->m["Nodes"]->m[l->strNode] = new Json;
+    for (auto &i : l->interfaces)
     {
-      ptStatus->m["Nodes"]->m[l->strNode] = new Json;
-      for (auto &i : l->interfaces)
+      stringstream ssPid;
+      Json *ptStat = new Json;
+      ssPid << i.second->nPid;
+      ptStat->i("Interface", i.first);
+      ptStat->i("Node", l->strNode);
+      ptStat->i("|function", "status");
+      stats[l->strNode][i.first] = ptStat;
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first] = new Json;
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("PID", ssPid.str(), 'n');
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?1:0));
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?1:0));
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
+      ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Command", i.second->strCommand);
+    }
+  }
+  m_mutexShare.unlock();
+  for (auto &n : stats)
+  {
+    for (auto &i : n.second)
+    {
+      Json *ptJson = ptStatus->m["Nodes"]->m[m_strNode]->m[i.first];
+      if (((n.first == m_strNode && hub(i.first, i.second, strError)) || (n.first != m_strNode && hub("link", i.second, strError))) && exist(i.second, "Response"))
       {
-        stringstream ssPid;
-        Json *ptStat = new Json;
-        ssPid << i.second->nPid;
-        ptStat->i("Interface", i.first);
-        ptStat->i("Node", l->strNode);
-        ptStat->i("|function", "status");
-        if (hub("link", ptStat, strError) && exist(ptStat, "Response"))
-        {
-          ptStatus->m["Nodes"]->m[l->strNode]->m[i.first] = new Json(ptStat->m["Response"]);
-        }
-        else
-        {
-          ptStatus->m["Nodes"]->m[l->strNode]->m[i.first] = new Json;
-        }
-        delete ptStat;
-        ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("PID", ssPid.str(), 'n');
-        ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?1:0));
-        ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?1:0));
-        ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
-        ptStatus->m["Nodes"]->m[l->strNode]->m[i.first]->i("Command", i.second->strCommand);
+        ptStatus->m["Nodes"]->m[m_strNode]->m[i.first] = new Json(i.second->m["Response"]);
       }
+      else
+      {
+        ptStatus->m["Nodes"]->m[m_strNode]->m[i.first] = new Json;
+      }
+      delete i.second;
+      ptStatus->m["Nodes"]->m[m_strNode]->m[i.first]->merge(ptJson, true, false);
+      delete ptJson;
     }
   }
 }
