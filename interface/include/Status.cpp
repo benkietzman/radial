@@ -53,7 +53,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
       radialUser d;
       userInit(ptJson, d);
 ssMessage.str("");
-ssMessage << ":  " << d.u << " | " << d.g;
+ssMessage << ":  " << ptJson;
 chat("#radial", ssMessage.str());
       ptApplication->i("name", "Radial");
       if (d.g || db("dbCentralApplications", ptApplication, getApplicationRow, strError))
