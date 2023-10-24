@@ -2570,10 +2570,6 @@ void Interface::userInit(Json *ptJson, radialUser &d)
   {
     strJwt = ptJson->m["wsJwt"]->v;
   }
-stringstream ssMessage;
-ssMessage.str("");
-ssMessage << ":  " << strJwt;
-chat("#radial", ssMessage.str());
   if (!strJwt.empty())
   {
     string strPayload, strValue;
@@ -2583,6 +2579,10 @@ chat("#radial", ssMessage.str());
     {
       strPayload = strJwt;
     }
+stringstream ssMessage;
+ssMessage.str("");
+ssMessage << ":  " << strPayload;
+chat("#radial", ssMessage.str());
     if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
     {
       if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
