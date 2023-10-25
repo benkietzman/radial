@@ -142,38 +142,38 @@ void Command::process(string strPrefix)
                 }
                 // }}}
               }
-              else if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "status")
-              {
-                float fCpu = 0, fMem = 0;
-                pid_t nPid = getpid();
-                stringstream ssCpu, ssImage, ssPid, ssResident;
-                time_t CTime = 0;
-                unsigned long ulImage = 0, ulResident = 0;
-                ptJson->i("Status", "okay");
-                if (exist(ptJson, "Response"))
-                {
-                  delete ptJson->m["Response"];
-                }   
-                ptJson->m["Response"] = new Json;
-                m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
-                ssCpu << fCpu;
-                ptJson->m["Response"]->i("CPU", ssCpu.str(), 'n');
-                ptJson->m["Response"]->m["Memory"] = new Json;
-                ssImage << ulImage;
-                ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
-                ssResident << ulResident;
-                ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
-                ssPid << nPid;
-                ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
-                ptJson->j(p.p);
-                hub(p, false);
-              }
               else
               {
                 ssMessage.str("");
                 ssMessage << strPrefix << " error [stdin,hub]:  Please provide a Function.";
                 log(ssMessage.str());
               }
+            }
+            else if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "status")
+            {
+              float fCpu = 0, fMem = 0;
+              pid_t nPid = getpid();
+              stringstream ssCpu, ssImage, ssPid, ssResident;
+              time_t CTime = 0;
+              unsigned long ulImage = 0, ulResident = 0;
+              ptJson->i("Status", "okay");
+              if (exist(ptJson, "Response"))
+              {
+                delete ptJson->m["Response"];
+              }   
+              ptJson->m["Response"] = new Json;
+              m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+              ssCpu << fCpu;
+              ptJson->m["Response"]->i("CPU", ssCpu.str(), 'n');
+              ptJson->m["Response"]->m["Memory"] = new Json;
+              ssImage << ulImage;
+              ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
+              ssResident << ulResident;
+              ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
+              ssPid << nPid;
+              ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
+              ptJson->j(p.p);
+              hub(p, false);
             }
             else if (!empty(ptJson, "Command"))
             {
