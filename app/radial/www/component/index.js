@@ -112,6 +112,15 @@ export default
             s.interfaces[i] = {};
           }
           s.interfaces[i][n] = stat.Nodes[n][i];
+          if (c.isDefined(stat.Nodes[n][i].Throughput))
+          {
+            let nThroughput = 0;
+            for (let t of Object.keys(stat.Nodes[n][i].Throughput))
+            {
+              nThroughput += stat.Nodes[n][i].Throughput[t];
+            }
+            s.interfaces[i][n].Throughput = nThroughput;
+          }
         }
       }
       s.u();
@@ -185,7 +194,7 @@ export default
             <td style="text-align: right;" title="Process ID"><i class="bi bi-robot"></i></td>
             <td style="text-align: right;" title="Resident Memory"><i class="bi bi-memory"></i></td>
             <td style="text-align: right;" title="Threads"><i class="bi bi-threads"></i></td>
-            <td title="Master"><i class="bi bi-person-gear"></i></td>
+            <td style="text-align: right;" title="Throughput (#/min)"><i class="bi bi-speedometer"></i></td>
             {{#if @root.bDeveloper}}
             <td></td>
             {{/if}}
@@ -194,11 +203,11 @@ export default
         <tbody>
           {{#each .}}
           <tr>
-            <td>{{@key}}</td>
+            <td {{#ifCond Master.Node "==" @key}} style="font-weight: bold;" title="Master"{{/ifCond}}>{{@key}}</td>
             <td style="text-align: right;">{{PID}}</td>
             <td style="text-align: right;">{{byteShort (multiply Memory.Resident 1024) 0}}</td>
             <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{else}}1{{/if}}</td>
-            <td>{{Master.Node}}</td>
+            <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{else}}0{{/if}}</td>
             {{#if @root.bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
             {{/if}}
