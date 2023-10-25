@@ -2132,7 +2132,7 @@ void Interface::process(string strPrefix)
                 {
                   float fCpu = 0, fMem = 0;
                   pid_t nPid = getpid();
-                  stringstream ssCpu, ssImage, ssMem, ssPid, ssResident;
+                  stringstream ssCpu, ssImage, ssPid, ssResident;
                   time_t CTime = 0;
                   unsigned long ulImage = 0, ulResident = 0;
                   ptJson->i("Status", "okay");
@@ -2149,8 +2149,6 @@ void Interface::process(string strPrefix)
                   ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
                   ssResident << ulResident;
                   ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
-                  ssMem << fMem;
-                  ptJson->m["Response"]->m["Memory"]->i("Usage", ssMem.str(), 'n');
                   ssPid << nPid;
                   ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
                   if (!m_strMaster.empty())
