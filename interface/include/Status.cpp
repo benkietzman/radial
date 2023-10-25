@@ -242,6 +242,7 @@ void Status::status(Json *ptStatus)
 {
   map<string, map<string, Json *> > nodes;
   string strError;
+  Json *ptThroughput;
 
   ptStatus->m["Nodes"] = new Json;
   ptStatus->m["Nodes"]->m[m_strNode] = new Json;
@@ -283,6 +284,8 @@ void Status::status(Json *ptStatus)
     }
   }
   m_mutexShare.unlock();
+  ptThroughput = new Json;
+  storageRetrieve({"radial", "throughput"}, ptThroughput, strError);
   for (auto &n : nodes)
   {
     for (auto &i : n.second)
@@ -322,6 +325,10 @@ void Status::status(Json *ptStatus)
       delete i.second;
       ptStatus->m["Nodes"]->m[n.first]->m[i.first]->merge(ptJson, true, false);
       delete ptJson;
+      if (exist(ptThroughput, n.first) && exist(ptThroughput->m[n.first], i.first) && !ptThroughput->m[n.first]->m[i.first]->m.empty())
+      {
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", ptThroughput->m[n.first]->m[i.first]);
+      }
     }
   }
 }
