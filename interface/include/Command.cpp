@@ -163,8 +163,6 @@ void Command::process(string strPrefix)
               }   
               ptJson->m["Response"] = new Json;
               m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
-              ssCpu << fCpu;
-              ptJson->m["Response"]->i("CPU", ssCpu.str(), 'n');
               ptJson->m["Response"]->m["Memory"] = new Json;
               ssImage << ulImage;
               ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
