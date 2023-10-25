@@ -181,11 +181,11 @@ export default
       <table class="table table-sm table-condensed table-striped">
         <thead>
           <tr>
-            <td>Node</td>
-            <td style="text-align: right;" title="Process ID">PID</td>
-            <td style="text-align: right;" title="Resident Memory">Mem</td>
-            <td style="text-align: right;" title="Threads">T</td>
-            <td title="Master">M</td>
+            <td title="Node"><i class="bi bi-node-plus"></i></td>
+            <td style="text-align: right;" title="Process ID"><i class="bi bi-robot"></i></td>
+            <td style="text-align: right;" title="Resident Memory"><i class="bi bi-memory"></i></td>
+            <td style="text-align: right;" title="Threads"><i class="bi bi-threads"></i></td>
+            <td title="Master"><i class="bi bi-person-gear"></i></td>
             {{#if @root.bDeveloper}}
             <td></td>
             {{/if}}
