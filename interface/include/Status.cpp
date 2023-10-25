@@ -299,9 +299,9 @@ void Status::status(Json *ptStatus)
         m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
         ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"] = new Json;
         ssImage << ulImage;
-        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Image", ssImage.str(), 'n');
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Image", ssImage.str(), 'n');
         ssResident << ulResident;
-        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Resident", ssResident.str(), 'n');
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Resident", ssResident.str(), 'n');
         m_mutexBase.lock();
         if (m_unThreads > 0)
         {
