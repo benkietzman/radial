@@ -2348,6 +2348,7 @@ void Interface::process(string strPrefix)
         }
         m_throughput.clear();
         m_mutexBase.unlock();
+        throughput(ptJson->m["Response"]);
         ptJson->j(p.p);
         delete ptJson;
         hub(p, false);
@@ -2475,6 +2476,17 @@ void Interface::throughput(const string strType, const size_t unThroughput)
   }
   m_throughput[strType] += unThroughput;
   m_mutexBase.unlock();
+}
+void Interface::throughput(Json *ptData)
+{
+  list<string> keys = {"radial", "throughput", m_strNode, m_strName};
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "add");
+  ptJson->i("Keys", keys);
+  ptJson->i("Request", ptData);
+  hub("storage", ptJson, false);
+  delete ptJson;
 }
 // }}}
 // {{{ user()

@@ -129,6 +129,7 @@ class Interface : public Base
   bool storageRetrieveKeys(const list<string> keysIn, list<string> &keysOut, string &strError);
   bool storageUpdate(const list<string> keys, Json *ptJson, string &strError);
   void throughput(const string strType, const size_t unThroughput = 1);
+  void throughput(Json *ptData);
   bool user(radialUser &d, string &e);
   void userDeinit(radialUser &d);
   void userInit(radialUser &d);
