@@ -1344,6 +1344,7 @@ void Link::process(string strPrefix)
             ptJson->i("Function", "throughput");
             ptJson->m["Response"] = new Json;
             ptJson->m["Response"]->i("request", ssThroughput.str(), 'n');
+            throughput(ptJson->m["Response"]);
             ptJson->j(p.p);
             delete ptJson;
             hub(p, false);
