@@ -288,7 +288,30 @@ void Status::status(Json *ptStatus)
     for (auto &i : n.second)
     {
       Json *ptJson = ptStatus->m["Nodes"]->m[n.first]->m[i.first];
-      if (((n.first == m_strNode && hub(i.first, i.second, strError)) || (n.first != m_strNode && hub("link", i.second, strError))) && exist(i.second, "Response"))
+      if (n.first == m_strNode && i.first == "status")
+      {
+        float fCpu = 0, fMem = 0;
+        pid_t nPid = getpid();
+        stringstream ssImage, ssPid, ssResident;
+        time_t CTime = 0;
+        unsigned long ulImage = 0, ulResident = 0;
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first] = new Json;
+        m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"] = new Json;
+        ssImage << ulImage;
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Image", ssImage.str(), 'n');
+        ssResident << ulResident;
+        ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Resident", ssResident.str(), 'n');
+        m_mutexBase.lock();
+        if (m_unThreads > 0)
+        {
+          stringstream ssThreads;
+          ssThreads << m_unThreads;
+          ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Threads", ssThreads.str(), 'n');
+        }
+        m_mutexBase.unlock();
+      }
+      else if (((n.first == m_strNode && hub(i.first, i.second, strError)) || (n.first != m_strNode && hub("link", i.second, strError))) && exist(i.second, "Response"))
       {
         ptStatus->m["Nodes"]->m[n.first]->m[i.first] = new Json(i.second->m["Response"]);
       }
