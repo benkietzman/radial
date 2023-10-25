@@ -153,7 +153,7 @@ void Command::process(string strPrefix)
             {
               float fCpu = 0, fMem = 0;
               pid_t nPid = getpid();
-              stringstream ssCpu, ssImage, ssPid, ssResident;
+              stringstream ssImage, ssPid, ssResident;
               time_t CTime = 0;
               unsigned long ulImage = 0, ulResident = 0;
               ptJson->i("Status", "okay");
