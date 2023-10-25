@@ -182,8 +182,10 @@ export default
         <thead>
           <tr>
             <td>Node</td>
-            <td>PID</td>
-            <td>Mem</td>
+            <td style="text-align: right;" title="Process ID">PID</td>
+            <td style="text-align: right;" title="Resident Memory">Mem</td>
+            <td style="text-align: right;" title="Threads">Thds</td>
+            <td title="Master">Mstr</td>
             {{#if @root.bDeveloper}}
             <td></td>
             {{/if}}
@@ -193,8 +195,10 @@ export default
           {{#each .}}
           <tr>
             <td>{{@key}}</td>
-            <td>{{PID}}</td>
-            <td>{{byteShort (multiply Memory.Resident 1024) 0}}</td>
+            <td style="text-align: right;">{{PID}}</td>
+            <td style="text-align: right;">{{byteShort (multiply Memory.Resident 1024) 0}}</td>
+            <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td>
+            <td>{{Master.Node}}</td>
             {{#if @root.bDeveloper}}
             <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
             {{/if}}
