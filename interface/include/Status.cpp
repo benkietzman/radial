@@ -304,6 +304,7 @@ void Status::status(Json *ptStatus)
               }
               else
               {
+                bool bFoundInterface = false;
                 Json *ptStat = new Json;
                 ptStat->i("|function", "status");
                 if (n.first != m_strNode)
@@ -311,7 +312,31 @@ void Status::status(Json *ptStatus)
                   ptStat->i("Interface", i.first);
                   ptStat->i("Node", n.first);
                 }
-                if (((n.first == m_strNode && hub(i.first, ptStat, strError)) || (n.first != m_strNode && hub("link", ptStat, strError))) && exist(ptStat, "Response"))
+                m_mutexShare.lock();
+                if (n.first == m_strNode)
+                {
+                  if (m_i.find(i.first) != m_i.end())
+                  {
+                    bFoundInterface = true;
+                  }
+                }
+                else
+                {
+                  bool bFoundNode = false;
+                  for (auto l = m_l.begin(); !bFoundNode && l != m_l.end(); l++)
+                  {
+                    if ((*l)->strNode == n.first)
+                    {
+                      bFoundNode = true;
+                      if ((*l)->interfaces.find(i.first) != (*l)->interfaces.end())
+                      {
+                        bFoundInterface = true;
+                      }
+                    }
+                  }
+                }
+                m_mutexShare.unlock();
+                if (bFoundInterface && ((n.first == m_strNode && hub(i.first, ptStat, strError)) || (n.first != m_strNode && hub("link", ptStat, strError))) && exist(ptStat, "Response"))
                 {
                   ptStatus->m["Nodes"]->m[n.first]->m[i.first]->merge(ptStat->m["Response"], true, false);
                 }
