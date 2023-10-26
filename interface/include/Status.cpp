@@ -341,8 +341,9 @@ void Status::schedule(string strPrefix)
     if ((CTime[1] - CTime[0]) >= 60)
     {
       struct stat tStat;
+      Json *ptConfiguration = new Json;
       CTime[0] = CTime[1];
-      if (stat(ssInterfaces.str().c_str(), &tStat) == 0 && CModify != tStat.st_mtime)
+      if ((stat(ssInterfaces.str().c_str(), &tStat) == 0 && CModify != tStat.st_mtime) || !storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
       {
         ifstream inInterfaces;
         Json *ptInterfaces = NULL;
@@ -368,6 +369,7 @@ void Status::schedule(string strPrefix)
           delete ptInterfaces;
         }
       }
+      delete ptConfiguration;
       if (isMasterSettled() && isMaster())
       {
         Json *ptMessage = new Json;
