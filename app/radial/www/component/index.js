@@ -24,6 +24,8 @@ export default
       a: a,
       c: c,
       bDeveloper: false,
+      bDisabled: false,
+      strAction: null,
       interfaces: null,
       nodes: null
     });
@@ -33,24 +35,27 @@ export default
     {
       if (s.bDeveloper)
       {
+        s.bDisabled = true;
+        s.strAction = strInterface;
+        s.u();
         let request = {Interface: 'status', 'Function': strAction, Request: {Interface: strInterface}};
         if (strNode != '')
         {
           request.Request.Node = strNode;
         }
-        s.info.v = 'Processing request...';
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
-          s.info.v = null;
+          s.bDisabled = false;
+          s.strAction = null;
           if (c.wsResponse(response, error))
           {
             s.stat();
-            alert('The '+strInterface+' has been '+((strAction == 'restart')?'restarted':((strAction == 'start')?'started':'stopped'))+((strNode != '')?' on '+strNode:' across all nodes')+'.');
           }
           else
           {
             s.message.v = error.message;
+            s.u();
           }
         });
       }
@@ -164,7 +169,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Radial', (data) =>
     {
-      if (data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Nodes)
+      if (!s.bDisabled && data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Nodes)
       {
         s.org(data.detail);
       }
@@ -182,9 +187,9 @@ export default
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{#if @root.bDeveloper}}
-      <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"></button>
-      <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" style="margin-left: 10px;" title="restart"></button>
-      <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}', '')" title="start"></button>
+      <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" style="margin-left: 10px;" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}', '')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>
       {{/if}}
       {{@key}}
     </div>
@@ -211,14 +216,19 @@ export default
             <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td>
             <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{/if}}</td>
             {{#if @root.bDeveloper}}
-            <td>{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button>{{/if}}</td>
-            <td>{{#if PID}}<button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"></button>{{else}}<button class="btn btn-sm btn-success bi bi-power" c-click="action('start', '{{@../key}}', '{{@key}}')" title="start"></button>{{/if}}</td>
+            <td>{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
+            <td>{{#if PID}}<button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>{{else}}<button class="btn btn-sm btn-success bi bi-power" c-click="action('start', '{{@../key}}', '{{@key}}')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
             {{/if}}
           </tr>
           {{/each}}
         </tbody>
       </table>
     </div>
+    {{#ifCond @root.strAction "==" @key}}
+    <div class="card-footer">
+      <span class="text-warning">processing...</span>
+    </div>
+    {{/ifCond}}
   </div>
   </div>
   {{/each}}
