@@ -313,7 +313,7 @@ void Status::status(Json *ptStatus)
               }
               if (exist(i.second, "throughput"))
               {
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", i.second->m["throughput"]->v, 'n');
+                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", i.second->m["throughput"]);
               }
             }
           }
