@@ -328,7 +328,7 @@ void Status::status(Json *ptStatus)
 void Status::schedule(string strPrefix)
 {
   string strError;
-  stringstream ssInterfaces;
+  stringstream ssInterfaces, ssMessage;
   time_t CModify = 0, CTime[2];
 
   threadIncrement();
@@ -343,31 +343,51 @@ void Status::schedule(string strPrefix)
       struct stat tStat;
       Json *ptConfiguration = new Json;
       CTime[0] = CTime[1];
-      if ((stat(ssInterfaces.str().c_str(), &tStat) == 0 && CModify != tStat.st_mtime) || !storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
+      if ((stat(ssInterfaces.str().c_str(), &tStat) == 0)
       {
-        ifstream inInterfaces;
-        Json *ptInterfaces = NULL;
-        inInterfaces.open(ssInterfaces.str().c_str());
-        if (inInterfaces)
+        if (CModify != tStat.st_mtime || !storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
         {
-          string strLine;
-          stringstream ssJson;
-          CModify = tStat.st_mtime;
-          while (getline(inInterfaces, strLine))
+          ifstream inInterfaces;
+          Json *ptInterfaces = NULL;
+          inInterfaces.open(ssInterfaces.str().c_str());
+          if (inInterfaces)
           {
-            ssJson << strLine;
+            string strLine;
+            stringstream ssJson;
+            CModify = tStat.st_mtime;
+            while (getline(inInterfaces, strLine))
+            {
+              ssJson << strLine;
+            }
+            ptInterfaces = new Json(ssJson.str());
           }
-          ptInterfaces = new Json(ssJson.str());
-        }
-        inInterfaces.close();
-        if (ptInterfaces != NULL)
-        {
-          for (auto &i : ptInterfaces->m)
+          else
           {
-            storageAdd({"radial", "nodes", m_strNode, "interfaces", i.first, "configuration"}, i.second, strError);
+            ssMessage.str("");
+            ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssInterfaces.str() << "]:  " << strerror(errno);
+            log(ssMessage.str());
           }
-          delete ptInterfaces;
+          inInterfaces.close();
+          if (ptInterfaces != NULL)
+          {
+            for (auto &i : ptInterfaces->m)
+            {
+              if (!storageAdd({"radial", "nodes", m_strNode, "interfaces", i.first, "configuration"}, i.second, strError))
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Interface::storageAdd() error [radial,nodes," << m_strNode << ",interfaces," << i.first << ",configuration]:  " << strError;
+                log(ssMessage.str());
+              }
+            }
+            delete ptInterfaces;
+          }
         }
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->stat(" << errno << ") error [" << ssInterfaces.str() << "]:  " << strerror(errno);
+        log(ssMessage.str());
       }
       delete ptConfiguration;
       if (isMasterSettled() && isMaster())
