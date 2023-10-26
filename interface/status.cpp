@@ -15,17 +15,25 @@
 #include "include/Status"
 using namespace radial;
 Status *gpStatus = NULL;
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "status->main()";
   gpStatus = new Status(strPrefix, argc, argv, &callback);
+  gpStatus->setAutoMode(&autoMode);
   thread threadSchedule(&Status::schedule, gpStatus, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpStatus->process(strPrefix);
   threadSchedule.join();
   delete gpStatus;
   return 0;
+}
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{ 
+  thread threadAutoMode(&radial::Status::autoMode, gpStatus, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {

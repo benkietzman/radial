@@ -30,6 +30,7 @@ class Status : public Interface
   public:
   Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Status();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void schedule(string strPrefix);
 };

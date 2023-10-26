@@ -245,106 +245,6 @@ bool Hub::load(string strPrefix, string &strError)
           ssJson << strLine;
         }
         ptInterfaces = new Json(ssJson.str());
-        if (ptInterfaces != NULL)
-        {
-          if (!ptInterfaces->m.empty())
-          {
-            bResult = true;
-            if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_i.find("log") == m_i.end())
-            {
-              stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
-              unsigned long ulMemory;
-              ssMemory >> ulMemory;
-              ulMemory *= 1024;
-              if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
-              {
-                bResult = false;
-              }
-              delete ptInterfaces->m["log"];
-              ptInterfaces->m.erase("log");
-            }
-            for (auto &i : ptInterfaces->m)
-            {
-              if (!empty(i.second, "Command"))
-              {
-                stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
-                unsigned long ulMemory;
-                ssMemory >> ulMemory;
-                ulMemory *= 1024;
-                if (m_i.find(i.first) != m_i.end())
-                {
-                  m_i[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
-                  m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
-                  m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
-                  if (m_i[i.first]->strCommand != i.second->m["Command"]->v)
-                  {
-                    m_i[i.first]->strCommand = i.second->m["Command"]->v;
-                    if (!m_i[i.first]->bShutdown && m_i[i.first]->bRespawn)
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << " [" << i.first << "]:  Restarting interface due to configuration change.";
-                      log(ssMessage.str());
-                      setShutdown(strPrefix, i.first);
-                    }
-                  }
-                  m_i[i.first]->ulMemory = ulMemory;
-                }
-                else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
-                {
-                  bResult = false;
-                }
-              }
-              else
-              {
-                bResult = false;
-                ssMessage.str("");
-                ssMessage << strPrefix << " error [" << i.first << "] Please provide the Command.";
-                log(ssMessage.str());
-              }
-            }
-            for (auto &i : m_i)
-            {
-              if (i.first != "log")
-              {
-                bool bFound = false;
-                for (auto j = ptInterfaces->m.begin(); !bFound && j != ptInterfaces->m.end(); j++)
-                {
-                  if (i.first == j->first)
-                  {
-                    bFound = true;
-                  }
-                }
-                if (!bFound)
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << " [" << i.first << "]:  Stopping interface due to non-existence in configuration.";
-                  log(ssMessage.str());
-                  setShutdown(strPrefix, i.first, true);
-                }
-              }
-            }
-            delete ptInterfaces;
-            if (!bResult)
-            {
-              ssMessage.str("");
-              ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
-              strError = ssMessage.str();
-            }
-            interfaces();
-          }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << "[" << ssInterfaces.str() << "] No interfaces configured.";
-            strError = ssMessage.str();
-          }
-        }
-        else
-        {
-          ssMessage.str("");
-          ssMessage << "[" << ssInterfaces.str() << "] Invalid configuration.";
-          strError = ssMessage.str();
-        }
       }
       else
       {
@@ -353,6 +253,106 @@ bool Hub::load(string strPrefix, string &strError)
         strError = ssMessage.str();
       }
       inInterfaces.close();
+      if (ptInterfaces != NULL)
+      {
+        if (!ptInterfaces->m.empty())
+        {
+          bResult = true;
+          if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_i.find("log") == m_i.end())
+          {
+            stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
+            unsigned long ulMemory;
+            ssMemory >> ulMemory;
+            ulMemory *= 1024;
+            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+            {
+              bResult = false;
+            }
+            delete ptInterfaces->m["log"];
+            ptInterfaces->m.erase("log");
+          }
+          for (auto &i : ptInterfaces->m)
+          {
+            if (!empty(i.second, "Command"))
+            {
+              stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
+              unsigned long ulMemory;
+              ssMemory >> ulMemory;
+              ulMemory *= 1024;
+              if (m_i.find(i.first) != m_i.end())
+              {
+                m_i[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
+                m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
+                m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
+                if (m_i[i.first]->strCommand != i.second->m["Command"]->v)
+                {
+                  m_i[i.first]->strCommand = i.second->m["Command"]->v;
+                  if (!m_i[i.first]->bShutdown && m_i[i.first]->bRespawn)
+                  {
+                    ssMessage.str("");
+                    ssMessage << strPrefix << " [" << i.first << "]:  Restarting interface due to configuration change.";
+                    log(ssMessage.str());
+                    setShutdown(strPrefix, i.first);
+                  }
+                }
+                m_i[i.first]->ulMemory = ulMemory;
+              }
+              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
+              {
+                bResult = false;
+              }
+            }
+            else
+            {
+              bResult = false;
+              ssMessage.str("");
+              ssMessage << strPrefix << " error [" << i.first << "] Please provide the Command.";
+              log(ssMessage.str());
+            }
+          }
+          for (auto &i : m_i)
+          {
+            if (i.first != "log")
+            {
+              bool bFound = false;
+              for (auto j = ptInterfaces->m.begin(); !bFound && j != ptInterfaces->m.end(); j++)
+              {
+                if (i.first == j->first)
+                {
+                  bFound = true;
+                }
+              }
+              if (!bFound)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << " [" << i.first << "]:  Stopping interface due to non-existence in configuration.";
+                log(ssMessage.str());
+                setShutdown(strPrefix, i.first, true);
+              }
+            }
+          }
+          if (!bResult)
+          {
+            ssMessage.str("");
+            ssMessage << "Encountered an error adding one or more interfaces.  Please check log for more details.";
+            strError = ssMessage.str();
+          }
+          interfaces();
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << "[" << ssInterfaces.str() << "] No interfaces configured.";
+          strError = ssMessage.str();
+        }
+        delete ptInterfaces;
+      }
+      else if (strError.empty())
+      {
+        ssMessage.str("");
+        ssMessage << "[" << ssInterfaces.str() << "] Invalid configuration.";
+        strError = ssMessage.str();
+      }
     }
     else
     {

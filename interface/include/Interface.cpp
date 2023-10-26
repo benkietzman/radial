@@ -2479,7 +2479,7 @@ void Interface::throughput(const string strType, const size_t unThroughput)
 }
 void Interface::throughput(Json *ptData)
 {
-  list<string> keys = {"radial", "throughput", m_strNode, m_strName};
+  list<string> keys = {"radial", "nodes", m_strNode, "interfaces", m_strName, "throughput"};
   Json *ptJson = new Json;
 
   ptJson->i("Function", "add");
