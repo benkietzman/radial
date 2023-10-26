@@ -361,6 +361,7 @@ void Status::status(Json *ptStatus)
 // {{{ schedule()
 void Status::schedule(string strPrefix)
 {
+  size_t unCount = 0;
   string strError;
   stringstream ssInterfaces, ssMessage;
   time_t CModify = 0, CTime[2];
@@ -431,6 +432,11 @@ void Status::schedule(string strPrefix)
         ptMessage->i("Action", "status");
         live("Radial", "", ptMessage, strError);
         delete ptMessage;
+        if (unCount++ > 480)
+        {
+          unCount = 0;
+          storageRemove({"radial"}, strError);
+        }
       }
     }
     msleep(250);
