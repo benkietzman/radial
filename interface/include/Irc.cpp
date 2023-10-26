@@ -1101,24 +1101,52 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 stringstream ssSubText;
                 if (strFunction == "status")
                 {
-                  string strT = strInterface;
-                  Json *ptJson = new Json;
-                  if (node != m_strNode)
+                  bool bFoundInterface = false;
+                  m_mutexShare.lock();
+                  if (node == m_strNode)
                   {
-                    ptJson->i("Interface", strInterface);
-                    ptJson->i("Node", node);
-                    strT = "link";
-                  }
-                  ptJson->i("|function", "status");
-                  if (hub(strT, ptJson, strError))
-                  {
-                    bSubResult = true;
-                    if (exist(ptJson, "Response"))
+                    if (m_i.find(strInterface) != m_i.end())
                     {
-                      ptJson->m["Response"]->j(strResult);
+                      bFoundInterface = true;
                     }
                   }
-                  delete ptJson;
+                  else
+                  {
+                    bool bFoundNode = false;
+                    for (auto l = m_l.begin(); !bFoundNode && l != m_l.end(); l++)
+                    {
+                      if ((*l)->strNode == node)
+                      {
+                        bFoundNode = true;
+                        if ((*l)->interfaces.find(strInterface) != (*l)->interfaces.end())
+                        {
+                          bFoundInterface = true;
+                        }
+                      }
+                    }
+                  }
+                  m_mutexShare.unlock();
+                  if (bFoundInterface)
+                  {
+                    string strT = strInterface;
+                    Json *ptJson = new Json;
+                    if (node != m_strNode)
+                    {
+                      ptJson->i("Interface", strInterface);
+                      ptJson->i("Node", node);
+                      strT = "link";
+                    }
+                    ptJson->i("|function", "status");
+                    if (hub(strT, ptJson, strError))
+                    {
+                      bSubResult = true;
+                      if (exist(ptJson, "Response"))
+                      {
+                        ptJson->m["Response"]->j(strResult);
+                      }
+                    }
+                    delete ptJson;
+                  }
                 }
                 else if (strInterface == "irc" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
                 {
