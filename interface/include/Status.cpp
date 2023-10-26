@@ -331,6 +331,7 @@ void Status::status(Json *ptStatus)
       }
     }
   }
+  delete ptThroughput;
 }
 // }}}
 // {{{ schedule()
