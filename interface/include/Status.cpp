@@ -287,6 +287,12 @@ void Status::status(Json *ptStatus)
                 ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Image", ssImage.str(), 'n');
                 ssResident << ulResident;
                 ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Resident", ssResident.str(), 'n');
+                if (!m_strMaster.empty())
+                {
+                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"] = new Json;
+                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Node", m_strMaster);
+                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+                }
                 m_mutexBase.lock();
                 if (m_unThreads > 0)
                 {
