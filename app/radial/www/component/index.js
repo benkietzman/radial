@@ -208,7 +208,7 @@ export default
             <td {{#ifCond Master.Node "==" @key}} style="font-weight: bold;" title="Master"{{/ifCond}}>{{@key}}</td>
             <td style="text-align: right;">{{PID}}</td>
             <td style="text-align: right;">{{byteShort (multiply Memory.Resident 1024) 0}}</td>
-            <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{else}}1{{/if}}</td>
+            <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{else}}0{{/if}}</td>
             <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{else}}0{{/if}}</td>
             {{#if @root.bDeveloper}}
             <td>{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button>{{/if}}</td>
