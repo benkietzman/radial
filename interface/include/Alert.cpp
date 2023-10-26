@@ -175,7 +175,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                       errors.push_back("Interface::curl() Encountered an unknown error.");
                     }
                   }
-                    else
+                  else
                   {
                     errors.push_back("Interface::curl() Encountered an unknown error.");
                   }
