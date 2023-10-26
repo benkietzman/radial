@@ -182,7 +182,9 @@ export default
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{#if @root.bDeveloper}}
-      <button class="btn btn-sm btn-success bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" title="restart"></button>
+      <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"></button>
+      <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" style="margin-left: 10px;" title="restart"></button>
+      <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}', '')" title="start"></button>
       {{/if}}
       {{@key}}
     </div>
@@ -196,7 +198,7 @@ export default
             <td style="text-align: right;" title="Threads"><i class="bi bi-threads"></i></td>
             <td style="text-align: right;" title="Throughput (#/min)"><i class="bi bi-speedometer"></i></td>
             {{#if @root.bDeveloper}}
-            <td></td>
+            <td colspan="2"></td>
             {{/if}}
           </tr>
         </thead>
@@ -209,7 +211,8 @@ export default
             <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{else}}1{{/if}}</td>
             <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{else}}0{{/if}}</td>
             {{#if @root.bDeveloper}}
-            <td><button class="btn btn-sm btn-success bi bi-arrow-clockwise" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button></td>
+            <td>{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"></button>{{/if}}</td>
+            <td>{{#if PID}}<button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"></button>{{else}}<button class="btn btn-sm btn-success bi bi-power" c-click="action('start', '{{@../key}}', '{{@key}}')" title="start"></button>{{/if}}</td>
             {{/if}}
           </tr>
           {{/each}}
