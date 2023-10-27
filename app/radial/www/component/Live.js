@@ -107,8 +107,6 @@ export default
   // [[[ template
   template: `
   <h4 class="page-header">Live Messaging</h4>
-  <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <p>
     Please be careful when using this tool.  Not selecting an Application will send the message to all applications.  Not inputting a User will send the message to all users for the given application.
   </p>
@@ -130,6 +128,9 @@ export default
   <textarea class="form-control" c-model="in.Message.Body" rows="5"></textarea>
   <br>
   <button class="btn btn-success bi bi-send float-end" c-click="send()">Send</button>
+  <div c-model="info" class="text-warning"></div>
+  <div c-model="message" class="text-danger"></div>
+  <div c-model="success" class="text-success"></div>
   `
   // ]]]
 }

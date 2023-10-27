@@ -79,8 +79,6 @@ export default
   // [[[ template
   template: `
   <h4 class="page-header">Send Alert</h4>
-  <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="row">
     <div class="col-md-6">
       <p>
