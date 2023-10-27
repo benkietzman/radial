@@ -41,9 +41,9 @@ export default
   // ]]]
   // [[[ template
   template: `
+  <h4 class="page-header">Radial</h4>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
-  <h4 class="page-header">Radial</h4>
   <p>
   Provides a radial design with a central hub and adjunct interfaces.
   </p>
