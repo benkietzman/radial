@@ -22,10 +22,12 @@ let common = new Common(
   },
   routes:
   [
-    {path: '/', name: 'index', component: '/radial/component/index.js'},
+    {path: '/Alert', name: 'Alert', component: '/radial/component/Alert.js'},
+    {path: '/Home', name: 'Home', component: '/radial/component/Home.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
-    {default: '/'}
+    {path: '/Status', name: 'Status', component: '/radial/component/Status.js'},
+    {default: '/Home'}
   ]
 });
 common.enableJwt(true);

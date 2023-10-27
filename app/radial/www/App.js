@@ -29,7 +29,7 @@ class App
     {
       this.resetMenu();
     });
-    Handlebars.registerHelper('showRestart', (nodes, options) =>
+    Handlebars.registerHelper('statusShowRestart', (nodes, options) =>
     {
       let bShow = false;
       for (let n of Object.keys(nodes))
@@ -48,7 +48,7 @@ class App
         return options.inverse(this);
       }
     });
-    Handlebars.registerHelper('showStart', (nodes, options) =>
+    Handlebars.registerHelper('statusShowStart', (nodes, options) =>
     {
       let bShow = false;
       for (let n of Object.keys(nodes))
@@ -67,7 +67,7 @@ class App
         return options.inverse(this);
       }
     });
-    Handlebars.registerHelper('showStop', (nodes, options) =>
+    Handlebars.registerHelper('statusShowStop', (nodes, options) =>
     {
       let bShow = false;
       for (let n of Object.keys(nodes))
@@ -103,7 +103,12 @@ class App
   // {{{ resetMenu()
   resetMenu()
   {
+    let unIndex = 0;
     this.c.clearMenu();
+    this.c.menu = {left: [], right: []};
+    this.c.menu.left[unIndex++] = {value: 'Home', href: '/Home', icon: 'house', active: null};
+    this.c.menu.left[unIndex++] = {value: 'Alert', href: '/Alert', icon: 'megaphone', active: null};
+    this.c.menu.left[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     this.c.resetMenu();
   }
   // }}}

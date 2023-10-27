@@ -13,12 +13,12 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
-    let s = c.scope('index',
+    let s = c.scope('Status',
     {
       // [[[ u()
       u: () =>
       {
-        c.update('index');
+        c.update('Status');
       },
       // ]]]
       a: a,
@@ -155,6 +155,7 @@ export default
     };
     // ]]]
     // [[[ main
+    c.setMenu('Status');
     s.u();
     if (a.ready())
     {
@@ -189,15 +190,15 @@ export default
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{#if @root.bDeveloper}}
-      {{#showStop .}}
+      {{#statusShowStop .}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
-      {{/showStop}}
-      {{#showRestart .}}
+      {{/statusShowStop}}
+      {{#statusShowRestart .}}
       <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" style="margin-left: 10px;" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>
-      {{/showRestart}}
-      {{#showStart .}}
+      {{/statusShowRestart}}
+      {{#statusShowStart .}}
       <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}', '')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>
-      {{/showStart}}
+      {{/statusShowStart}}
       {{/if}}
       {{@key}}
     </div>
