@@ -124,10 +124,9 @@ export default
   <br>
   <div class="input-group"><span class="input-group-text">Title</span><input type="text" class="form-control" c-model="in.Message.Title"></div>
   <br>
-  <b>Body</b><br>
-  <textarea class="form-control" c-model="in.Message.Body" rows="5"></textarea>
+  <textarea class="form-control" c-model="in.Message.Body" placeholder="Type message here..."></textarea>
   <br>
-  <button class="btn btn-success bi bi-send float-end" c-click="send()">Send</button>
+  <button class="btn btn-success bi bi-send float-end" c-click="send()"></button>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger"></div>
   <div c-model="success" class="text-success"></div>
