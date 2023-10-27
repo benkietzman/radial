@@ -52,7 +52,7 @@ export default
   The client application should connect to Radial on either port 7234 (encrypted socket) or 7797 (WebSocket).  The request is written in JSON format using name/value pairs and the line should end with a new line character.  Every JSON request should have the "Interface" argument containing a valid registered interface.  The request may or may not have additional arguments.  It depends on the requirements of the interface being run.
   </p>
   <p>
-  After a request has been sent by the client, Radial will be return the details of the original request as well as any response data.  If Radial was able to successfully process the request, a field of "Status" will be returned with a value of "okay".  If Radial was unable to successfully process the request, a field of "Status" will returned with a value of "error" and an error message will be provided within the field "Error".
+  After a request has been sent by the client, Radial will be return the details of the original request as well as any response data.  If Radial was able to successfully process the request, a field of "Status" will be returned with a value of "okay".  If Radial was unable to successfully process the request, a field of "Status" will be returned with a value of "error" and an error message will be provided within the field "Error".
   </p>
   <p>
   Radial is capable of processing requests on multiple socket connections in parallel.  It is also capable of processing multiple requests per socket connection.  Radial returns responses based on the order of completion not the order of arrival.  Radial never terminates the socket connection.  It is always the client who must terminate the connection when finished sending and receiving data.
