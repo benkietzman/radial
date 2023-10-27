@@ -68,6 +68,7 @@ export default
     // [[[ init()
     s.init = () =>
     {
+      s.info.v = 'Initializing...';
       s.bDeveloper = c.isGlobalAdmin();
       if (s.bDeveloper)
       {
@@ -138,6 +139,7 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
+        s.info.v = null;
         if (c.wsResponse(response, error))
         {
           if (response.Response && response.Response.Nodes)
