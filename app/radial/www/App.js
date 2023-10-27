@@ -29,6 +29,63 @@ class App
     {
       this.resetMenu();
     });
+    Handlebars.registerHelper('showRestart', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
+    Handlebars.registerHelper('showStart', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (!nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
+    Handlebars.registerHelper('showStop', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
   }
   // }}}
   // {{{ ready()

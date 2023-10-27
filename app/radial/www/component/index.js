@@ -187,9 +187,15 @@ export default
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white" style="font-weight: bold;">
       {{#if @root.bDeveloper}}
+      {{#showStop .}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/showStop}}
+      {{#showRestart .}}
       <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}', '')" style="margin-left: 10px;" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/showRestart}}
+      {{#showStart .}}
       <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}', '')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/showStart}}
       {{/if}}
       {{@key}}
     </div>
