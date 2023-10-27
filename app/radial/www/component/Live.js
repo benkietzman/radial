@@ -63,8 +63,8 @@ export default
       if (c.isGlobalAdmin() || (s['in'].Application && c.isLocalAdmin(s['in'].Application)))
       {
         s.info.v = 'Sending message...';
-        let request = {Interface: 'live', 'Function': 'message', Message: c.simplify(s['in'])};
-        request.Message.Action = 'message';
+        let request = {Interface: 'live', 'Function': 'message', Request: c.simplify(s['in'])};
+        request.Request.Message.Action = 'message';
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
