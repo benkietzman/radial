@@ -70,11 +70,11 @@ export default
           let error = {};
           s.info.v = null;
           if (c.wsResponse(response, error))
-          { 
-            alert("Successfully sent message.");
+          {
+            s.success.v = 'Successfully sent message.';
           }
           else
-          { 
+          {
             s.message.v = error.message;
           }
         });

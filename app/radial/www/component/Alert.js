@@ -42,7 +42,7 @@ export default
             s.info.v = null;
             if (c.wsResponse(response, error))
             {
-              s.success.v = 'The alert has been sent.';
+              s.success.v = 'Successfully sent alert.';
             }
             else
             {
