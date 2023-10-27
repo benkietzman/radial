@@ -112,7 +112,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             }
             if (user["alert_live_audio"] == "1")
             {
-              if (live("", strUser, {{"Action", "audio"}, {"Media", "/alert/media/alert.mp3"}}, strError))
+              if (live("", strUser, {{"Action", "audio"}, {"Media", "/radial/media/alert.mp3"}}, strError))
               {
                 bAlerted = true;
               }
