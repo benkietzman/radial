@@ -78,7 +78,7 @@ export default
   // ]]]
   // [[[ template
   template: `
-  <h3 class="page-header">Send Alert Message</h3>
+  <h4 class="page-header">Send Alert Message</h4>
   <div class="row">
     <div class="col-md-6">
       <p>
