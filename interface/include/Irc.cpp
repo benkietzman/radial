@@ -2653,7 +2653,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
         if (!strFunction.empty())
         {
           size_t unCount = 1;
-          string strData, strWait, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter, escape, function, home, key, keypadEnter, left, right, send, shiftFunction, tab, up, wait.";
+          string strData, strWait, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter (e), escape, function (f), home, key, keypadEnter (ke), left, right, send (s), shiftFunction (sf), tab (t), up, wait (w).";
           // {{{ ctrl
           if (strFunction == "ctrl")
           {
