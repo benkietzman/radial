@@ -2361,7 +2361,6 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   ssh_session session;
 
   strPrefix += "->ssh()";
-  // {{{ password
   if (strPassword.empty())
   {
     bool bExit = false;
@@ -2387,7 +2386,6 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
     }
   }
-  // }}}
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
   if ((session = ssh_new()) != NULL)
   {
