@@ -1446,7 +1446,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (m_sshClients.find(strIdent) == m_sshClients.end())
           {
             m_sshClients[strIdent] = {};
-            thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strIdent, strServer, strPort, strUser, strPassword);
+            thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strUserID, strIdent, strServer, strPort, strUser, strPassword);
             pthread_setname_np(threadSsh.native_handle(), "ssh");
             threadSsh.detach();
           }
@@ -2355,7 +2355,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 }
 // }}}
 // {{{ ssh()
-void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strServer, const string strPort, const string strUser, string strPassword)
+void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
 {
   string strError;
   ssh_session session;
@@ -2370,10 +2370,10 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     while (!bExit && unAttempts++ < 1200)
     {
       lock();
-      if (!m_sshClients[strUserID].empty())
+      if (!m_sshClients[strIdent].empty())
       {
-        strPassword = m_sshClients[strUserID].front();
-        m_sshClients[strUserID].pop_front();
+        strPassword = m_sshClients[strIdent].front();
+        m_sshClients[strIdent].pop_front();
       }
       unlock();
       if (!strPassword.empty())
@@ -2427,10 +2427,10 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
                     if (strBuffer[1].empty())
                     {
                       lock();
-                      while (!m_sshClients[strUserID].empty())
+                      while (!m_sshClients[strIdent].empty())
                       {
-                        strBuffer[1].append(m_sshClients[strUserID].front() + "\n");
-                        m_sshClients[strUserID].pop_front();
+                        strBuffer[1].append(m_sshClients[strIdent].front() + "\n");
+                        m_sshClients[strIdent].pop_front();
                       }
                       unlock();
                     }
@@ -2560,8 +2560,8 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
   lock();
-  m_sshClients[strUserID].clear();
-  m_sshClients.erase(strUserID);
+  m_sshClients[strIdent].clear();
+  m_sshClients.erase(strIdent);
   unlock();
 }
 // }}}
@@ -2600,7 +2600,7 @@ int Irc::sshAuthenticateKbdint(ssh_session session, const string strPassword)
 }
 // }}}
 // {{{ terminal()
-void Irc::terminal(string strPrefix, const string strTarget, const string strUserID, string strServer, string strPort)
+void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort)
 {
   bool bConnected = false;
   string strError;
@@ -2638,11 +2638,11 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strUse
       bProcess = false;
       strError.clear();
       lock();
-      if (!m_terminalClients[strUserID].empty())
+      if (!m_terminalClients[strIdent].empty())
       {
         bProcess = true;
-        strData = m_terminalClients[strUserID].front();
-        m_terminalClients[strUserID].pop_front();
+        strData = m_terminalClients[strIdent].front();
+        m_terminalClients[strIdent].pop_front();
       }
       unlock();
       if (bProcess)
@@ -2932,8 +2932,8 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strUse
   delete pTerminal;
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
   lock();
-  m_terminalClients[strUserID].clear();
-  m_terminalClients.erase(strUserID);
+  m_terminalClients[strIdent].clear();
+  m_terminalClients.erase(strIdent);
   unlock();
 }
 // }}}
