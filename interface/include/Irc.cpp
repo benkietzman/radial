@@ -2694,7 +2694,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ enter
-          else if (strFunction == "enter")
+          else if (strFunction == "enter" || strFunction == "e")
           {
             if (!pTerminal->sendEnter(true))
             {
@@ -2762,7 +2762,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ keypadEnter
-          else if (strFunction == "keypadEnter")
+          else if (strFunction == "keypadEnter" || strFunction "ke")
           {
             if (!pTerminal->sendKeypadEnter(true))
             {
@@ -2803,7 +2803,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ send
-          else if (strFunction == "send")
+          else if (strFunction == "send" || strFunction == "s")
           {
             string strTrimmed;
             getline(ssData, strData);
@@ -2833,7 +2833,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ tab
-          else if (strFunction == "tab")
+          else if (strFunction == "tab" || strFunction == "t")
           {
             string strCount;
             ssData >> strCount;
@@ -2865,7 +2865,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ wait
-          else if (strFunction == "wait")
+          else if (strFunction == "wait" || strFunction == "w")
           {
             if (!pTerminal->wait(true))
             {
