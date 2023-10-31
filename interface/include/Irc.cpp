@@ -1445,6 +1445,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           lock();
           if (m_sshClients.find(strIdent) == m_sshClients.end())
           {
+            m_sshClients[strIdent] = {};
             thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strIdent, strServer, strPort, strUser, strPassword);
             pthread_setname_np(threadSsh.native_handle(), "ssh");
             threadSsh.detach();
@@ -1528,6 +1529,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           lock();
           if (m_terminalClients.find(strIdent) == m_terminalClients.end())
           {
+            m_terminalClients[strIdent] = {};
             thread threadTerminal(&Irc::terminal, this, strPrefix, strTarget, strIdent, strServer, strPort);
             pthread_setname_np(threadTerminal.native_handle(), "terminal");
             threadTerminal.detach();
@@ -2359,15 +2361,13 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   ssh_session session;
 
   strPrefix += "->ssh()";
-  lock();
-  m_sshClients[strUserID] = {};
-  unlock();
   // {{{ password
   if (strPassword.empty())
   {
     bool bExit = false;
     size_t unAttempts = 0;
-    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03WAITING FOR PASSWORD - Please type the following in a private chat to the radial_bot:  ssh [password]" + string(1, char(3)) + string(1, char(2)));
+    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07WAITING FOR " + strUserID + " TO INPUT PASSWORD" + string(1, char(3)) + string(1, char(2)));
+    chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh [password]" + string(1, char(3)) + string(1, char(2)));
     while (!bExit && unAttempts++ < 1200)
     {
       lock();
