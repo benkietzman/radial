@@ -168,11 +168,17 @@ bool Interface::chat(const string strTarget, const string strMessage, string &st
 }
 // }}}
 // {{{ command()
-bool Interface::command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, size_t &unDuration, string &strError, const time_t CTimeout)
+bool Interface::command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, size_t &unDuration, string &strError, const time_t CTimeout, const string strNode)
 {
-  bool bResult = false;
+  bool bRemote = false, bResult = false;
   Json *ptJson = new Json;
 
+  if (!strNode.empty() && strNode != m_strNode)
+  {
+    bRemote = true;
+    ptJson->i("Interface", "command");
+    ptJson->i("Node", strNode);
+  }
   ptJson->i("Command", strCommand);
   if (!arguments.empty())
   {
@@ -189,7 +195,7 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
     ptJson->i("Timeout", ssTimeout.str(), 'n');
   }
   unDuration = 0;
-  if (hub("command", ptJson, strError))
+  if ((!bRemote && hub("command", ptJson, strError)) || (bRemote && hub("link", ptJson, strError)))
   {
     bResult = true;
     if (!empty(ptJson, "Duration"))
@@ -206,11 +212,17 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
 
   return bResult;
 }
-bool Interface::command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, size_t &unDuration, string &strError, const time_t CTimeout)
+bool Interface::command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, size_t &unDuration, string &strError, const time_t CTimeout, const string strNode)
 {
-  bool bResult = false;
+  bool bRemote = false, bResult = false;
   Json *ptJson = new Json;
 
+  if (!strNode.empty() && strNode != m_strNode)
+  {
+    bRemote = true;
+    ptJson->i("Interface", "command");
+    ptJson->i("Node", strNode);
+  }
   ptJson->i("Command", strCommand);
   if (!arguments.empty())
   {
@@ -228,7 +240,7 @@ bool Interface::command(const string strCommand, list<string> arguments, Json *p
     ptJson->i("Timeout", ssTimeout.str(), 'n');
   }
   unDuration = 0;
-  if (hub("command", ptJson, strError))
+  if ((!bRemote && hub("command", ptJson, strError)) || (bRemote && hub("link", ptJson, strError)))
   {
     bResult = true;
     if (!empty(ptJson, "Duration"))
