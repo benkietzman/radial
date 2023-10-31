@@ -2365,7 +2365,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   {
     bool bExit = false;
     size_t unAttempts = 0;
-    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07WAITING FOR " + strUserID + " TO INPUT PASSWORD" + string(1, char(3)) + string(1, char(2)));
+    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07Waiting for " + strUserID + " to input the password." + string(1, char(3)) + string(1, char(2)));
     chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh [password]" + string(1, char(3)) + string(1, char(2)));
     while (!bExit && unAttempts++ < 1200)
     {
