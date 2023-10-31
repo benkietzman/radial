@@ -2762,7 +2762,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ keypadEnter
-          else if (strFunction == "keypadEnter" || strFunction "ke")
+          else if (strFunction == "keypadEnter" || strFunction == "ke")
           {
             if (!pTerminal->sendKeypadEnter(true))
             {
