@@ -1440,7 +1440,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (strFunction == "connect")
       {
         string strPassword = var("Password", ptData), strPort = var("Port", ptData), strServer = var("Server", ptData), strUser = var("User", ptData);
-        if (!strServer.empty() && !strPort.empty() && !strUser.empty() && !strPassword.empty())
+        if (!strServer.empty() && !strPort.empty() && !strUser.empty())
         {
           lock();
           if (m_sshClients.find(strIdent) == m_sshClients.end())
@@ -1472,7 +1472,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect [server] [port] [user] [password].";
+      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect [server] [port] [user] <password>.";
     }
   }
   // }}}
@@ -2352,13 +2352,42 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
   m_pAnalyzeCallback2 = pCallback2;
 }
 // }}}
-// {{{ sshClient()
-void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strServer, const string strPort, const string strUser, const string strPassword)
+// {{{ ssh()
+void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strServer, const string strPort, const string strUser, string strPassword)
 {
   string strError;
   ssh_session session;
 
   strPrefix += "->ssh()";
+  lock();
+  m_sshClients[strUserID] = {};
+  unlock();
+  // {{{ password
+  if (strPassword.empty())
+  {
+    bool bExit = false;
+    size_t unAttempts = 0;
+    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03WAITING FOR PASSWORD - Please type the following in a private chat to the radial_bot:  ssh [password]" + string(1, char(3)) + string(1, char(2)));
+    while (!bExit && unAttempts++ < 1200)
+    {
+      lock();
+      if (!m_sshClients[strUserID].empty())
+      {
+        strPassword = m_sshClients[strUserID].front();
+        m_sshClients[strUserID].pop_front();
+      }
+      unlock();
+      if (!strPassword.empty())
+      {
+        bExit = true;
+      }
+      else
+      {
+        msleep(250);
+      }
+    }
+  }
+  // }}}
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
   if ((session = ssh_new()) != NULL)
   {
