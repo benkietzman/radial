@@ -1396,7 +1396,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  Please provide the Application within the JSON request.";
+      Json *ptFormat = new Json;
+      ptFormat->i("Application", "");
+      ptFormat->i("Class", "");
+      ptFormat->i("Message", "");
+      ptFormat->i("Title", "");
+      ptFormat->i("User", "");
+      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  FORMAT:  " << ptFormat;
+      delete ptFormat;
     }
   }
   // }}}
