@@ -25,6 +25,7 @@ namespace radial
 class Logger : public Interface
 {
   protected:
+  map<string, common::Logger *> m_logger;
 
   public:
   Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));

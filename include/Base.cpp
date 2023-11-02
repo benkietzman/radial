@@ -102,9 +102,6 @@ Base::Base(int argc, char **argv)
   m_pJunction->setTimeout("300");
   m_pJunction->setThrottle(100);
   m_pJunction->useSecureJunction(true);
-  m_pLogger = new Logger(strError);
-  m_pLogger->setTimeout("10");
-  m_pLogger->setThrottle(100);
   m_pUtility = new Utility(strError);
   if (!strProxyServer.empty() && !strProxyPort.empty())
   {
@@ -113,13 +110,7 @@ Base::Base(int argc, char **argv)
   m_pWarden = NULL;
   if (!m_strWarden.empty())
   {
-    Json *ptLogger = new Json;
     m_pWarden = new Warden(m_strApplication, m_strWarden, strError);
-    if (m_pWarden->vaultRetrieve({"logger"}, ptLogger, strError) && !empty(ptLogger, "Password") && !empty(ptLogger, "User"))
-    {
-      m_pLogger->setCredentials("Radial", ptLogger->m["User"]->v, ptLogger->m["Password"]->v);
-    }
-    delete ptLogger;
   }
 }
 // }}}

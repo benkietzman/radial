@@ -1849,15 +1849,20 @@ void Interface::log(const string strFunction, const string strMessage)
 }
 // }}}
 // {{{ logger()
-void Interface::logger(const string strFunction, map<string, string> label, const string strMessage)
+void Interface::logger(const string strApplication, const string strFunction, map<string, string> label, const string strMessage)
 {
   Json *ptJson = new Json;
 
+  ptJson->i("Application", strApplication);
   ptJson->i("Function", strFunction);
   ptJson->i("Label", label);
   ptJson->i("Message", strMessage);
   hub("logger", ptJson, false);
   delete ptJson;
+}
+void Interface::logger(const string strFunction, map<string, string> label, const string strMessage)
+{
+  logger("Radial", strFunction, label, strMessage);
 }
 // }}}
 // {{{ master()

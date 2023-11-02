@@ -22,19 +22,43 @@ namespace radial
 // {{{ Logger()
 Logger::Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "logger", argc, argv, pCallback)
 {
-  m_pLogger->useSingleSocket(true);
+  string strError;
+
+  if (m_pWarden != NULL)
+  {
+    Json *ptLogger = new Json;
+    if (m_pWarden->vaultRetrieve({"logger"}, ptLogger, strError))
+    {
+      for (auto &app : ptLogger->m)
+      {
+        if (!empty(app.second, "Password") && !empty(app.second, "User"))
+        {
+          m_logger[app.first] = new common::Logger(strError);
+          m_logger[app.first]->setTimeout("10");
+          m_logger[app.first]->setThrottle(100);
+          m_logger[app.first]->setCredentials(app.first, app.second->m["User"]->v, app.second->m["Password"]->v);
+          m_logger[app.first]->useSingleSocket(true);
+        }
+      }
+    }
+    delete ptLogger;
+  }
 }
 // }}}
 // {{{ ~Logger()
 Logger::~Logger()
 {
+  for (auto &app : m_logger)
+  {
+    delete app.second;
+  }
 }
 // }}}
 // {{{ callback()
 void Logger::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
-  string strError;
+  string strApplication = "Radial", strError;
   stringstream ssMessage;
   Json *ptJson;
   radialPacket p;
@@ -44,40 +68,51 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!empty(ptJson, "Application"))
   {
-    if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
+    strApplication = ptJson->m["Application"]->v;
+  }
+  if (m_logger.find(strApplication) != m_logger.end())
+  {
+    if (!empty(ptJson, "Function"))
     {
-      if (exist(ptJson, "Label"))
+      if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
       {
-        if (!empty(ptJson, "Message"))
+        if (exist(ptJson, "Label"))
         {
-          map<string, string> label;
-          ptJson->m["Label"]->flatten(label, true, false);
-          if ((ptJson->m["Function"]->v == "log" && m_pLogger->log(label, ptJson->m["Message"]->v, strError)) || (ptJson->m["Function"]->v == "message" && m_pLogger->message(label, ptJson->m["Message"]->v, strError)))
+          if (!empty(ptJson, "Message"))
           {
-            bResult = true;
+            map<string, string> label;
+            ptJson->m["Label"]->flatten(label, true, false);
+            if ((ptJson->m["Function"]->v == "log" && m_logger[strApplication]->log(label, ptJson->m["Message"]->v, strError)) || (ptJson->m["Function"]->v == "message" && m_logger[strApplication]->message(label, ptJson->m["Message"]->v, strError)))
+            {
+              bResult = true;
+            }
+          }
+          else
+          {
+            string strJson;
+            strError = "Please provide the Message.";
           }
         }
         else
         {
-          string strJson;
-          strError = "Please provide the Message.";
+          strError = "Please provide the Label.";
         }
       }
       else
       {
-        strError = "Please provide the Label.";
+        strError = "Please provide a valid Function:  log, message.";
       }
     }
     else
     {
-      strError = "Please provide a valid Function:  log, message.";
+      strError = "Please provide the Function.";
     }
   }
   else
   {
-    strError = "Please provide the Function.";
+    strError = "Please provide a valid Application.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
