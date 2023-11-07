@@ -1311,7 +1311,6 @@ void Interface::hub(Json *ptJson, const bool bWait)
 bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
 {
   bool bResult = false;
-  string strJson;
 
   hub(strTarget, ptJson, true);
   if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
@@ -1324,7 +1323,7 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   }
   else
   {
-    strError = (string)"[hub," + strTarget + (string)"] Encountered an unknown error. --- " + ptJson->j(strJson);
+    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.";
   }
 
   return bResult;
