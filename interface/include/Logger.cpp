@@ -34,9 +34,9 @@ Logger::Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string
         if (!empty(app.second, "Password") && !empty(app.second, "User"))
         {
           m_logger[app.first] = new common::Logger(strError);
+          m_logger[app.first]->setCredentials(app.first, app.second->m["User"]->v, app.second->m["Password"]->v);
           m_logger[app.first]->setTimeout("10");
           m_logger[app.first]->setThrottle(100);
-          m_logger[app.first]->setCredentials(app.first, app.second->m["User"]->v, app.second->m["Password"]->v);
           m_logger[app.first]->useSingleSocket(true);
         }
       }
