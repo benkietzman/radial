@@ -68,17 +68,30 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (exist(ptJson, "Request"))
+  if (!empty(ptJson, "Function"))
   {
-    if (!empty(ptJson->m["Request"], "Application"))
+    if (ptJson->m["Function"]->v == "applications")
     {
-      strApplication = ptJson->m["Request"]->m["Application"]->v;
-    }
-    if (m_logger.find(strApplication) != m_logger.end())
-    {
-      if (!empty(ptJson, "Function"))
+      bResult = true;
+      if (exist(ptJson, "Response"))
       {
-        if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json;
+      for (auto &i : m_logger)
+      {
+        ptJson->m["Response"]->pb(i.first);
+      }
+    }
+    else if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
+    {
+      if (exist(ptJson, "Request"))
+      {
+        if (!empty(ptJson->m["Request"], "Application"))
+        {
+          strApplication = ptJson->m["Request"]->m["Application"]->v;
+        }
+        if (m_logger.find(strApplication) != m_logger.end())
         {
           if (exist(ptJson->m["Request"], "Label"))
           {
@@ -104,22 +117,22 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
         }
         else
         {
-          strError = "Please provide a valid Function:  log, message.";
+          strError = "Please provide a valid Application within the Request.";
         }
       }
       else
       {
-        strError = "Please provide the Function.";
+        strError = "Please provide the Request.";
       }
     }
     else
     {
-      strError = "Please provide a valid Application within the Request.";
+      strError = "Please provide a valid Function:  applications, log, message.";
     }
   }
   else
   {
-    strError = "Please provide the Request.";
+    strError = "Please provide the Function.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
