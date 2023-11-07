@@ -130,6 +130,14 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
       if (m_pCallbackAddon != NULL && m_pCallbackAddon(ptJson->m["Function"]->v, ptJson->m["Request"], ptJson->m["Response"], strID, strQuery, strError, bInvalid))
       {
         bResult = true;
+        if (!strID.empty())
+        {
+          ptJson->i("ID", strID, 'n');
+        }
+        if (!strQuery.empty())
+        {
+          ptJson->i("Query", strQuery);
+        }
       }
       else if (bInvalid)
       {
