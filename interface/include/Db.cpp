@@ -103,7 +103,7 @@ void Db::autoMode(string strPrefix, const string strOldMaster, const string strN
 void Db::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
-  string strError;
+  string strError, strQuery;
   Json *ptJson;
   radialPacket p;
 
@@ -117,7 +117,7 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
     if (ptJson->m["Function"]->v.size() > 2 && ptJson->m["Function"]->v.substr(0, 2) == "db")
     {
       bool bInvalid = true;
-      string strID, strQuery;
+      string strID;
       if (!exist(ptJson, "Request"))
       {
         ptJson->m["Request"] = new Json;
@@ -134,10 +134,6 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
         {
           ptJson->i("ID", strID, 'n');
         }
-        if (!strQuery.empty())
-        {
-          ptJson->i("Query", strQuery);
-        }
       }
       else if (bInvalid)
       {
@@ -149,10 +145,6 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
             if (!strID.empty())
             {
               ptJson->i("ID", strID, 'n');
-            }
-            if (!strQuery.empty())
-            {
-              ptJson->i("Query", strQuery);
             }
           }
         }
@@ -175,6 +167,10 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
   if (!strError.empty())
   {
     ptJson->i("Error", strError);
+  }
+  if (!strQuery.empty())
+  {
+    ptJson->i("Query", strQuery);
   }
   if (bResponse)
   {
