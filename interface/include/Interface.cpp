@@ -1853,10 +1853,11 @@ void Interface::logger(const string strApplication, const string strFunction, ma
 {
   Json *ptJson = new Json;
 
-  ptJson->i("Application", strApplication);
   ptJson->i("Function", strFunction);
-  ptJson->i("Label", label);
-  ptJson->i("Message", strMessage);
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Application", strApplication);
+  ptJson->m["Request"]->i("Label", label);
+  ptJson->m["Request"]->i("Message", strMessage);
   hub("logger", ptJson, false);
   delete ptJson;
 }

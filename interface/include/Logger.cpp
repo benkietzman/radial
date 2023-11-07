@@ -68,51 +68,58 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Application"))
+  if (exist(ptJson, "Request"))
   {
-    strApplication = ptJson->m["Application"]->v;
-  }
-  if (m_logger.find(strApplication) != m_logger.end())
-  {
-    if (!empty(ptJson, "Function"))
+    if (!empty(ptJson->m["Request"], "Application"))
     {
-      if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
+      strApplication = ptJson->m["Request"]->m["Application"]->v;
+    }
+    if (m_logger.find(strApplication) != m_logger.end())
+    {
+      if (!empty(ptJson, "Function"))
       {
-        if (exist(ptJson, "Label"))
+        if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
         {
-          if (!empty(ptJson, "Message"))
+          if (exist(ptJson->m["Request"], "Label"))
           {
-            map<string, string> label;
-            ptJson->m["Label"]->flatten(label, true, false);
-            if ((ptJson->m["Function"]->v == "log" && m_logger[strApplication]->log(label, ptJson->m["Message"]->v, strError)) || (ptJson->m["Function"]->v == "message" && m_logger[strApplication]->message(label, ptJson->m["Message"]->v, strError)))
+            if (!empty(ptJson->m["Request"], "Message"))
             {
-              bResult = true;
+              map<string, string> label;
+              ptJson->m["Request"]->m["Label"]->flatten(label, true, false);
+              if ((ptJson->m["Function"]->v == "log" && m_logger[strApplication]->log(label, ptJson->m["Request"]->m["Message"]->v, strError)) || (ptJson->m["Function"]->v == "message" && m_logger[strApplication]->message(label, ptJson->m["Request"]->m["Message"]->v, strError)))
+              {
+                bResult = true;
+              }
+            }
+            else
+            {
+              string strJson;
+              strError = "Please provide the Message within the Request.";
             }
           }
           else
           {
-            string strJson;
-            strError = "Please provide the Message.";
+            strError = "Please provide the Label within the Request.";
           }
         }
         else
         {
-          strError = "Please provide the Label.";
+          strError = "Please provide a valid Function:  log, message.";
         }
       }
       else
       {
-        strError = "Please provide a valid Function:  log, message.";
+        strError = "Please provide the Function.";
       }
     }
     else
     {
-      strError = "Please provide the Function.";
+      strError = "Please provide a valid Application within the Request.";
     }
   }
   else
   {
-    strError = "Please provide a valid Application.";
+    strError = "Please provide the Request.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
