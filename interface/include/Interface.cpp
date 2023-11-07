@@ -739,7 +739,7 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
     }
     else
     {
-      strError = "Encountered an unknown error.";
+      strError = "[curl] Encountered an unknown error.";
     }
     requestResponse.clear();
   }
@@ -1323,7 +1323,7 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   }
   else
   {
-    strError = "Encountered an unknown error.";
+    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.";
   }
 
   return bResult;
@@ -1627,7 +1627,7 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
         }
         else
         {
-          strError = "Encountered an unknown error.";
+          strError = "[junction] Encountered an unknown error.";
         }
         for (auto &i : ptJson->m["Response"]->l)
         {

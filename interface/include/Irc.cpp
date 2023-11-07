@@ -1153,7 +1153,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   bSubResult = true;
                   setShutdown();
                 }
-                else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError == "Encountered an unknown error." || strError == "Interface not found.")
+                else if (strFunction == "start" || interfaceRemove(node, strInterface, strError) || strError.find("Encountered an unknown error.") != string::npos || strError == "Interface not found.")
                 {
                   bool bStopped = false;
                   time_t CTime[2];
