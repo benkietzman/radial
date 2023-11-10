@@ -91,17 +91,36 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                     vector<string> subFields;
                     if (fields(result, subFields))
                     {
+                      size_t unSize = 16;
                       map<string, string> *row;
+                      string strJson;
                       stringstream ssRows;
-                      bResult = true;
                       ssRows << ullRows;
                       ptJson->i("Rows", ssRows.str(), 'n');
                       ptJson->m["Response"] = new Json;
-                      while ((row = fetch(result, subFields)) != NULL)
+                      unSize += ptJson->j(strJson).size();
+                      while (unSize < m_unMaxPayload && (row = fetch(result, subFields)) != NULL)
                       {
-                        ptJson->m["Response"]->pb(*row);
+                        for (auto &i : *row)
+                        {
+                          unSize += i.first.size() + i.second.size() + 6;
+                        }
+                        if (unSize < m_unMaxPayload)
+                        {
+                          ptJson->m["Response"]->pb(*row);
+                        }
                         row->clear();
                         delete row;
+                      }
+                      if (unSize < m_unMaxPayload)
+                      {
+                        bResult = true;
+                      }
+                      else
+                      {
+                        delete ptJson->m["Response"];
+                        ptJson->m.erase("Response");
+                        strError = "Exceeded max payload.  Response has been removed.";
                       }
                     }
                     else
