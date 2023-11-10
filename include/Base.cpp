@@ -100,6 +100,7 @@ Base::Base(int argc, char **argv)
   m_pCentral->setApplication(m_strApplication);
   m_pJunction = new ServiceJunction(strError);
   m_pJunction->setApplication(m_strApplication);
+  m_pJunction->setMaxPayload(m_unMaxPayload);
   m_pJunction->setTimeout("300");
   m_pJunction->setThrottle(100);
   m_pJunction->useSecureJunction(true);
