@@ -35,6 +35,8 @@ Base::Base(int argc, char **argv)
   uname(&tServer);
   m_strNode = tServer.nodename;
   m_ulMaxResident = 40 * 1024;
+  //m_unMaxPayload = 1024 * 1024;
+  m_unMaxPayload = 1024 * 10;
   m_unMonitor = 0;
   m_unThreads = 0;
   // {{{ command line arguments
@@ -252,7 +254,19 @@ string Base::pack(radialPacket &p, string &d)
   {
     r->i("_u", p.u);
   }
-  ssData << r << m_cDelimiter << p.p;
+  ssData << r << m_cDelimiter;
+  if (p.p.size() < m_unMaxPayload)
+  {
+    ssData << p.p;
+  }
+  else
+  {
+    Json *e = new Json;
+    e->i("Status", "error");
+    e->i("Error", "Exceeded max payload.");
+    ssData << e;
+    delete e;
+  }
   delete r;
   d = ssData.str();
 

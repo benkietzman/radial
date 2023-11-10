@@ -123,6 +123,7 @@ class Base
   list<radialLink *> m_l;
   map<string, radialInterface *> m_i;
   mutex m_mutexBase;
+  size_t m_unMaxPayload;
   size_t m_unMonitor;
   size_t m_unThreads;
   string m_strApplication;
