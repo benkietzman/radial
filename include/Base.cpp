@@ -35,7 +35,7 @@ Base::Base(int argc, char **argv)
   uname(&tServer);
   m_strNode = tServer.nodename;
   m_ulMaxResident = 40 * 1024;
-  m_unMaxPayload = 1024 * 1024;
+  m_unMaxPayload = 1024 * 1024 * 16;
   m_unMonitor = 0;
   m_unThreads = 0;
   // {{{ command line arguments
