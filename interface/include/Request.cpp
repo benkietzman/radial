@@ -422,12 +422,15 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             {
               while ((unPosition = strBuffers[0].find("\n")) != string::npos)
               {
-                mutexResponses.lock();
-                unActive++;
-                mutexResponses.unlock();
-                thread threadRequest(&Request::request, this, strPrefix, ref(unActive), strBuffers[0].substr(0, unPosition), ref(bResponse), ref(fdResponse[1]), ref(responses), ref(mutexResponses));
-                pthread_setname_np(threadRequest.native_handle(), "request");
-                threadRequest.detach();
+                if (strBuffers[0].substr(0, unPosition).size() < m_unMaxPayload)
+                {
+                  mutexResponses.lock();
+                  unActive++;
+                  mutexResponses.unlock();
+                  thread threadRequest(&Request::request, this, strPrefix, ref(unActive), strBuffers[0].substr(0, unPosition), ref(bResponse), ref(fdResponse[1]), ref(responses), ref(mutexResponses));
+                  pthread_setname_np(threadRequest.native_handle(), "request");
+                  threadRequest.detach();
+                }
                 strBuffers[0].erase(0, (unPosition + 1));
               }
             }

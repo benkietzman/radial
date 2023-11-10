@@ -513,12 +513,19 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     case LWS_CALLBACK_RECEIVE:
     {
       pstrBuffers[0]->append((char *)in, len);
-      if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
+      if (pstrBuffers[0]->size() < m_unMaxPayload)
       {
-        thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
-        pthread_setname_np(threadRequest.native_handle(), "request");
-        threadRequest.detach();
-        pstrBuffers[0]->clear();
+        if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
+        {
+          thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
+          pthread_setname_np(threadRequest.native_handle(), "request");
+          threadRequest.detach();
+          pstrBuffers[0]->clear();
+        }
+      }
+      else
+      {
+        nResult = -1;
       }
       break;
     }
@@ -564,7 +571,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
         {
           nResult = -1;
           ssClose.str("");
-          ssClose << strPrefix << "->lws_write() error [WS_CLOSED,LWS_CALLBACK_SERVER_WRITEABLE]:  Failed to write data over websocket.";
+          ssClose << strPrefix << "->lws_write() error [LWS_CALLBACK_SERVER_WRITEABLE]:  Failed to write data over websocket.";
         }
         free(puszBuffer);
       }
