@@ -261,11 +261,39 @@ string Base::pack(radialPacket &p, string &d)
   }
   else
   {
-    Json *e = new Json;
-    e->i("Status", "error");
-    e->i("Error", "Exceeded max payload.");
-    ssData << e;
-    delete e;
+    bool b = false;
+    Json *d = new Json(p.p);
+    if (exist(d, "Response"))
+    {
+      string a;
+      delete d->m["Response"];
+      d->m.erase("Response");
+      d->j(a);
+      if (a.size() < m_unMaxPayload)
+      {
+        b = true;
+        if (!empty(d, "Status"))
+        {
+          d->i("StatusOrig", d->m["Status"]->v);
+        }
+        if (!empty(d, "Error"))
+        {
+          d->i("ErrorOrig", d->m["Error"]->v);
+        }
+        d->i("Status", "error");
+        d->i("Error", "Exceeded max payload.  Response has been removed.");
+        ssData << d;
+      }
+    }
+    delete d;
+    if (!b)
+    {
+      Json *e = new Json;
+      e->i("Status", "error");
+      e->i("Error", "Exceeded max payload.");
+      ssData << e;
+      delete e;
+    }
   }
   delete r;
   d = ssData.str();
@@ -316,6 +344,42 @@ void Base::unpack(const string d, radialPacket &p)
   getline(ssData, strRoute, m_cDelimiter);
   r = new Json(strRoute);
   getline(ssData, p.p, m_cDelimiter);
+  if (p.p.size() >= m_unMaxPayload)
+  {
+    bool b = false;
+    Json *d = new Json(p.p);
+    if (exist(d, "Response"))
+    {
+      string a;
+      delete d->m["Response"];
+      d->m.erase("Response");
+      d->j(a);
+      if (a.size() < m_unMaxPayload)
+      {
+        b = true;
+        if (!empty(d, "Status"))
+        {
+          d->i("StatusOrig", d->m["Status"]->v);
+        }
+        if (!empty(d, "Error"))
+        {
+          d->i("ErrorOrig", d->m["Error"]->v);
+        }
+        d->i("Status", "error");
+        d->i("Error", "Exceeded max payload.  Response has been removed.");
+        d->j(p.p);
+      }
+    }
+    delete d;
+    if (!b)
+    {
+      Json *e = new Json;
+      e->i("Status", "error");
+      e->i("Error", "Exceeded max payload.");
+      e->j(p.p);
+      delete e;
+    }
+  }
   if (!empty(r, "_d"))
   {
     p.d = r->m["_d"]->v;
