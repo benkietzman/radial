@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
   common::Utility utility(strError);
   utility.sslInit();
   gpWebsocket = new radial::Websocket(strPrefix, argc, argv, &callback, &websocket);
+  gpWebsocket->enableWorkers();
   for (int i = 1; i < argc; i++)
   {
     string strArg = argv[i];
@@ -82,9 +83,7 @@ int main(int argc, char *argv[])
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Websocket::callback, gpWebsocket, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpWebsocket->callback(strPrefix, strPacket, bResponse);
 }
 int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)
 {

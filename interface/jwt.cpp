@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "jwt->main()";
   gpJwt = new Jwt(strPrefix, argc, argv, &callback);
+  gpJwt->enableWorkers();
   gpJwt->process(strPrefix);
   delete gpJwt;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Jwt::callback, gpJwt, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpJwt->callback(strPrefix, strPacket, bResponse);
 }

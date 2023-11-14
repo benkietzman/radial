@@ -22,6 +22,22 @@ extern "C++"
 namespace radial
 {
 // {{{ structs
+// {{{ radialCallback
+struct radialCallback
+{
+  bool bResponse;
+  string strPacket;
+  string strPrefix;
+};
+// }}}
+// {{{ radialWorker
+struct radialWorker
+{
+  bool bExit;
+  list<radialCallback *> callbacks;
+  time_t CTime;
+};
+// }}}
 // {{{ radialUser
 struct radialUser
 {
@@ -41,6 +57,7 @@ class Interface : public Base
   bool m_bResponse;
   int m_fdResponse[2];
   list<string> m_responses;
+  list<radialCallback *> m_callbacks;
   map<string, int> m_waiting;
   map<string, size_t> m_throughput;
   mutex m_mutexShare;
@@ -50,12 +67,14 @@ class Interface : public Base
   string m_strJwtSigner;
   string m_strMaster;
   string m_strName;
+  thread *m_pThreadPool;
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
+  void callbackPush(string strPrefix, const string strPacket, const bool bResponse);
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
@@ -122,6 +141,7 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
+  void pool();
   bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
   bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
   bool storageRemove(const list<string> keys, string &strError);
@@ -136,10 +156,12 @@ class Interface : public Base
   void userInit(radialUser &d);
   void userInit(radialUser &i, radialUser &o);
   void userInit(Json *ptJson, radialUser &d);
+  void worker(radialWorker *ptWorker);
 
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Interface();
+  void enableWorkers();
   void hub(radialPacket &p, const bool bWait = true);
   void hub(const string strTarget, Json *ptJson, const bool bWait = true);
   void hub(Json *ptJson, const bool bWait = true);

@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "irc->main()";
   gpIrc = new Irc(strPrefix, argc, argv, &callback);
+  gpIrc->enableWorkers();
   gpIrc->setAutoMode(&autoMode);
   thread threadBot(&Irc::bot, gpIrc, strPrefix);
   pthread_setname_np(threadBot.native_handle(), "bot");
@@ -37,7 +38,5 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Irc::callback, gpIrc, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpIrc->callback(strPrefix, strPacket, bResponse);
 }

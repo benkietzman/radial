@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "feedback->main()";
   gpFeedback = new Feedback(strPrefix, argc, argv, &callback);
+  gpFeedback->enableWorkers();
   gpFeedback->process(strPrefix);
   delete gpFeedback;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Feedback::callback, gpFeedback, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpFeedback->callback(strPrefix, strPacket, bResponse);
 }

@@ -19,13 +19,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "centralMon->main()";
   gpCentralMon = new radial::CentralMon(strPrefix, argc, argv, &callback);
+  gpCentralMon->enableWorkers();
   gpCentralMon->process(strPrefix);
   delete gpCentralMon;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::CentralMon::callback, gpCentralMon, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpCentralMon->callback(strPrefix, strPacket, bResponse);
 }

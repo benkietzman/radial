@@ -41,6 +41,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_pCallback = pCallback;
   m_pJunction->setProgram(strName);
   m_strName = strName;
+  m_pThreadPool = NULL;
   if (m_pWarden != NULL)
   {
     Json *ptAes = new Json, *ptJwt = new Json;
@@ -61,6 +62,12 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
 // {{{ ~Interface()
 Interface::~Interface()
 {
+  if (m_pThreadPool)
+  {
+    m_pThreadPool->join();
+    delete m_pThreadPool;
+    m_pThreadPool = NULL;
+  }
 }
 // }}}
 // {{{ alert()
@@ -114,6 +121,19 @@ bool Interface::auth(Json *ptJson, string &strError)
   delete ptAuth;
 
   return bResult;
+}
+// }}}
+// {{{ callbackPush()
+void Interface::callbackPush(string strPrefix, const string strPacket, const bool bResponse)
+{
+  radialCallback *ptCallback = new radialCallback;
+
+  ptCallback->strPrefix = strPrefix;
+  ptCallback->strPacket = strPacket;
+  ptCallback->bResponse = bResponse;
+  m_mutexShare.lock();
+  m_callbacks.push_back(ptCallback);
+  m_mutexShare.unlock();
 }
 // }}}
 // {{{ centralmon()
@@ -1092,6 +1112,13 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
   delete ptJson;
 }
 // }}}
+// {{{ enableWorkers()
+void Interface::enableWorkers()
+{
+  m_pThreadPool = new thread(&Interface::pool, this);
+  pthread_setname_np(m_pThreadPool->native_handle(), "pool");
+}
+// }}}
 // {{{ getUserEmail()
 string Interface::getUserEmail(radialUser &d)
 {
@@ -2006,6 +2033,87 @@ bool Interface::pageUser(const string strUser, const string strMessage, string &
 }
 // }}}
 // }}}
+// {{{ pool()
+void Interface::pool()
+{
+  bool bIdle;
+  list<radialWorker *>::iterator workerIter;
+  list<radialWorker *> workers;
+  time_t CTime;
+  radialCallback *ptCallback;
+
+  threadIncrement();
+  while (!shutdown())
+  {
+    bIdle = true;
+    m_mutexShare.lock();
+    if (!m_callbacks.empty())
+    {
+      ptCallback = m_callbacks.front();
+      m_callbacks.pop_front();
+      workerIter = workers.end();
+      for (auto i = workers.begin(); i != workers.end(); i++)
+      {
+        if (!(*i)->bExit && (workerIter == workers.end() || (*i)->callbacks.size() < (*workerIter)->callbacks.size()))
+        {
+          workerIter = i;
+        }
+      }
+      if (workerIter != workers.end() && workers.size() <= 20)
+      {
+        (*workerIter)->callbacks.push_back(ptCallback);
+      }
+      else
+      {
+        radialWorker *ptWorker = new radialWorker;
+        ptWorker->bExit = false;
+        time(&(ptWorker->CTime));
+        ptWorker->callbacks.push_back(ptCallback);
+        workers.push_back(ptWorker);
+        thread threadWorker(&Interface::worker, this, ptWorker);
+        pthread_setname_np(threadWorker.native_handle(), "worker");
+        threadWorker.detach();
+      }
+    }
+    else
+    {
+      if (!workers.empty())
+      {
+        time(&CTime);
+        workerIter = workers.begin();
+        while (workerIter != workers.end())
+        {
+          workerIter = workers.end();
+          for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
+          {
+            if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
+            {
+              bIdle = false;
+              (*i)->bExit = true;
+              workerIter = i;
+            }
+          }
+          if (workerIter != workers.end())
+          {
+            delete (*workerIter);
+            workers.erase(workerIter);
+          }
+        }
+      }
+    }
+    m_mutexShare.unlock();
+    if (bIdle)
+    {
+      msleep(100);
+    }
+  }
+  for (auto &worker : workers)
+  {
+    worker->bExit = true;
+  }
+  threadDecrement();
+}
+// }}}
 // {{{ process()
 void Interface::process(string strPrefix)
 {
@@ -2212,7 +2320,14 @@ void Interface::process(string strPrefix)
                   }
                   if (!shutdown())
                   {
-                    m_pCallback(strPrefix, strLine, true);
+                    if (m_pThreadPool != NULL)
+                    {
+                      callbackPush(strPrefix, strLine, true);
+                    }
+                    else
+                    {
+                      m_pCallback(strPrefix, strLine, true);
+                    }
                   }
                   else
                   {
@@ -2635,6 +2750,30 @@ void Interface::userInit(Json *ptJson, radialUser &d)
     }
     delete ptJwt;
   }
+}
+// }}}
+// {{{ worker()
+void Interface::worker(radialWorker *ptWorker)
+{
+  radialCallback *ptCallback;
+
+  threadIncrement();
+  while (!shutdown() && !ptWorker->bExit)
+  {
+    if (!ptWorker->callbacks.empty())
+    {
+      ptCallback = ptWorker->callbacks.front();
+      m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
+      delete ptCallback;
+      ptWorker->callbacks.pop_front();
+      time(&(ptWorker->CTime));
+    }
+    else
+    {
+      msleep(100);
+    }
+  }
+  threadDecrement();
 }
 // }}}
 }

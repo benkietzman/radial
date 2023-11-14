@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "logger->main()";
   gpLogger = new radial::Logger(strPrefix, argc, argv, &callback);
+  gpLogger->enableWorkers();
   gpLogger->process(strPrefix);
   delete gpLogger;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Logger::callback, gpLogger, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpLogger->callback(strPrefix, strPacket, bResponse);
 }

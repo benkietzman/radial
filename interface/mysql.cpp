@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "mysql->main()";
   gpMysql = new Mysql(strPrefix, argc, argv, &callback);
+  gpMysql->enableWorkers();
   gpMysql->process(strPrefix);
   delete gpMysql;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Mysql::callback, gpMysql, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpMysql->callback(strPrefix, strPacket, bResponse);
 }

@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "alert->main()";
   gpAlert = new Alert(strPrefix, argc, argv, &callback);
+  gpAlert->enableWorkers();
   gpAlert->process(strPrefix);
   delete gpAlert;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Alert::callback, gpAlert, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpAlert->callback(strPrefix, strPacket, bResponse);
 }

@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "log->main()";
   gpLog = new Log(strPrefix, argc, argv, &callback);
+  gpLog->enableWorkers();
   gpLog->process(strPrefix);
   delete gpLog;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Log::callback, gpLog, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpLog->callback(strPrefix, strPacket, bResponse);
 }

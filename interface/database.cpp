@@ -21,15 +21,14 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "database->main()";
   gpDatabase = new Database(strPrefix, argc, argv, &callback, &mysql);
+  gpDatabase->enableWorkers();
   gpDatabase->process(strPrefix);
   delete gpDatabase;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Database::callback, gpDatabase, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpDatabase->callback(strPrefix, strPacket, bResponse);
 }
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {

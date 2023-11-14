@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "junction->main()";
   gpJunction = new Junction(strPrefix, argc, argv, &callback);
+  gpJunction->enableWorkers();
   gpJunction->process(strPrefix);
   delete gpJunction;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Junction::callback, gpJunction, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpJunction->callback(strPrefix, strPacket, bResponse);
 }

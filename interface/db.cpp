@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "db->main()";
   gpDb = new Db(strPrefix, argc, argv, &callback);
+  gpDb->enableWorkers();
   gpDb->setAutoMode(&autoMode);
   thread threadSchedule(&Db::schedule, gpDb, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");
@@ -37,7 +38,5 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Db::callback, gpDb, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpDb->callback(strPrefix, strPacket, bResponse);
 }

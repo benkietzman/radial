@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "secure->main()";
   gpSecure = new Secure(strPrefix, argc, argv, &callback);
+  gpSecure->enableWorkers();
   gpSecure->process(strPrefix);
   delete gpSecure;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Secure::callback, gpSecure, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpSecure->callback(strPrefix, strPacket, bResponse);
 }

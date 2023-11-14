@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "central->main()";
   gpCentral = new radial::Central(strPrefix, argc, argv, &callback);
+  gpCentral->enableWorkers();
   gpCentral->setAutoMode(&autoMode);
   thread threadSchedule(&radial::Central::schedule, gpCentral, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");
@@ -36,7 +37,5 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Central::callback, gpCentral, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpCentral->callback(strPrefix, strPacket, bResponse);
 }

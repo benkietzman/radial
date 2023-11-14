@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "storage->main()";
   gpStorage = new radial::Storage(strPrefix, argc, argv, &callback);
+  gpStorage->enableWorkers();
   gpStorage->setAutoMode(&autoMode);
   gpStorage->process(strPrefix);
   while (gpStorage->callbacks() > 0)
@@ -37,7 +38,5 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&radial::Storage::callback, gpStorage, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpStorage->callback(strPrefix, strPacket, bResponse);
 }

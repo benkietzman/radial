@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "status->main()";
   gpStatus = new Status(strPrefix, argc, argv, &callback);
+  gpStatus->enableWorkers();
   gpStatus->setAutoMode(&autoMode);
   thread threadSchedule(&Status::schedule, gpStatus, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");
@@ -37,7 +38,5 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Status::callback, gpStatus, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpStatus->callback(strPrefix, strPacket, bResponse);
 }

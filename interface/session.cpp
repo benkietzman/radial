@@ -20,13 +20,12 @@ int main(int argc, char *argv[])
 {
   string strError, strPrefix = "session->main()";
   gpSession = new Session(strPrefix, argc, argv, &callback);
+  gpSession->enableWorkers();
   gpSession->process(strPrefix);
   delete gpSession;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  thread threadCallback(&Session::callback, gpSession, strPrefix, strPacket, bResponse);
-  pthread_setname_np(threadCallback.native_handle(), "callback");
-  threadCallback.detach();
+  gpSession->callback(strPrefix, strPacket, bResponse);
 }
