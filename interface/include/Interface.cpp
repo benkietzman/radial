@@ -2273,6 +2273,16 @@ void Interface::process(string strPrefix)
               }
             }
           }
+          else if (fds[i].revents & POLLNVAL)
+          {
+            uniqueRemovals.push_back(fds[i].fd);
+            if (nReturn < 0)
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll(POLLNVAL) [" << fds[i].fd << "]:  Invalid request.";
+              log(ssMessage.str());
+            }
+          }
         }
       }
       else if (!bExit && nReturn < 0 && errno != EINTR)
