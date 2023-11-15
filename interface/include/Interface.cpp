@@ -35,6 +35,8 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_bMaster = false;
   m_bMasterSettled = false;
   m_bResponse = false;
+  m_fdPool[0] = -1;
+  m_fdPool[1] = -1;
   m_fdResponse[0] = -1;
   m_fdResponse[1] = -1;
   m_pAutoModeCallback = NULL;
@@ -1115,8 +1117,21 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 // {{{ enableWorkers()
 void Interface::enableWorkers()
 {
-  m_pThreadPool = new thread(&Interface::pool, this);
-  pthread_setname_np(m_pThreadPool->native_handle(), "pool");
+  int nReturn;
+  stringstream ssMessage;
+
+  if ((nReturn = pipe(m_fdPool)) == 0)
+  {
+    m_pThreadPool = new thread(&Interface::pool, this);
+    pthread_setname_np(m_pThreadPool->native_handle(), "pool");
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << "Interface::enableWorkers()->pipe(" << errno << ") error:  " << strerror(errno);
+    log(ssMessage.str());
+    setShutdown();
+  }
 }
 // }}}
 // {{{ getUserEmail()
@@ -2036,16 +2051,41 @@ bool Interface::pageUser(const string strUser, const string strMessage, string &
 // {{{ pool()
 void Interface::pool()
 {
-  bool bIdle;
+  char cChar;
+  int nReturn;
   list<radialWorker *>::iterator workerIter;
   list<radialWorker *> workers;
+  string strPrefix = "Interface::pool()";
+  stringstream ssMessage;
   time_t CTime;
   radialCallback *ptCallback;
 
   threadIncrement();
   while (!shutdown())
   {
-    bIdle = true;
+    pollfd fds[1];
+    fds[0].fd = m_fdPool[0];
+    fds[0].events = POLLIN;
+    if ((nReturn = poll(fds, 1, 2000)) > 0)
+    {
+      if (fds[0].revents & (POLLHUP | POLLIN))
+      {
+        if (read(fds[0].fd, &cChar, 1) <= 0)
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
+          notify(ssMessage.str());
+          setShutdown();
+        }
+      }
+    }
+    else if (nReturn < 0 && errno != EINTR)
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
+      notify(ssMessage.str());
+      setShutdown();
+    }
     m_mutexShare.lock();
     if (!m_callbacks.empty())
     {
@@ -2088,7 +2128,6 @@ void Interface::pool()
           {
             if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
             {
-              bIdle = false;
               (*i)->bExit = true;
               workerIter = i;
             }
@@ -2102,15 +2141,13 @@ void Interface::pool()
       }
     }
     m_mutexShare.unlock();
-    if (bIdle)
-    {
-      msleep(100);
-    }
   }
   for (auto &worker : workers)
   {
     worker->bExit = true;
   }
+  close(m_fdPool[0]);
+  close(m_fdPool[1]);
   threadDecrement();
 }
 // }}}

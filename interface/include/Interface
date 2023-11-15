@@ -55,6 +55,7 @@ class Interface : public Base
   bool m_bMaster;
   bool m_bMasterSettled;
   bool m_bResponse;
+  int m_fdPool[2];
   int m_fdResponse[2];
   list<string> m_responses;
   list<radialCallback *> m_callbacks;
