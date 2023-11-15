@@ -34,7 +34,9 @@ struct radialCallback
 struct radialWorker
 {
   bool bExit;
+  int fdWorker[2];
   list<radialCallback *> callbacks;
+  string strBuffer;
   time_t CTime;
 };
 // }}}
