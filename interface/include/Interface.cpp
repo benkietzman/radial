@@ -128,6 +128,7 @@ bool Interface::auth(Json *ptJson, string &strError)
 // {{{ callbackPush()
 void Interface::callbackPush(string strPrefix, const string strPacket, const bool bResponse)
 {
+  char cChar = '\n';
   radialCallback *ptCallback = new radialCallback;
 
   ptCallback->strPrefix = strPrefix;
@@ -135,6 +136,10 @@ void Interface::callbackPush(string strPrefix, const string strPacket, const boo
   ptCallback->bResponse = bResponse;
   m_mutexShare.lock();
   m_callbacks.push_back(ptCallback);
+  if (m_fdPool[1] != -1)
+  {
+    write(m_fdPool[1], &cChar, 1);
+  }
   m_mutexShare.unlock();
 }
 // }}}
@@ -2147,7 +2152,9 @@ void Interface::pool()
     worker->bExit = true;
   }
   close(m_fdPool[0]);
+  m_fdPool[0] = -1;
   close(m_fdPool[1]);
+  m_fdPool[1] = -1;
   threadDecrement();
 }
 // }}}
