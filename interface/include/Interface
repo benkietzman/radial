@@ -56,6 +56,7 @@ class Interface : public Base
   protected:
   bool m_bMaster;
   bool m_bMasterSettled;
+  bool m_bPool;
   bool m_bResponse;
   int m_fdPool[2];
   int m_fdResponse[2];

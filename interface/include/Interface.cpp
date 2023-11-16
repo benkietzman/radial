@@ -128,7 +128,6 @@ bool Interface::auth(Json *ptJson, string &strError)
 // {{{ callbackPush()
 void Interface::callbackPush(string strPrefix, const string strPacket, const bool bResponse)
 {
-  char cChar = '\n';
   radialCallback *ptCallback = new radialCallback;
 
   ptCallback->strPrefix = strPrefix;
@@ -136,10 +135,7 @@ void Interface::callbackPush(string strPrefix, const string strPacket, const boo
   ptCallback->bResponse = bResponse;
   m_mutexShare.lock();
   m_callbacks.push_back(ptCallback);
-  if (m_fdPool[1] != -1)
-  {
-    write(m_fdPool[1], &cChar, 1);
-  }
+  m_bPool = true;
   m_mutexShare.unlock();
 }
 // }}}
@@ -2127,7 +2123,7 @@ void Interface::pool()
       setShutdown();
     }
     m_mutexShare.lock();
-    if (!m_callbacks.empty())
+    while (!m_callbacks.empty())
     {
       ptCallback = m_callbacks.front();
       m_callbacks.pop_front();
@@ -2158,30 +2154,27 @@ void Interface::pool()
         threadWorker.detach();
       }
     }
-    else
+    if (!workers.empty())
     {
-      if (!workers.empty())
+      time(&CTime);
+      workerIter = workers.begin();
+      while (workerIter != workers.end())
       {
-        time(&CTime);
-        workerIter = workers.begin();
-        while (workerIter != workers.end())
+        workerIter = workers.end();
+        for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
-          workerIter = workers.end();
-          for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
+          if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
           {
-            if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
-            {
-              workerIter = i;
-            }
+            workerIter = i;
           }
-          if (workerIter != workers.end())
-          {
-            (*workerIter)->bExit = true;
-            close((*workerIter)->fdWorker[0]);
-            close((*workerIter)->fdWorker[1]);
-            delete (*workerIter);
-            workers.erase(workerIter);
-          }
+        }
+        if (workerIter != workers.end())
+        {
+          (*workerIter)->bExit = true;
+          close((*workerIter)->fdWorker[0]);
+          close((*workerIter)->fdWorker[1]);
+          delete (*workerIter);
+          workers.erase(workerIter);
         }
       }
     }
@@ -2224,7 +2217,7 @@ void Interface::process(string strPrefix)
     CMaster[0] = CMaster[1] = CThroughput = CBroadcast;
     while (!bExit)
     {
-      fds = new pollfd[uniques.size() + 3];
+      fds = new pollfd[uniques.size() + 4];
       unIndex = 0;
       fds[unIndex].fd = 0;
       fds[unIndex].events = POLLIN;
@@ -2249,6 +2242,17 @@ void Interface::process(string strPrefix)
       fds[unIndex].fd = m_fdResponse[0];
       fds[unIndex].events = POLLIN;
       unIndex++;
+      fds[unIndex].fd = -1;
+      fds[unIndex].events = POLLOUT;
+      if (m_pThreadPool != NULL)
+      {
+        m_mutexShare.lock();
+        if (m_bPool)
+        {
+          fds[unIndex].fd = m_fdPool[1];
+        }
+        m_mutexShare.unlock();
+      }
       for (auto &unique : uniques)
       {
         fds[unIndex].fd = -1;
@@ -2452,7 +2456,21 @@ void Interface::process(string strPrefix)
             bExit = true;
           }
         }
-        for (size_t i = 3; i < unIndex; i++)
+        if (fds[3].revents & POLLOUT)
+        {
+          cChar = '\n';
+          if (write(fds[3].fd, &cChar, 1) > 0)
+          {
+            m_mutexShare.lock();
+            m_bPool = false;
+            m_mutexShare.unlock();
+          }
+          else
+          {
+            bExit = true;
+          }
+        }
+        for (size_t i = 4; i < unIndex; i++)
         {
           if (fds[i].revents & POLLOUT)
           {
