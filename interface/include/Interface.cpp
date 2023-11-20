@@ -135,7 +135,12 @@ void Interface::callbackPush(string strPrefix, const string strPacket, const boo
   ptCallback->bResponse = bResponse;
   m_mutexShare.lock();
   m_callbacks.push_back(ptCallback);
-  m_bPool = true;
+  if (!m_bPool && m_fdPool[1] != -1)
+  {
+    char cChar = '\n';
+    m_bPool = true;
+    write(m_fdPool[1], &cChar, 1);
+  }
   m_mutexShare.unlock();
 }
 // }}}
@@ -1119,10 +1124,13 @@ void Interface::email(const string strFrom, list<string> to, list<string> cc, li
 void Interface::enableWorkers()
 {
   int nReturn;
+  string strError;
   stringstream ssMessage;
 
   if ((nReturn = pipe(m_fdPool)) == 0)
   {
+    m_pUtility->fdNonBlocking(m_fdPool[0], strError);
+    m_pUtility->fdNonBlocking(m_fdPool[1], strError);
     m_pThreadPool = new thread(&Interface::pool, this);
     pthread_setname_np(m_pThreadPool->native_handle(), "pool");
   }
@@ -2053,12 +2061,10 @@ bool Interface::pageUser(const string strUser, const string strMessage, string &
 void Interface::pool()
 {
   char cChar;
-  pollfd *fds;
   int nReturn;
   list<radialWorker *>::iterator workerIter;
   list<radialWorker *> workers;
-  size_t unIndex;
-  string strPrefix = "Interface::pool()";
+  string strError, strPrefix = "Interface::pool()";
   stringstream ssMessage;
   time_t CTime;
   radialCallback *ptCallback;
@@ -2066,52 +2072,25 @@ void Interface::pool()
   threadIncrement();
   while (!shutdown())
   {
-    fds = new pollfd[workers.size() + 1];
-    unIndex = 0;
-    fds[unIndex].fd = m_fdPool[0];
-    fds[unIndex].events = POLLIN;
-    unIndex++;
-    m_mutexShare.lock();
-    for (auto &i : workers)
-    {
-      fds[unIndex].fd = -1;
-      fds[unIndex].events = POLLOUT;
-      if (!i->strBuffer.empty())
-      {
-        fds[unIndex].fd = i->fdWorker[1];
-      }
-    }
-    m_mutexShare.unlock();
-    if ((nReturn = poll(fds, unIndex, 2000)) > 0)
+    pollfd fds[1];
+    fds[0].fd = m_fdPool[0];
+    fds[0].events = POLLIN;
+    if ((nReturn = poll(fds, 1, 2000)) > 0)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {
-        if (read(fds[0].fd, &cChar, 1) <= 0)
+        if (read(fds[0].fd, &cChar, 1) > 0)
+        {
+          m_mutexShare.lock();
+          m_bPool = false;
+          m_mutexShare.unlock();
+        }
+        else
         {
           ssMessage.str("");
           ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
           notify(ssMessage.str());
           setShutdown();
-        }
-      }
-      for (size_t i = 1; i < unIndex; i++)
-      {
-        if (fds[i].revents & POLLOUT)
-        {
-          for (auto &j : workers)
-          {
-            if (j->fdWorker[1] == fds[i].fd)
-            {
-              if ((nReturn = write(fds[i].fd, j->strBuffer.c_str(), j->strBuffer.size())) > 0)
-              {
-                j->strBuffer.erase(0, nReturn);
-              }
-              else
-              {
-                j->bExit = true;
-              }
-            }
-          }
         }
       }
     }
@@ -2135,19 +2114,33 @@ void Interface::pool()
           workerIter = i;
         }
       }
-      if (workerIter != workers.end() && workers.size() <= 20)
+      if (workerIter != workers.end() && workers.size() >= 20)
       {
+        (*workerIter)->mutexWorker.lock();
         (*workerIter)->callbacks.push_back(ptCallback);
-        (*workerIter)->strBuffer += "\n";
+        if (!(*workerIter)->bWorker && (*workerIter)->fdWorker[1] != -1)
+        {
+          char cChar = '\n';
+          (*workerIter)->bWorker = true;
+          write((*workerIter)->fdWorker[1], &cChar, 1);
+        }
+        (*workerIter)->mutexWorker.unlock();
       }
       else
       {
         radialWorker *ptWorker = new radialWorker;
         ptWorker->bExit = false;
+        ptWorker->bWorker = false;
         time(&(ptWorker->CTime));
         ptWorker->callbacks.push_back(ptCallback);
-        pipe(ptWorker->fdWorker);
-        ptWorker->strBuffer = "\n";
+        if (pipe(ptWorker->fdWorker) == 0)
+        {
+          char cChar = '\n';
+          m_pUtility->fdNonBlocking(ptWorker->fdWorker[0], strError);
+          m_pUtility->fdNonBlocking(ptWorker->fdWorker[1], strError);
+          ptWorker->bWorker = true;
+          write(ptWorker->fdWorker[1], &cChar, 1);
+        }
         workers.push_back(ptWorker);
         thread threadWorker(&Interface::worker, this, ptWorker);
         pthread_setname_np(threadWorker.native_handle(), "worker");
@@ -2217,7 +2210,7 @@ void Interface::process(string strPrefix)
     CMaster[0] = CMaster[1] = CThroughput = CBroadcast;
     while (!bExit)
     {
-      fds = new pollfd[uniques.size() + 4];
+      fds = new pollfd[uniques.size() + 3];
       unIndex = 0;
       fds[unIndex].fd = 0;
       fds[unIndex].events = POLLIN;
@@ -2242,17 +2235,6 @@ void Interface::process(string strPrefix)
       fds[unIndex].fd = m_fdResponse[0];
       fds[unIndex].events = POLLIN;
       unIndex++;
-      fds[unIndex].fd = -1;
-      fds[unIndex].events = POLLOUT;
-      if (m_pThreadPool != NULL)
-      {
-        m_mutexShare.lock();
-        if (m_bPool)
-        {
-          fds[unIndex].fd = m_fdPool[1];
-        }
-        m_mutexShare.unlock();
-      }
       for (auto &unique : uniques)
       {
         fds[unIndex].fd = -1;
@@ -2456,21 +2438,7 @@ void Interface::process(string strPrefix)
             bExit = true;
           }
         }
-        if (fds[3].revents & POLLOUT)
-        {
-          cChar = '\n';
-          if (write(fds[3].fd, &cChar, 1) > 0)
-          {
-            m_mutexShare.lock();
-            m_bPool = false;
-            m_mutexShare.unlock();
-          }
-          else
-          {
-            bExit = true;
-          }
-        }
-        for (size_t i = 4; i < unIndex; i++)
+        for (size_t i = 3; i < unIndex; i++)
         {
           if (fds[i].revents & POLLOUT)
           {
@@ -2859,6 +2827,7 @@ void Interface::userInit(Json *ptJson, radialUser &d)
 // {{{ worker()
 void Interface::worker(radialWorker *ptWorker)
 {
+  bool bCallbacks;
   char cChar;
   int nReturn;
   radialCallback *ptCallback;
@@ -2873,7 +2842,13 @@ void Interface::worker(radialWorker *ptWorker)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {
-        if (read(fds[0].fd, &cChar, 1) <= 0)
+        if (read(fds[0].fd, &cChar, 1) > 0)
+        {
+          ptWorker->mutexWorker.lock();
+          ptWorker->bWorker = false;
+          ptWorker->mutexWorker.unlock();
+        }
+        else
         {
           ptWorker->bExit = true;
         }
@@ -2883,13 +2858,18 @@ void Interface::worker(radialWorker *ptWorker)
     {
       ptWorker->bExit = true;
     }
-    if (!ptWorker->callbacks.empty())
+    ptWorker->mutexWorker.lock();
+    bCallbacks = ((!ptWorker->callbacks.empty())?true:false);
+    ptWorker->mutexWorker.unlock();
+    if (bCallbacks)
     {
+      ptWorker->mutexWorker.lock();
       ptCallback = ptWorker->callbacks.front();
-      m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
-      delete ptCallback;
       ptWorker->callbacks.pop_front();
       time(&(ptWorker->CTime));
+      ptWorker->mutexWorker.unlock();
+      m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
+      delete ptCallback;
     }
   }
   threadDecrement();
