@@ -2116,20 +2116,19 @@ void Interface::pool()
       }
       if (workerIter != workers.end() && workers.size() >= m_unWorkers)
       {
-        (*workerIter)->mutexWorker.lock();
         (*workerIter)->callbacks.push_back(ptCallback);
         if (!(*workerIter)->bWorker && (*workerIter)->fdWorker[1] != -1)
         {
           char cChar = '\n';
+          (*workerIter)->mutexWorker.lock();
           (*workerIter)->bWorker = true;
+          (*workerIter)->mutexWorker.unlock();
           write((*workerIter)->fdWorker[1], &cChar, 1);
         }
-        (*workerIter)->mutexWorker.unlock();
       }
       else
       {
         radialWorker *ptWorker = new radialWorker;
-        ptWorker->bExit = false;
         ptWorker->bWorker = false;
         time(&(ptWorker->CTime));
         ptWorker->callbacks.push_back(ptCallback);
@@ -2163,18 +2162,11 @@ void Interface::pool()
         }
         if (workerIter != workers.end())
         {
-          (*workerIter)->bExit = true;
-          if ((*workerIter)->fdWorker[0] != -1)
-          {
-            close((*workerIter)->fdWorker[0]);
-            (*workerIter)->fdWorker[0] = -1;
-          }
           if ((*workerIter)->fdWorker[1] != -1)
           {
             close((*workerIter)->fdWorker[1]);
             (*workerIter)->fdWorker[1] = -1;
           }
-          delete (*workerIter);
           workers.erase(workerIter);
         }
       }
@@ -2183,12 +2175,6 @@ void Interface::pool()
   }
   for (auto &worker : workers)
   {
-    worker->bExit = true;
-    if (worker->fdWorker[0] != -1)
-    {
-      close(worker->fdWorker[0]);
-      worker->fdWorker[0] = -1;
-    }
     if (worker->fdWorker[1] != -1)
     {
       close(worker->fdWorker[1]);
@@ -2849,7 +2835,7 @@ void Interface::worker(radialWorker *ptWorker)
   radialCallback *ptCallback;
 
   threadIncrement();
-  while (!shutdown() && !ptWorker->bExit)
+  while (ptWorker->fdWorker[0] != -1 || !ptWorker->callbacks.empty())
   {
     pollfd fds[1];
     fds[0].fd = ptWorker->fdWorker[0];
@@ -2878,29 +2864,16 @@ void Interface::worker(radialWorker *ptWorker)
     {
       bClose = true;
     }
-    if (bClose)
+    if (bClose && ptWorker->fdWorker[0] != -1)
     {
-      if (ptWorker->fdWorker[0] != -1)
-      {
-        close(ptWorker->fdWorker[0]);
-        ptWorker->fdWorker[0] = -1;
-      }
-      if (ptWorker->fdWorker[1] != -1)
-      {
-        close(ptWorker->fdWorker[1]);
-        ptWorker->fdWorker[1] = -1;
-      }
+      close(ptWorker->fdWorker[0]);
+      ptWorker->fdWorker[0] = -1;
     }
-    ptWorker->mutexWorker.lock();
-    bCallbacks = ((!ptWorker->callbacks.empty())?true:false);
-    ptWorker->mutexWorker.unlock();
-    if (bCallbacks)
+    while (!ptWorker->callbacks.empty())
     {
-      ptWorker->mutexWorker.lock();
       ptCallback = ptWorker->callbacks.front();
       ptWorker->callbacks.pop_front();
       time(&(ptWorker->CTime));
-      ptWorker->mutexWorker.unlock();
       if (m_pCallback != NULL)
       {
         m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
@@ -2908,6 +2881,7 @@ void Interface::worker(radialWorker *ptWorker)
       delete ptCallback;
     }
   }
+  delete ptWorker;
   threadDecrement();
 }
 // }}}
