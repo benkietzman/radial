@@ -126,6 +126,7 @@ class Base
   size_t m_unMaxPayload;
   size_t m_unMonitor;
   size_t m_unThreads;
+  size_t m_unWorkers;
   string m_strApplication;
   string m_strData;
   string m_strNode;

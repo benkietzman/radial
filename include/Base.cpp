@@ -38,6 +38,7 @@ Base::Base(int argc, char **argv)
   m_unMaxPayload = 1024 * 1024 * 16;
   m_unMonitor = 0;
   m_unThreads = 0;
+  m_unWorkers = 20;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -93,6 +94,15 @@ Base::Base(int argc, char **argv)
       }
       m_manip.purgeChar(m_strWarden, m_strWarden, "'");
       m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
+    }
+    else if ((strArg.size() > 12 && strArg.substr(0, 12) == "--workers="))
+    {
+      string strWorkers = strArg.substr(10, strArg.size() - 10);
+      stringstream ssWorkers;
+      m_manip.purgeChar(strWorkers, strWorkers, "'");
+      m_manip.purgeChar(strWorkers, strWorkers, "\"");
+      ssWorkers.str(strWorkers);
+      ssWorkers >> m_unWorkers;
     }
   }
   // }}}

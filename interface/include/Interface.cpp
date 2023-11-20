@@ -2114,7 +2114,7 @@ void Interface::pool()
           workerIter = i;
         }
       }
-      if (workerIter != workers.end() && workers.size() >= 20)
+      if (workerIter != workers.end() && workers.size() >= m_unWorkers)
       {
         (*workerIter)->mutexWorker.lock();
         (*workerIter)->callbacks.push_back(ptCallback);
@@ -2156,7 +2156,7 @@ void Interface::pool()
         workerIter = workers.end();
         for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
-          if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
+          if (!(*workerIter)->bExit && (*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
           {
             workerIter = i;
           }
@@ -2852,6 +2852,10 @@ void Interface::worker(radialWorker *ptWorker)
         {
           ptWorker->bExit = true;
         }
+      }
+      else if (fds[0].revents & POLLNVAL)
+      {
+        ptWorker->bExit = true;
       }
     }
     else if (nReturn < 0 && errno != EINTR)
