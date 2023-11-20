@@ -2109,7 +2109,7 @@ void Interface::pool()
       workerIter = workers.end();
       for (auto i = workers.begin(); i != workers.end(); i++)
       {
-        if (!(*i)->bExit && (workerIter == workers.end() || (*i)->callbacks.size() < (*workerIter)->callbacks.size()))
+        if (!(*i)->bExit && (*i)->fdWorker[1] != -1 && (workerIter == workers.end() || (*i)->callbacks.size() < (*workerIter)->callbacks.size()))
         {
           workerIter = i;
         }
@@ -2156,7 +2156,7 @@ void Interface::pool()
         workerIter = workers.end();
         for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
-          if (!(*workerIter)->bExit && (*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
+          if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
           {
             workerIter = i;
           }
@@ -2164,8 +2164,16 @@ void Interface::pool()
         if (workerIter != workers.end())
         {
           (*workerIter)->bExit = true;
-          close((*workerIter)->fdWorker[0]);
-          close((*workerIter)->fdWorker[1]);
+          if ((*workerIter)->fdWorker[0] != -1)
+          {
+            close((*workerIter)->fdWorker[0]);
+            (*workerIter)->fdWorker[0] = -1;
+          }
+          if ((*workerIter)->fdWorker[1] != -1)
+          {
+            close((*workerIter)->fdWorker[1]);
+            (*workerIter)->fdWorker[1] = -1;
+          }
           delete (*workerIter);
           workers.erase(workerIter);
         }
@@ -2176,8 +2184,16 @@ void Interface::pool()
   for (auto &worker : workers)
   {
     worker->bExit = true;
-    close(worker->fdWorker[0]);
-    close(worker->fdWorker[1]);
+    if (worker->fdWorker[0] != -1)
+    {
+      close(worker->fdWorker[0]);
+      worker->fdWorker[0] = -1;
+    }
+    if (worker->fdWorker[1] != -1)
+    {
+      close(worker->fdWorker[1]);
+      worker->fdWorker[1] = -1;
+    }
   }
   close(m_fdPool[0]);
   m_fdPool[0] = -1;
@@ -2855,7 +2871,10 @@ void Interface::worker(radialWorker *ptWorker)
       }
       else if (fds[0].revents & POLLNVAL)
       {
-        ptWorker->bExit = true;
+        close(ptWorker->fdWorker[0]);
+        ptWorker->fdWorker[0] = -1;
+        close(ptWorker->fdWorker[1]);
+        ptWorker->fdWorker[1] = -1;
       }
     }
     else if (nReturn < 0 && errno != EINTR)
