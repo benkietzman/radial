@@ -2854,7 +2854,7 @@ void Interface::worker(radialWorker *ptWorker)
         }
       }
     }
-    else
+    else if (nReturn < 0 && errno != EINTR)
     {
       ptWorker->bExit = true;
     }
