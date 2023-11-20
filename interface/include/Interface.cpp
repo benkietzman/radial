@@ -2156,7 +2156,7 @@ void Interface::pool()
         workerIter = workers.end();
         for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
-          if ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10)
+          if ((*i)->callbacks.empty() && ((*i)->fdWorker[0] == -1 || (*i)->fdWorker[1] == -1 || (CTime - (*i)->CTime) > 10))
           {
             workerIter = i;
           }
@@ -2843,7 +2843,7 @@ void Interface::userInit(Json *ptJson, radialUser &d)
 // {{{ worker()
 void Interface::worker(radialWorker *ptWorker)
 {
-  bool bCallbacks;
+  bool bCallbacks, bClose = false;
   char cChar;
   int nReturn;
   radialCallback *ptCallback;
@@ -2866,20 +2866,30 @@ void Interface::worker(radialWorker *ptWorker)
         }
         else
         {
-          ptWorker->bExit = true;
+          bClose = true;
         }
       }
       else if (fds[0].revents & POLLNVAL)
       {
-        close(ptWorker->fdWorker[0]);
-        ptWorker->fdWorker[0] = -1;
-        close(ptWorker->fdWorker[1]);
-        ptWorker->fdWorker[1] = -1;
+        bClose = true;
       }
     }
     else if (nReturn < 0 && errno != EINTR)
     {
-      ptWorker->bExit = true;
+      bClose = true;
+    }
+    if (bClose)
+    {
+      if (ptWorker->fdWorker[0] != -1)
+      {
+        close(ptWorker->fdWorker[0]);
+        ptWorker->fdWorker[0] = -1;
+      }
+      if (ptWorker->fdWorker[1] != -1)
+      {
+        close(ptWorker->fdWorker[1]);
+        ptWorker->fdWorker[1] = -1;
+      }
     }
     ptWorker->mutexWorker.lock();
     bCallbacks = ((!ptWorker->callbacks.empty())?true:false);
@@ -2891,7 +2901,10 @@ void Interface::worker(radialWorker *ptWorker)
       ptWorker->callbacks.pop_front();
       time(&(ptWorker->CTime));
       ptWorker->mutexWorker.unlock();
-      m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
+      if (m_pCallback != NULL)
+      {
+        m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
+      }
       delete ptCallback;
     }
   }
