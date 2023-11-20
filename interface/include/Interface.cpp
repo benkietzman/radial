@@ -2109,7 +2109,7 @@ void Interface::pool()
       workerIter = workers.end();
       for (auto i = workers.begin(); i != workers.end(); i++)
       {
-        if (!(*i)->bExit && (*i)->fdWorker[1] != -1 && (workerIter == workers.end() || (*i)->callbacks.size() < (*workerIter)->callbacks.size()))
+        if ((*i)->fdWorker[1] != -1 && (workerIter == workers.end() || (*i)->callbacks.size() < (*workerIter)->callbacks.size()))
         {
           workerIter = i;
         }
@@ -2829,13 +2829,13 @@ void Interface::userInit(Json *ptJson, radialUser &d)
 // {{{ worker()
 void Interface::worker(radialWorker *ptWorker)
 {
-  bool bCallbacks, bClose = false;
+  bool bClose = false;
   char cChar;
   int nReturn;
   radialCallback *ptCallback;
 
   threadIncrement();
-  while (ptWorker->fdWorker[0] != -1 || !ptWorker->callbacks.empty())
+  while (ptWorker->fdWorker[1] != -1 || !ptWorker->callbacks.empty())
   {
     pollfd fds[1];
     fds[0].fd = ptWorker->fdWorker[0];
