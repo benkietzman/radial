@@ -95,7 +95,7 @@ Base::Base(int argc, char **argv)
       m_manip.purgeChar(m_strWarden, m_strWarden, "'");
       m_manip.purgeChar(m_strWarden, m_strWarden, "\"");
     }
-    else if ((strArg.size() > 12 && strArg.substr(0, 12) == "--workers="))
+    else if ((strArg.size() > 10 && strArg.substr(0, 10) == "--workers="))
     {
       string strWorkers = strArg.substr(10, strArg.size() - 10);
       stringstream ssWorkers;
