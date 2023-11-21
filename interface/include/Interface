@@ -30,8 +30,8 @@ struct radialCallback
   string strPrefix;
 };
 // }}}
-// {{{ radialWorker
-struct radialWorker
+// {{{ radialCallbackWorker
+struct radialCallbackWorker
 {
   bool bWorker;
   int fdWorker[2];
@@ -54,11 +54,11 @@ struct radialUser
 class Interface : public Base
 {
   protected:
+  bool m_bCallbackPool;
   bool m_bMaster;
   bool m_bMasterSettled;
-  bool m_bPool;
   bool m_bResponse;
-  int m_fdPool[2];
+  int m_fdCallbackPool[2];
   int m_fdResponse[2];
   list<string> m_responses;
   list<radialCallback *> m_callbacks;
@@ -71,14 +71,16 @@ class Interface : public Base
   string m_strJwtSigner;
   string m_strMaster;
   string m_strName;
-  thread *m_pThreadPool;
+  thread *m_pThreadCallbackPool;
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
+  void callbackPool();
   void callbackPush(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackWorker(radialCallbackWorker *ptWorker);
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
   bool chat(const string strTarget, const string strMessage);
   bool chat(const string strTarget, const string strMessage, string &strError);
@@ -145,7 +147,6 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
-  void pool();
   bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
   bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
   bool storageRemove(const list<string> keys, string &strError);
@@ -160,7 +161,6 @@ class Interface : public Base
   void userInit(radialUser &d);
   void userInit(radialUser &i, radialUser &o);
   void userInit(Json *ptJson, radialUser &d);
-  void worker(radialWorker *ptWorker);
 
   public:
   Interface(string strPrefix, const string strName, int argc, char **argv, void (*pCallback)(string, const string, const bool));
