@@ -290,17 +290,22 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ irc
       else if (strAction == "irc")
       {
-        string strSubTarget;
-        ssData >> strSubTarget;
-        if (!strSubTarget.empty())
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
         {
-          string strMessage;
-          ptRequest->i("Target", strSubTarget);
-          getline(ssData, strMessage);
-          m_manip.trim(strMessage, strMessage);
-          if (!strMessage.empty())
+          string strSubTarget;
+          ssData >> strSubTarget;
+          if (!strSubTarget.empty())
           {
-            ptRequest->i("Message", strMessage);
+            string strMessage;
+            ptRequest->i("Target", strSubTarget);
+            getline(ssData, strMessage);
+            m_manip.trim(strMessage, strMessage);
+            if (!strMessage.empty())
+            {
+              ptRequest->i("Message", strMessage);
+            }
           }
         }
       }
@@ -1320,30 +1325,85 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ irc
   else if (strAction == "irc")
   {
-    string strSubTarget = var("Target", ptData);
-    if (!strSubTarget.empty())
+    string strFunction = var("Function", ptData);
+    if (strFunction == "channels")
     {
-      string strMessage = var("Message", ptData);
-      if (!strMessage.empty())
+      ssText << ":  ";
+      for (auto i = m_channels.begin(); i != m_channels.end(); i++)
       {
-        stringstream ssMessage;
-        ssMessage << char(3) << "08,03 " << strUserID;
-        if (strUserID != strTarget)
+        if (i != m_channels.begin())
         {
-          ssMessage << " @ " << strTarget;
+          ssText << ", ";
         }
-        ssMessage << " " << char(3) << " " << strMessage;
-        chat(strSubTarget, ssMessage.str());
-        ssText << ":  Message sent.";
+        ssText << (*i);
+      }
+    }
+    else if (strFunction == "chat" || strFunction == "join" || strFunction == "part")
+    {
+      string strSubTarget = var("Target", ptData);
+      if (!strSubTarget.empty())
+      {
+        if (strFunction == "chat")
+        {
+          string strMessage = var("Message", ptData);
+          if (!strMessage.empty())
+          {
+            stringstream ssMessage;
+            ssMessage << char(3) << "08,03 " << strUserID;
+            if (strUserID != strTarget)
+            {
+              ssMessage << " @ " << strTarget;
+            }
+            ssMessage << " " << char(3) << " " << strMessage;
+            chat(strSubTarget, ssMessage.str());
+            ssText << ":  Message sent.";
+          }
+          else
+          {
+            ssText << ":  Please provide a Message immediately following the Target.";
+          }
+        }
+        else
+        {
+          auto channelIter = m_channels.end();
+          for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+          {
+            if ((*i) == strSubTarget)
+            {
+              channelIter = i;
+            }
+          }
+          if (channelIter != m_channels.end())
+          {
+            if (strFunction == "join")
+            {
+              ssText << ":  Already joined channel.";
+            }
+            else
+            {
+              part(strSubTarget);
+              ssText << ":  Parted channel.";
+            }
+          }
+          else if (strFunction == "join")
+          {
+            join(strSubTarget);
+            ssText << ":  Joined channel.";
+          }
+          else
+          {
+            ssText << ":  Already parted channel.";
+          }
+        }
       }
       else
       {
-        ssText << ":  Please provide a Message immediately following the Target.";
+        ssText << ":  Please provide a Target immediately following the action.";
       }
     }
     else
     {
-      ssText << ":  The irc action is used to send IRC messages.  Please provide a Target immediately following the action.";
+      ssText << ":  The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, part.";
     }
   }
   // }}}
