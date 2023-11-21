@@ -175,7 +175,7 @@ void Interface::callbackPool()
     while (!m_callbacks.empty())
     {
       ptCallback = m_callbacks.front();
-      m_callbacks.pop_front();
+      m_callbacks.pop();
       workerIter = workers.end();
       for (auto i = workers.begin(); i != workers.end(); i++)
       {
@@ -186,7 +186,7 @@ void Interface::callbackPool()
       }
       if (workerIter != workers.end() && workers.size() >= m_unWorkers)
       {
-        (*workerIter)->callbacks.push_back(ptCallback);
+        (*workerIter)->callbacks.push(ptCallback);
         if (!(*workerIter)->bWorker && (*workerIter)->fdWorker[1] != -1)
         {
           char cChar = '\n';
@@ -201,7 +201,7 @@ void Interface::callbackPool()
         radialCallbackWorker *ptWorker = new radialCallbackWorker;
         ptWorker->bWorker = false;
         time(&(ptWorker->CTime));
-        ptWorker->callbacks.push_back(ptCallback);
+        ptWorker->callbacks.push(ptCallback);
         if (pipe(ptWorker->fdWorker) == 0)
         {
           char cChar = '\n';
@@ -267,7 +267,7 @@ void Interface::callbackPush(string strPrefix, const string strPacket, const boo
   ptCallback->strPacket = strPacket;
   ptCallback->bResponse = bResponse;
   m_mutexShare.lock();
-  m_callbacks.push_back(ptCallback);
+  m_callbacks.push(ptCallback);
   if (!m_bCallbackPool && m_fdCallbackPool[1] != -1)
   {
     char cChar = '\n';
@@ -323,7 +323,7 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
     while (!ptWorker->callbacks.empty())
     {
       ptCallback = ptWorker->callbacks.front();
-      ptWorker->callbacks.pop_front();
+      ptWorker->callbacks.pop();
       time(&(ptWorker->CTime));
       if (m_pCallback != NULL)
       {

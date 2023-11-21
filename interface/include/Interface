@@ -35,7 +35,7 @@ struct radialCallbackWorker
 {
   bool bWorker;
   int fdWorker[2];
-  list<radialCallback *> callbacks;
+  queue<radialCallback *> callbacks;
   mutex mutexWorker;
   time_t CTime;
 };
@@ -61,7 +61,7 @@ class Interface : public Base
   int m_fdCallbackPool[2];
   int m_fdResponse[2];
   list<string> m_responses;
-  list<radialCallback *> m_callbacks;
+  queue<radialCallback *> m_callbacks;
   map<string, int> m_waiting;
   map<string, size_t> m_throughput;
   mutex m_mutexShare;
