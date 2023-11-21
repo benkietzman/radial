@@ -295,6 +295,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (!strFunction.empty())
         {
           string strSubTarget;
+          ptRequest->i("Function", strFunction);
           ssData >> strSubTarget;
           if (!strSubTarget.empty())
           {
