@@ -336,7 +336,9 @@ void Base::status(Json *ptStatus)
   ssPid << nPid;
   ptStatus->i("PID", ssPid.str(), 'n');
   ptStatus->m["Memory"] = new Json;
+  ssImage << ulImage;
   ptStatus->m["Memory"]->i("Image", ssImage.str(), 'n');
+  ssResident << ulResident;
   ptStatus->m["Memory"]->i("Resident", ssResident.str(), 'n');
   m_mutexBase.lock();
   if (m_unThreads > 0)
