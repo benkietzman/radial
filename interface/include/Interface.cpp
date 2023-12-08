@@ -2665,6 +2665,44 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
   m_pAutoModeCallback = pCallback;
 }
 // }}}
+// {{{ status()
+void Interface::status(Json *ptStatus)
+{
+  float fCpu = 0, fMem = 0;
+  pid_t nPid = getpid();
+  stringstream ssImage, ssPid, ssResident;
+  time_t CTime = 0;
+  unsigned long ulImage = 0, ulResident = 0;
+
+  m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+  ssPid << nPid;
+  ptStatus->i("PID", ssPid.str(), 'n');
+  ptStatus->m["Memory"] = new Json;
+  ptStatus->m["Memory"]->i("Image", ssImage.str(), 'n');
+  ptStatus->m["Memory"]->i("Resident", ssResident.str(), 'n');
+  if (!m_strMaster.empty())
+  {
+    ptStatus->m["Master"] = new Json;
+    ptStatus->m["Master"]->i("Node", m_strMaster);
+    ptStatus->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+  }
+  m_mutexBase.lock();
+  if (m_unThreads > 0)
+  {
+    stringstream ssThreads;
+    ssThreads << m_unThreads;
+    ptStatus->i("Threads", ssThreads.str(), 'n');
+  }
+  ptStatus->m["Throughput"] = new Json;
+  for (auto &i : m_throughput)
+  {
+    stringstream ssThroughput;
+    ssThroughput << i.second;
+    ptStatus->m["Throughput"]->i(i.first, ssThroughput.str(), 'n');
+  }
+  m_mutexBase.unlock();
+}
+// }}}
 // {{{ storage
 // {{{ storage()
 bool Interface::storage(const string strFunction, const list<string> keys, Json *ptJson, string &strError)
