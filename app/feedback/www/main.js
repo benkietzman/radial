@@ -22,12 +22,12 @@ let common = new Common(
   },
   routes:
   [
-    {path: '/Home', name: 'index', component: '/feedback/component/Home.js'},
+    {path: '/Home', name: 'Home', component: '/feedback/component/Home.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
-    {path: '/results/:hash', name: 'index', component: '/feedback/component/index.js'},
+    {path: '/results/:hash', name: 'Home', component: '/feedback/component/Home.js'},
     {path: '/Status', name: 'Status', component: '/feedback/component/Status.js'},
-    {path: '/survey/:hash', name: 'index', component: '/feedback/component/index.js'},
+    {path: '/survey/:hash', name: 'Home', component: '/feedback/component/Home.js'},
     {default: '/Home'}
   ]
 });
