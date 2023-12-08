@@ -441,6 +441,7 @@ export default
     };
     // ]]]
     // [[[ main
+    c.setMenu('Home');
     s.u();
     if (a.ready())
     {
