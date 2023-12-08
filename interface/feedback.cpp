@@ -21,7 +21,10 @@ int main(int argc, char *argv[])
   string strPrefix = "feedback->main()";
   gpFeedback = new Feedback(strPrefix, argc, argv, &callback);
   gpFeedback->enableWorkers();
+  thread threadSchedule(&Feedback::schedule, gpFeedback, strPrefix);
+  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpFeedback->process(strPrefix);
+  threadSchedule.join();
   delete gpFeedback;
   return 0;
 }

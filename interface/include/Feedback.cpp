@@ -366,6 +366,38 @@ bool Feedback::resultAdd(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ schedule()
+void Feedback::schedule(string strPrefix)
+{ 
+  // {{{ prep work
+  string strError;
+  time_t CTime[2];
+
+  threadIncrement();
+  strPrefix += "->Feedback::schedule()";
+  time(&(CTime[0]));
+  // }}}
+  while (!shutdown())
+  {
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[0]) >= 60)
+    {
+      Json *ptMessage = new Json;
+      CTime[0] = CTime[1];
+      ptMessage->i("Source", m_strNode);
+      status(ptMessage);
+      ptMessage->i("Action", "status");
+      live("Feedback", "", ptMessage, strError);
+      delete ptMessage;
+    }
+    msleep(1000);
+  }
+  // {{{ post work
+  setShutdown();
+  threadDecrement();
+  // }}}
+}
+// }}}
 // {{{ setCallbackAddon()
 void Feedback::setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &))
 {

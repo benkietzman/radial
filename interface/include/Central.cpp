@@ -3112,17 +3112,28 @@ void Central::schedule(string strPrefix)
 {
   string strError;
   stringstream ssMessage, ssQuery;
-  time_t CTime[4] = {0, 0, 0, 0};
+  time_t CTime[5] = {0, 0, 0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
   strPrefix += "->Central::schedule()";
   time(&(CTime[0]));
+  CTime[4] = CTime[0];
   while (!shutdown())
   {
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[4]) >= 60)
+    {
+      Json *ptMessage = new Json;
+      CTime[4] = CTime[1];
+      ptMessage->i("Source", m_strNode);
+      status(ptMessage);
+      ptMessage->i("Action", "status");
+      live("Central", "", ptMessage, strError);
+      delete ptMessage;
+    }
     if (isMasterSettled() && isMaster())
     {
-      time(&(CTime[1]));
       if ((CTime[1] - CTime[0]) > 600)
       {
         CTime[0] = CTime[1];
@@ -3406,7 +3417,7 @@ void Central::schedule(string strPrefix)
         }
       }
     }
-    msleep(2000);
+    msleep(1000);
   }
   threadDecrement();
 }

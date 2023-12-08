@@ -45,6 +45,7 @@ class Feedback : public Interface
   Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Feedback();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void schedule(string strPrefix);
   void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}
