@@ -4292,9 +4292,30 @@ bool Central::sr(const string strKey, Json *ptData, string &strError)
 bool Central::status(radialUser &d, string &e)
 {
   bool b = true;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  d.p->m["o"] = new Json;
-  Interface::status(d.p->m["o"]);
+  if (!empty(i, "Node"))
+  {
+    if (i->m["Node"]->v != m_strNode)
+    {
+      Json *j = new Json;
+      j->i("Interface", "central");
+      j->i("Function", "status");
+      j->i("Node", i->m["Node"]->v);
+      if (hub("link", j, e) && exist(j, "Response"))
+      {
+        merge(o, j->m["Response"]);
+      }
+    }
+    else
+    {
+      Interface::status(o);
+    }
+  }
+  else
+  {
+    Interface::status(o);
+  }
 
   return b;
 }
