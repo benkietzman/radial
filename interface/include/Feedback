@@ -34,6 +34,7 @@ class Feedback : public Interface
   bool questions(radialUser &d, string &e);
   bool results(radialUser &d, string &e);
   bool resultAdd(radialUser &d, string &e);
+  bool status(radialUser &d, string &e);
   bool survey(radialUser &d, string &e);
   bool surveyEdit(radialUser &d, string &e);
   bool surveyRemove(radialUser &d, string &e);

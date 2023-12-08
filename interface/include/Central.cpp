@@ -106,6 +106,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["serverUserEdit"] = &Central::serverUserEdit;
   m_functions["serverUserRemove"] = &Central::serverUserRemove;
   m_functions["serverUsersByServerID"] = &Central::serverUsersByServerID;
+  m_functions["status"] = &Central::status;
   m_functions["user"] = &Central::user;
   m_functions["userAdd"] = &Central::userAdd;
   m_functions["userEdit"] = &Central::userEdit;
@@ -4285,6 +4286,17 @@ bool Central::sr(const string strKey, Json *ptData, string &strError)
   }
 
   return bResult;
+}
+// }}}
+// {{{ status()
+bool Central::status(radialUser &d, string &e)
+{
+  bool b = true;
+
+  d.p->m["o"] = new Json;
+  status(d.p->m["o"]);
+
+  return b;
 }
 // }}}
 // {{{ userAdd()

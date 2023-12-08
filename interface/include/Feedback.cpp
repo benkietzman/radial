@@ -26,6 +26,7 @@ Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(st
   m_functions["questions"] = &Feedback::questions;
   m_functions["results"] = &Feedback::results;
   m_functions["resultAdd"] = &Feedback::resultAdd;
+  m_functions["status"] = &Feedback::status;
   m_functions["survey"] = &Feedback::survey;
   m_functions["surveyEdit"] = &Feedback::surveyEdit;
   m_functions["surveyRemove"] = &Feedback::surveyRemove;
@@ -403,6 +404,17 @@ void Feedback::setCallbackAddon(bool (*pCallback)(const string, radialUser &, st
 {
   m_pCallbackAddon = pCallback;
 }
+// }}}
+// {{{ status()
+bool Feedback::status(radialUser &d, string &e)
+{
+  bool b = true;
+
+  d.p->m["o"] = new Json;
+  status(d.p->m["o"]);
+  
+  return b;
+} 
 // }}}
 // {{{ survey()
 bool Feedback::survey(radialUser &d, string &e)

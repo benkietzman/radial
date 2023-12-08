@@ -115,6 +115,7 @@ class Central : public Interface
   bool serverUserRemove(radialUser &d, string &e);
   bool serverUsersByServerID(radialUser &d, string &e);
   bool sr(const string strKey, Json *ptData, string &strError);
+  bool status(radialUser &d, string &e);
   bool userAdd(radialUser &d, string &e);
   bool userEdit(radialUser &d, string &e);
   bool userRemove(radialUser &d, string &e);
