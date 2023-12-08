@@ -411,7 +411,7 @@ bool Feedback::status(radialUser &d, string &e)
   bool b = true;
 
   d.p->m["o"] = new Json;
-  status(d.p->m["o"]);
+  Interface::status(d.p->m["o"]);
   
   return b;
 } 
