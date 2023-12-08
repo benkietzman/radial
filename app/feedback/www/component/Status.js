@@ -23,7 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
-      nodes: null
+      nodes: {}
     });
     // ]]]
     // [[[ init()
