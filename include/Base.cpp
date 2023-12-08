@@ -347,13 +347,6 @@ void Base::status(Json *ptStatus)
     ssThreads << m_unThreads;
     ptStatus->i("Threads", ssThreads.str(), 'n');
   }
-  ptStatus->m["Throughput"] = new Json;
-  for (auto &i : m_throughput)
-  {
-    stringstream ssThroughput;
-    ssThroughput << i.second;
-    ptStatus->m["Throughput"]->i(i.first, ssThroughput.str(), 'n');
-  }
   m_mutexBase.unlock();
 }
 // }}}

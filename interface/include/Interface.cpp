@@ -2668,12 +2668,23 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
 // {{{ status()
 void Interface::status(Json *ptStatus)
 {
+  string strError;
+  Json *ptThroughput = new Json;
+
   Base::status(ptStatus);
   if (!m_strMaster.empty())
   {
     ptStatus->m["Master"] = new Json;
     ptStatus->m["Master"]->i("Node", m_strMaster);
     ptStatus->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+  }
+  if (storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "throughput"}, ptThroughput, strError))
+  {
+    ptStatus->m["Throughput"] = ptThroughput;
+  }
+  else
+  {
+    delete ptThroughput;
   }
 }
 // }}}
