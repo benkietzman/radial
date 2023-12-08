@@ -3128,7 +3128,7 @@ void Central::schedule(string strPrefix)
       Json *ptMessage = new Json;
       CTime[4] = CTime[1];
       ptMessage->i("Source", m_strNode);
-      status(ptMessage);
+      Interface::status(ptMessage);
       ptMessage->i("Action", "status");
       live("Central", "", ptMessage, strError);
       delete ptMessage;
