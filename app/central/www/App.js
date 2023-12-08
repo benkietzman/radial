@@ -79,11 +79,12 @@ class App
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Status', href: '/Servers/Status', icon: 'stopwatch', active: null};
     unIndex++;
     this.c.menu.left[unIndex] = {value: 'Users', href: '/Users', icon: 'people', active: null};
+    unIndex = 0;
     if (this.c.isValid())
     {
-      unIndex = 0;
-      this.c.menu.right[unIndex] = {value: 'Profile', href: '/Users/?userid='+this.c.getUserID(), icon: 'person', active: null};
+      this.c.menu.right[unIndex++] = {value: 'Profile', href: '/Users/?userid='+this.c.getUserID(), icon: 'person', active: null};
     }
+    this.c.menu.right[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     this.c.resetMenu();
   }
   // }}}

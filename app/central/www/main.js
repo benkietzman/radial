@@ -45,6 +45,7 @@ let common = new Common(
     {path: '/Servers/Status', name: 'ServersStatus', component: '/central/component/ServersStatus.js'},
     {path: '/Servers/:id/:form', name: 'Servers', component: '/central/component/Servers.js'},
     {path: '/Servers/:id', name: 'Servers', component: '/central/component/Servers.js'},
+    {path: '/Status', name: 'Status', component: '/central/component/Status.js'},
     {path: '/Users', name: 'Users', component: '/central/component/Users.js'},
     {path: '/Users/:id/:form', name: 'Users', component: '/central/component/Users.js'},
     {path: '/Users/:id/', name: 'Users', component: '/central/component/Users.js'},

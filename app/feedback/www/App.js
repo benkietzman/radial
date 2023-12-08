@@ -68,7 +68,13 @@ class App
   // {{{ resetMenu()
   resetMenu()
   {
+    let unIndex;
     this.c.clearMenu();
+    this.c.menu = {left: [], right: []};
+    unIndex = 0;
+    this.c.menu.left[unIndex++] = {value: 'Home', href: '/Home', icon: 'house', active: null};
+    unIndex = 0;
+    this.c.menu.right[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     this.c.resetMenu();
   }
   // }}}
