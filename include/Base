@@ -122,6 +122,7 @@ class Base
   int m_argc;
   list<radialLink *> m_l;
   map<string, radialInterface *> m_i;
+  map<string, size_t> m_throughput;
   mutex m_mutexBase;
   size_t m_unMaxPayload;
   size_t m_unMonitor;

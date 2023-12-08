@@ -63,7 +63,6 @@ class Interface : public Base
   list<string> m_responses;
   queue<radialCallback *> m_callbacks;
   map<string, int> m_waiting;
-  map<string, size_t> m_throughput;
   mutex m_mutexShare;
   string m_strAesSecret;
   string m_strBuffers[2];
