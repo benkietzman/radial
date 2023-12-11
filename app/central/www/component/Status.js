@@ -61,6 +61,36 @@ export default
     // [[[ init()
     s.init = () =>
     {
+      s.bDeveloper = c.isGlobalAdmin();
+      if (s.bDeveloper)
+      {
+        s.u();
+      }
+      else if (c.isValid())
+      {
+        let request = {Interface: 'central', 'Function': 'application', Request: {name: 'Radial'}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            let request = {Interface: 'central', 'Function': 'isApplicationDeveloper', Request: {id: response.Response.id}};
+            c.wsRequest('radial', request).then((response) =>
+            {
+              let error = {};
+              if (c.wsResponse(response, error))
+              {
+                s.bDeveloper = true;
+                s.u();
+              }
+            });
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
       s.info.v = 'Retrieving nodes...';
       let request = {Interface: 'link', 'Function': 'status'};
       c.wsRequest('radial', request).then((response) =>
