@@ -214,7 +214,7 @@ bool Interface::action(radialUser &d, const string strApplication, string strFun
     }
     else
     {   
-      e = (string)"You are not authorized to perform this action. (" + (string)((d.g)?"":"non-") + (string)"admin)";
+      e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
   }
