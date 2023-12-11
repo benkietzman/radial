@@ -73,6 +73,156 @@ Interface::~Interface()
   }
 }
 // }}}
+// {{{ action()
+bool Interface::action(radialUser &d, const string strApplication, string strFunction, const string strInterface, const string strNode, string &e)
+{
+  bool b = false;
+  map<string, string> r;
+  stringstream ssMessage;
+  Json *p = new Json;
+
+  p->i("name", strApplication);
+  if (d.g || db("dbCentralApplications", p, r, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", r["id"]);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      if (!strInterface.empty())
+      {
+        list<string> nodes;
+        if (!strNode.empty())
+        {
+          nodes.push_back(strNode);
+        }
+        else
+        {
+          m_mutexShare.lock();
+          for (auto &link : m_l)
+          {
+            nodes.push_back(link->strNode);
+          }
+          m_mutexShare.unlock();
+          nodes.push_back(m_strNode);
+        }
+        if (!nodes.empty())
+        {
+          b = true;
+          ssMessage.str("");
+          ssMessage << ":  " << getUserName(d) << " (" << d.u << ") requested a " << strFunction << " of the " << strInterface << " interface ";
+          if (!strNode.empty())
+          {
+            ssMessage << "on the " << strNode << " node";
+          }
+          else
+          {
+            ssMessage << "across all nodes";
+          }
+          ssMessage << ".";
+          chat("#radial", ssMessage.str());
+          for (auto &node : nodes)
+          {
+            bool bResult = false;
+            if (strInterface == "status" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
+            {
+              bResult = true;
+              setShutdown();
+            }
+            else if (strFunction == "start" || interfaceRemove(node, strInterface, e) || e == "Encountered an unknown error." || e == "Interface not found.")
+            {
+              bool bStopped = false;
+              time_t CTime[2];
+              time(&(CTime[0]));
+              CTime[1] = CTime[0];
+              while (!bStopped && (CTime[1] - CTime[0]) < 40)
+              {
+                m_mutexShare.lock();
+                if (node == m_strNode)
+                {
+                  if (m_i.find(strInterface) == m_i.end())
+                  {
+                    bStopped = true;
+                  }
+                }
+                else
+                {
+                  auto linkIter = m_l.end();
+                  for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
+                  {
+                    if ((*i)->strNode == node)
+                    {
+                      linkIter = i;
+                    }
+                  }
+                  if (linkIter != m_l.end())
+                  {
+                    if ((*linkIter)->interfaces.find(strInterface) == (*linkIter)->interfaces.end())
+                    {
+                      bStopped = true;
+                    }
+                  }
+                  else
+                  {
+                    bStopped = true;
+                  }
+                }
+                m_mutexShare.unlock();
+                if (strFunction == "start")
+                {
+                  CTime[1] += 40;
+                }
+                else
+                {
+                  msleep(250);
+                  time(&(CTime[1]));
+                }
+              }
+              if (bStopped)
+              {
+                if (strFunction == "stop" || interfaceAdd(node, strInterface, e))
+                {
+                  bResult = true;
+                }
+              }
+              else if (strFunction == "start")
+              {
+                e = "Already started.";
+              }
+              else
+              {
+                e = "Failed to stop.";
+              }
+            }
+            ssMessage.str("");
+            ssMessage << node << ":  " << ((bResult)?"done":e);
+            chat("#radial", ssMessage.str());
+          }
+          ssMessage.str("");
+          ssMessage << ":  done";
+          chat("#radial", ssMessage.str());
+        }
+        else
+        {
+          e = "Interface does not exist.";
+        }
+      }
+      else
+      {
+        e = "Please provide the Interface.";
+      }
+    }
+    else
+    {   
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+  delete p;
+
+  return b;
+}
+// }}}
 // {{{ alert()
 void Interface::alert(const string strMessage)
 {

@@ -74,6 +74,7 @@ class Interface : public Base
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
+  bool action(radialUser &d, const string strApplication, const string strFunction, const string strInterface, const string strNode, string &strError);
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
