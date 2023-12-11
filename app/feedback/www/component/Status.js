@@ -156,7 +156,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Feedback', (data) =>
     { 
-      if (data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Source)
+      if (!s.bDisabled && data.detail && data.detail.Action && data.detail.Action == 'status' && data.detail.Source)
       {
         s.nodes[data.detail.Source] = data.detail;
         s.u();
