@@ -124,7 +124,7 @@ bool Interface::action(radialUser &d, const string strApplication, string strFun
           for (auto &node : nodes)
           {
             bool bResult = false;
-            if (strInterface == "status" && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
+            if (strInterface == m_strName && node == m_strNode && (strFunction == "restart" || strFunction == "stop"))
             {
               bResult = true;
               setShutdown();
