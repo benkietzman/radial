@@ -38,7 +38,7 @@ export default
         s.bDisabled = true;
         s.strAction = strInterface;
         s.u();
-        let request = {Interface: 'status', 'Function': strAction, Request: {Interface: strInterface}};
+        let request = {Interface: 'status', 'Function': 'action', Request: {Action: strAction, Interface: strInterface}};
         if (strNode != '')
         {
           request.Request.Node = strNode;

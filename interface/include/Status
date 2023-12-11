@@ -25,7 +25,8 @@ namespace radial
 class Status : public Interface
 {
   protected:
-  void status(Json *ptStatus);
+  map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
+  bool status(radialUser &d, string &e);
 
   public:
   Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));

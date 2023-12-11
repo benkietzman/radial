@@ -33,7 +33,6 @@ class Central : public Interface
 
   bool accountType(radialUser &d, string &e);
   bool accountTypes(radialUser &d, string &e);
-  bool action(radialUser &d, string &e);
   bool application(radialUser &d, string &e);
   bool applicationAccount(radialUser &d, string &e);
   bool applicationAccountAdd(radialUser &d, string &e);
@@ -116,7 +115,6 @@ class Central : public Interface
   bool serverUserRemove(radialUser &d, string &e);
   bool serverUsersByServerID(radialUser &d, string &e);
   bool sr(const string strKey, Json *ptData, string &strError);
-  bool status(radialUser &d, string &e);
   bool userAdd(radialUser &d, string &e);
   bool userEdit(radialUser &d, string &e);
   bool userRemove(radialUser &d, string &e);

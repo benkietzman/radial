@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
   string strPrefix = "central->main()";
   gpCentral = new radial::Central(strPrefix, argc, argv, &callback);
   gpCentral->enableWorkers();
+  gpCentral->setApplication("Central");
   gpCentral->setAutoMode(&autoMode);
   thread threadSchedule(&radial::Central::schedule, gpCentral, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");

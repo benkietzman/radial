@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
   string strPrefix = "status->main()";
   gpStatus = new Status(strPrefix, argc, argv, &callback);
   gpStatus->enableWorkers();
+  gpStatus->setApplication("Radial");
   gpStatus->setAutoMode(&autoMode);
   thread threadSchedule(&Status::schedule, gpStatus, strPrefix);
   pthread_setname_np(threadSchedule.native_handle(), "schedule");

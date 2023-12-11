@@ -22,6 +22,8 @@ namespace radial
 // {{{ Status()
 Status::Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "status", argc, argv, pCallback)
 {
+  m_functions["action"] = &Status::action;
+  m_functions["status"] = &Status::status;
 }
 // }}}
 // {{{ ~Status()
@@ -60,67 +62,29 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
-    if (strFunction == "restart" || strFunction == "start" || strFunction == "stop")
+    radialUser d;
+    userInit(ptJson, d);
+    if (m_functions.find(strFunction) != m_functions.end())
     {
-      map<string, string> getApplicationRow;
-      Json *ptApplication = new Json;
-      radialUser d;
-      userInit(ptJson, d);
-      ptApplication->i("name", "Radial");
-      if (d.g || db("dbCentralApplications", ptApplication, getApplicationRow, strError))
+      if ((this->*m_functions[strFunction])(d, strError))
       {
-        radialUser a;
-        userInit(d, a);
-        a.p->m["i"]->i("id", getApplicationRow["id"]);
-        if (d.g || isApplicationDeveloper(a, strError))
-        {
-          if (exist(ptJson, "Request"))
-          {
-            if (!empty(ptJson->m["Request"], "Interface"))
-            {
-              string strInterface = ptJson->m["Request"]->m["Interface"]->v, strNode;
-              if (!empty(ptJson->m["Request"], "Node"))
-              {
-                strNode = ptJson->m["Request"]->m["Node"]->v;
-              }
-              if (action(d, "Radial", strFunction, strInterface, strNode, strError))
-              {
-                bResult = true;
-              }
-            }
-            else
-            {
-              strError = "Please provide the Interface.";
-            }
-          }
-          else
-          {
-            strError = "Please provide the Request.";
-          }
-        }
-        else
-        {
-          strError = "You are not authorized to perform this action.";
-        }
-        userDeinit(a);
+        bResult = true;
       }
-      delete ptApplication;
-      userDeinit(d);
     }
-    else if (ptJson->m["Function"]->v == "status")
+    else
     {
-      bResult = true;
+      strError = "Please provide a valid Function.";
+    }
+    if (bResult)
+    {
       if (exist(ptJson, "Response"))
       {
         delete ptJson->m["Response"];
       }
-      ptJson->m["Response"] = new Json;
-      status(ptJson->m["Response"]);
+      ptJson->m["Response"] = d.p->m["o"];
+      d.p->m.erase("o");
     }
-    else
-    {
-      strError = "Please provide a valid Function:  restart, start, status, stop.";
-    }
+    userDeinit(d);
   }
   else
   {
@@ -141,26 +105,27 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
 }
 // }}}
 // {{{ status()
-void Status::status(Json *ptStatus)
+void Status::status(radialUser &d, string &e)
 {
-  string strError;
-  Json *ptNodes = new Json;
+  bool b = false;
+  Json , *o = d.p->m["o"], *ptNodes = new Json;
 
-  if (storageRetrieve({"radial", "nodes"}, ptNodes, strError))
+  if (storageRetrieve({"radial", "nodes"}, ptNodes, e))
   {
+    b = true;
     if (!ptNodes->m.empty())
     {
-      ptStatus->m["Nodes"] = new Json;
+      o->m["Nodes"] = new Json;
       for (auto &n : ptNodes->m)
       {
         if (exist(n.second, "interfaces") && !n.second->m["interfaces"]->m.empty())
         {
-          ptStatus->m["Nodes"]->m[n.first] = new Json;
+          o->m["Nodes"]->m[n.first] = new Json;
           for (auto &i : n.second->m["interfaces"]->m)
           {
             if (exist(i.second, "configuration"))
             {
-              ptStatus->m["Nodes"]->m[n.first]->m[i.first] = new Json(i.second->m["configuration"]);
+              o->m["Nodes"]->m[n.first]->m[i.first] = new Json(i.second->m["configuration"]);
               if (n.first == m_strNode && i.first == "status")
               {
                 float fCpu = 0, fMem = 0;
@@ -170,24 +135,24 @@ void Status::status(Json *ptStatus)
                 unsigned long ulImage = 0, ulResident = 0;
                 m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
                 ssPid << nPid;
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("PID", ssPid.str(), 'n');
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"] = new Json;
+                o->m["Nodes"]->m[n.first]->m[i.first]->i("PID", ssPid.str(), 'n');
+                o->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"] = new Json;
                 ssImage << ulImage;
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Image", ssImage.str(), 'n');
+                o->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Image", ssImage.str(), 'n');
                 ssResident << ulResident;
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Resident", ssResident.str(), 'n');
+                o->m["Nodes"]->m[n.first]->m[i.first]->m["Memory"]->i("Resident", ssResident.str(), 'n');
                 if (!m_strMaster.empty())
                 {
-                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"] = new Json;
-                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Node", m_strMaster);
-                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
+                  o->m["Nodes"]->m[n.first]->m[i.first]->m["Master"] = new Json;
+                  o->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Node", m_strMaster);
+                  o->m["Nodes"]->m[n.first]->m[i.first]->m["Master"]->i("Settled", ((m_bMasterSettled)?"1":"0"), ((m_bMasterSettled)?'1':'0'));
                 }
                 m_mutexBase.lock();
                 if (m_unThreads > 0)
                 {
                   stringstream ssThreads;
                   ssThreads << m_unThreads;
-                  ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Threads", ssThreads.str(), 'n');
+                  o->m["Nodes"]->m[n.first]->m[i.first]->i("Threads", ssThreads.str(), 'n');
                 }
                 m_mutexBase.unlock();
               }
@@ -227,16 +192,16 @@ void Status::status(Json *ptStatus)
                     ptStat->i("Interface", i.first);
                     ptStat->i("Node", n.first);
                   }
-                  if (((n.first == m_strNode && hub(i.first, ptStat, strError)) || (n.first != m_strNode && hub("link", ptStat, strError))) && exist(ptStat, "Response"))
+                  if (((n.first == m_strNode && hub(i.first, ptStat, e)) || (n.first != m_strNode && hub("link", ptStat, e))) && exist(ptStat, "Response"))
                   {
-                    ptStatus->m["Nodes"]->m[n.first]->m[i.first]->merge(ptStat->m["Response"], true, false);
+                    o->m["Nodes"]->m[n.first]->m[i.first]->merge(ptStat->m["Response"], true, false);
                   }
                   delete ptStat;
                 }
               }
               if (exist(i.second, "throughput"))
               {
-                ptStatus->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", i.second->m["throughput"]);
+                o->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", i.second->m["throughput"]);
               }
             }
           }
@@ -245,6 +210,8 @@ void Status::status(Json *ptStatus)
     }
   }
   delete ptNodes;
+
+  return b;
 }
 // }}}
 // {{{ schedule()

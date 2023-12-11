@@ -170,32 +170,6 @@ bool Central::accountTypes(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ action()
-bool Central::action(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "Action"))
-  {
-    string strNode;
-    if (!empty(i, "Node"))
-    {
-      strNode = i->m["Node"]->v;
-    }
-    if (Interface::action(d, "Central", i->m["Action"]->v, "central", strNode, e))
-    {
-      b = true;
-    }
-  }
-  else
-  {
-    e = "Please provide the Action.";
-  }
-
-  return b;
-}
-// }}}
 // {{{ application()
 bool Central::application(radialUser &d, string &e)
 {
@@ -2645,7 +2619,8 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
       {
         delete ptJson->m["Response"];
       }
-      ptJson->m["Response"] = new Json(d.p->m["o"]);
+      ptJson->m["Response"] = d.p->m["o"];
+      d.p->m.erase("o");
     }
     userDeinit(d);
   }
@@ -4313,38 +4288,6 @@ bool Central::sr(const string strKey, Json *ptData, string &strError)
   }
 
   return bResult;
-}
-// }}}
-// {{{ status()
-bool Central::status(radialUser &d, string &e)
-{
-  bool b = true;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (!empty(i, "Node"))
-  {
-    if (i->m["Node"]->v != m_strNode)
-    {
-      Json *j = new Json;
-      j->i("Interface", "central");
-      j->i("Function", "status");
-      j->i("Node", i->m["Node"]->v);
-      if (hub("link", j, e) && exist(j, "Response"))
-      {
-        merge(o, j->m["Response"]);
-      }
-    }
-    else
-    {
-      Interface::status(o);
-    }
-  }
-  else
-  {
-    Interface::status(o);
-  }
-
-  return b;
 }
 // }}}
 // {{{ userAdd()

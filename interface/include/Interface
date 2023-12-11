@@ -65,6 +65,7 @@ class Interface : public Base
   map<string, int> m_waiting;
   mutex m_mutexShare;
   string m_strAesSecret;
+  string m_strApplication;
   string m_strBuffers[2];
   string m_strJwtSecret;
   string m_strJwtSigner;
@@ -74,7 +75,7 @@ class Interface : public Base
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 
-  bool action(radialUser &d, const string strApplication, const string strFunction, const string strInterface, const string strNode, string &strError);
+  bool action(radialUser &d, string &e);
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
@@ -147,6 +148,7 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
+  bool status(radialUser &d, string &e);
   void status(Json *ptStatus);
   bool storage(const string strFunction, list<string> keys, Json *ptJson, string &strError);
   bool storageAdd(const list<string> keys, Json *ptJson, string &strError);
@@ -173,6 +175,7 @@ class Interface : public Base
   bool hub(const string strTarget, Json *ptJson, string &strError);
   bool hub(Json *ptJson, string &strError);
   void process(string strPrefix);
+  void setApplication(const string strApplication);
   void setAutoMode(void (*pCallback)(string, const string, const string));
 };
 // }}}

@@ -30,12 +30,10 @@ class Feedback : public Interface
   string m_strEmail;
   string m_strServer;
 
-  bool action(radialUser &d, string &e);
   bool answers(radialUser &d, string &e);
   bool questions(radialUser &d, string &e);
   bool results(radialUser &d, string &e);
   bool resultAdd(radialUser &d, string &e);
-  bool status(radialUser &d, string &e);
   bool survey(radialUser &d, string &e);
   bool surveyEdit(radialUser &d, string &e);
   bool surveyRemove(radialUser &d, string &e);
