@@ -33,6 +33,7 @@ class Central : public Interface
 
   bool accountType(radialUser &d, string &e);
   bool accountTypes(radialUser &d, string &e);
+  bool action(radialUser &d, string &e);
   bool application(radialUser &d, string &e);
   bool applicationAccount(radialUser &d, string &e);
   bool applicationAccountAdd(radialUser &d, string &e);

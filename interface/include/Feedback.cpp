@@ -22,6 +22,7 @@ namespace radial
 // {{{ Feedback()
 Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "feedback", argc, argv, pCallback)
 {
+  m_functions["ation"] = &Feedback::action;
   m_functions["answers"] = &Feedback::answers;
   m_functions["questions"] = &Feedback::questions;
   m_functions["results"] = &Feedback::results;
@@ -38,6 +39,32 @@ Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(st
 // {{{ ~Feedback()
 Feedback::~Feedback()
 {
+}
+// }}}
+// {{{ action()
+bool Feedback::action(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "Action"))
+  {
+    string strNode;
+    if (!empty(i, "Node"))
+    {
+      strNode = i->m["Node"]->v;
+    }
+    if (Interface::action(d, "Feedback", i->m["Action"]->v, "feedback", strNode, e))
+    {
+      b = true;
+    }
+  }
+  else
+  {
+    e = "Please provide the Action.";
+  }
+
+  return b;
 }
 // }}}
 // {{{ answers()

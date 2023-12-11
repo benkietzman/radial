@@ -32,6 +32,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   }
   m_functions["accountType"] = &Central::accountType;
   m_functions["accountTypes"] = &Central::accountTypes;
+  m_functions["action"] = &Central::action;
   m_functions["application"] = &Central::application;
   m_functions["applicationAccount"] = &Central::applicationAccount;
   m_functions["applicationAccountAdd"] = &Central::applicationAccountAdd;
@@ -164,6 +165,32 @@ bool Central::accountTypes(radialUser &d, string &e)
     {
       o->pb(r);
     }
+  }
+
+  return b;
+}
+// }}}
+// {{{ action()
+bool Central::action(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "Action"))
+  {
+    string strNode;
+    if (!empty(i, "Node"))
+    {
+      strNode = i->m["Node"]->v;
+    }
+    if (Interface::action(d, "Central", i->m["Action"]->v, "central", strNode, e))
+    {
+      b = true;
+    }
+  }
+  else
+  {
+    e = "Please provide the Action.";
   }
 
   return b;
