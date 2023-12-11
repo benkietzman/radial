@@ -105,10 +105,10 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
 }
 // }}}
 // {{{ status()
-void Status::status(radialUser &d, string &e)
+bool Status::status(Json *o, string &e)
 {
   bool b = false;
-  Json , *o = d.p->m["o"], *ptNodes = new Json;
+  Json *ptNodes = new Json;
 
   if (storageRetrieve({"radial", "nodes"}, ptNodes, e))
   {
@@ -213,6 +213,10 @@ void Status::status(radialUser &d, string &e)
 
   return b;
 }
+bool Status::status(radialUser &d, string &e)
+{
+  return status(d.p->m["o"], e);
+}
 // }}}
 // {{{ schedule()
 void Status::schedule(string strPrefix)
@@ -284,7 +288,7 @@ void Status::schedule(string strPrefix)
       if (isMasterSettled() && isMaster())
       {
         Json *ptMessage = new Json;
-        status(ptMessage);
+        status(ptMessage, strError);
         ptMessage->i("Action", "status");
         live("Radial", "", ptMessage, strError);
         delete ptMessage;
