@@ -22,7 +22,7 @@ namespace radial
 // {{{ Feedback()
 Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "feedback", argc, argv, pCallback)
 {
-  m_functions["ation"] = &Feedback::action;
+  m_functions["action"] = &Feedback::action;
   m_functions["answers"] = &Feedback::answers;
   m_functions["questions"] = &Feedback::questions;
   m_functions["results"] = &Feedback::results;
