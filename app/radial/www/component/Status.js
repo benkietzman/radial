@@ -88,7 +88,7 @@ export default
               let error = {};
               if (c.wsResponse(response, error))
               {
-                s.application.bDeveloper = true;
+                s.bDeveloper = true;
                 s.u();
               }
             });
