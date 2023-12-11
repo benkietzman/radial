@@ -25,9 +25,9 @@ export default
       c: c,
       bDeveloper: false,
       bDisabled: false,
-      strAction: null,
       interfaces: null,
-      nodes: null
+      nodes: null,
+      strAction: null
     });
     // ]]]
     // [[[ action()
