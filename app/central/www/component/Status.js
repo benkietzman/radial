@@ -40,7 +40,6 @@ export default
         {
           let error = {};
           s.bDisabled = false;
-          s.strAction = null;
           if (c.wsResponse(response, error))
           {
             s.init();
