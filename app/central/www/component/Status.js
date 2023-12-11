@@ -23,8 +23,40 @@ export default
       // ]]]
       a: a,
       c: c,
+      bDeveloper: false,
+      bDisabled: false,
       nodes: {}
     });
+    // ]]]
+    // [[[ action()
+    s.action = (strAction, strNode) =>
+    {
+      if (s.bDeveloper)
+      {
+        s.bDisabled = true;
+        s.u();
+        let request = {Interface: 'central', 'Function': 'action', Request: {Action: strAction, Node: strNode}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.bDisabled = false;
+          s.strAction = null;
+          if (c.wsResponse(response, error))
+          {
+            s.init();
+          }
+          else
+          {
+            s.message.v = error.message;
+            s.u();
+          }
+        });
+      }
+      else
+      {
+        s.message.v = 'You are not authorized to perform this action.';
+      }
+    };
     // ]]]
     // [[[ init()
     s.init = () =>
@@ -112,6 +144,17 @@ export default
   <div class="col-auto">
   <div class="card" style="margin-top: 10px;">
     <div class="card-header bg-info text-white">
+      {{#if @root.bDeveloper}}
+      {{#if PID}}
+      <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/if}}
+      {{#if PID}}
+      <button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@key}}')" style="margin-left: 10px;" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/if}}
+      {{^if PID}}
+      <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>
+      {{/if}}
+      {{/if}}
       {{#ifCond Master.Node "==" @key}}<b>{{@key}}</b>{{else}}{{@key}}{{/ifCond}}
     </div>
     <div class="card-body">
