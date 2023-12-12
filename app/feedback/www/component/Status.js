@@ -67,7 +67,7 @@ export default
       }
       else if (c.isValid())
       {
-        let request = {Interface: 'central', 'Function': 'application', Request: {name: 'Radial'}};
+        let request = {Interface: 'central', 'Function': 'application', Request: {name: c.application}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
