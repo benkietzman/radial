@@ -1889,38 +1889,33 @@ void Db::schedule(string strPrefix)
 {
   string strError;
   stringstream ssMessage;
-  time_t CTime[4] = {0, 0, 0, 0};
+  time_t CTime[3] = {0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
   strPrefix += "->Db::schedule()";
   time(&(CTime[0]));
-  CTime[1] = CTime[0];
   while (!shutdown())
   {
-    if (isMasterSettled() && isMaster())
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[0]) > 600)
     {
-      time(&(CTime[2]));
-      if ((CTime[2] - CTime[0]) > 30)
+      CTime[0] = CTime[1];
+      m_mutex.lock();
+      for (auto &i : m_cache)
       {
-        CTime[0] = CTime[2];
-        m_mutex.lock();
-        for (auto &i : m_cache)
-        {
-          delete i.second;
-        }
-        m_cache.clear();
-        m_mutex.unlock();
+        delete i.second;
       }
-      if ((CTime[2] - CTime[1]) > 600)
+      m_cache.clear();
+      m_mutex.unlock();
+      if (isMasterSettled() && isMaster())
       {
-        CTime[1] = CTime[2];
         ptJson = new Json;
         if (storageRetrieve({"db", "_time"}, ptJson, strError))
         {
           stringstream ssTime(ptJson->v);
-          ssTime >> CTime[3];
-          if ((CTime[1] - CTime[3]) > 14400)
+          ssTime >> CTime[2];
+          if ((CTime[1] - CTime[2]) > 14400)
           {
             storageRemove({"db"}, strError);
           }
