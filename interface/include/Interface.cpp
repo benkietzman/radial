@@ -36,6 +36,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_bMaster = false;
   m_bMasterSettled = false;
   m_bResponse = false;
+  time(&m_CDbCache);
   m_fdCallbackPool[0] = -1;
   m_fdCallbackPool[1] = -1;
   m_fdResponse[0] = -1;
@@ -1252,26 +1253,54 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
 
   if (!f.empty())
   {
-    string strJson;
-    Json *j = new Json;
-    j->i("Function", f);
-    j->m["Request"] = new Json(i);
-    j->m["Response"] = new Json(o);
-    if (hub("db", j, e))
+    bool c = false;
+    if (find(m_dbCacheFunctions.begin(), m_dbCacheFunctions.end(), f) != m_dbCacheFunctions.end())
     {
-      b = true;
-      if (!empty(j, "ID"))
+      time_t CTime;
+      c = true;
+      time(&CTime);
+      m_mutexShare.lock();
+      if ((CTime - CDbCache) > 300)
       {
-        id = j->m["ID"]->v;
+        CDbCache = CTime;
+        m_dbCache.clear();
       }
-      if (!empty(j, "Query"))
+      if (m_dbCache.find(f) != m_dbCache.end())
       {
-        q = j->m["Query"]->v;
+        b = true;
+        o->parse(m_dbCache[f]);
+      }
+      m_mutexShare.unlock();
+    }
+    if (!b)
+    {
+      string strJson;
+      Json *j = new Json;
+      j->i("Function", f);
+      j->m["Request"] = new Json(i);
+      j->m["Response"] = new Json(o);
+      if (hub("db", j, e))
+      {
+        b = true;
+        if (!empty(j, "ID"))
+        {
+          id = j->m["ID"]->v;
+        }
+        if (!empty(j, "Query"))
+        {
+          q = j->m["Query"]->v;
+        }
+      }
+      i->parse(j->m["Request"]->j(strJson));
+      o->parse(j->m["Response"]->j(strJson));
+      delete j;
+      if (c)
+      {
+        m_mutexShare.lock();
+        m_dbCache[f] = strJson;
+        m_mutexShare.unlock();
       }
     }
-    i->parse(j->m["Request"]->j(strJson));
-    o->parse(j->m["Response"]->j(strJson));
-    delete j;
   }
   else
   {
