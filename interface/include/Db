@@ -26,8 +26,12 @@ class Db : public Interface
 {
   protected:
   bool (*m_pCallbackAddon)(const string, Json *, Json *, string &, string &, string &, bool &);
+  map<string, string> m_cache;
   map<string, bool (Db::*)(Json *, Json *, string &, string &, string &)> m_functions;
+  mutex m_mutex;
 
+  bool cacheAdd(const list<string> k, Json *s, string &e);
+  bool cacheRetrieve(const list<string> k, Json *s, string &e);
   bool dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationAccountAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationAccountRemove(Json *i, Json *o, string &id, string &q, string &e);

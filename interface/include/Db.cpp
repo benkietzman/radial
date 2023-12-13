@@ -99,6 +99,56 @@ void Db::autoMode(string strPrefix, const string strOldMaster, const string strN
   threadDecrement();
 }
 // }}}
+// {{{ cache
+// {{{ cacheAdd()
+bool DB::cacheAdd(const list<string> k, Json *s, string &e)
+{
+  bool b = false;
+  string strJson, strKey;
+
+  for (auto &i : k)
+  {
+    strKey += (string)"_" + i;
+  }
+  s->j(strJson);
+  m_mutex.lock();
+  m_cache[strKey] = strJson;
+  m_mutex.unlock();
+  storageAdd(k, s, e);
+
+  return b;
+}
+// }}}
+// {{{ cacheRetrieve()
+bool DB::cacheRetrieve(const list<string> k, Json *s, string &e)
+{
+  bool b = false;
+  string strJson, strKey;
+
+  for (auto &i : k)
+  {
+    strKey += (string)"_" + i;
+  }
+  m_mutex.lock();
+  if (m_cache.find(strKey) != m_cache.end())
+  {
+    strJson = m_cache[strKey];
+  }
+  m_mutex.unlock();
+  if (!strJson.empty())
+  {
+    b = true;
+    s->parse(strJson);
+  }
+  else if (storageRetrieve(k, s, e))
+  {
+    b = true;
+  }
+
+  return b;
+}
+// }}}
+// }}}
 // {{{ callback()
 void Db::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
@@ -1672,7 +1722,7 @@ list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q,
   list<map<string, string> > *g = NULL;
 
   q = qs.str();
-  if (storageRetrieve(k, s, e))
+  if (cacheRetrieve(k, s, e))
   {
     g = new list<map<string, string> >;
     for (auto &i : s->l)
@@ -1688,7 +1738,7 @@ list<map<string, string> > *Db::dbq(const string d, stringstream &qs, string &q,
     {
       s->pb(r);
     }
-    storageAdd(k, s, e);
+    cacheAdd(k, s, e);
   }
   delete s;
 
@@ -1839,26 +1889,38 @@ void Db::schedule(string strPrefix)
 {
   string strError;
   stringstream ssMessage;
-  time_t CTime[3] = {0, 0, 0};
+  time_t CTime[4] = {0, 0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
   strPrefix += "->Db::schedule()";
   time(&(CTime[0]));
+  CTime[1] = CTime[0];
   while (!shutdown())
   {
     if (isMasterSettled() && isMaster())
     {
-      time(&(CTime[1]));
-      if ((CTime[1] - CTime[0]) > 600)
+      time(&(CTime[2]));
+      if ((CTime[2] - CTime[0]) > 30)
       {
-        CTime[0] = CTime[1];
+        CTime[0] = CTime[2];
+        m_mutex.lock();
+        for (auto &i : m_cache)
+        {
+          delete i.second;
+        }
+        m_cache.clear();
+        m_mutex.unlock();
+      }
+      if ((CTime[2] - CTime[1]) > 600)
+      {
+        CTime[1] = CTime[2];
         ptJson = new Json;
         if (storageRetrieve({"db", "_time"}, ptJson, strError))
         {
           stringstream ssTime(ptJson->v);
-          ssTime >> CTime[2];
-          if ((CTime[0] - CTime[2]) > 14400)
+          ssTime >> CTime[3];
+          if ((CTime[1] - CTime[3]) > 14400)
           {
             storageRemove({"db"}, strError);
           }
@@ -1866,7 +1928,7 @@ void Db::schedule(string strPrefix)
         else if (strError == "Failed to find key.")
         {
           stringstream ssTime;
-          ssTime << CTime[0];
+          ssTime << CTime[1];
           ptJson->i("_time", ssTime.str(), 'n');
           storageAdd({"db"}, ptJson, strError);
         }
