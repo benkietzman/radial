@@ -1260,9 +1260,9 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
       c = true;
       time(&CTime);
       m_mutexShare.lock();
-      if ((CTime - CDbCache) > 300)
+      if ((CTime - m_CDbCache) > 300)
       {
-        CDbCache = CTime;
+        m_CDbCache = CTime;
         m_dbCache.clear();
       }
       if (m_dbCache.find(f) != m_dbCache.end())
