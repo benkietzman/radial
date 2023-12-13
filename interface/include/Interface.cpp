@@ -612,7 +612,7 @@ bool Interface::command(const string strCommand, list<string> arguments, Json *p
   ptJson->i("Format", "json");
   if (ptInput != NULL)
   {
-    ptJson->i("Input", ptInput);
+    ptJson->i("Input", new Json(ptInput));
   }
   if (CTimeout > 0)
   {
@@ -1041,11 +1041,11 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
   ptJson->i("Service", "curl");
   in.push_back(ptJson);
   ptJson = new Json;
-  ptJson->insert("URL", strURL);
-  ptJson->insert("Display", "Content,Cookies,Header");
+  ptJson->i("URL", strURL);
+  ptJson->i("Display", "Content,Cookies,Header");
   if (!strCookies.empty())
   {
-    ptJson->insert("Cookies", strCookies);
+    ptJson->i("Cookies", strCookies);
     strCookies.clear();
   }
   if (ptAuth != NULL)
@@ -1054,12 +1054,12 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
   }
   if (!strContent.empty())
   {
-    ptJson->insert("Content", strContent);
+    ptJson->i("Content", strContent);
   }
-  ptJson->insert("FailOnError", ((bFailOnError)?"yes":"no"));
+  ptJson->i("FailOnError", ((bFailOnError)?"yes":"no"));
   if (!strCustomRequest.empty())
   {
-    ptJson->insert("CustomRequest", strCustomRequest);
+    ptJson->i("CustomRequest", strCustomRequest);
   }
   if (ptGet != NULL)
   {
@@ -1067,13 +1067,13 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
   }
   if (!strHeader.empty())
   {
-    ptJson->insert("Header", strHeader);
+    ptJson->i("Header", strHeader);
   }
   if (!strUserAgent.empty())
   {
-    ptJson->insert("UserAgent", strUserAgent);
+    ptJson->i("UserAgent", strUserAgent);
   }
-  ptJson->insert("Mobile", ((bMobile)?"yes":"no"));
+  ptJson->i("Mobile", ((bMobile)?"yes":"no"));
   if (ptPost != NULL)
   {
     ptJson->m["Post"] = new Json(ptPost);
@@ -1084,11 +1084,11 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
   }
   if (!strProxy.empty())
   {
-    ptJson->insert("Proxy", strProxy);
+    ptJson->i("Proxy", strProxy);
   }
   if (!strType.empty())
   {
-    ptJson->insert("Type", strType);
+    ptJson->i("Type", strType);
   }
   in.push_back(ptJson);
   if (junction(in, out, strError))
@@ -3066,7 +3066,7 @@ void Interface::userInit(Json *ptJson, radialUser &d)
   userInit(d);
   if (exist(ptJson, "Request"))
   {
-    d.p->insert("i", ptJson->m["Request"]);
+    d.p->i("i", ptJson->m["Request"]);
   }
   if (!empty(ptJson, "Jwt"))
   {
