@@ -61,9 +61,7 @@ class Interface : public Base
   int m_fdCallbackPool[2];
   int m_fdResponse[2];
   list<string> m_responses;
-  list<string> m_dbCacheFunctions;
   map<string, int> m_waiting;
-  map<string, string> m_dbCache;
   queue<radialCallback *> m_callbacks;
   mutex m_mutexShare;
   string m_strAesSecret;
@@ -74,7 +72,6 @@ class Interface : public Base
   string m_strMaster;
   string m_strName;
   thread *m_pThreadCallbackPool;
-  time_t m_CDbCache;
   void (*m_pAutoModeCallback)(string, const string, const string);
   void (*m_pCallback)(string, const string, const bool);
 

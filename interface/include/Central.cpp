@@ -24,7 +24,6 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   string strError;
 
-  m_dbCacheFunctions = {"dbCentralAccountTypes", "dbCentralContactTypes", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralRepos"};
   m_pCallbackAddon = NULL;
   m_ptCred = new Json;
   if (m_pWarden != NULL)
