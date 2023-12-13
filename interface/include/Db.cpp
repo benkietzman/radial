@@ -1898,7 +1898,7 @@ void Db::schedule(string strPrefix)
   while (!shutdown())
   {
     time(&(CTime[1]));
-    if ((CTime[1] - CTime[0]) > 600)
+    if ((CTime[1] - CTime[0]) > 1800)
     {
       CTime[0] = CTime[1];
       m_mutex.lock();
