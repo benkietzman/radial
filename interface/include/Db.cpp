@@ -101,7 +101,7 @@ void Db::autoMode(string strPrefix, const string strOldMaster, const string strN
 // }}}
 // {{{ cache
 // {{{ cacheAdd()
-bool DB::cacheAdd(const list<string> k, Json *s, string &e)
+bool Db::cacheAdd(const list<string> k, Json *s, string &e)
 {
   bool b = false;
   string strJson, strKey;
@@ -120,7 +120,7 @@ bool DB::cacheAdd(const list<string> k, Json *s, string &e)
 }
 // }}}
 // {{{ cacheRetrieve()
-bool DB::cacheRetrieve(const list<string> k, Json *s, string &e)
+bool Db::cacheRetrieve(const list<string> k, Json *s, string &e)
 {
   bool b = false;
   string strJson, strKey;
@@ -1902,10 +1902,6 @@ void Db::schedule(string strPrefix)
     {
       CTime[0] = CTime[1];
       m_mutex.lock();
-      for (auto &i : m_cache)
-      {
-        delete i.second;
-      }
       m_cache.clear();
       m_mutex.unlock();
       if (isMasterSettled() && isMaster())
