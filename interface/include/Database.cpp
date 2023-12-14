@@ -76,6 +76,10 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
         bResult = true;
         ssRows << ullRows;
         ptJson->i("Rows", ssRows.str(), 'n');
+        if (exist(ptJson, "Response"))
+        {
+          delete ptJson->m["Response"];
+        }
         ptJson->m["Response"] = new Json;
         for (auto &row : *rows)
         {
