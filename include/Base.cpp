@@ -163,8 +163,8 @@ Base::~Base()
 // {{{ compress()
 void Base::compress(const string strUncompress, string &strCompress)
 {
-  size_t unSize = compressBound(strUncompress.c_str());
-  stringstreams ssCompress;
+  size_t unSize = compressBound(strUncompress.size());
+  stringstream ssCompress;
   Bytef *pszBuffer;
 
   pszBuffer = new Bytef[unSize];
