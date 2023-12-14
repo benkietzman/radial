@@ -397,9 +397,9 @@ void Base::uncompress(const string strCompress, string &strUncompress)
     stringstream ssSize(strCompress.substr(0, unPosition));
     Bytef *pszBuffer;
     ssSize >> unSize;
-    pszBuffer = new char[unSize];
+    pszBuffer = new Bytef[unSize];
     ::uncompress(pszBuffer, &unSize, (Bytef *)strCompress.substr((unPosition + 1), (strCompress.size() - (unPosition + 1))).c_str(), strCompress.substr((unPosition + 1), (strCompress.size() - (unPosition + 1))).size());
-    strUncompress.assign((char *)pszBuffer, unCompress);
+    strUncompress.assign((char *)pszBuffer, unSize);
     delete[] pszBuffer;
   }
 }
