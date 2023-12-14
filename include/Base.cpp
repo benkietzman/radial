@@ -160,6 +160,21 @@ Base::~Base()
   }
 }
 // }}}
+// {{{ compress()
+void Base::compress(const string strUncompress, string &strCompress)
+{
+  size_t unSize = compressBound(strUncompress.c_str());
+  stringstreams ssCompress;
+  Bytef *pszBuffer;
+
+  pszBuffer = new Bytef[unSize];
+  ::compress(pszBuffer, &unSize, (Bytef *)strUncompress.c_str(), strUncompress.size());
+  ssCompress << strUncompress.size() << "|";
+  strCompress = ssCompress.str();
+  strCompress.append((char *)pszBuffer, unSize);
+  delete[] pszBuffer;
+}
+// }}}
 // {{{ dep()
 bool Base::dep(const list<string> fs, Json *i, string &e)
 {
@@ -370,6 +385,24 @@ void Base::threadIncrement()
   m_mutexBase.unlock();
 }
 // }}}
+// }}}
+// {{{ uncompress()
+void Base::uncompress(const string strCompress, string &strUncompress)
+{
+  size_t unPosition;
+
+  if ((unPosition = strCompress.find("|")) != string::npos)
+  {
+    size_t unSize;
+    stringstream ssSize(strCompress.substr(0, unPosition));
+    Bytef *pszBuffer;
+    ssSize >> unSize;
+    pszBuffer = new char[unSize];
+    ::uncompress(pszBuffer, &unSize, (Bytef *)strCompress.substr((unPosition + 1), (strCompress.size() - (unPosition + 1))).c_str(), strCompress.substr((unPosition + 1), (strCompress.size() - (unPosition + 1))).size());
+    strUncompress.assign((char *)pszBuffer, unCompress);
+    delete[] pszBuffer;
+  }
+}
 // }}}
 // {{{ unpack()
 void Base::unpack(const string d, radialPacket &p)

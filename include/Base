@@ -142,12 +142,14 @@ class Base
   Utility *m_pUtility;
   Warden *m_pWarden;
 
+  void compress(const string strUncompress, string &strCompress);
   size_t monitor(const pid_t nPid, string &strMessage);
   size_t monitor(const pid_t nPid, time_t CMonitor[2], size_t &unMonitor, unsigned long ulMaxResident, string &strMessage);
   string pack(radialPacket &p, string &d);
   void status(Json *ptStatus);
   void threadDecrement();
   void threadIncrement();
+  void uncompress(const string strCompress, string &strUncompress);
   void unpack(const string d, radialPacket &p);
 
   public:
