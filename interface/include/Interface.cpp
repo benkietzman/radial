@@ -1269,8 +1269,14 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
         q = j->m["Query"]->v;
       }
     }
-    i->parse(j->m["Request"]->j(strJson));
-    o->parse(j->m["Response"]->j(strJson));
+    if (exist(j, "Request"))
+    {
+      i->parse(j->m["Request"]->j(strJson));
+    }
+    if (exist(j, "Response"))
+    {
+      o->parse(j->m["Response"]->j(strJson));
+    }
     delete j;
   }
   else
