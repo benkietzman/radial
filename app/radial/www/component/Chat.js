@@ -25,6 +25,28 @@ export default
       c: c
     });
     // ]]]=
+    // [[[ load()
+    s.load = () =>
+    {
+      s.info.v = 'Retrieving channels...';
+      let request = {Interface: 'irc', 'Function': 'channels'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        s.info.v = null;
+        if (c.wsResponse(response, error))
+        {
+          s.channels = response.Response;
+          s.u();
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+      s.u();
+    };
+    // ]]]
     // [[[ send()
     s.send = () =>
     {
@@ -64,14 +86,17 @@ export default
     // [[[ main
     c.setMenu('Chat');
     s.u();
-    if (!a.ready())
+    if (a.ready())
+    {
+      s.load();
+    }
+    else
     {
       s.info.v = 'Authenticating session...';
     }
     c.attachEvent('appReady', (data) =>
     {
-      s.info.v = null;
-      s.u();
+      s.load();
     });
     // ]]]
   },
@@ -84,6 +109,17 @@ export default
       <p>
         Use the provided form to send a chat message to a given channel/user on IRC.  The message will be processed by the irc interface within Radial.
       </p>
+      <p>
+        You can send your chat to any channel regardless of whether the radial chatbot resides in that channel.  You can send your chat to any user, but if that user is not online at the time, the chat message will be undelivered.
+      </p>
+      <p>
+        Here is a list of channels in which the radial chatbot currently resides:
+      </p>
+      <ul class="list-group">
+        {{#each channels}}
+        <li class="list-group_item">{{.}}</li>
+        {{/each}}
+      </ul>
     </div>
     <div class="col-md-6">
       {{#isValid}}
