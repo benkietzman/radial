@@ -25,6 +25,12 @@ export default
       c: c
     });
     // ]]]=
+    // [[[ channel()
+    s.channel = (strChannel) =>
+    {
+      s.target.v = strChannel;
+    };
+    // ]]]
     // [[[ load()
     s.load = () =>
     {
@@ -117,7 +123,7 @@ export default
       </p>
       <ul class="list-group">
         {{#each channels}}
-        <li class="list-group-item">{{.}}</li>
+        <button class="list-group-item btn btn-link" c-click="channel('{{.}}')" style="text-align: left;">{{.}}</button>
         {{/each}}
       </ul>
     </div>
