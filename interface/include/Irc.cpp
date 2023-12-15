@@ -2087,7 +2087,19 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
-    if (ptJson->m["Function"]->v == "chat")
+    if (ptJson->m["Function"]->v == "channels")
+    {
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json;
+      for (auto i = m_channels.begin(); i != m_channels.end(); i++)
+      {
+        ptJson->m["Response"]->pb(*i);
+      }
+    }
+    else if (ptJson->m["Function"]->v == "chat")
     {
       if (!empty(ptJson, "Message"))
       {
@@ -2146,7 +2158,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
     }
     else
     {
-      strError = "Please provide a valid Function:  chat.";
+      strError = "Please provide a valid Function:  channels, chat.";
     }
   }
   else
