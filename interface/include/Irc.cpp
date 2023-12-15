@@ -2089,8 +2089,46 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   {
     if (ptJson->m["Function"]->v == "channels")
     {
-      bResult = true;
-      ptJson->i("Response", m_channels);
+      size_t unCount = 0;
+      while (unCount++ < 40 && !isMasterSettled())
+      {
+        msleep(250);
+      }
+      if (isMasterSettled())
+      {
+        if (isMaster())
+        {
+          unCount = 0;
+          while (unCount++ < 40 && !enabled())
+          {
+            msleep(250);
+          }
+          if (enabled())
+          {
+            bResult = true;
+            ptJson->i("Response", m_channels);
+          }
+          else
+          {
+            strError = "IRC disabled.";
+          }
+        }
+        else
+        {
+          Json *ptLink = new Json(ptJson);
+          ptLink->i("Interface", "irc");
+          ptLink->i("Node", master());
+          if (hub("link", ptLink, strError))
+          {
+            bResult = true;
+          }
+          delete ptLink;
+        }
+      }
+      else
+      {
+        strError = "Master not known.";
+      }
     }
     else if (ptJson->m["Function"]->v == "chat")
     {
