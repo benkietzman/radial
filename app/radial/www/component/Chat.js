@@ -117,7 +117,7 @@ export default
       </p>
       <ul class="list-group">
         {{#each channels}}
-        <li class="list-group_item">{{.}}</li>
+        <li class="list-group-item">{{.}}</li>
         {{/each}}
       </ul>
     </div>
