@@ -85,12 +85,12 @@ export default
         Use the provided form to send an alert message to a given user.  The message will be processed by the alert interface within Radial.
       </p>
       <p>
-        That interface will attempt to send to the following devices:
+        That interface will attempt to send to the following devices as enabled within the user profile on Central:
       </p>
       <ul>
         <li><b>chat</b>:  Sends a private chat message to the user on IRC.</li>
         <li><b>email</b>:  Sends an email to the email address defined within Central.</li>
-        <li><b>live</b>:  Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.
+        <li><b>live</b>:  Displays a notification box and/or an audio alert to the user on any website utilizing the Common framework for which the user is logged into that website.
         <li><b>text</b>:  Sends an email to the pager address defined within Central.</li>
       </ul>
     </div>
