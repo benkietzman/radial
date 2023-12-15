@@ -2121,6 +2121,10 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
           if (hub("link", ptLink, strError))
           {
             bResult = true;
+            if (exist(ptLink, "Response"))
+            {
+              ptJson->i("Response", ptLink->m["Response"]);
+            }
           }
           delete ptLink;
         }
