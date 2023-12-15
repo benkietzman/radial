@@ -2090,15 +2090,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
     if (ptJson->m["Function"]->v == "channels")
     {
       bResult = true;
-      if (exist(ptJson, "Response"))
-      {
-        delete ptJson->m["Response"];
-      }
-      ptJson->m["Response"] = new Json;
-      for (auto i = m_channels.begin(); i != m_channels.end(); i++)
-      {
-        ptJson->m["Response"]->pb(*i);
-      }
+      ptJson->i("Response", m_channels);
     }
     else if (ptJson->m["Function"]->v == "chat")
     {
