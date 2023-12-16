@@ -63,7 +63,7 @@ export default
           s.message.v = null;
           s.success.v = null;
           s.info.v = 'Sending chat...';
-          let request = {Interface: 'irc', 'Function': 'chat', Target: s.target.v, Message: '[' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')] ' + s.mess.v};
+          let request = {Interface: 'irc', 'Function': 'chat', Target: s.target.v, Message: '<ETX>08,03 ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ') <ETX> ' + s.mess.v};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
