@@ -2149,6 +2149,14 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
           {
             if (isMaster())
             {
+              size_t unPosition;
+              string strMessage = ptJson->m["Message"]->v;
+              stringstream ssEtx;
+              ssEtx << char(3);
+              while ((unPosition = strMessage.find("<ETX>")) != string::npos)
+              {
+                strMessage.replace(unPosiion, 5, ssEtx.str());
+              }
               unCount = 0;
               while (unCount++ < 40 && !enabled())
               {
@@ -2157,7 +2165,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
               if (enabled())
               {
                 bResult = true;
-                chat(ptJson->m["Target"]->v, ptJson->m["Message"]->v);
+                chat(ptJson->m["Target"]->v, strMessage);
               }
               else
               {
