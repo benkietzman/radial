@@ -2155,7 +2155,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
               ssEtx << char(3);
               while ((unPosition = strMessage.find("<ETX>")) != string::npos)
               {
-                strMessage.replace(unPosiion, 5, ssEtx.str());
+                strMessage.replace(unPosition, 5, ssEtx.str());
               }
               unCount = 0;
               while (unCount++ < 40 && !enabled())
