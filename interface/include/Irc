@@ -28,7 +28,7 @@ class Irc : public Interface
   bool m_bEnabled;
   bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *);
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &);
-  list<string> m_channels;
+  map<string, bool> m_channels;
   list<string> m_messages;
   map<string, list<string> > m_sshClients;
   map<string, list<string> > m_terminalClients;
