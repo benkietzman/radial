@@ -1374,7 +1374,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          if (m_channel.find(strSubTarget) != m_channel.end() && m_channel[strSubTarget])
+          if (m_channels.find(strSubTarget) != m_channels.end() && m_channels[strSubTarget])
           {
             if (strFunction == "join")
             {
