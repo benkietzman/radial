@@ -1926,10 +1926,16 @@ log(ssMessage.str());
                             {
                               if (m_channels[removals.front()])
                               {
+ssMessage.str("");
+ssMessage << strPrefix << ":  JOIN " << strChannel;
+log(ssMessage.str());
                                 join(removals.front());
                               }
                               else
                               {
+ssMessage.str("");
+ssMessage << strPrefix << ":  ERASE " << strChannel;
+log(ssMessage.str());
                                 m_channels.erase(removals.front());
                               }
                               removals.pop_front();
