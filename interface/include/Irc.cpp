@@ -1898,7 +1898,7 @@ log(ssMessage.str());
                             {
                               if (m_channels.find(channel) == m_channels.end())
                               {
-                                m_channels[strChannel] = false;
+                                m_channels[channel] = false;
                               }
                             }
                             for (auto &channel : m_channels)
