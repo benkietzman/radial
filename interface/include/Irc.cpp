@@ -1888,7 +1888,7 @@ log(ssMessage.str());
                           case 322:
                           {
                             string strChannel;
-                            ssCommand >> strChannel >> strChannel;
+                            ssSubMessage >> strChannel >> strChannel;
                             channels.push_back(strChannel);
                           }
                           case 323:
