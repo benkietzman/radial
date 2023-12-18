@@ -1891,7 +1891,7 @@ log(ssMessage.str());
                             ssCommand >> strChannel >> strChannel;
                             channels.push_back(strChannel);
                           }
-                          case 323
+                          case 323:
                           {
                             list<string> removals;
                             for (auto &channel : channels)
