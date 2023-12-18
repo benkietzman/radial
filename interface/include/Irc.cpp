@@ -1336,7 +1336,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           ssText << ", ";
         }
-        ssText << (*i);
+        if (i->second)
+        {
+          ssText << char(2);
+        }
+        ssText << i->first;
+        if (i->second)
+        {
+          ssText << char(2);
+        }
       }
     }
     else if (strFunction == "chat" || strFunction == "join" || strFunction == "part")
@@ -1366,15 +1374,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          auto channelIter = m_channels.end();
-          for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
-          {
-            if ((*i) == strSubTarget)
-            {
-              channelIter = i;
-            }
-          }
-          if (channelIter != m_channels.end())
+          if (m_channel.find(strSubTarget) != m_channel.end() && m_channel[strSubTarget])
           {
             if (strFunction == "join")
             {
@@ -1743,7 +1743,7 @@ void Irc::bot(string strPrefix)
             time(&(CTime[1]));
             if ((CTime[1] - CTime[0]) > 120)
             {
-              list();
+              listChannels();
               monitorChannels(strPrefix);
               CTime[0] = CTime[1];
             }
@@ -1906,9 +1906,7 @@ log(ssMessage.str());
                         }
                         if (strID == strNick)
                         {
-                          m_channels.push_back(strChannel);
-                          m_channels.sort();
-                          m_channels.unique();
+													m_channels[strChannel] = true;
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
@@ -1929,17 +1927,9 @@ log(ssMessage.str());
                         }
                         if (strID == strNick)
                         {
-                          auto channelIter = m_channels.end();
-                          for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
+                          if (m_channels.find(strChannel) != m_channels.end() && m_channels[strChannel])
                           {
-                            if ((*i) == strChannel)
-                            {
-                              channelIter = i;
-                            }
-                          }
-                          if (channelIter != m_channels.end())
-                          {
-                            m_channels.erase(channelIter);
+                            m_channels[strChannel] = false;
                           }
                         }
                       }
@@ -2112,7 +2102,15 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
           if (enabled())
           {
             bResult = true;
-            ptJson->i("Response", m_channels);
+            if (ptJson->m.find("Response") != ptJson->m.end())
+            {
+              delete ptJson->m["Response"];
+            }
+            ptJson->m["Response"] = new Json;
+            for (auto &channel : m_channels)
+            {
+              ptJson->m["Response"]->i(channel.first, ((channel.second)?"1":"0"), ((channel.second)?'1':'0'))
+            }
           }
           else
           {
@@ -2236,20 +2234,12 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
 // {{{ chat()
 void Irc::chat(const string strTarget, const string strMessage)
 {
-  auto channelIter = m_channels.end();
   bool bPart = false;
   size_t unMaxLength = 450;
   string strLine;
   stringstream ssLines(strMessage), ssMessage, ssPrefix;
 
-  for (auto i = m_channels.begin(); channelIter == m_channels.end() && i != m_channels.end(); i++)
-  {
-    if ((*i) == strTarget)
-    {
-      channelIter = i;
-    }
-  }
-  if (channelIter == m_channels.end())
+  if (m_channels.find(strTarget) == m_channels.end() || !m_channels[strTarget])
   {
     bPart = true;
     join(strTarget);
@@ -2410,10 +2400,13 @@ void Irc::monitorChannels(string strPrefix)
           {
             if (enabled())
             {
-              list<string> subChannels = m_channels;
+              auto subChannels = m_channels;
               for (auto &channel : subChannels)
               {
-                part(channel);
+                if (channel.second)
+                {
+                  part(channel.first);
+                }
               }
             }
             delete m_ptMonitor;
@@ -2484,7 +2477,10 @@ void Irc::quit()
 
   for (auto &channel : m_channels)
   {
-    part(channel);
+    if (channel.second)
+    {
+      part(channel.first);
+    }
   }
   ssMessage << ":" << m_strNick << " QUIT :Quitting.\r\n";
   push(ssMessage.str());
