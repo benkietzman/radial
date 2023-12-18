@@ -1822,9 +1822,6 @@ void Irc::bot(string strPrefix)
                   // {{{ prep work
                   strMessage = strBuffer[0].substr(0, unPosition);
                   strBuffer[0].erase(0, (unPosition + 1));
-ssMessage.str("");
-ssMessage << strPrefix << ":  " << strMessage;
-log(ssMessage.str());
                   // }}}
                   // {{{ PING
                   if (strMessage.size() >= 4 && strMessage.substr(0, 4) == "PING")
@@ -1891,11 +1888,9 @@ log(ssMessage.str());
                             ssSubMessage >> strChannel >> strChannel;
                             if (!strChannel.empty())
                             {
-ssMessage.str("");
-ssMessage << strPrefix << ":  CHANNEL " << strChannel;
-log(ssMessage.str());
                               channels.push_back(strChannel);
                             }
+                            break;
                           }
                           case 323:
                           {
@@ -1926,21 +1921,16 @@ log(ssMessage.str());
                             {
                               if (m_channels[removals.front()])
                               {
-ssMessage.str("");
-ssMessage << strPrefix << ":  JOIN " << removals.front();
-log(ssMessage.str());
                                 join(removals.front());
                               }
                               else
                               {
-ssMessage.str("");
-ssMessage << strPrefix << ":  ERASE " << removals.front();
-log(ssMessage.str());
                                 m_channels.erase(removals.front());
                               }
                               removals.pop_front();
                             }
                             channels.clear();
+                            break;
                           }
                           case 433:
                           case 436:
