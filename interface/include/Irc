@@ -49,6 +49,7 @@ class Irc : public Interface
   void disable();
   bool isLocalAdmin(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
   void join(const string strChannel);
+  void list();
   void lock();
   bool message(string &strMessage);
   Json *monitor();

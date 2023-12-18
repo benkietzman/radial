@@ -1720,6 +1720,7 @@ void Irc::bot(string strPrefix)
   {
     // {{{ prep work
     SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
+    time(&(CTime[0]));
     // }}}
     while (!shutdown())
     {
@@ -1742,6 +1743,7 @@ void Irc::bot(string strPrefix)
             time(&(CTime[1]));
             if ((CTime[1] - CTime[0]) > 120)
             {
+              list();
               monitorChannels(strPrefix);
               CTime[0] = CTime[1];
             }
@@ -1820,7 +1822,7 @@ void Irc::bot(string strPrefix)
                   // {{{ prep work
                   strMessage = strBuffer[0].substr(0, unPosition);
 ssMessage.str("");
-ssMessage << strPrefix << ":  " << strMessage;
+ssMessage << strMessage;
 log(ssMessage.str());
                   strBuffer[0].erase(0, (unPosition + 1));
                   // }}}
@@ -2090,6 +2092,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
+    // {{{ channels
     if (ptJson->m["Function"]->v == "channels")
     {
       size_t unCount = 0;
@@ -2137,6 +2140,8 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
         strError = "Master not known.";
       }
     }
+    // }}}
+    // {{{ chat
     else if (ptJson->m["Function"]->v == "chat")
     {
       if (!empty(ptJson, "Message"))
@@ -2202,10 +2207,13 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
         strError = "Please provide the Message.";
       }
     }
+    // }}}
+    // {{{ invalid
     else
     {
       strError = "Please provide a valid Function:  channels, chat.";
     }
+    // }}}
   }
   else
   {
@@ -2325,6 +2333,15 @@ void Irc::join(const string strChannel)
   stringstream ssMessage;
 
   ssMessage << ":" << m_strNick << " JOIN :" << strChannel << "\r\n";
+  push(ssMessage.str());
+}
+// }}}
+// {{{ list()
+void Irc::list()
+{
+  stringstream ssMessage;
+
+  ssMessage << ":" << m_strNick << " LIST\r\n";
   push(ssMessage.str());
 }
 // }}}
