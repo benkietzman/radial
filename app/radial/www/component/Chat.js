@@ -133,18 +133,21 @@ export default
         Use the provided form to send a chat message to a given channel/user on IRC.  The message will be processed by the irc interface within Radial.
       </p>
       <p>
-        You can send your chat to any channel regardless of whether the radial chatbot resides in that channel.  You can send your chat to any user, but if that user is not online at the time, the chat message will be undelivered.
-      </p>
-      <p>
-        Here is a list of channels (bolded items are channels in which the chatbot currently resides):
+        List of all channels:
       </p>
       <select class="form-control" c-model="selectChannels" c-change="changeChannels()" size="2" style="height: 200px;" multiple>
         {{#each channels}}
-        <option value="{{name}}"{{#if present}} style="font-weight: bold;"{{/if}}>{{name}}</option>
+        <option{{#if present}} class="text-success"{{/if}} value="{{name}}">{{name}}</option>
         {{/each}}
       </select>
+      <p>
+        <small>NOTE:  Channels in <span class="text-success">green</span> are where the chatbot currently resides.</small>
+      </p>
     </div>
     <div class="col-md-6">
+      <p>
+        You can send your chat to any channel regardless of whether the radial chatbot resides in that channel.  You can send your chat to any user, but if that user is not online at the time, the chat message will be undelivered.
+      </p>
       {{#isValid}}
       <div class="input-group"><span class="input-group-text">Channels/Users</span><input type="text" class="form-control" c-model="target"></div>
       <br>
