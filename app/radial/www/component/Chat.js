@@ -123,7 +123,7 @@ export default
       </p>
       <ul class="list-group">
         {{#each channels}}
-        <button class="list-group-item btn btn-link" c-click="channel('{{.}}')" style="text-align: left;">{{.}}</button>
+        <button class="list-group-item{{#if .}} list-group-item-success{{/if}} btn btn-link" c-click="channel('{{@key}}')" style="text-align: left;">{{@key}}</button>
         {{/each}}
       </ul>
     </div>
