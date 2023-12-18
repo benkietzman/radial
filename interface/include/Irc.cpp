@@ -2156,11 +2156,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
             ptJson->m["Response"] = new Json;
             for (auto &channel : m_channels)
             {
-              Json *ptChannel = new Json;
-              ptChannel->i("Channel", channel.first);
-              ptChannel->i("Present", ((channel.second)?"1":"0"), ((channel.second)?'1':'0'));
-              ptJson->m["Response"]->pb(ptChannel);
-              delete ptChannel;
+              ptJson->m["Response"]->i(channel.first, ((channel.second)?"1":"0"), ((channel.second)?'1':'0'));
             }
           }
           else
