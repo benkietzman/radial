@@ -1891,6 +1891,9 @@ log(ssMessage.str());
                             ssSubMessage >> strChannel >> strChannel;
                             if (!strChannel.empty())
                             {
+ssMesage.str("");
+ssMessage << strPrefix << ":  CHANNEL " << strChannel;
+log(ssMessage.str());
                               channels.push_back(strChannel);
                             }
                           }
