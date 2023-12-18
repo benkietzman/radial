@@ -1889,7 +1889,10 @@ log(ssMessage.str());
                           {
                             string strChannel;
                             ssSubMessage >> strChannel >> strChannel;
-                            channels.push_back(strChannel);
+                            if (!strChannel.empty())
+                            {
+                              channels.push_back(strChannel);
+                            }
                           }
                           case 323:
                           {
