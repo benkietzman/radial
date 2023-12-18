@@ -1819,6 +1819,9 @@ void Irc::bot(string strPrefix)
                 {
                   // {{{ prep work
                   strMessage = strBuffer[0].substr(0, unPosition);
+ssMessage.str("");
+ssMessage << strPrefix << ":  " << strMessage;
+log(ssMessage.str());
                   strBuffer[0].erase(0, (unPosition + 1));
                   // }}}
                   // {{{ PING
