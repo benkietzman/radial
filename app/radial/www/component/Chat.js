@@ -128,7 +128,7 @@ export default
   template: `
   <h4 class="page-header">Send Chat</h4>
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <p>
         Use the provided form to send a chat message to a given channel/user on IRC.  The message will be processed by the irc interface within Radial.
       </p>
@@ -141,10 +141,10 @@ export default
         {{/each}}
       </select>
       <p>
-        <small>NOTE:  Channels in <span class="text-success">green</span> are where the chatbot currently resides.</small>
+        <small>Chatbot resides in <span class="text-success">green</span> channels.</small>
       </p>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-8">
       <p>
         You can send your chat to any channel regardless of whether the radial chatbot resides in that channel.  You can send your chat to any user, but if that user is not online at the time, the chat message will be undelivered.
       </p>
