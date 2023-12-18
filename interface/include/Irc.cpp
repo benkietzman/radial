@@ -1907,7 +1907,6 @@ log(ssMessage.str());
                                 m_channels[channel] = false;
                               }
                             }
-                            /*
                             for (auto &channel : m_channels)
                             {
                               bool bFound = false;
@@ -1935,7 +1934,6 @@ log(ssMessage.str());
                               }
                               removals.pop_front();
                             }
-                            */
                             channels.clear();
                           }
                           case 433:
