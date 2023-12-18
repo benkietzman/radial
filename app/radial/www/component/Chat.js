@@ -25,10 +25,18 @@ export default
       c: c
     });
     // ]]]=
-    // [[[ channel()
-    s.channel = (strChannel) =>
+    // [[[ changeChannels()
+    s.changeChannels = () =>
     {
-      s.target.v = strChannel;
+      s.target.v = '';
+      for (let i = 0; i < s.selectChannels.v.length; i++)
+      {
+        if (i > 0)
+        {
+          s.target.v += ', ';
+        }
+        s.target.v += s.selectChannels.v[i];
+      }
     };
     // ]]]
     // [[[ load()
@@ -42,7 +50,12 @@ export default
         s.info.v = null;
         if (c.wsResponse(response, error))
         {
-          s.channels = response.Response;
+          s.channels = null;
+          s.channels = [];
+          for (let channel of Object.keys(response.Response))
+          {
+            s.channels.push({name: channel, present: response.Response[channel]});
+          }
           s.u();
         }
         else
@@ -60,23 +73,27 @@ export default
       {
         if (s.mess.v)
         {
-          s.message.v = null;
-          s.success.v = null;
-          s.info.v = 'Sending chat...';
-          let request = {Interface: 'irc', 'Function': 'chat', Target: s.target.v, Message: '<ETX>08,03 ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ') <ETX> ' + s.mess.v};
-          c.wsRequest('radial', request).then((response) =>
+          let channels = s.target.v.split(',');
+          for (let i = 0; i < channels.length; i++)
           {
-            let error = {};
-            s.info.v = null;
-            if (c.wsResponse(response, error))
+            s.message.v = null;
+            s.success.v = null;
+            s.info.v = 'Sending chat...';
+            let request = {Interface: 'irc', 'Function': 'chat', Target: channels[i].trim(), Message: '<ETX>08,03 ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ') <ETX> ' + s.mess.v};
+            c.wsRequest('radial', request).then((response) =>
             {
-              s.success.v = 'Successfully sent chat.';
-            }
-            else
-            {
-              s.message.v = error.message;
-            }
-          });
+              let error = {};
+              s.info.v = null;
+              if (c.wsResponse(response, error))
+              {
+                s.success.v = 'Successfully sent chat.';
+              }
+              else
+              {
+                s.message.v = error.message;
+              }
+            });
+          }
         }
         else
         {
@@ -119,17 +136,17 @@ export default
         You can send your chat to any channel regardless of whether the radial chatbot resides in that channel.  You can send your chat to any user, but if that user is not online at the time, the chat message will be undelivered.
       </p>
       <p>
-        Here is a list of channels in which the radial chatbot currently resides:
+        Here is a list of channels (bolded items are channels in which the chatbot currently resides):
       </p>
-      <ul class="list-group">
+      <select class="form-control" c-model="selectChannels" c-change="changeChannels()" size="2" style="height: 200px;" multiple>
         {{#each channels}}
-        <button class="list-group-item{{#if .}} list-group-item-success{{/if}} btn btn-link" c-click="channel('{{@key}}')" style="text-align: left;">{{@key}}</button>
+        <option value="{{name}}"{{#if present}} style="font-weight: bold;"{{/if}}>{{name}}</option>
         {{/each}}
-      </ul>
+      </select>
     </div>
     <div class="col-md-6">
       {{#isValid}}
-      <div class="input-group"><span class="input-group-text">Channel/User</span><input type="text" class="form-control" c-model="target"></div>
+      <div class="input-group"><span class="input-group-text">Channels/Users</span><input type="text" class="form-control" c-model="target"></div>
       <br>
       <textarea class="form-control" c-model="mess" placeholder="Type message here..."></textarea>
       <br>
