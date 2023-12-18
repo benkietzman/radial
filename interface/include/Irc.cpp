@@ -2336,8 +2336,8 @@ void Irc::join(const string strChannel)
   push(ssMessage.str());
 }
 // }}}
-// {{{ list()
-void Irc::list()
+// {{{ listChannels()
+void Irc::listChannels()
 {
   stringstream ssMessage;
 
