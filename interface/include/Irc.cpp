@@ -1728,6 +1728,7 @@ void Irc::bot(string strPrefix)
         // {{{ prep work
         bool bExit = false, bRegistering = false;
         int fdSocket = -1, nReturn;
+        list<string> channels;
         pollfd *fds;
         size_t unIndex = 0, unPosition;
         string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = "radial_bot", strUser = "radial_bot";
@@ -1883,6 +1884,51 @@ log(ssMessage.str());
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
                             break;
+                          }
+                          case 322:
+                          {
+                            string strChannel;
+                            ssCommand >> strChannel >> strChannel;
+                            channels.push_back(strChannel);
+                          }
+                          case 323
+                          {
+                            list<string> removals;
+                            for (auto &channel : channels)
+                            {
+                              if (m_channels.find(channel) == m_channels.end())
+                              {
+                                m_channels[strChannel] = false;
+                              }
+                            }
+                            for (auto &channel : m_channels)
+                            {
+                              bool bFound = false;
+                              for (auto i = channels.begin(); !bFound && i != channels.end(); i++)
+                              {
+                                if ((*i) == channel.first)
+                                {
+                                  bFound = true;
+                                }
+                              }
+                              if (!bFound)
+                              {
+                                removals.push_back(channel.first);
+                              }
+                            }
+                            while (!removals.empty())
+                            {
+                              if (m_channels[removals.front()])
+                              {
+                                join(removals.front());
+                              }
+                              else
+                              {
+                                m_channels.erase(removals.front());
+                              }
+                              removals.pop_front();
+                            }
+                            channels.clear();
                           }
                           case 433:
                           case 436:
