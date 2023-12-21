@@ -357,7 +357,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             string strPassword, strPort, strServer, strUser;
             stringstream ssServer;
-            ssData >> strServer >> strUser >> strPassword;
+            ssData >> strServer >> strPassword;
+            ssServer.str(strServer);
+            getline(ssServer, strUser, '@');
+            getline(ssServer, strServer, '@');
             ssServer.str(strServer);
             getline(ssServer, strServer, ':');
             getline(ssServer, strPort, ':');
@@ -1540,7 +1543,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect (c) [server]<:port> [user] <password>.";
+      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect (c) [user]@[server]<:port> <password>.";
     }
   }
   // }}}
