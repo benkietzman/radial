@@ -1498,9 +1498,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ ssh || s
   else if (strAction == "ssh" || strAction == "s")
   {
-    string strCommand = var("Command", ptData), strPassword = var("Password", ptData), strPort = var("Port", ptData), strServer = var("Server", ptData), strUser = var("User", ptData);
+    string strCommand = var("Command", ptData), strServer = var("Server", ptData), strUser = var("User", ptData);
     if (!strUser.empty() && !strServer.empty())
     {
+      string strPassword = var("Password", ptData), strPort = var("Port", ptData);
       lock();
       if (m_sshClients.find(strIdent) == m_sshClients.end())
       {
