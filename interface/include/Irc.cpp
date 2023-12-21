@@ -353,7 +353,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (!strFunction.empty())
         {
           ptRequest->i("Function", strFunction);
-          if (strFunction == "connect")
+          if (strFunction == "connect" || strFunction == "c")
           {
             string strPassword, strPort, strServer, strUser;
             ssData >> strServer >> strPort >> strUser >> strPassword;
@@ -364,22 +364,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            lock();
-            if (m_sshClients.find(strIdent) != m_sshClients.end())
+            string strCommand;
+            getline(ssData, strCommand);
+            if (!strCommand.empty())
             {
-              string strCommand;
-              getline(ssData, strCommand);
-              if (!strCommand.empty())
-              {
-                strCommand = strFunction + (string)" " + strCommand;
-              }
-              else
-              {
-                strCommand = strFunction;
-              }
-              ptRequest->i("Command", strCommand);
+              strCommand = strFunction + (string)" " + strCommand;
             }
-            unlock();
+            else
+            {
+              strCommand = strFunction;
+            }
+            ptRequest->i("Command", strCommand);
           }
         }
       }
@@ -404,7 +399,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (!strFunction.empty())
         {
           ptRequest->i("Function", strFunction);
-          if (strFunction == "connect")
+          if (strFunction == "connect" || strFunction == "c")
           {
             string strPort, strServer;
             ssData >> strServer >> strPort;
@@ -1589,7 +1584,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strFunction.empty())
     {
       string strCommand = var("Command", ptData);
-      if (strFunction == "connect")
+      if (strFunction == "connect" || strFunction == "c")
       {
         string strPort = var("Port", ptData), strServer = var("Server", ptData);
         if (!strPort.empty() || !strServer.empty())
@@ -1618,14 +1613,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << " error:  Please provide a valid function following the action:  connect.";
+          ssText << " error:  Please provide a valid function following the action:  connect (c).";
         }
         unlock();
       }
     }
     else
     {
-      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect [server] [port].";
+      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server] [port].";
     }
   }
   // }}}
