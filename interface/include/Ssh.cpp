@@ -105,6 +105,16 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             {
               bResult = true;
             }
+            else if (ptSsh->fdSocket == -1)
+            {
+              m_mutex.lock();
+              delete ptSsh;
+              ptSsh = NULL;
+              m_sessions.erase(ptJson->m["Session"]->v);
+              m_mutex.unlock();
+              delete ptJson->m["Session"];
+              ptJson->m.erase("Session");
+            }
             if (!messages.empty())
             {
               if (exist(ptJson, "Response"))
@@ -132,6 +142,8 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
               ptSsh = NULL;
               m_sessions.erase(ptJson->m["Session"]->v);
               m_mutex.unlock();
+              delete ptJson->m["Session"];
+              ptJson->m.erase("Session");
             }
             else
             {
@@ -375,7 +387,7 @@ void Ssh::schedule(string strPrefix)
 // {{{ transact()
 bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &messages, string &strError)
 {
-  bool bExit = false, bReading = true, bResult = false;
+  bool bClose = false, bExit = false, bReading = true, bResult = false;
   int nReturn;
   char szBuffer[4096];
   size_t unPosition;
@@ -447,9 +459,12 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         }
         else
         {
-          bExit = true;
-          bResult = false;
-          strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
+          bClose = bExit = true;
+          if (!(string)(ssh_get_error(ptSsh->session)).empty())
+          {
+            bResult = false;
+            strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
+          }
         }
       }
       if (fds[0].revents & POLLOUT)
@@ -465,15 +480,18 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         }
         else
         {
-          bExit = true;
-          bResult = false;
-          strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
+          bClose = bExit = true;
+          if (!(string)(ssh_get_error(ptSsh->session)).empty())
+          {
+            bResult = false;
+            strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
+          }
         }
       }
     }
     else if (nReturn < 0)
     {
-      bExit = true;
+      bClose = bExit = true;
       bResult = false;
       strError = (string)"poll() " + strerror(errno);
     }
@@ -486,11 +504,18 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
       time(&(CTime[1]));
       if ((CTime[1] - CTime[0]) > 60)
       {
-        bExit = true;
+        bClose = bExit = true;
         bResult = false;
         strError = (string)"Command timed out after 60 seconds waiting for response.";
       }
     }
+  }
+  if (bClose)
+  {
+    ssh_channel_free(ptSsh->channel);
+    ssh_disconnect(ptSsh->session);
+    ssh_free(ptSsh->session);
+    ptSsh->fdSocket = -1;
   }
 
   return bResult;

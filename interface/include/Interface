@@ -148,7 +148,7 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
-  bool sshCommand(const string strSession, const string strCommand, list<string> &messages, string &strError);
+  bool sshCommand(string &strSession, const string strCommand, list<string> &messages, string &strError);
   bool sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, list<string> &message, string &strError);
   bool sshDisconnect(const string strSession, string &strError);
   bool status(Json *o, string &e);

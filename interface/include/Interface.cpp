@@ -2838,7 +2838,7 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
 }
 // }}}
 // {{{ sshCommand()
-bool Interface::sshCommand(const string strSession, const string strCommand, list<string> &messages, string &strError)
+bool Interface::sshCommand(string &strSession, const string strCommand, list<string> &messages, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -2855,6 +2855,10 @@ bool Interface::sshCommand(const string strSession, const string strCommand, lis
         messages.push_back(i->v);
       }
     }
+  }
+  if (!exist(ptJson, "Session"))
+  {
+    strSession.clear();
   }
   delete ptJson;
 

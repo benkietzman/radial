@@ -2580,7 +2580,14 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       if (!strCommand.empty())
       {
-        if (!sshCommand(strSession, strCommand, messages, strError))
+        if (sshCommand(strSession, strCommand, messages, strError))
+        {
+          if (strSession.empty())
+          {
+            bExit = true;
+          }
+        }
+        else
         {
           bExit = true;
           chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshCommand() " + strError + string(1, char(3)));
@@ -2602,7 +2609,10 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
         chat(strTarget, ssTexts.str());
       }
     }
-    sshDisconnect(strSession, strError);
+    if (!strSession.empty())
+    {
+      sshDisconnect(strSession, strError);
+    }
   }
   else
   {
