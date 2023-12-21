@@ -179,6 +179,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
               {
                 delete ptJson->m["Response"];
               }
+              ptJson->m["Response"] = new Json;
               while (!messages.empty())
               {
                 ptJson->m["Response"]->pb(messages.front());
