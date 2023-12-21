@@ -2564,11 +2564,14 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     }
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
+stringstream ssMessage;
+ssMessage << "CONNECT:  " << strServer << "," << strPort, "," << strUser << "," << strPassword;
+chat(strTarget, ssMessage.str());
   if (sshConnect(strServer, strPort, strUser, strPassword, strSession, messages, strError))
   {
     bool bExit = false;
     string strCommand;
-chat(strTarget, (string)"Session:  " + strSession);
+chat(strTarget, (string)"SESSION:  " + strSession);
     while (!bExit)
     {
       if (!m_sshClients[strIdent].empty())
