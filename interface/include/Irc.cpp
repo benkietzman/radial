@@ -356,8 +356,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strConnect.empty())
           {
             string strPassword, strPort, strServer, strUser;
-            stringstream ssConnect;
+            stringstream ssConnect(strConnect);
             getline(ssData, strPassword);
+            m_manip.trim(strPassword, strPassword);
             if (!strPassword.empty())
             {
               ptRequest->i("Password", strPassword);
@@ -2567,6 +2568,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   {
     bool bExit = false;
     string strCommand;
+chat(strTarget, (string)"Session:  " + strSession);
     while (!bExit)
     {
       if (!m_sshClients[strIdent].empty())
