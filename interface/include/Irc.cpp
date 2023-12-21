@@ -358,7 +358,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             string strPassword, strPort, strServer, strUser;
             stringstream ssServer;
             ssData >> strServer >> strUser >> strPassword;
-            ssServer(strServer);
+            ssServer.str(strServer);
             getline(ssServer, strServer, ':');
             getline(ssServer, strPort, ':');
             ptRequest->i("Server", strServer);
