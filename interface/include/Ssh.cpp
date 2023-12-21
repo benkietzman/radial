@@ -387,135 +387,143 @@ void Ssh::schedule(string strPrefix)
 // {{{ transact()
 bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &messages, string &strError)
 {
-  bool bClose = false, bExit = false, bReading = true, bResult = false;
-  int nReturn;
-  char szBuffer[4096];
-  size_t unPosition;
-  string strBuffer[2];
-  time_t CTime[2];
+  bool bResult = false;
 
-  if (!strCommand.empty())
+  if (ptSsh->fdSocket != -1)
   {
-    bReading = false;
-    strBuffer[1] = strCommand + "\n";
-  }
-  else
-  {
-    bResult = true;
-  }
-  while (!bExit)
-  {
-    pollfd fds[1];
-    fds[0].fd = ptSsh->fdSocket;
-    fds[0].events = POLLIN;
-    if (!strBuffer[1].empty())
+    bool bClose = false, bExit = false, bReading = true;
+    int nReturn;
+    char szBuffer[4096];
+    size_t unPosition;
+    string strBuffer[2];
+    time_t CTime[2];
+    if (!strCommand.empty())
     {
-      fds[0].events |= POLLOUT;
+      bReading = false;
+      strBuffer[1] = strCommand + "\n";
     }
-    if ((nReturn = poll(fds, 1, 500)) > 0)
+    else
     {
-      if (fds[0].revents & POLLIN)
+      bResult = true;
+    }
+    while (!bExit)
+    {
+      pollfd fds[1];
+      fds[0].fd = ptSsh->fdSocket;
+      fds[0].events = POLLIN;
+      if (!strBuffer[1].empty())
       {
-        if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
+        fds[0].events |= POLLOUT;
+      }
+      if ((nReturn = poll(fds, 1, 500)) > 0)
+      {
+        if (fds[0].revents & POLLIN)
         {
-          bReading = true;
-          strBuffer[0].append(szBuffer, nReturn);
-          while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+          if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
           {
-            string strLine = strBuffer[0].substr(0, unPosition);
-            stringstream ssLine;
-            strBuffer[0].erase(0, (unPosition + 1));
-            while (!strLine.empty())
+            bReading = true;
+            strBuffer[0].append(szBuffer, nReturn);
+            while ((unPosition = strBuffer[0].find("\n")) != string::npos)
             {
-              if (strLine[0] == '\033' && strLine.size() > 1)
+              string strLine = strBuffer[0].substr(0, unPosition);
+              stringstream ssLine;
+              strBuffer[0].erase(0, (unPosition + 1));
+              while (!strLine.empty())
               {
-                if (strLine[1] == '[' && strLine.size() > 2)
+                if (strLine[0] == '\033' && strLine.size() > 1)
                 {
-                  char cEnd = '\0', cLast = '\0';
-                  size_t unPosition; 
-                  for (size_t i = 2; cEnd == '\0' && i < strLine.size(); i++)
+                  if (strLine[1] == '[' && strLine.size() > 2)
                   {
-                    unPosition = i;
-                    if (isalpha(strLine[i]))
+                    char cEnd = '\0', cLast = '\0';
+                    size_t unPosition; 
+                    for (size_t i = 2; cEnd == '\0' && i < strLine.size(); i++)
                     {
-                      cEnd = strLine[i];
+                      unPosition = i;
+                      if (isalpha(strLine[i]))
+                      {
+                        cEnd = strLine[i];
+                      }
+                      cLast = strLine[i];
                     }
-                    cLast = strLine[i];
-                  }
-                  if (cEnd != '\0' || cLast == ';')
-                  {
-                    strLine.erase(0, unPosition);
+                    if (cEnd != '\0' || cLast == ';')
+                    {
+                      strLine.erase(0, unPosition);
+                    }
                   }
                 }
+                else if (strLine[0] != '\r')
+                {
+                  ssLine << strLine[0];
+                }
+                strLine.erase(0, 1);
               }
-              else if (strLine[0] != '\r')
-              {
-                ssLine << strLine[0];
-              }
-              strLine.erase(0, 1);
+              messages.push_back(ssLine.str());
             }
-            messages.push_back(ssLine.str());
+          }
+          else
+          {
+            bClose = bExit = true;
+            if (strlen(ssh_get_error(ptSsh->session)) != 0)
+            {
+              bResult = false;
+              strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
+            }
           }
         }
-        else
+        if (fds[0].revents & POLLOUT)
         {
-          bClose = bExit = true;
-          if (strlen(ssh_get_error(ptSsh->session)) != 0)
+          if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
           {
-            bResult = false;
-            strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
+            strBuffer[1].erase(0, nReturn);
+            if (strBuffer[1].empty())
+            {
+              bResult = true;
+              time(&(CTime[0]));
+            }
+          }
+          else
+          {
+            bClose = bExit = true;
+            if (strlen(ssh_get_error(ptSsh->session)) != 0)
+            {
+              bResult = false;
+              strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
+            }
           }
         }
       }
-      if (fds[0].revents & POLLOUT)
-      {
-        if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
-        {
-          strBuffer[1].erase(0, nReturn);
-          if (strBuffer[1].empty())
-          {
-            bResult = true;
-            time(&(CTime[0]));
-          }
-        }
-        else
-        {
-          bClose = bExit = true;
-          if (strlen(ssh_get_error(ptSsh->session)) != 0)
-          {
-            bResult = false;
-            strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
-          }
-        }
-      }
-    }
-    else if (nReturn < 0)
-    {
-      bClose = bExit = true;
-      bResult = false;
-      strError = (string)"poll() " + strerror(errno);
-    }
-    else if (bReading)
-    {
-      bExit = true;
-    }
-    else if (bResult)
-    {
-      time(&(CTime[1]));
-      if ((CTime[1] - CTime[0]) > 60)
+      else if (nReturn < 0)
       {
         bClose = bExit = true;
         bResult = false;
-        strError = (string)"Command timed out after 60 seconds waiting for response.";
+        strError = (string)"poll() " + strerror(errno);
+      }
+      else if (bReading)
+      {
+        bExit = true;
+      }
+      else if (bResult)
+      {
+        time(&(CTime[1]));
+        if ((CTime[1] - CTime[0]) > 60)
+        {
+          bClose = bExit = true;
+          bResult = false;
+          strError = "Command timed out after 60 seconds waiting for response.";
+        }
       }
     }
+    if (bClose)
+    {
+      ssh_channel_free(ptSsh->channel);
+      ssh_disconnect(ptSsh->session);
+      ssh_free(ptSsh->session);
+      ptSsh->fdSocket = -1;
+    }
   }
-  if (bClose)
+  else
   {
-    ssh_channel_free(ptSsh->channel);
-    ssh_disconnect(ptSsh->session);
-    ssh_free(ptSsh->session);
-    ptSsh->fdSocket = -1;
+    strError = "SSH session already closed.";
   }
 
   return bResult;
