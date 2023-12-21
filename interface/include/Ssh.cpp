@@ -246,115 +246,114 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
     {
       if (!empty(ptJson, "Server"))
       {
+        string strPort = "22";
         if (!empty(ptJson, "Port"))
         {
-          if (!empty(ptJson, "User"))
+          strPort = ptJson->m["Port"]->v;
+        }
+        if (!empty(ptJson, "User"))
+        {
+          if (!empty(ptJson, "Password"))
           {
-            if (!empty(ptJson, "Password"))
+            radialSsh *ptSsh = new radialSsh;
+            if ((ptSsh->session = ssh_new()) != NULL)
             {
-              radialSsh *ptSsh = new radialSsh;
-              if ((ptSsh->session = ssh_new()) != NULL)
+              int nPort;
+              stringstream ssPort(strPort);
+              ssh_options_set(ptSsh->session, SSH_OPTIONS_HOST, ptJson->m["Server"]->v.c_str());
+              ssPort >> nPort;
+              ssh_options_set(ptSsh->session, SSH_OPTIONS_PORT, &nPort);
+              ssh_options_set(ptSsh->session, SSH_OPTIONS_USER, ptJson->m["User"]->v.c_str());
+              if (ssh_connect(ptSsh->session) == SSH_OK)
               {
-                int nPort;
-                stringstream ssPort(ptJson->m["Port"]->v);
-                ssh_options_set(ptSsh->session, SSH_OPTIONS_HOST, ptJson->m["Server"]->v.c_str());
-                ssPort >> nPort;
-                ssh_options_set(ptSsh->session, SSH_OPTIONS_PORT, &nPort);
-                ssh_options_set(ptSsh->session, SSH_OPTIONS_USER, ptJson->m["User"]->v.c_str());
-                if (ssh_connect(ptSsh->session) == SSH_OK)
+                int nMethod;
+                ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
+                ssh_userauth_none(ptSsh->session, NULL);
+                nMethod = ssh_userauth_list(ptSsh->session, NULL);
+                if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && authenticateKbdint(ptSsh->session, ptJson->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && authenticatePassword(ptSsh->session, ptJson->m["Password"]->v) == SSH_AUTH_SUCCESS))
                 {
-                  int nMethod;
-                  ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
-                  ssh_userauth_none(ptSsh->session, NULL);
-                  nMethod = ssh_userauth_list(ptSsh->session, NULL);
-                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && authenticateKbdint(ptSsh->session, ptJson->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && authenticatePassword(ptSsh->session, ptJson->m["Password"]->v) == SSH_AUTH_SUCCESS))
+                  if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                   {
-                    if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
+                    if (ssh_channel_open_session(ptSsh->channel) == SSH_OK)
                     {
-                      if (ssh_channel_open_session(ptSsh->channel) == SSH_OK)
-                      {
-                        if (ssh_channel_request_pty(ptSsh->channel) == SSH_OK)
-                        { 
-                          if (ssh_channel_change_pty_size(ptSsh->channel, 80, 24) == SSH_OK)
+                      if (ssh_channel_request_pty(ptSsh->channel) == SSH_OK)
+                      { 
+                        if (ssh_channel_change_pty_size(ptSsh->channel, 80, 24) == SSH_OK)
+                        {
+                          if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                           {
-                            if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
-                            {
-                              stringstream ssSession;
-                              bResult = true;
-                              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
-                              m_mutex.lock();
-                              m_sessions[ssSession.str()] = ptSsh;
-                              m_mutex.unlock();
-                            }
-                            else
-                            {
-                              strError = (string)"ssh_channel_request_shell() " + ssh_get_error(ptSsh->session);
-                            }
+                            stringstream ssSession;
+                            bResult = true;
+                            ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
+                            ptJson->i("Session", ssSession.str());
+                            m_mutex.lock();
+                            m_sessions[ssSession.str()] = ptSsh;
+                            m_mutex.unlock();
                           }
                           else
                           {
-                            strError = (string)"ssh_channel_change_pty_size() " + ssh_get_error(ptSsh->session);
+                            strError = (string)"ssh_channel_request_shell() " + ssh_get_error(ptSsh->session);
                           }
                         }
                         else
                         {
-                          strError = (string)"ssh_channel_request_pty() " + ssh_get_error(ptSsh->session);
+                          strError = (string)"ssh_channel_change_pty_size() " + ssh_get_error(ptSsh->session);
                         }
                       }
                       else
                       {
-                        strError = (string)"ssh_channel_open_session() " + ssh_get_error(ptSsh->session);
-                      }
-                      if (!bResult)
-                      {
-                        ssh_channel_free(ptSsh->channel);
+                        strError = (string)"ssh_channel_request_pty() " + ssh_get_error(ptSsh->session);
                       }
                     }
                     else
                     {
-                      strError = (string)"ssh_channel_new() " + ssh_get_error(ptSsh->session);
+                      strError = (string)"ssh_channel_open_session() " + ssh_get_error(ptSsh->session);
+                    }
+                    if (!bResult)
+                    {
+                      ssh_channel_free(ptSsh->channel);
                     }
                   }
                   else
                   {
-                    strError = (string)" authenticate*() " + ssh_get_error(ptSsh->session);
-                  }
-                  if (!bResult)
-                  {
-                    ssh_disconnect(ptSsh->session);
+                    strError = (string)"ssh_channel_new() " + ssh_get_error(ptSsh->session);
                   }
                 }
                 else
                 {
-                  strError = (string)"ssh_connect() " + ssh_get_error(ptSsh->session);
+                  strError = (string)" authenticate*() " + ssh_get_error(ptSsh->session);
                 }
                 if (!bResult)
                 {
-                  ssh_free(ptSsh->session);
+                  ssh_disconnect(ptSsh->session);
                 }
               }
               else
               {
-                strError = "ssh_new() Failed to initialize SSH session.";
+                strError = (string)"ssh_connect() " + ssh_get_error(ptSsh->session);
               }
               if (!bResult)
               {
-                delete ptSsh;
+                ssh_free(ptSsh->session);
               }
             }
             else
             {
-              strError = "Please provide the Password.";
+              strError = "ssh_new() Failed to initialize SSH session.";
+            }
+            if (!bResult)
+            {
+              delete ptSsh;
             }
           }
           else
           {
-            strError = "Please provide the User.";
+            strError = "Please provide the Password.";
           }
         }
         else
         {
-          strError = "Please provide the Port.";
+          strError = "Please provide the User.";
         }
       }
       else
