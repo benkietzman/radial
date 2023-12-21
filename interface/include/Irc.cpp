@@ -2583,7 +2583,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       if (!m_sshClients[strIdent].empty())
       {
         strCommand = m_sshClients[strIdent].front();
-        m_ssClients[strIdent].pop_front();
+        m_sshClients[strIdent].pop_front();
       }
       unlock();
       if (!strCommand.empty())
