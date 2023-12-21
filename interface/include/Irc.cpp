@@ -2597,38 +2597,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
           stringstream ssTexts;
           while (!messages.empty())
           {
-            string strBuffer = messages.front();
-            stringstream ssBuffer;
-            while (!strBuffer.empty())
-            {
-              if (strBuffer[0] == '\033' && strBuffer.size() > 1)
-              {
-                if (strBuffer[1] == '[' && strBuffer.size() > 2)
-                {
-                  char cEnd = '\0', cLast = '\0';
-                  size_t unPosition;
-                  for (size_t i = 2; cEnd == '\0' && i < strBuffer.size(); i++)
-                  {
-                    unPosition = i;
-                    if (isalpha(strBuffer[i]))
-                    {
-                      cEnd = strBuffer[i];
-                    }
-                    cLast = strBuffer[i];
-                  }
-                  if (cEnd != '\0' || cLast == ';')
-                  {
-                    strBuffer.erase(0, unPosition);
-                  }
-                }
-              }
-              else if (strBuffer[0] != '\r')
-              {
-                ssBuffer << strBuffer[0];
-              }
-              strBuffer.erase(0, 1);
-            }
-            ssTexts << ssBuffer.str() << endl;
+            ssTexts << message.front() << endl;
             messages.pop_front();
           }
           chat(strTarget, ssTexts.str());

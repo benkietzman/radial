@@ -100,78 +100,10 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
         {
           if (!empty(ptJson, "Command"))
           {
-            bool bExit = false, bReading = false;
-            int nReturn;
-            char szBuffer[4096];
             list<string> messages;
-            size_t unPosition;
-            string strBuffer[2] = {"", ptJson->m["Command"]->v + "\n"};
-            time_t CTime[2] = {0, 0};
-            while (!bExit)
+            if (transact(ptSsh, ptJson->m["Command"]->v, messages, strError))
             {
-              pollfd fds[1];
-              fds[0].fd = ptSsh->fdSocket;
-              fds[0].events = POLLIN;
-              if (!strBuffer[1].empty())
-              {
-                fds[0].events |= POLLOUT;
-              }
-              if ((nReturn = poll(fds, 1, 500)) > 0)
-              {
-                if (fds[0].revents & POLLIN)
-                {
-                  if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
-                  {
-                    bReading = true;
-                    strBuffer[0].append(szBuffer, nReturn);
-                    while ((unPosition = strBuffer[0].find("\n")) != string::npos)
-                    {
-                      messages.push_back(strBuffer[0].substr(0, unPosition));
-                      strBuffer[0].erase(0, (unPosition + 1));
-                    }
-                  }
-                  else
-                  {
-                    bExit = true;
-                    strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
-                  }
-                }
-                if (fds[0].revents & POLLOUT)
-                {
-                  if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
-                  {
-                    strBuffer[1].erase(0, nReturn);
-                    if (strBuffer[1].empty())
-                    {
-                      bResult = true;
-                      time(&(CTime[0]));
-                    }
-                  }
-                  else
-                  {
-                    bExit = true;
-                    strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
-                  }
-                }
-              }
-              else if (nReturn < 0)
-              {
-                bExit = true;
-                strError = (string)"poll() " + strerror(errno);
-              }
-              else if (bReading)
-              {
-                bExit = true;
-              }
-              if (bResult && !bReading)
-              {
-                time(&(CTime[1]));
-                if ((CTime[1] - CTime[0]) > 60)
-                {
-                  bExit = true;
-                  strError = (string)"Command timed out after 60 seconds waiting for response.";
-                }
-              }
+              bResult = true;
             }
             if (!messages.empty())
             {
@@ -283,13 +215,30 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                         {
                           if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                           {
+                            list<string> messages;
                             stringstream ssSession;
-                            bResult = true;
                             ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
                             ptJson->i("Session", ssSession.str());
                             m_mutex.lock();
                             m_sessions[ssSession.str()] = ptSsh;
                             m_mutex.unlock();
+                            if (transact(ptSsh, "", messages, strError))
+                            {
+                              bResult = true;
+                            }
+                            if (!messages.empty())
+                            {
+                              if (exist(ptJson, "Response"))
+                              {
+                                delete ptJson->m["Response"];
+                              }
+                              ptJson->m["Response"] = new Json;
+                              while (!messages.empty())
+                              {
+                                ptJson->m["Response"]->pb(messages.front());
+                                messages.pop_front();
+                              }
+                            }
                           }
                           else
                           {
@@ -421,6 +370,122 @@ void Ssh::schedule(string strPrefix)
     msleep(1000);
   }
   threadDecrement();
+}
+// }}}
+// {{{ transact()
+bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &messages, string &strError)
+{
+  bool bExit = false, bReading = true, bResult = false;
+  int nReturn;
+  char szBuffer[4096];
+  size_t unPosition;
+  string strBuffer[2];
+  time_t CTime[2];
+
+  if (!strCommand.empty())
+  {
+    bReading = false;
+    strBuffer[1] = strCommand + "\n";
+  }
+  while (!bExit)
+  {
+    pollfd fds[1];
+    fds[0].fd = ptSsh->fdSocket;
+    fds[0].events = POLLIN;
+    if (!strBuffer[1].empty())
+    {
+      fds[0].events |= POLLOUT;
+    }
+    if ((nReturn = poll(fds, 1, 500)) > 0)
+    {
+      if (fds[0].revents & POLLIN)
+      {
+        if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
+        {
+          bReading = true;
+          strBuffer[0].append(szBuffer, nReturn);
+          while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+          {
+            string strLine = strBuffer[0].substr(0, unPosition);
+            stringstream ssLine;
+            strBuffer[0].erase(0, (unPosition + 1));
+            while (!strLine.empty())
+            {
+              if (strLine[0] == '\033' && strLine.size() > 1)
+              {
+                if (strLine[1] == '[' && strLine.size() > 2)
+                {
+                  char cEnd = '\0', cLast = '\0';
+                  size_t unPosition; 
+                  for (size_t i = 2; cEnd == '\0' && i < strLine.size(); i++)
+                  {
+                    unPosition = i;
+                    if (isalpha(strLine[i]))
+                    {
+                      cEnd = strLine[i];
+                    }
+                    cLast = strLine[i];
+                  }
+                  if (cEnd != '\0' || cLast == ';')
+                  {
+                    strLine.erase(0, unPosition);
+                  }
+                }
+              }
+              else if (strLine[0] != '\r')
+              {
+                ssLine << strLine[0];
+              }
+              strLine.erase(0, 1);
+            }
+            messages.push_back(ssLine.str());
+          }
+        }
+        else
+        {
+          bExit = true;
+          strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
+        }
+      }
+      if (fds[0].revents & POLLOUT)
+      {
+        if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
+        {
+          strBuffer[1].erase(0, nReturn);
+          if (strBuffer[1].empty())
+          {
+            bResult = true;
+            time(&(CTime[0]));
+          }
+        }
+        else
+        {
+          bExit = true;
+          strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
+        }
+      }
+    }
+    else if (nReturn < 0)
+    {
+      bExit = true;
+      strError = (string)"poll() " + strerror(errno);
+    }
+    else if (bReading)
+    {
+      bExit = true;
+    }
+    if (bResult && !bReading)
+    {
+      time(&(CTime[1]));
+      if ((CTime[1] - CTime[0]) > 60)
+      {
+        bExit = true;
+        strError = (string)"Command timed out after 60 seconds waiting for response.";
+      }
+    }
+  }
+
+  return bResult;
 }
 // }}}
 }

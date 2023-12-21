@@ -43,6 +43,7 @@ class Ssh : public Interface
   int authenticateNone(ssh_session session);
   int authenticatePassword(ssh_session session, const string strPassword);
   int authenticateKbdint(ssh_session session, const string strPassword);
+  bool transact(radialSsh *ptSsh, const string strCommand, list<string> &message, string &strError);
 
   public:
   Ssh(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
