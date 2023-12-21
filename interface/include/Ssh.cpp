@@ -448,6 +448,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         else
         {
           bExit = true;
+          bResult = false;
           strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
         }
       }
@@ -465,6 +466,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         else
         {
           bExit = true;
+          bResult = false;
           strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
         }
       }
@@ -472,6 +474,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
     else if (nReturn < 0)
     {
       bExit = true;
+      bResult = false;
       strError = (string)"poll() " + strerror(errno);
     }
     else if (bReading)
@@ -484,6 +487,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
       if ((CTime[1] - CTime[0]) > 60)
       {
         bExit = true;
+        bResult = false;
         strError = (string)"Command timed out after 60 seconds waiting for response.";
       }
     }
