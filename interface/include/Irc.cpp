@@ -2542,6 +2542,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 // {{{ ssh()
 void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
 {
+  list<string> messages;
   string strError, strSession;
 
   strPrefix += "->ssh()";
@@ -2571,20 +2572,19 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     }
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
-  if (sshConnect(strServer, strPort, strUser, strPassword, strSession, strError))
+  if (sshConnect(strServer, strPort, strUser, strPassword, strSession, message, strError))
   {
     bool bExit = false;
-    list<string> messages;
     string strCommand;
     while (!bExit)
     {
-      lock();
       if (!m_sshClients[strIdent].empty())
       {
+        lock();
         strCommand = m_sshClients[strIdent].front();
         m_sshClients[strIdent].pop_front();
+        unlock();
       }
-      unlock();
       if (!strCommand.empty())
       {
         if (!sshCommand(strSession, strCommand, messages, strError))
@@ -2592,21 +2592,21 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
           bExit = true;
           chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshCommand() " + strError + string(1, char(3)));
         }
-        if (!messages.empty())
-        {
-          stringstream ssTexts;
-          while (!messages.empty())
-          {
-            ssTexts << messages.front() << endl;
-            messages.pop_front();
-          }
-          chat(strTarget, ssTexts.str());
-        }
         strCommand.clear();
       }
       else
       {
         msleep(500);
+      }
+      if (!messages.empty())
+      {
+        stringstream ssTexts;
+        while (!messages.empty())
+        {
+          ssTexts << messages.front() << endl;
+          messages.pop_front();
+        }
+        chat(strTarget, ssTexts.str());
       }
     }
     sshDisconnect(strSession, strError);

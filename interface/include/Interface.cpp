@@ -2856,12 +2856,13 @@ bool Interface::sshCommand(const string strSession, const string strCommand, lis
       }
     }
   }
+  delete ptJson;
 
   return bResult;
 }
 // }}}
 // {{{ sshConnect()
-bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, string &strError)
+bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, list<string> &messages, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -2874,7 +2875,15 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
+    if (exist(ptJson, "Response"))
+    {
+      for (auto &i : ptJson->m["Response"]->l)
+      {
+        messages.push_back(i->v);
+      }
+    }
   }
+  delete ptJson;
 
   return bResult;
 }
@@ -2891,6 +2900,7 @@ bool Interface::sshDisconnect(const string strSession, string &strError)
   {
     bResult = true;
   }
+  delete ptJson;
 
   return bResult;
 }
