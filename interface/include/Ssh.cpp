@@ -460,7 +460,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         else
         {
           bClose = bExit = true;
-          if (!(string)(ssh_get_error(ptSsh->session)).empty())
+          if (strlen(ssh_get_error(ptSsh->session)) != 0)
           {
             bResult = false;
             strError = (string)"ssh_channel_read() " + ssh_get_error(ptSsh->session);
@@ -481,7 +481,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         else
         {
           bClose = bExit = true;
-          if (!(string)(ssh_get_error(ptSsh->session)).empty())
+          if (strlen(ssh_get_error(ptSsh->session)) != 0)
           {
             bResult = false;
             strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
