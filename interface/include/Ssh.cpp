@@ -105,7 +105,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             {
               bResult = true;
             }
-            else if (ptSsh->fdSocket == -1)
+            if (ptSsh->fdSocket == -1)
             {
               m_mutex.lock();
               delete ptSsh;
@@ -415,7 +415,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
       {
         fds[0].events |= POLLOUT;
       }
-      if ((nReturn = poll(fds, 1, 2000)) > 0)
+      if ((nReturn = poll(fds, 1, 500)) > 0)
       {
         if (fds[0].revents & POLLIN)
         {
