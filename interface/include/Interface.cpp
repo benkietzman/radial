@@ -2875,6 +2875,10 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
+    if (!empty(ptJson, "Session"))
+    {
+      strSession = ptJson->m["Session"]->v;
+    }
     if (exist(ptJson, "Response"))
     {
       for (auto &i : ptJson->m["Response"]->l)
