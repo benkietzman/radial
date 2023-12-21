@@ -1505,7 +1505,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strFunction.empty())
     {
       string strCommand = var("Command", ptData);
-      if (strFunction == "connect")
+      if (strFunction == "connect" || strFunction == "c")
       {
         string strPassword = var("Password", ptData), strPort = var("Port", ptData), strServer = var("Server", ptData), strUser = var("User", ptData);
         if (!strServer.empty() && !strPort.empty() && !strUser.empty())
@@ -1534,14 +1534,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << " error:  Please provide a valid function following the action:  connect.";
+          ssText << " error:  Please provide a valid function following the action:  connect (c).";
         }
         unlock();
       }
     }
     else
     {
-      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect [server] [port] [user] <password>.";
+      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the following immediately following the action:  connect (c) [server] [port] [user] <password>.";
     }
   }
   // }}}
@@ -2583,6 +2583,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       if (!m_sshClients[strIdent].empty())
       {
         strCommand = m_sshClients[strIdent].front();
+        m_ssClients[strIdent].pop_front();
       }
       unlock();
       if (!strCommand.empty())
