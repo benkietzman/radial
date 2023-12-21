@@ -2597,7 +2597,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
           stringstream ssTexts;
           while (!messages.empty())
           {
-            ssTexts << message.front() << endl;
+            ssTexts << messages.front() << endl;
             messages.pop_front();
           }
           chat(strTarget, ssTexts.str());
