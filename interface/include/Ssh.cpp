@@ -499,7 +499,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
     {
       bExit = true;
     }
-    if (bResult && !bReading)
+    else if (bResult)
     {
       time(&(CTime[1]));
       if ((CTime[1] - CTime[0]) > 60)
