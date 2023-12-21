@@ -100,7 +100,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
         {
           if (!empty(ptJson, "Command"))
           {
-            bool bExit = false, bReading;
+            bool bExit = false, bReading = false;
             int nReturn;
             char szBuffer[4096];
             list<string> messages;
@@ -116,7 +116,6 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
               {
                 fds[0].events |= POLLOUT;
               }
-              bReading = false;
               if ((nReturn = poll(fds, 1, 500)) > 0)
               {
                 if (fds[0].revents & POLLIN)
@@ -191,6 +190,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
           {
             if (ptJson->m["Function"]->v == "disconnect")
             {
+              bResult = true;
               ssh_channel_free(ptSsh->channel);
               ssh_disconnect(ptSsh->session);
               ssh_free(ptSsh->session);
