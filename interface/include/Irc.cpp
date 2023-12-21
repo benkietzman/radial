@@ -377,7 +377,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           string strCommand;
           getline(ssData, strCommand);
-          manip.trim(strCommand, strCommand);
+          m_manip.trim(strCommand, strCommand);
           ptRequest->i("Command", strCommand);
         }
         unlock();
