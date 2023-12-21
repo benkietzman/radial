@@ -2543,8 +2543,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 // {{{ ssh()
 void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
 {
-  string strError;
-  ssh_session session;
+  string strError, strSession;
 
   strPrefix += "->ssh()";
   if (strPassword.empty())
@@ -2573,216 +2572,85 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     }
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
-  if ((session = ssh_new()) != NULL)
+  if (sshConnect(strServer, strPort, strUser, strPassword, strSession, strError))
   {
-    int nPort;
-    stringstream ssPort(strPort);
-    ssh_options_set(session, SSH_OPTIONS_HOST, strServer.c_str());
-    ssPort >> nPort;
-    ssh_options_set(session, SSH_OPTIONS_PORT, &nPort);
-    ssh_options_set(session, SSH_OPTIONS_USER, strUser.c_str());
-    if (ssh_connect(session) == SSH_OK)
+    bool bExit = false;
+    list<string> messages;
+    string strCommand;
+    while (!bExit)
     {
-      int fdSocket = ssh_get_fd(session), nMethod;
-      ssh_userauth_none(session, NULL);
-      nMethod = ssh_userauth_list(session, NULL);
-      if ((nMethod & SSH_AUTH_METHOD_NONE && sshAuthenticateNone(session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && sshAuthenticateKbdint(session, strPassword) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && sshAuthenticatePassword(session, strPassword) == SSH_AUTH_SUCCESS))
+      lock();
+      if (!m_sshClients[strIdent].empty())
       {
-        ssh_channel channel;
-        if ((channel = ssh_channel_new(session)) != NULL)
+        strCommand = m_sshClients[strIdent].front();
+      }
+      unlock();
+      if (!strCommand.empty())
+      {
+        if (!sshCommand(strSession, strCommand, messages, strError))
         {
-          if (ssh_channel_open_session(channel) == SSH_OK)
+          bExit = true;
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshCommand() " + strError + string(1, char(3)));
+        }
+        if (!messages.empty())
+        {
+          stringstream ssTexts;
+          while (!messages.empty())
           {
-            if (ssh_channel_request_pty(channel) == SSH_OK)
+            string strBuffer = messages.front();
+            stringstream ssBuffer;
+            while (!strBuffer.empty())
             {
-              if (ssh_channel_change_pty_size(channel, 80, 24) == SSH_OK)
+              if (strBuffer[0] == '\033' && strBuffer.size() > 1)
               {
-                if (ssh_channel_request_shell(channel) == SSH_OK)
+                if (strBuffer[1] == '[' && strBuffer.size() > 2)
                 {
-                  bool bExit = false, bReading;
-                  int nReturn;
-                  char szBuffer[4096];
-                  list<string> messages;
+                  char cEnd = '\0', cLast = '\0';
                   size_t unPosition;
-                  string strBuffer[2];
-                  while (!bExit)
+                  for (size_t i = 2; cEnd == '\0' && i < strBuffer.size(); i++)
                   {
-                    pollfd fds[1];
-                    fds[0].fd = fdSocket;
-                    fds[0].events = POLLIN;
-                    if (strBuffer[1].empty())
+                    unPosition = i;
+                    if (isalpha(strBuffer[i]))
                     {
-                      lock();
-                      while (!m_sshClients[strIdent].empty())
-                      {
-                        strBuffer[1].append(m_sshClients[strIdent].front() + "\n");
-                        m_sshClients[strIdent].pop_front();
-                      }
-                      unlock();
+                      cEnd = strBuffer[i];
                     }
-                    if (!strBuffer[1].empty())
-                    {
-                      fds[0].events |= POLLOUT;
-                    }
-                    bReading = false;
-                    if ((nReturn = poll(fds, 1, 500)) > 0)
-                    {
-                      if (fds[0].revents & POLLIN)
-                      {
-                        if ((nReturn = ssh_channel_read_nonblocking(channel, szBuffer, 4096, 0)) > 0)
-                        {
-                          bReading = true;
-                          strBuffer[0].append(szBuffer, nReturn);
-                          while ((unPosition = strBuffer[0].find("\n")) != string::npos)
-                          {
-                            messages.push_back(strBuffer[0].substr(0, unPosition));
-                            strBuffer[0].erase(0, (unPosition + 1));
-                          }
-                        }
-                        else
-                        {
-                          bExit = true;
-                        }
-                      }
-                      if (fds[0].revents & POLLOUT)
-                      {
-                        if ((nReturn = ssh_channel_write(channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
-                        {
-                          strBuffer[1].erase(0, nReturn);
-                        }
-                        else
-                        {
-                          bExit = true;
-                        }
-                      }
-                    }
-                    else if (nReturn < 0)
-                    {
-                      chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  poll() " + strerror(errno) + string(1, char(3)));
-                    }
-                    if ((bExit || !bReading) && !messages.empty())
-                    {
-                      stringstream ssTexts;
-                      while (!messages.empty())
-                      {
-                        string strBuffer = messages.front();
-                        stringstream ssBuffer;
-                        while (!strBuffer.empty())
-                        {
-                          if (strBuffer[0] == '\033' && strBuffer.size() > 1)
-                          {
-                            if (strBuffer[1] == '[' && strBuffer.size() > 2)
-                            {
-                              char cEnd = '\0', cLast = '\0';
-                              for (size_t i = 2; cEnd == '\0' && i < strBuffer.size(); i++)
-                              {
-                                unPosition = i;
-                                if (isalpha(strBuffer[i]))
-                                {
-                                  cEnd = strBuffer[i];
-                                }
-                                cLast = strBuffer[i];
-                              }
-                              if (cEnd != '\0' || cLast == ';')
-                              {
-                                strBuffer.erase(0, unPosition);
-                              }
-                            }
-                          }
-                          else if (strBuffer[0] != '\r')
-                          {
-                            ssBuffer << strBuffer[0];
-                          }
-                          strBuffer.erase(0, 1);
-                        }
-                        ssTexts << ssBuffer.str() << endl;
-                        messages.pop_front();
-                      }
-                      chat(strTarget, ssTexts.str());
-                    }
+                    cLast = strBuffer[i];
+                  }
+                  if (cEnd != '\0' || cLast == ';')
+                  {
+                    strBuffer.erase(0, unPosition);
                   }
                 }
-                else
-                {
-                  chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_channel_request() " + ssh_get_error(session) + string(1, char(3)));
-                }
               }
-              else
+              else if (strBuffer[0] != '\r')
               {
-                chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_channel_change_pty_size() " + ssh_get_error(session) + string(1, char(3)));
+                ssBuffer << strBuffer[0];
               }
+              strBuffer.erase(0, 1);
             }
-            else
-            {
-              chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_channel_request_pty() " + ssh_get_error(session) + string(1, char(3)));
-            }
+            ssTexts << ssBuffer.str() << endl;
+            messages.pop_front();
           }
-          else
-          {
-            chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_channel_open_session() " + ssh_get_error(session) + string(1, char(3)));
-          }
-          ssh_channel_free(channel);
+          chat(strTarget, ssTexts.str());
         }
-        else
-        {
-          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_channel_new() " + ssh_get_error(session) + string(1, char(3)));
-        }
+        strCommand.clear();
       }
       else
       {
-        chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  sshAuthenticate*() " + ssh_get_error(session) + string(1, char(3)));
+        msleep(500);
       }
-      ssh_disconnect(session);
     }
-    else
-    {
-      chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_connect() " + ssh_get_error(session) + string(1, char(3)));
-    }
-    ssh_free(session);
+    sshDisconnect(strSession, strError);
   }
   else
   {
-    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  ssh_new() Failed to initialize SSH session." + string(1, char(3)));
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshConnect() " + strError + string(1, char(3)));
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
   lock();
   m_sshClients[strIdent].clear();
   m_sshClients.erase(strIdent);
   unlock();
-}
-// }}}
-// {{{ sshAuthenticateNone()
-int Irc::sshAuthenticateNone(ssh_session session)
-{
-  return ssh_userauth_none(session, NULL);
-}
-// }}}
-// {{{ sshAuthenticatePassword()
-int Irc::sshAuthenticatePassword(ssh_session session, const string strPassword)
-{
-  return ssh_userauth_password(session, NULL, strPassword.c_str());
-}
-// }}}
-// {{{ sshAuthenticateKbdint()
-int Irc::sshAuthenticateKbdint(ssh_session session, const string strPassword)
-{
-  int nReturn;
-
-  while ((nReturn = ssh_userauth_kbdint(session, NULL, NULL)) == SSH_AUTH_INFO)
-  {
-    int nPrompts = ssh_userauth_kbdint_getnprompts(session);
-    for (int i = 0; i < nPrompts; i++)
-    {
-      char cEcho;
-      string strPrompt = ssh_userauth_kbdint_getprompt(session, i, &cEcho);
-      if (strPrompt == "Password: " && ssh_userauth_kbdint_setanswer(session, i, strPassword.c_str()) < 0)
-      {
-        return SSH_AUTH_ERROR;
-      }
-    }
-  }
-
-  return nReturn;
 }
 // }}}
 // {{{ terminal()

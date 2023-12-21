@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/status bin/storage bin/websocket
-install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/status bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/websocket
+install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
@@ -28,6 +28,7 @@ install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database 
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
 	install --mode=775 bin/session $(prefix)/radial/interface/
+	install --mode=775 bin/ssh $(prefix)/radial/interface/
 	install --mode=775 bin/status $(prefix)/radial/interface/
 	install --mode=775 bin/storage $(prefix)/radial/interface/
 	install --mode=775 bin/websocket $(prefix)/radial/interface/
@@ -77,7 +78,7 @@ obj/CentralMon.o: include/CentralMon.cpp obj
 command: bin/command $(prefix)/radial/interface
 	install --mode=775 bin/command $(prefix)/radial/interface/
 bin/command: ../../common/libcommon.a obj/command.o obj/Base.o obj/Interface.o obj/Command.o bin
-	g++ -o bin/command obj/command.o obj/Base.o obj/Interface.o obj/Command.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+	g++ -o bin/command obj/command.o obj/Base.o obj/Interface.o obj/Command.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/command.o: command.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c command.cpp -o obj/command.o $(CPPFLAGS) -I../../common
 obj/Command.o: include/Command.cpp obj
@@ -117,7 +118,7 @@ obj/Feedback.o: include/Feedback.cpp obj
 irc: bin/irc $(prefix)/radial/interface
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 bin/irc: ../../common/libcommon.a obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o bin
-	g++ -o bin/irc obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+	g++ -o bin/irc obj/irc.o obj/Base.o obj/Interface.o obj/Irc.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/irc.o: irc.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c irc.cpp -o obj/irc.o $(CPPFLAGS) -I../../common
 obj/Irc.o: include/Irc.cpp obj
@@ -137,7 +138,7 @@ obj/Junction.o: include/Junction.cpp obj
 jwt: bin/jwt $(prefix)/radial/interface
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
 bin/jwt: ../../common/libcommon.a obj/jwt.o obj/Base.o obj/Interface.o obj/Jwt.o bin
-	g++ -o bin/jwt obj/jwt.o obj/Base.o obj/Interface.o obj/Jwt.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -ljwt -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+	g++ -o bin/jwt obj/jwt.o obj/Base.o obj/Interface.o obj/Jwt.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -ljwt -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/jwt.o: jwt.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c jwt.cpp -o obj/jwt.o $(CPPFLAGS) -I../../common
 obj/Jwt.o: include/Jwt.cpp obj
@@ -223,11 +224,21 @@ obj/session.o: session.cpp ../../common/Makefile obj
 obj/Session.o: include/Session.cpp obj
 	g++ -ggdb -Wall -c include/Session.cpp -o obj/Session.o $(CPPFLAGS) -I../../common
 # }}}
+# {{{ ssh
+ssh: bin/ssh $(prefix)/radial/interface
+	install --mode=775 bin/ssh $(prefix)/radial/interface/
+bin/ssh: ../../common/libcommon.a obj/ssh.o obj/Base.o obj/Interface.o obj/Ssh.o bin
+	g++ -o bin/ssh obj/ssh.o obj/Base.o obj/Interface.o obj/Ssh.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+obj/ssh.o: ssh.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c ssh.cpp -o obj/ssh.o $(CPPFLAGS) -I../../common
+obj/Ssh.o: include/Ssh.cpp obj
+	g++ -ggdb -Wall -c include/Ssh.cpp -o obj/Ssh.o $(CPPFLAGS) -I/usr/local/include -I../../common
+# }}}
 # {{{ status
 status: bin/status $(prefix)/radial/interface
 	install --mode=775 bin/status $(prefix)/radial/interface/
 bin/status: ../../common/libcommon.a obj/status.o obj/Base.o obj/Interface.o obj/Status.o bin
-	g++ -o bin/status obj/status.o obj/Base.o obj/Interface.o obj/Status.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssh -lssl -ltar -lz
+	g++ -o bin/status obj/status.o obj/Base.o obj/Interface.o obj/Status.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
 obj/status.o: status.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c status.cpp -o obj/status.o $(CPPFLAGS) -I../../common
 obj/Status.o: include/Status.cpp obj
