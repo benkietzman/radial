@@ -418,6 +418,7 @@ void Ssh::schedule(string strPrefix)
       }
       m_mutex.unlock();
     }
+    msleep(1000);
   }
   threadDecrement();
 }
