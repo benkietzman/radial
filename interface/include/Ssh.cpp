@@ -216,27 +216,27 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                           if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                           {
                             list<string> messages;
-                            stringstream ssSession;
-                            ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
-                            ptJson->i("Session", ssSession.str());
-                            m_mutex.lock();
-                            m_sessions[ssSession.str()] = ptSsh;
-                            m_mutex.unlock();
                             if (transact(ptSsh, "", messages, strError))
                             {
+                              stringstream ssSession;
                               bResult = true;
-                            }
-                            if (!messages.empty())
-                            {
-                              if (exist(ptJson, "Response"))
+                              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
+                              ptJson->i("Session", ssSession.str());
+                              m_mutex.lock();
+                              m_sessions[ssSession.str()] = ptSsh;
+                              m_mutex.unlock();
+                              if (!messages.empty())
                               {
-                                delete ptJson->m["Response"];
-                              }
-                              ptJson->m["Response"] = new Json;
-                              while (!messages.empty())
-                              {
-                                ptJson->m["Response"]->pb(messages.front());
-                                messages.pop_front();
+                                if (exist(ptJson, "Response"))
+                                {
+                                  delete ptJson->m["Response"];
+                                }
+                                ptJson->m["Response"] = new Json;
+                                while (!messages.empty())
+                                {
+                                  ptJson->m["Response"]->pb(messages.front());
+                                  messages.pop_front();
+                                }
                               }
                             }
                           }
@@ -271,7 +271,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                 }
                 else
                 {
-                  strError = (string)" authenticate*() " + ssh_get_error(ptSsh->session);
+                  strError = (string)"authenticate*() " + ssh_get_error(ptSsh->session);
                 }
                 if (!bResult)
                 {
@@ -386,6 +386,10 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
   {
     bReading = false;
     strBuffer[1] = strCommand + "\n";
+  }
+  else
+  {
+    bResult = true;
   }
   while (!bExit)
   {
