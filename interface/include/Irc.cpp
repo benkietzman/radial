@@ -2628,7 +2628,6 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     string strCommand;
     if (!strData.empty())
     {
-      //sshConvert(strData);
       chat(strTarget, strData);
       strData.clear();
     }
@@ -2672,7 +2671,6 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       if (!strData.empty())
       {
-        //sshConvert(strData);
         chat(strTarget, strData);
         strData.clear();
       }
@@ -2693,43 +2691,6 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     m_sshClients.erase(strIdent);
   }
   unlock();
-}
-// }}}
-// {{{ sshConvert()
-void Irc::sshConvert(string &strData)
-{
-  stringstream ssData;
-
-  while (!strData.empty())
-  {
-    if (strData[0] == '\033' && strData.size() > 1)
-    {
-      if (strData[1] == '[' && strData.size() > 2)
-      {
-        char cEnd = '\0', cLast = '\0';
-        size_t unPosition;
-        for (size_t i = 2; cEnd == '\0' && i < strData.size(); i++)
-        {
-          unPosition = i;
-          if (isalpha(strData[i]))
-          {
-            cEnd = strData[i];
-          }
-          cLast = strData[i];
-        }
-        if (cEnd != '\0' || cLast == ';')
-        {
-          strData.erase(0, unPosition);
-        }
-      }
-    }
-    else if (strData[0] != '\r')
-    {
-      ssData << strData[0];
-    }
-    strData.erase(0, 1);
-  }
-  strData = ssData.str();
 }
 // }}}
 // }}}
