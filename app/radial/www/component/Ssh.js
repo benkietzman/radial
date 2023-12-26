@@ -98,7 +98,11 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        if (!c.wsResponse(response, error))
+        if (c.wsResponse(response, error))
+        {
+          s.command.v = null;
+        }
+        else
         {
           s.message.v = error.message;
         }
@@ -129,7 +133,7 @@ export default
     <div c-model="info" class="text-warning"></div>
     <div c-model="message" class="text-danger"></div>
     <div class="row">
-      {{#if bConnected}}
+      {{#if strSession}}
       <div class="col-md-auto">
         <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
       </div>
@@ -151,10 +155,10 @@ export default
     <div style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; margin: 0px; padding: 0px; white-space: pre;" c-model="screen"></div>
     <div class="row">
       <div class="col-md-auto">
-        <div class="input-group"><span class="input-group-text">Send</span><input type="text" class="form-control" c-model="command"{{^if bConnected}} disabled{{/if}}></div>
+        <div class="input-group"><span class="input-group-text">Send</span><input type="text" class="form-control" c-model="command"{{^if strSession}} disabled{{/if}}></div>
       </div>
       <div class="col-md-auto">
-        <button class="btn btn-warning" c-click="send()"{{^if bConnected}} disabled{{/if}}>Send</button>
+        <button class="btn btn-warning" c-click="send()"{{^if strSession}} disabled{{/if}}>Send</button>
       </div>
     </div>
   </div>
