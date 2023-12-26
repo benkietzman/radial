@@ -112,7 +112,7 @@ export default
         }
         if (c.isDefined(response.Response))
         {
-          s.screen.v = response.Response;
+          s.screen.v += response.Response;
         }
         s.u();
       });
@@ -127,38 +127,49 @@ export default
   // [[[ template
   template: `
   <h4 class="page-header">Secure Shell (SSH)</h4>
-    <p>
-      Use the provided form to establish an SSH session.
-    </p>
     <div c-model="info" class="text-warning"></div>
     <div c-model="message" class="text-danger"></div>
     <div class="row">
-      {{#if strSession}}
-      <div class="col-md-auto">
-        <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
+      <div class="col-md-8">
+        <div style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 400px; margin: 0px; max-height: 400px; max-width: 600px; overflow: auto; padding: 10px; white-space: pre; width: 600px;" c-model="screen"></div>
+        <div class="row">
+          <div class="col">
+            <div class="input-group"><span class="input-group-text">Send</span><input type="text" class="form-control" c-model="command"{{^if strSession}} disabled{{/if}}></div>
+          </div>
+          <div class="col">
+            <button class="btn btn-warning" c-click="send()"{{^if strSession}} disabled{{/if}}>Send</button>
+          </div>
+        </div>
       </div>
-      {{else}}
-      <div class="col-md-auto">
-        <div class="input-group"><span class="input-group-text">Server</span><input type="text" class="form-control" c-model="server"></div>
-      </div>
-      <div class="col-md-auto">
-        <div class="input-group"><span class="input-group-text">User</span><input type="text" class="form-control" c-model="user"></div>
-      </div>
-      <div class="col-md-auto">
-        <div class="input-group"><span class="input-group-text">Password</span><input type="password" class="form-control" c-model="password"></div>
-      </div>
-      <div class="col-md-auto">
-        <button class="btn btn-success" c-click="connect()">Connect</button>
-      </div>
-      {{/if}}
-    </div>
-    <div style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; margin: 0px; padding: 0px; white-space: pre;" c-model="screen"></div>
-    <div class="row">
-      <div class="col-md-auto">
-        <div class="input-group"><span class="input-group-text">Send</span><input type="text" class="form-control" c-model="command"{{^if strSession}} disabled{{/if}}></div>
-      </div>
-      <div class="col-md-auto">
-        <button class="btn btn-warning" c-click="send()"{{^if strSession}} disabled{{/if}}>Send</button>
+      <div class="col-md-4">
+        {{#if strSession}}
+        <div class="row">
+          <div class="col">
+          <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
+          </div>
+        </div>
+          {{else}}
+        <div class="row" style="margin-bottom: 10px;">
+          <div class="col">
+          <div class="input-group"><span class="input-group-text">Server</span><input type="text" class="form-control" c-model="server"></div>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom: 10px;">
+          <div class="col">
+          <div class="input-group"><span class="input-group-text">User</span><input type="text" class="form-control" c-model="user"></div>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom: 10px;">
+          <div class="col">
+          <div class="input-group"><span class="input-group-text">Password</span><input type="password" class="form-control" c-model="password"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+          <button class="btn btn-success" c-click="connect()">Connect</button>
+          </div>
+        </div>
+        {{/if}}
       </div>
     </div>
   </div>
