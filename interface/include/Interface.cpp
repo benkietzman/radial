@@ -2844,10 +2844,11 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   Json *ptJson = new Json;
 
   ptJson->i("Function", "connect");
-  ptJson->i("Server", strServer);
-  ptJson->i("Port", strPort);
-  ptJson->i("User", strUser);
-  ptJson->i("Password", strPassword);
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Server", strServer);
+  ptJson->m["Request"]->i("Port", strPort);
+  ptJson->m["Request"]->i("User", strUser);
+  ptJson->m["Request"]->i("Password", strPassword);
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
