@@ -2681,6 +2681,31 @@ void Irc::sshConvert(string &strData)
   size_t unPosition;
   stringstream ssData;
 
+  while ((unPosition = strData.find("\n")) != string::npos)
+  {
+    string strLine = strData.substr(0, (unPosition + 1));
+    strData.erase(0, (unPosition + 1));
+    sshConvertLine(strLine);
+    ssData << strLine;
+  }
+  if (!strData.empty())
+  {
+    sshConvertLine(strData);
+    ssData << strData;
+  }
+  strData = ssData.str();
+}
+// }}}
+// {{{ sshConvertLine()
+void Irc::sshConvertLine(string &strData)
+{
+  size_t unPosition;
+  stringstream ssData;
+
+  while ((unPosition = strData.find("\r")) != string::npos)
+  {
+    strData.erase(0, (unPosition + 1));
+  }
   while (!strData.empty())
   {
     if (strData[0] == char(27) && (unPosition = strData.find("m")) != string::npos)

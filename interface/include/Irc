@@ -59,6 +59,7 @@ class Irc : public Interface
   void quit();
   void ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword);
   void sshConvert(string &strData);
+  void sshConvertLine(string &strData);
   void terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort);
   void unlock();
   string var(const string strName, Json *ptData);
