@@ -2679,11 +2679,12 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
 void Irc::sshConvert(string &strData)
 {
   size_t unPosition;
+  string strLine;
   stringstream ssData;
 
   while ((unPosition = strData.find("\n")) != string::npos)
   {
-    string strLine = strData.substr(0, (unPosition + 1));
+    strLine = strData.substr(0, (unPosition + 1));
     strData.erase(0, (unPosition + 1));
     sshConvertLine(strLine);
     ssData << strLine;
@@ -2702,10 +2703,6 @@ void Irc::sshConvertLine(string &strData)
   size_t unPosition;
   stringstream ssData;
 
-  while ((unPosition = strData.find("\r")) != string::npos)
-  {
-    strData.erase(0, (unPosition + 1));
-  }
   while (!strData.empty())
   {
     if (strData[0] == char(27) && (unPosition = strData.find("m")) != string::npos)
