@@ -2698,24 +2698,38 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
 // {{{ sshConvert()
 void Irc::sshConvert(string &strData)
 {
-  size_t unPosition[3];
+  stringstream ssData;
 
-  while ((unPosition[0] = strData.find("\r")) != string::npos)
+  while (!strData.empty())
   {
-    strData.erase(unPosition[0], 1);
-  }
-  unPosition[0] = 0;
-  while ((unPosition[0] = strData.find("\033", unPosition[0])) != string::npos)
-  {
-    if ((unPosition[1] = strData.find("[", (unPosition[0] + 1))) != string::npos && (unPosition[2] = strData.find("m", (unPosition[1] + 1))) != string::npos)
+    if (strData[0] == '\033' && strData.size() > 1)
     {
-      strData.erase(unPosition[0], (unPosition[2] + 1 - unPosition[0]));
+      if (strData[1] == '[' && strData.size() > 2)
+      {
+        char cEnd = '\0', cLast = '\0';
+        size_t unPosition;
+        for (size_t i = 2; cEnd == '\0' && i < strData.size(); i++)
+        {
+          unPosition = i;
+          if (isalpha(strData[i]))
+          {
+            cEnd = strData[i];
+          }
+          cLast = strData[i];
+        }
+        if (cEnd != '\0' || cLast == ';')
+        {
+          strData.erase(0, unPosition);
+        }
+      }
     }
-    else
+    else if (strData[0] != '\r')
     {
-      unPosition[0]++;
+      ssData << strData[0];
     }
+    strData.erase(0, 1);
   }
+  strData = ssData.str();
 }
 // }}}
 // }}}
