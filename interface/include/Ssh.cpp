@@ -427,7 +427,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
         if (fds[0].revents & POLLNVAL)
         {
           bExit = true;
-          strError = (string)"poll() Socket is invalid.";
+          strError = (string)"poll() Invalid socket.";
         }
         if (fds[0].revents & POLLOUT)
         {
