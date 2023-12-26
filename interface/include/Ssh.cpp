@@ -440,7 +440,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
               time(&(CTime[0]));
             }
           }
-          else if (nReturn < 0 || ssh_channel_is_eof(ptSsh->channel))
+          else
           {
             bClose = bExit = true;
             if (strlen(ssh_get_error(ptSsh->session)) != 0)
