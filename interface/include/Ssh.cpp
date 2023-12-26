@@ -216,7 +216,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   {
                     if (ssh_channel_open_session(ptSsh->channel) == SSH_OK)
                     {
-                      if (ssh_channel_request_pty_size(ptSsh->channel, "vt100", 80, 24) == SSH_OK)
+                      if (ssh_channel_request_pty_size(ptSsh->channel, "xterm-old", 80, 24) == SSH_OK)
                       { 
                         if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                         {
