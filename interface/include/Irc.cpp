@@ -2601,7 +2601,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     bool bExit = false;
     size_t unAttempts = 0;
     chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07WAITING ON PASSWORD" + string(1, char(3)) + string(1, char(2)));
-    chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh [password]" + string(1, char(3)) + string(1, char(2)));
+    chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh send [password]" + string(1, char(3)) + string(1, char(2)));
     while (!bExit && unAttempts++ < 1200)
     {
       lock();
@@ -2704,11 +2704,16 @@ void Irc::sshConvert(string &strData)
   {
     strData.erase(unPosition[0], 1);
   }
-  while ((unPosition[0] = strData.find("\033")) != string::npos)
+  unPosition[0] = 0;
+  while ((unPosition[0] = strData.find("\033", unPosition[0])) != string::npos)
   {
     if ((unPosition[1] = strData.find("[", (unPosition[0] + 1))) != string::npos && (unPosition[2] = strData.find("m", (unPosition[1] + 1))) != string::npos)
     {
       strData.erase(unPosition[0], (unPosition[2] + 1 - unPosition[0]));
+    }
+    else
+    {
+      unPosition[0]++;
     }
   }
 }
