@@ -2685,7 +2685,7 @@ void Irc::sshConvert(string &strData)
   {
     if (strData[0] == char(27) && (unPosition = strData.find("m")) != string::npos)
     {
-      strData.erase(0, (unPosition + 1);
+      strData.erase(0, (unPosition + 1));
     }
     else
     {
