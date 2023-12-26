@@ -216,41 +216,34 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   {
                     if (ssh_channel_open_session(ptSsh->channel) == SSH_OK)
                     {
-                      if (ssh_channel_request_pty(ptSsh->channel) == SSH_OK)
+                      if (ssh_channel_request_pty_size(ptSsh->channel, "vt100", 80, 24) == SSH_OK)
                       { 
-                        if (ssh_channel_change_pty_size(ptSsh->channel, 80, 24) == SSH_OK)
+                        if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                         {
-                          if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
+                          string strData;
+                          if (transact(ptSsh, "", strData, strError))
                           {
-                            string strData;
-                            if (transact(ptSsh, "", strData, strError))
+                            stringstream ssSession;
+                            bResult = true;
+                            ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
+                            ptJson->i("Session", ssSession.str());
+                            m_mutex.lock();
+                            m_sessions[ssSession.str()] = ptSsh;
+                            m_mutex.unlock();
+                            if (!strData.empty())
                             {
-                              stringstream ssSession;
-                              bResult = true;
-                              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
-                              ptJson->i("Session", ssSession.str());
-                              m_mutex.lock();
-                              m_sessions[ssSession.str()] = ptSsh;
-                              m_mutex.unlock();
-                              if (!strData.empty())
-                              {
-                                ptJson->i("Response", strData);
-                              }
+                              ptJson->i("Response", strData);
                             }
-                          }
-                          else
-                          {
-                            strError = (string)"ssh_channel_request_shell() " + ssh_get_error(ptSsh->session);
                           }
                         }
                         else
                         {
-                          strError = (string)"ssh_channel_change_pty_size() " + ssh_get_error(ptSsh->session);
+                          strError = (string)"ssh_channel_request_shell() " + ssh_get_error(ptSsh->session);
                         }
                       }
                       else
                       {
-                        strError = (string)"ssh_channel_request_pty() " + ssh_get_error(ptSsh->session);
+                        strError = (string)"ssh_channel_request_pty_size() " + ssh_get_error(ptSsh->session);
                       }
                     }
                     else

@@ -2628,7 +2628,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     string strCommand;
     if (!strData.empty())
     {
-      sshConvert(strData);
+      //sshConvert(strData);
       chat(strTarget, strData);
       strData.clear();
     }
@@ -2672,7 +2672,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       if (!strData.empty())
       {
-        sshConvert(strData);
+        //sshConvert(strData);
         chat(strTarget, strData);
         strData.clear();
       }
