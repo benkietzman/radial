@@ -2837,31 +2837,6 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
   m_pAutoModeCallback = pCallback;
 }
 // }}}
-// {{{ sshCommand()
-bool Interface::sshCommand(string &strSession, const string strCommand, string &strData, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Session", strSession);
-  ptJson->i("Command", strCommand);
-  if (hub("ssh", ptJson, strError))
-  {
-    bResult = true;
-  }
-  if (!exist(ptJson, "Session"))
-  {
-    strSession.clear();
-  }
-  if (!empty(ptJson, "Response"))
-  {
-    strData = ptJson->m["Response"]->v;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
 // {{{ sshConnect()
 bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, string &strData, string &strError)
 {
@@ -2901,6 +2876,32 @@ bool Interface::sshDisconnect(const string strSession, string &strError)
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// {{{ sshSend()
+bool Interface::sshSend(string &strSession, const string strCommand, string &strData, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "send");
+  ptJson->i("Session", strSession);
+  ptJson->i("Request", strCommand);
+  if (hub("ssh", ptJson, strError))
+  {
+    bResult = true;
+  }
+  if (!exist(ptJson, "Session"))
+  {
+    strSession.clear();
+  }
+  if (!empty(ptJson, "Response"))
+  {
+    strData = ptJson->m["Response"]->v;
   }
   delete ptJson;
 

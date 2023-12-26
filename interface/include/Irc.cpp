@@ -2652,7 +2652,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       unlock();
       if (bCommand)
       {
-        if (sshCommand(strSession, strCommand, strData, strError))
+        if (sshSend(strSession, strCommand, strData, strError))
         {
           if (strSession.empty())
           {
@@ -2662,7 +2662,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
         else
         {
           bExit = true;
-          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshCommand() " + strError + string(1, char(3)));
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshSend() " + strError + string(1, char(3)));
         }
         strCommand.clear();
       }
@@ -2698,6 +2698,19 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
 // {{{ sshConvert()
 void Irc::sshConvert(string &strData)
 {
+  size_t unPosition[3];
+
+  while ((unPosition[0] = strData.find("\r")) != string::npos)
+  {
+    strData.erase(unPosition[0], 1);
+  }
+  while ((unPosition[0] = strData.find("\033")) != string::npos)
+  {
+    if ((unPosition[1] = strData.find("[", (unPosition[0] + 1))) != string::npos && (unPosition[2] = strData.find("m", (unPosition[1] + 1))) != string::npos)
+    {
+      strData.erase(unPosition[0], (unPosition[2] + 1 - unPosition[0]));
+    }
+  }
 }
 // }}}
 // }}}
