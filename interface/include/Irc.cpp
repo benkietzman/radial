@@ -2690,6 +2690,7 @@ void Irc::sshConvert(string &strData)
     else
     {
       ssData << strData[0];
+      strData.erase(0, 1);
     }
   }
   strData = ssData.str();
