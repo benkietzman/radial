@@ -424,6 +424,10 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
             }
           }
         }
+        if (fds[0].revents & POLLNVAL)
+        {
+          bExit = true;
+        }
         if (fds[0].revents & POLLOUT)
         {
           if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer.c_str(), strBuffer.size())) > 0)
