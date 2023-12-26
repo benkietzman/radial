@@ -98,38 +98,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
         m_mutex.unlock();
         if (ptSsh != NULL)
         {
-          if (!empty(ptJson, "Command"))
-          {
-            list<string> messages;
-            if (transact(ptSsh, ptJson->m["Command"]->v, messages, strError))
-            {
-              bResult = true;
-            }
-            if (ptSsh->fdSocket == -1)
-            {
-              m_mutex.lock();
-              delete ptSsh;
-              ptSsh = NULL;
-              m_sessions.erase(ptJson->m["Session"]->v);
-              m_mutex.unlock();
-              delete ptJson->m["Session"];
-              ptJson->m.erase("Session");
-            }
-            if (!messages.empty())
-            {
-              if (exist(ptJson, "Response"))
-              {
-                delete ptJson->m["Response"];
-              }
-              ptJson->m["Response"] = new Json;
-              while (!messages.empty())
-              {
-                ptJson->m["Response"]->pb(messages.front());
-                messages.pop_front();
-              }
-            }
-          }
-          else if (!empty(ptJson, "Function"))
+          if (!empty(ptJson, "Function"))
           {
             if (ptJson->m["Function"]->v == "disconnect")
             {
@@ -145,14 +114,40 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
               delete ptJson->m["Session"];
               ptJson->m.erase("Session");
             }
+            else if (ptJson->m["Function"]->v == "send")
+            {
+              string strData, strRequest;
+              if (!empty(ptJson, "Request"))
+              {
+                strRequest = ptJson->m["Request"]->v;
+              }
+              if (transact(ptSsh, ptJson->m["Request"]->v, strData, strError))
+              {
+                bResult = true;
+              }
+              if (ptSsh->fdSocket == -1)
+              {
+                m_mutex.lock();
+                delete ptSsh;
+                ptSsh = NULL;
+                m_sessions.erase(ptJson->m["Session"]->v);
+                m_mutex.unlock();
+                delete ptJson->m["Session"];
+                ptJson->m.erase("Session");
+              }
+              if (!strData.empty())
+              {
+                ptJson->i("Response", strData);
+              }
+            }
             else
             {
-              strError = "Please provide a valid Function:  disconnect.";
+              strError = "Please provide a valid Function:  disconnect, send.";
             }
           }
           else
           {
-            strError = "Please provide the Command or Function.";
+            strError = "Please provide the Function.";
           }
           if (ptSsh != NULL)
           {
@@ -227,8 +222,8 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                         {
                           if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                           {
-                            list<string> messages;
-                            if (transact(ptSsh, "", messages, strError))
+                            string strData;
+                            if (transact(ptSsh, "", strData, strError))
                             {
                               stringstream ssSession;
                               bResult = true;
@@ -237,18 +232,9 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                               m_mutex.lock();
                               m_sessions[ssSession.str()] = ptSsh;
                               m_mutex.unlock();
-                              if (!messages.empty())
+                              if (!strData.empty())
                               {
-                                if (exist(ptJson, "Response"))
-                                {
-                                  delete ptJson->m["Response"];
-                                }
-                                ptJson->m["Response"] = new Json;
-                                while (!messages.empty())
-                                {
-                                  ptJson->m["Response"]->pb(messages.front());
-                                  messages.pop_front();
-                                }
+                                ptJson->i("Response", strData);
                               }
                             }
                           }
@@ -385,22 +371,22 @@ void Ssh::schedule(string strPrefix)
 }
 // }}}
 // {{{ transact()
-bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &messages, string &strError)
+bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError)
 {
   bool bResult = false;
 
+  strData.clear();
   if (ptSsh->fdSocket != -1)
   {
     bool bClose = false, bExit = false, bReading = true;
     int nReturn;
     char szBuffer[4096];
-    size_t unPosition;
-    string strBuffer[2];
+    string strBuffer;
     time_t CTime[2];
     if (!strCommand.empty())
     {
       bReading = false;
-      strBuffer[1] = strCommand + "\n";
+      strBuffer = strCommand;
     }
     else
     {
@@ -411,53 +397,21 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
       pollfd fds[1];
       fds[0].fd = ptSsh->fdSocket;
       fds[0].events = POLLIN;
-      if (!strBuffer[1].empty())
+      if (!strBuffer.empty())
       {
         fds[0].events |= POLLOUT;
       }
-      if ((nReturn = poll(fds, 1, 500)) > 0)
+      if ((nReturn = poll(fds, 1, 100)) > 0)
       {
         if (fds[0].revents & POLLIN)
         {
           if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
           {
             bReading = true;
-            strBuffer[0].append(szBuffer, nReturn);
-            while ((unPosition = strBuffer[0].find("\n")) != string::npos)
+            strData.append(szBuffer, nReturn);
+            if (strData.size() > 1048576)
             {
-              string strLine = strBuffer[0].substr(0, unPosition);
-              stringstream ssLine;
-              strBuffer[0].erase(0, (unPosition + 1));
-              while (!strLine.empty())
-              {
-                if (strLine[0] == '\033' && strLine.size() > 1)
-                {
-                  if (strLine[1] == '[' && strLine.size() > 2)
-                  {
-                    char cEnd = '\0', cLast = '\0';
-                    size_t unPosition; 
-                    for (size_t i = 2; cEnd == '\0' && i < strLine.size(); i++)
-                    {
-                      unPosition = i;
-                      if (isalpha(strLine[i]))
-                      {
-                        cEnd = strLine[i];
-                      }
-                      cLast = strLine[i];
-                    }
-                    if (cEnd != '\0' || cLast == ';')
-                    {
-                      strLine.erase(0, unPosition);
-                    }
-                  }
-                }
-                else if (strLine[0] != '\r')
-                {
-                  ssLine << strLine[0];
-                }
-                strLine.erase(0, 1);
-              }
-              messages.push_back(ssLine.str());
+              bExit = true;
             }
           }
           else
@@ -472,10 +426,10 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
         }
         if (fds[0].revents & POLLOUT)
         {
-          if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer[1].c_str(), strBuffer[1].size())) > 0)
+          if ((nReturn = ssh_channel_write(ptSsh->channel, strBuffer.c_str(), strBuffer.size())) > 0)
           {
-            strBuffer[1].erase(0, nReturn);
-            if (strBuffer[1].empty())
+            strBuffer.erase(0, nReturn);
+            if (strBuffer.empty())
             {
               bResult = true;
               time(&(CTime[0]));
@@ -505,11 +459,11 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, list<string> &mess
       else if (bResult)
       {
         time(&(CTime[1]));
-        if ((CTime[1] - CTime[0]) > 60)
+        if ((CTime[1] - CTime[0]) > 5)
         {
           bClose = bExit = true;
           bResult = false;
-          strError = "Command timed out after 60 seconds waiting for response.";
+          strError = "Command timed out after five seconds waiting for response.";
         }
       }
     }

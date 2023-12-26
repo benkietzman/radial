@@ -2838,7 +2838,7 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
 }
 // }}}
 // {{{ sshCommand()
-bool Interface::sshCommand(string &strSession, const string strCommand, list<string> &messages, string &strError)
+bool Interface::sshCommand(string &strSession, const string strCommand, string &strData, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -2848,17 +2848,14 @@ bool Interface::sshCommand(string &strSession, const string strCommand, list<str
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
-    {
-      for (auto &i : ptJson->m["Response"]->l)
-      {
-        messages.push_back(i->v);
-      }
-    }
   }
   if (!exist(ptJson, "Session"))
   {
     strSession.clear();
+  }
+  if (!empty(ptJson, "Response"))
+  {
+    strData = ptJson->m["Response"]->v;
   }
   delete ptJson;
 
@@ -2866,7 +2863,7 @@ bool Interface::sshCommand(string &strSession, const string strCommand, list<str
 }
 // }}}
 // {{{ sshConnect()
-bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, list<string> &messages, string &strError)
+bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, string &strData, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -2879,17 +2876,14 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;
-    if (!empty(ptJson, "Session"))
-    {
-      strSession = ptJson->m["Session"]->v;
-    }
-    if (exist(ptJson, "Response"))
-    {
-      for (auto &i : ptJson->m["Response"]->l)
-      {
-        messages.push_back(i->v);
-      }
-    }
+  }
+  if (!empty(ptJson, "Session"))
+  {
+    strSession = ptJson->m["Session"]->v;
+  }
+  if (!empty(ptJson, "Response"))
+  {
+    strData = ptJson->m["Response"]->v;
   }
   delete ptJson;
 

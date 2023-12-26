@@ -375,10 +375,19 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          string strCommand;
-          getline(ssData, strCommand);
-          m_manip.trim(strCommand, strCommand);
-          ptRequest->i("Command", strCommand);
+          string strFunction;
+          ssData >> strFunction;
+          if (!strFunction.empty())
+          {
+            string strCommand;
+            ptRequest->i("Function", strFunction);
+            getline(ssData, strCommand);
+            m_manip.trim(strCommand, strCommand);
+            if (!strCommand.empty())
+            {
+              ptRequest->i("Command", strCommand);
+            }
+          }
         }
         unlock();
       }
@@ -1500,36 +1509,113 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ ssh || s
   else if (strAction == "ssh" || strAction == "s")
   {
-    string strCommand = var("Command", ptData), strServer = var("Server", ptData), strUser = var("User", ptData);
-    if (!strUser.empty() && !strServer.empty())
+    string strFunction = var("Function", ptData);
+    if (!strFunction.empty())
     {
-      string strPassword = var("Password", ptData), strPort = var("Port", ptData);
-      lock();
-      if (m_sshClients.find(strIdent) == m_sshClients.end())
+      if (strFunction == "connect" || strFunction == "c")
       {
-        m_sshClients[strIdent] = {};
-        thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strUserID, strIdent, strServer, strPort, strUser, strPassword);
-        pthread_setname_np(threadSsh.native_handle(), "ssh");
-        threadSsh.detach();
+        string strCommand = var("Command", ptData), strConnect, strPassword, strPort, strServer, strUser;
+        stringstream ssBuffer(strCommand), ssConnect;
+        ssBuffer >> strConnect;
+        ssConnect.str(strConnect);
+        getline(ssBuffer, strPassword);
+        m_manip.trim(strPassword, strPassword);
+        getline(ssConnect, strUser, '@');
+        getline(ssConnect, strServer, '@');
+        ssConnect.str(strServer);
+        getline(ssConnect, strServer, ':');
+        getline(ssConnect, strPort, ':');
+        if (!strServer.empty() && !strUser.empty() && !strPassword.empty())
+        {
+          lock();
+          if (m_sshClients.find(strIdent) == m_sshClients.end())
+          {
+            m_sshClients[strIdent] = {};
+            thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strUserID, strIdent, strServer, strPort, strUser, strPassword);
+            pthread_setname_np(threadSsh.native_handle(), "ssh");
+            threadSsh.detach();
+          }
+          else
+          {
+            ssText << " error:  You already have a session open.  Use the following action to close the session:  exit.";
+          }
+          unlock();
+        }
+        else
+        {
+          ssText << " error:  Please provide the connection string following the connect Function:  [user]@[server]<:port> <password>.";
+        }
+      }
+      else if (strFunction == "ctrl-c")
+      {
+        stringstream ssCommand;
+        ssCommand << char(3);
+        lock();
+        if (m_sshClients.find(strIdent) != m_sshClients.end())
+        {
+          m_sshClients[strIdent].push_back(ssCommand.str());
+        }
+        else
+        {
+          ssText << " error:  Please provide connect following the action.";
+        }
+        unlock();
+      }
+      else if (strFunction == "disconnect" || strFunction == "d")
+      {
+        lock();
+        if (m_sshClients.find(strIdent) != m_sshClients.end())
+        {
+          m_sshClients.erase(strIdent);
+        }
+        else
+        {
+          ssText << " error:  Please provide connect following the action.";
+        }
+        unlock();
+      }
+      else if (strFunction == "enter" || strFunction == "e")
+      {
+        lock();
+        if (m_sshClients.find(strIdent) != m_sshClients.end())
+        {
+          m_sshClients[strIdent].push_back("\n");
+        }
+        else
+        {
+          ssText << " error:  Please provide connect following the action.";
+        }
+        unlock();
+      }
+      else if (strFunction == "send" || strFunction == "s" || strFunction == "sendenter" || strFunction == "se")
+      {
+        string strCommand = var("Command", ptData);
+        if (!strCommand.empty())
+        {
+          if (strFunction == "sendenter" || strFunction == "se")
+          {
+            strCommand += "\n";
+          }
+          lock();
+          if (m_sshClients.find(strIdent) != m_sshClients.end())
+          {
+            m_sshClients[strIdent].push_back(strCommand);
+          }
+          else
+          {
+            ssText << " error:  Please provide connect following the action.";
+          }
+          unlock();
+        }
+        else
+        {
+          ssText << " error:  Please provide the Command following the Function.";
+        }
       }
       else
       {
-        ssText << " error:  You already have a session open.  Use the following action to close the session:  exit.";
+        ssText << " error:  Please provide a valid Function following the action:  connect (c), ctrl-c, disconnect (c), enter (e), send (s), sendenter (se).";
       }
-      unlock();
-    }
-    else if (!strCommand.empty())
-    {
-      lock();
-      if (m_sshClients.find(strIdent) != m_sshClients.end())
-      {
-        m_sshClients[strIdent].push_back(strCommand);
-      }
-      else
-      {
-        ssText << " error:  Please provide the connection string following the action:  [user]@[server]<:port> <password>.";
-      }
-      unlock();
     }
     else
     {
@@ -2535,8 +2621,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 // {{{ ssh()
 void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
 {
-  list<string> messages;
-  string strError, strSession;
+  string strData, strError, strSession;
 
   strPrefix += "->ssh()";
   if (strPassword.empty())
@@ -2565,22 +2650,36 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     }
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
-  if (sshConnect(strServer, strPort, strUser, strPassword, strSession, messages, strError))
+  if (sshConnect(strServer, strPort, strUser, strPassword, strSession, strData, strError))
   {
-    bool bExit = false;
+    bool bExit = false, bCommand;
     string strCommand;
+    if (!strData.empty())
+    {
+      chat(strTarget, strData);
+      strData.clear();
+    }
     while (!bExit)
     {
-      if (!m_sshClients[strIdent].empty())
+      bCommand = false;
+      lock();
+      if (m_sshClients.find(strIdent) != m_sshClients.end())
       {
-        lock();
-        strCommand = m_sshClients[strIdent].front();
-        m_sshClients[strIdent].pop_front();
-        unlock();
+        if (!m_sshClients[strIdent].empty())
+        {
+          bCommand = true;
+          strCommand = m_sshClients[strIdent].front();
+          m_sshClients[strIdent].pop_front();
+        }
       }
-      if (!strCommand.empty())
+      else
       {
-        if (sshCommand(strSession, strCommand, messages, strError))
+        bExit = true;
+      }
+      unlock();
+      if (bCommand)
+      {
+        if (sshCommand(strSession, strCommand, strData, strError))
         {
           if (strSession.empty())
           {
@@ -2596,17 +2695,12 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       else
       {
-        msleep(500);
+        msleep(100);
       }
-      if (!messages.empty())
+      if (!strData.empty())
       {
-        stringstream ssTexts;
-        while (!messages.empty())
-        {
-          ssTexts << messages.front() << endl;
-          messages.pop_front();
-        }
-        chat(strTarget, ssTexts.str());
+        chat(strTarget, strData);
+        strData.clear();
       }
     }
     if (!strSession.empty())
@@ -2620,8 +2714,10 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   }
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
   lock();
-  m_sshClients[strIdent].clear();
-  m_sshClients.erase(strIdent);
+  if (m_sshClients.find(strIdent) != m_sshClients.end())
+  {
+    m_sshClients.erase(strIdent);
+  }
   unlock();
 }
 // }}}
