@@ -348,48 +348,19 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ ssh || s
       else if (strAction == "ssh" || strAction == "s")
       {
-        lock();
-        if (m_sshClients.find(strIdent) == m_sshClients.end())
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
         {
-          string strConnect;
-          ssData >> strConnect;
-          if (!strConnect.empty())
+          string strCommand;
+          ptRequest->i("Function", strFunction);
+          getline(ssData, strCommand);
+          m_manip.trim(strCommand, strCommand);
+          if (!strCommand.empty())
           {
-            string strPassword, strPort, strServer, strUser;
-            stringstream ssConnect(strConnect);
-            getline(ssData, strPassword);
-            m_manip.trim(strPassword, strPassword);
-            if (!strPassword.empty())
-            {
-              ptRequest->i("Password", strPassword);
-            }
-            getline(ssConnect, strUser, '@');
-            ptRequest->i("User", strUser);
-            getline(ssConnect, strServer, '@');
-            ssConnect.str(strServer);
-            getline(ssConnect, strServer, ':');
-            ptRequest->i("Server", strServer);
-            getline(ssConnect, strPort, ':');
-            ptRequest->i("Port", strPort);
+            ptRequest->i("Command", strCommand);
           }
         }
-        else
-        {
-          string strFunction;
-          ssData >> strFunction;
-          if (!strFunction.empty())
-          {
-            string strCommand;
-            ptRequest->i("Function", strFunction);
-            getline(ssData, strCommand);
-            m_manip.trim(strCommand, strCommand);
-            if (!strCommand.empty())
-            {
-              ptRequest->i("Command", strCommand);
-            }
-          }
-        }
-        unlock();
       }
       // }}}
       // {{{ storage
@@ -2618,6 +2589,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
   m_pAnalyzeCallback2 = pCallback2;
 }
 // }}}
+// {{{ ssh
 // {{{ ssh()
 void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
 {
@@ -2656,6 +2628,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     string strCommand;
     if (!strData.empty())
     {
+      sshConvert(strData);
       chat(strTarget, strData);
       strData.clear();
     }
@@ -2699,6 +2672,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       if (!strData.empty())
       {
+        sshConvert(strData);
         chat(strTarget, strData);
         strData.clear();
       }
@@ -2720,6 +2694,12 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   }
   unlock();
 }
+// }}}
+// {{{ sshConvert()
+void Irc::sshConvert(string &strData)
+{
+}
+// }}}
 // }}}
 // {{{ terminal()
 void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort)
