@@ -1545,12 +1545,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         unlock();
       }
-      else if (strFunction == "enter" || strFunction == "e")
+      else if (strFunction == "send" || strFunction == "s" || strFunction == "sendenter" || strFunction == "se")
       {
+        string strCommand = var("Command", ptData);
+        if (strFunction == "sendenter" || strFunction == "se")
+        {
+          strCommand += "\n";
+        }
         lock();
         if (m_sshClients.find(strIdent) != m_sshClients.end())
         {
-          m_sshClients[strIdent].push_back("\n");
+          m_sshClients[strIdent].push_back(strCommand);
         }
         else
         {
@@ -1558,34 +1563,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         unlock();
       }
-      else if (strFunction == "send" || strFunction == "s" || strFunction == "sendenter" || strFunction == "se")
-      {
-        string strCommand = var("Command", ptData);
-        if (!strCommand.empty())
-        {
-          if (strFunction == "sendenter" || strFunction == "se")
-          {
-            strCommand += "\n";
-          }
-          lock();
-          if (m_sshClients.find(strIdent) != m_sshClients.end())
-          {
-            m_sshClients[strIdent].push_back(strCommand);
-          }
-          else
-          {
-            ssText << " error:  Please provide connect following the action.";
-          }
-          unlock();
-        }
-        else
-        {
-          ssText << " error:  Please provide the Command following the Function.";
-        }
-      }
       else
       {
-        ssText << " error:  Please provide a valid Function following the action:  connect (c), ctrl-c, disconnect (c), enter (e), send (s), sendenter (se).";
+        ssText << " error:  Please provide a valid Function following the action:  connect (c), ctrl-c, disconnect (c), send (s), sendenter (se).";
       }
     }
     else
