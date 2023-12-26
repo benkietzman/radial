@@ -2703,9 +2703,13 @@ void Irc::sshConvertLine(string &strData)
   size_t unPosition;
   stringstream ssData;
 
-  while ((unPosition = strData.find("\r")) != string::npos)
+  while ((unPosition = strData.find("\r\n")) != string::npos)
   {
     strData.erase(unPosition, 1);
+  }
+  while ((unPosition = strData.find("\r")) != string::npos)
+  {
+    strData.erase(0, (unPosition + 1));
   }
   while (!strData.empty())
   {
