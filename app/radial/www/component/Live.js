@@ -27,7 +27,7 @@ export default
       classes: ['danger', 'info', 'success', 'warning'],
       'in': {}
     });
-    // ]]]=
+    // ]]]
     // [[[ init()
     s.init = () =>
     {

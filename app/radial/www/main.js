@@ -28,6 +28,7 @@ let common = new Common(
     {path: '/Live', name: 'Live', component: '/radial/component/Live.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
+    {path: '/Ssh', name: 'Ssh', component: '/radial/component/Ssh.js'},
     {path: '/Status', name: 'Status', component: '/radial/component/Status.js'},
     {default: '/Home'}
   ]

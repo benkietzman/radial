@@ -110,7 +110,7 @@ class App
     this.c.menu.left[unIndex++] = {value: 'Home', href: '/Home', icon: 'house', active: null};
     this.c.menu.left[unIndex++] = {value: 'Alert', href: '/Alert', icon: 'megaphone', active: null};
     this.c.menu.left[unIndex++] = {value: 'Chat', href: '/Chat', icon: 'chat', active: null};
-    this.c.menu.left[unIndex++] = {value: 'Live', href: '/Live', icon: 'broadcast', active: null};
+    this.c.menu.left[unIndex++] = {value: 'SSH', href: '/Ssh', icon: 'terminal', active: null};
     unIndex = 0;
     this.c.menu.right[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     this.c.resetMenu();

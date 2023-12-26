@@ -24,7 +24,7 @@ export default
       a: a,
       c: c
     });
-    // ]]]=
+    // ]]]
     // [[[ send()
     s.send = () =>
     {
