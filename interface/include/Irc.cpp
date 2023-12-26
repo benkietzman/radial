@@ -2608,6 +2608,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     string strCommand;
     if (!strData.empty())
     {
+      sshConvert(strData);
       chat(strTarget, strData);
       strData.clear();
     }
@@ -2651,6 +2652,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
       if (!strData.empty())
       {
+        sshConvert(strData);
         chat(strTarget, strData);
         strData.clear();
       }
@@ -2671,6 +2673,26 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     m_sshClients.erase(strIdent);
   }
   unlock();
+}
+// }}}
+// {{{ sshConvert()
+void Irc::sshConvert(string &strData)
+{
+  size_t unPosition;
+  stringstream ssData;
+
+  while (!strData.empty())
+  {
+    if (strData[0] == char(27) && (unPosition = strData.find("m")) != string::npos)
+    {
+      strData.erase(0, (unPosition + 1);
+    }
+    else
+    {
+      ssData << strData[0];
+    }
+  }
+  strData = ssData.str();
 }
 // }}}
 // }}}
