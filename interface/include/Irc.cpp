@@ -1525,7 +1525,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ssConnect.str(strServer);
         getline(ssConnect, strServer, ':');
         getline(ssConnect, strPort, ':');
-        if (!strServer.empty() && !strUser.empty() && !strPassword.empty())
+        if (!strServer.empty() && !strUser.empty())
         {
           lock();
           if (m_sshClients.find(strIdent) == m_sshClients.end())
