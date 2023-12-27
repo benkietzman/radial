@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/websocket
-install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
@@ -31,6 +31,7 @@ install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database 
 	install --mode=775 bin/ssh $(prefix)/radial/interface/
 	install --mode=775 bin/status $(prefix)/radial/interface/
 	install --mode=775 bin/storage $(prefix)/radial/interface/
+	install --mode=775 bin/terminal $(prefix)/radial/interface/
 	install --mode=775 bin/websocket $(prefix)/radial/interface/
 # }}}
 
@@ -253,6 +254,16 @@ obj/storage.o: storage.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c storage.cpp -o obj/storage.o $(CPPFLAGS) -I../../common
 obj/Storage.o: include/Storage.cpp obj
 	g++ -ggdb -Wall -c include/Storage.cpp -o obj/Storage.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ terminal
+terminal: bin/terminal $(prefix)/radial/interface
+	install --mode=775 bin/terminal $(prefix)/radial/interface/
+bin/terminal: ../../common/libcommon.a obj/terminal.o obj/Base.o obj/Interface.o obj/Terminal.o bin
+	g++ -o bin/terminal obj/terminal.o obj/Base.o obj/Interface.o obj/Terminal.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+obj/terminal.o: terminal.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c terminal.cpp -o obj/terminal.o $(CPPFLAGS) -I../../common
+obj/Terminal.o: include/Terminal.cpp obj
+	g++ -ggdb -Wall -c include/Terminal.cpp -o obj/Terminal.o $(CPPFLAGS) -I/usr/local/include -I../../common
 # }}}
 # {{{ websocket
 websocket: bin/websocket $(prefix)/radial/interface
