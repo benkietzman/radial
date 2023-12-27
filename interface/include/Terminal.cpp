@@ -109,7 +109,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             // {{{ screen
             else if (ptJson->m["Function"]->v == "screen")
             {
-              bScreen = true;
+              bResult = bScreen = true;
             }
             // }}}
             // {{{ send*
