@@ -47,7 +47,7 @@ export default
             {
               s.strSession = response.Session;
             }
-            s.screen();
+            s.getScreen();
           });
         }
         else
@@ -81,8 +81,8 @@ export default
       });
     };
     // ]]]
-    // [[[ screen()
-    s.screen = () =>
+    // [[[ getScreen()
+    s.getScreen = () =>
     {
       let request = {Interface: 'terminal', 'Function': 'screen', Session: s.strSession};
       c.wsRequest('radial', request).then((response) =>
@@ -121,7 +121,7 @@ export default
         {
           s.strSession = null;
         }
-        s.screen();
+        s.getScreen();
       });
     };
     // ]]]
