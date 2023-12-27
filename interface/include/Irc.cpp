@@ -382,32 +382,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ssData >> strFunction;
         if (!strFunction.empty())
         {
+          string strCommand;
           ptRequest->i("Function", strFunction);
-          if (strFunction == "connect" || strFunction == "c")
+          getline(ssData, strCommand);
+          m_manip.trim(strCommand, strCommand);
+          if (!strCommand.empty())
           {
-            string strPort, strServer;
-            ssData >> strServer >> strPort;
-            ptRequest->i("Server", strServer);
-            ptRequest->i("Port", strPort);
-          }
-          else
-          {
-            lock();
-            if (m_terminalClients.find(strIdent) != m_terminalClients.end())
-            {
-              string strCommand;
-              getline(ssData, strCommand);
-              if (!strCommand.empty())
-              {
-                strCommand = strFunction + (string)" " + strCommand;
-              }
-              else
-              {
-                strCommand = strFunction;
-              }
-              ptRequest->i("Command", strCommand);
-            }
-            unlock();
+            ptRequest->i("Command", strCommand);
           }
         }
       }
@@ -1620,8 +1601,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       string strCommand = var("Command", ptData);
       if (strFunction == "connect" || strFunction == "c")
       {
-        string strPort = var("Port", ptData), strServer = var("Server", ptData);
-        if (!strPort.empty() || !strServer.empty())
+        string strPort, strServer;
+        stringstream ssConnect(strCommand);
+        getline(ssConnect, strServer, ':');
+        getline(ssConnect, strPort, ':');
+        if (!strServer.empty() && !strPort.empty())
         {
           lock();
           if (m_terminalClients.find(strIdent) == m_terminalClients.end())
@@ -1637,24 +1621,37 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           unlock();
         }
+        else
+        {
+          ssText << " error:  Please provide the connection string following the connect Function:  [server]:[port].";
+        }
       }
-      else if (!strCommand.empty())
+      else
       {
         lock();
         if (m_terminalClients.find(strIdent) != m_terminalClients.end())
         {
-          m_terminalClients[strIdent].push_back(strCommand);
+          stringstream ssCommand;
+          if (!strCommand.empty())
+          {
+            ssCommand << strFunction << " " << strCommand;
+          }
+          else
+          {
+            ssCommand << strFunction;
+          }
+          m_terminalClients[strIdent].push_back(ssCommand.str());
         }
         else
         {
-          ssText << " error:  Please provide a valid function following the action:  connect (c).";
+          ssText << " error:  Please provide connect following the action.";
         }
         unlock();
       }
     }
     else
     {
-      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server] [port].";
+      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server]:[port].";
     }
   }
   // }}}
@@ -2730,47 +2727,39 @@ void Irc::sshConvertLine(string &strData)
 // {{{ terminal()
 void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort)
 {
-  bool bConnected = false;
-  string strError;
-  Terminal *pTerminal = new Terminal;
+  string strError, strSession;
 
   strPrefix += "->terminal()";
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
-  // {{{ initialize
-  if (pTerminal->connect(strServer, strPort))
+  if (terminalConnect(strServer, strPort, strSession, strError))
   {
-    bConnected = true;
-  }
-  else
-  {
-    strError = (string)"Terminal::connect() " + pTerminal->error();
-  }
-  // }}}
-  if (bConnected)
-  {
-    bool bExit = false, bProcess = false;
+    bool bExit = false, bProcess;
     string strData;
-    stringstream ssTexts;
-    time_t CTime[2] = {0, 0};
-    vector<string> vecScreen;
-    pTerminal->screen(vecScreen);
-    for (size_t i = 0; i < vecScreen.size(); i++)
+    stringstream ssText;
+    vector<string> screen;
+    terminalScreen(strSession, screen, strError);
+    for (size_t i = 0; i < screen.size(); i++)
     {
-      ssTexts << vecScreen[i] << endl;
+      ssText << screen[i] << endl;
     }
-    vecScreen.clear();
-    chat(strTarget, ssTexts.str());
-    time(&(CTime[0]));
+    screen.clear();
+    chat(strTarget, ssText.str());
     while (!bExit)
     {
       bProcess = false;
-      strError.clear();
       lock();
-      if (!m_terminalClients[strIdent].empty())
+      if (m_terminalClients.find(strIdent) != m_terminalClients.end())
       {
-        bProcess = true;
-        strData = m_terminalClients[strIdent].front();
-        m_terminalClients[strIdent].pop_front();
+        if (!m_terminalClients[strIdent].empty())
+        {
+          bProcess = true;
+          strData = m_terminalClients[strIdent].front();
+          m_terminalClients[strIdent].pop_front();
+        }
+      }
+      else
+      {
+        bExit = true;
       }
       unlock();
       if (bProcess)
@@ -2788,10 +2777,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             ssData >> strData;
             if (strData.size() == 1)
             {
-              if (!pTerminal->sendCtrl(strData[0], true))
-              {
-                strError = pTerminal->error();
-              }
+              terminalSendCtrl(strSession, strData[0], true, strError);
             }
             else
             {
@@ -2815,55 +2801,33 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            if (!pTerminal->sendDown(unCount, true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendDown(strSession, unCount, true, strError);
           }
           // }}}
           // {{{ enter
           else if (strFunction == "enter" || strFunction == "e")
           {
-            if (!pTerminal->sendEnter(true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendEnter(strSession, true, strError);
           }
           // }}}
           // {{{ escape
           else if (strFunction == "escape")
           {
-            if (!pTerminal->sendEscape(true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendEscape(strSession, true, strError);
           }
           // }}}
           // {{{ function
           else if (strFunction == "function" || strFunction == "f")
           {
-            int nKey = 0;
+            int nKey;
             ssData >> nKey;
-            if (nKey >= 1 && nKey <= 12)
-            {
-              if (!pTerminal->sendFunction(nKey))
-              {
-                strError = pTerminal->error();
-              }
-            }
-            else
-            {
-              strError = "Please provide a Data value between 1 and 12.";
-            }
+            terminalSendFunction(strSession, nKey, strError);
           }
           // }}}
           // {{{ home
           else if (strFunction == "home")
           {
-            if (!pTerminal->sendHome(true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendHome(strSession, true, strError);
           }
           // }}}
           // {{{ key
@@ -2878,10 +2842,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             }
             if (strData.size() == 1)
             {
-              if (!pTerminal->sendKey(strData[0], unCount, true))
-              {
-                strError = pTerminal->error();
-              }
+              terminalSendKey(strSession, strData[0], unCount, true, strError);
             }
             else
             {
@@ -2892,10 +2853,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           // {{{ keypadEnter
           else if (strFunction == "keypadEnter" || strFunction == "ke")
           {
-            if (!pTerminal->sendKeypadEnter(true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendKeypadEnter(strSession, true, strError);
           }
           // }}}
           // {{{ left
@@ -2908,10 +2866,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            if (!pTerminal->sendLeft(unCount, true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendLeft(strSession, unCount, true, strError);
           }
           // }}}
           // {{{ right
@@ -2924,10 +2879,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            if (!pTerminal->sendRight(unCount, true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendRight(strSession, unCount, true, strError);
           }
           // }}}
           // {{{ send
@@ -2936,28 +2888,15 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             string strTrimmed;
             getline(ssData, strData);
             m_manip.ltrim(strTrimmed, strData);
-            if (!pTerminal->sendWait(strTrimmed, unCount))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendWait(strSession, strTrimmed, unCount, strError);
           }
           // }}}
           // {{{ shiftFunction
           else if (strFunction == "shiftFunction" || strFunction == "sf")
           {
-            int nKey = 0;
+            int nKey;
             ssData >> nKey;
-            if (nKey >= 1 && nKey <= 12)
-            {
-              if (!pTerminal->sendShiftFunction(nKey))
-              {
-                strError = pTerminal->error();
-              }
-            }
-            else
-            {
-              strError = "Please provide a Data value between 1 and 12.";
-            }
+            terminalSendShiftFunction(strSession, nKey, strError);
           }
           // }}}
           // {{{ tab
@@ -2970,10 +2909,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            if (!pTerminal->sendTab(unCount, true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendTab(strSession, unCount, true, strError);
           }
           // }}}
           // {{{ up
@@ -2986,19 +2922,13 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            if (!pTerminal->sendUp(unCount, true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalSendUp(strSession, unCount, true, strError);
           }
           // }}}
           // {{{ wait
           else if (strFunction == "wait" || strFunction == "w")
           {
-            if (!pTerminal->wait(true))
-            {
-              strError = pTerminal->error();
-            }
+            terminalWait(strSession, true, strError);
           }
           // }}}
           // {{{ invalid
@@ -3007,23 +2937,27 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             strError = strInvalid;
           }
           // }}}
-          if (!bExit)
+          if (!strSession.empty())
           {
-            size_t unCol = pTerminal->col(), unRow = pTerminal->row();
-            pTerminal->screen(vecScreen);
-            ssTexts.str("");
-            for (size_t i = 0; i < vecScreen.size(); i++)
+            size_t unCol, unCols, unRow, unRows;
+            terminalScreen(strSession, screen, unCol, unCols, unRow, unRows, strError);
+            ssText.str("");
+            for (size_t i = 0; i < screen.size(); i++)
             {
-              if (i == unRow && unCol < vecScreen.size())
+              if (i == unRow && unCol < screen.size())
               {
                 stringstream ssCursor;
-                ssCursor << char(3) << "08,03" << vecScreen[i][unCol] << char(3);
-                vecScreen[i].replace(unCol, 1, ssCursor.str());
+                ssCursor << char(3) << "08,03" << screen[i][unCol] << char(3);
+                screen[i].replace(unCol, 1, ssCursor.str());
               }
-              ssTexts << vecScreen[i] << endl;
+              ssText << screen[i] << endl;
             }
-            vecScreen.clear();
-            chat(strTarget, ssTexts.str());
+            screen.clear();
+            chat(strTarget, ssText.str());
+          }
+          if (strSession.empty())
+          {
+            bExit = true;
           }
         }
         else
@@ -3033,35 +2967,30 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
         if (!strError.empty())
         {
           chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)));
+          strError.clear();
         }
-        time(&(CTime[0]));
       }
       else
       {
-        msleep(250);
-      }
-      time(&(CTime[1]));
-      if ((CTime[1] - CTime[0]) > 3600)
-      {
-        bExit = true;
-        chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  The session timed out due to inactivity." + string(1, char(3)));
+        msleep(100);
       }
     }
-    pTerminal->disconnect();
-  }
-  else if (!strError.empty())
-  {
-    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)));
+    if (!strSession.empty())
+    {
+      terminalDisconnect(strSession, strError);
+    }
   }
   else
   {
-    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Encountered an unknown error." + string(1, char(3)));
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::terminalConnect() " + strError + string(1, char(3)));
   }
-  delete pTerminal;
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
   lock();
-  m_terminalClients[strIdent].clear();
-  m_terminalClients.erase(strIdent);
+  if (m_terminalClients.find(strIdent) != m_terminalClients.end())
+  {
+    m_terminalClients[strIdent].clear();
+    m_terminalClients.erase(strIdent);
+  }
   unlock();
 }
 // }}}
