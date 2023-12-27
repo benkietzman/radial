@@ -166,7 +166,7 @@ export default
     };
     // ]]]
     // [[[ main
-    c.setMenu('Ssh');
+    c.setMenu('SSH');
     s.u();
     // ]]]
   },
