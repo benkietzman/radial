@@ -406,18 +406,21 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             else if (ptJson->m["Function"]->v == "wait")
             {
               bool bWait = false;
+ptJson->m["Response"]->i("a", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
               if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->m["Wait"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
               {
                 bWait = true;
               }
               if (t->t.wait(bWait))
               {
+ptJson->m["Response"]->i("b", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
                 bResult = true;
               }
               else
               {
                 strError = t->t.error();
               }
+ptJson->m["Response"]->i("c", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
             }
             // }}}
             // {{{ invalid
@@ -426,6 +429,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               strError = strInvalid;
             }
             // }}}
+ptJson->m["Response"]->i("d", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
             if (bScreen)
             {
               stringstream ssValue;
@@ -449,6 +453,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               ssValue << t->t.rows();
               ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             }
+ptJson->m["Response"]->i("e", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
           }
           else
           {
