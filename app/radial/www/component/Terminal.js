@@ -42,15 +42,15 @@ export default
             let error = {};
             if (c.wsResponse(response, error))
             {
+              if (c.isDefined(response.Session))
+              {
+                s.strSession = response.Session;
+              }
               s.process(response.Response);
             }
             else
             {
               s.message.v = error.message;
-            }
-            if (c.isDefined(response.Session))
-            {
-              s.strSession = response.Session;
             }
           });
         }
@@ -155,10 +155,6 @@ export default
           {
             s.message.v = error.message;
           }
-          if (!c.isDefined(response.Session))
-          {
-            s.strSession = null;
-          }
         });
       }
       else if (key.length == 1)
@@ -174,10 +170,6 @@ export default
           else
           {
             s.message.v = error.message;
-          }
-          if (!c.isDefined(response.Session))
-          {
-            s.strSession = null;
           }
         });
       }
@@ -198,10 +190,6 @@ export default
         {
           s.message.v = error.message;
         }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
-        }
       });
     };
     // ]]]
@@ -219,10 +207,6 @@ export default
         else
         {
           s.message.v = error.message;
-        }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
         }
       });
     };
@@ -242,10 +226,6 @@ export default
         {
           s.message.v = error.message;
         }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
-        }
       });
     };
     // ]]]
@@ -263,10 +243,6 @@ export default
         else
         {
           s.message.v = error.message;
-        }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
         }
       });
     };
@@ -286,10 +262,6 @@ export default
         {
           s.message.v = error.message;
         }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
-        }
       });
     };
     // ]]]
@@ -308,10 +280,6 @@ export default
         {
           s.message.v = error.message;
         }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
-        }
       });
     };
     // ]]]
@@ -329,10 +297,6 @@ export default
         else
         {
           s.message.v = error.message;
-        }
-        if (!c.isDefined(response.Session))
-        {
-          s.strSession = null;
         }
       });
     };
