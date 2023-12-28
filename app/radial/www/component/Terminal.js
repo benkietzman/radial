@@ -336,7 +336,7 @@ export default
       <button class="btn btn-sm btn-default" c-click="sendEscape()">Escape</button>
       <button class="btn btn-sm btn-default" c-click="sendTab()">Tab</button>
       <button class="btn btn-sm btn-default" c-click="wait()">Wait</button>
-      <div class="input-group input-group-sm"><input type="text" class="form-control" c-model="input" c-keyup="send()" placeholder="type here..."></div>
+      <div class="input-group input-group-sm"><input type="text" class="form-control" id="input" c-model="input" c-keyup="send()" placeholder="type here..."></div>
     </div>
     <div class="col-md-3">
       <h4 class="page-header">Terminal Emulation</h4>
