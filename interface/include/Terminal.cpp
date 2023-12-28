@@ -173,7 +173,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                 if (pTerminal->sendDown(unCount, bWait))
                 {
                   bResult = true;
-                } 
+                }
                 else
                 {
                   strError = pTerminal->error();
@@ -431,17 +431,14 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             // }}}
             if (bScreen)
             {
-              list<string> screen;
               stringstream ssValue;
-              vector<string> vecScreen;
-              pTerminal->screen(vecScreen);
-              for (size_t i = 0; i < vecScreen.size(); i++)
+              vector<string> screen;
+              pTerminal->screen(screen);
+              ptJson->m["Response"]->m["Screen"] = new Json;
+              for (size_t i = 0; i < screen.size(); i++)
               {
-                screen.push_back(vecScreen[i]);
-              } 
-              vecScreen.clear();
-              ptJson->m["Response"]->insert("Screen", screen);
-              screen.clear();
+                ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
+              }
               ssValue.str("");
               ssValue << pTerminal->col();
               ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
