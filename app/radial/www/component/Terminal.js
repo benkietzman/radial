@@ -111,6 +111,7 @@ export default
           s.screen = strScreen;
         }
         s.u();
+        document.getElementById('input').focus();
       }
     };
     // ]]]
@@ -120,7 +121,6 @@ export default
       let code = window.event.keyCode;
       let key = window.event.key;
       s.message.v = null;
-      s.input.v = '';
       if (code == 13 || (code >= 37 && code <= 40)) // enter | left | up | right | down
       {
         let strFunction;
@@ -174,6 +174,7 @@ export default
           }
         });
       }
+      s.input.v = '';
     };
     // ]]]
     // [[[ sendEnter()
