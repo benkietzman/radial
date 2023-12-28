@@ -473,7 +473,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
       else
       {
         Json *ptLink = new Json(ptJson);
-        ptLink->i("Interface", "ssh");
+        ptLink->i("Interface", "terminal");
         ptLink->i("Node", strNode);
         if (hub("link", ptLink, strError))
         {
