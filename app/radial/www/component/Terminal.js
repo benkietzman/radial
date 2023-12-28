@@ -25,6 +25,7 @@ export default
       c: c,
       nums: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       strSession: null,
+      useWait: 'yes'
     });
     // ]]]
     // [[[ connect()
@@ -35,11 +36,15 @@ export default
         if (s.port.v)
         {
           s.screen.v = '';
-          let request = {Interface: 'terminal', 'Function': 'connect', Request: {Server: s.server.v, Port: s.port.v}};
+          let request = {Interface: 'terminal', 'Function': 'connect', Request: {Server: s.server.v, Port: s.port.v, Screen: true}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
-            if (!c.wsResponse(response, error))
+            if (c.wsResponse(response, error))
+            {
+              s.process(response.Response);
+            }
+            else
             {
               s.message.v = error.message;
             }
@@ -47,7 +52,6 @@ export default
             {
               s.strSession = response.Session;
             }
-            s.getScreen();
           });
         }
         else
@@ -81,39 +85,116 @@ export default
       });
     };
     // ]]]
-    // [[[ getScreen()
-    s.getScreen = () =>
+    // [[[ process()
+    s.process = (response) =>
     {
-      let request = {Interface: 'terminal', 'Function': 'screen', Session: s.strSession};
-      c.wsRequest('radial', request).then((response) =>
+      if (c.isDefined(response.Screen))
       {
-        let error = {};
-        if (!c.wsResponse(response, error))
+        let strScreen = '';
+        for (let i = 0; i < response.Screen.length; i++)
         {
-          s.message.v = error.message;
-        }
-        if (c.isDefined(response.Response))
-        {
-          if (c.isDefined(response.Response.Screen))
+          if (i > 0)
           {
-            s.screen.v = response.Response.Screen;
+            strScreen += '\n';
+          }
+          if (c.isDefined(response.Row) && c.isDefined(response.Col) && i == response.Row && response.Screen[i].length > response.Col)
+          {
+            strScreen += response.Screen[i].substr(0, response.Col) + '<span style="background: green; color: black;">' + response.Screen[i].substr(response.Col, 1) + '</span>' + response.Screen[i].substr((response.Col + 1), (response.Screen[i].length - (response.Col + 1)));
+          }
+          else
+          {
+            strScreen += response.Screen[i];
           }
         }
+        if (strScreen != '')
+        {
+          s.screen = strScreen;
+        }
         s.u();
-        var div = document.getElementById('screen');
-        div.scrollTop = div.scrollHeight;
-      });
+      }
     };
     // ]]]
     // [[[ send()
     s.send = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'send', Session: s.strSession, Request: s.command.v};
-      s.command.v = null;
+      let code = window.event.keyCode;
+      let key = window.event.key;
+      s.message.v = null;
+      if (code == 13 || (code >= 37 && code <= 40)) // enter | left | up | right | down
+      {
+        let strFunction;
+        if (code == 13)
+        {
+          strFunction = 'sendEnter';
+        }
+        else if (code == 37)
+        {
+          strFunction = 'sendLeft';
+        }
+        else if (code == 38)
+        {
+          strFunction = 'sendUp';
+        }
+        else if (code == 39)
+        {
+          strFunction = 'sendRight';
+        }
+        else if (code == 40)
+        {
+          strFunction = 'sendDown';
+        }
+        let request = {Interface: 'terminal', 'Function': strFunction, Session: s.strSession, Request: {Screen: true}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.process(response.Response);
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+          if (!c.isDefined(response.Session))
+          {
+            s.strSession = null;
+          }
+        });
+      }
+      else if (key.length == 1)
+      {
+        let request = {Interface: 'terminal', 'Function': ((s.useWait.v == 'yes')?'sendWait':'send'), Session: s.strSession, Request: {Data: key, Screen: true, Wait: s.useWait.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.process(response.Response);
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+          if (!c.isDefined(response.Session))
+          {
+            s.strSession = null;
+          }
+        });
+      }
+    };
+    // ]]]
+    // [[[ sendEnter()
+    s.sendEnter = () =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendEnter', Session: s.strSession, Request: {Screen: true, Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        if (!c.wsResponse(response, error))
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
         {
           s.message.v = error.message;
         }
@@ -121,7 +202,138 @@ export default
         {
           s.strSession = null;
         }
-        s.getScreen();
+      });
+    };
+    // ]]]
+    // [[[ sendEscape()
+    s.sendEscape = () =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendEscape', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
+      });
+    };
+    // ]]]
+    // [[[ sendFunction()
+    s.sendFunction = (nValue) =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendFunction', Session: s.strSession, Request: {Data: nValue, Screen: true, Wait: true}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
+      });
+    };
+    // ]]]
+    // [[[ sendKeypadEnter()
+    s.sendKeypadEnter = () =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendKeypadEnter', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
+      });
+    };
+    // ]]]
+    // [[[ sendShiftFunction()
+    s.sendShiftFunction = (nValue) =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendShiftFunction', Session: s.strSession, Request: {Data: nValue, Screen: true, Wait: true}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
+      });
+    };
+    // ]]]
+    // [[[ sendTab()
+    s.sendTab = () =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'sendTab', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
+      });
+    };
+    // ]]]
+    // [[[ wait()
+    s.wait = () =>
+    {
+      let request = {Interface: 'terminal', 'Function': 'wait', Session: s.strSession, Request: {Screen: true, Wait: false}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.process(response.Response);
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+        if (!c.isDefined(response.Session))
+        {
+          s.strSession = null;
+        }
       });
     };
     // ]]]
@@ -136,7 +348,7 @@ export default
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger"></div>
   <div class="row">
-    <div class="col-md-9">
+    <div class="col-md-6">
       <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; margin: 0px; padding: 0px; white-space: pre;" c-model="screen"></div>
       <div style="display: inline; font-family: monospace;">
         <div class="row">
@@ -155,6 +367,15 @@ export default
         </div>
       </div>
     </div>
+    <div class="col-md-3" style="font-family: monospace;">
+      <div class="input-group input-group-sm"><span class="input-group-text">Wait</span><select class="form-control" c-model="useWait"><option value="no">No</option><option value="yes">Yes</option></select></div>
+      <button class="btn btn-sm btn-default" c-click="sendEnter()">Enter</button>
+      <button class="btn btn-sm btn-default" c-click="sendKeypadEnter()">Enter (Keypad)</button>
+      <button class="btn btn-sm btn-default" c-click="sendEscape()">Escape</button>
+      <button class="btn btn-sm btn-default" c-click="sendTab()">Tab</button>
+      <button class="btn btn-sm btn-default" c-click="wait()">Wait</button>
+      <div class="input-group input-group-sm"><input type="text" class="form-control" c-model="input" c-keyup="send()" placeholder="type here..."></div>
+    </div>
     <div class="col-md-3">
       <h4 class="page-header">Terminal Emulation</h4>
       {{#if strSession}}
@@ -163,7 +384,7 @@ export default
         <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
         </div>
       </div>
-        {{else}}
+      {{else}}
       <div class="row" style="margin-bottom: 10px;">
         <div class="col">
         <div class="input-group"><span class="input-group-text">Server</span><input type="text" class="form-control" c-model="server"></div>
