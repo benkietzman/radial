@@ -51,18 +51,17 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
     {
       if (strNode == m_strNode)
       {
-        radialTerminal *ptTerminal = NULL;
+        radialTerminal *t = NULL;
         m_mutex.lock();
         if (m_sessions.find(ptJson->m["Session"]->v) != m_sessions.end())
         {
-          ptTerminal = m_sessions[ptJson->m["Session"]->v];
-          ptTerminal->bActive = true;
-          time(&(ptTerminal->CTime));
+          t = m_sessions[ptJson->m["Session"]->v];
+          t->bActive = true;
+          time(&(t->CTime));
         }
         m_mutex.unlock();
-        if (ptTerminal != NULL)
+        if (t != NULL)
         {
-          common::Terminal *pTerminal = ptTerminal->pTerminal;
           if (!empty(ptJson, "Function"))
           {
             bool bScreen = false;
@@ -80,12 +79,10 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             else if (ptJson->m["Function"]->v == "disconnect")
             {
               bResult = true;
-              pTerminal->disconnect();
+              t->t.disconnect();
               m_mutex.lock();
-              delete pTerminal;
-              pTerminal = NULL;
-              delete ptTerminal;
-              ptTerminal = NULL;
+              delete t;
+              t = NULL;
               m_sessions.erase(ptJson->m["Session"]->v);
               m_mutex.unlock();
               delete ptJson->m["Session"];
@@ -98,7 +95,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               int nLong, nShort;
               stringstream ssLong, ssShort;
               bResult = true;
-              pTerminal->getSocketTimeout(nShort, nLong);
+              t->t.getSocketTimeout(nShort, nLong);
               ssLong << nLong;
               ssShort << nShort;
               ptJson->m["Response"] = new Json;
@@ -137,13 +134,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ send
               if (ptJson->m["Function"]->v == "send")
               {
-                if (pTerminal->send(strData, unCount))
+                if (t->t.send(strData, unCount))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
@@ -152,13 +149,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               {
                 if (strData.size() == 1)
                 {
-                  if (pTerminal->sendCtrl(strData[0], bWait))
+                  if (t->t.sendCtrl(strData[0], bWait))
                   {
                     bResult = true;
                   }
                   else
                   {
-                    strError = pTerminal->error();
+                    strError = t->t.error();
                   }
                 }
                 else
@@ -170,39 +167,39 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ sendDown
               else if (ptJson->m["Function"]->v == "sendDown")
               {
-                if (pTerminal->sendDown(unCount, bWait))
+                if (t->t.sendDown(unCount, bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendEnter
               else if (ptJson->m["Function"]->v == "sendEnter")
               {
-                if (pTerminal->sendEnter(bWait))
+                if (t->t.sendEnter(bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendEscape
               else if (ptJson->m["Function"]->v == "sendEscape")
               {
-                if (pTerminal->sendEscape(bWait))
+                if (t->t.sendEscape(bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
@@ -214,13 +211,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                 ssKey >> nKey;
                 if (nKey >= 1 && nKey <= 12)
                 {
-                  if (pTerminal->sendFunction(nKey))
+                  if (t->t.sendFunction(nKey))
                   {
                     bResult = true;
                   }
                   else
                   {
-                    strError = pTerminal->error();
+                    strError = t->t.error();
                   }
                 }
                 else
@@ -232,13 +229,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ sendHome
               else if (ptJson->m["Function"]->v == "sendHome")
               {
-                if (pTerminal->sendHome(bWait))
+                if (t->t.sendHome(bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
@@ -247,13 +244,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               {
                 if (strData.size() == 1)
                 {
-                  if (pTerminal->sendKey(strData[0], unCount, bWait))
+                  if (t->t.sendKey(strData[0], unCount, bWait))
                   {
                     bResult = true;
                   }
                   else
                   {
-                    strError = pTerminal->error();
+                    strError = t->t.error();
                   }
                 }
                 else
@@ -265,39 +262,39 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ sendKeypadEnter
               else if (ptJson->m["Function"]->v == "sendKeypadEnter")
               {
-                if (pTerminal->sendKeypadEnter(bWait))
+                if (t->t.sendKeypadEnter(bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendLeft
               else if (ptJson->m["Function"]->v == "sendLeft")
               {
-                if (pTerminal->sendLeft(unCount, bWait))
+                if (t->t.sendLeft(unCount, bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendRight
               else if (ptJson->m["Function"]->v == "sendRight")
               {
-                if (pTerminal->sendRight(unCount, bWait))
+                if (t->t.sendRight(unCount, bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
@@ -309,13 +306,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                 ssKey >> nKey;
                 if (nKey >= 1 && nKey <= 12)
                 {
-                  if (pTerminal->sendShiftFunction(nKey))
+                  if (t->t.sendShiftFunction(nKey))
                   {
                     bResult = true;
                   }
                   else
                   {
-                    strError = pTerminal->error();
+                    strError = t->t.error();
                   }
                 }
                 else
@@ -327,39 +324,39 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ sendTab
               else if (ptJson->m["Function"]->v == "sendTab")
               {
-                if (pTerminal->sendTab(unCount, bWait))
+                if (t->t.sendTab(unCount, bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendUp
               else if (ptJson->m["Function"]->v == "sendUp")
               {
-                if (pTerminal->sendUp(unCount, bWait))
+                if (t->t.sendUp(unCount, bWait))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
               // {{{ sendWait
               else if (ptJson->m["Function"]->v == "sendWait")
               {
-                if (pTerminal->sendWait(strData, unCount))
+                if (t->t.sendWait(strData, unCount))
                 {
                   bResult = true;
                 }
                 else
                 {
-                  strError = pTerminal->error();
+                  strError = t->t.error();
                 }
               }
               // }}}
@@ -387,7 +384,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                     stringstream ssShort(ptJson->m["Request"]->m["Short"]->v);
                     ssShort >> nShort;
                     bResult = true;
-                    pTerminal->setSocketTimeout(nShort, nLong);
+                    t->t.setSocketTimeout(nShort, nLong);
                   }
                   else
                   {
@@ -413,13 +410,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               {
                 bWait = true;
               }
-              if (pTerminal->wait(bWait))
+              if (t->t.wait(bWait))
               {
                 bResult = true;
               }
               else
               {
-                strError = pTerminal->error();
+                strError = t->t.error();
               }
             }
             // }}}
@@ -433,23 +430,23 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             {
               stringstream ssValue;
               vector<string> screen;
-              pTerminal->screen(screen);
+              t->t.screen(screen);
               ptJson->m["Response"]->m["Screen"] = new Json;
               for (size_t i = 0; i < screen.size(); i++)
               {
                 ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
               }
               ssValue.str("");
-              ssValue << pTerminal->col();
+              ssValue << t->t.col();
               ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
               ssValue.str("");
-              ssValue << pTerminal->cols();
+              ssValue << t->t.cols();
               ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
               ssValue.str("");
-              ssValue << pTerminal->row();
+              ssValue << t->t.row();
               ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
               ssValue.str("");
-              ssValue << pTerminal->rows();
+              ssValue << t->t.rows();
               ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             }
           }
@@ -457,9 +454,9 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
           {
             strError = "Please provide the Function.";
           }
-          if (ptTerminal != NULL)
+          if (t != NULL)
           {
-            ptTerminal->bActive = false;
+            t->bActive = false;
           }
         }
         else
@@ -498,41 +495,39 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
         {
           if (!empty(ptJson->m["Request"], "Port"))
           {
-            common::Terminal *pTerminal;
-            radialTerminal *ptTerminal = new radialTerminal;
-            pTerminal = ptTerminal->pTerminal = new common::Terminal;
+            radialTerminal *t = new radialTerminal;
             if (!empty(ptJson->m["Request"], "Cols"))
             {
               size_t unCols;
               stringstream ssCols(ptJson->m["Request"]->m["Cols"]->v);
               ssCols >> unCols;
-              pTerminal->cols(unCols);
+              t->t.cols(unCols);
             }
             if (!empty(ptJson->m["Request"], "Rows"))
             {
               size_t unRows;
               stringstream ssRows(ptJson->m["Request"]->m["Rows"]->v);
               ssRows >> unRows;
-              pTerminal->rows(unRows);
+              t->t.rows(unRows);
             }
             if (!empty(ptJson->m["Request"], "Type"))
             {
-              pTerminal->type(ptJson->m["Request"]->m["Type"]->v);
+              t->t.type(ptJson->m["Request"]->m["Type"]->v);
             }
-            if (pTerminal->connect(ptJson->m["Request"]->m["Server"]->v, ptJson->m["Request"]->m["Port"]->v))
+            if (t->t.connect(ptJson->m["Request"]->m["Server"]->v, ptJson->m["Request"]->m["Port"]->v))
             {
               stringstream ssSession;
               bResult = true;
-              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << pTerminal;
+              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
               ptJson->i("Session", ssSession.str());
               m_mutex.lock();
-              m_sessions[ssSession.str()] = ptTerminal;
+              m_sessions[ssSession.str()] = t;
               m_mutex.unlock();
               if (!empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
               {
                 stringstream ssValue;
                 vector<string> screen;
-                pTerminal->screen(screen);
+                t->t.screen(screen);
                 if (exist(ptJson, "Response"))
                 {
                   delete ptJson->m["Response"];
@@ -544,27 +539,26 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                   ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
                 }
                 ssValue.str("");
-                ssValue << pTerminal->col();
+                ssValue << t->t.col();
                 ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
                 ssValue.str("");
-                ssValue << pTerminal->cols();
+                ssValue << t->t.cols();
                 ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
                 ssValue.str("");
-                ssValue << pTerminal->row();
+                ssValue << t->t.row();
                 ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
                 ssValue.str("");
-                ssValue << pTerminal->rows();
+                ssValue << t->t.rows();
                 ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
               }
             }
             else
             {
-              strError = pTerminal->error();
+              strError = t->t.error();
             }
             if (!bResult)
             {
-              delete pTerminal;
-              delete ptTerminal;
+              delete t;
             }
           }
           else
@@ -630,8 +624,7 @@ void Terminal::schedule(string strPrefix)
       }
       while (!removals.empty())
       {
-        m_sessions[removals.front()]->pTerminal->disconnect();
-        delete m_sessions[removals.front()]->pTerminal;
+        m_sessions[removals.front()]->t.disconnect();
         delete m_sessions[removals.front()];
         removals.pop_front();
       }
