@@ -71,10 +71,12 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               delete ptJson->m["Response"];
             }
             ptJson->m["Response"] = new Json;
+ptJson->m["Response"]->i("a", ptJson->m["Function"]->v);
             if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
             {
               bScreen = true;
             }
+ptJson->m["Response"]->i("b", ptJson->m["Function"]->v);
             // {{{ disconnect
             else if (ptJson->m["Function"]->v == "disconnect")
             {
@@ -98,7 +100,6 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               t->t.getSocketTimeout(nShort, nLong);
               ssLong << nLong;
               ssShort << nShort;
-              ptJson->m["Response"] = new Json;
               ptJson->m["Response"]->insert("Long", ssLong.str(), 'n');
               ptJson->m["Response"]->insert("Short", ssShort.str(), 'n');
             }
@@ -406,21 +407,19 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             else if (ptJson->m["Function"]->v == "wait")
             {
               bool bWait = false;
-ptJson->m["Response"]->i("a", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
+ptJson->m["Response"]->i("c", ptJson->m["Function"]->v);
               if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->m["Wait"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
               {
                 bWait = true;
               }
               if (t->t.wait(bWait))
               {
-ptJson->m["Response"]->i("b", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
                 bResult = true;
               }
               else
               {
                 strError = t->t.error();
               }
-ptJson->m["Response"]->i("c", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
             }
             // }}}
             // {{{ invalid
@@ -429,7 +428,7 @@ ptJson->m["Response"]->i("c", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
               strError = strInvalid;
             }
             // }}}
-ptJson->m["Response"]->i("d", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
+ptJson->m["Response"]->i("d", ptJson->m["Function"]->v);
             if (bScreen)
             {
               stringstream ssValue;
@@ -453,7 +452,7 @@ ptJson->m["Response"]->i("d", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
               ssValue << t->t.rows();
               ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             }
-ptJson->m["Response"]->i("e", ((bResult)?"1":"0"), ((bResult)?'1':'0'));
+ptJson->m["Response"]->i("e", ptJson->m["Function"]->v);
           }
           else
           {
