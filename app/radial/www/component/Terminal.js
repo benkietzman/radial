@@ -73,15 +73,12 @@ export default
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.strSession = null;
-          s.u();
-        }
-        else
+        if (!c.wsResponse(response, error))
         {
           s.message.v = error.message;
         }
+        s.strSession = null;
+        s.u();
       });
     };
     // ]]]
