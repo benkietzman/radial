@@ -75,6 +75,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             {
               bScreen = true;
             }
+            t->m.lock();
             // {{{ disconnect
             if (ptJson->m["Function"]->v == "disconnect")
             {
@@ -448,6 +449,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               ssValue << t->t.rows();
               ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             }
+            t->m.unlock();
           }
           else
           {
@@ -623,7 +625,9 @@ void Terminal::schedule(string strPrefix)
       }
       while (!removals.empty())
       {
+        m_sessions[removals.front()]->m.lock();
         m_sessions[removals.front()]->t.disconnect();
+        m_sessions[removals.front()]->m.unlock();
         delete m_sessions[removals.front()];
         removals.pop_front();
       }

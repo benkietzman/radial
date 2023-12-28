@@ -27,6 +27,7 @@ struct radialTerminal
 {
   bool bActive;
   int fdSocket;
+  mutex m;
   time_t CTime;
   common::Terminal t;
 };
