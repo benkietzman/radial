@@ -36,7 +36,7 @@ export default
         if (s.port.v)
         {
           s.screen.v = '';
-          let request = {Interface: 'terminal', 'Function': 'connect', Request: {Server: s.server.v, Port: s.port.v, Screen: true}};
+          let request = {Interface: 'terminal', 'Function': 'connect', Request: {Server: s.server.v, Port: s.port.v, Wait: true}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
@@ -123,25 +123,25 @@ export default
         let strFunction;
         if (code == 13)
         {
-          strFunction = 'sendEnter';
+          strFunction = 'enter';
         }
         else if (code == 37)
         {
-          strFunction = 'sendLeft';
+          strFunction = 'left';
         }
         else if (code == 38)
         {
-          strFunction = 'sendUp';
+          strFunction = 'up';
         }
         else if (code == 39)
         {
-          strFunction = 'sendRight';
+          strFunction = 'right';
         }
         else if (code == 40)
         {
-          strFunction = 'sendDown';
+          strFunction = 'down';
         }
-        let request = {Interface: 'terminal', 'Function': strFunction, Session: s.strSession, Request: {Screen: true}};
+        let request = {Interface: 'terminal', 'Function': strFunction, Session: s.strSession};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -157,7 +157,7 @@ export default
       }
       else if (key.length == 1)
       {
-        let request = {Interface: 'terminal', 'Function': ((s.useWait.v == 'yes')?'sendWait':'send'), Session: s.strSession, Request: {Data: key, Screen: true, Wait: s.useWait.v}};
+        let request = {Interface: 'terminal', 'Function': 'send', Session: s.strSession, Request: {Data: key, Screen: true, Wait: s.useWait.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -176,7 +176,7 @@ export default
     // [[[ sendEnter()
     s.sendEnter = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendEnter', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'enter', Session: s.strSession, Request: {Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -194,7 +194,7 @@ export default
     // [[[ sendEscape()
     s.sendEscape = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendEscape', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'escape', Session: s.strSession, Request: {Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -212,7 +212,7 @@ export default
     // [[[ sendFunction()
     s.sendFunction = (nValue) =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendFunction', Session: s.strSession, Request: {Data: nValue, Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'function', Session: s.strSession, Request: {Data: nValue, Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -230,7 +230,7 @@ export default
     // [[[ sendKeypadEnter()
     s.sendKeypadEnter = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendKeypadEnter', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'keypadEnter', Session: s.strSession, Request: {Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -248,7 +248,7 @@ export default
     // [[[ sendShiftFunction()
     s.sendShiftFunction = (nValue) =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendShiftFunction', Session: s.strSession, Request: {Data: nValue, Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'shiftFunction', Session: s.strSession, Request: {Data: nValue, Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -266,7 +266,7 @@ export default
     // [[[ sendTab()
     s.sendTab = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'sendTab', Session: s.strSession, Request: {Screen: true, Wait: true}};
+      let request = {Interface: 'terminal', 'Function': 'tab', Session: s.strSession, Request: {Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -284,7 +284,7 @@ export default
     // [[[ wait()
     s.wait = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'wait', Session: s.strSession, Request: {Screen: true, Wait: false}};
+      let request = {Interface: 'terminal', 'Function': 'wait', Session: s.strSession, Request: {Wait: false}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
