@@ -3046,484 +3046,271 @@ bool Interface::storageUpdate(const list<string> keys, Json *ptJson, string &str
 // }}}
 // {{{ terminal
 // {{{ terminalConnect()
-bool Interface::terminalConnect(const string strServer, const string strPort, string &strSession, string &strError)
+bool Interface::terminalConnect(radialTerminalInfo &tInfo, const string strServer, const string strPort, const bool bWait, string &strError)
 {
-  bool bResult = false;
-  Json *ptJson = new Json;
+  return terminalRequest(tInfo, "connect", {{"Server", strServer}, {"Port", strPort}, {"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalCtrl()
+bool Interface::terminalCtrl(radialTerminalInfo &tInfo, const char cData, const bool bWait, string &strError)
+{
+  stringstream ssData;
 
-  ptJson->i("Function", "connect");
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Server", strServer);
-  ptJson->m["Request"]->i("Port", strPort);
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  if (!empty(ptJson, "Session"))
-  {
-    strSession = ptJson->m["Session"]->v;
-  }
-  delete ptJson;
+  ssData << cData;
 
-  return bResult;
+  return terminalRequest(tInfo, "ctrl", {{"Data", ssData.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalDown()
+bool Interface::terminalDown(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "down", {{"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // {{{ terminalDisconnect()
-bool Interface::terminalDisconnect(const string strSession, string &strError)
+bool Interface::terminalDisconnect(radialTerminalInfo &tInfo, string &strError)
 {
-  bool bResult = false;
-  Json *ptJson = new Json;
+  return terminalRequest(tInfo, "disconnect", strError);
+}
+// }}}
+// {{{ terminalEnter()
+bool Interface::terminalEnter(radialTerminalInfo &tInfo, const bool bWait, string &strError)
+{
+  return terminalRequest(tInfo, "enter", {{"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalEscape()
+bool Interface::terminalEscape(radialTerminalInfo &tInfo, const bool bWait, string &strError)
+{
+  return terminalRequest(tInfo, "escape", {{"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalFunction()
+bool Interface::terminalFunction(radialTerminalInfo &tInfo, const int nKey, string &strError)
+{
+  stringstream ssKey;
 
-  ptJson->i("Function", "disconnect");
-  ptJson->i("Session", strSession);
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
+  ssKey << nKey;
 
-  return bResult;
+  return terminalRequest(tInfo, "function", {{"Data", ssKey.str()}}, strError);
 }
 // }}}
 // {{{ terminalGetSocketTimeout()
-bool Interface::terminalGetSocketTimeout(const string strSession, int &nShort, int &nLong, string &strError)
+bool Interface::terminalGetSocketTimeout(radialTerminalInfo &tInfo, int &nShort, int &nLong, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
 
-  ptJson->i("Function", "getSocketTimeout");
-  ptJson->i("Session", strSession);
-  if (hub("terminal", ptJson, strError))
+  if (terminalRequest(tInfo, "getSocketTimeout", {}, ptJson, strError))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
+    if (!empty(ptJson, "Long"))
     {
-      if (!empty(ptJson->m["Response"], "Long"))
-      {
-        stringstream ssLong(ptJson->m["Response"]->m["Long"]->v);
-        ssLong >> nLong;
-      }
-      if (!empty(ptJson->m["Response"], "Short"))
-      {
-        stringstream ssShort(ptJson->m["Response"]->m["Short"]->v);
-        ssShort >> nShort;
-      }
+      stringstream ssLong(ptJson->m["Long"]->v);
+      ssLong >> nLong;
+    }
+    if (!empty(ptJson, "Short"))
+    {
+      stringstream ssShort(ptJson->m["Short"]->v);
+      ssShort >> nShort;
     }
   }
   delete ptJson;
 
   return bResult;
+}
+// }}}
+// {{{ terminalHome()
+bool Interface::terminalHome(radialTerminalInfo &tInfo, const bool bWait, string &strError)
+{
+  return terminalRequest(tInfo, "home", {{"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalKey()
+bool Interface::terminalKey(radialTerminalInfo &tInfo, const char cData, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssData, ssCount;
+
+  ssData << cData;
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "key", {{"Data", ssData.str()}, {"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalKeypadEnter()
+bool Interface::terminalKeypadEnter(radialTerminalInfo &tInfo, const bool bWait, string &strError)
+{
+  return terminalRequest(tInfo, "keypadEnter", {{"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalLeft()
+bool Interface::terminalLeft(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "left", {{"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalRequest()
+bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunction, string &strError)
+{
+  return terminalRequest(tInfo, strFunction, {}, strError);
+}
+bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunction, map<string, string> data, string &strError)
+{
+  bool bResult = false;
+  Json *ptResponse = new Json;
+
+  if (terminalRequest(tInfo, strFunction, data, ptResponse, strError))
+  {
+    bResult = true;
+  }
+  delete ptResponse;
+
+  return bResult;
+}
+bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunction, map<string, string> data, Json *ptResponse, string &strError)
+{
+  bool bResult = false;
+  string strJson;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", strFunction);
+  if (!tInfo.strSession.empty())
+  {
+    ptJson->i("Session", tInfo.strSession);
+  }
+  if (!data.empty())
+  {
+    ptJson->m["Request"] = new Json(data);
+  }
+  if (ptJson->m.find("Request") == ptJson->m.end())
+  {
+    ptJson->m["Request"] = new Json;
+  }
+  ptJson->m["Request"]->i("Screen", "1", '1');
+  if (hub("terminal", ptJson, strError))
+  {
+    bResult = true;
+  }
+  if (ptJson->m.find("Response") != ptJson->m.end())
+  {
+    ptResponse->parse(ptJson->m["Response"]->j(strJson));
+    if (ptResponse->m.find("Screen") != ptResponse->m.end() && !ptResponse->m["Screen"]->l.empty())
+    {
+      tInfo.screen.clear();
+      for (auto &i : ptResponse->m["Screen"]->l)
+      {
+        tInfo.screen.push_back(i->v);
+      }
+    }
+    if (ptResponse->m.find("Col") != ptResponse->m.end() && !ptResponse->m["Col"]->v.empty())
+    {
+      stringstream ssCol(ptResponse->m["Col"]->v);
+      ssCol >> tInfo.unCol;
+    }
+    if (ptResponse->m.find("Cols") != ptResponse->m.end() && !ptResponse->m["Cols"]->v.empty())
+    {
+      stringstream ssCols(ptResponse->m["Cols"]->v);
+      ssCols >> tInfo.unCols;
+    }
+    if (ptResponse->m.find("Row") != ptResponse->m.end() && !ptResponse->m["Row"]->v.empty())
+    {
+      stringstream ssRow(ptResponse->m["Row"]->v);
+      ssRow >> tInfo.unRow;
+    }
+    if (ptResponse->m.find("Rows") != ptResponse->m.end() && !ptResponse->m["Rows"]->v.empty())
+    {
+      stringstream ssRows(ptResponse->m["Rows"]->v);
+      ssRows >> tInfo.unRows;
+    }
+  }
+  if (ptJson->m.find("Session") != ptJson->m.end() && !ptJson->m["Session"]->v.empty())
+  {
+    tInfo.strSession = ptJson->m["Session"]->v;
+  }
+  else
+  {
+    tInfo.strSession.clear();
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// {{{ terminalRight()
+bool Interface::terminalRight(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "right", {{"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // {{{ terminalScreen()
-bool Interface::terminalScreen(const string strSession, vector<string> &screen, string &strError)
+bool Interface::terminalScreen(radialTerminalInfo &tInfo, string &strError)
 {
-  size_t unCol, unCols, unRow, unRows;
-
-  return terminalScreen(strSession, screen, unCol, unCols, unRow, unRows, strError);
-}
-bool Interface::terminalScreen(const string strSession, vector<string> &screen, size_t &unCol, size_t &unCols, size_t &unRow, size_t &unRows, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  screen.clear();
-  ptJson->i("Function", "screen");
-  ptJson->i("Session", strSession);
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-    if (exist(ptJson, "Response"))
-    {
-      if (exist(ptJson->m["Response"], "Screen"))
-      {
-        for (auto &i : ptJson->m["Response"]->m["Screen"]->l)
-        {
-          screen.push_back(i->v);
-        }
-      }
-      if (!empty(ptJson->m["Response"], "Col"))
-      {
-        stringstream ssCol(ptJson->m["Response"]->m["Col"]->v);
-        ssCol >> unCol;
-      }
-      if (!empty(ptJson->m["Response"], "Cols"))
-      {
-        stringstream ssCols(ptJson->m["Response"]->m["Cols"]->v);
-        ssCols >> unCols;
-      }
-      if (!empty(ptJson->m["Response"], "Row"))
-      {
-        stringstream ssRow(ptJson->m["Response"]->m["Row"]->v);
-        ssRow >> unRow;
-      }
-      if (!empty(ptJson->m["Response"], "Rows"))
-      {
-        stringstream ssRows(ptJson->m["Response"]->m["Rows"]->v);
-        ssRows >> unRows;
-      }
-    }
-  }
-  delete ptJson;
-
-  return bResult;
+  return terminalRequest(tInfo, "screen", strError);
 }
 // }}}
 // {{{ terminalSend()
-bool Interface::terminalSend(const string strSession, const string strData, const size_t unCount, string &strError)
+bool Interface::terminalSend(radialTerminalInfo &tInfo, const string strData, const size_t unCount, const bool bWait, string &strError)
 {
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "send");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Data", strData);
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendCtrl()
-bool Interface::terminalSendCtrl(const string strSession, const char cData, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssData;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendCtrl");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssData << cData;
-  ptJson->m["Request"]->i("Data", ssData.str());
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendDown()
-bool Interface::terminalSendDown(const string strSession, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendDown");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendEnter()
-bool Interface::terminalSendEnter(const string strSession, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendEnter");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendEscape()
-bool Interface::terminalSendEscape(const string strSession, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendEscape");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendFunction()
-bool Interface::terminalSendFunction(const string strSession, const int nKey, string &strError)
-{
-  bool bResult = false;
-  stringstream ssKey;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendFunction");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssKey << nKey;
-  ptJson->m["Request"]->i("Data", ssKey.str(), 'n');
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendHome()
-bool Interface::terminalSendHome(const string strSession, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendHome");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendKey()
-bool Interface::terminalSendKey(const string strSession, const char cData, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssData, ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendKey");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssData << cData;
-  ptJson->m["Request"]->i("Data", ssData.str());
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendKeypadEnter()
-bool Interface::terminalSendKeypadEnter(const string strSession, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendKeypadEnter");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendLeft()
-bool Interface::terminalSendLeft(const string strSession, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendLeft");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendRight()
-bool Interface::terminalSendRight(const string strSession, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendRight");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendShiftFunction()
-bool Interface::terminalSendShiftFunction(const string strSession, const int nKey, string &strError)
-{
-  bool bResult = false;
-  stringstream ssKey;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendShiftFunction");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssKey << nKey;
-  ptJson->m["Request"]->i("Data", ssKey.str(), 'n');
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendTab()
-bool Interface::terminalSendTab(const string strSession, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendTab");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendUp()
-bool Interface::terminalSendUp(const string strSession, const size_t unCount, const bool bWait, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendUp");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
-}
-// }}}
-// {{{ terminalSendWait()
-bool Interface::terminalSendWait(const string strSession, const string strData, const size_t unCount, string &strError)
-{
-  bool bResult = false;
-  stringstream ssCount;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "sendWait");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Data", strData);
-  ssCount << unCount;
-  ptJson->m["Request"]->i("Count", ssCount.str(), 'n');
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
+  return terminalRequest(tInfo, "send", {{"Data", strData}, {"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // {{{ terminalSetSocketTimeout()
-bool Interface::terminalSetSocketTimeout(const string strSession, const int nShort, const int nLong, string &strError)
+bool Interface::terminalSetSocketTimeout(radialTerminalInfo &tInfo, const int nShort, const int nLong, string &strError)
 {
-  bool bResult = false;
   stringstream ssLong, ssShort;
-  Json *ptJson = new Json;
 
-  ptJson->i("Function", "setSocketTimeout");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
   ssShort << nShort;
-  ptJson->m["Request"]->i("Short", ssShort.str(), 'n');
   ssLong << nLong;
-  ptJson->m["Request"]->i("Long", ssLong.str(), 'n');
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
 
-  return bResult;
+  return terminalRequest(tInfo, "setSocketTimeout", {{"Short", ssShort.str()}, {"Long", ssLong.str()}}, strError);
+}
+// }}}
+// {{{ terminalShiftFunction()
+bool Interface::terminalShiftFunction(radialTerminalInfo &tInfo, const int nKey, string &strError)
+{
+  stringstream ssKey;
+
+  ssKey << nKey;
+
+  return terminalRequest(tInfo, "shiftFunction", {{"Data", ssKey.str()}}, strError);
+}
+// }}}
+// {{{ terminalTab()
+bool Interface::terminalTab(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "tab", {{"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
+}
+// }}}
+// {{{ terminalUp()
+bool Interface::terminalUp(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError)
+{
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "up", {{"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // {{{ terminalWait()
-bool Interface::terminalWait(const string strSession, const bool bWait, string &strError)
+bool Interface::terminalWait(radialTerminalInfo &tInfo, const bool bWait, string &strError)
 {
-  bool bResult = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Function", "wait");
-  ptJson->i("Session", strSession);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
-  if (hub("terminal", ptJson, strError))
-  {
-    bResult = true;
-  }
-  delete ptJson;
-
-  return bResult;
+  return terminalRequest(tInfo, "wait", {{"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // }}}

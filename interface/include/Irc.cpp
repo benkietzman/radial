@@ -2727,22 +2727,26 @@ void Irc::sshConvertLine(string &strData)
 // {{{ terminal()
 void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort)
 {
-  string strError, strSession;
+  string strError;
+  radialTerminalInfo tInfo;
 
   strPrefix += "->terminal()";
   chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
-  if (terminalConnect(strServer, strPort, strSession, strError))
+  if (terminalConnect(tInfo, strServer, strPort, true, strError))
   {
     bool bExit = false, bProcess;
     string strData;
     stringstream ssText;
-    vector<string> screen;
-    terminalScreen(strSession, screen, strError);
-    for (size_t i = 0; i < screen.size(); i++)
+    for (size_t i = 0; i < tInfo.screen.size(); i++)
     {
-      ssText << screen[i] << endl;
+      if (i == tInfo.unRow && tInfo.unCol < tInfo.screen.size())
+      {
+        stringstream ssCursor;
+        ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
+        tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
+      }
+      ssText << tInfo.screen[i] << endl;
     }
-    screen.clear();
     chat(strTarget, ssText.str());
     while (!bExit)
     {
@@ -2777,7 +2781,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             ssData >> strData;
             if (strData.size() == 1)
             {
-              terminalSendCtrl(strSession, strData[0], true, strError);
+              terminalCtrl(tInfo, strData[0], true, strError);
             }
             else
             {
@@ -2801,19 +2805,19 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            terminalSendDown(strSession, unCount, true, strError);
+            terminalDown(tInfo, unCount, true, strError);
           }
           // }}}
           // {{{ enter
           else if (strFunction == "enter" || strFunction == "e")
           {
-            terminalSendEnter(strSession, true, strError);
+            terminalEnter(tInfo, true, strError);
           }
           // }}}
           // {{{ escape
           else if (strFunction == "escape")
           {
-            terminalSendEscape(strSession, true, strError);
+            terminalEscape(tInfo, true, strError);
           }
           // }}}
           // {{{ function
@@ -2821,13 +2825,13 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           {
             int nKey;
             ssData >> nKey;
-            terminalSendFunction(strSession, nKey, strError);
+            terminalFunction(tInfo, nKey, strError);
           }
           // }}}
           // {{{ home
           else if (strFunction == "home")
           {
-            terminalSendHome(strSession, true, strError);
+            terminalHome(tInfo, true, strError);
           }
           // }}}
           // {{{ key
@@ -2842,7 +2846,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             }
             if (strData.size() == 1)
             {
-              terminalSendKey(strSession, strData[0], unCount, true, strError);
+              terminalKey(tInfo, strData[0], unCount, true, strError);
             }
             else
             {
@@ -2853,7 +2857,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           // {{{ keypadEnter
           else if (strFunction == "keypadEnter" || strFunction == "ke")
           {
-            terminalSendKeypadEnter(strSession, true, strError);
+            terminalKeypadEnter(tInfo, true, strError);
           }
           // }}}
           // {{{ left
@@ -2866,7 +2870,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            terminalSendLeft(strSession, unCount, true, strError);
+            terminalLeft(tInfo, unCount, true, strError);
           }
           // }}}
           // {{{ right
@@ -2879,7 +2883,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            terminalSendRight(strSession, unCount, true, strError);
+            terminalRight(tInfo, unCount, true, strError);
           }
           // }}}
           // {{{ send
@@ -2888,7 +2892,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             string strTrimmed;
             getline(ssData, strData);
             m_manip.ltrim(strTrimmed, strData);
-            terminalSendWait(strSession, strTrimmed, unCount, strError);
+            terminalSend(tInfo, strTrimmed, unCount, true, strError);
           }
           // }}}
           // {{{ shiftFunction
@@ -2896,7 +2900,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           {
             int nKey;
             ssData >> nKey;
-            terminalSendShiftFunction(strSession, nKey, strError);
+            terminalShiftFunction(tInfo, nKey, strError);
           }
           // }}}
           // {{{ tab
@@ -2909,7 +2913,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            terminalSendTab(strSession, unCount, true, strError);
+            terminalTab(tInfo, unCount, true, strError);
           }
           // }}}
           // {{{ up
@@ -2922,13 +2926,13 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               stringstream ssCount(strCount);
               ssCount >> unCount;
             }
-            terminalSendUp(strSession, unCount, true, strError);
+            terminalUp(tInfo, unCount, true, strError);
           }
           // }}}
           // {{{ wait
           else if (strFunction == "wait" || strFunction == "w")
           {
-            terminalWait(strSession, true, strError);
+            terminalWait(tInfo, true, strError);
           }
           // }}}
           // {{{ invalid
@@ -2937,25 +2941,22 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             strError = strInvalid;
           }
           // }}}
-          if (!strSession.empty())
+          if (!tInfo.strSession.empty())
           {
-            size_t unCol, unCols, unRow, unRows;
-            terminalScreen(strSession, screen, unCol, unCols, unRow, unRows, strError);
             ssText.str("");
-            for (size_t i = 0; i < screen.size(); i++)
+            for (size_t i = 0; i < tInfo.screen.size(); i++)
             {
-              if (i == unRow && unCol < screen.size())
+              if (i == tInfo.unRow && tInfo.unCol < tInfo.screen.size())
               {
                 stringstream ssCursor;
-                ssCursor << char(3) << "08,03" << screen[i][unCol] << char(3);
-                screen[i].replace(unCol, 1, ssCursor.str());
+                ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
+                tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
               }
-              ssText << screen[i] << endl;
+              ssText << tInfo.screen[i] << endl;
             }
-            screen.clear();
             chat(strTarget, ssText.str());
           }
-          if (strSession.empty())
+          else if (tInfo.strSession.empty())
           {
             bExit = true;
           }
@@ -2975,9 +2976,9 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
         msleep(100);
       }
     }
-    if (!strSession.empty())
+    if (!tInfo.strSession.empty())
     {
-      terminalDisconnect(strSession, strError);
+      terminalDisconnect(tInfo, strError);
     }
   }
   else
