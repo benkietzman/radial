@@ -483,7 +483,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             {
               t->t.type(ptJson->m["Request"]->m["Type"]->v);
             }
-            if (!empty(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")
+            if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->m["Wait"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "1" || ptJson->m["Request"]->m["Wait"]->v == "yes"))
             {
               bWait = true;
             }
