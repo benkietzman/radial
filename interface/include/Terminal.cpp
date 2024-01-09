@@ -80,7 +80,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
                 stringstream ssCount(ptJson->m["Request"]->m["Count"]->v);
                 ssCount >> unCount;
               }
-              if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
+              if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "1" || ptJson->m["Request"]->m["Wait"]->v == "yes"))
               {
                 bWait = true;
               }

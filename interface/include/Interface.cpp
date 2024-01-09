@@ -3263,7 +3263,11 @@ bool Interface::terminalScreen(radialTerminalInfo &tInfo, string &strError)
 // {{{ terminalSend()
 bool Interface::terminalSend(radialTerminalInfo &tInfo, const string strData, const size_t unCount, const bool bWait, string &strError)
 {
-  return terminalRequest(tInfo, "send", {{"Data", strData}, {"Wait", ((bWait)?"1":"0")}}, strError);
+  stringstream ssCount;
+
+  ssCount << unCount;
+
+  return terminalRequest(tInfo, "send", {{"Data", strData}, {"Count", ssCount.str()}, {"Wait", ((bWait)?"1":"0")}}, strError);
 }
 // }}}
 // {{{ terminalSetSocketTimeout()
