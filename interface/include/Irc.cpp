@@ -2739,7 +2739,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
     stringstream ssText;
     for (size_t i = 0; i < tInfo.screen.size(); i++)
     {
-      if (i == tInfo.unRow && tInfo.unCol < tInfo.screen.size())
+      if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
       {
         stringstream ssCursor;
         ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
@@ -2946,7 +2946,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             ssText.str("");
             for (size_t i = 0; i < tInfo.screen.size(); i++)
             {
-              if (i == tInfo.unRow && tInfo.unCol < tInfo.screen.size())
+              if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
               {
                 stringstream ssCursor;
                 ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
