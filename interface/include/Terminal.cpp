@@ -64,20 +64,55 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
         {
           if (!empty(ptJson, "Function"))
           {
-            bool bScreen = false;
-            string strInvalid = "Please provide a valid Function:  disconnect, getSocketTimeout, screen, send, sendCtrl, sendDown, sendEnter, sendEscape, sendFunction, sendHome, sendKey, sendKeypadEnter, sendLeft, sendRight, sendShiftFunction, sendTab, sendUp, setSocketTimeout, wait.";
+            bool bWait = false;
+            size_t unCount = 1;
+            string strData, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter, escape, function, getSocketTimeout, home, key, keypadEnter, left, right, screen, send, setSocketTimeout, shiftFunction, tab, up, wait.";
+            stringstream ssValue;
+            vector<string> screen;
+            if (exist(ptJson, "Request"))
+            {
+              if (!empty(ptJson->m["Request"], "Data"))
+              {
+                strData = ptJson->m["Request"]->m["Data"]->v;
+              }
+              if (!empty(ptJson->m["Request"], "Count"))
+              {
+                stringstream ssCount(ptJson->m["Request"]->m["Count"]->v);
+                ssCount >> unCount;
+              }
+              if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
+              {
+                bWait = true;
+              }
+            }
             if (exist(ptJson, "Response"))
             {
               delete ptJson->m["Response"];
             }
             ptJson->m["Response"] = new Json;
-            if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
-            {
-              bScreen = true;
-            }
             t->m.lock();
+            // {{{ ctrl
+            if (ptJson->m["Function"]->v == "ctrl")
+            {
+              if (strData.size() == 1)
+              {
+                if (t->t.sendCtrl(strData[0], bWait))
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  strError = t->t.error();
+                }
+              }
+              else
+              {
+                strError = "Data should contain a single character for this Function.";
+              }
+            }
+            // }}}
             // {{{ disconnect
-            if (ptJson->m["Function"]->v == "disconnect")
+            else if (ptJson->m["Function"]->v == "disconnect")
             {
               bResult = true;
               t->t.disconnect();
@@ -88,6 +123,68 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               m_mutex.unlock();
               delete ptJson->m["Session"];
               ptJson->m.erase("Session");
+            }
+            // }}}
+            // {{{ down
+            else if (ptJson->m["Function"]->v == "down")
+            {
+              if (t->t.sendDown(unCount, bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ enter
+            else if (ptJson->m["Function"]->v == "enter")
+            {
+              if (t->t.sendEnter(bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ escape
+            else if (ptJson->m["Function"]->v == "escape")
+            {
+              if (t->t.sendEscape(bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ function
+            else if (ptJson->m["Function"]->v == "function")
+            {
+              stringstream ssKey(strData);
+              int nKey = 0;
+              ssKey >> nKey;
+              if (nKey >= 1 && nKey <= 12)
+              {
+                if (t->t.sendFunction(nKey))
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  strError = t->t.error();
+                }
+              }
+              else
+              {
+                strError = "Please provide a Data value between 1 and 12.";
+              }
             }
             // }}}
             // {{{ getSocketTimeout
@@ -103,256 +200,95 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               ptJson->m["Response"]->insert("Short", ssShort.str(), 'n');
             }
             // }}}
+            // {{{ home
+            else if (ptJson->m["Function"]->v == "home")
+            {
+              if (t->t.sendHome(bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ key
+            else if (ptJson->m["Function"]->v == "key")
+            {
+              if (strData.size() == 1)
+              {
+                if (t->t.sendKey(strData[0], unCount, bWait))
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  strError = t->t.error();
+                }
+              }
+              else
+              {
+                strError = "Data should contain a single character for this Function.";
+              }
+            }
+            // }}}
+            // {{{ keypadEnter
+            else if (ptJson->m["Function"]->v == "keypadEnter")
+            {
+              if (t->t.sendKeypadEnter(bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ left
+            else if (ptJson->m["Function"]->v == "left")
+            {
+              if (t->t.sendLeft(unCount, bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ right
+            else if (ptJson->m["Function"]->v == "right")
+            {
+              if (t->t.sendRight(unCount, bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
             // {{{ screen
             else if (ptJson->m["Function"]->v == "screen")
             {
-              bResult = bScreen = true;
+              bResult = true;
             }
             // }}}
-            // {{{ send*
-            else if (ptJson->m["Function"]->v.size() >= 4 && ptJson->m["Function"]->v.substr(0, 4) == "send")
+            // {{{ send
+            if (ptJson->m["Function"]->v == "send")
             {
-              bool bWait = false;
-              size_t unCount = 1;
-              string strData;
-              if (exist(ptJson, "Request"))
+              if ((bWait && t->t.sendWait(strData, unCount)) || (!bWait && t->t.send(strData, unCount)))
               {
-                if (!empty(ptJson->m["Request"], "Data"))
-                {
-                  strData = ptJson->m["Request"]->m["Data"]->v;
-                }
-                if (!empty(ptJson->m["Request"], "Count"))
-                {
-                  stringstream ssCount(ptJson->m["Request"]->m["Count"]->v);
-                  ssCount >> unCount;
-                }
-                if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
-                {
-                  bWait = true;
-                }
+                bResult = true;
               }
-              // {{{ send
-              if (ptJson->m["Function"]->v == "send")
-              {
-                if ((bWait && t->t.sendWait(strData, unCount)) || (!bWait && t->t.send(strData, unCount)))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendCtrl
-              else if (ptJson->m["Function"]->v == "sendCtrl")
-              {
-                if (strData.size() == 1)
-                {
-                  if (t->t.sendCtrl(strData[0], bWait))
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    strError = t->t.error();
-                  }
-                }
-                else
-                {
-                  strError = "Data should contain a single character for this Function.";
-                }
-              }
-              // }}}
-              // {{{ sendDown
-              else if (ptJson->m["Function"]->v == "sendDown")
-              {
-                if (t->t.sendDown(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendEnter
-              else if (ptJson->m["Function"]->v == "sendEnter")
-              {
-                if (t->t.sendEnter(bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendEscape
-              else if (ptJson->m["Function"]->v == "sendEscape")
-              {
-                if (t->t.sendEscape(bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendFunction
-              else if (ptJson->m["Function"]->v == "sendFunction")
-              {
-                stringstream ssKey(strData);
-                int nKey = 0;
-                ssKey >> nKey;
-                if (nKey >= 1 && nKey <= 12)
-                {
-                  if (t->t.sendFunction(nKey))
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    strError = t->t.error();
-                  }
-                }
-                else
-                {
-                  strError = "Please provide a Data value between 1 and 12.";
-                }
-              }
-              // }}}
-              // {{{ sendHome
-              else if (ptJson->m["Function"]->v == "sendHome")
-              {
-                if (t->t.sendHome(bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendKey
-              else if (ptJson->m["Function"]->v == "sendKey")
-              {
-                if (strData.size() == 1)
-                {
-                  if (t->t.sendKey(strData[0], unCount, bWait))
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    strError = t->t.error();
-                  }
-                }
-                else
-                {
-                  strError = "Data should contain a single character for this Function.";
-                }
-              }
-              // }}}
-              // {{{ sendKeypadEnter
-              else if (ptJson->m["Function"]->v == "sendKeypadEnter")
-              {
-                if (t->t.sendKeypadEnter(bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendLeft
-              else if (ptJson->m["Function"]->v == "sendLeft")
-              {
-                if (t->t.sendLeft(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendRight
-              else if (ptJson->m["Function"]->v == "sendRight")
-              {
-                if (t->t.sendRight(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendShiftFunction
-              else if (ptJson->m["Function"]->v == "sendShiftFunction")
-              {
-                stringstream ssKey(strData);
-                int nKey = 0;
-                ssKey >> nKey;
-                if (nKey >= 1 && nKey <= 12)
-                {
-                  if (t->t.sendShiftFunction(nKey))
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    strError = t->t.error();
-                  }
-                }
-                else
-                {
-                  strError = "Please provide a Data value between 1 and 12.";
-                }
-              }
-              // }}}
-              // {{{ sendTab
-              else if (ptJson->m["Function"]->v == "sendTab")
-              {
-                if (t->t.sendTab(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendUp
-              else if (ptJson->m["Function"]->v == "sendUp")
-              {
-                if (t->t.sendUp(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ invalid
               else
               {
-                strError = strInvalid;
+                strError = t->t.error();
               }
-              // }}}
             }
             // }}}
             // {{{ setSocketTimeout
@@ -389,6 +325,55 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               }
             }
             // }}}
+            // {{{ shiftFunction
+            else if (ptJson->m["Function"]->v == "shiftFunction")
+            {
+              stringstream ssKey(strData);
+              int nKey = 0;
+              ssKey >> nKey;
+              if (nKey >= 1 && nKey <= 12)
+              {
+                if (t->t.sendShiftFunction(nKey))
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  strError = t->t.error();
+                }
+              }
+              else
+              {
+                strError = "Please provide a Data value between 1 and 12.";
+              }
+            }
+            // }}}
+            // {{{ tab
+            else if (ptJson->m["Function"]->v == "tab")
+            {
+              if (t->t.sendTab(unCount, bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
+            // {{{ up
+            else if (ptJson->m["Function"]->v == "up")
+            {
+              if (t->t.sendUp(unCount, bWait))
+              {
+                bResult = true;
+              }
+              else
+              {
+                strError = t->t.error();
+              }
+            }
+            // }}}
             // {{{ wait
             else if (ptJson->m["Function"]->v == "wait")
             {
@@ -413,29 +398,24 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               strError = strInvalid;
             }
             // }}}
-            if (bScreen)
+            t->t.screen(screen);
+            ptJson->m["Response"]->m["Screen"] = new Json;
+            for (size_t i = 0; i < screen.size(); i++)
             {
-              stringstream ssValue;
-              vector<string> screen;
-              t->t.screen(screen);
-              ptJson->m["Response"]->m["Screen"] = new Json;
-              for (size_t i = 0; i < screen.size(); i++)
-              {
-                ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
-              }
-              ssValue.str("");
-              ssValue << t->t.col();
-              ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.cols();
-              ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.row();
-              ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.rows();
-              ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
+              ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
             }
+            ssValue.str("");
+            ssValue << t->t.col();
+            ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
+            ssValue.str("");
+            ssValue << t->t.cols();
+            ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
+            ssValue.str("");
+            ssValue << t->t.row();
+            ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
+            ssValue.str("");
+            ssValue << t->t.rows();
+            ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             t->m.unlock();
           }
           else
