@@ -65,7 +65,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
           if (!empty(ptJson, "Function"))
           {
             bool bScreen = false;
-            string strInvalid = "Please provide a valid Function:  disconnect, getSocketTimeout, screen, send, sendCtrl, sendDown, sendEnter, sendEscape, sendFunction, sendHome, sendKey, sendKeypadEnter, sendLeft, sendRight, sendShiftFunction, sendTab, sendUp, sendWait, setSocketTimeout, wait.";
+            string strInvalid = "Please provide a valid Function:  disconnect, getSocketTimeout, screen, send, sendCtrl, sendDown, sendEnter, sendEscape, sendFunction, sendHome, sendKey, sendKeypadEnter, sendLeft, sendRight, sendShiftFunction, sendTab, sendUp, setSocketTimeout, wait.";
             if (exist(ptJson, "Response"))
             {
               delete ptJson->m["Response"];
@@ -134,7 +134,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               // {{{ send
               if (ptJson->m["Function"]->v == "send")
               {
-                if (t->t.send(strData, unCount))
+                if ((bWait && t->t.sendWait(strData, unCount)) || (!bWait && t->t.send(strData, unCount)))
                 {
                   bResult = true;
                 }
@@ -338,19 +338,6 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               else if (ptJson->m["Function"]->v == "sendUp")
               {
                 if (t->t.sendUp(unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              // }}}
-              // {{{ sendWait
-              else if (ptJson->m["Function"]->v == "sendWait")
-              {
-                if (t->t.sendWait(strData, unCount))
                 {
                   bResult = true;
                 }
