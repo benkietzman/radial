@@ -496,6 +496,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
         {
           if (!empty(ptJson->m["Request"], "Port"))
           {
+            bool bWait = false;
             radialTerminal *t = new radialTerminal;
             if (!empty(ptJson->m["Request"], "Cols"))
             {
@@ -515,42 +516,53 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             {
               t->t.type(ptJson->m["Request"]->m["Type"]->v);
             }
+            if (!empty(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")
+            {
+              bWait = true;
+            }
             if (t->t.connect(ptJson->m["Request"]->m["Server"]->v, ptJson->m["Request"]->m["Port"]->v))
             {
-              stringstream ssSession;
-              bResult = true;
-              ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
-              ptJson->i("Session", ssSession.str());
-              m_mutex.lock();
-              m_sessions[ssSession.str()] = t;
-              m_mutex.unlock();
-              if (!empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
+              if (t->t.wait(bWait))
               {
-                stringstream ssValue;
-                vector<string> screen;
-                t->t.screen(screen);
-                if (exist(ptJson, "Response"))
+                stringstream ssSession;
+                bResult = true;
+                ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
+                ptJson->i("Session", ssSession.str());
+                m_mutex.lock();
+                m_sessions[ssSession.str()] = t;
+                m_mutex.unlock();
+                if (!empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
                 {
-                  delete ptJson->m["Response"];
+                  stringstream ssValue;
+                  vector<string> screen;
+                  t->t.screen(screen);
+                  if (exist(ptJson, "Response"))
+                  {
+                    delete ptJson->m["Response"];
+                  }
+                  ptJson->m["Response"] = new Json;
+                  ptJson->m["Response"]->m["Screen"] = new Json;
+                  for (size_t i = 0; i < screen.size(); i++)
+                  {
+                    ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
+                  }
+                  ssValue.str("");
+                  ssValue << t->t.col();
+                  ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
+                  ssValue.str("");
+                  ssValue << t->t.cols();
+                  ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
+                  ssValue.str("");
+                  ssValue << t->t.row();
+                  ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
+                  ssValue.str("");
+                  ssValue << t->t.rows();
+                  ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
                 }
-                ptJson->m["Response"] = new Json;
-                ptJson->m["Response"]->m["Screen"] = new Json;
-                for (size_t i = 0; i < screen.size(); i++)
-                {
-                  ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
-                }
-                ssValue.str("");
-                ssValue << t->t.col();
-                ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.cols();
-                ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.row();
-                ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.rows();
-                ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
+              }
+              else
+              {
+                strError = t->t.error();
               }
             }
             else
