@@ -279,7 +279,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             }
             // }}}
             // {{{ send
-            if (ptJson->m["Function"]->v == "send")
+            else if (ptJson->m["Function"]->v == "send")
             {
               if ((bWait && t->t.sendWait(strData, unCount)) || (!bWait && t->t.send(strData, unCount)))
               {
