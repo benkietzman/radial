@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
         if (r.terminalConnect(t, s, p, true, e))
         {
           string f;
-          cout << "\033[32m";
+          cout << "\033[32;40m";
           for (size_t i = 0; i < t.screen.size(); i++)
           {
             if (i == t.unRow && t.unCol < t.screen[i].size())
             {
               stringstream ssCursor;
-              ssCursor << "\033[0m\033[30m\033[42m" << t.screen[i][t.unCol] << "\033[0m\033[32m";
+              ssCursor << "\033[30;42m" << t.screen[i][t.unCol] << "\033[32;40m";
               t.screen[i].replace(t.unCol, 1, ssCursor.str());
             }
             cout << t.screen[i] << endl;
@@ -152,13 +152,13 @@ int main(int argc, char *argv[])
             }
             if (!b)
             {
-              cout << "\033[32m";
+              cout << "\033[32;40m";
               for (size_t i = 0; i < t.screen.size(); i++)
               {
                 if (i == t.unRow && t.unCol < t.screen[i].size())
                 {
                   stringstream ssCursor;
-                  ssCursor << "\033[0m\033[30m\033[42m" << t.screen[i][t.unCol] << "\033[0m\033[32m";
+                  ssCursor << "\033[30;42m" << t.screen[i][t.unCol] << "\033[32;40m";
                   t.screen[i].replace(t.unCol, 1, ssCursor.str());
                 }
                 cout << t.screen[i] << endl;
