@@ -3190,11 +3190,6 @@ bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunct
   {
     ptJson->m["Request"] = new Json(data);
   }
-  if (ptJson->m.find("Request") == ptJson->m.end())
-  {
-    ptJson->m["Request"] = new Json;
-  }
-  ptJson->m["Request"]->i("Screen", "1", '1');
   if (hub("terminal", ptJson, strError))
   {
     bResult = true;
