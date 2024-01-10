@@ -2739,14 +2739,13 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
     stringstream ssText;
     for (size_t i = 0; i < tInfo.screen.size(); i++)
     {
-      ssText << char(3) << "03,01";
       if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
       {
         stringstream ssCursor;
-        ssCursor << char(3) << "01,03" << tInfo.screen[i][tInfo.unCol] << char(3) << "03,01";
+        ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
         tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
       }
-      ssText << tInfo.screen[i] << char(3) << endl;
+      ssText << tInfo.screen[i] << endl;
     }
     chat(strTarget, ssText.str());
     while (!bExit)
@@ -2947,14 +2946,13 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
             ssText.str("");
             for (size_t i = 0; i < tInfo.screen.size(); i++)
             {
-              ssText << char(3) << "03,01";
               if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
               {
                 stringstream ssCursor;
-                ssCursor << char(3) << "01,03" << tInfo.screen[i][tInfo.unCol] << char(3) << "03,01";
+                ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
                 tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
               }
-              ssText << tInfo.screen[i] << char(3) << endl;
+              ssText << tInfo.screen[i] << endl;
             }
             chat(strTarget, ssText.str());
           }
