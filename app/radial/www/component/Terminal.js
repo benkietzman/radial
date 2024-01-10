@@ -85,22 +85,22 @@ export default
     // [[[ process()
     s.process = (response) =>
     {
-      if (c.isDefined(response.Screen))
+      if (c.isDefined(response.Response) && c.isDefined(response.Response.Screen))
       {
         let strScreen = '';
-        for (let i = 0; i < response.Screen.length; i++)
+        for (let i = 0; i < response.Response.Screen.length; i++)
         {
           if (i > 0)
           {
             strScreen += '\n';
           }
-          if (c.isDefined(response.Row) && c.isDefined(response.Col) && i == response.Row && response.Screen[i].length > response.Col)
+          if (c.isDefined(response.Response.Row) && c.isDefined(response.Response.Col) && i == response.Response.Row && response.Response.Screen[i].length > response.Response.Col)
           {
-            strScreen += response.Screen[i].substr(0, response.Col) + '<span style="background: green; color: black;">' + response.Screen[i].substr(response.Col, 1) + '</span>' + response.Screen[i].substr((response.Col + 1), (response.Screen[i].length - (response.Col + 1)));
+            strScreen += response.Response.Screen[i].substr(0, response.Response.Col) + '<span style="background: green; color: black;">' + response.Response.Screen[i].substr(response.Response.Col, 1) + '</span>' + response.Response.Screen[i].substr((response.Response.Col + 1), (response.Response.Screen[i].length - (response.Response.Col + 1)));
           }
           else
           {
-            strScreen += response.Screen[i];
+            strScreen += response.Response.Screen[i];
           }
         }
         if (strScreen != '')
