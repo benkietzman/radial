@@ -491,41 +491,37 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
             {
               if (t->t.wait(bWait))
               {
-                stringstream ssSession;
+                stringstream ssSession, ssValue;
+                vector<string> screen;
                 bResult = true;
                 ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
                 ptJson->i("Session", ssSession.str());
                 m_mutex.lock();
                 m_sessions[ssSession.str()] = t;
                 m_mutex.unlock();
-                if (!empty(ptJson->m["Request"], "Screen") && (ptJson->m["Request"]->m["Screen"]->t == '1' || ptJson->m["Request"]->m["Screen"]->v == "yes"))
+                t->t.screen(screen);
+                if (exist(ptJson, "Response"))
                 {
-                  stringstream ssValue;
-                  vector<string> screen;
-                  t->t.screen(screen);
-                  if (exist(ptJson, "Response"))
-                  {
-                    delete ptJson->m["Response"];
-                  }
-                  ptJson->m["Response"] = new Json;
-                  ptJson->m["Response"]->m["Screen"] = new Json;
-                  for (size_t i = 0; i < screen.size(); i++)
-                  {
-                    ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
-                  }
-                  ssValue.str("");
-                  ssValue << t->t.col();
-                  ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-                  ssValue.str("");
-                  ssValue << t->t.cols();
-                  ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-                  ssValue.str("");
-                  ssValue << t->t.row();
-                  ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-                  ssValue.str("");
-                  ssValue << t->t.rows();
-                  ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
+                  delete ptJson->m["Response"];
                 }
+                ptJson->m["Response"] = new Json;
+                ptJson->m["Response"]->m["Screen"] = new Json;
+                for (size_t i = 0; i < screen.size(); i++)
+                {
+                  ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
+                }
+                ssValue.str("");
+                ssValue << t->t.col();
+                ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
+                ssValue.str("");
+                ssValue << t->t.cols();
+                ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
+                ssValue.str("");
+                ssValue << t->t.row();
+                ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
+                ssValue.str("");
+                ssValue << t->t.rows();
+                ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
               }
               else
               {
