@@ -46,7 +46,7 @@ export default
               {
                 s.strSession = response.Session;
               }
-              s.process(response.Response);
+              s.process(response);
             }
             else
             {
@@ -147,7 +147,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.process(response.Response);
+            s.process(response);
           }
           else
           {
@@ -163,7 +163,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.process(response.Response);
+            s.process(response);
           }
           else
           {
@@ -182,7 +182,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -200,7 +200,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -218,7 +218,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -236,7 +236,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -254,7 +254,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -272,7 +272,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
@@ -290,7 +290,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.process(response.Response);
+          s.process(response);
         }
         else
         {
