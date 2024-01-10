@@ -398,25 +398,27 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               strError = strInvalid;
             }
             // }}}
-            t->t.screen(screen);
-            ptJson->m["Response"]->m["Screen"] = new Json;
-            for (size_t i = 0; i < screen.size(); i++)
+            if (t != NULL)
             {
-              ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
+              t->t.screen(screen);
+              ptJson->m["Response"]->m["Screen"] = new Json;
+              for (size_t i = 0; i < screen.size(); i++)
+              {
+                ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
+              }
+              ssValue.str("");
+              ssValue << t->t.col();
+              ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
+              ssValue.str("");
+              ssValue << t->t.cols();
+              ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
+              ssValue.str("");
+              ssValue << t->t.row();
+              ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
+              ssValue.str("");
+              ssValue << t->t.rows();
+              ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
             }
-            ssValue.str("");
-            ssValue << t->t.col();
-            ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-            ssValue.str("");
-            ssValue << t->t.cols();
-            ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-            ssValue.str("");
-            ssValue << t->t.row();
-            ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-            ssValue.str("");
-            ssValue << t->t.rows();
-            ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
-            t->m.unlock();
           }
           else
           {
