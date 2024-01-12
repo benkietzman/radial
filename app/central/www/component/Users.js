@@ -340,9 +340,9 @@ export default
         <td><a href="#/Users/{{id}}">{{last_name}}, {{first_name}}</a> <small>({{userid}})</small></td>
         <td><a href="mailto:{{email}}">{{email}}</a></td>
         <td><a href="mailto:{{pager}}">{{pager}}</a></td>
-        <td>{{#if active}}Yes{{else}}No{{/if}}</td>
-        <td>{{#if admin}}Yes{{else}}No{{/if}}</td>
-        <td>{{#if locked}}Yes{{else}}No{{/if}}</td>
+        <td>{{#if active.value}}Yes{{else}}No{{/if}}</td>
+        <td>{{#if admin.value}}Yes{{else}}No{{/if}}</td>
+        <td>{{#if locked.value}}Yes{{else}}No{{/if}}</td>
       </tr>
       {{/eachFilter}}
     </table>
