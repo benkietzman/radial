@@ -323,8 +323,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ math
-      else if (strAction == "math")
+      // {{{ math || m
+      else if (strAction == "math" || strAction == "m")
       {
         string strFunction;
         ssData >> strFunction;
