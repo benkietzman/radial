@@ -326,21 +326,21 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ math || m
       else if (strAction == "math" || strAction == "m")
       {
-        string strFunction;
-        ssData >> strFunction;
-        if (!strFunction.empty())
+        string strA;
+        ssData >> strA;
+        if (!strA.empty())
         {
-          string strA;
-          ptRequest->i("Function", strFunction);
-          ssData >> strA;
-          if (!strA.empty())
+          string strB;
+          ptRequest->i("A", strA);
+          ssData >> strB;
+          if (!strB.empty())
           {
-            string strB;
-            ptRequest->i("A", strA);
-            ssData >> strB;
-            if (!strB.empty())
+            string strC;
+            ptRequest->i("B", strB);
+            ssData >> strC;
+            if (!strC.empty())
             {
-              ptRequest->i("B", strB);
+              ptRequest->i("C", strC);
             }
           }
         }
@@ -1454,13 +1454,27 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ math || m
   else if (strAction == "math" || strAction == "m")
   {
-    string strFunction = var("Function", ptData);
-    if (!strFunction.empty())
+    string strA = var("A", ptData);
+    if (!strA.empty())
     {
       long double dA, dB, dC = 0;
       auto max{numeric_limits<long double>::digits10 + 1};
-      stringstream ssA(var("A", ptData)), ssB(var("B", ptData));
+      string strB = var("B", ptData), strC = var("C", ptData), strFunction;
+      stringstream ssA, ssB;
+      if (m_manip.isNumeric(strA))
+      {
+        strFunction = strB;
+        strB = strC;
+      }
+      else
+      {
+        strFunction = strA;
+        strA = strB;
+        strB = strC;
+      }
+      ssA.str(strA);
       ssA >> dA;
+      ssB.str(strB);
       ssB >> dB;
       if (strFunction == "+")
       {
@@ -1545,7 +1559,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The math action is used to perform basic mathematics.  Please provide one of the following functions immediately following the action:  +, -, *, /, %, ^, abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.";
+      ssText << ":  The math action is used to perform basic mathematics.  Please provide a number or one of the following functions immediately following the action:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.";
     }
   }
   // }}}
