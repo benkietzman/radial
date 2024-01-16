@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
-  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "math (m)", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -320,6 +320,29 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (!strJson.empty())
         {
           ptRequest->i("Json", strJson);
+        }
+      }
+      // }}}
+      // {{{ math
+      else if (strAction == "math")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          string strA;
+          ptRequest->i("Function", strFunction);
+          ssData >> strA;
+          if (!strA.empty())
+          {
+            string strB;
+            ptRequest->i("A", strA);
+            ssData >> strB;
+            if (!strB.empty())
+            {
+              ptRequest->i("B", strB);
+            }
+          }
         }
       }
       // }}}
@@ -1425,6 +1448,104 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ptFormat->i("User", "");
       ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  FORMAT:  " << ptFormat;
       delete ptFormat;
+    }
+  }
+  // }}}
+  // {{{ math || m
+  else if (strAction == "math" || strAction == "m")
+  {
+    string strFunction = var("Function", ptData);
+    if (!strFunction.empty())
+    {
+      long double dA, dB, dC = 0;
+      auto max{numeric_limits<long double>::digits10 + 1};
+      stringstream ssA(var("A", ptData)), ssB(var("B", ptData));
+      ssA >> dA;
+      ssB >> dB;
+      if (strFunction == "+")
+      {
+        dC = dA + dB;
+      }
+      else if (strFunction == "-")
+      {
+        dC = dA - dB;
+      }
+      else if (strFunction == "-")
+      {
+        dC = dA - dB;
+      }
+      else if (strFunction == "*")
+      {
+        dC = dA * dB;
+      }
+      else if (strFunction == "/")
+      {
+        if (dB != 0)
+        {
+          dC = dA / dB;
+        }
+      }
+      else if (strFunction == "%")
+      {
+        dC = (int)dA % (int)dB;
+      }
+      else if (strFunction == "^")
+      {
+        dC = pow(dA, dB);
+      }
+      else if (strFunction == "abs")
+      {
+        dC = abs(dA);
+      }
+      else if (strFunction == "acos")
+      {
+        dC = acos(dA);
+      }
+      else if (strFunction == "asin")
+      {
+        dC = asin(dA);
+      }
+      else if (strFunction == "atan")
+      {
+        dC = atan(dA);
+      }
+      else if (strFunction == "cbrt")
+      {
+        dC = cbrt(dA);
+      }
+      else if (strFunction == "ceil")
+      {
+        dC = ceil(dA);
+      }
+      else if (strFunction == "cos")
+      {
+        dC = cos(dA);
+      }
+      else if (strFunction == "exp")
+      {
+        dC = exp(dA);
+      }
+      else if (strFunction == "floor")
+      {
+        dC = floor(dA);
+      }
+      else if (strFunction == "sin")
+      {
+        dC = sin(dA);
+      }
+      else if (strFunction == "sqrt")
+      {
+        dC = sqrt(dA);
+      }
+      else if (strFunction == "tan")
+      {
+        dC = tan(dA);
+      }
+      ssText << ":  " << setprecision(max) << dC;
+    }
+    else
+    {
+      ssText << ":  The math action is used to perform basic mathematics.  Please provide one of the following functions immediately following the action:  +, -, *, /, %, ^, abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.";
     }
   }
   // }}}
