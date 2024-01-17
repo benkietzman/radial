@@ -1448,7 +1448,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       auto max{numeric_limits<long double>::digits10 + 1};
       long double ldResult;
       string strItem;
-      stringstream ssEquation;
+      stringstream ssEquation(strEquation);
       vector<string> equation;
       while (ssEquation >> strItem)
       {
