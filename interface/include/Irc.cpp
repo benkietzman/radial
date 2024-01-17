@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
 {
-  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "math (m)", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -323,26 +323,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ math || m
-      else if (strAction == "math" || strAction == "m")
+      // {{{ math
+      else if (strAction == "math")
       {
-        string strA;
-        ssData >> strA;
-        if (!strA.empty())
+        string strEquation;
+        getline(ssData, strEquation);
+        if (!strEquation.empty())
         {
-          string strB;
-          ptRequest->i("A", strA);
-          ssData >> strB;
-          if (!strB.empty())
-          {
-            string strC;
-            ptRequest->i("B", strB);
-            ssData >> strC;
-            if (!strC.empty())
-            {
-              ptRequest->i("C", strC);
-            }
-          }
+          ptRequest->i("Equation", strEquation);
         }
       }
       // }}}
@@ -1451,111 +1439,21 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ math || m
-  else if (strAction == "math" || strAction == "m")
+  // {{{ math
+  else if (strAction == "math")
   {
-    string strA = var("A", ptData);
-    if (!strA.empty())
+    string strEquation = var("Equation", ptData);
+    if (!strEquation.empty())
     {
-      long double dA, dB, dC = 0;
       auto max{numeric_limits<long double>::digits10 + 1};
-      string strB = var("B", ptData), strC = var("C", ptData), strFunction;
-      stringstream ssA, ssB;
-      if (m_manip.isNumeric(strA))
+      string strItem;
+      stringstream ssEquation;
+      vector<string> equation;
+      while (ssEquation >> strItem)
       {
-        strFunction = strB;
-        strB = strC;
+        equation.push_back(strItem);
       }
-      else
-      {
-        strFunction = strA;
-        strA = strB;
-        strB = strC;
-      }
-      ssA.str(strA);
-      ssA >> dA;
-      ssB.str(strB);
-      ssB >> dB;
-      if (strFunction == "+")
-      {
-        dC = dA + dB;
-      }
-      else if (strFunction == "-")
-      {
-        dC = dA - dB;
-      }
-      else if (strFunction == "-")
-      {
-        dC = dA - dB;
-      }
-      else if (strFunction == "*")
-      {
-        dC = dA * dB;
-      }
-      else if (strFunction == "/")
-      {
-        if (dB != 0)
-        {
-          dC = dA / dB;
-        }
-      }
-      else if (strFunction == "%")
-      {
-        dC = (int)dA % (int)dB;
-      }
-      else if (strFunction == "^")
-      {
-        dC = pow(dA, dB);
-      }
-      else if (strFunction == "abs")
-      {
-        dC = abs(dA);
-      }
-      else if (strFunction == "acos")
-      {
-        dC = acos(dA);
-      }
-      else if (strFunction == "asin")
-      {
-        dC = asin(dA);
-      }
-      else if (strFunction == "atan")
-      {
-        dC = atan(dA);
-      }
-      else if (strFunction == "cbrt")
-      {
-        dC = cbrt(dA);
-      }
-      else if (strFunction == "ceil")
-      {
-        dC = ceil(dA);
-      }
-      else if (strFunction == "cos")
-      {
-        dC = cos(dA);
-      }
-      else if (strFunction == "exp")
-      {
-        dC = exp(dA);
-      }
-      else if (strFunction == "floor")
-      {
-        dC = floor(dA);
-      }
-      else if (strFunction == "sin")
-      {
-        dC = sin(dA);
-      }
-      else if (strFunction == "sqrt")
-      {
-        dC = sqrt(dA);
-      }
-      else if (strFunction == "tan")
-      {
-        dC = tan(dA);
-      }
-      ssText << ":  " << setprecision(max) << dC;
+      ssText << ":  " << setprecision(max) << math(equation);
     }
     else
     {
@@ -2547,6 +2445,165 @@ void Irc::listChannels()
 void Irc::lock()
 {
   m_mutex.lock();
+}
+// }}}
+// {{{ math()
+long double Irc::math(vector<string> e)
+{
+  long double r = 0;
+  ssize_t a, b, d;
+
+  do
+  {
+    a = b = -1;
+    d = 0;
+    for (ssize_t i = 0; b == -1 && i < (ssize_t)e.size(); i++)
+    {
+      if (e[i] == "(")
+      {
+        if (++d == 1)
+        {
+          a = i;
+        }
+      }
+      else if (e[i] == ")")
+      {
+        if (d-- == 1)
+        {
+          b = i;
+        }
+      }
+    }
+    if (b != -1)
+    {
+      stringstream s;
+      vector<string> f;
+      for (ssize_t i = (a + 1); i < b; i++)
+      {
+        f.push_back(e[i]);
+      }
+      s << math(f);
+      f.clear();
+      for (ssize_t i = 0; i < (ssize_t)e.size(); i++)
+      {
+        if (i == a)
+        {
+          f.push_back(s.str());
+        }
+        else if (i < a || i > b)
+        {
+          f.push_back(e[i]);
+        }
+      }
+      e = f;
+    }
+  } while (b != -1);
+  if (e.size() == 2 || e.size() == 3)
+  {
+    long double dA, dB;
+    string strA = e[0], strB = e[1], strC, strF;
+    stringstream ssA, ssB;
+    if (e.size() == 3)
+    {
+      strC = e[2];
+    }
+    if (m_manip.isNumeric(strA))
+    {
+      strF = strB;
+      strB = strC;
+    }
+    else
+    {
+      strF = strA;
+      strA = strB;
+      strB = strC;
+    }
+    ssA.str(strA);
+    ssA >> dA;
+    ssB.str(strB);
+    ssB >> dB;
+    if (strF == "+")
+    {
+      r = dA + dB;
+    }
+    else if (strF == "-")
+    {
+      r = dA - dB;
+    }
+    else if (strF == "-")
+    {
+      r = dA - dB;
+    }
+    else if (strF == "*")
+    {
+      r = dA * dB;
+    }
+    else if (strF == "/")
+    {
+      if (dB != 0)
+      {
+        r = dA / dB;
+      }
+    }
+    else if (strF == "%")
+    {
+      r = (int)dA % (int)dB;
+    }
+    else if (strF == "^")
+    {
+      r = pow(dA, dB);
+    }
+    else if (strF == "abs")
+    {
+      r = abs(dA);
+    }
+    else if (strF == "acos")
+    {
+      r = acos(dA);
+    }
+    else if (strF == "asin")
+    {
+      r = asin(dA);
+    }
+    else if (strF == "atan")
+    {
+      r = atan(dA);
+    }
+    else if (strF == "cbrt")
+    {
+      r = cbrt(dA);
+    }
+    else if (strF == "ceil")
+    {
+      r = ceil(dA);
+    }
+    else if (strF == "cos")
+    {
+      r = cos(dA);
+    }
+    else if (strF == "exp")
+    {
+      r = exp(dA);
+    }
+    else if (strF == "floor")
+    {
+      r = floor(dA);
+    }
+    else if (strF == "sin")
+    {
+      r = sin(dA);
+    }
+    else if (strF == "sqrt")
+    {
+      r = sqrt(dA);
+    }
+    else if (strF == "tan")
+    {
+      r = tan(dA);
+    }
+  }
+
+  return r;
 }
 // }}}
 // {{{ message()
