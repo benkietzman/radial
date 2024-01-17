@@ -1465,7 +1465,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The math action is used to perform basic mathematics.  Please provide a number or one of the following functions immediately following the action:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.";
+      ssText << ":  The math action is used to perform basic mathematics.  The following Functions are available:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.  Each item in the provided equation must be space delimited.  All sub-operations must be wrapped in parenthesis.  EX:  ( -1 * ( ( ( ( sqrt 64 ) + 4 ) / 2 ) ^ 3 ) ) + ( floor 300.47 )";
     }
   }
   // }}}
