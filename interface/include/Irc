@@ -51,7 +51,7 @@ class Irc : public Interface
   void join(const string strChannel);
   void listChannels();
   void lock();
-  long double math(vector<string> e);
+  bool math(vector<string> e, long double &r, string &strError);
   bool message(string &strMessage);
   Json *monitor();
   void monitorChannels(string strPrefix);

@@ -1446,6 +1446,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strEquation.empty())
     {
       auto max{numeric_limits<long double>::digits10 + 1};
+      long double ldResult;
       string strItem;
       stringstream ssEquation;
       vector<string> equation;
@@ -1453,7 +1454,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         equation.push_back(strItem);
       }
-      ssText << ":  " << setprecision(max) << math(equation);
+      if (math(equation, ldResult, strError))
+      {
+        ssText << ":  " << setprecision(max) << ldResult;
+      }
+      else
+      {
+        ssText << ":  " << strError;
+      }
     }
     else
     {
@@ -2448,11 +2456,12 @@ void Irc::lock()
 }
 // }}}
 // {{{ math()
-long double Irc::math(vector<string> e)
+bool Irc::math(vector<string> e, long double &r, string &strError)
 {
-  long double r = 0;
+  bool bResult = true;
   ssize_t a, b, d;
 
+  r = 0;
   do
   {
     a = b = -1;
@@ -2476,134 +2485,170 @@ long double Irc::math(vector<string> e)
     }
     if (b != -1)
     {
+      long double t;
       stringstream s;
       vector<string> f;
       for (ssize_t i = (a + 1); i < b; i++)
       {
         f.push_back(e[i]);
       }
-      s << math(f);
-      f.clear();
-      for (ssize_t i = 0; i < (ssize_t)e.size(); i++)
+      if (math(f, t, strError))
       {
-        if (i == a)
+        s << t;
+        f.clear();
+        for (ssize_t i = 0; i < (ssize_t)e.size(); i++)
         {
-          f.push_back(s.str());
+          if (i == a)
+          {
+            f.push_back(s.str());
+          }
+          else if (i < a || i > b)
+          {
+            f.push_back(e[i]);
+          }
         }
-        else if (i < a || i > b)
+        e = f;
+      }
+      else
+      {
+        bResult = false;
+      }
+    }
+  } while (bResult && b != -1);
+  if (bResult)
+  {
+    if (e.size() == 2 || e.size() == 3)
+    {
+      long double dA, dB;
+      string strA = e[0], strB = e[1], strC, strF;
+      stringstream ssA, ssB;
+      if (e.size() == 3)
+      {
+        strC = e[2];
+      }
+      if (m_manip.isNumeric(strA))
+      {
+        strF = strB;
+        strB = strC;
+      }
+      else
+      {
+        strF = strA;
+        strA = strB;
+        strB = strC;
+      }
+      ssA.str(strA);
+      ssA >> dA;
+      ssB.str(strB);
+      ssB >> dB;
+      if (strF == "+")
+      {
+        r = dA + dB;
+      }
+      else if (strF == "-")
+      {
+        r = dA - dB;
+      }
+      else if (strF == "-")
+      {
+        r = dA - dB;
+      }
+      else if (strF == "*")
+      {
+        r = dA * dB;
+      }
+      else if (strF == "/")
+      {
+        if (dB != 0)
         {
-          f.push_back(e[i]);
+          r = dA / dB;
+        }
+        else
+        {
+          bResult = false;
+          strError = "Result is undefined.";
         }
       }
-      e = f;
-    }
-  } while (b != -1);
-  if (e.size() == 2 || e.size() == 3)
-  {
-    long double dA, dB;
-    string strA = e[0], strB = e[1], strC, strF;
-    stringstream ssA, ssB;
-    if (e.size() == 3)
-    {
-      strC = e[2];
-    }
-    if (m_manip.isNumeric(strA))
-    {
-      strF = strB;
-      strB = strC;
+      else if (strF == "%")
+      {
+        r = (int)dA % (int)dB;
+      }
+      else if (strF == "^")
+      {
+        r = pow(dA, dB);
+      }
+      else if (strF == "abs")
+      {
+        r = abs(dA);
+      }
+      else if (strF == "acos")
+      {
+        r = acos(dA);
+      }
+      else if (strF == "asin")
+      {
+        r = asin(dA);
+      }
+      else if (strF == "atan")
+      {
+        r = atan(dA);
+      }
+      else if (strF == "cbrt")
+      {
+        r = cbrt(dA);
+      }
+      else if (strF == "ceil")
+      {
+        r = ceil(dA);
+      }
+      else if (strF == "cos")
+      {
+        r = cos(dA);
+      }
+      else if (strF == "exp")
+      {
+        r = exp(dA);
+      }
+      else if (strF == "floor")
+      {
+        r = floor(dA);
+      }
+      else if (strF == "sin")
+      {
+        r = sin(dA);
+      }
+      else if (strF == "sqrt")
+      {
+        r = sqrt(dA);
+      }
+      else if (strF == "tan")
+      {
+        r = tan(dA);
+      }
+      else
+      {
+        bResult = false;
+        strError = "Please provide a valid Function:  +, -, *, /, %, ^, abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan";
+      }
     }
     else
     {
-      strF = strA;
-      strA = strB;
-      strB = strC;
-    }
-    ssA.str(strA);
-    ssA >> dA;
-    ssB.str(strB);
-    ssB >> dB;
-    if (strF == "+")
-    {
-      r = dA + dB;
-    }
-    else if (strF == "-")
-    {
-      r = dA - dB;
-    }
-    else if (strF == "-")
-    {
-      r = dA - dB;
-    }
-    else if (strF == "*")
-    {
-      r = dA * dB;
-    }
-    else if (strF == "/")
-    {
-      if (dB != 0)
-      {
-        r = dA / dB;
-      }
-    }
-    else if (strF == "%")
-    {
-      r = (int)dA % (int)dB;
-    }
-    else if (strF == "^")
-    {
-      r = pow(dA, dB);
-    }
-    else if (strF == "abs")
-    {
-      r = abs(dA);
-    }
-    else if (strF == "acos")
-    {
-      r = acos(dA);
-    }
-    else if (strF == "asin")
-    {
-      r = asin(dA);
-    }
-    else if (strF == "atan")
-    {
-      r = atan(dA);
-    }
-    else if (strF == "cbrt")
-    {
-      r = cbrt(dA);
-    }
-    else if (strF == "ceil")
-    {
-      r = ceil(dA);
-    }
-    else if (strF == "cos")
-    {
-      r = cos(dA);
-    }
-    else if (strF == "exp")
-    {
-      r = exp(dA);
-    }
-    else if (strF == "floor")
-    {
-      r = floor(dA);
-    }
-    else if (strF == "sin")
-    {
-      r = sin(dA);
-    }
-    else if (strF == "sqrt")
-    {
-      r = sqrt(dA);
-    }
-    else if (strF == "tan")
-    {
-      r = tan(dA);
+      bResult = false;
+      strError = "Invalid number of items.";
     }
   }
+  if (!bResult)
+  {
+    stringstream ssError;
+    ssError << strError << " ---";
+    for (auto i : e)
+    {
+      ssError << " " << i;
+    }
+    strError = ssError.str();
+  }
 
-  return r;
+  return bResult;
 }
 // }}}
 // {{{ message()
