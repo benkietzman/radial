@@ -112,6 +112,13 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
           strError = "Please provide a valid Function.";
         }
       }
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = d.p->m["o"];
+      d.p->m.erase("o");
+      userDeinit(d);
     }
     else
     {
