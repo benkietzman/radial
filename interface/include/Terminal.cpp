@@ -468,6 +468,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
           {
             bool bWait = false;
             radialTerminal *t = new radialTerminal;
+            t.setSocketTimeout(100, 500);
             if (!empty(ptJson->m["Request"], "Cols"))
             {
               size_t unCols;
