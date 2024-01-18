@@ -48,6 +48,15 @@ Terminal::Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(st
 // {{{ ~Terminal()
 Terminal::~Terminal()
 {
+  m_mutex.lock();
+  while (m_sessions.empty())
+  {
+    m_sessions.front()->t->disconnect();
+    delete m_sessions.front()->t;
+    delete m_sessions.front();
+    sessions.pop_front();
+  }
+  m_mutex.unlock();
 }
 // }}}
 // {{{ callback()
@@ -151,49 +160,50 @@ bool Terminal::connect(radialUser &d, string &e)
     {
       bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
+      t->t = new common::Terminal;
       t->unActive = 0;
       if (!empty(i, "Cols"))
       {
         size_t unCols;
         stringstream ssCols(i->m["Cols"]->v);
         ssCols >> unCols;
-        t->t.cols(unCols);
+        t->t->cols(unCols);
       }
       if (!empty(i, "Rows"))
       {
         size_t unRows;
         stringstream ssRows(i->m["Rows"]->v);
         ssRows >> unRows;
-        t->t.rows(unRows);
+        t->t->rows(unRows);
       }
       if (!empty(i, "Type"))
       {
-        t->t.type(i->m["Type"]->v);
+        t->t->type(i->m["Type"]->v);
       }
-      if (t->t.connect(i->m["Server"]->v, i->m["Port"]->v) && t->t.wait(bWait))
+      if (t->t->connect(i->m["Server"]->v, i->m["Port"]->v) && t->t->wait(bWait))
       {
         stringstream ssSession, ssValue;
         vector<string> screen;
         b = true;
         ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
         o->i("Session", ssSession.str());
-        t->t.screen(screen);
+        t->t->screen(screen);
         o->m["Screen"] = new Json;
         for (size_t i = 0; i < screen.size(); i++)
         {
           o->m["Screen"]->pb(screen[i]);
         }
         ssValue.str("");
-        ssValue << t->t.col();
+        ssValue << t->t->col();
         o->insert("Col", ssValue.str(), 'n');
         ssValue.str("");
-        ssValue << t->t.cols();
+        ssValue << t->t->cols();
         o->insert("Cols", ssValue.str(), 'n');
         ssValue.str("");
-        ssValue << t->t.row();
+        ssValue << t->t->row();
         o->insert("Row", ssValue.str(), 'n');
         ssValue.str("");
-        ssValue << t->t.rows();
+        ssValue << t->t->rows();
         o->insert("Rows", ssValue.str(), 'n');
         m_mutex.lock();
         m_sessions[ssSession.str()] = t;
@@ -201,10 +211,11 @@ bool Terminal::connect(radialUser &d, string &e)
       }
       else
       {
-        e = t->t.error();
+        e = t->t->error();
       }
       if (!b)
       {
+        delete t->t;
         delete t;
       }
     }
@@ -233,13 +244,13 @@ bool Terminal::ctrl(radialUser &d, string &e)
   {
     if (k.size() == 1)
     {
-      if (t->t.sendCtrl(k[0], w))
+      if (t->t->sendCtrl(k[0], w))
       {
         b = true;
       }
       else
       {
-        e = t->t.error();
+        e = t->t->error();
       }
     }
     else
@@ -265,13 +276,14 @@ bool Terminal::disconnect(radialUser &d, string &e)
   {
     bool bRemoved = false;
     b = true;
-    t->t.disconnect();
+    t->t->disconnect();
     while (!bRemoved)
     {
       m_mutex.lock();
       if (t->unActive == 0)
       {
         bRemoved = true;
+        delete t->t;
         delete t;
         t = NULL;
         m_sessions.erase(i->m["Session"]->v);
@@ -299,13 +311,13 @@ bool Terminal::down(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendDown(c, w))
+    if (t->t->sendDown(c, w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -323,13 +335,13 @@ bool Terminal::enter(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendEnter(w))
+    if (t->t->sendEnter(w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -347,13 +359,13 @@ bool Terminal::escape(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendEscape(w))
+    if (t->t->sendEscape(w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -376,13 +388,13 @@ bool Terminal::function(radialUser &d, string &e)
     ssKey >> nKey;
     if (nKey >= 1 && nKey <= 12)
     {
-      if (t->t.sendFunction(nKey))
+      if (t->t->sendFunction(nKey))
       {
         b = true;
       }
       else
       {
-        e = t->t.error();
+        e = t->t->error();
       }
     }
     else
@@ -409,7 +421,7 @@ bool Terminal::getSocketTimeout(radialUser &d, string &e)
     int nLong, nShort;
     stringstream ssLong, ssShort;
     b = true;
-    t->t.getSocketTimeout(nShort, nLong);
+    t->t->getSocketTimeout(nShort, nLong);
     ssLong << nLong;
     o->insert("Long", ssLong.str(), 'n');
     ssShort << nShort;
@@ -430,13 +442,13 @@ bool Terminal::home(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendHome(w))
+    if (t->t->sendHome(w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -456,13 +468,13 @@ bool Terminal::key(radialUser &d, string &e)
   {
     if (k.size() == 1)
     {
-      if (t->t.sendKey(k[0], c, w))
+      if (t->t->sendKey(k[0], c, w))
       {
         b = true;
       }
       else
       {
-        e = t->t.error();
+        e = t->t->error();
       }
     }
     else
@@ -485,13 +497,13 @@ bool Terminal::keypadEnter(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendKeypadEnter(w))
+    if (t->t->sendKeypadEnter(w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -509,13 +521,13 @@ bool Terminal::left(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendLeft(c, w))
+    if (t->t->sendLeft(c, w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -530,23 +542,23 @@ void Terminal::post(radialUser &d, radialTerminal *t)
   vector<string> screen;
   Json *o = d.p->m["o"];
 
-  t->t.screen(screen);
+  t->t->screen(screen);
   o->m["Screen"] = new Json;
   for (size_t i = 0; i < screen.size(); i++)
   {
     o->m["Screen"]->pb(screen[i]);
   }
   ssValue.str("");
-  ssValue << t->t.col();
+  ssValue << t->t->col();
   o->insert("Col", ssValue.str(), 'n');
   ssValue.str("");
-  ssValue << t->t.cols();
+  ssValue << t->t->cols();
   o->insert("Cols", ssValue.str(), 'n');
   ssValue.str("");
-  ssValue << t->t.row();
+  ssValue << t->t->row();
   o->insert("Row", ssValue.str(), 'n');
   ssValue.str("");
-  ssValue << t->t.rows();
+  ssValue << t->t->rows();
   o->insert("Rows", ssValue.str(), 'n');
   m_mutex.lock();
   if (t->unActive > 0)
@@ -611,13 +623,13 @@ bool Terminal::right(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendRight(c, w))
+    if (t->t->sendRight(c, w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -650,7 +662,8 @@ void Terminal::schedule(string strPrefix)
       }
       while (!removals.empty())
       {
-        m_sessions[removals.front()]->t.disconnect();
+        m_sessions[removals.front()]->t->disconnect();
+        delete m_sessions[removals.front()]->t;
         delete m_sessions[removals.front()];
         removals.pop_front();
       }
@@ -688,13 +701,13 @@ bool Terminal::send(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if ((w && t->t.sendWait(k, c)) || (!w && t->t.send(k, c)))
+    if ((w && t->t->sendWait(k, c)) || (!w && t->t->send(k, c)))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -730,7 +743,7 @@ bool Terminal::setSocketTimeout(radialUser &d, string &e)
         stringstream ssShort(i->m["Short"]->v);
         ssShort >> nShort;
         b = true;
-        t->t.setSocketTimeout(nShort, nLong);
+        t->t->setSocketTimeout(nShort, nLong);
       }
       else
       {
@@ -762,13 +775,13 @@ bool Terminal::shiftFunction(radialUser &d, string &e)
     ssKey >> nKey;
     if (nKey >= 1 && nKey <= 12)
     {
-      if (t->t.sendShiftFunction(nKey))
+      if (t->t->sendShiftFunction(nKey))
       {
         b = true;
       }
       else
       {
-        e = t->t.error();
+        e = t->t->error();
       }
     }
     else
@@ -791,13 +804,13 @@ bool Terminal::tab(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendTab(c, w))
+    if (t->t->sendTab(c, w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -815,13 +828,13 @@ bool Terminal::up(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.sendUp(c, w))
+    if (t->t->sendUp(c, w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
@@ -839,13 +852,13 @@ bool Terminal::wait(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    if (t->t.wait(w))
+    if (t->t->wait(w))
     {
       b = true;
     }
     else
     {
-      e = t->t.error();
+      e = t->t->error();
     }
     post(d, t);
   }
