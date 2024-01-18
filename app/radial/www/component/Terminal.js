@@ -141,7 +141,7 @@ export default
         {
           strFunction = 'down';
         }
-        let request = {Interface: 'terminal', 'Function': strFunction, Session: s.strSession};
+        let request = {Interface: 'terminal', 'Function': strFunction, Session: s.strSession, Request: {Wait: s.useWait.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -157,7 +157,7 @@ export default
       }
       else if (key.length == 1)
       {
-        let request = {Interface: 'terminal', 'Function': 'send', Session: s.strSession, Request: {Data: key, Screen: true, Wait: s.useWait.v}};
+        let request = {Interface: 'terminal', 'Function': 'send', Session: s.strSession, Request: {Data: key, Wait: s.useWait.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
