@@ -284,7 +284,7 @@ export default
     // [[[ wait()
     s.wait = () =>
     {
-      let request = {Interface: 'terminal', 'Function': 'wait', Session: s.strSession, Request: {Wait: false}};
+      let request = {Interface: 'terminal', 'Function': 'wait', Session: s.strSession, Request: {Wait: true}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
