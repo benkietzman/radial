@@ -176,9 +176,6 @@ bool Terminal::connect(radialUser &d, string &e)
         b = true;
         ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
         o->i("Session", ssSession.str());
-        m_mutex.lock();
-        m_sessions[ssSession.str()] = t;
-        m_mutex.unlock();
         t->t.screen(screen);
         o->m["Screen"] = new Json;
         for (size_t i = 0; i < screen.size(); i++)
@@ -197,6 +194,9 @@ bool Terminal::connect(radialUser &d, string &e)
         ssValue.str("");
         ssValue << t->t.rows();
         o->insert("Rows", ssValue.str(), 'n');
+        m_mutex.lock();
+        m_sessions[ssSession.str()] = t;
+        m_mutex.unlock();
       }
       else
       {
