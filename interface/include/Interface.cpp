@@ -3182,13 +3182,17 @@ bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunct
   Json *ptJson = new Json;
 
   ptJson->i("Function", strFunction);
-  if (!tInfo.strSession.empty())
-  {
-    ptJson->i("Session", tInfo.strSession);
-  }
   if (!data.empty())
   {
     ptJson->m["Request"] = new Json(data);
+  }
+  else
+  {
+    ptJson->m["Request"] = new Json;
+  }
+  if (!tInfo.strSession.empty())
+  {
+    ptJson->m["Request"]->i("Session", tInfo.strSession);
   }
   if (hub("terminal", ptJson, strError))
   {
@@ -3197,6 +3201,14 @@ bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunct
   if (ptJson->m.find("Response") != ptJson->m.end())
   {
     ptResponse->parse(ptJson->m["Response"]->j(strJson));
+    if (ptResponse->m.find("Session") != ptResponse->m.end() && !ptResponse->m["Session"]->v.empty())
+    {
+      tInfo.strSession = ptResponse->m["Session"]->v;
+    }
+    else
+    {
+      tInfo.strSession.clear();
+    }
     if (ptResponse->m.find("Screen") != ptResponse->m.end() && !ptResponse->m["Screen"]->l.empty())
     {
       tInfo.screen.clear();
@@ -3225,14 +3237,6 @@ bool Interface::terminalRequest(radialTerminalInfo &tInfo, const string strFunct
       stringstream ssRows(ptResponse->m["Rows"]->v);
       ssRows >> tInfo.unRows;
     }
-  }
-  if (ptJson->m.find("Session") != ptJson->m.end() && !ptJson->m["Session"]->v.empty())
-  {
-    tInfo.strSession = ptJson->m["Session"]->v;
-  }
-  else
-  {
-    tInfo.strSession.clear();
   }
   delete ptJson;
 
