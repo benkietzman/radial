@@ -28,7 +28,7 @@ struct radialTerminal
   int fdSocket;
   size_t unActive;
   time_t CTime;
-  common::Terminal *t;
+  common::Terminal t;
 };
 // }}}
 // }}}
