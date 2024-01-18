@@ -210,9 +210,6 @@ bool Terminal::connect(radialUser &d, string &e)
       else
       {
         e = t->t.error();
-      }
-      if (!b)
-      {
         delete t;
       }
     }
