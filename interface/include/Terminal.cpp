@@ -166,41 +166,34 @@ bool Terminal::connect(radialUser &d, string &e)
       {
         bWait = true;
       }
-      if (t->t.connect(i->m["Server"]->v, i->m["Port"]->v))
+      if (t->t.connect(i->m["Server"]->v, i->m["Port"]->v) && t->t.wait(bWait))
       {
-        if (t->t.wait(bWait))
+        stringstream ssSession, ssValue;
+        vector<string> screen;
+        b = true;
+        ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
+        o->i("Session", ssSession.str());
+        m_mutex.lock();
+        m_sessions[ssSession.str()] = t;
+        m_mutex.unlock();
+        t->t.screen(screen);
+        o->m["Screen"] = new Json;
+        for (size_t i = 0; i < screen.size(); i++)
         {
-          stringstream ssSession, ssValue;
-          vector<string> screen;
-          b = true;
-          ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
-          o->i("Session", ssSession.str());
-          m_mutex.lock();
-          m_sessions[ssSession.str()] = t;
-          m_mutex.unlock();
-          t->t.screen(screen);
-          o->m["Screen"] = new Json;
-          for (size_t i = 0; i < screen.size(); i++)
-          {
-            o->m["Screen"]->pb(screen[i]);
-          }
-          ssValue.str("");
-          ssValue << t->t.col();
-          o->insert("Col", ssValue.str(), 'n');
-          ssValue.str("");
-          ssValue << t->t.cols();
-          o->insert("Cols", ssValue.str(), 'n');
-          ssValue.str("");
-          ssValue << t->t.row();
-          o->insert("Row", ssValue.str(), 'n');
-          ssValue.str("");
-          ssValue << t->t.rows();
-          o->insert("Rows", ssValue.str(), 'n');
+          o->m["Screen"]->pb(screen[i]);
         }
-        else
-        {
-          e = t->t.error();
-        }
+        ssValue.str("");
+        ssValue << t->t.col();
+        o->insert("Col", ssValue.str(), 'n');
+        ssValue.str("");
+        ssValue << t->t.cols();
+        o->insert("Cols", ssValue.str(), 'n');
+        ssValue.str("");
+        ssValue << t->t.row();
+        o->insert("Row", ssValue.str(), 'n');
+        ssValue.str("");
+        ssValue << t->t.rows();
+        o->insert("Rows", ssValue.str(), 'n');
       }
       else
       {
