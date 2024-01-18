@@ -49,13 +49,13 @@ Terminal::Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(st
 Terminal::~Terminal()
 {
   m_mutex.lock();
-  while (m_sessions.empty())
+  for (auto &session : m_sessions)
   {
-    m_sessions.front()->t->disconnect();
-    delete m_sessions.front()->t;
-    delete m_sessions.front();
-    sessions.pop_front();
+    session.second->t->disconnect();
+    delete session.second->t;
+    delete session.second;
   }
+  m_sessions.clear();
   m_mutex.unlock();
 }
 // }}}
