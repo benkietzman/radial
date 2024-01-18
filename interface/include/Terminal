@@ -37,14 +37,41 @@ struct radialTerminal
 class Terminal : public Interface
 {
   protected:
+  bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
+  map<string, bool (Terminal::*)(radialUser &, string &)> m_functions;
   map<string, radialTerminal *> m_sessions;
   mutex m_mutex;
+
+  bool connect(radialUser &d, string &e);
+  bool ctrl(radialUser &d, string &e);
+  bool disconnect(radialUser &d, string &e);
+  bool down(radialUser &d, string &e);
+  bool enter(radialUser &d, string &e);
+  bool escape(radialUser &d, string &e);
+  bool function(radialUser &d, string &e);
+  bool getSocketTimeout(radialUser &d, string &e);
+  bool getTerminal(radialUser &d, radialTerminal *t, string &e);
+  bool home(radialUser &d, string &e);
+  bool key(radialUser &d, string &e);
+  bool keypadEnter(radialUser &d, string &e);
+  bool left(radialUser &d, string &e);
+  void post(Json *o, radialTerminal *t);
+  void pre(Json *i, radialTerminal *t, bool &w, size_t &c, string &k);
+  bool right(radialUser &d, string &e);
+  bool screen(radialUser &d, string &e);
+  bool send(radialUser &d, string &e);
+  bool setSocketTimeout(radialUser &d, string &e);
+  bool shiftFunction(radialUser &d, string &e);
+  bool tab(radialUser &d, string &e);
+  bool up(radialUser &d, string &e);
+  bool wait(radialUser &d, string &e);
 
   public:
   Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Terminal();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void schedule(string strPrefix);
+  void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}
 }

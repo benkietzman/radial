@@ -22,6 +22,27 @@ namespace radial
 // {{{ Terminal()
 Terminal::Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "terminal", argc, argv, pCallback)
 {
+  m_pCallbackAddon = NULL;
+  m_functions["connect"] = &Terminal::connect;
+  m_functions["ctrl"] = &Terminal::ctrl;
+  m_functions["disconnect"] = &Terminal::disconnect;
+  m_functions["down"] = &Terminal::down;
+  m_functions["enter"] = &Terminal::enter;
+  m_functions["escape"] = &Terminal::escape;
+  m_functions["function"] = &Terminal::function;
+  m_functions["getSocketTimeout"] = &Terminal::getSocketTimeout;
+  m_functions["home"] = &Terminal::home;
+  m_functions["key"] = &Terminal::key;
+  m_functions["keypadEnter"] = &Terminal::keypadEnter;
+  m_functions["left"] = &Terminal::left;
+  m_functions["right"] = &Terminal::right;
+  m_functions["screen"] = &Terminal::screen;
+  m_functions["send"] = &Terminal::send;
+  m_functions["setSocketTimeout"] = &Terminal::setSocketTimeout;
+  m_functions["shiftFunction"] = &Terminal::shiftFunction;
+  m_functions["tab"] = &Terminal::tab;
+  m_functions["up"] = &Terminal::up;
+  m_functions["wait"] = &Terminal::wait;
 }
 // }}}
 // {{{ ~Terminal()
@@ -32,7 +53,7 @@ Terminal::~Terminal()
 // {{{ callback()
 void Terminal::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  bool bResult = false;
+  bool bLocal = true, bResult = false;
   string strError;
   Json *ptJson;
   radialPacket p;
@@ -42,527 +63,60 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Session"))
+
+  if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Session"))
   {
     string strNode;
-    stringstream ssSession(ptJson->m["Session"]->v);
+    stringstream ssSession(ptJson->m["Request"]->m["Session"]->v);
     getline(ssSession, strNode, '_');
-    if (!strNode.empty())
+    if (!strNode.empty() && strNode != m_strNode)
     {
-      if (strNode == m_strNode)
+      Json *ptLink = new Json(ptJson);
+      bLocal = false;
+      ptLink->i("Interface", "terminal");
+      ptLink->i("Node", strNode);
+      if (hub("link", ptLink, strError))
       {
-        radialTerminal *t = NULL;
-        m_mutex.lock();
-        if (m_sessions.find(ptJson->m["Session"]->v) != m_sessions.end())
+        bResult = true;
+        if (exist(ptLink, "Response"))
         {
-          t = m_sessions[ptJson->m["Session"]->v];
-          t->bActive = true;
-          time(&(t->CTime));
+          ptJson->i("Response", ptLink->m["Response"]);
         }
-        m_mutex.unlock();
-        if (t != NULL)
+      }
+      delete ptLink;
+    }
+  }
+  if (bLocal)
+  {
+    if (!empty(ptJson, "Function"))
+    {
+      bool bInvalid = true;
+      string strFunction = ptJson->m["Function"]->v;
+      radialUser d;
+      userInit(ptJson, d);
+      if (m_pCallbackAddon != NULL && m_pCallbackAddon(strFunction, d, strError, bInvalid))
+      {
+        bResult = true;
+      }
+      else if (bInvalid)
+      {
+        if (m_functions.find(strFunction) != m_functions.end())
         {
-          if (!empty(ptJson, "Function"))
+          if ((this->*m_functions[strFunction])(d, strError))
           {
-            bool bWait = false;
-            size_t unCount = 1;
-            string strData, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter, escape, function, getSocketTimeout, home, key, keypadEnter, left, right, screen, send, setSocketTimeout, shiftFunction, tab, up, wait.";
-            stringstream ssValue;
-            vector<string> screen;
-            if (exist(ptJson, "Request"))
-            {
-              if (!empty(ptJson->m["Request"], "Data"))
-              {
-                strData = ptJson->m["Request"]->m["Data"]->v;
-              }
-              if (!empty(ptJson->m["Request"], "Count"))
-              {
-                stringstream ssCount(ptJson->m["Request"]->m["Count"]->v);
-                ssCount >> unCount;
-              }
-              if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "1" || ptJson->m["Request"]->m["Wait"]->v == "yes"))
-              {
-                bWait = true;
-              }
-            }
-            if (exist(ptJson, "Response"))
-            {
-              delete ptJson->m["Response"];
-            }
-            ptJson->m["Response"] = new Json;
-            t->m.lock();
-            // {{{ ctrl
-            if (ptJson->m["Function"]->v == "ctrl")
-            {
-              if (strData.size() == 1)
-              {
-                if (t->t.sendCtrl(strData[0], bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              else
-              {
-                strError = "Data should contain a single character for this Function.";
-              }
-            }
-            // }}}
-            // {{{ disconnect
-            else if (ptJson->m["Function"]->v == "disconnect")
-            {
-              bResult = true;
-              t->t.disconnect();
-              m_mutex.lock();
-              delete t;
-              t = NULL;
-              m_sessions.erase(ptJson->m["Session"]->v);
-              m_mutex.unlock();
-              delete ptJson->m["Session"];
-              ptJson->m.erase("Session");
-            }
-            // }}}
-            // {{{ down
-            else if (ptJson->m["Function"]->v == "down")
-            {
-              if (t->t.sendDown(unCount, bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ enter
-            else if (ptJson->m["Function"]->v == "enter")
-            {
-              if (t->t.sendEnter(bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ escape
-            else if (ptJson->m["Function"]->v == "escape")
-            {
-              if (t->t.sendEscape(bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ function
-            else if (ptJson->m["Function"]->v == "function")
-            {
-              stringstream ssKey(strData);
-              int nKey = 0;
-              ssKey >> nKey;
-              if (nKey >= 1 && nKey <= 12)
-              {
-                if (t->t.sendFunction(nKey))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              else
-              {
-                strError = "Please provide a Data value between 1 and 12.";
-              }
-            }
-            // }}}
-            // {{{ getSocketTimeout
-            else if (ptJson->m["Function"]->v == "getSocketTimeout")
-            {
-              int nLong, nShort;
-              stringstream ssLong, ssShort;
-              bResult = true;
-              t->t.getSocketTimeout(nShort, nLong);
-              ssLong << nLong;
-              ssShort << nShort;
-              ptJson->m["Response"]->insert("Long", ssLong.str(), 'n');
-              ptJson->m["Response"]->insert("Short", ssShort.str(), 'n');
-            }
-            // }}}
-            // {{{ home
-            else if (ptJson->m["Function"]->v == "home")
-            {
-              if (t->t.sendHome(bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ key
-            else if (ptJson->m["Function"]->v == "key")
-            {
-              if (strData.size() == 1)
-              {
-                if (t->t.sendKey(strData[0], unCount, bWait))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              else
-              {
-                strError = "Data should contain a single character for this Function.";
-              }
-            }
-            // }}}
-            // {{{ keypadEnter
-            else if (ptJson->m["Function"]->v == "keypadEnter")
-            {
-              if (t->t.sendKeypadEnter(bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ left
-            else if (ptJson->m["Function"]->v == "left")
-            {
-              if (t->t.sendLeft(unCount, bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ right
-            else if (ptJson->m["Function"]->v == "right")
-            {
-              if (t->t.sendRight(unCount, bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ screen
-            else if (ptJson->m["Function"]->v == "screen")
-            {
-              bResult = true;
-            }
-            // }}}
-            // {{{ send
-            else if (ptJson->m["Function"]->v == "send")
-            {
-              if ((bWait && t->t.sendWait(strData, unCount)) || (!bWait && t->t.send(strData, unCount)))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ setSocketTimeout
-            else if (ptJson->m["Function"]->v == "setSocketTimeout")
-            {
-              if (exist(ptJson, "Request"))
-              {
-                if (!empty(ptJson->m["Request"], "Long"))
-                {
-                  int nLong;
-                  stringstream ssLong(ptJson->m["Request"]->m["Long"]->v);
-                  ssLong >> nLong;
-                  if (!empty(ptJson->m["Request"], "Short"))
-                  {
-                    int nShort;
-                    stringstream ssShort(ptJson->m["Request"]->m["Short"]->v);
-                    ssShort >> nShort;
-                    bResult = true;
-                    t->t.setSocketTimeout(nShort, nLong);
-                  }
-                  else
-                  {
-                    strError = "Please provide the Short within the Request.";
-                  }
-                }
-                else
-                {
-                  strError = "Please provide the Long within the Request.";
-                }
-              }
-              else
-              {
-                strError = "Please provide the Request.";
-              }
-            }
-            // }}}
-            // {{{ shiftFunction
-            else if (ptJson->m["Function"]->v == "shiftFunction")
-            {
-              stringstream ssKey(strData);
-              int nKey = 0;
-              ssKey >> nKey;
-              if (nKey >= 1 && nKey <= 12)
-              {
-                if (t->t.sendShiftFunction(nKey))
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  strError = t->t.error();
-                }
-              }
-              else
-              {
-                strError = "Please provide a Data value between 1 and 12.";
-              }
-            }
-            // }}}
-            // {{{ tab
-            else if (ptJson->m["Function"]->v == "tab")
-            {
-              if (t->t.sendTab(unCount, bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ up
-            else if (ptJson->m["Function"]->v == "up")
-            {
-              if (t->t.sendUp(unCount, bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ wait
-            else if (ptJson->m["Function"]->v == "wait")
-            {
-              bool bWait = false;
-              if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->m["Wait"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "yes"))
-              {
-                bWait = true;
-              }
-              if (t->t.wait(bWait))
-              {
-                bResult = true;
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            // }}}
-            // {{{ invalid
-            else
-            {
-              strError = strInvalid;
-            }
-            // }}}
-            if (t != NULL)
-            {
-              t->t.screen(screen);
-              ptJson->m["Response"]->m["Screen"] = new Json;
-              for (size_t i = 0; i < screen.size(); i++)
-              {
-                ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
-              }
-              ssValue.str("");
-              ssValue << t->t.col();
-              ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.cols();
-              ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.row();
-              ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-              ssValue.str("");
-              ssValue << t->t.rows();
-              ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
-              t->m.unlock();
-            }
-          }
-          else
-          {
-            strError = "Please provide the Function.";
-          }
-          if (t != NULL)
-          {
-            t->bActive = false;
+            bResult = true;
           }
         }
         else
         {
-          strError = "Please provide a valid Session.";
+          strError = "Please provide a valid Function.";
         }
-      }
-      else
-      {
-        Json *ptLink = new Json(ptJson);
-        ptLink->i("Interface", "terminal");
-        ptLink->i("Node", strNode);
-        if (hub("link", ptLink, strError))
-        {
-          bResult = true;
-          if (exist(ptLink, "Response"))
-          {
-            ptJson->i("Response", ptLink->m["Response"]);
-          }
-        }
-        delete ptLink;
       }
     }
     else
     {
-      strError = "Please provide a valid Session.";
+      strError = "Please provide the Function.";
     }
-  }
-  else if (!empty(ptJson, "Function"))
-  {
-    if (ptJson->m["Function"]->v == "connect")
-    {
-      if (exist(ptJson, "Request"))
-      {
-        if (!empty(ptJson->m["Request"], "Server"))
-        {
-          if (!empty(ptJson->m["Request"], "Port"))
-          {
-            bool bWait = false;
-            radialTerminal *t = new radialTerminal;
-            if (!empty(ptJson->m["Request"], "Cols"))
-            {
-              size_t unCols;
-              stringstream ssCols(ptJson->m["Request"]->m["Cols"]->v);
-              ssCols >> unCols;
-              t->t.cols(unCols);
-            }
-            if (!empty(ptJson->m["Request"], "Rows"))
-            {
-              size_t unRows;
-              stringstream ssRows(ptJson->m["Request"]->m["Rows"]->v);
-              ssRows >> unRows;
-              t->t.rows(unRows);
-            }
-            if (!empty(ptJson->m["Request"], "Type"))
-            {
-              t->t.type(ptJson->m["Request"]->m["Type"]->v);
-            }
-            if (!empty(ptJson->m["Request"], "Wait") && (ptJson->m["Request"]->m["Wait"]->t == '1' || ptJson->m["Request"]->m["Wait"]->v == "1" || ptJson->m["Request"]->m["Wait"]->v == "yes"))
-            {
-              bWait = true;
-            }
-            if (t->t.connect(ptJson->m["Request"]->m["Server"]->v, ptJson->m["Request"]->m["Port"]->v))
-            {
-              if (t->t.wait(bWait))
-              {
-                stringstream ssSession, ssValue;
-                vector<string> screen;
-                bResult = true;
-                ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
-                ptJson->i("Session", ssSession.str());
-                m_mutex.lock();
-                m_sessions[ssSession.str()] = t;
-                m_mutex.unlock();
-                t->t.screen(screen);
-                if (exist(ptJson, "Response"))
-                {
-                  delete ptJson->m["Response"];
-                }
-                ptJson->m["Response"] = new Json;
-                ptJson->m["Response"]->m["Screen"] = new Json;
-                for (size_t i = 0; i < screen.size(); i++)
-                {
-                  ptJson->m["Response"]->m["Screen"]->pb(screen[i]);
-                }
-                ssValue.str("");
-                ssValue << t->t.col();
-                ptJson->m["Response"]->insert("Col", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.cols();
-                ptJson->m["Response"]->insert("Cols", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.row();
-                ptJson->m["Response"]->insert("Row", ssValue.str(), 'n');
-                ssValue.str("");
-                ssValue << t->t.rows();
-                ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
-              }
-              else
-              {
-                strError = t->t.error();
-              }
-            }
-            else
-            {
-              strError = t->t.error();
-            }
-            if (!bResult)
-            {
-              delete t;
-            }
-          }
-          else
-          {
-            strError = "Please provide the Port within the Request.";
-          }
-        }
-        else
-        {
-          strError = "Please provide the Server within the Request.";
-        }
-      }
-      else
-      {
-        strError = "Please provide the Request.";
-      }
-    }
-    else
-    {
-      strError = "Please provide a valid Function:  connect.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Function or Session.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
@@ -576,6 +130,525 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ connect()
+bool Terminal::connect(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "Server"))
+  {
+    if (!empty(i, "Port"))
+    {
+      bool bWait = false;
+      radialTerminal *t = new radialTerminal;
+      if (!empty(i, "Cols"))
+      {
+        size_t unCols;
+        stringstream ssCols(i->m["Cols"]->v);
+        ssCols >> unCols;
+        t->t.cols(unCols);
+      }
+      if (!empty(i, "Rows"))
+      {
+        size_t unRows;
+        stringstream ssRows(i->m["Rows"]->v);
+        ssRows >> unRows;
+        t->t.rows(unRows);
+      }
+      if (!empty(i, "Type"))
+      {
+        t->t.type(i->m["Type"]->v);
+      }
+      if (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"))
+      {
+        bWait = true;
+      }
+      if (t->t.connect(i->m["Server"]->v, i->m["Port"]->v))
+      {
+        if (t->t.wait(bWait))
+        {
+          stringstream ssSession, ssValue;
+          vector<string> screen;
+          b = true;
+          ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << t;
+          o->i("Session", ssSession.str());
+          m_mutex.lock();
+          m_sessions[ssSession.str()] = t;
+          m_mutex.unlock();
+          t->t.screen(screen);
+          o->m["Screen"] = new Json;
+          for (size_t i = 0; i < screen.size(); i++)
+          {
+            o->m["Screen"]->pb(screen[i]);
+          }
+          ssValue.str("");
+          ssValue << t->t.col();
+          o->insert("Col", ssValue.str(), 'n');
+          ssValue.str("");
+          ssValue << t->t.cols();
+          o->insert("Cols", ssValue.str(), 'n');
+          ssValue.str("");
+          ssValue << t->t.row();
+          o->insert("Row", ssValue.str(), 'n');
+          ssValue.str("");
+          ssValue << t->t.rows();
+          o->insert("Rows", ssValue.str(), 'n');
+        }
+        else
+        {
+          e = t->t.error();
+        }
+      }
+      else
+      {
+        e = t->t.error();
+      }
+      if (!b)
+      {
+        delete t;
+      }
+    }
+    else
+    {
+      e = "Please provide the Port.";
+    }
+  }
+  else
+  {
+    e = "Please provide the Server.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ ctrl()
+bool Terminal::ctrl(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (k.size() == 1)
+    {
+      if (t->t.sendCtrl(k[0], w))
+      {
+        b = true;
+      }
+      else
+      {
+        e = t->t.error();
+      }
+    }
+    else
+    {
+      e = "Data should contain a single character for this Function.";
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ disconnect()
+bool Terminal::disconnect(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    b = true;
+    t->t.disconnect();
+    m_mutex.lock();
+    delete t;
+    t = NULL;
+    m_sessions.erase(i->m["Session"]->v);
+    m_mutex.unlock();
+    delete o->m["Session"];
+    o->m.erase("Session");
+  }
+
+  return b;
+}
+// }}}
+// {{{ down()
+bool Terminal::down(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendDown(c, w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ enter()
+bool Terminal::enter(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendEnter(w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ escape()
+bool Terminal::escape(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendEscape(w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ function()
+bool Terminal::function(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    int nKey = 0;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    stringstream ssKey(k);
+    ssKey >> nKey;
+    if (nKey >= 1 && nKey <= 12)
+    {
+      if (t->t.sendFunction(nKey))
+      {
+        b = true;
+      }
+      else
+      {
+        e = t->t.error();
+      }
+    }
+    else
+    {
+      e = "Please provide a Data value between 1 and 12.";
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ getSocketTimeout()
+bool Terminal::getSocketTimeout(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    int nLong, nShort;
+    size_t c;
+    string k;
+    stringstream ssLong, ssShort;
+    pre(i, t, w, c, k);
+    b = true;
+    t->t.getSocketTimeout(nShort, nLong);
+    ssLong << nLong;
+    o->insert("Long", ssLong.str(), 'n');
+    ssShort << nShort;
+    o->insert("Short", ssShort.str(), 'n');
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ getTerminal()
+bool Terminal::getTerminal(radialUser &d, radialTerminal *t, string &e)
+{
+  bool bResult = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "Session"))
+  {
+    m_mutex.lock();
+    if (m_sessions.find(i->m["Session"]->v) != m_sessions.end())
+    {
+      bResult = true;
+      t = m_sessions[i->m["Session"]->v];
+      time(&(t->CTime));
+      o->i("Session", i->m["Session"]->v);
+    }
+    else
+    {
+      e = "Please provide a valid Session.";
+    }
+    m_mutex.unlock();
+  }
+  else
+  {
+    e = "Please provide the Session.";
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ home()
+bool Terminal::home(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendHome(w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ key()
+bool Terminal::key(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (k.size() == 1)
+    {
+      if (t->t.sendKey(k[0], c, w))
+      {
+        b = true;
+      }
+      else
+      {
+        e = t->t.error();
+      }
+    }
+    else
+    {
+      e = "Data should contain a single character for this Function.";
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ keypadEnter()
+bool Terminal::keypadEnter(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendKeypadEnter(w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ left()
+bool Terminal::left(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendLeft(c, w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ post()
+void Terminal::post(Json *o, radialTerminal *t)
+{
+  stringstream ssValue;
+  vector<string> screen;
+
+  t->t.screen(screen);
+  o->m["Screen"] = new Json;
+  for (size_t i = 0; i < screen.size(); i++)
+  {
+    o->m["Screen"]->pb(screen[i]);
+  }
+  ssValue.str("");
+  ssValue << t->t.col();
+  o->insert("Col", ssValue.str(), 'n');
+  ssValue.str("");
+  ssValue << t->t.cols();
+  o->insert("Cols", ssValue.str(), 'n');
+  ssValue.str("");
+  ssValue << t->t.row();
+  o->insert("Row", ssValue.str(), 'n');
+  ssValue.str("");
+  ssValue << t->t.rows();
+  o->insert("Rows", ssValue.str(), 'n');
+  t->bActive = false;
+  t->m.unlock();
+}
+// }}}
+// {{{ pre()
+void Terminal::pre(Json *i, radialTerminal *t, bool &w, size_t &c, string &k)
+{
+  t->bActive = true;
+  t->m.lock();
+  if (!empty(i, "Data"))
+  {
+    k = i->m["Data"]->v;
+  }
+  if (!empty(i, "Count"))
+  {
+    stringstream ssC(i->m["Count"]->v);
+    ssC >> c;
+  }
+  else
+  {
+    c = 1;
+  }
+  w = (!empty(i, "Wait") && (i->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
+}
+// }}}
+// {{{ right()
+bool Terminal::right(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendRight(c, w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
 }
 // }}}
 // {{{ schedule()
@@ -614,6 +687,218 @@ void Terminal::schedule(string strPrefix)
     msleep(1000);
   }
   threadDecrement();
+}
+// }}}
+// {{{ screen()
+bool Terminal::screen(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    b = true;
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ send()
+bool Terminal::send(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if ((w && t->t.sendWait(k, c)) || (!w && t->t.send(k, c)))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ setCallbackAddon()
+void Terminal::setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &))
+{
+  m_pCallbackAddon = pCallback;
+}
+// }}}
+// {{{ setSocketTimeout()
+bool Terminal::setSocketTimeout(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (!empty(i, "Long"))
+    {
+      int nLong;
+      stringstream ssLong(i->m["Long"]->v);
+      ssLong >> nLong;
+      if (!empty(i, "Short"))
+      {
+        int nShort;
+        stringstream ssShort(i->m["Short"]->v);
+        ssShort >> nShort;
+        b = true;
+        t->t.setSocketTimeout(nShort, nLong);
+      }
+      else
+      {
+        e = "Please provide the Short within the Request.";
+      }
+    }
+    else
+    {
+      e = "Please provide the Long within the Request.";
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ shiftFunction()
+bool Terminal::shiftFunction(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    int nKey = 0;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    stringstream ssKey(k);
+    ssKey >> nKey;
+    if (nKey >= 1 && nKey <= 12)
+    {
+      if (t->t.sendShiftFunction(nKey))
+      {
+        b = true;
+      }
+      else
+      {
+        e = t->t.error();
+      }
+    }
+    else
+    {
+      e = "Please provide a Data value between 1 and 12.";
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ tab()
+bool Terminal::tab(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendTab(c, w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ up()
+bool Terminal::up(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.sendUp(c, w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
+}
+// }}}
+// {{{ wait()
+bool Terminal::wait(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
+
+  if (getTerminal(d, t, e))
+  {
+    bool w;
+    size_t c;
+    string k;
+    pre(i, t, w, c, k);
+    if (t->t.wait(w))
+    {
+      b = true;
+    }
+    else
+    {
+      e = t->t.error();
+    }
+    post(o, t);
+  }
+
+  return b;
 }
 // }}}
 }
