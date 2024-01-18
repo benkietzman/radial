@@ -25,9 +25,8 @@ namespace radial
 // {{{ radialTerminal
 struct radialTerminal
 {
-  bool bActive;
   int fdSocket;
-  mutex m;
+  size_t unActive;
   time_t CTime;
   common::Terminal t;
 };
@@ -50,13 +49,12 @@ class Terminal : public Interface
   bool escape(radialUser &d, string &e);
   bool function(radialUser &d, string &e);
   bool getSocketTimeout(radialUser &d, string &e);
-  bool getTerminal(radialUser &d, radialTerminal *t, string &e);
   bool home(radialUser &d, string &e);
   bool key(radialUser &d, string &e);
   bool keypadEnter(radialUser &d, string &e);
   bool left(radialUser &d, string &e);
-  void post(Json *o, radialTerminal *t);
-  void pre(Json *i, radialTerminal *t, bool &w, size_t &c, string &k);
+  void post(radialUser &d, radialTerminal *t);
+  bool pre(radialUser &d, radialTerminal *t, bool &w, size_t &c, string &k, string &e);
   bool right(radialUser &d, string &e);
   bool screen(radialUser &d, string &e);
   bool send(radialUser &d, string &e);

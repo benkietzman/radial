@@ -151,6 +151,7 @@ bool Terminal::connect(radialUser &d, string &e)
     {
       bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
+      t->unActive = 0;
       if (!empty(i, "Cols"))
       {
         size_t unCols;
@@ -223,16 +224,13 @@ bool Terminal::connect(radialUser &d, string &e)
 // {{{ ctrl()
 bool Terminal::ctrl(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (k.size() == 1)
     {
       if (t->t.sendCtrl(k[0], w))
@@ -248,7 +246,7 @@ bool Terminal::ctrl(radialUser &d, string &e)
     {
       e = "Data should contain a single character for this Function.";
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -257,19 +255,29 @@ bool Terminal::ctrl(radialUser &d, string &e)
 // {{{ disconnect()
 bool Terminal::disconnect(radialUser &d, string &e)
 {
-  bool b = false;
+  bool b = false, w;
+  size_t c;
+  string k;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
+    bool bActive = true;
     b = true;
     t->t.disconnect();
     m_mutex.lock();
+    while (bActive)
+    {
+      if (t->unActive == 0)
+      {
+        bActive = false;
+      }
+      if (bActive)
+      {
+        msleep(100);
+      }
+    }
     delete t;
     t = NULL;
     m_sessions.erase(i->m["Session"]->v);
@@ -284,16 +292,13 @@ bool Terminal::disconnect(radialUser &d, string &e)
 // {{{ down()
 bool Terminal::down(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendDown(c, w))
     {
       b = true;
@@ -302,7 +307,7 @@ bool Terminal::down(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -311,16 +316,13 @@ bool Terminal::down(radialUser &d, string &e)
 // {{{ enter()
 bool Terminal::enter(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendEnter(w))
     {
       b = true;
@@ -329,7 +331,7 @@ bool Terminal::enter(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -338,16 +340,13 @@ bool Terminal::enter(radialUser &d, string &e)
 // {{{ escape()
 bool Terminal::escape(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendEscape(w))
     {
       b = true;
@@ -356,7 +355,7 @@ bool Terminal::escape(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -365,17 +364,14 @@ bool Terminal::escape(radialUser &d, string &e)
 // {{{ function()
 bool Terminal::function(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
     int nKey = 0;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     stringstream ssKey(k);
     ssKey >> nKey;
     if (nKey >= 1 && nKey <= 12)
@@ -393,7 +389,7 @@ bool Terminal::function(radialUser &d, string &e)
     {
       e = "Please provide a Data value between 1 and 12.";
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -402,73 +398,38 @@ bool Terminal::function(radialUser &d, string &e)
 // {{{ getSocketTimeout()
 bool Terminal::getSocketTimeout(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
+  Json *o = d.p->m["o"];
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
     int nLong, nShort;
-    size_t c;
-    string k;
     stringstream ssLong, ssShort;
-    pre(i, t, w, c, k);
     b = true;
     t->t.getSocketTimeout(nShort, nLong);
     ssLong << nLong;
     o->insert("Long", ssLong.str(), 'n');
     ssShort << nShort;
     o->insert("Short", ssShort.str(), 'n');
-    post(o, t);
+    post(d, t);
   }
 
   return b;
 }
 // }}}
-// {{{ getTerminal()
-bool Terminal::getTerminal(radialUser &d, radialTerminal *t, string &e)
-{
-  bool bResult = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (!empty(i, "Session"))
-  {
-    m_mutex.lock();
-    if (m_sessions.find(i->m["Session"]->v) != m_sessions.end())
-    {
-      bResult = true;
-      t = m_sessions[i->m["Session"]->v];
-      time(&(t->CTime));
-      o->i("Session", i->m["Session"]->v);
-    }
-    else
-    {
-      e = "Please provide a valid Session.";
-    }
-    m_mutex.unlock();
-  }
-  else
-  {
-    e = "Please provide the Session.";
-  }
-
-  return bResult;
-}
-// }}}
 // {{{ home()
 bool Terminal::home(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendHome(w))
     {
       b = true;
@@ -477,7 +438,7 @@ bool Terminal::home(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -486,16 +447,13 @@ bool Terminal::home(radialUser &d, string &e)
 // {{{ key()
 bool Terminal::key(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (k.size() == 1)
     {
       if (t->t.sendKey(k[0], c, w))
@@ -511,7 +469,7 @@ bool Terminal::key(radialUser &d, string &e)
     {
       e = "Data should contain a single character for this Function.";
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -520,16 +478,13 @@ bool Terminal::key(radialUser &d, string &e)
 // {{{ keypadEnter()
 bool Terminal::keypadEnter(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendKeypadEnter(w))
     {
       b = true;
@@ -538,7 +493,7 @@ bool Terminal::keypadEnter(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -547,16 +502,13 @@ bool Terminal::keypadEnter(radialUser &d, string &e)
 // {{{ left()
 bool Terminal::left(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendLeft(c, w))
     {
       b = true;
@@ -565,17 +517,18 @@ bool Terminal::left(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
 }
 // }}}
 // {{{ post()
-void Terminal::post(Json *o, radialTerminal *t)
+void Terminal::post(radialUser &d, radialTerminal *t)
 {
   stringstream ssValue;
   vector<string> screen;
+  Json *o = d.p->m["o"];
 
   t->t.screen(screen);
   o->m["Screen"] = new Json;
@@ -595,15 +548,41 @@ void Terminal::post(Json *o, radialTerminal *t)
   ssValue.str("");
   ssValue << t->t.rows();
   o->insert("Rows", ssValue.str(), 'n');
-  t->bActive = false;
-  t->m.unlock();
+  m_mutex.lock();
+  if (t->unActive > 0)
+  {
+    t->unActive--;
+  }
+  m_mutex.unlock();
 }
 // }}}
 // {{{ pre()
-void Terminal::pre(Json *i, radialTerminal *t, bool &w, size_t &c, string &k)
+bool Terminal::pre(radialUser &d, radialTerminal *t, bool &w, size_t &c, string &k, string &e)
 {
-  t->bActive = true;
-  t->m.lock();
+  bool bResult = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (!empty(i, "Session"))
+  {
+    m_mutex.lock();
+    if (m_sessions.find(i->m["Session"]->v) != m_sessions.end())
+    {
+      bResult = true;
+      t = m_sessions[i->m["Session"]->v];
+      t->unActive++;
+      time(&(t->CTime));
+      o->i("Session", i->m["Session"]->v);
+    }
+    else
+    {
+      e = "Please provide a valid Session.";
+    }
+    m_mutex.unlock();
+  }
+  else
+  {
+    e = "Please provide the Session.";
+  }
   if (!empty(i, "Data"))
   {
     k = i->m["Data"]->v;
@@ -618,21 +597,20 @@ void Terminal::pre(Json *i, radialTerminal *t, bool &w, size_t &c, string &k)
     c = 1;
   }
   w = (!empty(i, "Wait") && (i->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
+
+  return bResult;
 }
 // }}}
 // {{{ right()
 bool Terminal::right(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendRight(c, w))
     {
       b = true;
@@ -641,7 +619,7 @@ bool Terminal::right(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -665,16 +643,14 @@ void Terminal::schedule(string strPrefix)
       m_mutex.lock();
       for (auto &session : m_sessions)
       {
-        if (!session.second->bActive && (CTime[1] - session.second->CTime) > 300)
+        if (session.second->unActive == 0 && (CTime[1] - session.second->CTime) > 300)
         {
           removals.push_back(session.first);
         }
       }
       while (!removals.empty())
       {
-        m_sessions[removals.front()]->m.lock();
         m_sessions[removals.front()]->t.disconnect();
-        m_sessions[removals.front()]->m.unlock();
         delete m_sessions[removals.front()];
         removals.pop_front();
       }
@@ -688,18 +664,15 @@ void Terminal::schedule(string strPrefix)
 // {{{ screen()
 bool Terminal::screen(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     b = true;
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -708,16 +681,13 @@ bool Terminal::screen(radialUser &d, string &e)
 // {{{ send()
 bool Terminal::send(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if ((w && t->t.sendWait(k, c)) || (!w && t->t.send(k, c)))
     {
       b = true;
@@ -726,7 +696,7 @@ bool Terminal::send(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -741,16 +711,14 @@ void Terminal::setCallbackAddon(bool (*pCallback)(const string, radialUser &, st
 // {{{ setSocketTimeout()
 bool Terminal::setSocketTimeout(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
+  Json *i = d.p->m["i"];
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (!empty(i, "Long"))
     {
       int nLong;
@@ -773,7 +741,7 @@ bool Terminal::setSocketTimeout(radialUser &d, string &e)
     {
       e = "Please provide the Long within the Request.";
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -782,17 +750,14 @@ bool Terminal::setSocketTimeout(radialUser &d, string &e)
 // {{{ shiftFunction()
 bool Terminal::shiftFunction(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
     int nKey = 0;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     stringstream ssKey(k);
     ssKey >> nKey;
     if (nKey >= 1 && nKey <= 12)
@@ -810,7 +775,7 @@ bool Terminal::shiftFunction(radialUser &d, string &e)
     {
       e = "Please provide a Data value between 1 and 12.";
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -819,16 +784,13 @@ bool Terminal::shiftFunction(radialUser &d, string &e)
 // {{{ tab()
 bool Terminal::tab(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendTab(c, w))
     {
       b = true;
@@ -837,7 +799,7 @@ bool Terminal::tab(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -846,16 +808,13 @@ bool Terminal::tab(radialUser &d, string &e)
 // {{{ up()
 bool Terminal::up(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.sendUp(c, w))
     {
       b = true;
@@ -864,7 +823,7 @@ bool Terminal::up(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
@@ -873,16 +832,13 @@ bool Terminal::up(radialUser &d, string &e)
 // {{{ wait()
 bool Terminal::wait(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  bool b = false, w;
+  size_t c;
+  string k;
   radialTerminal *t = NULL;
 
-  if (getTerminal(d, t, e))
+  if (pre(d, t, w, c, k, e))
   {
-    bool w;
-    size_t c;
-    string k;
-    pre(i, t, w, c, k);
     if (t->t.wait(w))
     {
       b = true;
@@ -891,7 +847,7 @@ bool Terminal::wait(radialUser &d, string &e)
     {
       e = t->t.error();
     }
-    post(o, t);
+    post(d, t);
   }
 
   return b;
