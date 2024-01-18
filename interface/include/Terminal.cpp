@@ -142,7 +142,7 @@ bool Terminal::connect(radialUser &d, string &e)
   {
     if (!empty(i, "Port"))
     {
-      bool bWait = false;
+      bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
       if (!empty(i, "Cols"))
       {
@@ -161,10 +161,6 @@ bool Terminal::connect(radialUser &d, string &e)
       if (!empty(i, "Type"))
       {
         t->t.type(i->m["Type"]->v);
-      }
-      if (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"))
-      {
-        bWait = true;
       }
       if (t->t.connect(i->m["Server"]->v, i->m["Port"]->v) && t->t.wait(bWait))
       {
