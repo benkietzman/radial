@@ -263,25 +263,25 @@ bool Terminal::disconnect(radialUser &d, string &e)
 
   if (pre(d, t, w, c, k, e))
   {
-    bool bActive = true;
+    bool bRemoved = false;
     b = true;
     t->t.disconnect();
-    m_mutex.lock();
-    while (bActive)
+    while (!bRemoved)
     {
+      m_mutex.lock();
       if (t->unActive == 0)
       {
-        bActive = false;
+        bRemoved = true;
+        delete t;
+        t = NULL;
+        m_sessions.erase(i->m["Session"]->v);
       }
-      if (bActive)
+      m_mutex.unlock();
+      if (!bRemoved)
       {
         msleep(100);
       }
     }
-    delete t;
-    t = NULL;
-    m_sessions.erase(i->m["Session"]->v);
-    m_mutex.unlock();
     delete o->m["Session"];
     o->m.erase("Session");
   }
