@@ -418,6 +418,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
               ssValue.str("");
               ssValue << t->t.rows();
               ptJson->m["Response"]->insert("Rows", ssValue.str(), 'n');
+              t->m.unlock();
             }
           }
           else
