@@ -53,6 +53,9 @@ Terminal::~Terminal()
   {
     session.second->t.disconnect();
     delete session.second;
+stringstream ssMessage;
+ssMessage << "Terminal::~Terminal():  Removed radialTerminal structure from m_sessions map using key of " << session.first << ".";
+log(ssMessage.str());
   }
   m_sessions.clear();
   m_mutex.unlock();
@@ -159,6 +162,9 @@ bool Terminal::connect(radialUser &d, string &e)
     {
       bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
+stringstream ssMessage;
+ssMessage << "Terminal::connect():  Instantiated new radialTerminal structure.";
+log(ssMessage.str());
       t->unActive = 0;
       if (!empty(i, "Cols"))
       {
@@ -206,6 +212,9 @@ bool Terminal::connect(radialUser &d, string &e)
         m_mutex.lock();
         m_sessions[ssSession.str()] = t;
         m_mutex.unlock();
+ssMessage.str("");
+ssMessage << "Terminal::connect():  Added radialTerminal structure to the m_sessions map using a key of " << ssSession.str() << ".";
+log(ssMessage.str());
       }
       else
       {
@@ -280,6 +289,9 @@ bool Terminal::disconnect(radialUser &d, string &e)
         delete t;
         t = NULL;
         m_sessions.erase(i->m["Session"]->v);
+stringstream ssMessage;
+ssMessage << "Terminal::disconnect():  Removed radialTerminal structure from m_sessions map using key of " << i->m["Session"]->v << ".";
+log(ssMessage.str());
       }
       m_mutex.unlock();
       if (!bRemoved)
@@ -657,6 +669,10 @@ void Terminal::schedule(string strPrefix)
       {
         m_sessions[removals.front()]->t.disconnect();
         delete m_sessions[removals.front()];
+        m_sessions.erase(removals.front());
+stringstream ssMessage;
+ssMessage << "Terminal::schedule():  Removed radialTerminal structure from m_sessions map using key of " << removals.front() << ".";
+log(ssMessage.str());
         removals.pop_front();
       }
       m_mutex.unlock();
