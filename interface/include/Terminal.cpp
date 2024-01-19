@@ -244,9 +244,9 @@ bool Terminal::ctrl(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (k.size() == 1)
     {
@@ -276,9 +276,9 @@ bool Terminal::disconnect(radialUser &d, string &e)
   size_t c;
   string k;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     bool bRemoved = false;
     b = true;
@@ -315,9 +315,9 @@ bool Terminal::down(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendDown(c, w))
     {
@@ -339,9 +339,9 @@ bool Terminal::enter(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendEnter(w))
     {
@@ -363,9 +363,9 @@ bool Terminal::escape(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendEscape(w))
     {
@@ -387,9 +387,9 @@ bool Terminal::function(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     int nKey = 0;
     stringstream ssKey(k);
@@ -422,9 +422,9 @@ bool Terminal::getSocketTimeout(radialUser &d, string &e)
   size_t c;
   string k;
   Json *o = d.p->m["o"];
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     int nLong, nShort;
     stringstream ssLong, ssShort;
@@ -446,9 +446,9 @@ bool Terminal::home(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendHome(w))
     {
@@ -470,9 +470,9 @@ bool Terminal::key(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (k.size() == 1)
     {
@@ -501,9 +501,9 @@ bool Terminal::keypadEnter(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendKeypadEnter(w))
     {
@@ -525,9 +525,9 @@ bool Terminal::left(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendLeft(c, w))
     {
@@ -577,17 +577,16 @@ void Terminal::post(radialUser &d, radialTerminal *t)
 }
 // }}}
 // {{{ pre()
-bool Terminal::pre(radialUser &d, radialTerminal *t, bool &w, size_t &c, string &k, string &e)
+radialTerminal *Terminal::pre(radialUser &d, bool &w, size_t &c, string &k, string &e)
 {
-  bool bResult = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
+  radialTerminal *t = NULL;
 
   if (!empty(i, "Session"))
   {
     m_mutex.lock();
     if (m_sessions.find(i->m["Session"]->v) != m_sessions.end())
     {
-      bResult = true;
       t = m_sessions[i->m["Session"]->v];
 stringstream ssMessage;
 ssMessage << "Terminal::pre() [" << t << "]:  Retrieved the radialTerminal structure from the m_sessions hash using the key " << i->m["Session"]->v << ".";
@@ -621,7 +620,7 @@ log(ssMessage.str());
   }
   w = (!empty(i, "Wait") && (i->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
 
-  return bResult;
+  return t;
 }
 // }}}
 // {{{ right()
@@ -630,9 +629,9 @@ bool Terminal::right(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendRight(c, w))
     {
@@ -694,9 +693,9 @@ bool Terminal::screen(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     b = true;
     post(d, t);
@@ -711,9 +710,9 @@ bool Terminal::send(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if ((w && t->t.sendWait(k, c)) || (!w && t->t.send(k, c)))
     {
@@ -742,9 +741,9 @@ bool Terminal::setSocketTimeout(radialUser &d, string &e)
   size_t c;
   string k;
   Json *i = d.p->m["i"];
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (!empty(i, "Long"))
     {
@@ -780,9 +779,9 @@ bool Terminal::shiftFunction(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     int nKey = 0;
     stringstream ssKey(k);
@@ -814,9 +813,9 @@ bool Terminal::tab(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendTab(c, w))
     {
@@ -838,9 +837,9 @@ bool Terminal::up(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
     if (t->t.sendUp(c, w))
     {
@@ -862,9 +861,9 @@ bool Terminal::wait(radialUser &d, string &e)
   bool b = false, w;
   size_t c;
   string k;
-  radialTerminal *t = NULL;
+  radialTerminal *t;
 
-  if (pre(d, t, w, c, k, e))
+  if ((t = pre(d, w, c, k, e)) != NULL)
   {
 stringstream ssMessage;
 ssMessage << "Terminal::wait() [" << t << "]:  Retrieved the radialTerminal structure from Terminal::pre().";

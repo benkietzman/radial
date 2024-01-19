@@ -54,7 +54,7 @@ class Terminal : public Interface
   bool keypadEnter(radialUser &d, string &e);
   bool left(radialUser &d, string &e);
   void post(radialUser &d, radialTerminal *t);
-  bool pre(radialUser &d, radialTerminal *t, bool &w, size_t &c, string &k, string &e);
+  radialTerminal *pre(radialUser &d, bool &w, size_t &c, string &k, string &e);
   bool right(radialUser &d, string &e);
   bool screen(radialUser &d, string &e);
   bool send(radialUser &d, string &e);
