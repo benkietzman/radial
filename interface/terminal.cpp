@@ -17,7 +17,7 @@ radial::Terminal *gpTerminal = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
-  string strPrefix = "ssj->main()";
+  string strPrefix = "terminal->main()";
   gpTerminal = new radial::Terminal(strPrefix, argc, argv, &callback);
   gpTerminal->enableWorkers();
   thread threadSchedule(&radial::Terminal::schedule, gpTerminal, strPrefix);

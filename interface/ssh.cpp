@@ -18,7 +18,7 @@ Ssh *gpSsh = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
-  string strPrefix = "ssj->main()";
+  string strPrefix = "ssh->main()";
   gpSsh = new Ssh(strPrefix, argc, argv, &callback);
   gpSsh->enableWorkers();
   thread threadSchedule(&Ssh::schedule, gpSsh, strPrefix);
