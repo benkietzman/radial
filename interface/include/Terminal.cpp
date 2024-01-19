@@ -220,6 +220,9 @@ log(ssMessage.str());
       {
         e = t->t.error();
         delete t;
+stringstream ssMessage;
+ssMessage << "Terminal::connect():  Deleted radialTerminal structure.";
+log(ssMessage.str());
       }
     }
     else
