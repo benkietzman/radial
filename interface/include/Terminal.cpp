@@ -280,7 +280,7 @@ log(ssMessage.str());
     while (!bRemoved)
     {
       m_mutex.lock();
-      if (t->unActive == 0)
+      if (t->unActive == 1)
       {
         bRemoved = true;
 ssMessage.str("");
