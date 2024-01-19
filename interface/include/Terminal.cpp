@@ -53,7 +53,7 @@ Terminal::~Terminal()
   {
     session.second->t.disconnect();
 stringstream ssMessage;
-ssMessage << "Terminal::~Terminal() [" << session.second->t << "]:  Removed radialTerminal structure from m_sessions map using key of " << session.first << ".";
+ssMessage << "Terminal::~Terminal() [" << session.second << "]:  Removed radialTerminal structure from m_sessions map using key of " << session.first << ".";
 log(ssMessage.str());
     delete session.second;
   }
@@ -675,7 +675,7 @@ void Terminal::schedule(string strPrefix)
       {
         m_sessions[removals.front()]->t.disconnect();
 stringstream ssMessage;
-ssMessage << "Terminal::schedule() [" << m_sessions[removals.front()]->t << "]:  Removed radialTerminal structure from m_sessions map using key of " << removals.front() << ".";
+ssMessage << "Terminal::schedule() [" << m_sessions[removals.front()] << "]:  Removed radialTerminal structure from m_sessions map using key of " << removals.front() << ".";
 log(ssMessage.str());
         delete m_sessions[removals.front()];
         m_sessions.erase(removals.front());
@@ -867,7 +867,7 @@ bool Terminal::wait(radialUser &d, string &e)
   if (pre(d, t, w, c, k, e))
   {
 stringstream ssMessage;
-ssMessage << "Terminal::wait() [" << t << "]:  Retrieved the radialTerminal structure from the m_sessions hash using the key " << i->m["Session"]->v << ".";
+ssMessage << "Terminal::wait() [" << t << "]:  Retrieved the radialTerminal structure from Terminal::pre().";
 log(ssMessage.str());
     if (t->t.wait(w))
     {
