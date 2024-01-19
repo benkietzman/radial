@@ -270,22 +270,13 @@ bool Terminal::disconnect(radialUser &d, string &e)
   {
     bool bRemoved = false;
     b = true;
-stringstream ssMessage;
-ssMessage << "Terminal::disconnect() [" << t << "]:  Retrieved radialTerminal.";
-log(ssMessage.str());
     t->t.disconnect();
-ssMessage.str("");
-ssMessage << "Terminal::disconnect() [" << t << "]:  Disconnected terminal.";
-log(ssMessage.str());
     while (!bRemoved)
     {
       m_mutex.lock();
       if (t->unActive == 1)
       {
         bRemoved = true;
-ssMessage.str("");
-ssMessage << "Terminal::disconnect() [" << t << "]:  Deleted radialTerminal.";
-log(ssMessage.str());
         delete t;
         t = NULL;
         m_sessions.erase(i->m["Session"]->v);
@@ -296,9 +287,6 @@ log(ssMessage.str());
         msleep(100);
       }
     }
-ssMessage.str("");
-ssMessage << "Terminal::disconnect():  Deleted session.";
-log(ssMessage.str());
     delete o->m["Session"];
     o->m.erase("Session");
   }
