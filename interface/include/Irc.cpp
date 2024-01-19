@@ -3011,7 +3011,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
         if (!strFunction.empty())
         {
           size_t unCount = 1;
-          string strData, strWait, strInvalid = "Please provide a valid Function:  ctrl, disconnect, down, enter (e), escape, function (f), home, key, keypadEnter (ke), left, right, send (s), shiftFunction (sf), tab (t), up, wait (w).";
+          string strData, strWait, strInvalid = "Please provide a valid Function:  ctrl, disconnect (d), down, enter (e), escape, function (f), home, key, keypadEnter (ke), left, right, send (s), shiftFunction (sf), tab (t), up, wait (w).";
           // {{{ ctrl
           if (strFunction == "ctrl")
           {
@@ -3027,7 +3027,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
           }
           // }}}
           // {{{ disconnect
-          else if (strFunction == "disconnect" || strFunction == "exit")
+          else if (strFunction == "disconnect" || strFunction == "d")
           {
             bExit = true;
           }
