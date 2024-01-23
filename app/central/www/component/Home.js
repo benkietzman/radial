@@ -187,7 +187,7 @@ export default
       </div>
     </div>
     <div class="col-md-7">
-      <div class="card ">
+      <div class="card">
         <div class="card-header bg-warning text-white" style="font-weight: bold;">
           <i class="bi bi-person-workspace"></i> Workload
         </div>
