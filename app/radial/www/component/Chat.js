@@ -146,7 +146,7 @@ export default
     </div>
     <div class="col-md-8">
       <p>
-        You can send your message to any channel regardless of whether the radial chatbot resides in that channel.  You can send your message to any user, but if that user is not online at the time, the message will be undeliverable.
+        You can send your message to any channel regardless of whether the radial chatbot resides in that channel.  You can send your message to any user, but if that user is not online at that time, the message will be undeliverable.
       </p>
       {{#isValid}}
       <div class="input-group"><span class="input-group-text">Channels/Users</span><input type="text" class="form-control" c-model="target"></div>
