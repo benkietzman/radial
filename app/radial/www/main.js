@@ -18,7 +18,7 @@ let common = new Common(
     'footer': '/include/common/js/component/footer.js',
     'menu': '/include/common/js/component/menu.js',
     'messages': '/include/common/js/component/messages.js',
-    'radialChat': '/include/common/js/component/radialChat.js'
+    'radialChat': '/include/common/js/component/radialChat.js',
     'radialStatus': '/include/common/js/component/radialStatus.js'
   },
   routes:
