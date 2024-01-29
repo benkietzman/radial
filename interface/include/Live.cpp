@@ -145,7 +145,9 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         for (auto &node : nodes)
         {
           Json *ptSubJson = new Json(ptJson);
-          ptJson->i("Node", node);
+          delete ptSubJson->m["Request"];
+          ptSubJson->m.erase("Request");
+          ptSubJson->i("Node", node);
           if (hub("link", ptSubJson, strError))
           {
             if (exist(ptSubJson, "Response"))
