@@ -128,9 +128,17 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       Json *ptResponse = new Json;
       for (auto &conn : m_conns)
       {
-        Json *ptConn = new Json;
+        map<string, string> getUser;
+        Json *ptConn = new Json, *ptUser = new Json;
         ptConn->i("Application", conn.second->strApplication);
         ptConn->i("User", conn.second->strUser);
+        ptUser->i("userid", conn.second->strUser);
+        if (db("dbCentralUsers", ptUser, getUser, strError))
+        {
+          ptConn->i("FirstName", getUser["first_name"]);
+          ptConn->i("LastName", getUser["last_name"]);
+        }
+        delete ptUser;
         ptResponse->m[conn.first] = ptConn;
       }
       if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Scope") && ptJson->m["Request"]->m["Scope"]->v == "all")
