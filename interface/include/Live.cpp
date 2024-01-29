@@ -80,11 +80,21 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           string strApplication, strNode, strUser;
           if (retrieve(ptJson->m["wsRequestID"]->v, strApplication, strUser))
           {
+            map<string, string> getUser;
+            Json *ptUser = new Json;
             data *ptData = new data;
             bResult = true;
             ptData->strApplication = strApplication;
             ptData->strUser = strUser;
+            ptUser->i("userid", strUser);
+            if (db("dbCentralUsers", ptUser, getUser, strError))
+            {
+              ptData->strFirstName = getUser["first_name"];
+              ptData->strLastName = getUser["last_name"];
+            }
+            delete ptUser;
             m_conns[ptJson->m["wsRequestID"]->v] = ptData;
+            live("", "", {{"Action", "connect"}, {"Application", strApplication}, {"User", strUser}, {"FirstName", ptData->strFirstName}, {"LastName", ptData->strLastName}}, strError);
           }
           else
           {
@@ -109,6 +119,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         bResult = true;
         if (m_conns.find(ptJson->m["wsRequestID"]->v) != m_conns.end())
         {
+          live("", "", {{"Action", "disconnect"}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}}, strError);
           delete m_conns[ptJson->m["wsRequestID"]->v];
           m_conns.erase(ptJson->m["wsRequestID"]->v);
         }

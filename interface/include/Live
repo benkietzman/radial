@@ -26,6 +26,8 @@ namespace radial
 struct data
 { 
   string strApplication;
+  string strFirstName;
+  string strLastName;
   string strNode;
   string strUser;
 };
