@@ -94,7 +94,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
             }
             delete ptUser;
             m_conns[ptJson->m["wsRequestID"]->v] = ptData;
-            live("", "", {{"Action", "connect"}, {"Application", strApplication}, {"User", strUser}, {"FirstName", ptData->strFirstName}, {"LastName", ptData->strLastName}}, strError);
+            live("", "", {{"Action", "connect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", strApplication}, {"User", strUser}, {"FirstName", ptData->strFirstName}, {"LastName", ptData->strLastName}}, strError);
           }
           else
           {
@@ -119,7 +119,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         bResult = true;
         if (m_conns.find(ptJson->m["wsRequestID"]->v) != m_conns.end())
         {
-          live("", "", {{"Action", "disconnect"}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}}, strError);
+          live("", "", {{"Action", "disconnect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}}, strError);
           delete m_conns[ptJson->m["wsRequestID"]->v];
           m_conns.erase(ptJson->m["wsRequestID"]->v);
         }
