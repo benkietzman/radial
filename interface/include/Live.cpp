@@ -125,14 +125,41 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     else if (ptJson->m["Function"]->v == "list")
     {
       bResult = true;
-      ptJson->m["Response"] = new Json;
+      Json *ptResponse = new Json;
       for (auto &conn : m_conns)
       {
         Json *ptConn = new Json;
         ptConn->i("Application", conn.second->strApplication);
         ptConn->i("User", conn.second->strUser);
-        ptJson->m["Response"]->m[conn.first] = ptConn;
+        ptResponse->m[conn.first] = ptConn;
       }
+      if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Scope") && ptJson->m["Request"]->m["Scope"]->v == "all")
+      {
+        list<string> nodes;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          nodes.push_back(link->strNode);
+        }
+        m_mutexShare.unlock();
+        for (auto &node : nodes)
+        {
+          Json *ptSubJson = new Json(ptJson);
+          ptJson->i("Node", node);
+          if (hub("link", ptSubJson, strError))
+          {
+            if (exist(ptSubJson, "Response"))
+            {
+              for (auto &item : ptSubJson->m["Response"]->m)
+              {
+                ptResponse->i(item.first, item.second);
+              }
+            }
+          }
+          delete ptSubJson;
+        }
+      }
+      ptJson->m["Response"] = ptResponse;
     }
     else if (ptJson->m["Function"]->v == "message")
     {
@@ -207,7 +234,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     }
     else
     {
-      strError = "Please provide a valid Function:  connect, disconnect, list, message.";
+      strError = "Please provide a valid Function:  connect, disconnect, list, listall, message.";
     }
   }
   else
