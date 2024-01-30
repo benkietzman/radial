@@ -41,6 +41,8 @@ class Live : public Interface
   mutex m_mutex;
   time_t m_CTime;
 
+  void message(const string strApplication, const string strUser, map<string, string> message);
+  void message(const string strApplication, const string strUser, Json *ptMessage);
   bool retrieve(const string strWsRequestID, string &strApplication, string &strUser);
 
   public:
