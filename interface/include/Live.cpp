@@ -106,6 +106,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         {
           bResult = true;
           strError = "Already connected.";
+          message("", "", {{"Action", "connect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}});
         }
       }
       else
