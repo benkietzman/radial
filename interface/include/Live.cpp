@@ -50,7 +50,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
   ptJson = new Json(p.p);
   m_mutex.lock();
   time(&CTime);
-  if ((CTime - m_CTime) > 600)
+  if ((CTime - m_CTime) > 60)
   {
     list<string> removals;
     string strApplication, strUser;
@@ -64,6 +64,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     }
     for (auto &removal : removals)
     {
+      message("", "", {{"Action", "disconnect"}, {"wsRequestID", removal}, {"Application", m_conns[removal]->strApplication}, {"User", m_conns[removal]->strUser}, {"FirstName", m_conns[removal]->strFirstName}, {"LastName", m_conns[removal]->strLastName}});
       delete m_conns[removal];
       m_conns.erase(removal);
     }
