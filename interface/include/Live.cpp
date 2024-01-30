@@ -71,6 +71,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
   m_mutex.unlock();
   if (!empty(ptJson, "Function"))
   {
+    // {{{ connect
     if (ptJson->m["Function"]->v == "connect")
     {
       if (!empty(ptJson, "wsRequestID"))
@@ -112,6 +113,8 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         strError = "Please provide the wsRequestID.";
       }
     }
+    // }}}
+    // {{{ disconnect
     else if (ptJson->m["Function"]->v == "disconnect")
     {
       if (!empty(ptJson, "wsRequestID"))
@@ -133,6 +136,8 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         strError = "Please provide the wsRequestID.";
       }
     }
+    // }}}
+    // {{{ list
     else if (ptJson->m["Function"]->v == "list")
     {
       bResult = true;
@@ -182,6 +187,8 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       }
       ptJson->m["Response"] = ptResponse;
     }
+    // }}}
+    // {{{ message
     else if (ptJson->m["Function"]->v == "message")
     {
       if (exist(ptJson, "Request"))
@@ -253,10 +260,13 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         strError = "Please provide the Request.";
       }
     }
+    // }}}
+    // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  connect, disconnect, list, listall, message.";
+      strError = "Please provide a valid Function:  connect, disconnect, list, message.";
     }
+    // }}}
   }
   else
   {
