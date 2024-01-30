@@ -20,7 +20,10 @@ int main(int argc, char *argv[])
   string strPrefix = "live->main()";
   gpLive = new radial::Live(strPrefix, argc, argv, &callback);
   gpLive->enableWorkers();
+  thread threadSchedule(&radial::Live::schedule, gpLive, strPrefix);
+  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpLive->process(strPrefix);
+  threadSchedule.join();
   delete gpLive;
   return 0;
 }

@@ -39,7 +39,6 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
   bool bResult = false;
   string strError;
   stringstream ssMessage;
-  time_t CTime;
   Json *ptJson;
   radialPacket p;
 
@@ -48,28 +47,6 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  m_mutex.lock();
-  time(&CTime);
-  if ((CTime - m_CTime) > 60)
-  {
-    list<string> removals;
-    string strApplication, strUser;
-    m_CTime = CTime;
-    for (auto &conn : m_conns)
-    {
-      if (!retrieve(conn.first, strApplication, strUser))
-      {
-        removals.push_back(conn.first);
-      }
-    }
-    for (auto &removal : removals)
-    {
-      message("", "", {{"Action", "disconnect"}, {"wsRequestID", removal}, {"Application", m_conns[removal]->strApplication}, {"User", m_conns[removal]->strUser}, {"FirstName", m_conns[removal]->strFirstName}, {"LastName", m_conns[removal]->strLastName}});
-      delete m_conns[removal];
-      m_conns.erase(removal);
-    }
-  }
-  m_mutex.unlock();
   if (!empty(ptJson, "Function"))
   {
     // {{{ connect
@@ -77,7 +54,22 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     {
       if (!empty(ptJson, "wsRequestID"))
       {
-        if (m_conns.find(ptJson->m["wsRequestID"]->v) == m_conns.end())
+        bool bFound = false;
+        map<string, string> mess;
+        m_mutex.lock();
+        if (m_conns.find(ptJson->m["wsRequestID"]->v) != m_conns.end())
+        {
+          bFound = true;
+          bResult = true;
+          strError = "Already connected.";
+          mess = {{"Action", "connect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}};
+        }
+        m_mutex.unlock();
+        if (bFound)
+        {
+          message("", "", mess);
+        }
+        else
         {
           string strApplication, strNode, strUser;
           if (retrieve(ptJson->m["wsRequestID"]->v, strApplication, strUser))
@@ -95,19 +87,15 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
               ptData->strLastName = getUser["last_name"];
             }
             delete ptUser;
+            m_mutex.lock();
             m_conns[ptJson->m["wsRequestID"]->v] = ptData;
+            m_mutex.unlock();
             message("", "", {{"Action", "connect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", strApplication}, {"User", strUser}, {"FirstName", ptData->strFirstName}, {"LastName", ptData->strLastName}});
           }
           else
           {
             strError = "Please provide a valid wsRequestID.";
           }
-        }
-        else
-        {
-          bResult = true;
-          strError = "Already connected.";
-          message("", "", {{"Action", "connect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}});
         }
       }
       else
@@ -121,12 +109,21 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     {
       if (!empty(ptJson, "wsRequestID"))
       {
+        bool bFound = false;
+        map<string, string> mess;
         bResult = true;
+        m_mutex.lock();
         if (m_conns.find(ptJson->m["wsRequestID"]->v) != m_conns.end())
         {
-          message("", "", {{"Action", "disconnect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}});
+          bFound = true;
+          mess = {{"Action", "disconnect"}, {"wsRequestID", ptJson->m["wsRequestID"]->v}, {"Application", m_conns[ptJson->m["wsRequestID"]->v]->strApplication}, {"User", m_conns[ptJson->m["wsRequestID"]->v]->strUser}, {"FirstName", m_conns[ptJson->m["wsRequestID"]->v]->strFirstName}, {"LastName", m_conns[ptJson->m["wsRequestID"]->v]->strLastName}};
           delete m_conns[ptJson->m["wsRequestID"]->v];
           m_conns.erase(ptJson->m["wsRequestID"]->v);
+        }
+        m_mutex.unlock();
+        if (bFound)
+        {
+          message("", "", mess);
         }
         else
         {
@@ -142,22 +139,43 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     // {{{ list
     else if (ptJson->m["Function"]->v == "list")
     {
+      list<string> conns;
       bResult = true;
       Json *ptResponse = new Json;
+      m_mutex.lock();
       for (auto &conn : m_conns)
       {
+        conns.push_back(conn.first);
+      }
+      m_mutex.unlock();
+      for (auto &conn : conns)
+      {
+        bool bFound = false;
         map<string, string> getUser;
         Json *ptConn = new Json, *ptUser = new Json;
-        ptConn->i("Application", conn.second->strApplication);
-        ptConn->i("User", conn.second->strUser);
-        ptUser->i("userid", conn.second->strUser);
-        if (db("dbCentralUsers", ptUser, getUser, strError))
+        m_mutex.lock();
+        if (m_conns.find(conn) != m_conns.end())
+        {
+          bFound = true;
+          ptConn->i("Application", m_conns[conn]->strApplication);
+          ptConn->i("User", m_conns[conn]->strUser);
+          ptUser->i("userid", m_conns[conn]->strUser);
+        }
+        m_mutex.unlock();
+        if (bFound && db("dbCentralUsers", ptUser, getUser, strError))
         {
           ptConn->i("FirstName", getUser["first_name"]);
           ptConn->i("LastName", getUser["last_name"]);
         }
         delete ptUser;
-        ptResponse->m[conn.first] = ptConn;
+        if (bFound)
+        {
+          ptResponse->m[conn] = ptConn;
+        }
+        else
+        {
+          delete ptConn;
+        }
       }
       if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Scope") && ptJson->m["Request"]->m["Scope"]->v == "all")
       {
@@ -256,6 +274,7 @@ void Live::message(const string strApplication, const string strUser, map<string
 void Live::message(const string strApplication, const string strUser, Json *ptMessage)
 {
   map<string, Json *> requests;
+  m_mutex.lock();
   for (auto &conn : m_conns)
   {
     if ((strApplication.empty() || conn.second->strApplication == strApplication) && (strUser.empty() || conn.second->strUser == strUser))
@@ -266,6 +285,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
       delete ptSubJson;
     }
   }
+  m_mutex.unlock();
   m_mutexShare.lock();
   for (auto &link : m_l)
   {
@@ -333,6 +353,51 @@ bool Live::retrieve(const string strWsRequestID, string &strApplication, string 
   }
 
   return bResult;
+}
+// }}}
+// {{{ schedule()
+void Live::schedule(string strPrefix)
+{
+  list<string> conns, removals;
+  string strApplication, strUser;
+  time_t CTime[2];
+
+  threadIncrement();
+  strPrefix += "->Live::schedule()";
+  time(&(CTime[0]));
+  while (!shutdown())
+  {
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[0]) > 60)
+    {
+      CTime[0] = CTime[1];
+      m_mutex.lock();
+      for (auto &conn : m_conns)
+      {
+        conns.push_back(conn.first);
+      }
+      m_mutex.unlock();
+      for (auto &conn : conns)
+      {
+        if (!retrieve(conn, strApplication, strUser))
+        {
+          removals.push_back(conn);
+        }
+      }
+      conns.clear();
+      for (auto &removal : removals)
+      {
+        message("", "", {{"Action", "disconnect"}, {"wsRequestID", removal}, {"Application", m_conns[removal]->strApplication}, {"User", m_conns[removal]->strUser}, {"FirstName", m_conns[removal]->strFirstName}, {"LastName", m_conns[removal]->strLastName}});
+        m_mutex.lock();
+        delete m_conns[removal];
+        m_conns.erase(removal);
+        m_mutex.unlock();
+      }
+      removals.clear();
+    }
+    msleep(1000);
+  }
+  threadDecrement();
 }
 // }}}
 }
