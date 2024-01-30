@@ -76,7 +76,7 @@ export default
         s.user.forms =
         {
           General:      {value: 'General',      icon: 'info-circle', active: null},
-          Applications: {value: 'Applications', icon: 'window',      active: null},
+          Applications: {value: 'Applications', icon: 'app',         active: null},
           Servers:      {value: 'Servers',      icon: 'servers',     active: null},
         };
       }

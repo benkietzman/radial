@@ -120,7 +120,7 @@ export default
         s.server.forms =
         {
           General:      {value: 'General',      icon: 'info-circle', active: null},
-          Applications: {value: 'Applications', icon: 'window',      active: null},
+          Applications: {value: 'Applications', icon: 'app',         active: null},
           Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
         };
       }
