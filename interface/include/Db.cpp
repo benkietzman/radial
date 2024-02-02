@@ -780,7 +780,7 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
       qs << " and";
       if (i->m["letter"]->v == "#")
       {
-        qs << " name regexp '^[ -@[-`{-~]'";
+        qs << " name regexp '^[0-9]+'";
       }
       else
       {
@@ -1392,7 +1392,7 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
     {
       if (i->m["letter"]->v == "#")
       {
-        qs << " and name regexp '^[ -@[-`{-~]'";
+        qs << " and name regexp '^[0-9]+'";
       }
       else
       {
@@ -1600,7 +1600,7 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
   {
     if (i->m["letter"]->v == "#")
     {
-      qs << " and last_name regexp '^[ -@[-`{-~]'";
+      qs << " and last_name regexp '^[0-9]+'";
     }
     else
     {
