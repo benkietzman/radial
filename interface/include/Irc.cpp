@@ -102,7 +102,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   if (!strAction.empty())
   {
     ptRequest->i("Action", strAction);
-    if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest))
+    if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest, strSource))
     {
       // {{{ central
       if (strAction == "central")
@@ -408,7 +408,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   }
   else if (m_pAnalyzeCallback1 != NULL)
   {
-    m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest);
+    m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest, strSource);
   }
   analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, ptRequest, strSource);
   delete ptRequest;
@@ -2862,7 +2862,7 @@ void Irc::quit()
 }
 // }}}
 // {{{ setAnalyze()
-void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string))
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string))
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;

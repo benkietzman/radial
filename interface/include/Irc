@@ -26,7 +26,7 @@ class Irc : public Interface
 {
   protected:
   bool m_bEnabled;
-  bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *);
+  bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string);
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string);
   map<string, bool> m_channels;
   list<string> m_messages;
@@ -71,7 +71,7 @@ class Irc : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string));
+  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string));
 };
 // }}}
 }
