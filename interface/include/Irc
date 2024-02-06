@@ -27,7 +27,7 @@ class Irc : public Interface
   protected:
   bool m_bEnabled;
   bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *);
-  bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &);
+  bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string);
   map<string, bool> m_channels;
   list<string> m_messages;
   map<string, list<string> > m_sshClients;
@@ -40,10 +40,10 @@ class Irc : public Interface
   Json *m_ptMonitor;
 
   void analyze(const string strNick, const string strTarget, const string strMessage);
-  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData);
-  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData);
-  void analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData);
-  void chat(const string strTarget, const string strMessage);
+  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource = "");
+  void analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData, const string strSource = "");
+  void analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData, const string strSource = "");
+  void chat(const string strTarget, const string strMessage, const string strSource = "");
   void enable(const string strNick);
   bool enabled();
   void disable();
@@ -58,10 +58,10 @@ class Irc : public Interface
   void part(const string strChannel);
   void push(const string strMessage);
   void quit();
-  void ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword);
+  void ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword, const string strSource);
   void sshConvert(string &strData);
   void sshConvertLine(string &strData);
-  void terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort);
+  void terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort, const string strSource);
   void unlock();
   string var(const string strName, Json *ptData);
 
@@ -71,7 +71,7 @@ class Irc : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &));
+  void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string));
 };
 // }}}
 }

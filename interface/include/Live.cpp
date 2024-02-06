@@ -225,7 +225,35 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           {
             strUser = ptJson->m["Request"]->m["User"]->v;
           }
-          message(strApplication, strUser, ptJson->m["Request"]->m["Message"]);
+          if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && strUser == "radial_bot")
+          {
+            string strFromApplication, strFromUser;
+            Json *ptIrc = new Json;
+            if (!empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strFromApplication, strFromUser))
+            {
+              ptJson->m["Request"]->m["Message"]->i("Application", strFromApplication);
+              ptJson->m["Request"]->m["Message"]->i("User", strFromUser);
+            }
+            ptIrc->i("Function", "analyze");
+            ptIrc->m["Request"] = new Json;
+            ptIrc->m["Request"]->i("Source", "live");
+            if (!empty(ptJson->m["Request"]->m["Message"], "User"))
+            {
+              ptIrc->m["Request"]->i("Target", ptJson->m["Request"]->m["Message"]->m["User"]->v);
+              ptIrc->m["Request"]->i("UserID", ptJson->m["Request"]->m["Message"]->m["User"]->v);
+              ptIrc->m["Request"]->i("Ident", ptJson->m["Request"]->m["Message"]->m["User"]->v);
+            }
+            if (!empty(ptJson->m["Request"]->m["Message"], "Message"))
+            {
+              ptIrc->m["Request"]->i("Message", ptJson->m["Request"]->m["Message"]->m["Message"]->v);
+            }
+            hub("irc", ptIrc, false);
+            delete ptIrc;
+          }
+          else
+          {
+            message(strApplication, strUser, ptJson->m["Request"]->m["Message"]);
+          }
         }
         else
         {

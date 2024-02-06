@@ -91,7 +91,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
     }
   }
 }
-void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData)
+void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
   list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
@@ -410,10 +410,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   {
     m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest);
   }
-  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, ptRequest);
+  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, ptRequest, strSource);
   delete ptRequest;
 }
-void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData)
+void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData, const string strSource)
 {
   // {{{ prep work
   string strAction = var("Action", ptData), strError, strValue;
@@ -422,7 +422,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   ssText << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
-  if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText))
+  if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource))
   {
   }
   // }}}
@@ -1196,7 +1196,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   }
                 }
                 ssSubText << node << ":  " << ((bSubResult)?strResult:strError);
-                chat(strTarget, ssSubText.str());
+                chat(strTarget, ssSubText.str(), strSource);
               }
               ssText << ":  done";
             }
@@ -1335,7 +1335,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssMessage << " @ " << strTarget;
             }
             ssMessage << " " << char(3) << " " << strMessage;
-            chat(strSubTarget, ssMessage.str());
+            chat(strSubTarget, ssMessage.str(), strSource);
             ssText << ":  Message sent.";
           }
           else
@@ -1524,7 +1524,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (m_sshClients.find(strIdent) == m_sshClients.end())
           {
             m_sshClients[strIdent] = {};
-            thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strUserID, strIdent, strServer, strPort, strUser, strPassword);
+            thread threadSsh(&Irc::ssh, this, strPrefix, strTarget, strUserID, strIdent, strServer, strPort, strUser, strPassword, strSource);
             pthread_setname_np(threadSsh.native_handle(), "ssh");
             threadSsh.detach();
           }
@@ -1652,7 +1652,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (m_terminalClients.find(strIdent) == m_terminalClients.end())
           {
             m_terminalClients[strIdent] = {};
-            thread threadTerminal(&Irc::terminal, this, strPrefix, strTarget, strIdent, strServer, strPort);
+            thread threadTerminal(&Irc::terminal, this, strPrefix, strTarget, strIdent, strServer, strPort, strSource);
             pthread_setname_np(threadTerminal.native_handle(), "terminal");
             threadTerminal.detach();
           }
@@ -1710,12 +1710,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   }
   // }}}
   // {{{ post work
-  chat(strTarget, ssText.str());
+  chat(strTarget, ssText.str(), strSource);
   // }}}
 }
 // }}}
 // {{{ analyzer()
-void Irc::analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData)
+void Irc::analyzer(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strData, const string strSource)
 {
   bool bAdmin = false;
   map<string, bool> auth;
@@ -1757,7 +1757,7 @@ void Irc::analyzer(string strPrefix, const string strTarget, const string strUse
     }
   }
   m_pCentral->free(getPerson);
-  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ssData);
+  analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ssData, strSource);
 }
 // }}}
 // {{{ autoMode()
@@ -2077,7 +2077,7 @@ void Irc::bot(string strPrefix)
                           }
                           getline(ssData, strData);
                           m_manip.trim(strData, strData);
-                          thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, strData);
+                          thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, strData, "");
                           pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
                           threadAnalyzer.detach();
                         }
@@ -2196,8 +2196,59 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
+    // {{{ analyze
+    if (ptJson->m["Function"]->v == "analyze")
+    {
+      if (exist(ptJson, "Request"))
+      {
+        if (!empty(ptJson->m["Request"], "Source"))
+        {
+          if (!empty(ptJson->m["Request"], "Target"))
+          {
+            if (!empty(ptJson->m["Request"], "UserID"))
+            {
+              if (!empty(ptJson->m["Request"], "Ident"))
+              {
+                if (!empty(ptJson->m["Request"], "Message"))
+                {
+                  bResult = true;
+                  thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ptJson->m["Request"]->m["Target"]->v, ptJson->m["Request"]->m["UserID"]->v, ptJson->m["Request"]->m["Ident"]->v, ptJson->m["Request"]->m["Message"]->v, ptJson->m["Request"]->m["Source"]->v);
+                  pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
+                  threadAnalyzer.detach();
+                }
+                else
+                {
+                  strError = "Please provide the Message within the Request.";
+                }
+              }
+              else
+              {
+                strError = "Please provide the Ident within the Request.";
+              }
+            }
+            else
+            {
+              strError = "Please provide the UserID within the Request.";
+            }
+          }
+          else
+          {
+            strError = "Please provide the Target within the Request.";
+          }
+        }
+        else
+        {
+          strError = "Please provide the Source within the Request.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Request.";
+      }
+    }
+    // }}}
     // {{{ channels
-    if (ptJson->m["Function"]->v == "channels")
+    else if (ptJson->m["Function"]->v == "channels")
     {
       size_t unCount = 0;
       while (unCount++ < 40 && !isMasterSettled())
@@ -2323,7 +2374,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
     // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  channels, chat.";
+      strError = "Please provide a valid Function:  analyze, channels, chat.";
     }
     // }}}
   }
@@ -2346,38 +2397,52 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
 }
 // }}}
 // {{{ chat()
-void Irc::chat(const string strTarget, const string strMessage)
+void Irc::chat(const string strTarget, const string strMessage, const string strSource)
 {
-  bool bPart = false;
-  size_t unMaxLength = 450;
-  string strLine;
-  stringstream ssLines(strMessage), ssMessage, ssPrefix;
-
-  if (m_channels.find(strTarget) == m_channels.end() || !m_channels[strTarget])
+  if (strSource == "live")
   {
-    bPart = true;
-    join(strTarget);
+    Json *ptLive = new Json;
+    ptLive->i("Function", "message");
+    ptLive->m["Request"] = new Json;
+    ptLive->m["Request"]->i("User", strTarget);
+    ptLive->m["Request"]->m["Message"] = new Json;
+    ptLive->m["Request"]->m["Message"]->i("Action", "chat");
+    ptLive->m["Request"]->m["Message"]->i("Message", strMessage);
+    hub("live", ptLive, false);
+    delete ptLive;
   }
-  ssPrefix << ":" << m_strNick << " PRIVMSG " << strTarget << " :";
-  while (getline(ssLines, strLine))
+  else
   {
-    while ((ssPrefix.str().size() + strLine.size() + 2) > unMaxLength)
+    bool bPart = false;
+    size_t unMaxLength = 450;
+    string strLine;
+    stringstream ssLines(strMessage), ssMessage, ssPrefix;
+    if (m_channels.find(strTarget) == m_channels.end() || !m_channels[strTarget])
     {
-      ssMessage.str("");
-      ssMessage << ssPrefix.str() << strLine.substr(0, (unMaxLength - (ssPrefix.str().size() + 2))) << "\r\n";
-      push(ssMessage.str());
-      strLine.erase(0, (unMaxLength - (ssPrefix.str().size() + 2)));
+      bPart = true;
+      join(strTarget);
     }
-    if (!strLine.empty())
+    ssPrefix << ":" << m_strNick << " PRIVMSG " << strTarget << " :";
+    while (getline(ssLines, strLine))
     {
-      ssMessage.str("");
-      ssMessage << ssPrefix.str() << strLine << "\r\n";
-      push(ssMessage.str());
+      while ((ssPrefix.str().size() + strLine.size() + 2) > unMaxLength)
+      {
+        ssMessage.str("");
+        ssMessage << ssPrefix.str() << strLine.substr(0, (unMaxLength - (ssPrefix.str().size() + 2))) << "\r\n";
+        push(ssMessage.str());
+        strLine.erase(0, (unMaxLength - (ssPrefix.str().size() + 2)));
+      }
+      if (!strLine.empty())
+      {
+        ssMessage.str("");
+        ssMessage << ssPrefix.str() << strLine << "\r\n";
+        push(ssMessage.str());
+      }
     }
-  }
-  if (bPart)
-  {
-    part(strTarget);
+    if (bPart)
+    {
+      part(strTarget);
+    }
   }
 }
 // }}}
@@ -2797,7 +2862,7 @@ void Irc::quit()
 }
 // }}}
 // {{{ setAnalyze()
-void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &))
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string))
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;
@@ -2805,7 +2870,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 // }}}
 // {{{ ssh
 // {{{ ssh()
-void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword)
+void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword, const string strSource)
 {
   string strData, strError, strSession;
 
@@ -2814,8 +2879,8 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   {
     bool bExit = false;
     size_t unAttempts = 0;
-    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07WAITING ON PASSWORD" + string(1, char(3)) + string(1, char(2)));
-    chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh send [password]" + string(1, char(3)) + string(1, char(2)));
+    chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07WAITING ON PASSWORD" + string(1, char(3)) + string(1, char(2)), strSource);
+    chat(strUserID, string(1, char(2)) + string(1, char(3)) + (string)"07Please type the following:  ssh send [password]" + string(1, char(3)) + string(1, char(2)), strSource);
     while (!bExit && unAttempts++ < 1200)
     {
       lock();
@@ -2835,7 +2900,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       }
     }
   }
-  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"03SESSION STARTED" + string(1, char(3)) + string(1, char(2)), strSource);
   if (sshConnect(strServer, strPort, strUser, strPassword, strSession, strData, strError))
   {
     bool bExit = false, bCommand;
@@ -2843,7 +2908,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
     if (!strData.empty())
     {
       sshConvert(strData);
-      chat(strTarget, strData);
+      chat(strTarget, strData, strSource);
       strData.clear();
     }
     while (!bExit)
@@ -2876,7 +2941,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
         else
         {
           bExit = true;
-          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshSend() " + strError + string(1, char(3)));
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshSend() " + strError + string(1, char(3)), strSource);
         }
         strCommand.clear();
       }
@@ -2887,7 +2952,7 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
       if (!strData.empty())
       {
         sshConvert(strData);
-        chat(strTarget, strData);
+        chat(strTarget, strData, strSource);
         strData.clear();
       }
     }
@@ -2898,9 +2963,9 @@ void Irc::ssh(string strPrefix, const string strTarget, const string strUserID, 
   }
   else
   {
-    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshConnect() " + strError + string(1, char(3)));
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::sshConnect() " + strError + string(1, char(3)), strSource);
   }
-  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)), strSource);
   lock();
   if (m_sshClients.find(strIdent) != m_sshClients.end())
   {
@@ -2962,13 +3027,13 @@ void Irc::sshConvertLine(string &strData)
 // }}}
 // }}}
 // {{{ terminal()
-void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort)
+void Irc::terminal(string strPrefix, const string strTarget, const string strIdent, string strServer, string strPort, const string strSource)
 {
   string strError;
   radialTerminalInfo tInfo;
 
   strPrefix += "->terminal()";
-  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)));
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)), strSource);
   if (terminalConnect(tInfo, strServer, strPort, true, strError))
   {
     bool bExit = false, bProcess;
@@ -2984,7 +3049,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
       }
       ssText << tInfo.screen[i] << endl;
     }
-    chat(strTarget, ssText.str());
+    chat(strTarget, ssText.str(), strSource);
     while (!bExit)
     {
       bProcess = false;
@@ -3191,7 +3256,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               }
               ssText << tInfo.screen[i] << endl;
             }
-            chat(strTarget, ssText.str());
+            chat(strTarget, ssText.str(), strSource);
           }
           else if (tInfo.strSession.empty())
           {
@@ -3204,7 +3269,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
         }
         if (!strError.empty())
         {
-          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)));
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)), strSource);
           strError.clear();
         }
       }
@@ -3220,9 +3285,9 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
   }
   else
   {
-    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::terminalConnect() " + strError + string(1, char(3)));
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::terminalConnect() " + strError + string(1, char(3)), strSource);
   }
-  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)));
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)), strSource);
   lock();
   if (m_terminalClients.find(strIdent) != m_terminalClients.end())
   {
