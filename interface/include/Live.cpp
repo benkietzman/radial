@@ -215,25 +215,24 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       {
         if (exist(ptJson->m["Request"], "Message"))
         {
-          string strApplication, strUser;
+          string strApplication[2], strUser[2];
           bResult = true;
+          if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && !empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strApplication[0], strUser[0]))
+          {
+            ptJson->m["Request"]->m["Message"]->i("Application", strApplication[0]);
+            ptJson->m["Request"]->m["Message"]->i("User", strUser[0]);
+          }
           if (!empty(ptJson->m["Request"], "Application"))
           {
-            strApplication = ptJson->m["Request"]->m["Application"]->v;
+            strApplication[1] = ptJson->m["Request"]->m["Application"]->v;
           }
           if (!empty(ptJson->m["Request"], "User"))
           {
-            strUser = ptJson->m["Request"]->m["User"]->v;
+            strUser[1] = ptJson->m["Request"]->m["User"]->v;
           }
           if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && strUser == "radial_bot")
           {
-            string strFromApplication, strFromUser;
             Json *ptIrc = new Json;
-            if (!empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strFromApplication, strFromUser))
-            {
-              ptJson->m["Request"]->m["Message"]->i("Application", strFromApplication);
-              ptJson->m["Request"]->m["Message"]->i("User", strFromUser);
-            }
             ptIrc->i("Function", "analyze");
             ptIrc->m["Request"] = new Json;
             ptIrc->m["Request"]->i("Source", "live");
@@ -252,7 +251,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else
           {
-            message(strApplication, strUser, ptJson->m["Request"]->m["Message"]);
+            message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"]);
           }
         }
         else

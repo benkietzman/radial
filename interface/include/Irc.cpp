@@ -2408,6 +2408,7 @@ void Irc::chat(const string strTarget, const string strMessage, const string str
     ptLive->m["Request"]->m["Message"] = new Json;
     ptLive->m["Request"]->m["Message"]->i("Action", "chat");
     ptLive->m["Request"]->m["Message"]->i("Message", strMessage);
+    ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
     hub("live", ptLive, false);
     delete ptLive;
   }
