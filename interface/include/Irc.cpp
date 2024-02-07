@@ -1587,7 +1587,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << " error:  Please provide a valid Function following the action:  connect (c), ctrl-c, disconnect (c), send (s), sendenter (se).";
+        ssText << " error:  Please provide a valid Function following the action:  connect (c), ctrl-c, disconnect (d), send (s), sendenter (se).";
       }
     }
     else
