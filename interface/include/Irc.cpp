@@ -3011,7 +3011,6 @@ void Irc::sshConvertLine(string &strData)
   {
     strData.erase(0, (unPosition + 1));
   }
-  ssData << char(17);
   while (!strData.empty())
   {
     if (strData[0] == char(27) && (unPosition = strData.find("m")) != string::npos)
@@ -3024,7 +3023,6 @@ void Irc::sshConvertLine(string &strData)
       strData.erase(0, 1);
     }
   }
-  ssData << char(17);
   strData = ssData.str();
 }
 // }}}
@@ -3257,7 +3255,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
                 ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
                 tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
               }
-              ssText << char(17) << tInfo.screen[i] << char(17) << endl;
+              ssText << tInfo.screen[i] << endl;
             }
             chat(strTarget, ssText.str(), strSource);
           }
