@@ -2185,6 +2185,7 @@ void Irc::bot(string strPrefix)
 void Irc::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
+  size_t unCount = 0;
   string strError;
   Json *ptJson;
   radialPacket p;
@@ -2194,193 +2195,184 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  while (unCount++ < 40 && !isMasterSettled())
   {
-    // {{{ analyze
-    if (ptJson->m["Function"]->v == "analyze")
+    msleep(250);
+  }
+  if (isMasterSettled() && isMaster())
+  {
+    if (!empty(ptJson, "Function"))
     {
-      if (exist(ptJson, "Request"))
+      // {{{ analyze
+      if (ptJson->m["Function"]->v == "analyze")
       {
-        if (!empty(ptJson->m["Request"], "Source"))
+        if (exist(ptJson, "Request"))
         {
-          if (!empty(ptJson->m["Request"], "Target"))
+          if (!empty(ptJson->m["Request"], "Source"))
           {
-            if (!empty(ptJson->m["Request"], "UserID"))
+            if (!empty(ptJson->m["Request"], "Target"))
             {
-              if (!empty(ptJson->m["Request"], "Ident"))
+              if (!empty(ptJson->m["Request"], "UserID"))
               {
-                if (!empty(ptJson->m["Request"], "Message"))
+                if (!empty(ptJson->m["Request"], "Ident"))
                 {
-                  bResult = true;
-                  thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ptJson->m["Request"]->m["Target"]->v, ptJson->m["Request"]->m["UserID"]->v, ptJson->m["Request"]->m["Ident"]->v, ptJson->m["Request"]->m["Message"]->v, ptJson->m["Request"]->m["Source"]->v);
-                  pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
-                  threadAnalyzer.detach();
+                  if (!empty(ptJson->m["Request"], "Message"))
+                  {
+                    bResult = true;
+                    thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ptJson->m["Request"]->m["Target"]->v, ptJson->m["Request"]->m["UserID"]->v, ptJson->m["Request"]->m["Ident"]->v, ptJson->m["Request"]->m["Message"]->v, ptJson->m["Request"]->m["Source"]->v);
+                    pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
+                    threadAnalyzer.detach();
+                  }
+                  else
+                  {
+                    strError = "Please provide the Message within the Request.";
+                  }
                 }
                 else
                 {
-                  strError = "Please provide the Message within the Request.";
+                  strError = "Please provide the Ident within the Request.";
                 }
               }
               else
               {
-                strError = "Please provide the Ident within the Request.";
+                strError = "Please provide the UserID within the Request.";
               }
             }
             else
             {
-              strError = "Please provide the UserID within the Request.";
+              strError = "Please provide the Target within the Request.";
             }
           }
           else
           {
-            strError = "Please provide the Target within the Request.";
+            strError = "Please provide the Source within the Request.";
           }
         }
         else
         {
-          strError = "Please provide the Source within the Request.";
+          strError = "Please provide the Request.";
         }
       }
-      else
+      // }}}
+      // {{{ channels
+      else if (ptJson->m["Function"]->v == "channels")
       {
-        strError = "Please provide the Request.";
-      }
-    }
-    // }}}
-    // {{{ channels
-    else if (ptJson->m["Function"]->v == "channels")
-    {
-      size_t unCount = 0;
-      while (unCount++ < 40 && !isMasterSettled())
-      {
-        msleep(250);
-      }
-      if (isMasterSettled())
-      {
-        if (isMaster())
+        if (enabled())
         {
-          unCount = 0;
-          while (unCount++ < 40 && !enabled())
+          bResult = true;
+          if (ptJson->m.find("Response") != ptJson->m.end())
           {
-            msleep(250);
+            delete ptJson->m["Response"];
           }
-          if (enabled())
+          ptJson->m["Response"] = new Json;
+          for (auto &channel : m_channels)
           {
-            bResult = true;
-            if (ptJson->m.find("Response") != ptJson->m.end())
-            {
-              delete ptJson->m["Response"];
-            }
-            ptJson->m["Response"] = new Json;
-            for (auto &channel : m_channels)
-            {
-              ptJson->m["Response"]->i(channel.first, ((channel.second)?"1":"0"), ((channel.second)?'1':'0'));
-            }
-          }
-          else
-          {
-            strError = "IRC disabled.";
+            ptJson->m["Response"]->i(channel.first, ((channel.second)?"1":"0"), ((channel.second)?'1':'0'));
           }
         }
         else
         {
-          Json *ptLink = new Json(ptJson);
-          ptLink->i("Interface", "irc");
-          ptLink->i("Node", master());
-          if (hub("link", ptLink, strError))
-          {
-            bResult = true;
-            if (exist(ptLink, "Response"))
-            {
-              ptJson->i("Response", ptLink->m["Response"]);
-            }
-          }
-          delete ptLink;
+          strError = "IRC disabled.";
         }
       }
-      else
+      // }}}
+      // {{{ chat
+      else if (ptJson->m["Function"]->v == "chat")
       {
-        strError = "Master not known.";
-      }
-    }
-    // }}}
-    // {{{ chat
-    else if (ptJson->m["Function"]->v == "chat")
-    {
-      if (!empty(ptJson, "Message"))
-      {
-        if (!empty(ptJson, "Target"))
+        if (!empty(ptJson, "Message"))
         {
-          size_t unCount = 0;
-          while (unCount++ < 40 && !isMasterSettled())
+          if (!empty(ptJson, "Target"))
           {
-            msleep(250);
-          }
-          if (isMasterSettled())
-          {
-            if (isMaster())
+            size_t unCount = 0;
+            while (unCount++ < 40 && !isMasterSettled())
             {
-              size_t unPosition;
-              string strMessage = ptJson->m["Message"]->v;
-              stringstream ssEtx;
-              ssEtx << char(3);
-              while ((unPosition = strMessage.find("<ETX>")) != string::npos)
+              msleep(250);
+            }
+            if (isMasterSettled())
+            {
+              if (isMaster())
               {
-                strMessage.replace(unPosition, 5, ssEtx.str());
-              }
-              unCount = 0;
-              while (unCount++ < 40 && !enabled())
-              {
-                msleep(250);
-              }
-              if (enabled())
-              {
-                bResult = true;
-                chat(ptJson->m["Target"]->v, strMessage);
+                size_t unPosition;
+                string strMessage = ptJson->m["Message"]->v;
+                stringstream ssEtx;
+                ssEtx << char(3);
+                while ((unPosition = strMessage.find("<ETX>")) != string::npos)
+                {
+                  strMessage.replace(unPosition, 5, ssEtx.str());
+                }
+                unCount = 0;
+                while (unCount++ < 40 && !enabled())
+                {
+                  msleep(250);
+                }
+                if (enabled())
+                {
+                  bResult = true;
+                  chat(ptJson->m["Target"]->v, strMessage);
+                }
+                else
+                {
+                  strError = "IRC disabled.";
+                }
               }
               else
               {
-                strError = "IRC disabled.";
+                Json *ptLink = new Json(ptJson);
+                ptLink->i("Interface", "irc");
+                ptLink->i("Node", master());
+                if (hub("link", ptLink, strError))
+                {
+                  bResult = true;
+                }
+                delete ptLink;
               }
             }
             else
             {
-              Json *ptLink = new Json(ptJson);
-              ptLink->i("Interface", "irc");
-              ptLink->i("Node", master());
-              if (hub("link", ptLink, strError))
-              {
-                bResult = true;
-              }
-              delete ptLink;
+              strError = "Master not known.";
             }
           }
           else
           {
-            strError = "Master not known.";
+            strError = "Please provide the Target.";
           }
         }
         else
         {
-          strError = "Please provide the Target.";
+          strError = "Please provide the Message.";
         }
       }
+      // }}}
+      // {{{ invalid
       else
       {
-        strError = "Please provide the Message.";
+        strError = "Please provide a valid Function:  analyze, channels, chat.";
       }
+      // }}}
     }
-    // }}}
-    // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  analyze, channels, chat.";
+      strError = "Please provide the Function.";
     }
-    // }}}
+  }
+  else if (isMasterSettled())
+  {
+    Json *ptLink = new Json(ptJson);
+    ptLink->i("Interface", "irc");
+    ptLink->i("Node", master());
+    if (hub("link", ptLink, strError))
+    {
+      bResult = true;
+      if (exist(ptLink, "Response"))
+      {
+        ptJson->i("Response", ptLink->m["Response"]);
+      }
+    }
+    delete ptLink;
   }
   else
   {
-    strError = "Please provide the Function.";
+    strError = "Master not known.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
