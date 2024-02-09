@@ -1508,16 +1508,16 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (strFunction == "connect" || strFunction == "c")
       {
         string strCommand = var("Command", ptData), strConnect, strPassword, strPort, strServer, strUser;
-        stringstream ssBuffer(strCommand), ssConnect;
+        stringstream ssBuffer(strCommand), ssConnect, ssServer;
         ssBuffer >> strConnect;
         ssConnect.str(strConnect);
         getline(ssBuffer, strPassword);
         m_manip.trim(strPassword, strPassword);
         getline(ssConnect, strUser, '@');
         getline(ssConnect, strServer, '@');
-        ssConnect.str(strServer);
-        getline(ssConnect, strServer, ':');
-        getline(ssConnect, strPort, ':');
+        ssServer.str(strServer);
+        getline(ssServer, strServer, ':');
+        getline(ssServer, strPort, ':');
         if (!strServer.empty() && !strUser.empty())
         {
           lock();
