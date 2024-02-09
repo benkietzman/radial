@@ -1335,7 +1335,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssMessage << " @ " << strTarget;
             }
             ssMessage << " " << char(3) << " " << strMessage;
-            chat(strSubTarget, ssMessage.str(), strSource);
+            chat(strSubTarget, ssMessage.str());
             ssText << ":  Message sent.";
           }
           else
