@@ -454,9 +454,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ssText << " " << char(3) << "00,14 " << strUser << " " << char(3);
       if (!strMessage.empty())
       {
-        if (alert(strUser, strMessage, strError))
+        stringstream ssMessage;
+        ssMessage << strMessage << endl << endl << " -- " << strFirstName << " " << strLastName << " (" << strIdent << ")" << endl;
+        if (alert(strUser, ssMessage.str(), strError))
         {
-          ssText << ":  Successfully sent alert.";
+          ssText << ":  Successfully sent the alert to " << strUser << ".";
         }
         else
         {
