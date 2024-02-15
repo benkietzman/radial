@@ -104,8 +104,26 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     ptRequest->i("Action", strAction);
     if (m_pAnalyzeCallback1 == NULL || !m_pAnalyzeCallback1(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, actions, strAction, ssData, ptRequest, strSource))
     {
+      // {{{ alert
+      if (strAction == "alert")
+      {
+        string strUser;
+        ssData >> strUser;
+        if (!strUser.empty())
+        {
+          string strMessage;
+          ptRequest->i("User", strUser);
+          getline(ssData, strMessage);
+          m_manip.trim(strMessage, strMessage);
+          if (!strMessage.empty())
+          {
+            ptRequest->i("Message", strMessage);
+          }
+        }
+      }
+      // }}}
       // {{{ central
-      if (strAction == "central")
+      else if (strAction == "central")
       {
         string strFunction;
         ssData >> strFunction;
@@ -424,6 +442,36 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ callback
   if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource))
   {
+  }
+  // }}}
+  // {{{ alert
+  else if (strAction == "alert")
+  {
+    string strUser = var("User", ptData);
+    if (!strUser.empty())
+    {
+      string strMessage = var("Message", ptData);
+      ssText << " " << char(3) << "00,14 " << strUser << " " << char(3);
+      if (!strMessage.empty())
+      {
+        if (alert(strUser, strMessage, strError))
+        {
+          ssText << ":  Successfully sent alert.";
+        }
+        else
+        {
+          ssText << " error:  " << strError;
+        }
+      }
+      else
+      {
+        ssText << ":  Please provide the message immediately following the user.";
+      }
+    }
+    else
+    {
+      ssText << ":  The alert action is used to send an alert message through the Alert framework.  Please provide the user immediately following the action.";
+    }
   }
   // }}}
   // {{{ central
