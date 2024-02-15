@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"central", "centralmon", "database", "db", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "database", "db", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
