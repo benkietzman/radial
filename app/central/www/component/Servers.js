@@ -674,11 +674,11 @@ export default
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">
-            {{#each parents}}
+            {{#with parent}}
             <tr>
               <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
             </tr>
-            {{/each}}
+            {{/with}}
           </table>
         </td>
         <td valign="top">
