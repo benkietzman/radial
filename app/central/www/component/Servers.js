@@ -785,9 +785,13 @@ export default
         Children Servers:
       </th>
       <td>
-        {{#each server.children}}
-        <a href="#/Servers/{{id}}">{{name}}</a>
-        {{/each}}
+        <table class="table table-condensed" style="background: inherit;">
+          {{#each server.children}}
+          <tr>
+            <td><a href="#/Servers/{{id}}">{{name}}</a></td>
+          </tr>
+          {{/each}}
+        </table>
       </td>
       <th>
         Processors:
