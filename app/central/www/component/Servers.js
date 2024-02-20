@@ -674,14 +674,14 @@ export default
         </td>
         <td valign="top">
           {{#with parent}}
-          <td><a href="#/Servers/{{id}}">{{name}}</a></td>
+          <a href="#/Servers/{{id}}">{{name}}</a>
           {{/with}}
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">
             {{#each children}}
             <tr>
-              <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
+              <td><a href="#/Servers/{{id}}">{{name}}</a></td>
             </tr>
             {{/each}}
           </table>
