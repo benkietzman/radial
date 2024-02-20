@@ -673,13 +673,9 @@ export default
           <a href="#/Servers/{{id}}">{{name}}</a>
         </td>
         <td valign="top">
-          <table class="table table-condensed" style="background: inherit;">
-            {{#with parent}}
-            <tr>
-              <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
-            </tr>
-            {{/with}}
-          </table>
+          {{#with parent}}
+          <td><a href="#/Servers/{{id}}">{{name}}</a></td>
+          {{/with}}
         </td>
         <td valign="top">
           <table class="table table-condensed" style="background: inherit;">
