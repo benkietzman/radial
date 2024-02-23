@@ -1524,6 +1524,22 @@ bool Interface::feedback(const string strFunction, Json *ptData, string &strErro
   return bResult;
 }
 // }}}
+// {{{ feedbackAnswers()
+bool Interface::feedbackAnswers(const string strQuestionID, Json *ptData, string &strError)
+{
+  ptData->i("question_id", strHash);
+
+  return feedback("answers", ptData, strError);
+}
+// }}}
+// {{{ feedbackQuestions()
+bool Interface::feedbackQuestions(const string strSurveyID, Json *ptData, string &strError)
+{
+  ptData->i("survey_id", strHash);
+
+  return feedback("questions", ptData, strError);
+}
+// }}}
 // {{{ feedbackSurvey()
 bool Interface::feedbackSurvey(const string strHash, Json *ptData, string &strError)
 {

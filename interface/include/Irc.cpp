@@ -2559,7 +2559,6 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
   if (feedbackSurvey(strHash, ptSurvey, strError))
   {
     bool bExit = false, bProcess;
-    string strData;
     stringstream ssText;
     if (!empty(ptSurvey, "title"))
     {
@@ -2597,40 +2596,60 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
     }
     ssText << ".";
     chat(strTarget, ssText.str(), strSource);
-    while (!bExit)
+    if (!empty(ptSurvey, "id"))
     {
-      bProcess = false;
-      lock();
-      if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
+      Json *ptQuestions = new Json;
+      if (feedbackQuestions(ptSurvey->m["id"]->v, ptQuestions, strError))
       {
-        if (!m_feedbackClients[strIdent].empty())
+        bool bDisplayQuestion = true;
+        string strData;
+        ssText.str("");
+        ssText << ptQuestions;
+        chat(strTarget, ssText.str(), strSource);
+        while (!bExit)
         {
-          bProcess = true;
-          strData = m_feedbackClients[strIdent].front();
-          m_feedbackClients[strIdent].pop_front();
+          bProcess = false;
+          lock();
+          if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
+          {
+            if (!m_feedbackClients[strIdent].empty())
+            {
+              bProcess = true;
+              strData = m_feedbackClients[strIdent].front();
+              m_feedbackClients[strIdent].pop_front();
+            }
+          }
+          else
+          {
+            bExit = true;
+          }
+          unlock();
+          if (bProcess)
+          {
+            if (strData == "exit")
+            {
+              bExit = true;
+            }
+            if (!strError.empty())
+            {
+              chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)), strSource);
+              strError.clear();
+            }
+          }
+          else
+          {
+            msleep(100);
+          }
         }
       }
       else
       {
-        bExit = true;
+        chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackQuestions() " + strError + string(1, char(3)), strSource);
       }
-      unlock();
-      if (bProcess)
-      {
-        if (strData == "exit")
-        {
-          bExit = true;
-        }
-        if (!strError.empty())
-        {
-          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)), strSource);
-          strError.clear();
-        }
-      }
-      else
-      {
-        msleep(100);
-      }
+    }
+    else
+    {
+      chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Survey ID was not returned." + string(1, char(3)), strSource);
     }
   }
   else
