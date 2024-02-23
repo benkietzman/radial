@@ -1548,6 +1548,14 @@ bool Interface::feedbackSurvey(const string strHash, Json *ptData, string &strEr
   return feedback("survey", ptData, strError);
 }
 // }}}
+// {{{ feedbackType()
+bool Interface::feedbackType(const string strTypeID, Json *ptData, string &strError)
+{
+  ptData->i("type_id", strTypeID);
+
+  return feedback("type", ptData, strError);
+}
+// }}}
 // }}}
 // {{{ getUserEmail()
 string Interface::getUserEmail(radialUser &d)

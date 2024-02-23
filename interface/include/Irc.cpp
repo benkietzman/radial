@@ -2601,13 +2601,13 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
       Json *ptQuestions = new Json;
       if (feedbackQuestions(ptSurvey->m["id"]->v, ptQuestions, strError))
       {
-        map<string, map<string, string> > questions;
-        map<string, string> question;
+        map<string, map<string, string> > answers, questions;
+        map<string, string> answer, question;
         string strData;
-        Json *ptAnswers;
+        Json *ptAnswers, *ptType;
         for (auto &ptQuestion : ptQuestions->l)
         {
-          if (!empty(ptQuestion, "id") && !empty(ptQuestion, "question") && !empty(ptQuestion, "sequence"))
+          if (!empty(ptQuestion, "id") && !empty(ptQuestion, "question") && !empty(ptQuestion, "sequence") && !empty(ptQuestion, "type_id"))
           {
             ptQuestion->flatten(question, true, false);
             questions[question["sequence"]] = question;
@@ -2626,20 +2626,63 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
               ssText.str("");
               ssText << "QUESTION:  " << question["question"];
               chat(strTarget, ssText.str(), strSource);
-              ptAnswers = new Json;
-              if (feedbackAnswers(question["id"], ptAnswers, strError))
+              ptType = new Json;
+              if (feedbackType(question["type_id"], ptType, strError))
               {
-                ssText.str("");
-                ssText << ptAnswers;
-                chat(strTarget, ssText.str(), strSource);
+                if (!empty(ptType, "name"))
+                {
+                  if (ptType->m["name"]->v == "checkbox" || ptType->m["name"]->v == "radio" || ptType->m["name"]->v == "select")
+                  {
+                    ptAnswers = new Json;
+                    if (feedbackAnswers(question["id"], ptAnswers, strError))
+                    {
+                      for (auto &ptAnswer : ptAnswers->l)
+                      {
+                        if (!empty(ptAnswer, "id") && !empty(ptAnswer, "answer") && !empty(ptAnswer, "sequence"))
+                        {
+                          ptAnswer->flatten(answer, true, false);
+                          answers[answer["sequence"]] = answer;
+                          answer.clear();
+                        }
+                      }
+                      ssText.str("");
+                      ssText << "ANSWERS:" << endl;
+                      for (auto &answer : answers)
+                      {
+                        ssText << answer["sequence"] << ")  " << answer["answer"] << endl;
+                      }
+                      ssText << "Please provide an answer by number.";
+                      chat(strTarget, ssText.str(), strSource);
+                    }
+                    else
+                    {
+                      bExit = true;
+                      chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackAnswers() " + strError + string(1, char(3)), strSource);
+                      strError.clear();
+                    }
+                    delete ptAnswers;
+                  }
+                  else
+                  {
+                    ssText.str("");
+                    ssText << "Please provide your answer.";
+                    chat(strTarget, ssText.str(), strSource);
+                  }
+                }
+                else
+                {
+                  bExit = true;
+                  chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackType() Type name not returned." + string(1, char(3)), strSource);
+                  strError.clear();
+                }
               }
               else
               {
                 bExit = true;
-                chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackAnswers() " + strError + string(1, char(3)), strSource);
+                chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackType() " + strError + string(1, char(3)), strSource);
                 strError.clear();
               }
-              delete ptAnswers;
+              delete ptType;
             }
             else
             {
