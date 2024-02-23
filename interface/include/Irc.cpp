@@ -2649,7 +2649,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
                       ssText << "ANSWERS:" << endl;
                       for (auto &a : answers)
                       {
-                        ssText << a["sequence"] << ")  " << a["answer"] << endl;
+                        ssText << a.first << ")  " << a.second["answer"] << endl;
                       }
                       ssText << "Please provide an answer by number.";
                       chat(strTarget, ssText.str(), strSource);
