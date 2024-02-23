@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "database", "db", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -279,6 +279,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             ptRequest->i("Request", strRequest);
           }
+        }
+      }
+      // }}}
+      // {{{ feedback
+      else if (strAction == "feedback")
+      {
+        string strHash;
+        ssData >> strHash;
+        if (!strHash.empty())
+        {
+          ptRequest->i("Hash", strHash);
         }
       }
       // }}}
@@ -1078,12 +1089,38 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  The db action is used to call a to call a database function.  Please provide a Function immediately following the action.";
+        ssText << ":  The db action is used to call a database function.  Please provide a Function immediately following the action.";
       }
     }
     else
     {
       ssText << " error:  You are not authorized to access db.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
+  // {{{ feedback
+  else if (strAction == "feedback")
+  {
+    string strHash = var("Hash", ptData);
+    if (!strHash.empty())
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Function", "survey");
+      ptJson->m["Request"] = new Json;
+      ptJson->m["Request"]->i("hash", strHash);
+      if (hub("feedback", ptJson, strError))
+      {
+        ssText << ":  " << ptJson;
+      }
+      else
+      {
+        ssText << " error:  " << strError;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      ssText << ":  The feedback action is used to take a feedback survey.  Please provide a hash immediately following the action.";
     }
   }
   // }}}
