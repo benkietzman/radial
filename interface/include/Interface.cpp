@@ -1527,7 +1527,7 @@ bool Interface::feedback(const string strFunction, Json *ptData, string &strErro
 // {{{ feedbackAnswers()
 bool Interface::feedbackAnswers(const string strQuestionID, Json *ptData, string &strError)
 {
-  ptData->i("question_id", strHash);
+  ptData->i("question_id", strQuestionID);
 
   return feedback("answers", ptData, strError);
 }
@@ -1535,7 +1535,7 @@ bool Interface::feedbackAnswers(const string strQuestionID, Json *ptData, string
 // {{{ feedbackQuestions()
 bool Interface::feedbackQuestions(const string strSurveyID, Json *ptData, string &strError)
 {
-  ptData->i("survey_id", strHash);
+  ptData->i("survey_id", strSurveyID);
 
   return feedback("questions", ptData, strError);
 }
