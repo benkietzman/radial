@@ -2621,7 +2621,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
           {
             if (!questions.empty())
             {
-              question = (*questions.begin());
+              question = questions.begin()->second;
               questions.erase(questions.begin());
               ssText.str("");
               ssText << "QUESTION:  " << question["question"];
