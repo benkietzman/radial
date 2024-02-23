@@ -30,6 +30,7 @@ class Irc : public Interface
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string);
   map<string, bool> m_channels;
   list<string> m_messages;
+  map<string, list<string> > m_feedbackClients;
   map<string, list<string> > m_sshClients;
   map<string, list<string> > m_terminalClients;
   mutex m_mutex;
@@ -47,6 +48,7 @@ class Irc : public Interface
   void enable(const string strNick);
   bool enabled();
   void disable();
+  void feedback(string strPrefix, const string strTarget, const string strIdent, const string strHash, const string strSource);
   bool isLocalAdmin(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
   void join(const string strChannel);
   void listChannels();

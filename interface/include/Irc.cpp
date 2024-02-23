@@ -93,7 +93,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -282,14 +282,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ feedback
-      else if (strAction == "feedback")
+      // {{{ feedback || fb
+      else if (strAction == "feedback" || strAction == "fb")
       {
-        string strHash;
-        ssData >> strHash;
-        if (!strHash.empty())
+        string strData;
+        getline(ssData, strData);
+        m_manip.trim(strData, strData);
+        if (!strData.empty())
         {
-          ptRequest->i("Hash", strHash);
+          ptRequest->i("Data", strData);
         }
       }
       // }}}
@@ -1098,30 +1099,34 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ feedback
-  else if (strAction == "feedback")
+  // {{{ feedback || fb
+  else if (strAction == "feedback" || strAction == "fb")
   {
-    string strHash = var("Hash", ptData);
-    if (!strHash.empty())
+    string strData = var("Data", ptData);
+    lock();
+    if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
     {
-      Json *ptJson = new Json;
-      ptJson->i("Function", "survey");
-      ptJson->m["Request"] = new Json;
-      ptJson->m["Request"]->i("hash", strHash);
-      if (hub("feedback", ptJson, strError))
+      if (!strData.empty())
       {
-        ssText << ":  " << ptJson;
+        m_feedbackClients[strIdent].push_back(strData);
       }
       else
       {
-        ssText << " error:  " << strError;
+        ssText << ":  Please provide an answer to submit an answer or provide exit to abandon the survey.";
       }
-      delete ptJson;
+    }
+    else if (!strData.empty())
+    {
+      m_feedbackClients[strIdent] = {};
+      thread threadFeedback(&Irc::feedback, this, strPrefix, strTarget, strIdent, strData, strSource);
+      pthread_setname_np(threadFeedback.native_handle(), "feedback");
+      threadFeedback.detach();
     }
     else
     {
       ssText << ":  The feedback action is used to take a feedback survey.  Please provide a hash immediately following the action.";
     }
+    unlock();
   }
   // }}}
   // {{{ interface
@@ -2541,6 +2546,106 @@ void Irc::disable()
     m_strNick.clear();
     m_bEnabled = false;
   }
+}
+// }}}
+// {{{ feedback()
+void Irc::feedback(string strPrefix, const string strTarget, const string strIdent, const string strHash, const string strSource)
+{
+  string strError;
+  Json *ptSurvey = new Json;
+
+  strPrefix += "->feedback()";
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION STARTED" + string(1, char(3)) + string(1, char(2)), strSource);
+  if (feedbackSurvey(strHash, ptSurvey, strError))
+  {
+    bool bExit = false, bProcess;
+    string strData;
+    stringstream ssText;
+    if (!empty(ptSurvey, "title"))
+    {
+      ssText << "SURVEY:  " << ptSurvey->m["title"]->v << endl;
+    }
+    ssText << "This survey was created by ";
+    if (exist(ptSurvey, "owner") && !empty(ptSurvey->m["owner"], "first_name") && !empty(ptSurvey->m["owner"], "last_name"))
+    {
+      ssText << ptSurvey->m["owner"]->m["first_name"]->v << " " << ptSurvey->m["owner"]->m["last_name"]->v;
+    }
+    else
+    {
+      ssText << "an unknown person";
+    }
+    if (!empty(ptSurvey, "now_date") && !empty(ptSurvey, "start_date") && ptSurvey->m["now_date"]->v < ptSurvey->m["start_date"]->v)
+    {
+      bExit = true;
+      ssText << " and opens " << ptSurvey->m["start_date"]->v;
+    }
+    if (!empty(ptSurvey, "end_date"))
+    {
+      if (!empty(ptSurvey, "now_date") && ptSurvey->m["now_date"]->v <= ptSurvey->m["end_date"]->v)
+      {
+        ssText << " and expires " << ptSurvey->m["end_date"]->v;
+      }
+      else
+      {
+        bExit = true;
+        ssText << " and has expired";
+      }
+    }
+    else
+    {
+      ssText << " and is open indefinitely";
+    }
+    ssText << ".";
+    chat(strTarget, ssText.str(), strSource);
+    while (!bExit)
+    {
+      bProcess = false;
+      lock();
+      if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
+      {
+        if (!m_feedbackClients[strIdent].empty())
+        {
+          bProcess = true;
+          strData = m_feedbackClients[strIdent].front();
+          m_feedbackClients[strIdent].pop_front();
+        }
+      }
+      else
+      {
+        bExit = true;
+      }
+      unlock();
+      if (bProcess)
+      {
+        if (strData == "exit")
+        {
+          bExit = true;
+        }
+        if (!strError.empty())
+        {
+          chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)), strSource);
+          strError.clear();
+        }
+      }
+      else
+      {
+        msleep(100);
+      }
+    }
+  }
+  else
+  {
+    chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackSurvey() " + strError + string(1, char(3)), strSource);
+  }
+  delete ptSurvey;
+  chat(strTarget, string(1, char(2)) + string(1, char(3)) + (string)"07SESSION ENDED" + string(1, char(3)) + string(1, char(2)), strSource);
+  lock();
+  if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
+  {
+    m_feedbackClients[strIdent].clear();
+    m_feedbackClients.erase(strIdent);
+  }
+  unlock();
 }
 // }}}
 // {{{ enable()

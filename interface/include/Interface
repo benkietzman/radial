@@ -125,6 +125,8 @@ class Interface : public Base
   void email(const string strFrom, const string strTo, const string strSubject, const string strText, const string strHtml);
   void email(const string strFrom, list<string> to, const string strSubject, const string strText, const string strHtml);
   void email(const string strFrom, list<string> to, list<string> cc, list<string> bcc, const string strSubject, const string strText, const string strHtml, map<string, string> file);
+  bool feedback(const string strFunction, Json *ptData, string &strError);
+  bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   string getUserEmail(radialUser &d);
   string getUserFirstName(radialUser &d);
   string getUserLastName(radialUser &d);

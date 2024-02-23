@@ -1502,6 +1502,37 @@ void Interface::enableWorkers()
   }
 }
 // }}}
+// {{{ feedback
+// {{{ feedback()
+bool Interface::feedback(const string strFunction, Json *ptData, string &strError)
+{
+  bool bResult = false;
+  string strJson;
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", strFunction);
+  ptJson->m["Request"] = new Json(ptData);
+  if (hub("feedback", ptJson, strError))
+  {
+    bResult = true;
+    if (exist(ptJson, "Response"))
+    {
+      ptData->parse(ptJson->m["Response"]->j(strJson));
+    }
+  }
+
+  return bResult;
+}
+// }}}
+// {{{ feedbackSurvey()
+bool Interface::feedbackSurvey(const string strHash, Json *ptData, string &strError)
+{
+  ptData->i("hash", strHash);
+
+  return feedback("survey", ptData, strError);
+}
+// }}}
+// }}}
 // {{{ getUserEmail()
 string Interface::getUserEmail(radialUser &d)
 {
