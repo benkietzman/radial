@@ -2601,14 +2601,54 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
       Json *ptQuestions = new Json;
       if (feedbackQuestions(ptSurvey->m["id"]->v, ptQuestions, strError))
       {
-        bool bDisplayQuestion = true;
+        map<string, map<string, string> > questions;
+        map<string, string> question;
         string strData;
-        ssText.str("");
-        ssText << ptQuestions;
-        chat(strTarget, ssText.str(), strSource);
+        Json *ptAnswers;
+        for (auto &ptQuestion : ptQuestions->l)
+        {
+          if (!empty(ptQuestion, "id") && !empty(ptQuestion, "question") && !empty(ptQuestion, "sequence"))
+          {
+            ptQuestion->flatten(question, true, false);
+            questions[question["sequence"]] = question;
+            question.clear();
+          }
+        }
         while (!bExit)
         {
           bProcess = false;
+          if (question.empty())
+          {
+            if (!questions.empty())
+            {
+              question = (*questions.begin());
+              questions.erase(questions.begin());
+              ssText.str("");
+              ssText << "QUESTION:  " << question["question"];
+              chat(strTarget, ssText.str(), strSource);
+              ptAnswers = new Json;
+              if (feedbackAnswers(question["id"], ptAnswers, strError))
+              {
+                ssText.str("");
+                ssText << ptAnswers;
+                chat(strTarget, ptAnswers, strSource);
+              }
+              else
+              {
+                bExit = true;
+                chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackAnswers() " + strError + string(1, char(3)), strSource);
+                strError.clear();
+              }
+              delete ptAnswers;
+            }
+            else
+            {
+              bExit = true;
+              ssText.str("");
+              ssText << "Thank you for providing your feedback to this survey.";
+              chat(strTarget, ssText.str(), strSource);
+            }
+          }
           lock();
           if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
           {
