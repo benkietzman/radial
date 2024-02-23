@@ -2631,7 +2631,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
               {
                 ssText.str("");
                 ssText << ptAnswers;
-                chat(strTarget, ptAnswers, strSource);
+                chat(strTarget, ssText.str(), strSource);
               }
               else
               {
