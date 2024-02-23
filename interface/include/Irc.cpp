@@ -2647,9 +2647,9 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
                       }
                       ssText.str("");
                       ssText << "ANSWERS:" << endl;
-                      for (auto &answer : answers)
+                      for (auto &a : answers)
                       {
-                        ssText << answer["sequence"] << ")  " << answer["answer"] << endl;
+                        ssText << a["sequence"] << ")  " << a["answer"] << endl;
                       }
                       ssText << "Please provide an answer by number.";
                       chat(strTarget, ssText.str(), strSource);
