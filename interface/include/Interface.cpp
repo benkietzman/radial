@@ -1540,6 +1540,22 @@ bool Interface::feedbackQuestions(const string strSurveyID, Json *ptData, string
   return feedback("questions", ptData, strError);
 }
 // }}}
+// {{{ feedbackResultAdd()
+bool Interface::feedbackResultAdd(Json *ptData, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->m["survey"] = new Json(ptData);
+  if (feedback("resultAdd", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ feedbackSurvey()
 bool Interface::feedbackSurvey(const string strHash, Json *ptData, string &strError)
 {

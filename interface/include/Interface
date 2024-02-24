@@ -128,6 +128,7 @@ class Interface : public Base
   bool feedback(const string strFunction, Json *ptData, string &strError);
   bool feedbackAnswers(const string strQuestionID, Json *ptData, string &strError);
   bool feedbackQuestions(const string strSurveyID, Json *ptData, string &strError);
+  bool feedbackResultAdd(Json *ptData, string &strError);
   bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   bool feedbackType(const string strTypeID, Json *ptData, string &strError);
   string getUserEmail(radialUser &d);

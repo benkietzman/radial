@@ -2548,6 +2548,33 @@ void Irc::disable()
   }
 }
 // }}}
+// {{{ enable()
+void Irc::enable(const string strNick)
+{
+  if (!enabled())
+  {
+    m_bEnabled = true;
+    if (!m_messages.empty())
+    {
+      m_messages.clear();
+    }
+    m_strNick = strNick;
+    if (m_ptMonitor != NULL)
+    {
+      for (auto &i : m_ptMonitor->m)
+      {
+        join(i.first);
+      }
+    }
+  }
+}
+// }}}
+// {{{ enabled()
+bool Irc::enabled()
+{
+  return m_bEnabled;
+}
+// }}}
 // {{{ feedback()
 void Irc::feedback(string strPrefix, const string strTarget, const string strIdent, const string strHash, const string strSource)
 {
@@ -2601,10 +2628,13 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
       Json *ptQuestions = new Json;
       if (feedbackQuestions(ptSurvey->m["id"]->v, ptQuestions, strError))
       {
+        bool bSubmit = false;
         map<string, map<string, string> > answers, questions;
         map<string, string> answer, question;
         string strData;
-        Json *ptAnswers, *ptType;
+        Json *ptAnswers, *ptResult = new Json, *ptType;
+        ptResult->i("hash", strHash);
+        ptResult->i("id", ptSurvey->m["id"]->v);
         for (auto &ptQuestion : ptQuestions->l)
         {
           if (!empty(ptQuestion, "id") && !empty(ptQuestion, "question") && !empty(ptQuestion, "sequence") && !empty(ptQuestion, "type_id"))
@@ -2686,10 +2716,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
             }
             else
             {
-              bExit = true;
-              ssText.str("");
-              ssText << "Thank you for providing your feedback to this survey.";
-              chat(strTarget, ssText.str(), strSource);
+              bExit = bSubmit = true;
             }
           }
           lock();
@@ -2713,6 +2740,23 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
             {
               bExit = true;
             }
+            else if (question["name"] == "checkbox" || question["name"] == "radio" || question["name"] == "select")
+            {
+              string strAnswerID;
+              for (auto a = answers.begin(); strAnswerID.empty() && a != answers.end(); a++)
+              {
+                if (a->first == strData)
+                {
+                  strAnswerID = a->second["id"];
+                }
+              }
+              if (!strAnswerID.empty())
+              {
+              }
+            }
+            else
+            {
+            }
             if (!strError.empty())
             {
               chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  " + strError + string(1, char(3)), strSource);
@@ -2724,6 +2768,20 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
             msleep(100);
           }
         }
+        if (bSubmit)
+        {
+          if (feedbackResultAdd(ptResult, strError))
+          {
+            ssText.str("");
+            ssText << "Thank you for providing your feedback to this survey.";
+            chat(strTarget, ssText.str(), strSource);
+          }
+          else
+          {
+            chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackResultAdd() " + strError + string(1, char(3)), strSource);
+          }
+        }
+        delete ptResult;
       }
       else
       {
@@ -2748,33 +2806,6 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
     m_feedbackClients.erase(strIdent);
   }
   unlock();
-}
-// }}}
-// {{{ enable()
-void Irc::enable(const string strNick)
-{
-  if (!enabled())
-  {
-    m_bEnabled = true;
-    if (!m_messages.empty())
-    {
-      m_messages.clear();
-    }
-    m_strNick = strNick;
-    if (m_ptMonitor != NULL)
-    {
-      for (auto &i : m_ptMonitor->m)
-      {
-        join(i.first);
-      }
-    }
-  }
-}
-// }}}
-// {{{ enabled()
-bool Irc::enabled()
-{
-  return m_bEnabled;
 }
 // }}}
 // {{{ isLocalAdmin()
