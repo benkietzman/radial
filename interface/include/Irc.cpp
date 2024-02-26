@@ -2625,61 +2625,48 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
     chat(strTarget, ssText.str(), strSource);
     if (!empty(ptSurvey, "id"))
     {
-      Json *ptQuestions = new Json;
-      if (feedbackQuestions(ptSurvey->m["id"]->v, ptQuestions, strError))
+      if (exist(ptSurvey, "questions"))
+      {
+        delete ptSurvey->m["questions"];
+      }
+      ptSurvey->m["questions"] = new Json;
+      if (feedbackQuestions(ptSurvey->m["id"]->v, ptSurvey->m["questions"], strError))
       {
         bool bSubmit = false;
-        map<string, map<string, string> > answers, questions;
-        map<string, string> answer, question;
+        list<Json *>::iterator q = ptSurvey->m["questions"]->l.begin();
         string strData;
-        Json *ptAnswers, *ptResult = new Json, *ptType;
-        ptResult->i("hash", strHash);
-        ptResult->i("id", ptSurvey->m["id"]->v);
-        for (auto &ptQuestion : ptQuestions->l)
-        {
-          if (!empty(ptQuestion, "id") && !empty(ptQuestion, "question") && !empty(ptQuestion, "sequence") && !empty(ptQuestion, "type_id"))
-          {
-            ptQuestion->flatten(question, true, false);
-            questions[question["sequence"]] = question;
-            question.clear();
-          }
-        }
         while (!bExit)
         {
           bProcess = false;
-          if (question.empty())
+          if (q != ptSurvey->m["questions"]->l.end())
           {
-            if (!questions.empty())
+            if (!exist((*q), "type"))
             {
-              question = questions.begin()->second;
-              questions.erase(questions.begin());
               ssText.str("");
-              ssText << "QUESTION:  " << question["question"];
+              ssText << "QUESTION:  " << (*q)->m["question"]->v;
               chat(strTarget, ssText.str(), strSource);
-              ptType = new Json;
-              if (feedbackType(question["type_id"], ptType, strError))
+              (*q)->m["type"] = new Json;
+              if (feedbackType((*q)->m["type_id"]->v, (*q)->m["type"], strError))
               {
-                if (!empty(ptType, "name"))
+                if (!empty((*q)->m["type"], "name"))
                 {
-                  if (ptType->m["name"]->v == "checkbox" || ptType->m["name"]->v == "radio" || ptType->m["name"]->v == "select")
+                  if ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select")
                   {
-                    ptAnswers = new Json;
-                    if (feedbackAnswers(question["id"], ptAnswers, strError))
+                    if (exist((*q), "answers"))
                     {
-                      for (auto &ptAnswer : ptAnswers->l)
+                      delete ((*q)->m["answers"]);
+                    }
+                    (*q)->m["answers"] = new Json;
+                    if (feedbackAnswers((*q)->m["id"]->v, (*q)->m["answers"], strError))
+                    {
+                      ssText.str("");
+                      ssText << "ANSWERS:" << endl;
+                      for (auto &ptAnswer : (*q)->m["answers"]->l)
                       {
                         if (!empty(ptAnswer, "id") && !empty(ptAnswer, "answer") && !empty(ptAnswer, "sequence"))
                         {
-                          ptAnswer->flatten(answer, true, false);
-                          answers[answer["sequence"]] = answer;
-                          answer.clear();
+                          ssText << ptAnswer->m["sequence"]->v << ") " << ptAnswer->m["answer"]->v << endl;
                         }
-                      }
-                      ssText.str("");
-                      ssText << "ANSWERS:" << endl;
-                      for (auto &a : answers)
-                      {
-                        ssText << a.first << ") " << a.second["answer"] << endl;
                       }
                       ssText << "Please provide an answer by number.";
                       chat(strTarget, ssText.str(), strSource);
@@ -2690,7 +2677,6 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
                       chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackAnswers() " + strError + string(1, char(3)), strSource);
                       strError.clear();
                     }
-                    delete ptAnswers;
                   }
                   else
                   {
@@ -2712,12 +2698,11 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
                 chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackType() " + strError + string(1, char(3)), strSource);
                 strError.clear();
               }
-              delete ptType;
             }
-            else
-            {
-              bExit = bSubmit = true;
-            }
+          }
+          else
+          {
+            bExit = bSubmit = true;
           }
           lock();
           if (m_feedbackClients.find(strIdent) != m_feedbackClients.end())
@@ -2740,22 +2725,36 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
             {
               bExit = true;
             }
-            else if (question["name"] == "checkbox" || question["name"] == "radio" || question["name"] == "select")
+            else if (!empty((*q), "name") && ((*q)->m["name"]->v == "checkbox" || (*q)->m["name"]->v == "radio" || (*q)->m["name"]->v == "select") && exist((*q), "answers"))
             {
               string strAnswerID;
-              for (auto a = answers.begin(); strAnswerID.empty() && a != answers.end(); a++)
+              for (auto a = (*q)->m["answers"]->l.begin(); strAnswerID.empty() && a != (*q)->m["answers"]->l.end(); a++)
               {
-                if (a->first == strData)
+                if (!empty((*a), "sequence") && (*a)->m["sequence"]->v == strData && !empty((*a), "id"))
                 {
-                  strAnswerID = a->second["id"];
+                  strAnswerID = (*a)->m["id"]->v;
                 }
               }
               if (!strAnswerID.empty())
               {
+                (*q)->i("answer", strAnswerID);
               }
             }
             else
             {
+              (*q)->i("answer", strData);
+            }
+            if (exist((*q), "answer"))
+            {
+              if (!empty((*q), "answer"))
+              {
+                q++;
+              }
+              else
+              {
+                delete (*q)->m["answer"];
+                (*q)->m.erase("answer");
+              }
             }
             if (!strError.empty())
             {
@@ -2770,7 +2769,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
         }
         if (bSubmit)
         {
-          if (feedbackResultAdd(ptResult, strError))
+          if (feedbackResultAdd(ptSurvey, strError))
           {
             ssText.str("");
             ssText << "Thank you for providing your feedback to this survey.";
@@ -2781,7 +2780,6 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
             chat(strTarget, string(1, char(3)) + (string)"04" + string(1, char(2)) + (string)"ERROR:" + string(1, char(2)) + (string)"  Interface::feedbackResultAdd() " + strError + string(1, char(3)), strSource);
           }
         }
-        delete ptResult;
       }
       else
       {
