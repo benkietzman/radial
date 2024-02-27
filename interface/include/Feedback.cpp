@@ -250,7 +250,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
         if (exist(i->m["survey"], "questions") && !i->m["survey"]->m["questions"]->l.empty())
         {
           bool bAnonymous = (!empty(i->m["survey"], "anonymous") && i->m["survey"]->m["anonymous"]->v == "1");
-          if (bAnonymous || isValid(d, "Feedback"))
+          if (bAnonymous || isValid(d))
           {
             bool bGood = true;
             string strApplicationContactID;

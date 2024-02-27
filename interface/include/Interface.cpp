@@ -1504,20 +1504,44 @@ void Interface::enableWorkers()
 // }}}
 // {{{ feedback
 // {{{ feedback()
-bool Interface::feedback(const string strFunction, Json *ptData, string &strError)
+bool Interface::feedback(const string strFunction, Json *ptData, string &strError, const string strUser)
 {
-  bool bResult = false;
+  bool bResult = true;
   string strJson;
   Json *ptJson = new Json;
 
   ptJson->i("Function", strFunction);
-  ptJson->m["Request"] = new Json(ptData);
-  if (hub("feedback", ptJson, strError))
+  if (!strUser.empty())
   {
-    bResult = true;
-    if (exist(ptJson, "Response"))
+    string strPayload, strValue;
+    stringstream ssTime;
+    time_t CTime;
+    Json *ptJwt = new Json;
+    ptJwt->i("sl_login", strUser);
+    time(&CTime);
+    ssTime << CTime;
+    ptJwt->i("exp", ssTime.str(), 'n');
+    if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
     {
-      ptData->parse(ptJson->m["Response"]->j(strJson));
+      ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+    }
+    else
+    {
+      bResult = false;
+    }
+    delete ptJwt;
+  }
+  if (bResult)
+  {
+    bResult = false;
+    ptJson->m["Request"] = new Json(ptData);
+    if (hub("feedback", ptJson, strError))
+    {
+      bResult = true;
+      if (exist(ptJson, "Response"))
+      {
+        ptData->parse(ptJson->m["Response"]->j(strJson));
+      }
     }
   }
 
@@ -1541,13 +1565,13 @@ bool Interface::feedbackQuestions(const string strSurveyID, Json *ptData, string
 }
 // }}}
 // {{{ feedbackResultAdd()
-bool Interface::feedbackResultAdd(Json *ptData, string &strError)
+bool Interface::feedbackResultAdd(const string strUser, Json *ptData, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
 
   ptJson->m["survey"] = new Json(ptData);
-  if (feedback("resultAdd", ptJson, strError))
+  if (feedback("resultAdd", ptJson, strError, strUser))
   {
     bResult = true;
   }

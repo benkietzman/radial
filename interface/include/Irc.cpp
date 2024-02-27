@@ -22,6 +22,9 @@ namespace radial
 // {{{ Irc()
 Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
+  string strError;
+  Json *ptAes = new Json, *ptJwt = new Json;
+
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
   // {{{ command line arguments
@@ -58,6 +61,26 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   // }}}
   m_bEnabled = false;
   m_CMonitorChannelsModify = 0;
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
+  { 
+    if (!empty(ptAes, "Secret"))
+    {
+      m_strAesSecret = ptAes->m["Secret"]->v;
+    }
+  }
+  delete ptAes; 
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
+  {
+    if (!empty(ptJwt, "Secret"))
+    {
+      m_strJwtSecret = ptJwt->m["Secret"]->v;
+    }
+    if (!empty(ptJwt, "Signer"))
+    {
+      m_strJwtSigner = ptJwt->m["Signer"]->v;
+    }
+  }
+  delete ptJwt;
 }
 // }}}
 // {{{ ~Irc()
@@ -2769,7 +2792,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
         }
         if (bSubmit)
         {
-          if (feedbackResultAdd(ptSurvey, strError))
+          if (feedbackResultAdd(strIdent, ptSurvey, strError))
           {
             ssText.str("");
             ssText << "Thank you for providing your feedback to this survey.";
