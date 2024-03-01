@@ -475,6 +475,8 @@ export default
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <!-- [[[ surveys -->
+  <div class="row">
+    <div class="col-md-8">
   {{#each categories}}
   <button class="btn btn-sm btn-primary bi bi-lightbulb{{#if showClosed}}-off{{/if}} float-end" style="margin-left: 10px;" c-click="setClosed('{{@key}}', {{#if showClosed}}false{{else}}true{{/if}})"> {{#if showClosed}}Hide{{else}}Show{{/if}} Closed</button>
   {{#ifCond @key "==" "Your Surveys"}}
@@ -525,6 +527,13 @@ export default
           {{/ifCond}}
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-body" style="margin-top: 20px; text-align: center;">
+            hash: {{../hash}}
+          </div>
+        </div>
+      </div>
     </div>
     <div class="card-footer">
       <div class="row">
@@ -545,6 +554,33 @@ export default
   {{/each}}
   </div>
   {{/each}}
+    </div>
+    <div class="col-md-4">
+      <div class="card card-body">
+        <p class="text-warning">
+          Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
+        </p>
+        <p class="text-info">
+          When providing feedback, surveys can be completed either on this website or via a conversation with the Radial chatbot.  The Radial chatbot is known as radial_bot and can be accessed either via Internet Relay Chat (IRC) or by logging into the website and clicking the blue chat tab on the right.  This blue chat tab can be found on any website utilizing the Common framework.
+        </p>
+        <p class="text-info">
+          When communicating with the Radial chatbot, you must provide an action.  In order to access Feedback functionalities, you must provide the feedback (or fb for short) action.  Surveys are uniquely identified using a hash.  If you wanted to provide feedback for a given survey, you send the following message to the chatbot:
+        </p>
+        <p class="text-success">
+          fb [hash]
+        </p>
+        <p class="text-info">
+          You would replace [hash] with the hash of the survey.  You would then provide answers to the survey questions using the following format:
+        </p>
+        <p class="text-success">
+          fb [answer]
+        </p>
+        <p class="text-info">
+          Continue to answer questions until the survey is complete.
+        </p>
+      </div>
+    </div>
+  </div>
   <!-- ]]] -->
   <!-- [[[ survey -->
   <div id="loadModalSurvey" class="modal modal-lg">
