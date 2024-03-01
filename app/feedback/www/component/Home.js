@@ -561,16 +561,16 @@ export default
           Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
         </p>
         <p class="text-info">
-          When providing feedback, surveys can be completed either on this website or via a conversation with the Radial chatbot.  The Radial chatbot is known as radial_bot and can be accessed either via Internet Relay Chat (IRC) or by logging into the website and clicking the blue chat tab on the right.  This blue chat tab can be found on any website utilizing the Common framework.
+          Surveys can be submitted either on this website or via a conversation with the Radial chatbot.  The Radial chatbot is known as radial_bot and can be accessed either via Internet Relay Chat (IRC) or by logging into the website and clicking the blue chat tab on the right.
         </p>
         <p class="text-info">
-          When communicating with the Radial chatbot, you must provide an action.  In order to access Feedback functionalities, you must provide the feedback (or fb for short) action.  Surveys are uniquely identified using a hash.  If you wanted to provide feedback for a given survey, you send the following message to the chatbot:
+          The chatbot responds to keywords called actions.  Provide the feedback (aka: fb) action in order to access Feedback functionalities.  Surveys are uniquely identified using hashes.  Send the following message to the chatbot in order to begin a survey:
         </p>
         <p class="text-success">
           fb [hash]
         </p>
         <p class="text-info">
-          You would replace [hash] with the hash of the survey.  You would then provide answers to the survey questions using the following format:
+          Replace [hash] with the hash of the survey.  Provide answers to the survey questions using the following format:
         </p>
         <p class="text-success">
           fb [answer]
