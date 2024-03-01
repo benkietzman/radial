@@ -530,7 +530,7 @@ export default
       <div class="row">
         <div class="col-md-12">
           <div class="card card-body" style="margin-top: 20px; text-align: center;">
-            hash: {{../hash}}
+            <small>hash: {{../hash}}</small>
           </div>
         </div>
       </div>
