@@ -1141,7 +1141,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else if (!strData.empty())
     {
       m_feedbackClients[strIdent] = {};
-      thread threadFeedback(&Irc::feedback, this, strPrefix, strTarget, strIdent, strData, strSource);
+      thread threadFeedback(&Irc::feedback, this, strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strData, strSource);
       pthread_setname_np(threadFeedback.native_handle(), "feedback");
       threadFeedback.detach();
     }
@@ -2599,7 +2599,7 @@ bool Irc::enabled()
 }
 // }}}
 // {{{ feedback()
-void Irc::feedback(string strPrefix, const string strTarget, const string strIdent, const string strHash, const string strSource)
+void Irc::feedback(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> auth, const string strHash, const string strSource)
 {
   string strError;
   Json *ptSurvey = new Json;
@@ -2792,7 +2792,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strIde
         }
         if (bSubmit)
         {
-          if (feedbackResultAdd(strIdent, ptSurvey, strError))
+          if (feedbackResultAdd(strUserID, strFirstName, strLastName, bAdmin, auth, ptSurvey, strError))
           {
             ssText.str("");
             ssText << "Thank you for providing your feedback to this survey.";

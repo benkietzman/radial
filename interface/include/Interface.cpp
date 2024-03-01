@@ -1504,7 +1504,7 @@ void Interface::enableWorkers()
 // }}}
 // {{{ feedback
 // {{{ feedback()
-bool Interface::feedback(const string strFunction, Json *ptData, string &strError, const string strUser)
+bool Interface::feedback(const string strFunction, Json *ptData, string &strError, const string strUser, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> auth)
 {
   bool bResult = true;
   string strJson;
@@ -1517,10 +1517,18 @@ bool Interface::feedback(const string strFunction, Json *ptData, string &strErro
     stringstream ssTime;
     time_t CTime;
     Json *ptJwt = new Json;
+    ptJwt->i("sl_first_name", strFirstName);
+    ptJwt->i("sl_last_name", strLastName);
     ptJwt->i("sl_login", strUser);
     time(&CTime);
     ssTime << CTime;
     ptJwt->i("exp", ssTime.str(), 'n');
+    ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+    ptJwt->m["sl_auth"] = new Json;
+    for (auto &i : auth)
+    {
+      ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+    }
     if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
     {
       ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
@@ -1565,7 +1573,7 @@ bool Interface::feedbackQuestions(const string strSurveyID, Json *ptData, string
 }
 // }}}
 // {{{ feedbackResultAdd()
-bool Interface::feedbackResultAdd(const string strUser, Json *ptData, string &strError)
+bool Interface::feedbackResultAdd(const string strUser, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
