@@ -476,7 +476,7 @@ export default
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <!-- [[[ surveys -->
   <div class="row">
-    <div class="col-md-9">
+    <div class="col-md-8">
       {{#each categories}}
       <button class="btn btn-sm btn-primary bi bi-lightbulb{{#if showClosed}}-off{{/if}} float-end" style="margin-left: 10px;" c-click="setClosed('{{@key}}', {{#if showClosed}}false{{else}}true{{/if}})"> {{#if showClosed}}Hide{{else}}Show{{/if}} Closed</button>
       {{#ifCond @key "==" "Your Surveys"}}
@@ -488,7 +488,7 @@ export default
       <div class="card-group">
       {{#each surveys}}
       {{#showClosedOrOpen ../showClosed open}}
-      <div class="card" style="margin: 10px; min-width: 500px; max-width: 500px;">
+      <div class="card" style="margin: 10px; min-width: 400px; max-width: 400px;">
         <div class="card-header text-white">
           <div class="row">
             <div class="col-md-2">
@@ -529,8 +529,8 @@ export default
           </div>
           <div class="row">
             <div class="col-md-12">
-              <div class="card card-body" style="margin-top: 20px; text-align: center;">
-                hash: {{../hash}}
+              <div class="card card-body text-center" style="margin-top: 20px;">
+                <small>hash: {{../hash}}</small>
               </div>
             </div>
           </div>
@@ -538,12 +538,12 @@ export default
         <div class="card-footer">
           <div class="row">
             <div class="col-md-7">
-              {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
+              <small>{{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} {{../../../end_date}}{{/haveDate}}{{/ifCond}}</small>
             </div>
             <div class="col-md-5" style="text-align: right;">
               {{#ifCond @../key "==" "Public Surveys"}}
               {{#if ../../owner}}
-              {{../../owner.first_name}} {{../../owner.last_name}}
+              <small>{{../../owner.first_name}} {{../../owner.last_name}}</small>
               {{/if}}
               {{/ifCond}}
             </div>
@@ -555,7 +555,7 @@ export default
       </div>
       {{/each}}
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
       <div class="card card-body">
         <p class="text-warning">
           Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
