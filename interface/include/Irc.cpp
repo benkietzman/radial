@@ -2748,7 +2748,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
             {
               bExit = true;
             }
-            else if (!empty((*q), "name") && ((*q)->m["name"]->v == "checkbox" || (*q)->m["name"]->v == "radio" || (*q)->m["name"]->v == "select") && exist((*q), "answers"))
+            else if (exist((*q), "type") && !empty((*q)->m["type"], "name") && ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select") && exist((*q), "answers"))
             {
               string strAnswerID;
               for (auto a = (*q)->m["answers"]->l.begin(); strAnswerID.empty() && a != (*q)->m["answers"]->l.end(); a++)
