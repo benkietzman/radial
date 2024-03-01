@@ -476,86 +476,86 @@ export default
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <!-- [[[ surveys -->
   <div class="row">
-    <div class="col-md-8">
-  {{#each categories}}
-  <button class="btn btn-sm btn-primary bi bi-lightbulb{{#if showClosed}}-off{{/if}} float-end" style="margin-left: 10px;" c-click="setClosed('{{@key}}', {{#if showClosed}}false{{else}}true{{/if}})"> {{#if showClosed}}Hide{{else}}Show{{/if}} Closed</button>
-  {{#ifCond @key "==" "Your Surveys"}}
-  <button class="btn btn-sm btn-success bi bi-plus-circle float-end" c-click="getSurvey('edit', null)"> Add Survey</button>
-  {{/ifCond}}
-  <h5 class="page-header">{{@key}}</h5>
-  <div c-model="categories.['{{@key}}'].info" class="text-warning"></div>
-  <div c-model="categories.['{{@key}}'].message" class="text-danger" style="font-weight:bold;"></div>
-  <div class="card-group">
-  {{#each surveys}}
-  {{#showClosedOrOpen ../showClosed open}}
-  <div class="card" style="margin: 10px; min-width: 500px; max-width: 500px;">
-    <div class="card-header text-white">
-      <div class="row">
-        <div class="col-md-2">
-          {{#ifCond @../key "==" "Your Surveys"}}
-          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="getSurvey('edit', '{{../../hash}}')" title="Edit"></button>
-          {{/ifCond}}
+    <div class="col-md-9">
+      {{#each categories}}
+      <button class="btn btn-sm btn-primary bi bi-lightbulb{{#if showClosed}}-off{{/if}} float-end" style="margin-left: 10px;" c-click="setClosed('{{@key}}', {{#if showClosed}}false{{else}}true{{/if}})"> {{#if showClosed}}Hide{{else}}Show{{/if}} Closed</button>
+      {{#ifCond @key "==" "Your Surveys"}}
+      <button class="btn btn-sm btn-success bi bi-plus-circle float-end" c-click="getSurvey('edit', null)"> Add Survey</button>
+      {{/ifCond}}
+      <h5 class="page-header">{{@key}}</h5>
+      <div c-model="categories.['{{@key}}'].info" class="text-warning"></div>
+      <div c-model="categories.['{{@key}}'].message" class="text-danger" style="font-weight:bold;"></div>
+      <div class="card-group">
+      {{#each surveys}}
+      {{#showClosedOrOpen ../showClosed open}}
+      <div class="card" style="margin: 10px; min-width: 500px; max-width: 500px;">
+        <div class="card-header text-white">
+          <div class="row">
+            <div class="col-md-2">
+              {{#ifCond @../key "==" "Your Surveys"}}
+              <button class="btn btn-sm btn-warning bi bi-pencil" c-click="getSurvey('edit', '{{../../hash}}')" title="Edit"></button>
+              {{/ifCond}}
+            </div>
+            <div class="col-md-8" style="text-align: center;">
+              {{../title}}
+            </div>
+            <div class="col-md-2">
+              {{#ifCond @../key "==" "Your Surveys"}}
+              <button class="btn btn-sm btn-danger bi bi-trash float-end" c-click="surveyRemove('{{../../id}}')" title="Remove"></button>
+              {{/ifCond}}
+            </div>
+          </div>
         </div>
-        <div class="col-md-8" style="text-align: center;">
-          {{../title}}
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 text-center">
+              {{#if ../viewResults}}
+              <button class="btn btn-sm btn-info bi bi-bar-chart-steps" c-click="getSurvey('results', '{{../hash}}')"> View Results ({{numberShort ../numResults 0}})</button>
+              <br>
+              <a href="#/results/{{../hash}}">external link</a>
+              {{/if}}
+            </div>
+            <div class="col-md-6 text-center">
+              {{#ifCond ../open "==" 1}}
+              {{#isValid}}
+              <button class="btn btn-sm btn-success bi bi-person-raised-hand" c-click="getSurvey('survey', '{{../../hash}}')"> Take Survey</button>
+              <br>
+              <a href="#/survey/{{../../hash}}">external link</a>
+              {{else}}
+              <a class="btn btn-link" href="#/Login"><b>login first</b></a>
+              {{/isValid}}
+              {{/ifCond}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-body" style="margin-top: 20px; text-align: center;">
+                hash: {{../hash}}
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-md-2">
-          {{#ifCond @../key "==" "Your Surveys"}}
-          <button class="btn btn-sm btn-danger bi bi-trash float-end" c-click="surveyRemove('{{../../id}}')" title="Remove"></button>
-          {{/ifCond}}
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-6 text-center">
-          {{#if ../viewResults}}
-          <button class="btn btn-sm btn-info bi bi-bar-chart-steps" c-click="getSurvey('results', '{{../hash}}')"> View Results ({{numberShort ../numResults 0}})</button>
-          <br>
-          <a href="#/results/{{../hash}}">external link</a>
-          {{/if}}
-        </div>
-        <div class="col-md-6 text-center">
-          {{#ifCond ../open "==" 1}}
-          {{#isValid}}
-          <button class="btn btn-sm btn-success bi bi-person-raised-hand" c-click="getSurvey('survey', '{{../../hash}}')"> Take Survey</button>
-          <br>
-          <a href="#/survey/{{../../hash}}">external link</a>
-          {{else}}
-          <a class="btn btn-link" href="#/Login"><b>login first</b></a>
-          {{/isValid}}
-          {{/ifCond}}
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card card-body" style="margin-top: 20px; text-align: center;">
-            hash: {{../hash}}
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-md-7">
+              {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
+            </div>
+            <div class="col-md-5" style="text-align: right;">
+              {{#ifCond @../key "==" "Public Surveys"}}
+              {{#if ../../owner}}
+              {{../../owner.first_name}} {{../../owner.last_name}}
+              {{/if}}
+              {{/ifCond}}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="card-footer">
-      <div class="row">
-        <div class="col-md-7">
-          {{#ifCond ../open "==" 1}}open {{#haveDate ../../end_date}}until {{../../../end_date}}{{else}}indefinitely{{/haveDate}}{{else}}closed{{#haveDate ../../end_date}} as of {{../../../end_date}}{{/haveDate}}{{/ifCond}}
-        </div>
-        <div class="col-md-5" style="text-align: right;">
-          {{#ifCond @../key "==" "Public Surveys"}}
-          {{#if ../../owner}}
-          {{../../owner.first_name}} {{../../owner.last_name}}
-          {{/if}}
-          {{/ifCond}}
-        </div>
+      {{/showClosedOrOpen}}
+      {{/each}}
       </div>
+      {{/each}}
     </div>
-  </div>
-  {{/showClosedOrOpen}}
-  {{/each}}
-  </div>
-  {{/each}}
-    </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card card-body">
         <p class="text-warning">
           Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
