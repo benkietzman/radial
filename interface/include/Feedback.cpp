@@ -183,7 +183,7 @@ bool Feedback::results(radialUser &d, string &e)
       if (survey(s, e))
       {
         bool bValid = (s.p->m["o"]->m["restrict"]->v == "0");
-        if (!bValid && isValid(d, "Feedback") && exist(s.p->m["o"], "owner") && && d.u == s.p->m["o"]->m["owner"]->m["userid"]->v)
+        if (!bValid && isValid(d, "Feedback") && exist(s.p->m["o"], "owner") && d.u == s.p->m["o"]->m["owner"]->m["userid"]->v)
         {
           bValid = true;
         }
