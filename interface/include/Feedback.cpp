@@ -183,13 +183,13 @@ bool Feedback::results(radialUser &d, string &e)
       if (survey(s, e))
       {
         bool bValid = (s.p->m["o"]->m["restrict"]->v == "0");
-        if (!bValid && isValid(d, "Feedback") && !empty(s.p->m["o"], "userid") && d.u == s.p->m["o"]->m["userid"]->v)
+        if (!bValid && isValid(d, "Feedback") && exist(s.p->m["o"], "owner") && && d.u == s.p->m["o"]->m["owner"]->m["userid"]->v)
         {
           bValid = true;
         }
         if (bValid)
         {
-          q << "select " << ((!empty(s.p->m["o"], "anonymous") && s.p->m["o"]->m["anonymous"]->v == "0")?"a.application_contact_id, ":"") << "date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, b.answer from result a, result_answer b where a.id = b.result_id and a.survey_id = " << i->m["survey_id"]->v << " and b.question_id = " << i->m["question_id"]->v << " order by a.entry_date";
+          q << "select " << ((s.p->m["o"]->m["anonymous"]->v == "0")?"a.application_contact_id, ":"") << "date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, b.answer from result a, result_answer b where a.id = b.result_id and a.survey_id = " << i->m["survey_id"]->v << " and b.question_id = " << i->m["question_id"]->v << " order by a.entry_date";
           auto g = dbquery("feedback_r", q.str(), e);
           if (g != NULL)
           {
@@ -197,7 +197,7 @@ bool Feedback::results(radialUser &d, string &e)
             for (auto &r : *g)
             {
               Json *ro = new Json(r);
-              if (!empty(s.p->m["o"], "anonymous") && s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
+              if (s.p->m["o"]->m["anonymous"]->v == "0" && !r["application_contact_id"].empty())
               {
                 q.str("");
                 q << "select b.userid, b.first_name, b.last_name from central.application_contact a, central.person b where a.contact_id = b.id and a.id = " << r["application_contact_id"];
