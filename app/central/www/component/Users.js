@@ -75,14 +75,15 @@ export default
       {
         s.user.forms =
         {
-          General:      {value: 'General',      icon: 'info-circle', active: null},
-          Applications: {value: 'Applications', icon: 'app',         active: null},
-          Servers:      {value: 'Servers',      icon: 'servers',     active: null},
+          General:      {value: 'General',      icon: 'info-circle',    active: null},
+          Applications: {value: 'Applications', icon: 'app',            active: null},
+          Reminders:    {value: 'Reminders',    icon: 'calendar-event', active: null},
+          Servers:      {value: 'Servers',      icon: 'servers',        active: null},
         };
       }
       if (!c.isDefined(s.user.forms_order))
       {
-        s.user.forms_order = ['General', 'Applications', 'Servers'];
+        s.user.forms_order = ['General', 'Applications', 'Reminders', 'Servers'];
       }
     };
     // ]]]
@@ -248,6 +249,30 @@ export default
             if (c.wsResponse(response, error))
             {
               s.user.applications = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Reminders
+      else if (strForm == 'Reminders')
+      {
+        if (!c.isDefined(s.user.reminders) || s.user.reminders == null)
+        {
+          s.info.v = 'Retrieving reminders...';
+          let request = {Interface: 'central', 'Function': 'userReminders', Request: {person_id: s.user.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.user.reminders = response.Response;
               s.u();
             }
             else
@@ -635,6 +660,24 @@ export default
       {{#each user.applications}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ reminders -->
+  {{#if user.forms.Reminders.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>ID</td>
+        <th>Title</td>
+      </tr>
+      {{#each user.reminders}}
+      <tr>
+        <td>{{id}}</td>
+        <td>{{title}}</td>
       </tr>
       {{/each}}
     </table>
