@@ -4660,6 +4660,7 @@ bool Central::userReminders(radialUser &d, string &e)
   if (dep({"person_id"}, i, e))
   {
     radialUser a;
+    userInit(d, a);
     a.p->m["i"]->i("userid", d.u);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == i->m["person_id"]->v))
     {
