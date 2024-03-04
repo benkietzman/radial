@@ -64,6 +64,7 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralPhpSession"] = &Db::dbCentralPhpSession;
   m_functions["dbCentralPhpSessionAdd"] = &Db::dbCentralPhpSessionAdd;
   m_functions["dbCentralPhpSessionRemove"] = &Db::dbCentralPhpSessionRemove;
+  m_functions["dbCentralReminderFrequencies"] = &Db::dbCentralReminderFrequencies;
   m_functions["dbCentralRepos"] = &Db::dbCentralRepos;
   m_functions["dbCentralServerAdd"] = &Db::dbCentralServerAdd;
   m_functions["dbCentralServerDetails"] = &Db::dbCentralServerDetails;
@@ -75,6 +76,10 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralServerUsers"] = &Db::dbCentralServerUsers;
   m_functions["dbCentralServerUserUpdate"] = &Db::dbCentralServerUserUpdate;
   m_functions["dbCentralUserAdd"] = &Db::dbCentralUserAdd;
+  m_functions["dbCentralUserReminderAdd"] = &Db::dbCentralUserReminderAdd;
+  m_functions["dbCentralUserReminderRemove"] = &Db::dbCentralUserReminderRemove;
+  m_functions["dbCentralUserReminders"] = &Db::dbCentralUserReminders;
+  m_functions["dbCentralUserReminderUpdate"] = &Db::dbCentralUserReminderUpdate;
   m_functions["dbCentralUserRemove"] = &Db::dbCentralUserRemove;
   m_functions["dbCentralUsers"] = &Db::dbCentralUsers;
   m_functions["dbCentralUserUpdate"] = &Db::dbCentralUserUpdate;
@@ -1280,6 +1285,38 @@ bool Db::dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, stri
   return b;
 }
 // }}}
+// {{{ dbCentralReminderFrequencies()
+bool Db::dbCentralReminderFrequencies(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+  list<string> k = {"db", "central", "reminder_frequency"};
+  stringstream qs;
+
+  qs << "select id, pattern, repo from repo order by repo";
+  auto g = dbq("central_r", qs, q, k, e);
+  if (g != NULL)
+  {
+    b = true;
+    for (auto &r : *g)
+    {
+      if (!empty(i, "id") || !empty(i, "frequency"))
+      {
+        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "frequency") && r["frequency"] == i->m["frequency"]->v))
+        {
+          o->pb(r);
+        }
+      }
+      else
+      {
+        o->pb(r);
+      }
+    }
+  }
+  dbf(g);
+
+  return b;
+}
+// }}}
 // {{{ dbCentralRepos()
 bool Db::dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e)
 {
@@ -1552,6 +1589,72 @@ bool Db::dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e)
     stringstream qs;
     qs << "insert into person (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralUserReminderAdd()
+bool Db::dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"frequency_id", "person_id", "title"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"alert", "chat", "description", "email", "frequency_id", "live", "person_id", "text", "timestamp", "title"};
+    stringstream qs;
+    qs << "insert into person_reminder (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralUserReminderRemove()
+bool Db::dbCentralUserReminderRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from person_reminder where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralUserReminders()
+bool Db::dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, alert, chat, description, email, frequency_id, live, person_id, text, timestamp, title from person_reminder where 1";
+  if (!empty(i, "id"))
+  {
+    qs << " and id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "person_id"))
+  {
+    qs << " and person_id = " << v(i->m["person_id"]->v);
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralUserReminderUpdate()
+bool Db::dbCentralUserReminderUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update person_reminder set" << u({"alert", "chat", "description", "email", "frequency_id", "live", "person_id", "text", "timestamp", "title"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
   }
 
   return b;

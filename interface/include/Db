@@ -74,6 +74,7 @@ class Db : public Interface
   bool dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralReminderFrequencies(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e);
@@ -85,6 +86,10 @@ class Db : public Interface
   bool dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserReminderRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserReminderUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
