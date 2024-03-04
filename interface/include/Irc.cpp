@@ -2691,7 +2691,14 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
                           ssText << ptAnswer->m["sequence"]->v << ") " << ptAnswer->m["answer"]->v << endl;
                         }
                       }
-                      ssText << "Please provide an answer by number.";
+                      if ((*q)->m["type"]->m["name"]->v == "checkbox")
+                      {
+                        ssText << "Please provide space delimited answers by number.";
+                      }
+                      else
+                      {
+                        ssText << "Please provide an answer by number.";
+                      }
                       chat(strTarget, ssText.str(), strSource);
                     }
                     else
@@ -2750,17 +2757,35 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
             }
             else if (exist((*q), "type") && !empty((*q)->m["type"], "name") && ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select") && exist((*q), "answers"))
             {
-              string strAnswerID;
-              for (auto a = (*q)->m["answers"]->l.begin(); strAnswerID.empty() && a != (*q)->m["answers"]->l.end(); a++)
+              if ((*q)->m["type"]->m["name"]->v == "checkbox")
               {
-                if (!empty((*a), "sequence") && (*a)->m["sequence"]->v == strData && !empty((*a), "id"))
+                string strAnswer;
+                stringstream ssAnswers(strData);
+                (*q)->m["answer"] = new Json;
+                while (ssAnswers >> strAnswer)
                 {
-                  strAnswerID = (*a)->m["id"]->v;
+                  (*q)->m["answer"]->pb(strAnswer);
+                }
+                if ((*q)->m["answer"]->l.empty())
+                {
+                  delete (*q)->m["answer"];
+                  (*q)->m.erase("answer");
                 }
               }
-              if (!strAnswerID.empty())
+              else
               {
-                (*q)->i("answer", strAnswerID);
+                string strAnswerID;
+                for (auto a = (*q)->m["answers"]->l.begin(); strAnswerID.empty() && a != (*q)->m["answers"]->l.end(); a++)
+                {
+                  if (!empty((*a), "sequence") && (*a)->m["sequence"]->v == strData && !empty((*a), "id"))
+                  {
+                    strAnswerID = (*a)->m["id"]->v;
+                  }
+                }
+                if (!strAnswerID.empty())
+                {
+                  (*q)->i("answer", strAnswerID);
+                }
               }
             }
             else
