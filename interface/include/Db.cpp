@@ -1599,10 +1599,10 @@ bool Db::dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, strin
 {
   bool b = false;
 
-  if (dep({"frequency_id", "person_id", "title"}, i, e))
+  if (dep({"frequency_id", "notify_date", "notify_time", "person_id", "title"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"alert", "chat", "description", "email", "frequency_id", "live", "person_id", "text", "timestamp", "title"};
+    list<string> ks = {"alert", "chat", "description", "email", "frequency_id", "live", "notify_date", "notify_time", "person_id", "text", "title"};
     stringstream qs;
     qs << "insert into person_reminder (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -1631,7 +1631,7 @@ bool Db::dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string 
 {
   stringstream qs;
 
-  qs << "select id, alert, chat, description, email, frequency_id, live, person_id, text, timestamp, title from person_reminder where 1";
+  qs << "select id, alert, chat, description, email, frequency_id, live, notify_date, notify_time, person_id, text, title from person_reminder where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
@@ -1649,11 +1649,11 @@ bool Db::dbCentralUserReminderUpdate(Json *i, Json *o, string &id, string &q, st
 {
   bool b = false;
 
-  if (dep({"id"}, i, e))
+  if (dep({"id",}, i, e))
   {
     bool f = true;
     stringstream qs;
-    qs << "update person_reminder set" << u({"alert", "chat", "description", "email", "frequency_id", "live", "person_id", "text", "timestamp", "title"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update person_reminder set" << u({"alert", "chat", "description", "email", "frequency_id", "live", "notify_date", "notify_time", "person_id", "text", "title"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
