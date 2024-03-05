@@ -4549,7 +4549,7 @@ bool Central::userReminderAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"notify_date", "notify_time", "title"}, i, e))
+  if (dep({"timestamp", "title"}, i, e))
   {
     if (exist(i, "frequency") && !empty(i->m["frequency"], "id"))
     {
