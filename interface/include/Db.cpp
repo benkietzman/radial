@@ -1292,7 +1292,7 @@ bool Db::dbCentralReminderFrequencies(Json *i, Json *o, string &id, string &q, s
   list<string> k = {"db", "central", "reminder_frequency"};
   stringstream qs;
 
-  qs << "select id, pattern, repo from repo order by repo";
+  qs << "select id, frequency from reminder_frequency order by id";
   auto g = dbq("central_r", qs, q, k, e);
   if (g != NULL)
   {
