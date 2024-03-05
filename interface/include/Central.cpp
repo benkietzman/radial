@@ -4492,6 +4492,7 @@ bool Central::userReminder(radialUser &d, string &e)
       if (!r.empty())
       {
         radialUser a;
+        userInit(d, a);
         a.p->m["i"]->i("userid", d.u);
         if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == r["person_id"]))
         {
@@ -4500,6 +4501,23 @@ bool Central::userReminder(radialUser &d, string &e)
           ny(j, "alert");
           ny(j, "chat");
           ny(j, "email");
+          if (!empty(j, "frequency_id"))
+          {
+            size_t unValue;
+            stringstream ssValue(j->m["frequency_id"]->v);
+            ssValue >> unValue;
+            if (unValue > 0)
+            {
+              radialUser f;
+              userInit(d, f);
+              f.p->m["i"]->i("id", j->m["frequency_id"]->v);
+              if (reminderFrequency(m, e))
+              {
+                j->i("frequency", f.p->m["o"]);
+              }
+              userDeinit(f);
+            }
+          }
           ny(j, "live");
           ny(j, "text");
           d.p->i("o", j);
