@@ -4538,7 +4538,7 @@ bool Central::userReminderAdd(radialUser &d, string &e)
       radialUser a;
       userInit(d, a);
       a.p->m["i"]->i("userid", d.u);
-      if (user(a, e) && !empty(a.p->m["o"], "id")
+      if (user(a, e) && !empty(a.p->m["o"], "id"))
       {
         if (empty(i, "person_id"))
         {
