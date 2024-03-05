@@ -847,7 +847,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.application.servers  = null;
+            s.application.servers = null;
             s.showForm('Servers');
           }
           else
@@ -2118,7 +2118,7 @@ export default
           </div>
           <div class="modal-body table-responsive">
             <div c-model="modalServerInfo" class="text-warning"></div>
-            <div c-model="modalServermessage" class="text-danger" style="font-weight:bold;"></div>
+            <div c-model="modalServerMessage" class="text-danger" style="font-weight:bold;"></div>
             <table class="table table-condensed table-striped">
               <tr>
                 <th colspan="5"></th>
