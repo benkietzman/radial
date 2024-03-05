@@ -4533,7 +4533,7 @@ bool Central::userReminderAdd(radialUser &d, string &e)
 
   if (dep({"title"}, i, e))
   {
-    if (!exist(i, "frequency") && !empty(i->m["frequency"], "id"))
+    if (exist(i, "frequency") && !empty(i->m["frequency"], "id"))
     {
       radialUser a;
       userInit(d, a);
@@ -4602,7 +4602,7 @@ bool Central::userReminderEdit(radialUser &d, string &e)
 
   if (dep({"id", "person_id", "title"}, i, e))
   {
-    if (!exist(i, "frequency") && !empty(i->m["frequency"], "id"))
+    if (exist(i, "frequency") && !empty(i->m["frequency"], "id"))
     {
       radialUser a, c;
       userInit(d, a);
