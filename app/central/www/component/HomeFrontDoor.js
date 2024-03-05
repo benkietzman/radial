@@ -221,7 +221,7 @@ export default
                   <div class="input-group"><span class="input-group-text">Priority</span><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></div>
                 </div>
                 <div class="col-md-4">
-                  <div class="input-group"><div class="input-group-text">Assigned</div><input type="text" class="form-control" c-model="issue.assigned_userid" placeholder="User ID"></div>
+                  <div class="input-group"><span class="input-group-text">Assigned</span><input type="text" class="form-control" c-model="issue.assigned_userid" placeholder="User ID"></div>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
