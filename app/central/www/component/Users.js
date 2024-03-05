@@ -35,6 +35,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
+          s.reminder = null;
           s.user.reminders = null;
           s.showForm('Reminders');
         }
@@ -64,21 +65,17 @@ export default
     };
     // ]]]
     // [[[ editReminder()
-    s.editReminder = () =>
+    s.editReminder = (nIndex) =>
     {
-      s.modalReminderInfo.v = 'Updateing reminder...';
-      let request = {Interface: 'central', 'Function': 'userReminderEdit', Request: c.simplify(s.modalReminder)};
+      s.info.v = 'Updating reminder...';
+      let request = {Interface: 'central', 'Function': 'userReminderEdit', Request: c.simplify(s.user.reminders[nIndex])};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.modalReminderInfo.v = null;
-        if (c.wsResponse(response, error))
+        s.info.v = null;
+        if (!c.wsResponse(response, error))
         {
-          s.preEditReminder(s.modalReminder.id);
-        }
-        else
-        {
-          s.modalReminderMessage.v = error.message;
+          s.message.v = error.message;
         }
       });
     };
@@ -214,20 +211,6 @@ export default
       }
     };
     // ]]]
-    // [[[ preEditReminder()
-    s.preEditReminder = (nID) =>
-    {
-      s.modalReminder = null;
-      for (let i = 0; i < s.user.reminders.length; i++)
-      {
-        if (s.user.reminders[i].id == nID)
-        {
-          s.modalReminder = s.user.reminders[i];
-        }
-      }
-      c.loadModal('Users', 'reminderModal', true);
-    };
-    // ]]]
     // [[[ preEditUser()
     s.preEditUser = (bEdit) =>
     {
@@ -337,6 +320,10 @@ export default
       // [[[ Reminders
       else if (strForm == 'Reminders')
       {
+        if (!c.isDefined(s.reminder) || s.reminder == null)
+        {
+          s.reminder = {'alert': a.m_noyes[0], chat: a.m_noyes[0], email: a.m_noyes[0], live: a.m_noyes[0], text: a.m_noyes[0]};
+        }
         if (!c.isDefined(s.reminderFrequencies) || s.reminderFrequencies == null)
         {
           s.info.v = 'Retrieving reminder frequencies...';
@@ -348,6 +335,7 @@ export default
             if (c.wsResponse(response, error))
             {
               s.reminderFrequencies = response.Response;
+              s.reminder.frequency = s.reminderFrequencies[0];
               s.u();
             }
             else
@@ -765,84 +753,119 @@ export default
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
-        <th>Title</td>
-        <th>Frequency</th>
+        <th>Reminder</td>
+        <th>Timing</th>
+        <th>Notifications</th>
         <th></td>
       </tr>
       <tr>
-        <td><input type="text" class="form-control" c-model="reminder.title"></td>
-        <td><select class="form-control" c-model="reminder.frequency" c-json>{{#each reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></td>
-        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addReminder()" title="Add"></button></td>
+        <td>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="reminder.title"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <textarea class="form-control form-control-sm" rows="3" c-model="reminder.description" placeholder="Enter any reminder details..."></textarea>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Date/Time</span><input type="text" class="form-control form-control-sm" c-model="reminder.timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Frequency</span><select class="form-control form-control-sm" c-model="reminder.frequency" c-json>{{#each reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="reminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="reminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="reminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="reminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="reminder.text" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addReminder()" title="Add"></button>
+        </td>
       </tr>
       {{#each user.reminders}}
       <tr>
-        <td>{{title}}</td>
-        <td>{{frequency.frequency}}</td>
-        <td><button class="btn btn-sm btn-warning bi bi-pencil" data-bs-toggle="modal" data-bs-target="#reminderModal" c-click="preEditReminder({{id}})" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeReminder({{id}})" title="Remove"></button></td>
+        <td>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].title"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Date/Time</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}.timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="input-group input-group-sm"><span class="input-group-text">Frequency</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].frequency" c-json>{{#each @root.reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].chat" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].email" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].live" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].text" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeReminder({{id}})" title="Remove"></button>
+          <button class="btn btn-sm btn-success bi bi-save" c-click="editReminder({{@key}})" title="Save"></button>
+        </td>
       </tr>
       {{/each}}
     </table>
-  </div>
-  <div id="serverModal" class="modal modal-xl">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Edit Reminder</h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body table-responsive">
-          <div c-model="modalReminderInfo" class="text-warning"></div>
-          <div c-model="modalReminderMessage" class="text-danger" style="font-weight:bold;"></div>
-          <div class="row">
-            <div class="col-md-12">
-              <div class="input-group"><span class="input-group-text">Title</span><input type="text" class="form-control" c-model="modalReminder.title"></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              <textarea class="form-control" rows="5" c-model="modalReminder.description" placeholder="Enter any reminder details...">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="input-group"><span class="input-group-text">Frequency</span><select class="form-control" c-model="modalReminder.frequency" c-json>{{#each reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-group"><span class="input-group-text">Date</span><input type="text" class="form-control" c-model="modalReminder.date" placeholder="YYYY-MM-DD"></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">
-              <div class="input-group"><span class="input-group-text">Alert</span><select class="form-control" c-model="modalReminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-4">
-              <div class="input-group"><span class="input-group-text">Chat</span><select class="form-control" c-model="modalReminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-4">
-              <div class="input-group"><span class="input-group-text">Email</span><select class="form-control" c-model="modalReminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="input-group"><span class="input-group-text">Live</span><select class="form-control" c-model="modalReminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-group"><span class="input-group-text">Text</span><select class="form-control" c-model="modalReminder.text" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="row">
-            <div class="col-md-6">
-              <button class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-            </div>
-            <div class="col-md-6">
-              <button class="btn btn-success float-end" c-click="editReminder({{modalReminder.id}})" title="Save"></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   {{/if}}
   <!-- ]]] -->

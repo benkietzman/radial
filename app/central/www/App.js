@@ -15,7 +15,7 @@ class App
     this.m_bCommonFooterReady = false;
     this.m_bCommonWsReady = false;
     this.m_letters = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'ALL'];
-    this.m_noyes = [{name: 'No', value: '0'}, {name: 'Yes', value: '1'}];
+    this.m_noyes = [{name: 'No', value: 0}, {name: 'Yes', value: 1}];
     this.m_strApplication = null;
     this.c.attachEvent('commonAuthReady', (data) =>
     {
