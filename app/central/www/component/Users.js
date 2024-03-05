@@ -78,7 +78,7 @@ export default
           General:      {value: 'General',      icon: 'info-circle',    active: null},
           Applications: {value: 'Applications', icon: 'app',            active: null},
           Reminders:    {value: 'Reminders',    icon: 'calendar-event', active: null},
-          Servers:      {value: 'Servers',      icon: 'servers',        active: null},
+          Servers:      {value: 'Servers',      icon: 'server',        active: null},
         };
       }
       if (!c.isDefined(s.user.forms_order))
