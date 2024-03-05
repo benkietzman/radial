@@ -4531,45 +4531,53 @@ bool Central::userReminderAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"frequency_id", "person_id", "title"}, i, e))
+  if (dep({"person_id", "title"}, i, e))
   {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("userid", d.u);
-    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == i->m["person_id"]->v))
+    if (!exist(i, "frequency") && !empty(i->m["frequency"], "id"))
     {
-      string id, q;
-      if (exist(i, "alert") && !empty(i->m["alert"], "value"))
+      radialUser a;
+      userInit(d, a);
+      a.p->m["i"]->i("userid", d.u);
+      if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == i->m["person_id"]->v))
       {
-        i->i("alert", i->m["alert"]->m["value"]->v);
+        string id, q;
+        if (exist(i, "alert") && !empty(i->m["alert"], "value"))
+        {
+          i->i("alert", i->m["alert"]->m["value"]->v);
+        }
+        if (exist(i, "chat") && !empty(i->m["chat"], "value"))
+        {
+          i->i("chat", i->m["chat"]->m["value"]->v);
+        }
+        if (exist(i, "email") && !empty(i->m["email"], "value"))
+        {
+          i->i("email", i->m["email"]->m["value"]->v);
+        }
+        i->i("frequency_id", i->m["frequency"]->m["id"]->v);
+        if (exist(i, "live") && !empty(i->m["live"], "value"))
+        {
+          i->i("live", i->m["live"]->m["value"]->v);
+        }
+        if (exist(i, "text") && !empty(i->m["text"], "value"))
+        {
+          i->i("text", i->m["text"]->m["value"]->v);
+        }
+        if (db("dbCentralUserReminderAdd", i, id, q, e))
+        {
+          b = true;
+          o->i("id", id);
+        }
       }
-      if (exist(i, "chat") && !empty(i->m["chat"], "value"))
+      else
       {
-        i->i("chat", i->m["chat"]->m["value"]->v);
+        e = "You are not authorized to perform this action.";
       }
-      if (exist(i, "email") && !empty(i->m["email"], "value"))
-      {
-        i->i("email", i->m["email"]->m["value"]->v);
-      }
-      if (exist(i, "live") && !empty(i->m["live"], "value"))
-      {
-        i->i("live", i->m["live"]->m["value"]->v);
-      }
-      if (exist(i, "text") && !empty(i->m["text"], "value"))
-      {
-        i->i("text", i->m["text"]->m["value"]->v);
-      }
-      if (db("dbCentralUserReminderAdd", i, id, q, e))
-      {
-        b = true;
-        o->i("id", id);
-      }
+      userDeinit(a);
     }
     else
     {
-      e = "You are not authorized to perform this action.";
+      e = "Please provide the frequency.";
     }
-    userDeinit(a);
   }
 
   return b;
@@ -4581,43 +4589,51 @@ bool Central::userReminderEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (dep({"frequency_id", "id", "person_id", "title"}, i, e))
+  if (dep({"id", "person_id", "title"}, i, e))
   {
-    radialUser a, c;
-    userInit(d, a);
-    userInit(d, c);
-    a.p->m["i"]->i("userid", d.u);
-    c.p->m["i"]->i("id", i->m["id"]->v);
-    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userReminder(c, e) && !empty(c.p->m["o"], "person_id") && a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v && c.p->m["o"]->m["person_id"]->v == i->m["person_id"]->v))
+    if (!exist(i, "frequency") && !empty(i->m["frequency"], "id"))
     {
-      if (exist(i, "alert") && !empty(i->m["alert"], "value"))
+      radialUser a, c;
+      userInit(d, a);
+      userInit(d, c);
+      a.p->m["i"]->i("userid", d.u);
+      c.p->m["i"]->i("id", i->m["id"]->v);
+      if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userReminder(c, e) && !empty(c.p->m["o"], "person_id") && a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v && c.p->m["o"]->m["person_id"]->v == i->m["person_id"]->v))
       {
-        i->i("alert", i->m["alert"]->m["value"]->v);
+        if (exist(i, "alert") && !empty(i->m["alert"], "value"))
+        {
+          i->i("alert", i->m["alert"]->m["value"]->v);
+        }
+        if (exist(i, "chat") && !empty(i->m["chat"], "value"))
+        {
+          i->i("chat", i->m["chat"]->m["value"]->v);
+        }
+        if (exist(i, "email") && !empty(i->m["email"], "value"))
+        {
+          i->i("email", i->m["email"]->m["value"]->v);
+        }
+        i->i("frequency_id", i->m["frequency"]->m["id"]->v);
+        if (exist(i, "live") && !empty(i->m["live"], "value"))
+        {
+          i->i("live", i->m["live"]->m["value"]->v);
+        }
+        if (exist(i, "text") && !empty(i->m["text"], "value"))
+        {
+          i->i("text", i->m["text"]->m["value"]->v);
+        }
+        b = db("dbCentralUserReminderUpdate", i, e);
       }
-      if (exist(i, "chat") && !empty(i->m["chat"], "value"))
+      else
       {
-        i->i("chat", i->m["chat"]->m["value"]->v);
+        e = "You are not authorized to perform this action.";
       }
-      if (exist(i, "email") && !empty(i->m["email"], "value"))
-      {
-        i->i("email", i->m["email"]->m["value"]->v);
-      }
-      if (exist(i, "live") && !empty(i->m["live"], "value"))
-      {
-        i->i("live", i->m["live"]->m["value"]->v);
-      }
-      if (exist(i, "text") && !empty(i->m["text"], "value"))
-      {
-        i->i("text", i->m["text"]->m["value"]->v);
-      }
-      b = db("dbCentralUserReminderUpdate", i, e);
+      userDeinit(c);
+      userDeinit(a);
     }
     else
     {
-      e = "You are not authorized to perform this action.";
+      e = "Please provide the frequency.";
     }
-    userDeinit(c);
-    userDeinit(a);
   }
 
   return b;
