@@ -3405,6 +3405,17 @@ void Central::schedule(string strPrefix)
                 }
               }
             }
+            Json *ptJson = new Json;
+            for (auto &reminder : reminders)
+            {
+              stringstream ssTime;
+              ssTime << reminder.second;
+              ptJson->i(reminder.first, ssTime.str(), 'n');
+            }
+            ssMessage.str("");
+            ssMessage << strPrefix << ":  Loaded reminders.  " << ptJson;
+            delete ptJson;
+            log(ssMessage.str());
           }
           else
           {
