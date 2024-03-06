@@ -25,6 +25,7 @@ namespace radial
 class Central : public Interface
 {
   protected:
+  bool m_bLoadReminders;
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
   string m_strEmail;

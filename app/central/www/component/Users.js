@@ -360,6 +360,10 @@ export default
             if (c.wsResponse(response, error))
             {
               s.user.reminders = response.Response;
+              for (let i = 0; i < s.user.reminders.length; i++)
+              {
+                s.user.reminders[i].timestamp = s.user.reminders[i].datetime;
+              }
               s.u();
             }
             else

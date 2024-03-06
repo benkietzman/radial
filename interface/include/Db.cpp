@@ -1631,7 +1631,7 @@ bool Db::dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string 
 {
   stringstream qs;
 
-  qs << "select id, alert, chat, description, email, frequency_id, live, person_id, text, timestamp, title from person_reminder where 1";
+  qs << "select id, alert, chat, description, email, frequency_id, live, person_id, text, unix_timestamp(timestamp) timestamp, timestamp datetime, title from person_reminder where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
