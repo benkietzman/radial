@@ -3245,7 +3245,7 @@ chat("#radial", ssMessage.str());
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
           ptReminder->i("id", reminder.first);
-          if (db("dbCentralUserReminder", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
+          if (db("dbCentralUserReminders", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
           {
 ssMessage.str("");
 ssMessage << "[" << reminder.first << "]:  Retrieved reminder.";
