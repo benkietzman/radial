@@ -113,13 +113,12 @@ export default
         {
           General:      {value: 'General',      icon: 'info-circle',    active: null},
           Applications: {value: 'Applications', icon: 'app',            active: null},
-          Reminders:    {value: 'Reminders',    icon: 'calendar-event', active: null},
           Servers:      {value: 'Servers',      icon: 'server',        active: null},
         };
       }
       if (!c.isDefined(s.user.forms_order))
       {
-        s.user.forms_order = ['General', 'Applications', 'Reminders', 'Servers'];
+        s.user.forms_order = ['General', 'Applications', 'Servers'];
       }
     };
     // ]]]
@@ -157,6 +156,12 @@ export default
               s.user.bAdmin = ((c.isGlobalAdmin() || c.getUserID() == s.user.userid)?true:false);
               s.initForms();
               s.showForm(strForm);
+              if (s.user.bAdmin)
+              {
+                s.user.forms.Reminders = {value: 'Reminders', icon: 'calendar-event', active: null};
+                s.user.forms_order.splice(2, 0, 'Reminders');
+                s.showForm(strForm);
+              }
             }
             else
             {
@@ -758,6 +763,7 @@ export default
         <th>Notifications</th>
         <th></td>
       </tr>
+      {{#if user.bAdmin}}
       <tr>
         <td>
           <div class="row">
@@ -865,6 +871,7 @@ export default
         </td>
       </tr>
       {{/each}}
+      {{/if}}
     </table>
   </div>
   {{/if}}
