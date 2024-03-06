@@ -3239,33 +3239,21 @@ void Central::schedule(string strPrefix)
       {
         if (CTime[1] > reminder.second)
         {
-ssMessage.str("");
-ssMessage << "[" << reminder.first << "]:  Launching reminder.";
-chat("#radial", ssMessage.str());
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
           ptReminder->i("id", reminder.first);
           if (db("dbCentralUserReminders", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
           {
-ssMessage.str("");
-ssMessage << "[" << reminder.first << "]:  Retrieved reminder.";
-chat("#radial", ssMessage.str());
             map<string, string> getFrequencyRow;
             Json *ptFrequency = new Json;
             ptFrequency->i("id", getReminderRow["frequency_id"]);
             if (db("dbCentralReminderFrequencies", ptFrequency, getFrequencyRow, strQuery, strError))
             {
-ssMessage.str("");
-ssMessage << "[" << reminder.first << "," << getFrequencyRow["frequency"] << "]:  Retrieved frequency.";
-chat("#radial", ssMessage.str());
               map<string, string> getUserRow;
               Json *ptUser = new Json;
               ptUser->i("id", getReminderRow["person_id"]);
               if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
               {
-ssMessage.str("");
-ssMessage << "[" << reminder.first << "," << getUserRow["userid"] << "]:  Retrieved user.";
-chat("#radial", ssMessage.str());
                 if (getFrequencyRow["frequency"] == "once")
                 {
                   Json *ptReminderDelete = new Json;
@@ -3436,18 +3424,10 @@ chat("#radial", ssMessage.str());
       }
       // }}}
       // {{{ workload
-      if (CTime[3] == 0)
+      if (CTime[3] == 0 && !cron(CTime[3], "0 4 * * 1", strError))
       {
         ssMessage.str("");
-        ssMessage << strPrefix << "->Interface::cron()";
-        if (cron(CTime[3], "0 4 * * 1", strError))
-        {
-          ssMessage << ":  Workload email scheduled for " << CTime[3] << ".";
-        }
-        else
-        {
-          ssMessage << " error:  " << strError;
-        }
+        ssMessage << strPrefix << "->Interface::cron() error:  " << strError;
         chat("#radial", ssMessage.str());
       }
       if (CTime[1] > CTime[3])
