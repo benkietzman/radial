@@ -3239,21 +3239,33 @@ void Central::schedule(string strPrefix)
       {
         if (CTime[1] > reminder.second)
         {
+ssMessage.str("");
+ssMessage << "[" << reminder.first << "]:  Launching reminder.";
+chat("#radial", ssMessage.str());
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
           ptReminder->i("id", reminder.first);
           if (db("dbCentralUserReminder", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
           {
+ssMessage.str("");
+ssMessage << "[" << reminder.first << "]:  Retrieved reminder.";
+chat("#radial", ssMessage.str());
             map<string, string> getFrequencyRow;
             Json *ptFrequency = new Json;
             ptFrequency->i("id", getReminderRow["frequency_id"]);
             if (db("dbCentralReminderFrequencies", ptFrequency, getFrequencyRow, strQuery, strError))
             {
+ssMessage.str("");
+ssMessage << "[" << reminder.first << "," << getFrequencyRow["frequency"] << "]:  Retrieved frequency.";
+chat("#radial", ssMessage.str());
               map<string, string> getUserRow;
               Json *ptUser = new Json;
               ptUser->i("id", getReminderRow["person_id"]);
               if (db("dbCentralUser", ptUser, getUserRow, strQuery, strError))
               {
+ssMessage.str("");
+ssMessage << "[" << reminder.first << "," << getUserRow["userid"] << "]:  Retrieved user.";
+chat("#radial", ssMessage.str());
                 if (getFrequencyRow["frequency"] == "once")
                 {
                   Json *ptReminderDelete = new Json;
@@ -3405,19 +3417,6 @@ void Central::schedule(string strPrefix)
                 }
               }
             }
-//////////////////
-            Json *ptJson = new Json;
-            for (auto &reminder : reminders)
-            {
-              stringstream ssTime;
-              ssTime << reminder.second;
-              ptJson->i(reminder.first, ssTime.str(), 'n');
-            }
-            ssMessage.str("");
-            ssMessage << strPrefix << ":  Loaded reminders.  " << ptJson;
-            delete ptJson;
-            log(ssMessage.str());
-//////////////////
           }
           else
           {
