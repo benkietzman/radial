@@ -2580,7 +2580,10 @@ void Central::autoMode(string strPrefix, const string strOldMaster, const string
     stringstream ssMessage;
     ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
     log(ssMessage.str());
-    m_bLoadReminders = true;
+    if (strNewMaster == m_strNode)
+    {
+      m_bLoadReminders = true;
+    }
   }
   threadDecrement();
 }
