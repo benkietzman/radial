@@ -3303,7 +3303,7 @@ void Central::schedule(string strPrefix)
                 }
                 if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
                 {
-                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["description"]}}, strError);
+                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["description"]}}, strError);
                 }
                 if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
                 {
