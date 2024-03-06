@@ -3270,9 +3270,9 @@ void Central::schedule(string strPrefix)
                 {
                   ssMessage.str("");
                   ssMessage << getReminderRow["title"];
-                  if (!getReminderRow["text"].empty())
+                  if (!getReminderRow["description"].empty())
                   {
-                    ssMessage << endl << endl << getReminderRow["text"];
+                    ssMessage << endl << endl << getReminderRow["description"];
                   }
                   alert(getUserRow["userid"], ssMessage.str(), strError);
                 }
@@ -3291,27 +3291,27 @@ void Central::schedule(string strPrefix)
                   }
                   ssMessage.str("");
                   ssMessage << getReminderRow["title"];
-                  if (!getReminderRow["text"].empty())
+                  if (!getReminderRow["description"].empty())
                   {
-                    ssMessage << endl << getReminderRow["text"];
+                    ssMessage << endl << getReminderRow["description"];
                   }
                   chat((strFirst + strLast), ssMessage.str());
                 }
                 if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
                 {
-                  email("", getUserRow["email"], getReminderRow["title"], getReminderRow["text"], "");
+                  email("", getUserRow["email"], getReminderRow["title"], getReminderRow["description"], "");
                 }
                 if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
                 {
-                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["text"]}}, strError);
+                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["description"]}}, strError);
                 }
                 if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
                 {
                   ssMessage.str("");
                   ssMessage << getReminderRow["title"];
-                  if (!getReminderRow["text"].empty())
+                  if (!getReminderRow["description"].empty())
                   {
-                    ssMessage << endl << endl << getReminderRow["text"];
+                    ssMessage << endl << endl << getReminderRow["description"];
                   }
                   pageUser(getUserRow["userid"], ssMessage.str(), strError);
                 }
