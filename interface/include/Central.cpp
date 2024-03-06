@@ -3261,7 +3261,7 @@ chat("#radial", ssMessage.str());
               map<string, string> getUserRow;
               Json *ptUser = new Json;
               ptUser->i("id", getReminderRow["person_id"]);
-              if (db("dbCentralUser", ptUser, getUserRow, strQuery, strError))
+              if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
               {
 ssMessage.str("");
 ssMessage << "[" << reminder.first << "," << getUserRow["userid"] << "]:  Retrieved user.";
