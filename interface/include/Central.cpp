@@ -24,6 +24,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   string strError;
 
+  m_bLoadReminders = false;
   m_pCallbackAddon = NULL;
   m_ptCred = new Json;
   if (m_pWarden != NULL)
@@ -2579,6 +2580,10 @@ void Central::autoMode(string strPrefix, const string strOldMaster, const string
     stringstream ssMessage;
     ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
     log(ssMessage.str());
+    if (strNewMaster == m_strNode)
+    {
+      m_bLoadReminders = true;
+    }
   }
   threadDecrement();
 }
@@ -3169,9 +3174,11 @@ bool Central::sa(const string strKey, Json *ptData, string &strError)
 // {{{ schedule()
 void Central::schedule(string strPrefix)
 {
-  string strError;
+  list<string> reminderRemovals;
+  map<string, time_t> reminders;
+  string strError, strQuery;
   stringstream ssMessage, ssQuery;
-  time_t CTime[5] = {0, 0, 0, 0, 0};
+  time_t CTime[6] = {0, 0, 0, 0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
@@ -3193,6 +3200,7 @@ void Central::schedule(string strPrefix)
     }
     if (isMasterSettled() && isMaster())
     {
+      // {{{ storage
       if ((CTime[1] - CTime[0]) > 600)
       {
         CTime[0] = CTime[1];
@@ -3215,6 +3223,189 @@ void Central::schedule(string strPrefix)
         }
         delete ptJson;
       }
+      // }}}
+      // {{{ reminders
+      if ((CTime[1] - CTime[5]) > 60)
+      {
+        CTime[5] = CTime[1];
+        ptJson = new Json;
+        if (sr("loadReminders", ptJson, strError) && ptJson->v == "1")
+        {
+          m_bLoadReminders = true;
+        }
+        delete ptJson;
+      }
+      for (auto &reminder : reminders)
+      {
+        if (CTime[1] > reminder.second)
+        {
+          map<string, string> getReminderRow;
+          Json *ptReminder = new Json;
+          ptReminder->i("id", reminder.first);
+          if (db("dbCentralUserReminder", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["person_id"].empty())
+          {
+            map<string, string> getUserRow;
+            Json *ptUser = new Json;
+            ptUser->i("id", getReminderRow["person_id"]);
+            if (db("dbCentralUser", ptUser, getUserRow, strQuery, strError))
+            {
+              m_bLoadReminders = true;
+              reminderRemovals.push_back(reminder.first);
+              if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["title"];
+                if (!getReminderRow["text"].empty())
+                {
+                  ssMessage << endl << endl << getReminderRow["text"];
+                }
+                alert(getUserRow["userid"], ssMessage.str(), strError);
+              }
+              if (getReminderRow["chat"] == "1" && !getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
+              {
+                string strFirst, strLast;
+                if (!getUserRow["first_name"].empty())
+                {
+                  m_manip.toLower(strFirst, getUserRow["first_name"]);
+                  toupper(strFirst[0]);
+                }
+                if (!getUserRow["last_name"].empty())
+                {
+                  m_manip.toLower(strLast, getUserRow["last_name"]);
+                  toupper(strLast[0]);
+                }
+                ssMessage.str("");
+                ssMessage << getReminderRow["title"];
+                if (!getReminderRow["text"].empty())
+                {
+                  ssMessage << endl << getReminderRow["text"];
+                }
+                chat((strFirst + strLast), ssMessage.str());
+              }
+              if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
+              {
+                email("", getUserRow["email"], getReminderRow["title"], getReminderRow["text"], "");
+              }
+              if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
+              {
+                live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["text"]}}, strError);
+              }
+              if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["title"];
+                if (!getReminderRow["text"].empty())
+                {
+                  ssMessage << endl << endl << getReminderRow["text"];
+                }
+                pageUser(getUserRow["userid"], ssMessage.str(), strError);
+              }
+            }
+          }
+          delete ptReminder;
+        }
+      }
+      while (!reminderRemovals.empty())
+      {
+        reminders.erase(reminderRemovals.front());
+        reminderRemovals.pop_front();
+      }
+      if (m_bLoadReminders)
+      {
+        list<map<string, string> > getFrequency;
+        Json *ptFrequency = new Json;
+        if (db("dbCentralReminderFrequencies", ptFrequency, getFrequency, strQuery, strError))
+        {
+          list<map<string, string> > getReminder;
+          map<string, string> frequencies;
+          Json *ptReminder = new Json;
+          for (auto &getFrequencyRow : getFrequency)
+          {
+            frequencies[getFrequencyRow["id"]] = getFrequencyRow["frequency"];
+          }
+          if (db("dbCentralUserReminders", ptReminder, getReminder, strQuery, strError))
+          {
+            m_bLoadReminders = false;
+            reminders.clear();
+            for (auto &getReminderRow : getReminder)
+            {
+              if (frequencies.find(getReminderRow["frequency_id"]) != frequencies.end())
+              {
+                int nDay, nDow, nHour, nMinute, nMonth;
+                string strFrequency = frequencies[getReminderRow["frequency_id"]];
+                stringstream ssCron, ssTimestamp(getReminderRow["timestamp"]);
+                struct tm tTime;
+                time_t CTimestamp;
+                ssTimestamp >> CTimestamp;
+                localtime_r(&CTimestamp, &tTime);
+                nMonth = tTime.tm_mon + 1;
+                nDay = tTime.tm_mday;
+                nDow = tTime.tm_wday;
+                nHour = tTime.tm_hour;
+                nMinute = tTime.tm_min;
+                ssCron << nMinute << " " << nHour << " ";
+                reminders[getReminderRow["id"]] = 0;
+                if (strFrequency == "once")
+                {
+                  reminders[getReminderRow["id"]] = CTimestamp;
+                }
+                else if (strFrequency == "yearly")
+                {
+                  ssCron << nDay << " " << nMonth << " *";
+                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
+                  {
+                    reminders.erase(getReminderRow["id"]);
+                  }
+                }
+                else if (strFrequency == "monthly")
+                {
+                  ssCron << nDay << " * *";
+                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
+                  {
+                    reminders.erase(getReminderRow["id"]);
+                  }
+                }
+                else if (strFrequency == "weekly")
+                {
+                  ssCron << "* * " << nDow;
+                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
+                  {
+                    reminders.erase(getReminderRow["id"]);
+                  }
+                }
+                else if (strFrequency == "daily")
+                {
+                  ssCron << "* * *";
+                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
+                  {
+                    reminders.erase(getReminderRow["id"]);
+                  }
+                }
+                else
+                {
+                  reminders.erase(getReminderRow["id"]);
+                }
+              }
+            }
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << "->Interface::db(dbCentralUserReminders," << strQuery << ") error:  " << strError;
+            log(ssMessage.str());
+          }
+          delete ptReminder;
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::db(dbCentralReminderFrequencies," << strQuery << ") error:  " << strError;
+          log(ssMessage.str());
+        }
+        delete ptFrequency;
+      }
+      // }}}
+      // {{{ workload
       if (CTime[3] == 0)
       {
         ssMessage.str("");
@@ -3475,6 +3666,7 @@ void Central::schedule(string strPrefix)
           dbfree(getPerson);
         }
       }
+      // }}}
     }
     msleep(1000);
   }
@@ -4588,8 +4780,12 @@ bool Central::userReminderAdd(radialUser &d, string &e)
           }
           if (db("dbCentralUserReminderAdd", i, id, q, e))
           {
+            Json *ptJson = new Json;
             b = true;
             o->i("id", id);
+            ptJson->i("loadReminders", "1", '1');
+            storageAdd({"central"}, ptJson, e);
+            delete ptJson;
           }
         }
         else
@@ -4650,7 +4846,14 @@ bool Central::userReminderEdit(radialUser &d, string &e)
         {
           i->i("text", i->m["text"]->m["value"]->v);
         }
-        b = db("dbCentralUserReminderUpdate", i, e);
+        if (db("dbCentralUserReminderUpdate", i, e))
+        {
+          Json *j = new Json;
+          b = true;
+          j->i("loadReminders", "1", '1');
+          storageAdd({"central"}, j, e);
+          delete j;
+        }
       }
       else
       {
@@ -4683,7 +4886,14 @@ bool Central::userReminderRemove(radialUser &d, string &e)
     c.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userReminder(c, e) && !empty(c.p->m["o"], "person_id") &&  a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v))
     {
-      b = db("dbCentralUserReminderRemove", i, e);
+      if (db("dbCentralUserReminderRemove", i, e))
+      {
+        Json *j = new Json;
+        b = true;
+        j->i("loadReminders", "1", '1');
+        storageAdd({"central"}, j, e);
+        delete j;
+      }
     }
     else
     {
