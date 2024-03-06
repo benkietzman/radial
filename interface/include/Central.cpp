@@ -3242,65 +3242,83 @@ void Central::schedule(string strPrefix)
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
           ptReminder->i("id", reminder.first);
-          if (db("dbCentralUserReminder", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["person_id"].empty())
+          if (db("dbCentralUserReminder", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
           {
-            map<string, string> getUserRow;
-            Json *ptUser = new Json;
-            ptUser->i("id", getReminderRow["person_id"]);
-            if (db("dbCentralUser", ptUser, getUserRow, strQuery, strError))
+            map<string, string> getFrequencyRow;
+            Json *ptFrequency = new Json;
+            ptFrequency->i("id", getReminderRow["frequency_id"]);
+            if (db("dbCentralReminderFrequencies", ptFrequency, getFrequencyRow, strQuery, strError))
             {
-              m_bLoadReminders = true;
-              reminderRemovals.push_back(reminder.first);
-              if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
+              map<string, string> getUserRow;
+              Json *ptUser = new Json;
+              ptUser->i("id", getReminderRow["person_id"]);
+              if (db("dbCentralUser", ptUser, getUserRow, strQuery, strError))
               {
-                ssMessage.str("");
-                ssMessage << getReminderRow["title"];
-                if (!getReminderRow["text"].empty())
+                if (getFrequencyRow["frequency"] == "once")
                 {
-                  ssMessage << endl << endl << getReminderRow["text"];
+                  Json *ptReminderDelete = new Json;
+                  ptReminderDelete->i("id", getReminderRow["id"]);
+                  db("dbCentralUserReminderRemove", ptReminderDelete, strQuery, strError);
+                  delete ptReminderDelete;
                 }
-                alert(getUserRow["userid"], ssMessage.str(), strError);
-              }
-              if (getReminderRow["chat"] == "1" && !getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
-              {
-                string strFirst, strLast;
-                if (!getUserRow["first_name"].empty())
+                else
                 {
-                  m_manip.toLower(strFirst, getUserRow["first_name"]);
-                  toupper(strFirst[0]);
+                  m_bLoadReminders = true;
                 }
-                if (!getUserRow["last_name"].empty())
+                reminderRemovals.push_back(reminder.first);
+                if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
                 {
-                  m_manip.toLower(strLast, getUserRow["last_name"]);
-                  toupper(strLast[0]);
+                  ssMessage.str("");
+                  ssMessage << getReminderRow["title"];
+                  if (!getReminderRow["text"].empty())
+                  {
+                    ssMessage << endl << endl << getReminderRow["text"];
+                  }
+                  alert(getUserRow["userid"], ssMessage.str(), strError);
                 }
-                ssMessage.str("");
-                ssMessage << getReminderRow["title"];
-                if (!getReminderRow["text"].empty())
+                if (getReminderRow["chat"] == "1" && !getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
                 {
-                  ssMessage << endl << getReminderRow["text"];
+                  string strFirst, strLast;
+                  if (!getUserRow["first_name"].empty())
+                  {
+                    m_manip.toLower(strFirst, getUserRow["first_name"]);
+                    toupper(strFirst[0]);
+                  }
+                  if (!getUserRow["last_name"].empty())
+                  {
+                    m_manip.toLower(strLast, getUserRow["last_name"]);
+                    toupper(strLast[0]);
+                  }
+                  ssMessage.str("");
+                  ssMessage << getReminderRow["title"];
+                  if (!getReminderRow["text"].empty())
+                  {
+                    ssMessage << endl << getReminderRow["text"];
+                  }
+                  chat((strFirst + strLast), ssMessage.str());
                 }
-                chat((strFirst + strLast), ssMessage.str());
-              }
-              if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
-              {
-                email("", getUserRow["email"], getReminderRow["title"], getReminderRow["text"], "");
-              }
-              if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
-              {
-                live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["text"]}}, strError);
-              }
-              if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
-              {
-                ssMessage.str("");
-                ssMessage << getReminderRow["title"];
-                if (!getReminderRow["text"].empty())
+                if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
                 {
-                  ssMessage << endl << endl << getReminderRow["text"];
+                  email("", getUserRow["email"], getReminderRow["title"], getReminderRow["text"], "");
                 }
-                pageUser(getUserRow["userid"], ssMessage.str(), strError);
+                if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
+                {
+                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["text"]}}, strError);
+                }
+                if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
+                {
+                  ssMessage.str("");
+                  ssMessage << getReminderRow["title"];
+                  if (!getReminderRow["text"].empty())
+                  {
+                    ssMessage << endl << endl << getReminderRow["text"];
+                  }
+                  pageUser(getUserRow["userid"], ssMessage.str(), strError);
+                }
               }
+              delete ptUser;
             }
+            delete ptFrequency;
           }
           delete ptReminder;
         }
