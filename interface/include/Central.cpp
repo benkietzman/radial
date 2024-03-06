@@ -2580,10 +2580,7 @@ void Central::autoMode(string strPrefix, const string strOldMaster, const string
     stringstream ssMessage;
     ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
     log(ssMessage.str());
-    if (strNewMaster == m_strNode)
-    {
-      m_bLoadReminders = true;
-    }
+    m_bLoadReminders = true;
   }
   threadDecrement();
 }
@@ -3405,6 +3402,7 @@ void Central::schedule(string strPrefix)
                 }
               }
             }
+//////////////////
             Json *ptJson = new Json;
             for (auto &reminder : reminders)
             {
@@ -3416,6 +3414,7 @@ void Central::schedule(string strPrefix)
             ssMessage << strPrefix << ":  Loaded reminders.  " << ptJson;
             delete ptJson;
             log(ssMessage.str());
+//////////////////
           }
           else
           {
