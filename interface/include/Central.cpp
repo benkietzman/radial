@@ -3309,7 +3309,7 @@ void Central::schedule(string strPrefix)
                     ptLive->m["Request"]->i("User", getUserRow["userid"]);
                     ptLive->m["Request"]->m["Message"] = new Json;
                     ptLive->m["Request"]->m["Message"]->i("Action", "chat");
-                    ptLive->m["Request"]->m["Message"]->i("Message", ssMessage.str(""));
+                    ptLive->m["Request"]->m["Message"]->i("Message", ssMessage.str());
                     ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
                     hub("live", ptLive, false);
                     delete ptLive;
