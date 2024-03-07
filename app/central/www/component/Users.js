@@ -73,7 +73,12 @@ export default
       {
         let error = {};
         s.info.v = null;
-        if (!c.wsResponse(response, error))
+        if (c.wsResponse(response, error))
+        {
+          s.user.reminders[nIndex].bEdit = false;
+          s.u();
+        }
+        else
         {
           s.message.v = error.message;
         }
@@ -214,6 +219,20 @@ export default
       {
         s.loadUser();
       }
+    };
+    // ]]]
+    // [[[ preEditReminder()
+    s.preEditReminder = (nIndex) =>
+    {
+      if (s.user.reminders[nIndex].bEdit)
+      {
+        s.user.reminders[nIndex].bEdit = false;
+      }
+      else
+      {
+        s.user.reminders[nIndex].bEdit = true;
+      }
+      s.u();
     };
     // ]]]
     // [[[ preEditUser()
@@ -825,53 +844,94 @@ export default
         <td>
           <div class="row">
             <div class="col-md-12">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].title"></div>
+              {{else}}
+              <span style="white-space: nowrap;">Title: {{title}}</span>
+              {{/if}}
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
+              {{#if bEdit}}
               <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
+              {{else}}
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
+              {{/if}}
             </div>
           </div>
         </td>
         <td>
           <div class="row">
             <div class="col-md-12">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Date/Time</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}.timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+              {{else}}
+              <span style="white-space: nowrap;">Date/Time: {{timestamp}}</span>
+              {{/if}}
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Frequency</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].frequency" c-json>{{#each @root.reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Frequency: {{frequency.frequency}}</span>
+              {{/if}}
             </div>
           </div>
         </td>
         <td>
           <div class="row">
             <div class="col-md-6">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Alert: {{alert.name}}</span>
+              {{/if}}
             </div>
             <div class="col-md-6">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].chat" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Chat: {{chat.name}}</span>
+              {{/if}}
             </div>
           </div>
           <div class="row">
             <div class="col-md-6">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].email" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Email: {{email.name}}</span>
+              {{/if}}
             </div>
             <div class="col-md-6">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].live" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Live: {{live.name}}</span>
+              {{/if}}
             </div>
           </div>
           <div class="row">
             <div class="col-md-6">
+              {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].text" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              {{else}}
+              <span style="white-space: nowrap;">Text: {{text.name}}</span>
+              {{/if}}
             </div>
           </div>
         </td>
         <td>
-          <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeReminder({{id}})" title="Remove"></button>
+          {{#if bEdit}}
+          <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditReminder({{@key}})" title="Save"></button>
           <button class="btn btn-sm btn-success bi bi-save" c-click="editReminder({{@key}})" title="Save"></button>
+          {{else}}
+          <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditReminder({{@key}})" title="Edit"></button>
+          <button class="btn btn-sm btn-danger bi bi-trash" c-click="removeReminder({{id}})" title="Remove"></button>
+          {{/if}}
         </td>
       </tr>
       {{/each}}
