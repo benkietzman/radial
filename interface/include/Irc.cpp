@@ -877,7 +877,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 {
                   for (auto &reminder : ptJson->m["Response"]->l)
                   {
-                    ssText << endl << reminder;
+                    if (!empty(reminder, "title"))
+                    {
+                      ssText << endl << reminder->m["title"]->v;
+                    }
                   }
                 }
               }
