@@ -885,7 +885,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                         ssText << reminder->m["datetime"]->v;
                         if (exist(reminder, "frequency") && !empty(reminder->m["frequency"], "frequency"))
                         {
-                          ssText << "(" << reminder->m["frequency"]->m["frequency"]->v << ")";
+                          ssText << " (" << reminder->m["frequency"]->m["frequency"]->v << ")";
                         }
                         ssText << ":  ";
                       }
