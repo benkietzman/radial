@@ -469,7 +469,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData, const string strSource)
 {
   // {{{ prep work
-  string strAction = var("Action", ptData), strError, strValue;
+  string strAction = var("Action", ptData), strError, strQuery, strValue;
   stringstream ssQuery, ssText;
   throughput("analyze");
   ssText << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
@@ -841,39 +841,52 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         // {{{ reminders
         else if (strForm == "reminders")
         {
-          string strPayload, strValue;
-          stringstream ssTime;
-          time_t CTime;
-          Json *ptJwt = new Json;
-          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
-          ptJwt->i("sl_first_name", strFirstName);
-          ptJwt->i("sl_last_name", strLastName);
-          ptJwt->i("sl_login", strUserID);
-          time(&CTime);
-          ssTime << CTime;
-          ptJwt->i("exp", ssTime.str(), 'n');
-          ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
-          ptJwt->m["sl_auth"] = new Json;
-          for (auto &i : auth)
-          { 
-            ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
-          }
-          if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+          map<string, string> getUserRow;
+          Json *ptUser = new Json;
+          ptUser->i("userid", strUserID);
+          if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
           {
-            Json *ptJson = new Json;
-            ptJson->i("Function", "userReminders");
-            ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
-            if (hub("central", ptJson, strError))
-            {
-              ssText << endl << ptJson;
+            string strPayload, strValue;
+            stringstream ssTime;
+            time_t CTime;
+            Json *ptJwt = new Json;
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ptJwt->i("sl_first_name", strFirstName);
+            ptJwt->i("sl_last_name", strLastName);
+            ptJwt->i("sl_login", strUserID);
+            time(&CTime);
+            ssTime << CTime;
+            ptJwt->i("exp", ssTime.str(), 'n');
+            ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+            ptJwt->m["sl_auth"] = new Json;
+            for (auto &i : auth)
+            { 
+              ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
             }
-            else
+            if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
             {
-              ssText << " error:  " << strError;
+              Json *ptJson = new Json;
+              ptJson->i("Function", "userReminders");
+              ptJson->m["Request"] = new Json;
+              ptJson->m["Request"]->i("person_id", getUserRow["id"]);
+              ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+              if (hub("central", ptJson, strError))
+              {
+                ssText << endl << ptJson;
+              }
+              else
+              {
+                ssText << " error:  " << strError;
+              }
+              delete ptJson;
             }
-            delete ptJson;
+            delete ptJwt;
           }
-          delete ptJwt;
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          delete ptUser;
         }
         // }}}
         // {{{ servers
