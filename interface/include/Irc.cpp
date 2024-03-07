@@ -872,7 +872,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
               if (hub("central", ptJson, strError))
               {
-                ssText << endl << ptJson;
+                ssText << ": done";
+                if (exist(ptJson, "Response"))
+                {
+                  for (auto &reminder : ptJson->m["Response"]->l)
+                  {
+                    ssText << endl << reminder;
+                  }
+                }
               }
               else
               {
