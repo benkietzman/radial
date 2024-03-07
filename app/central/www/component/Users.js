@@ -75,8 +75,9 @@ export default
         s.info.v = null;
         if (c.wsResponse(response, error))
         {
-          s.user.reminders = null;
-          s.showForm('Reminders');
+          s.user.reminders[nIndex].bEdit = false;
+          s.user.reminders = c.simplify(s.user.reminders);
+          s.u();
         }
         else
         {
@@ -226,8 +227,8 @@ export default
     {
       if (s.user.reminders[nIndex].bEdit)
       {
-        s.user.reminders = null;
-        s.showForm('Reminders');
+        s.user.reminders[nIndex].bEdit = false;
+        s.user.reminders = c.simplify(s.user.reminders);
       }
       else
       {
