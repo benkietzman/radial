@@ -876,7 +876,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
               else
               {
-                ssText << " error:  " << strError << " --- " << strQuery;
+                ssText << " error:  " << strError;
               }
               delete ptJson;
             }
