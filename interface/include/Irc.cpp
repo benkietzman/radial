@@ -843,7 +843,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           map<string, string> getUserRow;
           Json *ptUser = new Json;
-          ptUser->i("userid", strUserID);
+          ptUser->i("userid", strIdent);
           if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
           {
             string strPayload, strValue;
@@ -853,7 +853,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
             ptJwt->i("sl_first_name", strFirstName);
             ptJwt->i("sl_last_name", strLastName);
-            ptJwt->i("sl_login", strUserID);
+            ptJwt->i("sl_login", strIdent);
             time(&CTime);
             ssTime << CTime;
             ptJwt->i("exp", ssTime.str(), 'n');
