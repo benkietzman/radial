@@ -3279,7 +3279,7 @@ void Central::schedule(string strPrefix)
                 }
                 if (getReminderRow["chat"] == "1")
                 {
-                  if (!getUserRow["first_name"].empty() && !getUserRow["last_name"].empty()
+                  if (!getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
                   {
                     string strFirst, strLast;
                     if (!getUserRow["first_name"].empty())
