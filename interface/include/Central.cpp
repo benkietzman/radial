@@ -3274,36 +3274,56 @@ void Central::schedule(string strPrefix)
                   {
                     ssMessage << endl << endl << getReminderRow["description"];
                   }
+                  ssMessage << endl << endl "-- Central Reminder";
                   alert(getUserRow["userid"], ssMessage.str(), strError);
                 }
-                if (getReminderRow["chat"] == "1" && !getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
+                if (getReminderRow["chat"] == "1")
                 {
-                  string strFirst, strLast;
-                  if (!getUserRow["first_name"].empty())
+                  if (!getUserRow["first_name"].empty() && !getUserRow["last_name"].empty()
                   {
-                    m_manip.toLower(strFirst, getUserRow["first_name"]);
-                    toupper(strFirst[0]);
+                    string strFirst, strLast;
+                    if (!getUserRow["first_name"].empty())
+                    {
+                      m_manip.toLower(strFirst, getUserRow["first_name"]);
+                      toupper(strFirst[0]);
+                    }
+                    if (!getUserRow["last_name"].empty())
+                    {
+                      m_manip.toLower(strLast, getUserRow["last_name"]);
+                      toupper(strLast[0]);
+                    }
+                    ssMessage.str("");
+                    ssMessage << getReminderRow["title"];
+                    if (!getReminderRow["description"].empty())
+                    {
+                      ssMessage << endl << getReminderRow["description"];
+                    }
+                    ssMessage << endl "-- Central Reminder";
+                    chat((strFirst + strLast), ssMessage.str());
                   }
-                  if (!getUserRow["last_name"].empty())
+                  if (!getUserRow["userid"].empty())
                   {
-                    m_manip.toLower(strLast, getUserRow["last_name"]);
-                    toupper(strLast[0]);
+                    ssMessage.str("");
+                    ssMessage << getReminderRow["title"];
+                    if (!getReminderRow["description"].empty())
+                    {
+                      ssMessage << endl << endl << getReminderRow["description"];
+                    }
+                    ssMessage << endl << endl "-- Central Reminder";
+                    chat(getUserRow["userid"], ssMessage.str(), "live");
                   }
-                  ssMessage.str("");
-                  ssMessage << getReminderRow["title"];
-                  if (!getReminderRow["description"].empty())
-                  {
-                    ssMessage << endl << getReminderRow["description"];
-                  }
-                  chat((strFirst + strLast), ssMessage.str());
                 }
                 if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
                 {
-                  email("", getUserRow["email"], getReminderRow["title"], getReminderRow["description"], "");
+                  ssMessage.str("");
+                  ssMessage << getReminderRow["description"] << endl << endl "-- Central Reminder";
+                  email("", getUserRow["email"], getReminderRow["title"], ssMessage.str(""), "");
                 }
                 if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
                 {
-                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", getReminderRow["description"]}}, strError);
+                  ssMessage.str("");
+                  ssMessage << getReminderRow["description"] << endl << endl "-- Central Reminder";
+                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", ssMessage.str()}}, strError);
                 }
                 if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
                 {
@@ -3313,6 +3333,7 @@ void Central::schedule(string strPrefix)
                   {
                     ssMessage << endl << endl << getReminderRow["description"];
                   }
+                  ssMessage << endl << endl << "-- Central Reminder";
                   pageUser(getUserRow["userid"], ssMessage.str(), strError);
                 }
               }
