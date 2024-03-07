@@ -3317,7 +3317,7 @@ void Central::schedule(string strPrefix)
                 {
                   ssMessage.str("");
                   ssMessage << getReminderRow["description"] << endl << endl "-- Central Reminder";
-                  email("", getUserRow["email"], getReminderRow["title"], ssMessage.str(""), "");
+                  email("", getUserRow["email"], getReminderRow["title"], ssMessage.str(), "");
                 }
                 if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
                 {
