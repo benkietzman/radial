@@ -838,6 +838,44 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           types.clear();
         }
         // }}}
+        // {{{ reminders
+        else if (strForm == "reminders")
+        {
+          string strPayload, strValue;
+          stringstream ssTime;
+          time_t CTime;
+          Json *ptJwt = new Json;
+          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+          ptJwt->i("sl_first_name", strFirstName);
+          ptJwt->i("sl_last_name", strLastName);
+          ptJwt->i("sl_login", strUserID);
+          time(&CTime);
+          ssTime << CTime;
+          ptJwt->i("exp", ssTime.str(), 'n');
+          ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+          ptJwt->m["sl_auth"] = new Json;
+          for (auto &i : auth)
+          { 
+            ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+          }
+          if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+          {
+            Json *ptJson = new Json;
+            ptJson->i("Function", "userReminders");
+            ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+            if (hub("central", ptJson, strError))
+            {
+              ssText << endl << ptJson;
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            delete ptJson;
+          }
+          delete ptJwt;
+        }
+        // }}}
         // {{{ servers
         else if (strForm == "servers")
         {
@@ -886,7 +924,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         // {{{ invalid
         else
         {
-          ssText << ":  Please provide the Form immediately following the User:  general, applications, servers.";
+          ssText << ":  Please provide the Form immediately following the User:  general, applications, reminders, servers.";
         }
         // }}}
       }
