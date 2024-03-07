@@ -3303,14 +3303,16 @@ void Central::schedule(string strPrefix)
                   }
                   if (!getUserRow["userid"].empty())
                   {
-                    ssMessage.str("");
-                    ssMessage << getReminderRow["title"];
-                    if (!getReminderRow["description"].empty())
-                    {
-                      ssMessage << endl << endl << getReminderRow["description"];
-                    }
-                    ssMessage << endl << endl << "-- Central Reminder";
-                    chat(getUserRow["userid"], ssMessage.str(), "live");
+                    Json *ptLive = new Json;
+                    ptLive->i("Function", "message");
+                    ptLive->m["Request"] = new Json;
+                    ptLive->m["Request"]->i("User", getUserRow["userid"]);
+                    ptLive->m["Request"]->m["Message"] = new Json;
+                    ptLive->m["Request"]->m["Message"]->i("Action", "chat");
+                    ptLive->m["Request"]->m["Message"]->i("Message", ssMessage.str(""));
+                    ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
+                    hub("live", ptLive, false);
+                    delete ptLive;
                   }
                 }
                 if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
