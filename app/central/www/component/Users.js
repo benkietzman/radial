@@ -862,7 +862,7 @@ export default
               {{#if bEdit}}
               <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
               {{else}}
-              <div class="card card-body" style="background: inherit; color: inherit;">
+              <div class="card card-body" style="background: inherit; color: inherit; max-width: 600px;">
                 {{description}}
               </div>
               {{/if}}
