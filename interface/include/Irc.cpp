@@ -876,9 +876,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
               else
               {
-Json *j = new Json(getUserRow);
-                ssText << " error:  " << strError << " --- " << j;
-delete j;
+                ssText << " error:  " << strError << " --- " << strQuery;
               }
               delete ptJson;
             }
