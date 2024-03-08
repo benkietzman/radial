@@ -4775,7 +4775,7 @@ bool Central::userReminderAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"timestamp", "title"}, i, e))
+  if (dep({"sched", "title"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -4844,7 +4844,7 @@ bool Central::userReminderEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (dep({"id", "cron", "person_id", "title"}, i, e))
+  if (dep({"id", "person_id", "sched", "title"}, i, e))
   {
     radialUser a, c;
     userInit(d, a);

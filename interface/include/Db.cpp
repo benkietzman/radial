@@ -1599,7 +1599,7 @@ bool Db::dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, strin
 {
   bool b = false;
 
-  if (dep({"cron", "person_id", "sched", "title"}, i, e))
+  if (dep({"person_id", "sched", "title"}, i, e))
   {
     bool fa = true, fb = true;
     list<string> ks = {"alert", "chat", "cron", "description", "email", "live", "person_id", "sched", "text", "title"};
