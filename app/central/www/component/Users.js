@@ -348,27 +348,7 @@ export default
       {
         if (!c.isDefined(s.reminder) || s.reminder == null)
         {
-          s.reminder = {'alert': a.m_noyes[0], chat: a.m_noyes[0], email: a.m_noyes[0], live: a.m_noyes[0], text: a.m_noyes[0]};
-        }
-        if (!c.isDefined(s.reminderFrequencies) || s.reminderFrequencies == null)
-        {
-          s.info.v = 'Retrieving reminder frequencies...';
-          let request = {Interface: 'central', 'Function': 'reminderFrequencies'};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            s.info.v = null;
-            if (c.wsResponse(response, error))
-            {
-              s.reminderFrequencies = response.Response;
-              s.reminder.frequency = s.reminderFrequencies[0];
-              s.u();
-            }
-            else
-            {
-              s.message.v = error.message;
-            }
-          });
+          s.reminder = {'alert': a.m_noyes[0], chat: a.m_noyes[0], cron: a.m_noyes[0], email: a.m_noyes[0], live: a.m_noyes[0], text: a.m_noyes[0]};
         }
         if (!c.isDefined(s.user.reminders) || s.user.reminders == null)
         {
@@ -805,12 +785,12 @@ export default
         <td>
           <div class="row">
             <div class="col-md-12">
-              <div class="input-group input-group-sm"><span class="input-group-text">Date/Time</span><input type="text" class="form-control form-control-sm" c-model="reminder.timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+              <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="reminder.cron" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
-              <div class="input-group input-group-sm"><span class="input-group-text">Frequency</span><select class="form-control form-control-sm" c-model="reminder.frequency" c-json>{{#each reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
+              <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="reminder.sched"></div>
             </div>
           </div>
         </td>
@@ -873,18 +853,18 @@ export default
           <div class="row">
             <div class="col-md-12">
               {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Date/Time</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}.timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+              <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].cron" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               {{else}}
-              <span style="white-space: nowrap;">Date/Time: {{timestamp}}</span>
+              <span style="white-space: nowrap;">Cron: {{cron.name}}</span>
               {{/if}}
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
               {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Frequency</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].frequency" c-json>{{#each @root.reminderFrequencies}}<option value="{{json .}}">{{frequency}}</option>{{/each}}</select></div>
+              <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched"></div>
               {{else}}
-              <span style="white-space: nowrap;">Frequency: {{frequency.frequency}}</span>
+              <span style="white-space: nowrap;">Sched: {{sched}}</span>
               {{/if}}
             </div>
           </div>
