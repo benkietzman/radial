@@ -96,8 +96,6 @@ class Central : public Interface
   bool notifyPriority(radialUser &d, string &e);
   bool packageType(radialUser &d, string &e);
   bool packageTypes(radialUser &d, string &e);
-  bool reminderFrequencies(radialUser &d, string &e);
-  bool reminderFrequency(radialUser &d, string &e);
   bool repo(radialUser &d, string &e);
   bool repos(radialUser &d, string &e);
   void rm(Json *ptJson, const string strField);

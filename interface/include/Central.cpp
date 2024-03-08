@@ -91,8 +91,6 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["notifyPriority"] = &Central::notifyPriority;
   m_functions["packageType"] = &Central::packageType;
   m_functions["packageTypes"] = &Central::packageTypes;
-  m_functions["reminderFrequencies"] = &Central::reminderFrequencies;
-  m_functions["reminderFrequency"] = &Central::reminderFrequency;
   m_functions["repo"] = &Central::repo;
   m_functions["repos"] = &Central::repos;
   m_functions["server"] = &Central::server;
@@ -3049,55 +3047,6 @@ bool Central::packageTypes(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ reminderFrequencies()
-bool Central::reminderFrequencies(radialUser &d, string &e)
-{
-  bool b = false;
-  list<map<string, string> > rs;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (db("dbCentralReminderFrequencies", i, rs, e))
-  {
-    b = true;
-    for (auto &r : rs)
-    {
-      o->pb(r);
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ reminderFrequency()
-bool Central::reminderFrequency(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "frequency"))
-  {
-    map<string, string> r;
-    if (db("dbCentralReminderFrequencies", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or frequency.";
-  }
-
-  return b;
-}
-// }}}
 // {{{ repo()
 bool Central::repo(radialUser &d, string &e)
 {
@@ -3232,106 +3181,99 @@ void Central::schedule(string strPrefix)
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
           ptReminder->i("id", reminder.first);
-          if (db("dbCentralUserReminders", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["frequency_id"].empty() && !getReminderRow["person_id"].empty())
+          if (db("dbCentralUserReminders", ptReminder, getReminderRow, strQuery, strError) && !getReminderRow["person_id"].empty())
           {
-            map<string, string> getFrequencyRow;
-            Json *ptFrequency = new Json;
-            ptFrequency->i("id", getReminderRow["frequency_id"]);
-            if (db("dbCentralReminderFrequencies", ptFrequency, getFrequencyRow, strQuery, strError))
+            map<string, string> getUserRow;
+            Json *ptUser = new Json;
+            ptUser->i("id", getReminderRow["person_id"]);
+            if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
             {
-              map<string, string> getUserRow;
-              Json *ptUser = new Json;
-              ptUser->i("id", getReminderRow["person_id"]);
-              if (db("dbCentralUsers", ptUser, getUserRow, strQuery, strError))
+              if (getReminderRow["cron"] == "0")
               {
-                if (getFrequencyRow["frequency"] == "once")
+                Json *ptReminderDelete = new Json;
+                ptReminderDelete->i("id", getReminderRow["id"]);
+                db("dbCentralUserReminderRemove", ptReminderDelete, strQuery, strError);
+                delete ptReminderDelete;
+              }
+              else
+              {
+                m_bLoadReminders = true;
+              }
+              reminderRemovals.push_back(reminder.first);
+              if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["title"];
+                if (!getReminderRow["description"].empty())
                 {
-                  Json *ptReminderDelete = new Json;
-                  ptReminderDelete->i("id", getReminderRow["id"]);
-                  db("dbCentralUserReminderRemove", ptReminderDelete, strQuery, strError);
-                  delete ptReminderDelete;
+                  ssMessage << endl << endl << getReminderRow["description"];
                 }
-                else
+                ssMessage << endl << endl << "-- Central Reminder";
+                alert(getUserRow["userid"], ssMessage.str(), strError);
+              }
+              if (getReminderRow["chat"] == "1")
+              {
+                if (!getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
                 {
-                  m_bLoadReminders = true;
-                }
-                reminderRemovals.push_back(reminder.first);
-                if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
-                {
+                  string strFirst, strLast;
+                  if (!getUserRow["first_name"].empty())
+                  {
+                    m_manip.toLower(strFirst, getUserRow["first_name"]);
+                    toupper(strFirst[0]);
+                  }
+                  if (!getUserRow["last_name"].empty())
+                  {
+                    m_manip.toLower(strLast, getUserRow["last_name"]);
+                    toupper(strLast[0]);
+                  }
                   ssMessage.str("");
                   ssMessage << getReminderRow["title"];
                   if (!getReminderRow["description"].empty())
                   {
-                    ssMessage << endl << endl << getReminderRow["description"];
+                    ssMessage << endl << getReminderRow["description"];
                   }
-                  ssMessage << endl << endl << "-- Central Reminder";
-                  alert(getUserRow["userid"], ssMessage.str(), strError);
+                  ssMessage << endl << "-- Central Reminder";
+                  chat((strFirst + strLast), ssMessage.str());
                 }
-                if (getReminderRow["chat"] == "1")
+                if (!getUserRow["userid"].empty())
                 {
-                  if (!getUserRow["first_name"].empty() && !getUserRow["last_name"].empty())
-                  {
-                    string strFirst, strLast;
-                    if (!getUserRow["first_name"].empty())
-                    {
-                      m_manip.toLower(strFirst, getUserRow["first_name"]);
-                      toupper(strFirst[0]);
-                    }
-                    if (!getUserRow["last_name"].empty())
-                    {
-                      m_manip.toLower(strLast, getUserRow["last_name"]);
-                      toupper(strLast[0]);
-                    }
-                    ssMessage.str("");
-                    ssMessage << getReminderRow["title"];
-                    if (!getReminderRow["description"].empty())
-                    {
-                      ssMessage << endl << getReminderRow["description"];
-                    }
-                    ssMessage << endl << "-- Central Reminder";
-                    chat((strFirst + strLast), ssMessage.str());
-                  }
-                  if (!getUserRow["userid"].empty())
-                  {
-                    Json *ptLive = new Json;
-                    ptLive->i("Function", "message");
-                    ptLive->m["Request"] = new Json;
-                    ptLive->m["Request"]->i("User", getUserRow["userid"]);
-                    ptLive->m["Request"]->m["Message"] = new Json;
-                    ptLive->m["Request"]->m["Message"]->i("Action", "chat");
-                    ptLive->m["Request"]->m["Message"]->i("Message", ssMessage.str());
-                    ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
-                    hub("live", ptLive, false);
-                    delete ptLive;
-                  }
-                }
-                if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
-                {
-                  ssMessage.str("");
-                  ssMessage << getReminderRow["description"] << endl << endl << "-- Central Reminder";
-                  email("", getUserRow["email"], getReminderRow["title"], ssMessage.str(), "");
-                }
-                if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
-                {
-                  ssMessage.str("");
-                  ssMessage << getReminderRow["description"] << endl << endl << "-- Central Reminder";
-                  live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", ssMessage.str()}}, strError);
-                }
-                if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
-                {
-                  ssMessage.str("");
-                  ssMessage << getReminderRow["title"];
-                  if (!getReminderRow["description"].empty())
-                  {
-                    ssMessage << endl << endl << getReminderRow["description"];
-                  }
-                  ssMessage << endl << endl << "-- Central Reminder";
-                  pageUser(getUserRow["userid"], ssMessage.str(), strError);
+                  Json *ptLive = new Json;
+                  ptLive->i("Function", "message");
+                  ptLive->m["Request"] = new Json;
+                  ptLive->m["Request"]->i("User", getUserRow["userid"]);
+                  ptLive->m["Request"]->m["Message"] = new Json;
+                  ptLive->m["Request"]->m["Message"]->i("Action", "chat");
+                  ptLive->m["Request"]->m["Message"]->i("Message", ssMessage.str());
+                  ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
+                  hub("live", ptLive, false);
+                  delete ptLive;
                 }
               }
-              delete ptUser;
+              if (getReminderRow["email"] == "1" && !getUserRow["email"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["description"] << endl << endl << "-- Central Reminder";
+                email("", getUserRow["email"], getReminderRow["title"], ssMessage.str(), "");
+              }
+              if (getReminderRow["live"] == "1" && !getUserRow["userid"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["description"] << endl << endl << "-- Central Reminder";
+                live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", ssMessage.str()}}, strError);
+              }
+              if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
+              {
+                ssMessage.str("");
+                ssMessage << getReminderRow["title"];
+                if (!getReminderRow["description"].empty())
+                {
+                  ssMessage << endl << endl << getReminderRow["description"];
+                }
+                ssMessage << endl << endl << "-- Central Reminder";
+                pageUser(getUserRow["userid"], ssMessage.str(), strError);
+              }
             }
-            delete ptFrequency;
+            delete ptUser;
           }
           delete ptReminder;
         }
@@ -3353,97 +3295,58 @@ void Central::schedule(string strPrefix)
       }
       if (m_bLoadReminders)
       {
-        list<map<string, string> > getFrequency;
-        Json *ptFrequency = new Json;
-        if (db("dbCentralReminderFrequencies", ptFrequency, getFrequency, strQuery, strError))
+        list<map<string, string> > getReminder;
+        Json *ptReminder = new Json;
+        if (db("dbCentralUserReminders", ptReminder, getReminder, strQuery, strError))
         {
-          list<map<string, string> > getReminder;
-          map<string, string> frequencies;
-          Json *ptReminder = new Json;
-          for (auto &getFrequencyRow : getFrequency)
+          m_bLoadReminders = false;
+          reminders.clear();
+          for (auto &getReminderRow : getReminder)
           {
-            frequencies[getFrequencyRow["id"]] = getFrequencyRow["frequency"];
-          }
-          if (db("dbCentralUserReminders", ptReminder, getReminder, strQuery, strError))
-          {
-            m_bLoadReminders = false;
-            reminders.clear();
-            for (auto &getReminderRow : getReminder)
+            if (getReminderRow["cron"] == "0")
             {
-              if (frequencies.find(getReminderRow["frequency_id"]) != frequencies.end())
-              {
-                int nDay, nDow, nHour, nMinute, nMonth;
-                string strFrequency = frequencies[getReminderRow["frequency_id"]];
-                stringstream ssCron, ssTimestamp(getReminderRow["timestamp"]);
-                struct tm tTime;
-                time_t CTimestamp;
-                ssTimestamp >> CTimestamp;
-                localtime_r(&CTimestamp, &tTime);
-                nMonth = tTime.tm_mon + 1;
-                nDay = tTime.tm_mday;
-                nDow = tTime.tm_wday;
-                nHour = tTime.tm_hour;
-                nMinute = tTime.tm_min;
-                ssCron << nMinute << " " << nHour << " ";
-                reminders[getReminderRow["id"]] = 0;
-                if (strFrequency == "once")
-                {
-                  reminders[getReminderRow["id"]] = CTimestamp;
-                }
-                else if (strFrequency == "yearly")
-                {
-                  ssCron << nDay << " " << nMonth << " *";
-                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
-                  {
-                    reminders.erase(getReminderRow["id"]);
-                  }
-                }
-                else if (strFrequency == "monthly")
-                {
-                  ssCron << nDay << " * *";
-                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
-                  {
-                    reminders.erase(getReminderRow["id"]);
-                  }
-                }
-                else if (strFrequency == "weekly")
-                {
-                  ssCron << "* * " << nDow;
-                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
-                  {
-                    reminders.erase(getReminderRow["id"]);
-                  }
-                }
-                else if (strFrequency == "daily")
-                {
-                  ssCron << "* * *";
-                  if (!cron(reminders[getReminderRow["id"]], ssCron.str(), strError))
-                  {
-                    reminders.erase(getReminderRow["id"]);
-                  }
-                }
-                else
-                {
-                  reminders.erase(getReminderRow["id"]);
-                }
-              }
+              string strDate, strDay, strHour, strMinute, strMonth, strSecond, strTime, strYear;
+              stringstream ssDate, ssDateTime(getReminderRow["sched"]), ssDay, ssHour, ssMinute, ssMonth, ssSecond, ssTime, ssYear;
+              struct tm tTime;
+              getline(ssDateTime, strDate, ' ');
+              ssDate.str(strDate);
+              getline(ssDate, strYear, '-');
+              ssYear.str(strYear);
+              ssYear >> tTime.tm_year;
+              tTime.tm_year -= 1900;
+              getline(ssDate, strMonth, '-');
+              ssMonth.str(strMonth);
+              ssMonth >> tTime.tm_mon;
+              tTime.tm_mon--;
+              getline(ssDate, strDay, '-');
+              ssDay.str(strDay);
+              ssDay >> tTime.tm_mday;
+              getline(ssDateTime, strTime, ' ');
+              ssTime.str(strTime);
+              getline(ssTime, strHour, ':');
+              ssHour.str(strHour);
+              ssHour >> tTime.tm_hour;
+              getline(ssTime, strMinute, ':');
+              ssMinute.str(strMinute);
+              ssMinute >> tTime.tm_min;
+              getline(ssTime, strSecond, ':');
+              ssSecond.str(strSecond);
+              ssSecond >> tTime.tm_sec;
+              reminders[getReminderRow["id"]] = mktime(&tTime);
+            }
+            else if (!cron(reminders[getReminderRow["id"]], getReminderRow["sched"], strError))
+            {
+              reminders.erase(getReminderRow["id"]);
             }
           }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->Interface::db(dbCentralUserReminders," << strQuery << ") error:  " << strError;
-            log(ssMessage.str());
-          }
-          delete ptReminder;
         }
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->Interface::db(dbCentralReminderFrequencies," << strQuery << ") error:  " << strError;
+          ssMessage << strPrefix << "->Interface::db(dbCentralUserReminders," << strQuery << ") error:  " << strError;
           log(ssMessage.str());
         }
-        delete ptFrequency;
+        delete ptReminder;
       }
       // }}}
       // {{{ workload
@@ -4727,23 +4630,6 @@ bool Central::userReminder(radialUser &d, string &e)
           ny(j, "chat");
           ny(j, "cron");
           ny(j, "email");
-          if (!empty(j, "frequency_id"))
-          {
-            size_t unValue;
-            stringstream ssValue(j->m["frequency_id"]->v);
-            ssValue >> unValue;
-            if (unValue > 0)
-            {
-              radialUser f;
-              userInit(d, f);
-              f.p->m["i"]->i("id", j->m["frequency_id"]->v);
-              if (reminderFrequency(f, e))
-              {
-                j->i("frequency", f.p->m["o"]);
-              }
-              userDeinit(f);
-            }
-          }
           ny(j, "live");
           ny(j, "text");
           d.p->i("o", j);
@@ -4956,23 +4842,6 @@ bool Central::userReminders(radialUser &d, string &e)
           ny(j, "chat");
           ny(j, "cron");
           ny(j, "email");
-          if (!empty(j, "frequency_id"))
-          {
-            size_t unValue;
-            stringstream ssValue(j->m["frequency_id"]->v);
-            ssValue >> unValue;
-            if (unValue > 0)
-            {
-              radialUser f;
-              userInit(d, f);
-              f.p->m["i"]->i("id", j->m["frequency_id"]->v);
-              if (reminderFrequency(f, e))
-              {
-                j->i("frequency", f.p->m["o"]);
-              }
-              userDeinit(f);
-            }
-          }
           ny(j, "live");
           ny(j, "text");
           o->pb(j);

@@ -74,7 +74,6 @@ class Db : public Interface
   bool dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, string &e);
-  bool dbCentralReminderFrequencies(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e);

@@ -64,7 +64,6 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralPhpSession"] = &Db::dbCentralPhpSession;
   m_functions["dbCentralPhpSessionAdd"] = &Db::dbCentralPhpSessionAdd;
   m_functions["dbCentralPhpSessionRemove"] = &Db::dbCentralPhpSessionRemove;
-  m_functions["dbCentralReminderFrequencies"] = &Db::dbCentralReminderFrequencies;
   m_functions["dbCentralRepos"] = &Db::dbCentralRepos;
   m_functions["dbCentralServerAdd"] = &Db::dbCentralServerAdd;
   m_functions["dbCentralServerDetails"] = &Db::dbCentralServerDetails;
@@ -1285,38 +1284,6 @@ bool Db::dbCentralPhpSessionRemove(Json *i, Json *o, string &id, string &q, stri
   return b;
 }
 // }}}
-// {{{ dbCentralReminderFrequencies()
-bool Db::dbCentralReminderFrequencies(Json *i, Json *o, string &id, string &q, string &e)
-{
-  bool b = false;
-  list<string> k = {"db", "central", "reminder_frequency"};
-  stringstream qs;
-
-  qs << "select id, frequency from reminder_frequency order by id";
-  auto g = dbq("central_r", qs, q, k, e);
-  if (g != NULL)
-  {
-    b = true;
-    for (auto &r : *g)
-    {
-      if (!empty(i, "id") || !empty(i, "frequency"))
-      {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "frequency") && r["frequency"] == i->m["frequency"]->v))
-        {
-          o->pb(r);
-        }
-      }
-      else
-      {
-        o->pb(r);
-      }
-    }
-  }
-  dbf(g);
-
-  return b;
-}
-// }}}
 // {{{ dbCentralRepos()
 bool Db::dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e)
 {
@@ -1631,7 +1598,7 @@ bool Db::dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string 
 {
   stringstream qs;
 
-  qs << "select id, alert, chat, cron, description, email, frequency_id, live, person_id, sched, text, unix_timestamp(timestamp) timestamp, timestamp datetime, title from person_reminder where 1";
+  qs << "select id, alert, chat, cron, description, email, live, person_id, sched, text, title from person_reminder where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
