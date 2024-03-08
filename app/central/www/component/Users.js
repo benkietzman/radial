@@ -771,28 +771,32 @@ export default
       {{#if user.bAdmin}}
       <tr>
         <td>
-          <div class="row">
-            <div class="col-md-12">
-              <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="reminder.title"></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              <textarea class="form-control form-control-sm" rows="3" c-model="reminder.description" placeholder="Enter any reminder details..."></textarea>
-            </div>
-          </div>
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="reminder.title"></div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <textarea class="form-control form-control-sm" rows="3" c-model="reminder.description" placeholder="Enter any reminder details..."></textarea>
+              </td>
+            </tr>
+          </table>
         </td>
         <td>
-          <div class="row">
-            <div class="col-md-12">
-              <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="reminder.cron" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="reminder.sched"></div>
-            </div>
-          </div>
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="reminder.cron" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="reminder.sched"></div>
+              </td>
+            </tr>
+          </table>
         </td>
         <td>
           <table class="table table-condensed">
@@ -828,46 +832,48 @@ export default
       {{#each user.reminders}}
       <tr>
         <td>
-          <div class="row">
-            <div class="col-md-12">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].title"></div>
-              {{else}}
-              <span style="white-space: nowrap;">Title: {{title}}</span>
-              {{/if}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              {{#if bEdit}}
-              <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
-              {{else}}
-              <div class="card card-body" style="background: inherit; color: inherit; max-width: 600px;">
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Title</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].title"></div>
+                {{else}}
+                Title: {{title}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
+                {{else}}
                 {{description}}
-              </div>
-              {{/if}}
-            </div>
-          </div>
+                {{/if}}
+              </td>
+            </tr>
+          </table>
         </td>
         <td>
-          <div class="row">
-            <div class="col-md-12">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].cron" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Cron: {{cron.name}}</span>
-              {{/if}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched"></div>
-              {{else}}
-              <span style="white-space: nowrap;">Sched: {{sched}}</span>
-              {{/if}}
-            </div>
-          </div>
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].cron" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Cron: {{cron.name}}</span>
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched"></div>
+                {{else}}
+                <span style="white-space: nowrap;">Sched: {{sched}}</span>
+                {{/if}}
+              </td>
+            </tr>
+          </table>
         </td>
         <td>
           <table class="table table-condensed">
