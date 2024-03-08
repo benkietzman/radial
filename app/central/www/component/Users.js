@@ -864,7 +864,7 @@ export default
               {{#if bEdit}}
               <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched"></div>
               {{else}}
-              <span style="white-space: nowrap;">Date/Time: {{sched}}</span>
+              <span style="white-space: nowrap;">Sched: {{sched}}</span>
               {{/if}}
             </div>
           </div>
