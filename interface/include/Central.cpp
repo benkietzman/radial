@@ -3176,7 +3176,7 @@ void Central::schedule(string strPrefix)
       // {{{ reminders
       for (auto &reminder : reminders)
       {
-        if (CTime[1] > reminder.second)
+        if (CTime[1] >= reminder.second)
         {
           map<string, string> getReminderRow;
           Json *ptReminder = new Json;
