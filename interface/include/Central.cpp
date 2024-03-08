@@ -3308,6 +3308,7 @@ void Central::schedule(string strPrefix)
               string strDate, strDay, strHour, strMinute, strMonth, strSecond, strTime, strYear;
               stringstream ssDate, ssDateTime(getReminderRow["sched"]), ssDay, ssHour, ssMinute, ssMonth, ssSecond, ssTime, ssYear;
               struct tm tTime;
+              memset(&tTime, 0, sizeof(struct tm));
               getline(ssDateTime, strDate, ' ');
               ssDate.str(strDate);
               getline(ssDate, strYear, '-');
@@ -3332,6 +3333,7 @@ void Central::schedule(string strPrefix)
               getline(ssTime, strSecond, ':');
               ssSecond.str(strSecond);
               ssSecond >> tTime.tm_sec;
+              tTime.tm_isdst = -1;
               reminders[getReminderRow["id"]] = mktime(&tTime);
             }
             else if (!cron(reminders[getReminderRow["id"]], getReminderRow["sched"], strError))
