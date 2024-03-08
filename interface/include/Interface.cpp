@@ -676,7 +676,7 @@ bool Interface::cron(time_t &CTime, string strValue, string &strError)
       time_t CMaxTime;
       time(&CTime);
       CTime += 60 - (CTime % 60);
-      CMaxTime = CTime + 31536000;
+      CMaxTime = CTime + 31622400;
       for (time_t i = CTime; !bFound && i < CMaxTime; i += 60)
       {
         localtime_r(&i, &tTime);
