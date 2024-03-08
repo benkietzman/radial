@@ -76,6 +76,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.user.reminders[nIndex].bEdit = false;
+          s.user.reminders = c.simplify(s.user.reminders);
           s.u();
         }
         else
@@ -227,6 +228,7 @@ export default
       if (s.user.reminders[nIndex].bEdit)
       {
         s.user.reminders[nIndex].bEdit = false;
+        s.user.reminders = c.simplify(s.user.reminders);
       }
       else
       {
@@ -813,27 +815,31 @@ export default
           </div>
         </td>
         <td>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="reminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="reminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="reminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="reminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="reminder.text" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-            </div>
-          </div>
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="reminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="reminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="reminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="reminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="reminder.text" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+              </td>
+              <td>
+              </td>
+            </tr>
+          </table>
         </td>
         <td>
           <button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addReminder()" title="Add"></button>
@@ -856,7 +862,9 @@ export default
               {{#if bEdit}}
               <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
               {{else}}
-              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
+              <div class="card card-body" style="background: inherit; color: inherit; max-width: 600px;">
+                {{description}}
+              </div>
               {{/if}}
             </div>
           </div>
@@ -882,49 +890,53 @@ export default
           </div>
         </td>
         <td>
-          <div class="row">
-            <div class="col-md-6">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Alert: {{alert.name}}</span>
-              {{/if}}
-            </div>
-            <div class="col-md-6">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].chat" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Chat: {{chat.name}}</span>
-              {{/if}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].email" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Email: {{email.name}}</span>
-              {{/if}}
-            </div>
-            <div class="col-md-6">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].live" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Live: {{live.name}}</span>
-              {{/if}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              {{#if bEdit}}
-              <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].text" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-              {{else}}
-              <span style="white-space: nowrap;">Text: {{text.name}}</span>
-              {{/if}}
-            </div>
-          </div>
+          <table class="table table-condensed">
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Alert: {{alert.name}}</span>
+                {{/if}}
+              </td>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].chat" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Chat: {{chat.name}}</span>
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].email" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Email: {{email.name}}</span>
+                {{/if}}
+              </td>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].live" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Live: {{live.name}}</span>
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Text</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].text" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Text: {{text.name}}</span>
+                {{/if}}
+              </td>
+              <td>
+              </td>
+            </tr>
+          </table>
         </td>
-        <td>
+        <td style="white-space: nowrap;">
           {{#if bEdit}}
           <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditReminder({{@key}})" title="Save"></button>
           <button class="btn btn-sm btn-success bi bi-save" c-click="editReminder({{@key}})" title="Save"></button>
