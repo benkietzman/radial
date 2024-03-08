@@ -68,7 +68,7 @@ export default
     s.cronUpdate = () =>
     {
       s.reminder.cronPlaceholder = (((c.isDefined(s.reminder.cron.v) && s.reminder.cron.v.value == 1) || s.reminder.cron.value == 1)?'* * * * *':'YYYY-MM-DD HH:MM:SS');
-      if (c.isDefined(s.user.reminders))
+      if (c.isDefined(s.user.reminders) && c.isArray(s.user.reminders))
       {
         for (let i = 0; i < s.user.reminders.length; i++)
         {
