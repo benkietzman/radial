@@ -64,6 +64,20 @@ export default
       });
     };
     // ]]]
+    // [[[ cronUpdate()
+    s.cronUpdate = () =>
+    {
+      s.reminder.cronPlaceholder = (((c.isDefined(s.reminder.cron.v) && s.reminder.cron.v.value == 1) || s.reminder.cron.value == 1)?'* * * * *':'YYYY-MM-DD HH:MM:SS');
+      if (c.isDefined(s.user.reminders))
+      {
+        for (let i = 0; i < s.user.reminders.length; i++)
+        {
+          s.user.reminders[i].cronPlaceholder = (((c.isDefined(s.user.reminders[i].cron.v) && s.user.reminders[i].cron.v.value == 1) || s.user.reminders[i].cron.value == 1)?'* * * * *':'YYYY-MM-DD HH:MM;SS');
+        }
+      }
+      s.u();
+    };
+    // ]]]
     // [[[ editReminder()
     s.editReminder = (nIndex) =>
     {
@@ -350,6 +364,7 @@ export default
         {
           s.reminder = {'alert': a.m_noyes[0], chat: a.m_noyes[0], cron: a.m_noyes[0], email: a.m_noyes[0], live: a.m_noyes[0], text: a.m_noyes[0]};
         }
+        s.cronUpdate();
         if (!c.isDefined(s.user.reminders) || s.user.reminders == null)
         {
           s.info.v = 'Retrieving reminders...';
@@ -365,7 +380,7 @@ export default
               {
                 s.user.reminders[i].timestamp = s.user.reminders[i].datetime;
               }
-              s.u();
+              s.cronUpdate();
             }
             else
             {
@@ -788,12 +803,12 @@ export default
           <table class="table table-condensed">
             <tr>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="reminder.cron" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="reminder.cron" c-change="cronUpdate()" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               </td>
             </tr>
             <tr>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="reminder.sched"></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="reminder.sched" placeholder="{{reminder.cronPlaceholder}}"></div>
               </td>
             </tr>
           </table>
@@ -858,7 +873,7 @@ export default
             <tr>
               <td>
                 {{#if bEdit}}
-                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].cron" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Cron</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].cron" c-change="cronUpdate()" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
                 {{else}}
                 <span style="white-space: nowrap;">Cron: {{cron.name}}</span>
                 {{/if}}
@@ -867,7 +882,7 @@ export default
             <tr>
               <td>
                 {{#if bEdit}}
-                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched"></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Sched</span><input type="text" class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].sched" placeholder="{{cronPlaceholder}}"></div>
                 {{else}}
                 <span style="white-space: nowrap;">Sched: {{sched}}</span>
                 {{/if}}
