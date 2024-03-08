@@ -880,10 +880,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     if (!empty(reminder, "title"))
                     {
                       ssText << endl;
-                      if (!empty(reminder, "sched"))
+                      if (exist(reminder, "cron") && !empty(reminder->m["cron"], "value") && !empty(reminder, "sched"))
                       {
-                        ssText << reminder->m["sched"]->v;
-                        ssText << ":  ";
+                        ssText << char(3) << ((reminder->m["cron"]->v == "0")?"00,14":"13,06") << " " << reminder->m["sched"]->v << " " << char(3) << " ";
                       }
                       ssText << reminder->m["title"]->v;
                     }
