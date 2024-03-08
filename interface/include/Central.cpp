@@ -3225,16 +3225,6 @@ void Central::schedule(string strPrefix)
       }
       // }}}
       // {{{ reminders
-      if ((CTime[1] - CTime[5]) > 60)
-      {
-        CTime[5] = CTime[1];
-        ptJson = new Json;
-        if (sr("loadReminders", ptJson, strError) && ptJson->v == "1")
-        {
-          m_bLoadReminders = true;
-        }
-        delete ptJson;
-      }
       for (auto &reminder : reminders)
       {
         if (CTime[1] > reminder.second)
@@ -3350,6 +3340,16 @@ void Central::schedule(string strPrefix)
       {
         reminders.erase(reminderRemovals.front());
         reminderRemovals.pop_front();
+      }
+      if ((CTime[1] - CTime[5]) > 60)
+      {
+        CTime[5] = CTime[1];
+        ptJson = new Json;
+        if (sr("loadReminders", ptJson, strError) && ptJson->v == "1")
+        {
+          m_bLoadReminders = true;
+        }
+        delete ptJson;
       }
       if (m_bLoadReminders)
       {
@@ -4725,6 +4725,7 @@ bool Central::userReminder(radialUser &d, string &e)
           b = true;
           ny(j, "alert");
           ny(j, "chat");
+          ny(j, "cron");
           ny(j, "email");
           if (!empty(j, "frequency_id"))
           {
@@ -4776,66 +4777,62 @@ bool Central::userReminderAdd(radialUser &d, string &e)
 
   if (dep({"timestamp", "title"}, i, e))
   {
-    if (exist(i, "frequency") && !empty(i->m["frequency"], "id"))
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("userid", d.u);
+    if (user(a, e) && !empty(a.p->m["o"], "id"))
     {
-      radialUser a;
-      userInit(d, a);
-      a.p->m["i"]->i("userid", d.u);
-      if (user(a, e) && !empty(a.p->m["o"], "id"))
+      if (empty(i, "person_id"))
       {
-        if (empty(i, "person_id"))
+        i->i("person_id", a.p->m["o"]->m["id"]->v);
+      }
+      if (d.g || a.p->m["o"]->m["id"]->v == i->m["person_id"]->v)
+      {
+        string id, q;
+        if (exist(i, "alert") && !empty(i->m["alert"], "value"))
         {
-          i->i("person_id", a.p->m["o"]->m["id"]->v);
+          i->i("alert", i->m["alert"]->m["value"]->v);
         }
-        if (d.g || a.p->m["o"]->m["id"]->v == i->m["person_id"]->v)
+        if (exist(i, "chat") && !empty(i->m["chat"], "value"))
         {
-          string id, q;
-          if (exist(i, "alert") && !empty(i->m["alert"], "value"))
-          {
-            i->i("alert", i->m["alert"]->m["value"]->v);
-          }
-          if (exist(i, "chat") && !empty(i->m["chat"], "value"))
-          {
-            i->i("chat", i->m["chat"]->m["value"]->v);
-          }
-          if (exist(i, "email") && !empty(i->m["email"], "value"))
-          {
-            i->i("email", i->m["email"]->m["value"]->v);
-          }
-          i->i("frequency_id", i->m["frequency"]->m["id"]->v);
-          if (exist(i, "live") && !empty(i->m["live"], "value"))
-          {
-            i->i("live", i->m["live"]->m["value"]->v);
-          }
-          if (exist(i, "text") && !empty(i->m["text"], "value"))
-          {
-            i->i("text", i->m["text"]->m["value"]->v);
-          }
-          if (db("dbCentralUserReminderAdd", i, id, q, e))
-          {
-            Json *ptJson = new Json;
-            b = true;
-            o->i("id", id);
-            ptJson->i("loadReminders", "1", '1');
-            storageAdd({"central"}, ptJson, e);
-            delete ptJson;
-          }
+          i->i("chat", i->m["chat"]->m["value"]->v);
         }
-        else
+        if (exist(i, "cron") && !empty(i->m["cron"], "value"))
         {
-          e = "You are not authorized to perform this action.";
+          i->i("cron", i->m["cron"]->m["value"]->v);
+        }
+        if (exist(i, "email") && !empty(i->m["email"], "value"))
+        {
+          i->i("email", i->m["email"]->m["value"]->v);
+        }
+        if (exist(i, "live") && !empty(i->m["live"], "value"))
+        {
+          i->i("live", i->m["live"]->m["value"]->v);
+        }
+        if (exist(i, "text") && !empty(i->m["text"], "value"))
+        {
+          i->i("text", i->m["text"]->m["value"]->v);
+        }
+        if (db("dbCentralUserReminderAdd", i, id, q, e))
+        {
+          Json *ptJson = new Json;
+          b = true;
+          o->i("id", id);
+          ptJson->i("loadReminders", "1", '1');
+          storageAdd({"central"}, ptJson, e);
+          delete ptJson;
         }
       }
-      else if (e.empty())
+      else
       {
-        e = "Failed to fetch user.";
+        e = "You are not authorized to perform this action.";
       }
-      userDeinit(a);
     }
-    else
+    else if (e.empty())
     {
-      e = "Please provide the frequency.";
+      e = "Failed to fetch user.";
     }
+    userDeinit(a);
   }
 
   return b;
@@ -4847,58 +4844,54 @@ bool Central::userReminderEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (dep({"id", "person_id", "title"}, i, e))
+  if (dep({"id", "cron", "person_id", "title"}, i, e))
   {
-    if (exist(i, "frequency") && !empty(i->m["frequency"], "id"))
+    radialUser a, c;
+    userInit(d, a);
+    userInit(d, c);
+    a.p->m["i"]->i("userid", d.u);
+    c.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userReminder(c, e) && !empty(c.p->m["o"], "person_id") && a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v && c.p->m["o"]->m["person_id"]->v == i->m["person_id"]->v))
     {
-      radialUser a, c;
-      userInit(d, a);
-      userInit(d, c);
-      a.p->m["i"]->i("userid", d.u);
-      c.p->m["i"]->i("id", i->m["id"]->v);
-      if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userReminder(c, e) && !empty(c.p->m["o"], "person_id") && a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v && c.p->m["o"]->m["person_id"]->v == i->m["person_id"]->v))
+      if (exist(i, "alert") && !empty(i->m["alert"], "value"))
       {
-        if (exist(i, "alert") && !empty(i->m["alert"], "value"))
-        {
-          i->i("alert", i->m["alert"]->m["value"]->v);
-        }
-        if (exist(i, "chat") && !empty(i->m["chat"], "value"))
-        {
-          i->i("chat", i->m["chat"]->m["value"]->v);
-        }
-        if (exist(i, "email") && !empty(i->m["email"], "value"))
-        {
-          i->i("email", i->m["email"]->m["value"]->v);
-        }
-        i->i("frequency_id", i->m["frequency"]->m["id"]->v);
-        if (exist(i, "live") && !empty(i->m["live"], "value"))
-        {
-          i->i("live", i->m["live"]->m["value"]->v);
-        }
-        if (exist(i, "text") && !empty(i->m["text"], "value"))
-        {
-          i->i("text", i->m["text"]->m["value"]->v);
-        }
-        if (db("dbCentralUserReminderUpdate", i, e))
-        {
-          Json *j = new Json;
-          b = true;
-          j->i("loadReminders", "1", '1');
-          storageAdd({"central"}, j, e);
-          delete j;
-        }
+        i->i("alert", i->m["alert"]->m["value"]->v);
       }
-      else
+      if (exist(i, "chat") && !empty(i->m["chat"], "value"))
       {
-        e = "You are not authorized to perform this action.";
+        i->i("chat", i->m["chat"]->m["value"]->v);
       }
-      userDeinit(c);
-      userDeinit(a);
+      if (exist(i, "cron") && !empty(i->m["cron"], "value"))
+      {
+        i->i("cron", i->m["cron"]->m["value"]->v);
+      }
+      if (exist(i, "email") && !empty(i->m["email"], "value"))
+      {
+        i->i("email", i->m["email"]->m["value"]->v);
+      }
+      if (exist(i, "live") && !empty(i->m["live"], "value"))
+      {
+        i->i("live", i->m["live"]->m["value"]->v);
+      }
+      if (exist(i, "text") && !empty(i->m["text"], "value"))
+      {
+        i->i("text", i->m["text"]->m["value"]->v);
+      }
+      if (db("dbCentralUserReminderUpdate", i, e))
+      {
+        Json *j = new Json;
+        b = true;
+        j->i("loadReminders", "1", '1');
+        storageAdd({"central"}, j, e);
+        delete j;
+      }
     }
     else
     {
-      e = "Please provide the frequency.";
+      e = "You are not authorized to perform this action.";
     }
+    userDeinit(c);
+    userDeinit(a);
   }
 
   return b;
@@ -4961,6 +4954,7 @@ bool Central::userReminders(radialUser &d, string &e)
           b = true; 
           ny(j, "alert");
           ny(j, "chat");
+          ny(j, "cron");
           ny(j, "email");
           if (!empty(j, "frequency_id"))
           {
