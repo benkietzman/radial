@@ -1729,7 +1729,7 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.accounts.[{{@key}}].password" placeholder="Password">
+          <input type="password" class="form-control" c-model="application.accounts.[{{@key}}].password" placeholder="Password">
           {{else}}
           {{password}}
           {{/if}}
