@@ -184,6 +184,8 @@ class Interface : public Base
   bool terminalDown(radialTerminalInfo &tInfo, const size_t unCount, const bool bWait, string &strError);
   bool terminalEnter(radialTerminalInfo &tInfo, const bool bWait, string &strError);
   bool terminalEscape(radialTerminalInfo &tInfo, const bool bWait, string &strError);
+  bool terminalFind(radialTerminalInfo &t, const string strData);
+  bool terminalFind(radialTerminalInfo &t, const string strData, size_t &unRow, size_t &unCol);
   bool terminalFunction(radialTerminalInfo &tInfo, const int nKey, string &strError);
   bool terminalGetSocketTimeout(radialTerminalInfo &tInfo, int &nShort, int &nLong, string &strError);
   bool terminalHome(radialTerminalInfo &tInfo, const bool bWait, string &strError);
