@@ -389,7 +389,7 @@ void Feedback::schedule(string strPrefix)
       Json *ptMessage = new Json;
       CTime[0] = CTime[1];
       ptMessage->i("Source", m_strNode);
-      Interface::status(ptMessage);
+      status(ptMessage);
       ptMessage->i("Action", "status");
       live("Feedback", "", ptMessage, strError);
       delete ptMessage;
