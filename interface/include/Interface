@@ -187,6 +187,8 @@ class Interface : public Base
   bool terminalFind(radialTerminalInfo &t, const string strData);
   bool terminalFind(radialTerminalInfo &t, const string strData, size_t &unRow, size_t &unCol);
   bool terminalFunction(radialTerminalInfo &tInfo, const int nKey, string &strError);
+  bool terminalGet(radialTerminalInfo &tInfo, string &strData, const size_t unRow, string &strError);
+  bool terminalGet(radialTerminalInfo &tInfo, string &strData, const size_t unRow, const size_t unStartCol, const size_t unEndcol, string &strError);
   bool terminalGetSocketTimeout(radialTerminalInfo &tInfo, int &nShort, int &nLong, string &strError);
   bool terminalHome(radialTerminalInfo &tInfo, const bool bWait, string &strError);
   bool terminalKey(radialTerminalInfo &tInfo, const char cData, const size_t unCount, const bool bWait, string &strError);

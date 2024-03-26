@@ -3227,6 +3227,55 @@ bool Interface::terminalFunction(radialTerminalInfo &tInfo, const int nKey, stri
   return terminalRequest(tInfo, "function", {{"Data", ssKey.str()}}, strError);
 }
 // }}}
+// {{{ terminalGet()
+bool Interface::terminalGet(radialTerminalInfo &tInfo, string &strData, const size_t unRow, string &strError)
+{
+  bool bResult = false;
+
+  strData = "";
+  if (unRow < tInfo.screen.size())
+  {
+    bResult = true;
+    strData = tInfo.screen[unRow];
+  }
+  if (!bResult)
+  {
+    strError = "Failed to get data from provided positional arguments.";
+  }
+
+  return bResult;
+}
+bool Terminal::get(radialTerminalInfo &tInfo, string &strData, const size_t unRow, const size_t unStartCol, const size_t unEndCol, string &strError)
+{
+  bool bResult = false;
+
+  strData = "";
+  if (unRow < tInfo.screen.size())
+  {
+    size_t unRealStartCol = unStartCol, unRealEndCol = unEndCol;
+    if (unStartCol > unEndCol)
+    {
+      unRealStartCol = unEndCol;
+      unRealEndCol = unStartCol;
+    }
+    if (unRealEndCol >= tInfo.screen[unRow].size())
+    {
+      unRealEndCol = tInfo.screen[unRow].size() - 1;
+    }
+    if (unRealStartCol <= unRealEndCol)
+    {
+      bResult = true;
+      strData = tInfo.screen[unRow].substr(unRealStartCol, (unRealEndCol + 1) - unRealStartCol);
+    }
+  }
+  if (!bResult)
+  {
+    strError = "Failed to get data from provided positional arguments.";
+  }
+
+  return bResult;
+}
+// }}}
 // {{{ terminalGetSocketTimeout()
 bool Interface::terminalGetSocketTimeout(radialTerminalInfo &tInfo, int &nShort, int &nLong, string &strError)
 {
