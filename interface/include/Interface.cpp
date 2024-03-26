@@ -3245,7 +3245,7 @@ bool Interface::terminalGet(radialTerminalInfo &tInfo, string &strData, const si
 
   return bResult;
 }
-bool Terminal::get(radialTerminalInfo &tInfo, string &strData, const size_t unRow, const size_t unStartCol, const size_t unEndCol, string &strError)
+bool Interface::terminalGet(radialTerminalInfo &tInfo, string &strData, const size_t unRow, const size_t unStartCol, const size_t unEndCol, string &strError)
 {
   bool bResult = false;
 
