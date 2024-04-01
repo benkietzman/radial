@@ -2489,7 +2489,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
                 if (enabled())
                 {
                   bResult = true;
-                  chat(ptJson->m["Target"]->v, strMessage);
+                  chat(ptJson->m["Target"]->v, strMessage, ((!empty(ptJson, "Source"))?ptJson->m["Source"]->v:""));
                 }
                 else
                 {

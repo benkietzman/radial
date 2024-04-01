@@ -94,8 +94,7 @@ class Interface : public Base
   void callbackPush(string strPrefix, const string strPacket, const bool bResponse);
   void callbackWorker(radialCallbackWorker *ptWorker);
   bool centralmon(const string strServer, const string strProcess, Json *ptData, string &strError);
-  bool chat(const string strTarget, const string strMessage);
-  bool chat(const string strTarget, const string strMessage, string &strError);
+  void chat(const string strTarget, const string strMessage, const string strSource = "");
   bool command(const string strCommand, list<string> arguments, const string strInput, string &strOutput, size_t &unDuration, string &strError, const time_t CTimeout = 0, const string strNode = "");
   bool command(const string strCommand, list<string> arguments, Json *ptInput, Json *ptOutput, size_t &unDuration, string &strError, const time_t CTimeout = 0, const string strNode = "");
   bool cron(time_t &CTime, const string strValue, string &strError);

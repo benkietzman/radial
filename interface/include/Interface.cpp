@@ -523,29 +523,21 @@ bool Interface::centralmon(const string strServer, const string strProcess, Json
 }
 // }}}
 // {{{ chat()
-bool Interface::chat(const string strTarget, const string strMessage)
+void Interface::chat(const string strTarget, const string strMessage, const string strSource)
 {
-  string strError;
-
-  return chat(strTarget, strMessage, strError);
-}
-bool Interface::chat(const string strTarget, const string strMessage, string &strError)
-{
-  bool bResult = false;
   stringstream ssMessage;
   Json *ptJson = new Json;
 
   ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strMessage;
   ptJson->i("Function", "chat");
+  if (!strSource.empty())
+  {
+    ptJson->i("Source", strSource);
+  }
   ptJson->i("Target", strTarget);
   ptJson->i("Message", ssMessage.str());
-  if (hub("irc", ptJson, strError))
-  {
-    bResult = true;
-  }
+  hub("irc", ptJson, false);
   delete ptJson;
-
-  return bResult;
 }
 // }}}
 // {{{ command()

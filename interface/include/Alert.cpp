@@ -88,14 +88,9 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             ssName << strFirstName << strLastName;
             if (user["alert_chat"] == "1")
             {
-              if (chat(ssName.str(), strMessage, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::chat() " + strError);
-              }
+              bAlerted = true;
+              chat(ssName.str(), strMessage);
+              chat(strUser, strMessage, "live");
             }
             if (!user["email"].empty())
             {
