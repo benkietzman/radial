@@ -957,14 +957,24 @@ class App
   // {{{ jsonExport()
   jsonExport()
   {
-    let data = JSON.stringify(this.d);
-    sessionStorage.setItem('finance', data);
-    const a = document.createElement('a');
-    const file = new Blob([data], {type: 'application/json'});
-    a.href = URL.createObjectURL(file);
-    a.download = this.m_strFile;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    let request = [{Service: 'format', 'Function': 'convert', Format:{In: 'json', Out: 'json'}, reqApp: 'Finance'}, this.d];
+    this.j.request(request, true, (response) =>
+    {
+      let error = {};
+      if (this.j.response(response, error) && this.c.isDefined(response.Response) && this.c.isDefined(response.Response[0]) && this.c.isDefined(response.Response[0].Status) && response.Response[0].Status == 'okay' && this.c.isDefined(response.Response[1]))
+      {
+        this.d = null;
+        this.d = response.Response[1];
+      } 
+      let data = JSON.stringify(this.d);
+      sessionStorage.setItem('finance', data);
+      const a = document.createElement('a');
+      const file = new Blob([data], {type: 'application/json'});
+      a.href = URL.createObjectURL(file);
+      a.download = this.m_strFile;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }); 
   }
   // }}}
   // {{{ jsonImport()
