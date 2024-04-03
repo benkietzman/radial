@@ -130,7 +130,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       if (!empty(ptJson, "reqApp"))
       {
         stringstream ssQuery;
-        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << m_manip.escape(ptJson->m["reqApp"]->v, strValue) << "'";
+        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << esc(ptJson->m["reqApp"]->v) << "'";
         auto getLoginType = dbquery("central_r", ssQuery.str(), strError);
         if (getLoginType != NULL)
         {
@@ -366,6 +366,45 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
               {
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
                 ptJson->m["Response"]->m["auth"]->m["apps"] = new Json(ptData->m["central"]->m["apps"]);
+              }
+              if (!empty(ptJson, "reqApp"))
+              {
+                ssQuery.str("");
+                ssQuery << "select id from application where name = '" << esc(ptJson->m["reqApp"]->v) << "' and auto_register = 1";
+                auto getApplication = dbquery("central_r", ssQuery.str(), strError);
+                if (getApplication != NULL && !getApplication->empty())
+                {
+                  ssQuery.str("");
+                  ssQuery << "select a.id from application_contact a, person b where a.contact_id = b.id and a.application_id = " << getApplication->front()["id"] << " and b.id = " << getPersonRow["id"];
+                  auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
+                  if (getApplicationContact != NULL && getApplicationContact->empty())
+                  {
+                    ssQuery.str("");
+                    ssQuery << "select id from contact_type where type = 'Contact'";
+                    auto getContactType = dbquery("central_r", ssQuery.str(), strError);
+                    if (getContactType != NULL && !getContactType->empty())
+                    {
+                      ssQuery.str("");
+                      ssQuery << "insert into application_contact (application_id, type_id, contact_id) values (" << getApplication->front()["id"] << ", " << getContactType->front()["id"] << ", " << getPersonRow["id"] << ")";
+                      if (dbupdate("central", ssQuery.str(), strError))
+                      {
+                        if (!exist(ptJwt, "sl_auth"))
+                        {
+                          ptJwt->m["sl_auth"] = new Json;
+                        }
+                        ptJwt->m["sl_auth"]->i(ptJson->m["reqApp"]->v, "0", '0');
+                        if (!exist(ptJson->m["Response"]->m["auth"], "apps"))
+                        {
+                          ptJson->m["Response"]->m["auth"]->m["apps"] = new Json;
+                        }
+                        ptJson->m["Response"]->m["auth"]->m["apps"]->i(ptJson->m["reqApp"]->v, "0", '0');
+                      }
+                    }
+                    dbfree(getContactType);
+                  }
+                  dbfree(getApplicationContact);
+                }
+                dbfree(getApplication);
               }
               if (m_pProcessJwtCallback != NULL)
               {
