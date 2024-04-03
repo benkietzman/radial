@@ -36,6 +36,7 @@ let common = new Common(
     {path: '/Expense/Charity', name: 'ExpenseCharity', component: '/finance/component/ExpenseCharity.js'},
     {path: '/Expense/Food', name: 'ExpenseFood', component: '/finance/component/ExpenseFood.js'},
     {path: '/Expense/Home', name: 'ExpenseHome', component: '/finance/component/ExpenseHome.js'},
+    {path: '/Expense/Medical', name: 'ExpenseMedical', component: '/finance/component/ExpenseMedical.js'},
     {path: '/Expense/Misc', name: 'ExpenseMisc', component: '/finance/component/ExpenseMisc.js'},
     {path: '/Expense/Spend', name: 'ExpenseSpend', component: '/finance/component/ExpenseSpend.js'},
     {path: '/Expense/Utility', name: 'ExpenseUtility', component: '/finance/component/ExpenseUtility.js'},

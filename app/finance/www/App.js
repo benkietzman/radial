@@ -673,6 +673,10 @@ class App
     {
       this.d.Expense.Home = {};
     }
+    if (!this.c.isObject(this.d.Expense.Medical))
+    {
+      this.d.Expense.Medical = {};
+    }
     if (!this.c.isObject(this.d.Expense.Misc))
     {
       this.d.Expense.Misc = {};
@@ -1146,6 +1150,7 @@ class App
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Charity', href: '/Expense/Charity', icon: 'bag-plus', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Food', href: '/Expense/Food', icon: 'cart3', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Home', href: '/Expense/Home', icon: 'house', active: null};
+    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Medical', href: '/Expense/Medical', icon: 'bandaid', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Misc', href: '/Expense/Misc', icon: 'cloud', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Utility', href: '/Expense/Utility', icon: 'lightning', active: null};
     unSubIndex = 0;
