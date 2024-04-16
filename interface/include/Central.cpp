@@ -4909,6 +4909,8 @@ bool Central::users(radialUser &d, string &e)
       ny(j, "alert_pager");
       rm(j, "alert_remote_auth_decrypted_password");
       rm(j, "alert_remote_auth_password");
+      rm(j, "alert_remote_proxy_decrypted_password");
+      rm(j, "alert_remote_proxy_password");
       ny(j, "locked");
       o->pb(j);
       delete j;
