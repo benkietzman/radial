@@ -750,6 +750,30 @@ export default
                 {{/if}}
               </td>
             </tr>
+            <tr>
+              <th style="white-space: nowrap;">
+                <span title="User for the proxy.">Proxy User:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_proxy_user">
+                {{else}}
+                {{user.alert_remote_proxy_user}}
+                {{/if}}
+              </td>
+              <th style="white-space: nowrap;">
+                <span title="Password for the proxy.">Proxy Password:</span>
+              </th>
+              <td>
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.alert_remote_proxy_password">
+                {{else if user.bAdmin}}
+                {{#ifCond user.alert_remote_proxy_password "!=" ""}}
+                ******
+                {{/ifCond}}
+                {{/if}}
+              </td>
+            </tr>
           </table>
         </div>
       </div>
