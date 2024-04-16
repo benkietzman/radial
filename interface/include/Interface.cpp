@@ -3537,10 +3537,24 @@ bool Interface::user(radialUser &d, string &e)
           delete j->m["alert_remote_auth_decrypted_password"];
           j->m.erase("alert_remote_auth_decrypted_password");
         }
-        if (!d.g && (r["userid"].empty() || d.u != r["userid"]) && exist(j, "alert_remote_auth_password"))
+        if (exist(j, "alert_remote_proxy_decrypted_password"))
         {
-          delete j->m["alert_remote_auth_password"];
-          j->m.erase("alert_remote_auth_password");
+          j->i("alert_remote_proxy_password", j->m["alert_remote_proxy_decrypted_password"]->v);
+          delete j->m["alert_remote_proxy_decrypted_password"];
+          j->m.erase("alert_remote_proxy_decrypted_password");
+        }
+        if (!d.g && (r["userid"].empty() || d.u != r["userid"]))
+        {
+          if (exist(j, "alert_remote_auth_password"))
+          {
+            delete j->m["alert_remote_auth_password"];
+            j->m.erase("alert_remote_auth_password");
+          }
+          if (exist(j, "alert_remote_proxy_password"))
+          {
+            delete j->m["alert_remote_proxy_password"];
+            j->m.erase("alert_remote_proxy_password");
+          }
         }
         ny(j, "locked");
         d.p->i("o", j);
