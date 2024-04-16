@@ -130,7 +130,16 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             if (!user["alert_remote_url"].empty())
             {
               string strContent, strCookies, strHeader;
+              stringstream ssProxy;
               Json *ptPost = new Json;
+              if (!user["alert_remote_proxy"].empty())
+              {
+                ssProxy << user["alert_remote_proxy"];
+                if (!user["alert_remote_proxy_user"].empty() && !user["alert_remote_proxy_password"].empty())
+                {
+                  ssProxy << endl << user["alert_remote_proxy_user"] << ":" << user["alert_remote_proxy_password"];
+                }
+              }
               ptPost->i("Interface", "alert");
               if (!user["alert_remote_auth_user"].empty())
               {
@@ -146,7 +155,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 ptPost->m["Request"]->i("User", user["alert_remote_user"]);
               }
               ptPost->m["Request"]->i("Message", strMessage);
-              if (curl(user["alert_remote_url"], "json", NULL, NULL, ptPost, NULL, user["alert_remote_proxy"], strCookies, strHeader, strContent, strError))
+              if (curl(user["alert_remote_url"], "json", NULL, NULL, ptPost, NULL, ssProxy.str(), strCookies, strHeader, strContent, strError))
               {
                 Json *ptContent = new Json(strContent);
                 if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
@@ -181,6 +190,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
               {
                 errors.push_back((string)"Interface::curl() " + strError);
               }
+              delete ptPost;
             }
             if (bAlerted)
             {
