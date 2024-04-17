@@ -886,7 +886,7 @@ export default
                 {{#if bEdit}}
                 <textarea class="form-control form-control-sm" rows="3" c-model="user.reminders.[{{@key}}].description" placeholder="Enter any reminder details..."></textarea>
                 {{else}}
-                {{description}}
+                <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{description}}</pre>
                 {{/if}}
               </td>
             </tr>
