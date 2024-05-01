@@ -67,10 +67,10 @@ export default
           </tr>
           <tr>
             <td style="white-space: nowrap;">Invest</td>
-            <td>10%</td>
+            <td>15%</td>
             <td title="{{number (multiply (divide (cashFlow) (incomeSum)) 100)}}%">{{numberShort (multiply (divide (cashFlow) (incomeSum)) 100)}}%</td>
-            <td>{{#ifCond (divide (cashFlow) (incomeSum)) '>=' 0.10}}<span class="text-success">YES</span>{{else}}<span class="text-danger">NO</span>{{/ifCond}}</td>
-            <td>The goal is to be investing at least 10% of your gross income.  You may need to increase that percentage in order to reach your personal retirement goals.  The <a href="#/Summary/Forecast">Summary - Forecast</a> can be used to determine whether you are on track for meeting your retirement goals.</td>
+            <td>{{#ifCond (divide (cashFlow) (incomeSum)) '>=' 0.15}}<span class="text-success">YES</span>{{else}}<span class="text-danger">NO</span>{{/ifCond}}</td>
+            <td>The goal is to be investing at least 15% of your gross income.  You may need to increase that percentage in order to reach your personal retirement goals.  The <a href="#/Summary/Forecast">Summary - Forecast</a> can be used to determine whether you are on track for meeting your retirement goals.</td>
           </tr>
           <tr>
             <td style="white-space: nowrap;">Retire</td>
