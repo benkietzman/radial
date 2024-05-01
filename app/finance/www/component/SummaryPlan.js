@@ -53,7 +53,7 @@ export default
           </tr>
           <tr>
             <td style="white-space: nowrap;">Emergency Fund</td>
-            <td title="{{number (multiply (divide (subtract (expenseSum) (incomeEmploymentWithheldSum)) 12) 3)}}">{{numberShort (multiply (divide (subtract (expenseSum) (incomeEmploymentWithheldSum)) 12) 3)}}</td>
+            <td title="{{number (divide (subtract (expenseSum) (incomeEmploymentWithheldSum)) 4)}}">{{numberShort (divide (subtract (expenseSum) (incomeEmploymentWithheldSum)) 4)}}</td>
             <td title="{{number (add (genericTypeSum f.Asset 'Liquid') (assetMetalSum))}}">{{numberShort (add (genericTypeSum f.Asset 'Liquid') (assetMetalSum))}}</td>
             <td>{{#ifCond (add (genericTypeSum f.Asset 'Liquid') (assetMetalSum)) '>=' (multiply (divide (subtract (expenseSum) (incomeEmploymentWithheldSum)) 12) 3)}}<span class="text-success">YES</span>{{else}}<span class="text-danger">NO</span>{{/ifCond}}</td>
             <td>The goal is to have at least three months worth of expenses saved as an emergency fund.  As the name suggests, an emergency fund is ear marked for emergencies.</td>
