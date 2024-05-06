@@ -22,11 +22,15 @@ namespace radial
 // {{{ Live()
 Live::Live(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "live", argc, argv, pCallback)
 {
+  m_pThreadSchedule = new thread(&Live::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Live()
 Live::~Live()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
   for (auto &conn : m_conns)
   {
     delete conn.second;

@@ -40,6 +40,7 @@ class Terminal : public Interface
   map<string, bool (Terminal::*)(radialUser &, string &)> m_functions;
   map<string, radialTerminal *> m_sessions;
   mutex m_mutex;
+  thread *m_pThreadSchedule;
 
   bool connect(radialUser &d, string &e);
   bool ctrl(radialUser &d, string &e);
@@ -56,6 +57,7 @@ class Terminal : public Interface
   void post(radialUser &d, radialTerminal *t);
   radialTerminal *pre(radialUser &d, bool &w, size_t &c, string &k, string &e);
   bool right(radialUser &d, string &e);
+  void schedule(string strPrefix);
   bool screen(radialUser &d, string &e);
   bool send(radialUser &d, string &e);
   bool setSocketTimeout(radialUser &d, string &e);
@@ -68,7 +70,6 @@ class Terminal : public Interface
   Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Terminal();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
   void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}

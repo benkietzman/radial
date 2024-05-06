@@ -119,11 +119,15 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["userReminders"] = &Central::userReminders;
   m_functions["userRemove"] = &Central::userRemove;
   m_functions["users"] = &Central::users;
+  m_pThreadSchedule = new thread(&Central::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Central()
 Central::~Central()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
   delete m_ptCred;
 }
 // }}}

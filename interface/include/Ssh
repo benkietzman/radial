@@ -39,17 +39,18 @@ class Ssh : public Interface
   protected:
   map<string, radialSsh *> m_sessions;
   mutex m_mutex;
+  thread *m_pThreadSchedule;
 
   int authenticateNone(ssh_session session);
   int authenticatePassword(ssh_session session, const string strPassword);
   int authenticateKbdint(ssh_session session, const string strPassword);
+  void schedule(string strPrefix);
   bool transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError);
 
   public:
   Ssh(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Ssh();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
 };
 // }}}
 }

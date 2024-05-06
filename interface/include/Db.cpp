@@ -82,11 +82,15 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralUserRemove"] = &Db::dbCentralUserRemove;
   m_functions["dbCentralUsers"] = &Db::dbCentralUsers;
   m_functions["dbCentralUserUpdate"] = &Db::dbCentralUserUpdate;
+  m_pThreadSchedule = new thread(&Db::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Db()
 Db::~Db()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
 }
 // }}}
 // {{{ autoMode()

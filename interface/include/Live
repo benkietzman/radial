@@ -39,16 +39,17 @@ class Live : public Interface
   protected:
   map<string, data *> m_conns;
   mutex m_mutex;
+  thread *m_pThreadSchedule;
 
   void message(const string strApplication, const string strUser, map<string, string> message);
   void message(const string strApplication, const string strUser, Json *ptMessage);
   bool retrieve(const string strWsRequestID, string &strApplication, string &strUser);
+  void schedule(string strPrefix);
 
   public:
   Live(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Live();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
 };
 // }}}
 }

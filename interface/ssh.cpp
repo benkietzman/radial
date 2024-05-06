@@ -21,10 +21,7 @@ int main(int argc, char *argv[])
   string strPrefix = "ssh->main()";
   gpSsh = new Ssh(strPrefix, argc, argv, &callback);
   gpSsh->enableWorkers();
-  thread threadSchedule(&Ssh::schedule, gpSsh, strPrefix);
-  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpSsh->process(strPrefix);
-  threadSchedule.join();
   delete gpSsh;
   return 0;
 }

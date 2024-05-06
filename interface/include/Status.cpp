@@ -24,11 +24,15 @@ Status::Status(string strPrefix, int argc, char **argv, void (*pCallback)(string
 {
   m_functions["action"] = &Status::action;
   m_functions["status"] = &Status::status;
+  m_pThreadSchedule = new thread(&Status::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Status()
 Status::~Status()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
 }
 // }}}
 // {{{ autoMode()

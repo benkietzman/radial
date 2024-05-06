@@ -43,11 +43,15 @@ Terminal::Terminal(string strPrefix, int argc, char **argv, void (*pCallback)(st
   m_functions["tab"] = &Terminal::tab;
   m_functions["up"] = &Terminal::up;
   m_functions["wait"] = &Terminal::wait;
+  m_pThreadSchedule = new thread(&Terminal::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Terminal()
 Terminal::~Terminal()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
   m_mutex.lock();
   for (auto &session : m_sessions)
   {

@@ -26,7 +26,9 @@ class Status : public Interface
 {
   protected:
   map<string, bool (Status::*)(radialUser &, string &)> m_functions;
+  thread *m_pThreadSchedule;
 
+  void schedule(string strPrefix);
   bool status(Json *o, string &e);
   bool status(radialUser &d, string &e);
 
@@ -35,7 +37,6 @@ class Status : public Interface
   ~Status();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
 };
 // }}}
 }

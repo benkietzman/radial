@@ -30,6 +30,7 @@ class Central : public Interface
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
   string m_strEmail;
   string m_strServer;
+  thread *m_pThreadSchedule;
   Json *m_ptCred;
 
   bool accountType(radialUser &d, string &e);
@@ -100,6 +101,7 @@ class Central : public Interface
   bool repos(radialUser &d, string &e);
   void rm(Json *ptJson, const string strField);
   bool sa(const string strKey, Json *ptData, string &strError);
+  void schedule(string strPrefix);
   bool server(radialUser &d, string &e);
   bool serverAdd(radialUser &d, string &e);
   bool serverDetailsByApplicationID(radialUser &d, string &e);
@@ -132,7 +134,6 @@ class Central : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
-  void schedule(string strPrefix);
 };
 // }}}
 }

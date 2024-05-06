@@ -22,11 +22,15 @@ namespace radial
 // {{{ Ssh()
 Ssh::Ssh(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "ssh", argc, argv, pCallback)
 {
+  m_pThreadSchedule = new thread(&Ssh::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Ssh()
 Ssh::~Ssh()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
 }
 // }}}
 // {{{ authenticate

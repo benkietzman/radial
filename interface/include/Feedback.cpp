@@ -35,11 +35,15 @@ Feedback::Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(st
   m_functions["surveys"] = &Feedback::surveys;
   m_functions["type"] = &Feedback::type;
   m_functions["types"] = &Feedback::types;
+  m_pThreadSchedule = new thread(&Feedback::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Feedback()
 Feedback::~Feedback()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
 }
 // }}}
 // {{{ answers()

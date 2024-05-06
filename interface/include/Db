@@ -29,6 +29,7 @@ class Db : public Interface
   map<string, string> m_cache;
   map<string, bool (Db::*)(Json *, Json *, string &, string &, string &)> m_functions;
   mutex m_mutex;
+  thread *m_pThreadSchedule;
 
   bool cacheAdd(const list<string> k, Json *s, string &e);
   bool cacheRetrieve(const list<string> k, Json *s, string &e);
@@ -111,6 +112,7 @@ class Db : public Interface
   string ib(const string k, Json *i, bool &f);
   string ib(const string k, const string i);
   string ib(const string k, const string i, bool &f);
+  void schedule(string strPrefix);
   string u(const list<string> ks, Json *i);
   string u(const list<string> ks, Json *i, bool &f);
   string u(const string k, Json *i);
@@ -124,7 +126,6 @@ class Db : public Interface
   ~Db();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
   void setCallbackAddon(bool (*pCallback)(const string, Json *, Json *, string &, string &, string &, bool &));
 };
 // }}}

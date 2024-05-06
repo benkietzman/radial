@@ -29,11 +29,13 @@ class Feedback : public Interface
   map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
   string m_strEmail;
   string m_strServer;
+  thread *m_pThreadSchedule;
 
   bool answers(radialUser &d, string &e);
   bool questions(radialUser &d, string &e);
   bool results(radialUser &d, string &e);
   bool resultAdd(radialUser &d, string &e);
+  void schedule(string strPrefix);
   bool survey(radialUser &d, string &e);
   bool surveyEdit(radialUser &d, string &e);
   bool surveyRemove(radialUser &d, string &e);
@@ -45,7 +47,6 @@ class Feedback : public Interface
   Feedback(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Feedback();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void schedule(string strPrefix);
   void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}

@@ -20,10 +20,7 @@ int main(int argc, char *argv[])
   string strPrefix = "terminal->main()";
   gpTerminal = new radial::Terminal(strPrefix, argc, argv, &callback);
   gpTerminal->enableWorkers();
-  thread threadSchedule(&radial::Terminal::schedule, gpTerminal, strPrefix);
-  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpTerminal->process(strPrefix);
-  threadSchedule.join();
   delete gpTerminal;
   return 0;
 }

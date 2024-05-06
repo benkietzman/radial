@@ -23,10 +23,7 @@ int main(int argc, char *argv[])
   gpCentral->enableWorkers();
   gpCentral->setApplication("Central");
   gpCentral->setAutoMode(&autoMode);
-  thread threadSchedule(&radial::Central::schedule, gpCentral, strPrefix);
-  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpCentral->process(strPrefix);
-  threadSchedule.join();
   delete gpCentral;
   return 0;
 }

@@ -24,10 +24,7 @@ int main(int argc, char *argv[])
   gpStatus->enableWorkers();
   gpStatus->setApplication("Radial");
   gpStatus->setAutoMode(&autoMode);
-  thread threadSchedule(&Status::schedule, gpStatus, strPrefix);
-  pthread_setname_np(threadSchedule.native_handle(), "schedule");
   gpStatus->process(strPrefix);
-  threadSchedule.join();
   delete gpStatus;
   return 0;
 }
