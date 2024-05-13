@@ -2820,6 +2820,7 @@ bool Central::footer(radialUser &d, string &e)
 {
   bool b = true;
   Json *i = d.p->m["i"], *o;
+  radialUser a;
 
   d.p->i("o", i);
   o = d.p->m["o"];
@@ -2832,7 +2833,6 @@ bool Central::footer(radialUser &d, string &e)
   }
   if (!empty(i, "userid"))
   {
-    radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("userid", i->m["userid"]->v);
     if (user(a, e) && !empty(a.p->m["o"], "id"))
@@ -2845,6 +2845,16 @@ bool Central::footer(radialUser &d, string &e)
     }
     userDeinit(a);
   }
+  userInit(d, a);
+  a.p->m["i"]->i("name", "Radial");
+  if (application(a, e) && !empty(a.p->m["o"], "website"))
+  {
+    a.p->m["o"]->("application", "Radial");
+    a.p->m["o"]->("link", a.p->m["o"]->m["website"]->v);
+    a.p->m["o"]->i("target", "_blank");
+    o->i("power", a.p->m["o"]);
+  }
+  userDeinit(a);
 
   return b;
 }
