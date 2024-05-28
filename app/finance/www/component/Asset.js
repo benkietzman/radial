@@ -275,7 +275,7 @@ export default
               <th c-click="c.tableSort('stock', 10, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Current Allocation">Alloc</th>
               <th c-click="c.tableSort('stock', 11, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Current Value">Value</th>
               <th c-click="c.tableSort('stock', 12, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Target Allocation">TgtA</th>
-              <th c-click="c.tableSort('stock', 13, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Target Value">Tgt</th>
+              <th c-click="c.tableSort('stock', 13, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Target Value">TgtV</th>
               <th c-click="c.tableSort('stock', 14, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Gap between Current Value and Target Value">Gap</th>
               <th c-click="c.tableSort('stock', 15, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Annual Dividend">Div</th>
               <th c-click="c.tableSort('stock', 16, true)" style="cursor: ns-resize; font-size: small; text-align:right;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
