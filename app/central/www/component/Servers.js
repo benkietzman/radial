@@ -162,7 +162,6 @@ export default
               let strForm = response.Request.form;
               s.server = response.Response;
               s.server.bAdmin = c.isGlobalAdmin();
-              s.initForms();
               s.showForm(strForm);
               if (s.server.bAdmin)
               {

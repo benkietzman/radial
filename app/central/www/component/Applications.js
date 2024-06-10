@@ -441,7 +441,6 @@ export default
               s.application = response.Response;
               s.application.bDeveloper = c.isGlobalAdmin();
               s.application.bLocalAdmin = c.isLocalAdmin(s.application.name);
-              s.initForms();
               s.showForm(strForm);
               if (s.application.bDeveloper)
               {

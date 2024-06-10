@@ -91,8 +91,8 @@ class App
   // {{{ setNoYes()
   setNoYes(item)
   {
-    let bFound = false;;
-    let nIndex = 0
+    let bFound = false;
+    let nIndex = 0;
 
     for (nIndex = 0; !bFound && nIndex < this.m_noyes.length; nIndex++)
     {

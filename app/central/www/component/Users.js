@@ -174,7 +174,6 @@ export default
               let strForm = response.Request.form;
               s.user = response.Response;
               s.user.bAdmin = ((c.isGlobalAdmin() || c.getUserID() == s.user.userid)?true:false);
-              s.initForms();
               s.showForm(strForm);
               if (s.user.bAdmin)
               {
