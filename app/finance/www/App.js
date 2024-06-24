@@ -851,7 +851,7 @@ class App
   // {{{ incomeEmploymentWithheld()
   incomeEmploymentWithheld(k)
   {
-    return Number(this.d.Income.Employment[k].Medical) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number(this.d.Income.Employment[k].Tax) / 100));
+    return Number(this.d.Income.Employment[k].Hsa) + Number(this.d.Income.Employment[k].Medical) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number(this.d.Income.Employment[k].Tax) / 100));
   }
   // }}}
   // {{{ incomeEmploymentWithheldSum()

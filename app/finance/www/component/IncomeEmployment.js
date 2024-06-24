@@ -183,7 +183,8 @@ export default
           <th title="Name of Employer">Employer</th>
           <th title="Gross Salary">Salary</th>
           <th title="Bonus Amount">Bonus</th>
-          <th title="Medical Expense">Medical</th>
+          <th title="Health Savings Account">HSA</th>
+          <th title="Medical Premium">Medical</th>
           <th title="Investment Percentage">Invest</th>
           <th title="Employer Match Percentage">Match</th>
           <th title="Withholding Percentage">Tax</th>
@@ -195,6 +196,7 @@ export default
           <td><input type="text" class="form-control form-control-sm" c-model="d.k"></td>
           <td><input type="text" class="form-control form-control-sm" c-model="d.Salary"></td>
           <td><input type="text" class="form-control form-control-sm" c-model="d.Bonus"></td>
+          <td><input type="text" class="form-control form-control-sm" c-model="d.Hsa"></td>
           <td><input type="text" class="form-control form-control-sm" c-model="d.Medical"></td>
           <td><div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="d.Invest"><span class="input-group-text">%</span></div></td>
           <td><div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="d.Match"><span class="input-group-text">%</span></div></td>
@@ -206,6 +208,7 @@ export default
           <td>{{#ifCond @key '!=' ../k}}{{../k}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.k">{{/ifCond}}</td>
           <td>{{#ifCond @key '!=' ../k}}{{../Salary}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Salary">{{/ifCond}}</td>
           <td>{{#ifCond @key '!=' ../k}}{{../Bonus}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Bonus">{{/ifCond}}</td>
+          <td>{{#ifCond @key '!=' ../k}}{{../Hsa}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Hsa">{{/ifCond}}</td>
           <td>{{#ifCond @key '!=' ../k}}{{../Medical}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Medical">{{/ifCond}}</td>
           <td>{{#ifCond @key '!=' ../k}}{{../Invest}}%{{else}}<div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="e.Invest"><span class="input-group-text">%</span></div>{{/ifCond}}</td>
           <td>{{#ifCond @key '!=' ../k}}{{../Match}}%{{else}}<div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="e.Match"><span class="input-group-text">%</span></div>{{/ifCond}}</td>

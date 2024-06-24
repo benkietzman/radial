@@ -49,7 +49,7 @@ export default
           s.chart.destroy();
           delete s.chart;
         }
-        s.chart = new Chart(ctx, {type: 'doughnut', data: d, options: {plugins: {legend: {display: false}, title: {display: false}}}});
+        s.chart = new Chart(ctx, {type: 'doughnut', data: d, options: {plugins: {legend: {display: false}, title: {display: false}} } });
       }
     });
   },
