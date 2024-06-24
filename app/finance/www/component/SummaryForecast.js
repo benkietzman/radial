@@ -144,7 +144,6 @@ export default
         {
           s.d[i].Stock = Number(s.d[i].Stock) + Number(f.Assumption.PensionLumpSum);
         }
-        s.d[i].Dividend = Number(s.d[i].Stock) * fYield;
         s.d[i].Metal = Number(s.d[i-1].Metal) * (1 + (Number(f.Assumption.InflationRate) / 100));
         if (Number(s.d[i-1].Flow) > 0)
         {
@@ -178,6 +177,7 @@ export default
             }
           }
         }
+        s.d[i].Dividend = Number(s.d[i].Stock) * fYield;
         s.d[i].Asset = Number(s.d[i].Stock) + Number(s.d[i].Dividend) + Number(s.d[i].Metal);
         s.d[i].DivTax = 0;
         if ((s.d[i].Gross + s.d[i].Dividend) >= divTax[0][f.Assumption.FilingStatus])
