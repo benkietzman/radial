@@ -72,7 +72,8 @@ export default
               <th title="Name of Employer">Employer</th>
               <th style="text-align:right;" title="Gross Salary">Salary</th>
               <th style="text-align:right;" title="Bonus Amount">Bonus</th>
-              <th style="text-align:right;" title="Medical Expense">Medical</th>
+              <th style="text-align:right;" title="Health Savings Account">HSA</th>
+              <th style="text-align:right;" title="Medical Premium">Medical</th>
               <th style="text-align:right;" title="Investment Percentage">Invest</th>
               <th style="text-align:right;" title="Employer Match Percentage">Match</th>
               <th style="text-align:right;" title="Withholding Percentage">Tax</th>
@@ -84,6 +85,7 @@ export default
               <td>{{@key}}</td>
               <td style="text-align:right;" title="{{number Salary}}">{{numberShort Salary}}</td>
               <td style="text-align:right;" title="{{number Bonus}}">{{numberShort Bonus}}</td>
+              <td style="text-align:right;" title="{{number Hsa}}">{{numberShort Hsa}}</td>
               <td style="text-align:right;" title="{{number Medical}}">{{numberShort Medical}}</td>
               <td style="text-align:right;">{{Invest}}%</td>
               <td style="text-align:right;">{{Match}}%</td>
