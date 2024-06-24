@@ -94,7 +94,7 @@ export default
             {{/each}}
             <tr>
               <th style="text-align:left;">Gross</th>
-              <th colspan="6" style="text-align:right;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
+              <th colspan="7" style="text-align:right;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
             </tr>
             </tbody>
           </table>
