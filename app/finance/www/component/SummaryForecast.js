@@ -25,11 +25,7 @@ export default
       c: c,
       chart0: null,
       chart1: null,
-      d: [],
-      u: () =>
-      {
-        c.render(id, 'SummaryForecast', this);
-      }
+      d: []
     });
     c.setMenu('Summary', 'Forecast');
     s.f = f;
