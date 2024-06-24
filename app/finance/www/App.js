@@ -140,6 +140,10 @@ class App
     {
       return this.genericTypeSum(f, t);
     });
+    Handlebars.registerHelper('incomeEmployment', (k) =>
+    {
+      return this.incomeEmployment(k);
+    });
     Handlebars.registerHelper('incomeEmploymentSum', () =>
     {
       return this.incomeEmploymentSum();
@@ -826,6 +830,12 @@ class App
     return nSum;
   }
   // }}}
+  // {{{ incomeEmployment()
+  incomeEmployment(k)
+  {
+    return Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus) + (Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number((Number(this.d.Income.Employment[k].Invest) >= Number(this.d.Income.Employment[k].Match))?this.d.Income.Employment[k].Match:this.d.Income.Employment[k].Invest) / 100);
+  }
+  // }}}
   // {{{ incomeEmploymentSum()
   incomeEmploymentSum()
   {
@@ -833,16 +843,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Income.Employment))
     {
-      let fMatch = 0;
-      if (Number(v.Invest) >= Number(v.Match))
-      {
-        fMatch = Number(v.Match) / 100;
-      }
-      else
-      {
-        fMatch = Number(v.Invest) / 100;
-      }
-      nSum += Number(v.Salary) + Number(v.Bonus) + (Number(v.Salary) + Number(v.Bonus)) * fMatch;
+      nSum += this.incomeEmployment(k);
     }
 
     return nSum;
@@ -851,7 +852,7 @@ class App
   // {{{ incomeEmploymentWithheld()
   incomeEmploymentWithheld(k)
   {
-    return Number(this.d.Income.Employment[k].Hsa) + Number(this.d.Income.Employment[k].Medical) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number(this.d.Income.Employment[k].Tax) / 100));
+    return ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number(this.d.Income.Employment[k].Invest) / 100)) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * Number(this.d.Income.Employment[k].Invest / 100))) * (Number(this.d.Income.Employment[k].Tax) / 100)) + Number(this.d.Income.Employment[k].Hsa) + Number(this.d.Income.Employment[k].Medical);
   }
   // }}}
   // {{{ incomeEmploymentWithheldSum()

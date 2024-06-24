@@ -79,10 +79,15 @@ export default
       if (y == nYear)
       {
         s.d[i].Gross = 0;
+        s.d[i].Invest = 0;
         s.d[i].Net = 0;
         if (!bRetired)
         {
           s.d[i].Gross = Number(a.incomeSum());
+          for (let [k, v] of Object.entries(a.d.Income.Employment))
+          {
+            s.d[i].Invest += ((Number(v.Salary) + Number(v.Bonus)) * (v.Invest / 100) + (Number(v.Salary) + Number(v.Bonus)) * (Number((Number(v.Invest) >= Number(v.Match))?v.Match:v.Invest) / 100)) * (1 - (Number(v.Tax) / 100));
+          }
           s.d[i].Net = Number(s.d[i].Gross) - Number(a.incomeEmploymentWithheldSum());
         }
         s.d[i].Stock = Number(a.assetStockSum());
@@ -109,7 +114,7 @@ export default
         {
           s.d[i].Tithe = Number(s.d[i].Gross) * (Number(f.Assumption.Tithe) / 100);
         }
-        s.d[i].Income = (Number(s.d[i].Net) + Number(s.d[i].Dividend)) - (Number(s.d[i].DivTax) + Number(s.d[i].Tithe));
+        s.d[i].Income = (Number(s.d[i].Invest) + Number(s.d[i].Net) + Number(s.d[i].Dividend)) - (Number(s.d[i].DivTax) + Number(s.d[i].Tithe));
         if (y >= Number(f.Assumption.SocialSecurityYear))
         {
           if (Number(fSocialSecurity) == 0)
@@ -126,10 +131,12 @@ export default
       else
       {
         s.d[i].Gross = 0;
+        s.d[i].Invest = 0;
         s.d[i].Net = 0;
         if (!bRetired)
         {
           s.d[i].Gross = Number(s.d[i-1].Gross) * (1 + (Number(f.Assumption.IncomeRaise) / 100));
+          s.d[i].Invest = Number(s.d[i-1].Invest) * (1 + (Number(f.Assumption.IncomeRaise) / 100));
           s.d[i].Net = Number(s.d[i-1].Net) * (1 + (Number(f.Assumption.IncomeRaise) / 100));
         }
         s.d[i].Stock = Number(s.d[i-1].Stock) * (1 + (Number(f.Assumption.StockGrowth) / 100));
@@ -186,7 +193,7 @@ export default
         {
           s.d[i].Tithe = Number(s.d[i].Gross) * (Number(f.Assumption.Tithe) / 100);
         }
-        s.d[i].Income = (Number(s.d[i].Net) + Number(s.d[i].Dividend)) - (Number(s.d[i].DivTax) + Number(s.d[i].Tithe));
+        s.d[i].Income = (Number(s.d[i].Invest) + Number(s.d[i].Net) + Number(s.d[i].Dividend)) - (Number(s.d[i].DivTax) + Number(s.d[i].Tithe));
         if (y >= Number(f.Assumption.SocialSecurityYear))
         {
           if (Number(fSocialSecurity) == 0)
@@ -267,7 +274,9 @@ export default
           <th>Year</th>
           <th>Age</th>
           <th title="Gross Income including Employer Match">Gross</th>
+          <th title="Invest">Invest</th>
           <th title="Net Income">Net</th>
+          <th title="Tithe">Tithe</th>
           <th title="Value of Stocks">Stock</th>
           <th title="Annual Dividend Yield">Dividend</th>
           <th title="Dividend Tax">Div Tax</th>
@@ -285,7 +294,9 @@ export default
           <td>{{Year}}</td>
           <td>{{Age}}</td>
           <td title="{{number Gross}}">{{numberShort Gross}}</td>
+          <td title="{{number Invest}}">{{numberShort Invest}}</td>
           <td title="{{number Net}}">{{numberShort Net}}</td>
+          <td title="{{number Tithe}}">{{numberShort Tithe}}</td>
           <td title="{{number Stock}}">{{numberShort Stock}}</td>
           <td title="{{number Dividend}}">{{numberShort Dividend}}</td>
           <td title="{{number DivTax}}">{{numberShort DivTax}}</td>
