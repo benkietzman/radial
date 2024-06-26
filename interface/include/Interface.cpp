@@ -286,6 +286,22 @@ bool Interface::auth(Json *ptJson, string &strError)
   return bResult;
 }
 // }}}
+// {{{ boolean()
+void Interface::boolean(Json *ptJson, const string strField)
+{
+  if (ptJson != NULL)
+  {
+    char cType = '0';
+    string strValue = "0";
+    if (exist(ptJson, strField) && ptJson->m[strField]->v == "1")
+    {
+      cType = '1';
+      strValue = "1";
+    }
+    ptJson->i(strField, strValue, cType);
+  }
+}
+// }}}
 // {{{ callback
 // {{{ callbackPool()
 void Interface::callbackPool()

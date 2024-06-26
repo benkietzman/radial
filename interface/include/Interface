@@ -90,6 +90,7 @@ class Interface : public Base
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
   bool auth(Json *ptJson, string &strError);
+  void boolean(Json *ptJson, const string strField);
   void callbackPool();
   void callbackPush(string strPrefix, const string strPacket, const bool bResponse);
   void callbackWorker(radialCallbackWorker *ptWorker);
