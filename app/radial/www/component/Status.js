@@ -221,7 +221,7 @@ export default
           <tr>
             <td {{#ifCond Master.Node "==" @key}} style="font-weight: bold;" title="Master"{{/ifCond}}>{{@key}}</td>
             <td style="text-align: right;">{{PID}}</td>
-            <td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 0}}{{/if}}</td>
+            <td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td>
             <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td>
             <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{/if}}</td>
             {{#if @root.bDeveloper}}

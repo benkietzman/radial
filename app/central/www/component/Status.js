@@ -190,7 +190,7 @@ export default
       <b>Status</b>
       <table class="table table-sm table-condensed table-striped">
         <tr><td>Process ID</td><td style="text-align: right;">{{PID}}</td></tr>
-        <tr><td>Resident</td><td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 0}}{{/if}}</td></tr>
+        <tr><td>Resident</td><td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td></tr>
         <tr><td>Threads</td><td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td></tr>
       </table>
       {{#if Throughput}}
