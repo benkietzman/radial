@@ -349,10 +349,13 @@ export default
     s.resize = () =>
     {
       let history = document.getElementById('radial_history');
-      let maxHeight = document.documentElement.clientHeight - 240;
+      let user = document.getElementById('radial_user');
+      let maxHeight = document.documentElement.clientHeight - 200;
       history.style.minHeight = maxHeight + 'px';
       history.style.maxHeight = maxHeight + 'px';
       history.scrollTop = history.scrollHeight;
+      user.style.minHeight = maxHeight + 'px';
+      user.style.maxHeight = maxHeight + 'px';
       document.getElementById('radial_message').focus();
     };
     // ]]]
@@ -437,22 +440,32 @@ export default
   // [[[ template
   template: `
     {{#isValid}}
-    <select class="form-select form-select-sm" c-model="user" c-change="hist()" style="font-family: monospace, monospace; margin-bottom: 10px;">
-      {{#each @root.users}}
-      <option value="{{@key}}"{{#if unread}} class="bg-warning"{{/if}}>{{#if connected}}{{{icon}}}{{else}}&nbsp;{{/if}}&nbsp;{{#if LastName}}{{LastName}}, {{/if}}{{FirstName}} ({{@key}}){{#if unread}} [{{unread}}]{{/if}}</option>
-      {{/each}}
-    </select>
-    <div class="card card-body card-inverse table-responsive" id="radial_history" style="padding: 0px;">
-      <table class="table table-condensed table-striped" style="margin: 0px;">
-        {{#each @root.history}}
-        <tr>
-          <td><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{#if FirstName}}{{FirstName}}{{else}}{{User}}{{/if}}</pre></td>
-          <td><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{{Message}}}</pre></td>
-        </tr>
-        {{/each}}
-      </table>
+    <div class="row">
+      <div class="col-md-9">
+        <div class="card card-body card-inverse table-responsive" id="radial_history" style="padding: 0px;">
+          <table class="table table-condensed table-striped" style="margin: 0px;">
+            {{#each @root.history}}
+            <tr>
+              <td><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{#if FirstName}}{{FirstName}}{{else}}{{User}}{{/if}}</pre></td>
+              <td><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{{Message}}}</pre></td>
+            </tr>
+            {{/each}}
+          </table>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select form-select-sm" id="radial_user" c-model="user" c-change="hist()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 60vh; margin-bottom: 10px;">
+          {{#each @root.users}}
+          <option value="{{@key}}"{{#if unread}} class="bg-warning"{{/if}}>{{#if connected}}{{{icon}}}{{else}}&nbsp;{{/if}}&nbsp;{{#if LastName}}{{LastName}}, {{/if}}{{FirstName}} ({{@key}}){{#if unread}} [{{unread}}]{{/if}}</option>
+          {{/each}}
+        </select>
+      </div>
     </div>
-    <input type="text" class="form-control form-control-sm" id="radial_message" c-model="message" c-keyup="enter()" placeholder="Type message and hit enter..." style="font-family: monospace, monospace; margin-top: 10px;">
+    <div class="row">
+      <div class="col">
+        <input type="text" class="form-control form-control-sm" id="radial_message" c-model="message" c-keyup="enter()" placeholder="Type message and hit enter..." style="font-family: monospace, monospace; margin-top: 10px;">
+      </div>
+    </div>
     {{/isValid}}
   `
   // ]]]
