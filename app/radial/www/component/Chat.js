@@ -433,7 +433,12 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Chat');
-    c.attachEvent('commonWsConnected', (data) =>
+    s.u();
+    if (a.ready())
+    {
+      s.init();
+    }
+    c.attachEvent('appReady', (data) =>
     {
       s.init();
     });
