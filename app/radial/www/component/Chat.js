@@ -17,7 +17,6 @@ export default
     {
       a: a,
       c: c,
-      blurred: false,
       histories: {},
       history: [],
       message: null,
@@ -257,27 +256,6 @@ export default
             s.u();
             document.getElementById('radial_message').focus();
             document.getElementById('radial_history').scrollTop = document.getElementById('radial_history').scrollHeight;
-            if (s.blurred && 'Notification' in window)
-            {
-              Notification.requestPermission((permission) =>
-              {
-                let strTitle = 'Radial Chat - ';
-                if (c.isDefined(data.detail.LastName))
-                {
-                  strTitle += data.detail.LastName + ', ';
-                }
-                if (c.isDefined(data.detail.FirstName))
-                {
-                  strTitle += data.detail.FirstName;
-                }
-                strTitle += ' (' + data.detail.User + ')';
-                let notification = new Notification(strTitle, {body: data.detail.Message, dir: 'auto'});
-                setTimeout(() =>
-                {
-                  notification.close();
-                }, 5000);
-              });
-            }
           }
           // ]]]
           // [[[ connect
@@ -453,14 +431,6 @@ export default
     {
       s.resize();
     });
-    window.onblur = () =>
-    {
-      s.blurred = true;
-    };
-    window.onfocus = () =>
-    {
-      s.blurred = false;
-    };
     // ]]]
   },
   // ]]]
