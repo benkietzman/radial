@@ -25,6 +25,7 @@ let common = new Common(
   [
     {path: '/Alert', name: 'Alert', component: '/radial/component/Alert.js'},
     {path: '/Home', name: 'Home', component: '/radial/component/Home.js'},
+    {path: '/Chat/:user', name: 'Chat', component: '/radial/component/Chat.js'},
     {path: '/Chat', name: 'Chat', component: '/radial/component/Chat.js'},
     {path: '/Irc', name: 'Irc', component: '/radial/component/Irc.js'},
     {path: '/Live', name: 'Live', component: '/radial/component/Live.js'},

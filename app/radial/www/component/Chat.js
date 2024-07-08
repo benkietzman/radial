@@ -356,6 +356,14 @@ export default
           s.sort();
           s.u();
         }
+        if (c.isParam(nav, 'user') && c.isDefined(s.users[c.getParam(nav, 'user')]))
+        {
+          s.user.v = c.getParam(nav, 'user');
+        }
+        else
+        {
+          s.user.v = 'radial_bot';
+        }
       });
     };
     // ]]]
