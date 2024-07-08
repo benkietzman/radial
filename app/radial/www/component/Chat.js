@@ -433,7 +433,6 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Chat');
-    s.u();
     if (a.ready())
     {
       s.init();
