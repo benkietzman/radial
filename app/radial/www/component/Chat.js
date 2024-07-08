@@ -15,13 +15,6 @@ export default
     let c = common;
     let s = c.scope('Chat',
     {
-      // [[[ u()
-      u: () =>
-      {
-        c.update('Chat');
-        s.resize();
-      },
-      // ]]]
       a: a,
       c: c,
       blurred: false,
@@ -429,6 +422,13 @@ export default
       {
         s.users[result[i].User] = result[i];
       }
+    };
+    // ]]]
+    // [[[ u()
+    s.u = () =>
+    {
+      c.update('Chat');
+      s.resize();
     };
     // ]]]
     // [[[ main
