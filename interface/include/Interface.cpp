@@ -1560,6 +1560,7 @@ bool Interface::feedback(const string strFunction, Json *ptData, string &strErro
       }
     }
   }
+  delete ptJson;
 
   return bResult;
 }
