@@ -2205,7 +2205,7 @@ void Irc::bot(string strPrefix)
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
-                            ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strPrefix << ":  Assumed master role.";
+                            ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strPrefix << ":  Switched to master mode.";
                             chat("#radial", ssMessage.str());
                           }
                         }
