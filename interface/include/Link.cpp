@@ -1042,6 +1042,10 @@ void Link::process(string strPrefix)
                           {
                             ptJson->i(j.first, j.second);
                           }
+                          if (ptJson->m.find("_l") == ptJson->m.end())
+                          {
+                            ptJson->i("_l", ptSubLink);
+                          }
                           delete ptSubLink;
                           if (exist(ptJson, "_d"))
                           {
