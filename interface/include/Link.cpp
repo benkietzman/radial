@@ -1035,11 +1035,15 @@ void Link::process(string strPrefix)
                         if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
+                          Json *ptSubLink = new Json(ptJson->m["_l"]);
                           radialPacket p;
-                          for (auto &j : ptJson->m["_l"]->m)
+                          delete ptJson->m["_l"];
+                          ptJson->m.erase("_l");
+                          for (auto &j : ptSubLink->m)
                           {
                             ptJson->i(j.first, j.second);
                           }
+                          delete ptSubLink;
                           if (exist(ptJson, "_d"))
                           {
                             delete ptJson->m["_d"];
