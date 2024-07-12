@@ -1344,7 +1344,7 @@ void Hub::setShutdown(string strPrefix, const string strTarget, const bool bStop
   Json *ptJson = new Json;
   radialPacket p;
 
-  strPrefix += "->shutdown()";
+  strPrefix += "->setShutdown()";
   p.s = "hub";
   ptJson->i("Function", "shutdown");
   ptJson->j(p.p);
