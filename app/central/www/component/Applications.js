@@ -2033,7 +2033,7 @@ export default
       {{/if}}
     </div>
     <div class="col-md-9">
-      <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
+      <button class="btn btn-success bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
     </div>
   </div>
   {{#if ../bNotified}}
