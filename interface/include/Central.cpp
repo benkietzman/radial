@@ -1538,7 +1538,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 }
                 m << endl << endl;
               }
-              m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+              m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
               if (alert(k.first, m.str(), e))
               {
                 k.second->i("sent", "1", 'n');
@@ -3783,7 +3783,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                 {
                   m << "* You are a Contact for this server." << endl << endl;
                 }
-                m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+                m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
                 if (alert(k.first, m.str(), e))
                 {
                   k.second->i("sent", "1", 'n');
@@ -3869,7 +3869,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                       m << endl;
                     }
                     m << endl;
-                    m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+                    m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
                     alert(n.first, m.str(), e);
                   }
                 }
@@ -4502,7 +4502,7 @@ bool Central::userNotify(radialUser &d, string &e)
           m << endl << endl;
           m << strNotification;
           m << endl << endl;
-          m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";
+          m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
           if (alert(c.p->m["o"]->m["userid"]->v, m.str(), e))
           {
             b = true;
