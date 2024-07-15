@@ -1410,6 +1410,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
 
   if (dep({"id", "notification"}, i, e))
   {
+    bool bDeveloper = false;
     string strNotification = i->m["notification"]->v;
     size_t unPosition;
     radialUser a;
@@ -1427,7 +1428,9 @@ bool Central::applicationNotify(radialUser &d, string &e)
     }
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
-    if (d.g || isApplicationDeveloper(a, e))
+    bDeveloper = ((d.g || isApplicationDeveloper(a, e))?true:false);
+    userDeinit(a);
+    if (!d.u.empty())
     {
       radialUser c;
       userInit(d, c);
@@ -1439,23 +1442,21 @@ bool Central::applicationNotify(radialUser &d, string &e)
         f.p->m["i"]->i("application_id", i->m["id"]->v);
         f.p->m["i"]->i("Primary Developer", "1", 'n');
         f.p->m["i"]->i("Backup Developer", "1", 'n');
+        f.p->m["i"]->i("Primary Contact", "1", 'n');
         f.p->m["i"]->i("Contact", "1", 'n');
         if (applicationUsersByApplicationID(f, e))
         {
           map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
-          stringstream s;
           b = true;
           for (auto &contact : f.p->m["o"]->l)
           {
-            radialUser h;
-            if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+            if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
             {
               if (!exist(o, contact->m["userid"]->v))
               {
                 o->m[contact->m["userid"]->v] = new Json;
               }
               o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-              o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
               o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
               if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
               {
@@ -1478,85 +1479,80 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 o->m[contact->m["userid"]->v]->i("contact", "1", 1);
               }
             }
-            userInit(d, h);
-            h.p->m["i"]->i("application_id", i->m["id"]->v);
-            h.p->m["i"]->i("contacts", "1", 'n');
-            if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+            if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
             {
-              for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+              radialUser h;
+              userInit(d, h);
+              h.p->m["i"]->i("application_id", i->m["id"]->v);
+              h.p->m["i"]->i("contacts", "1", 'n');
+              if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
               {
-                if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
                 {
-                  for (auto &contact : dependent->m["contacts"]->l)
+                  if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
                   {
-                    if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                    for (auto &contact : dependent->m["contacts"]->l)
                     {
-                      if (!exist(o, contact->m["userid"]->v))
+                      if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                       {
-                        o->m[contact->m["userid"]->v] = new Json;
-                      }
-                      o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                      o->m[contact->m["userid"]->v]->i("email", contact->m["email"]->v);
-                      o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                      if (!empty(dependent, "name"))
-                      {
-                        if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                        if (!exist(o, contact->m["userid"]->v))
                         {
-                          o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                          o->m[contact->m["userid"]->v] = new Json;
                         }
-                        o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                        o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                        o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                        if (!empty(dependent, "name"))
+                        {
+                          if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                          {
+                            o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                          }
+                          o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                        }
                       }
                     }
                   }
                 }
               }
+              userDeinit(h);
             }
-            userDeinit(h);
           }
-          s << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
           for (auto &k : o->m)
           {
-            list<string> to;
             stringstream m;
-            to.push_back(k.second->m["email"]->v);
-            m << "<html><body>";
-            m << "<div style=\"font-family: arial, helvetica, sans-serif; font-size: 12px;\">";
-            m << "<h3><b>Application Notification:  <a href=\"https://" << m_strServer << "/central/#/Applications/" << i->m["id"]->v << "\">" << c.p->m["o"]->m["name"]->v << "</a></b></h3>";
+            m << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
+            m << endl << endl;
             m << strNotification;
-            m << "<br><br>";
-            m << "<b>You are receiving this application notification for the following reason(s):</b>";
-            m << "<br><br>";
-            m << "<ul>";
+            m << endl << endl;
+            m << "You are receiving this application notification for the following reason(s):";
+            m << endl << endl;
             if (exist(k.second, "primary"))
             {
-              m << "<li>You are a Primary Developer for this application.</li>";
+              m << "* You are a Primary Developer for this application." << endl;
             }
             else if (exist(k.second, "backup"))
             {
-              m << "<li>You are a Backup Developer for this application.</li>";
+              m << "* You are a Backup Developer for this application." << endl;
             }
             else if (exist(k.second, "contact"))
             {
-              m << "<li>You are a Contact for this application.</li>";
+              m << "* You are a Contact for this application." << endl;
             }
+            m << endl;
             if (exist(k.second, "depend"))
             {
-              m << "<li>";
               m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
-              m << "<ul>";
+              m << endl << endl;
               for (auto &depend : k.second->m["depend"]->l)
               {
-                m << "<li>" << depend->v << "</li>";
+                m << "* " << depend->v << endl;
               }
-              m << "</ul>";
-              m << "</li>";
             }
-            m << "</ul>";
             if (!developer["primary"].empty())
             {
               bool bFirst = true;
-              m << "<br><br>";
-              m << "<b>Primary Developer(s):</b><br>";
+              m << endl;
+              m << "Primary Developer(s):  ";
               for (auto &dev : developer["primary"])
               {
                 if (bFirst)
@@ -1567,14 +1563,14 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << ", ";
                 }
-                m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                m << dev.second << endl;
               }
             }
             if (!developer["backup"].empty())
             {
               bool bFirst = true;
-              m << "<br><br>";
-              m << "<b>Backup Developer(s):</b><br>";
+              m << endl;
+              m << "Backup Developer(s):  ";
               for (auto &dev : developer["backup"])
               {
                 if (bFirst)
@@ -1585,15 +1581,15 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << ", ";
                 }
-                m << "<a href=\"https://" << m_strServer << "/central/#/Users/" << dev.first << "\">" << dev.second << "</a>";
+                m << dev.second;
               }
             }
-            m << "<br><br>";
+            m << endl;
             m << "If you have any questions or concerns, please contact your application contacts.";
-            m << "</div>";
-            m << "</body></html>";
-            email(m_strEmail, to, s.str(), "", m.str());
-            k.second->i("sent", "1", 'n');
+            if (alert(k.first, m.str(), e))
+            {
+              k.second->i("sent", "1", 'n');
+            }
           }
         }
         userDeinit(f);
@@ -1604,7 +1600,6 @@ bool Central::applicationNotify(radialUser &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
-    userDeinit(a);
   }
 
   return b;
