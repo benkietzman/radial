@@ -162,27 +162,24 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 {
                   bAlerted = true;
                 }
-                else
+                else if (ptContent->m.find("Error") != ptContent->m.end())
                 {
-                  if (ptContent->m.find("Error") != ptContent->m.end())
+                  if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
                   {
-                    if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
-                    {
-                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
-                    }
-                    else if (!ptContent->m["Error"]->v.empty())
-                    {
-                      errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
-                    }
-                    else
-                    {
-                      errors.push_back("Interface::curl() Encountered an unknown error.");
-                    }
+                    errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
+                  }
+                  else if (!ptContent->m["Error"]->v.empty())
+                  {
+                    errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
                   }
                   else
                   {
                     errors.push_back("Interface::curl() Encountered an unknown error.");
                   }
+                }
+                else
+                {
+                  errors.push_back("Interface::curl() Encountered an unknown error.");
                 }
                 delete ptContent;
               }
