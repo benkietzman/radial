@@ -112,6 +112,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["user"] = &Central::user;
   m_functions["userAdd"] = &Central::userAdd;
   m_functions["userEdit"] = &Central::userEdit;
+  m_functions["userNotify"] = &Central::userNotify;
   m_functions["userReminder"] = &Central::userReminder;
   m_functions["userReminderAdd"] = &Central::userReminderAdd;
   m_functions["userReminderEdit"] = &Central::userReminderEdit;
@@ -1432,171 +1433,136 @@ bool Central::applicationNotify(radialUser &d, string &e)
     userDeinit(a);
     if (!d.u.empty())
     {
-      radialUser c;
-      userInit(d, c);
-      c.p->m["i"]->i("id", i->m["id"]->v);
-      if (application(c, e) && !empty(c.p->m["o"], "name"))
+      radialUser u;
+      userInit(d, u);
+      u.p->m["i"]->i("userid", d.u);
+      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
       {
-        radialUser f;
-        userInit(d, f);
-        f.p->m["i"]->i("application_id", i->m["id"]->v);
-        f.p->m["i"]->i("Primary Developer", "1", 'n');
-        f.p->m["i"]->i("Backup Developer", "1", 'n');
-        f.p->m["i"]->i("Primary Contact", "1", 'n');
-        f.p->m["i"]->i("Contact", "1", 'n');
-        if (applicationUsersByApplicationID(f, e))
+        radialUser c;
+        userInit(d, c);
+        c.p->m["i"]->i("id", i->m["id"]->v);
+        if (application(c, e) && !empty(c.p->m["o"], "name"))
         {
-          map<string, map<string, string> > developer = {{"primary", {}}, {"backup", {}} };
-          b = true;
-          for (auto &contact : f.p->m["o"]->l)
+          radialUser f;
+          userInit(d, f);
+          f.p->m["i"]->i("application_id", i->m["id"]->v);
+          f.p->m["i"]->i("Primary Developer", "1", 'n');
+          f.p->m["i"]->i("Backup Developer", "1", 'n');
+          f.p->m["i"]->i("Primary Contact", "1", 'n');
+          f.p->m["i"]->i("Contact", "1", 'n');
+          if (applicationUsersByApplicationID(f, e))
           {
-            if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+            b = true;
+            for (auto &contact : f.p->m["o"]->l)
             {
-              if (!exist(o, contact->m["userid"]->v))
+              if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
               {
-                o->m[contact->m["userid"]->v] = new Json;
-              }
-              o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-              o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-              if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
-              {
-                if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                if (!exist(o, contact->m["userid"]->v))
                 {
-                  o->m[contact->m["userid"]->v]->i("primary", "1", 1);
+                  o->m[contact->m["userid"]->v] = new Json;
                 }
-                developer["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"") + (string)" " + (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)" (" + contact->m["user_id"]->v + (string)")";
-              }
-              else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
-              {
-                if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
                 {
-                  o->m[contact->m["userid"]->v]->i("backup", "1", 1);
-                }
-                developer["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"") + (string)" " + (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)" (" + contact->m["user_id"]->v + (string)")";
-              }
-              else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-              {
-                o->m[contact->m["userid"]->v]->i("contact", "1", 1);
-              }
-            }
-            if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
-            {
-              radialUser h;
-              userInit(d, h);
-              h.p->m["i"]->i("application_id", i->m["id"]->v);
-              h.p->m["i"]->i("contacts", "1", 'n');
-              if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
-              {
-                for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
-                {
-                  if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                   {
-                    for (auto &contact : dependent->m["contacts"]->l)
+                    o->m[contact->m["userid"]->v]->i("primary", "1", 1);
+                  }
+                }
+                else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
+                {
+                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  {
+                    o->m[contact->m["userid"]->v]->i("backup", "1", 1);
+                  }
+                }
+                else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                {
+                  o->m[contact->m["userid"]->v]->i("contact", "1", 1);
+                }
+              }
+              if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
+              {
+                radialUser h;
+                userInit(d, h);
+                h.p->m["i"]->i("application_id", i->m["id"]->v);
+                h.p->m["i"]->i("contacts", "1", 'n');
+                if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+                {
+                  for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+                  {
+                    if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
                     {
-                      if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      for (auto &contact : dependent->m["contacts"]->l)
                       {
-                        if (!exist(o, contact->m["userid"]->v))
+                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                         {
-                          o->m[contact->m["userid"]->v] = new Json;
-                        }
-                        o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                        o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                        if (!empty(dependent, "name"))
-                        {
-                          if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                          if (!exist(o, contact->m["userid"]->v))
                           {
-                            o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                            o->m[contact->m["userid"]->v] = new Json;
                           }
-                          o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                          o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                          o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                          if (!empty(dependent, "name"))
+                          {
+                            if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                            {
+                              o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                            }
+                            o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                          }
                         }
                       }
                     }
                   }
                 }
+                userDeinit(h);
               }
-              userDeinit(h);
             }
-          }
-          for (auto &k : o->m)
-          {
-            stringstream m;
-            m << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
-            m << endl << endl;
-            m << strNotification;
-            m << endl << endl;
-            m << "You are receiving this application notification for the following reason(s):";
-            m << endl << endl;
-            if (exist(k.second, "primary"))
+            for (auto &k : o->m)
             {
-              m << "* You are a Primary Developer for this application.";
-            }
-            else if (exist(k.second, "backup"))
-            {
-              m << "* You are a Backup Developer for this application.";
-            }
-            else if (exist(k.second, "contact"))
-            {
-              m << "* You are a Contact for this application.";
-            }
-            m << endl << endl;
-            if (exist(k.second, "depend"))
-            {
-              m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
+              stringstream m;
+              m << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
               m << endl << endl;
-              for (auto &depend : k.second->m["depend"]->l)
+              m << strNotification;
+              m << endl << endl;
+              m << "You are receiving this application notification for the following reason:";
+              m << endl << endl;
+              if (exist(k.second, "primary"))
               {
-                m << "* " << depend->v << endl;
+                m << "* You are a Primary Developer for this application." << endl << endl;
               }
-            }
-            if (!developer["primary"].empty())
-            {
-              bool bFirst = true;
-              m << endl;
-              m << "Primary Developer(s):  ";
-              for (auto &dev : developer["primary"])
+              else if (exist(k.second, "backup"))
               {
-                if (bFirst)
-                {
-                  bFirst = false;
-                }
-                else
-                {
-                  m << ", ";
-                }
-                m << dev.second;
+                m << "* You are a Backup Developer for this application." << endl << endl;
               }
-            }
-            if (!developer["backup"].empty())
-            {
-              bool bFirst = true;
-              m << endl;
-              m << "Backup Developer(s):  ";
-              for (auto &dev : developer["backup"])
+              else if (exist(k.second, "contact"))
               {
-                if (bFirst)
-                {
-                  bFirst = false;
-                }
-                else
-                {
-                  m << ", ";
-                }
-                m << dev.second;
+                m << "* You are a Contact for this application." << endl << endl;
               }
-            }
-            m << endl << endl;
-            m << "If you have any questions or concerns, please contact your application contacts.";
-            m << endl << endl;
-            m << "-- Central";
-            if (alert(k.first, m.str(), e))
-            {
-              k.second->i("sent", "1", 'n');
+              if (exist(k.second, "depend"))
+              {
+                m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
+                m << endl << endl;
+                for (auto &depend : k.second->m["depend"]->l)
+                {
+                  m << "* " << depend->v << endl;
+                }
+                m << endl << endl;
+              }
+              m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+              if (alert(k.first, m.str(), e))
+              {
+                k.second->i("sent", "1", 'n');
+              }
             }
           }
+          userDeinit(f);
         }
-        userDeinit(f);
+        userDeinit(c);
       }
-      userDeinit(c);
+      userDeinit(u);
     }
     else
     {
@@ -3772,253 +3738,175 @@ bool Central::serverNotify(radialUser &d, string &e)
       userDeinit(a);
       if (!d.u.empty())
       {
-        radialUser c;
-        userInit(d, c);
-        c.p->m["i"]->i("id", i->m["id"]->v);
-        if (server(c, e) && !empty(c.p->m["o"], "name"))
+        radialUser u;
+        userInit(d, u);
+        u.p->m["i"]->i("userid", d.u);
+        if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
         {
-          radialUser f;
-          userInit(d, f);
-          f.p->m["i"]->i("server_id", i->m["id"]->v);
-          f.p->m["i"]->i("Primary Admin", "1", 'n');
-          f.p->m["i"]->i("Backup Admin", "1", 'n');
-          f.p->m["i"]->i("Primary Contact", "1", 'n');
-          f.p->m["i"]->i("Contact", "1", 'n');
-          if (serverUsersByServerID(f, e))
+          radialUser c;
+          userInit(d, c);
+          c.p->m["i"]->i("id", i->m["id"]->v);
+          if (server(c, e) && !empty(c.p->m["o"], "name"))
           {
-            map<string, map<string, string> > admin = {{"primary", {}}, {"backup", {}} };
-            b = true;
-            for (auto &contact : f.p->m["o"]->l)
+            radialUser f;
+            userInit(d, f);
+            f.p->m["i"]->i("server_id", i->m["id"]->v);
+            f.p->m["i"]->i("Primary Admin", "1", 'n');
+            f.p->m["i"]->i("Backup Admin", "1", 'n');
+            f.p->m["i"]->i("Primary Contact", "1", 'n');
+            f.p->m["i"]->i("Contact", "1", 'n');
+            if (serverUsersByServerID(f, e))
             {
-              if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+              b = true;
+              for (auto &contact : f.p->m["o"]->l)
               {
-                if (!exist(o, contact->m["userid"]->v))
+                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                 {
-                  o->m[contact->m["userid"]->v] = new Json;
-                }
-                o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Admin")
-                {
-                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  if (!exist(o, contact->m["userid"]->v))
                   {
-                    o->m[contact->m["userid"]->v]->i("primary", "1", 1);
+                    o->m[contact->m["userid"]->v] = new Json;
                   }
-                  admin["primary"][contact->m["user_id"]->v] = (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"") + (string)" " + (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)" (" + contact->m["user_id"]->v + (string)")";
-                }
-                else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Admin")
-                {
-                  if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                  o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Admin")
                   {
-                    o->m[contact->m["userid"]->v]->i("backup", "1", 1);
-                  }
-                  admin["backup"][contact->m["user_id"]->v] = (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"") + (string)" " + (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)" (" + contact->m["user_id"]->v + (string)")";
-                }
-                else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
-                {
-                  o->m[contact->m["userid"]->v]->i("contact", "1", 1);
-                }
-              }
-            }
-            for (auto &k : o->m)
-            {
-              stringstream m;
-              m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
-              m << endl << endl;
-              m << strNotification;
-              m << endl << endl;
-              m << "You are receiving this server notification for the following reason(s):";
-              m << endl << endl;
-              if (exist(k.second, "primary"))
-              {
-                m << "* You are a Primary Admin for this server.";
-              }
-              else if (exist(k.second, "backup"))
-              {
-                m << "* You are a Backup Admin for this server.";
-              }
-              else if (exist(k.second, "contact"))
-              {
-                m << "* You are a Contact for this server.";
-              }
-              m << endl;
-              if (!admin["primary"].empty())
-              {
-                bool bFirst = true;
-                m << endl;
-                m << "Primary Admin(s):";
-                for (auto &ad : admin["primary"])
-                {
-                  if (bFirst)
-                  {
-                    bFirst = false;
-                  }
-                  else
-                  {
-                    m << ", ";
-                  }
-                  m << ad.second;
-                }
-              }
-              if (!admin["backup"].empty())
-              {
-                bool bFirst = true;
-                m << endl;
-                m << "Backup Admin(s):";
-                for (auto &ad : admin["backup"])
-                {
-                  if (bFirst)
-                  {
-                    bFirst = false;
-                  }
-                  else
-                  {
-                    m << ", ";
-                  }
-                  m << ad.second;
-                }
-              }
-              m << endl << endl;
-              m << "If you have any questions or concerns, please contact your server contacts.";
-              m << endl << endl;
-              m << "-- Central";
-              if (alert(k.first, m.str(), e))
-              {
-                k.second->i("sent", "1", 'n');
-              }
-            }
-            if (bAdmin && exist(i, "notifyApplications") && exist(i->m["notifyApplications"], "value") && i->m["notifyApplications"]->m["value"]->v == "1")
-            {
-              radialUser h;
-              userInit(d, h);
-              h.p->m["i"]->i("server_id", i->m["id"]->v);
-              if (applicationsByServerID(h, e))
-              {
-                map<string, map<string, map<string, string> > > developer;
-                for (auto &app : h.p->m["o"]->l)
-                {
-                  if (!empty(app, "application_id"))
-                  {
-                    radialUser k;
-                    userInit(d, k);
-                    k.p->m["i"]->i("id", app->m["application_id"]->v);
-                    if (application(k, e) && !empty(k.p->m["o"], "name") && empty(k.p->m["o"], "retirement_date"))
+                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                     {
-                      radialUser l;
-                      userInit(d, l);
-                      l.p->m["i"]->i("application_id", app->m["application_id"]->v);
-                      l.p->m["i"]->i("Primary Developer", "1", 'n');
-                      l.p->m["i"]->i("Backup Developer", "1", 'n');
-                      l.p->m["i"]->i("Primary Contact", "1", 'n');
-                      l.p->m["i"]->i("Contact", "1", 'n');
-                      if (applicationUsersByApplicationID(l, e))
+                      o->m[contact->m["userid"]->v]->i("primary", "1", 1);
+                    }
+                  }
+                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Admin")
+                  {
+                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    {
+                      o->m[contact->m["userid"]->v]->i("backup", "1", 1);
+                    }
+                  }
+                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  {
+                    o->m[contact->m["userid"]->v]->i("contact", "1", 1);
+                  }
+                }
+              }
+              for (auto &k : o->m)
+              {
+                stringstream m;
+                m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+                m << endl << endl;
+                m << strNotification;
+                m << endl << endl;
+                m << "You are receiving this server notification for the following reason:";
+                m << endl << endl;
+                if (exist(k.second, "primary"))
+                {
+                  m << "* You are a Primary Admin for this server." << endl << endl;
+                }
+                else if (exist(k.second, "backup"))
+                {
+                  m << "* You are a Backup Admin for this server." << endl << endl;
+                }
+                else if (exist(k.second, "contact"))
+                {
+                  m << "* You are a Contact for this server." << endl << endl;
+                }
+                m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+                if (alert(k.first, m.str(), e))
+                {
+                  k.second->i("sent", "1", 'n');
+                }
+              }
+              if (bAdmin && exist(i, "notifyApplications") && exist(i->m["notifyApplications"], "value") && i->m["notifyApplications"]->m["value"]->v == "1")
+              {
+                radialUser h;
+                userInit(d, h);
+                h.p->m["i"]->i("server_id", i->m["id"]->v);
+                if (applicationsByServerID(h, e))
+                {
+                  map<string, map<string, map<string, string> > > developer;
+                  for (auto &app : h.p->m["o"]->l)
+                  {
+                    if (!empty(app, "application_id"))
+                    {
+                      radialUser k;
+                      userInit(d, k);
+                      k.p->m["i"]->i("id", app->m["application_id"]->v);
+                      if (application(k, e) && !empty(k.p->m["o"], "name") && empty(k.p->m["o"], "retirement_date"))
                       {
-                        for (auto &contact : l.p->m["o"]->l)
+                        radialUser l;
+                        userInit(d, l);
+                        l.p->m["i"]->i("application_id", app->m["application_id"]->v);
+                        l.p->m["i"]->i("Primary Developer", "1", 'n');
+                        l.p->m["i"]->i("Backup Developer", "1", 'n');
+                        if (applicationUsersByApplicationID(l, e))
                         {
-                          if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                          for (auto &contact : l.p->m["o"]->l)
                           {
-                            if (developer.find(contact->m["userid"]->v) == developer.end())
+                            if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                             {
-                              developer[contact->m["userid"]->v] = {};
-                            }
-                            if (developer[contact->m["userid"]->v].find(k.p->m["o"]->m["name"]->v) == developer[contact->m["userid"]->v].end())
-                            {
-                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v] = {};
-                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["application_id"] = app->m["application_id"]->v;
-                            }
-                            developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
-                            if (exist(contact, "type") && !empty(contact->m["type"], "type"))
-                            {
-                              if (contact->m["type"]->m["type"]->v == "Primary Developer")
+                              if (developer.find(contact->m["userid"]->v) == developer.end())
                               {
-                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["primary"] = "1";
+                                developer[contact->m["userid"]->v] = {};
                               }
-                              else if (contact->m["type"]->m["type"]->v == "Primary Developer")
+                              if (developer[contact->m["userid"]->v].find(k.p->m["o"]->m["name"]->v) == developer[contact->m["userid"]->v].end())
                               {
-                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["backup"] = "1";
+                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v] = {};
+                                developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["application_id"] = app->m["application_id"]->v;
+                              }
+                              developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["name"] = (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:"");
+                              if (exist(contact, "type") && !empty(contact->m["type"], "type"))
+                              {
+                                if (contact->m["type"]->m["type"]->v == "Primary Developer")
+                                {
+                                  developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["primary"] = "1";
+                                }
+                                else
+                                {
+                                  developer[contact->m["userid"]->v][k.p->m["o"]->m["name"]->v]["backup"] = "1";
+                                }
                               }
                             }
                           }
                         }
+                        userDeinit(l);
                       }
-                      userDeinit(l);
+                      userDeinit(k);
                     }
-                    userDeinit(k);
                   }
-                }
-                for (auto &n : developer)
-                {
-                  stringstream m;
-                  m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
-                  m << endl << endl;
-                  m << strNotification;
-                  m << endl << endl;
-                  m << "You are associated with the following applications that depend upon this server:";
-                  m << endl << endl;
-                  for (auto &p : n.second)
+                  for (auto &n : developer)
                   {
-                    m << "* " << p.first;
-                    if (p.second.find("primary") != p.second.end())
+                    stringstream m;
+                    m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+                    m << endl << endl;
+                    m << strNotification;
+                    m << endl << endl;
+                    m << "You are associated with the following applications that depend upon this server:";
+                    m << endl << endl;
+                    for (auto &p : n.second)
                     {
-                      m << ":  You are a Primary Developer for this application.";
-                    }
-                    else if (p.second.find("backup") != p.second.end())
-                    {
-                      m << ":  You are a Backup Developer for this application.";
-                    }
-                    m << endl;
-                  }
-                  if (!admin["primary"].empty())
-                  {
-                    bool bFirst = true;
-                    m << endl;
-                    m << "Primary Admin(s):  ";
-                    for (auto &ad : admin["primary"])
-                    {
-                      if (bFirst)
+                      m << "* " << p.first;
+                      if (p.second.find("primary") != p.second.end())
                       {
-                        bFirst = false;
+                        m << ":  You are a Primary Developer for this application.";
                       }
                       else
                       {
-                        m << ", ";
+                        m << ":  You are a Backup Developer for this application.";
                       }
-                      m << ad.second;
+                      m << endl;
                     }
                     m << endl;
+                    m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";;
+                    alert(n.first, m.str(), e);
                   }
-                  if (!admin["backup"].empty())
-                  {
-                    bool bFirst = true;
-                    m << endl;
-                    m << "Backup Admin(s):  ";
-                    for (auto &ad : admin["backup"])
-                    {
-                      if (bFirst)
-                      {
-                        bFirst = false;
-                      }
-                      else
-                      {
-                        m << ", ";
-                      }
-                      m << ad.second;
-                    }
-                    m << endl;
-                  }
-                  m << endl;
-                  m << "If you have any questions or concerns, please contact your server contacts.";
-                  m << endl << endl;
-                  m << "-- Central";
-                  alert(n.first, m.str(), e);
                 }
+                userDeinit(h);
               }
-              userDeinit(h);
             }
+            userDeinit(f);
           }
-          userDeinit(f);
+          userDeinit(c);
         }
-        userDeinit(c);
+        userDeinit(u);
       }
       else
       {
@@ -4608,6 +4496,65 @@ bool Central::userEdit(radialUser &d, string &e)
       e = "You are not authorized to perform this action.";
     }
     userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ userNotify()
+bool Central::userNotify(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id", "notification"}, i, e))
+  {
+    string strNotification = i->m["notification"]->v;
+    size_t unPosition;
+    while ((unPosition = strNotification.find("<")) != string::npos)
+    {
+      strNotification.replace(unPosition, 1, "&lt;");
+    }
+    while ((unPosition = strNotification.find(">")) != string::npos)
+    {
+      strNotification.replace(unPosition, 1, "&gt;");
+    }
+    while ((unPosition = strNotification.find("\n")) != string::npos)
+    {
+      strNotification.replace(unPosition, 1, "<br>");
+    }
+    if (!d.u.empty())
+    {
+      radialUser u;
+      userInit(d, u);
+      u.p->m["i"]->i("userid", d.u);
+      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
+      {
+        radialUser c;
+        userInit(d, c);
+        c.p->m["i"]->i("id", i->m["id"]->v);
+        if (user(c, e) && !empty(c.p->m["o"], "userid"))
+        {
+          stringstream m;
+          m << "User Notification";
+          m << endl << endl;
+          m << strNotification;
+          m << endl << endl;
+          m << "-- " << u.p->m["o"]->m["first_name"] << " " << u.p->m["o"]->m["last_name"] << " (" << d.u << ")";
+          if (alert(c.p->m["o"]->m["userid"]->v, m.str(), e))
+          {
+            b = true;
+          }
+        }
+        userDeinit(c);
+      }
+      userDeinit(u);
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
   }
 
   return b;
