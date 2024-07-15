@@ -1413,20 +1413,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
   {
     bool bDeveloper = false;
     string strNotification = i->m["notification"]->v;
-    size_t unPosition;
     radialUser a;
-    while ((unPosition = strNotification.find("<")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "&lt;");
-    }
-    while ((unPosition = strNotification.find(">")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "&gt;");
-    }
-    while ((unPosition = strNotification.find("\n")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "<br>");
-    }
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["id"]->v);
     bDeveloper = ((d.g || isApplicationDeveloper(a, e))?true:false);
@@ -3718,20 +3705,7 @@ bool Central::serverNotify(radialUser &d, string &e)
     {
       bool bAdmin = false;
       string strNotification = i->m["notification"]->v;
-      size_t unPosition;
       radialUser a;
-      while ((unPosition = strNotification.find("<")) != string::npos)
-      {
-        strNotification.replace(unPosition, 1, "&lt;");
-      }
-      while ((unPosition = strNotification.find(">")) != string::npos)
-      {
-        strNotification.replace(unPosition, 1, "&gt;");
-      }
-      while ((unPosition = strNotification.find("\n")) != string::npos)
-      {
-        strNotification.replace(unPosition, 1, "<br>");
-      }
       userInit(d, a);
       a.p->m["i"]->i("id", i->m["id"]->v);
       bAdmin = ((d.g || isServerAdmin(a, e))?true:false);
@@ -4511,19 +4485,6 @@ bool Central::userNotify(radialUser &d, string &e)
   if (dep({"id", "notification"}, i, e))
   {
     string strNotification = i->m["notification"]->v;
-    size_t unPosition;
-    while ((unPosition = strNotification.find("<")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "&lt;");
-    }
-    while ((unPosition = strNotification.find(">")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "&gt;");
-    }
-    while ((unPosition = strNotification.find("\n")) != string::npos)
-    {
-      strNotification.replace(unPosition, 1, "<br>");
-    }
     if (!d.u.empty())
     {
       radialUser u;
