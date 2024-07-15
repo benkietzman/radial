@@ -27,6 +27,7 @@ export default
       bNotified: false,
       issue: {priority: '1'},
       issueList: true,
+      notifyDependents: a.m_noyes[0],
       onlyOpenIssues: 1,
       serverDetail: {delay: 0, min_processes: 0, max_processes: 0, min_image: 0, max_image: 0, min_resident: 0, max_resident: 0}
     });
@@ -442,20 +443,14 @@ export default
               s.application.bDeveloper = c.isGlobalAdmin();
               s.application.bLocalAdmin = c.isLocalAdmin(s.application.name);
               s.showForm(strForm);
-              if (s.application.bDeveloper)
-              {
-                s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet2', active: null};
-                s.application.forms_order.splice(1, 0, 'Accounts');
-                s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                s.application.forms_order.splice(5, 0, 'Notify');
-                s.showForm(strForm);
-              }
-              else if (c.isValid())
+              if (c.isValid())
               {
                 let request = {Interface: 'central', 'Function': 'isApplicationDeveloper', Request: {id: s.application.id, form: strForm}};
                 c.wsRequest('radial', request).then((response) =>
                 {
                   let error = {};
+                  s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
+                  s.application.forms_order.splice(5, 0, 'Notify');
                   if (c.wsResponse(response, error))
                   {
                     let strForm = response.Request.form;
@@ -463,14 +458,12 @@ export default
                     s.application.bLocalAdmin = true;
                     s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet2', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
-                    s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                    s.application.forms_order.splice(5, 0, 'Notify');
-                    s.showForm(strForm);
                   }
                   else
                   {
                     s.message.v = error.message;
                   }
+                  s.showForm(strForm);
                 });
               }
             }
@@ -2027,15 +2020,30 @@ export default
   <!-- ]]] -->
   <!-- [[[ notify -->
   {{#if application.forms.Notify.active}}
-  {{#if application.bDeveloper}}
-  <div class="table-responsive">
+  {{#isValid}}
+  <div class="row">
+    <div class="col-md-12">
     <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
-    <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
-    {{#if bNotified}}
-    <span class="text-success">Notification has been sent.</span>
-    {{/if}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+      {{#if ../application.bDeveloper}}
+      <div class="input-group"><span class="input-group-text">Notify Dependents</span><select class="form-control" c-model="notifyDependents" c-json>{{#each ../a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+      {{/if}}
+    </div>
+    <div class="col-md-9">
+      <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
+    </div>
+  </div>
+  {{#if ../bNotified}}
+  <div class="row">
+    <div class="col-md-12">
+      <span class="text-success">Notification has been sent.</span>
+    </div>
   </div>
   {{/if}}
+  {{/isValid}}
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ repositories -->

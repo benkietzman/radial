@@ -23,7 +23,8 @@ export default
       // ]]]
       a: a,
       c: c,
-      d: {}
+      d: {},
+      bNotified: false,
     });
     // ]]]
     // [[[ addReminder()
@@ -181,6 +182,12 @@ export default
                 s.user.forms_order.splice(2, 0, 'Reminders');
                 s.showForm(strForm);
               }
+              if (c.isValid())
+              {
+                s.user.forms.Notify = {value: 'Notify', icon: 'megaphone', active: null};
+                s.user.forms_order.splice(2, 0, 'Notify');
+                s.showForm(strForm);
+              }
             }
             else
             {
@@ -296,6 +303,33 @@ export default
           {
             s.user = null;
             document.location.href = '#/Users';
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+    };
+    // ]]]
+    // [[[ sendNotification()
+    s.sendNotification = () =>
+    {
+      if (s.bNotified)
+      {
+        s.bNotified = false;
+        s.u();
+      }
+      if (confirm('Are you sure you want to send this user notification?'))
+      {
+        let request = {Interface: 'central', 'Function': 'userNotify', Request: {id: s.user.id, notification: s.notification.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.bNotified = true;
+            s.u();
           }
           else
           {
@@ -794,6 +828,29 @@ export default
       {{/each}}
     </table>
   </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ notify -->
+  {{#if user.forms.Notify.active}}
+  {{#isValid}}
+  <div class="row">
+    <div class="col-md-12">
+      <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
+    </div>
+  </div>
+  {{#if ../bNotified}}
+  <div class="row">
+    <div class="col-md-12">
+      <span class="text-success">Notification has been sent.</span>
+    </div>
+  </div>
+  {{/if}}
+  {{/isValid}} 
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ reminders -->

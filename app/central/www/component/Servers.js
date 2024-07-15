@@ -31,6 +31,7 @@ export default
       login_types: [],
       menu_accesses: [],
       notify_priorities: [],
+      notifyApplications: a.m_noyes[0],
       onlyOpenIssues: 1,
       package_types: [],
       serverDetail: {delay: 0, min_processes: 0, max_processes: 0, min_image: 0, max_image: 0, min_resident: 0, max_resident: 0}
@@ -163,30 +164,24 @@ export default
               s.server = response.Response;
               s.server.bAdmin = c.isGlobalAdmin();
               s.showForm(strForm);
-              if (s.server.bAdmin)
-              {
-                s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                s.server.forms_order.splice(5, 0, 'Notify');
-                s.showForm(strForm);
-              }
-              else if (c.isValid())
+              if (c.isValid())
               {
                 let request = {Interface: 'central', 'Function': 'isServerAdmin', Request: {id: s.server.id, form: strForm}};
                 c.wsRequest('radial', request).then((response) =>
                 {
                   let error = {};
+                  s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
+                  s.server.forms_order.splice(5, 0, 'Notify');
                   if (c.wsResponse(response, error))
                   {
                     let strForm = response.Request.form;
                     s.server.bAdmin = true;
-                    s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                    s.server.forms_order.splice(5, 0, 'Notify');
-                    s.showForm(strForm);
                   }
                   else
                   {
                     s.message.v = error.message;
                   }
+                  s.showForm(strForm);
                 });
               }
               let request = {Interface: 'junction', Request: [{Service: 'addrInfo', Server: s.server.name}]};
@@ -1109,15 +1104,30 @@ export default
   <!-- ]]] -->
   <!-- [[[ notify -->
   {{#if server.forms.Notify.active}}
-  {{#if server.bAdmin}}
-  <div class="table-responsive">
-    <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
-    <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
-    {{#if bNotified}}
-    <span class="text-success">Notification has been sent.</span>
-    {{/if}}
+  {{#isValid}}
+  <div class="row">
+    <div class="col-md-12">
+      <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+      {{#if ../server.bAdmin}}
+      <div class="input-group"><span class="input-group-text">Notify Applications</span><select class="form-control" c-model="notifyApplications" c-json>{{#each ../a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+      {{/if}}
+    </div>
+    <div class="col-md-9">
+      <button class="btn btn-primary bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
+    </div>
+  </div>
+  {{#if ../bNotified}}
+  <div class="row">
+    <div class="col-md-12">
+      <span class="text-success">Notification has been sent.</span>
+    </div>
   </div>
   {{/if}}
+  {{/isValid}}
   {{/if}}
   <!-- ]]] -->
   {{/if}}
