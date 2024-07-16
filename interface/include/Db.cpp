@@ -31,6 +31,9 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationDependAdd"] = &Db::dbCentralApplicationDependAdd;
   m_functions["dbCentralApplicationDependRemove"] = &Db::dbCentralApplicationDependRemove;
   m_functions["dbCentralApplicationDepends"] = &Db::dbCentralApplicationDepends;
+  m_functions["dbCentralApplicationGroupAdd"] = &Db::dbCentralApplicationGroupAdd;
+  m_functions["dbCentralApplicationGroupRemove"] = &Db::dbCentralApplicationGroupRemove;
+  m_functions["dbCentralApplicationGroups"] = &Db::dbCentralApplicationGroups;
   m_functions["dbCentralApplicationIssueAdd"] = &Db::dbCentralApplicationIssueAdd;
   m_functions["dbCentralApplicationIssueCommentAdd"] = &Db::dbCentralApplicationIssueCommentAdd;
   m_functions["dbCentralApplicationIssueComments"] = &Db::dbCentralApplicationIssueComments;
@@ -75,6 +78,9 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralRepos"] = &Db::dbCentralRepos;
   m_functions["dbCentralServerAdd"] = &Db::dbCentralServerAdd;
   m_functions["dbCentralServerDetails"] = &Db::dbCentralServerDetails;
+  m_functions["dbCentralServerGroupAdd"] = &Db::dbCentralServerGroupAdd;
+  m_functions["dbCentralServerGroupRemove"] = &Db::dbCentralServerGroupRemove;
+  m_functions["dbCentralServerGroups"] = &Db::dbCentralServerGroups;
   m_functions["dbCentralServerRemove"] = &Db::dbCentralServerRemove;
   m_functions["dbCentralServers"] = &Db::dbCentralServers;
   m_functions["dbCentralServerUpdate"] = &Db::dbCentralServerUpdate;
@@ -481,6 +487,50 @@ bool Db::dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, st
   stringstream qs;
   
   qs << "select id, application_id, dependant_id from application_dependant";
+  if (!empty(i, "id"))
+  {
+    qs << " where id = " << v(i->m["id"]->v);
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralApplicationGroupAdd()
+bool Db::dbCentralApplicationGroupAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"application_id", "group_id"}, i, e))
+  {
+    stringstream qs;
+    qs << "insert into application_group (application_id, group_id) values (" << v(i->m["application_id"]->v) << ", " << v(i->m["group_id"]->v) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationGroupRemove()
+bool Db::dbCentralApplicationGroupRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from application_group where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralApplicationGroups()
+bool Db::dbCentralApplicationGroups(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, application_id, group_id from application_group";
   if (!empty(i, "id"))
   {
     qs << " where id = " << v(i->m["id"]->v);
@@ -1563,6 +1613,50 @@ bool Db::dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string 
     qs << " and a.application_id = " << v(i->m["application_id"]->v);
   }
   qs << " order by b.name, c.daemon";
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralServerGroupAdd()
+bool Db::dbCentralServerGroupAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"server_id", "group_id"}, i, e))
+  {
+    stringstream qs;
+    qs << "insert into server_group (server_id, group_id) values (" << v(i->m["server_id"]->v) << ", " << v(i->m["group_id"]->v) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralServerGroupRemove()
+bool Db::dbCentralServerGroupRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from server_group where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralServerGroups()
+bool Db::dbCentralServerGroups(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, server_id, group_id from server_group";
+  if (!empty(i, "id"))
+  {
+    qs << " where id = " << v(i->m["id"]->v);
+  }
 
   return dbq("central_r", qs, q, o, e);
 }

@@ -46,6 +46,9 @@ class Central : public Interface
   bool applicationDependAdd(radialUser &d, string &e);
   bool applicationDependRemove(radialUser &d, string &e);
   bool applicationEdit(radialUser &d, string &e);
+  bool applicationGroup(radialUser &d, string &e);
+  bool applicationGroupAdd(radialUser &d, string &e);
+  bool applicationGroupRemove(radialUser &d, string &e);
   bool applicationIssue(radialUser &d, string &e);
   bool applicationIssueAdd(radialUser &d, string &e);
   bool applicationIssueClose(radialUser &d, string &e);
@@ -118,6 +121,9 @@ class Central : public Interface
   bool serverAdd(radialUser &d, string &e);
   bool serverDetailsByApplicationID(radialUser &d, string &e);
   bool serverEdit(radialUser &d, string &e);
+  bool serverGroup(radialUser &d, string &e);
+  bool serverGroupAdd(radialUser &d, string &e);
+  bool serverGroupRemove(radialUser &d, string &e);
   bool serverNotify(radialUser &d, string &e);
   bool serverRemove(radialUser &d, string &e);
   bool servers(radialUser &d, string &e);

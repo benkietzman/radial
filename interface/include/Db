@@ -42,6 +42,9 @@ class Db : public Interface
   bool dbCentralApplicationDependAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDependRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationGroupAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationGroupRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralApplicationGroups(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueCommentAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralApplicationIssueComments(Json *i, Json *o, string &id, string &q, string &e);
@@ -86,6 +89,9 @@ class Db : public Interface
   bool dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralServerGroupAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralServerGroupRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralServerGroups(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerUpdate(Json *i, Json *o, string &id, string &q, string &e);

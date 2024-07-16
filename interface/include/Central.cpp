@@ -45,6 +45,9 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationDependAdd"] = &Central::applicationDependAdd;
   m_functions["applicationDependRemove"] = &Central::applicationDependRemove;
   m_functions["applicationEdit"] = &Central::applicationEdit;
+  m_functions["applicationGroup"] = &Central::applicationGroup;
+  m_functions["applicationGroupAdd"] = &Central::applicationGroupAdd;
+  m_functions["applicationGroupRemove"] = &Central::applicationGroupRemove;
   m_functions["applicationIssue"] = &Central::applicationIssue;
   m_functions["applicationIssueAdd"] = &Central::applicationIssueAdd;
   m_functions["applicationIssueClose"] = &Central::applicationIssueClose;
@@ -110,6 +113,9 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["serverAdd"] = &Central::serverAdd;
   m_functions["serverDetailsByApplicationID"] = &Central::serverDetailsByApplicationID;
   m_functions["serverEdit"] = &Central::serverEdit;
+  m_functions["serverGroup"] = &Central::serverGroup;
+  m_functions["serverGroupAdd"] = &Central::serverGroupAdd;
+  m_functions["serverGroupRemove"] = &Central::serverGroupRemove;
   m_functions["serverNotify"] = &Central::serverNotify;
   m_functions["serverRemove"] = &Central::serverRemove;
   m_functions["servers"] = &Central::servers;
@@ -732,6 +738,98 @@ bool Central::applicationEdit(radialUser &d, string &e)
     else
     {
       e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationGroup()
+bool Central::applicationGroup(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    map<string, string> r;
+    if (db("dbCentralApplicationGroups", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationGroupAdd()
+bool Central::applicationGroupAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"application_id", "group_id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["application_id"]->v);
+    if (d.g || isApplicationDeveloper(a, e))
+    {
+      string id, q;
+      if (db("dbCentralApplicationGroupAdd", i, id, q, e))
+      {
+        b = true;
+        o->i("id", id);
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationGroupRemove()
+bool Central::applicationGroupRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (applicationGroup(a, e) && !empty(a.p->m["o"], "application_id")))
+    {
+      radialUser c;
+      userInit(d, c);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["application_id"]->v);
+      }
+      if (d.g || isApplicationDeveloper(c, e))
+      {
+        b = db("dbCentralApplicationGroupRemove", i, e);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      userDeinit(c);
     }
     userDeinit(a);
   }
@@ -4292,6 +4390,98 @@ bool Central::serverEdit(radialUser &d, string &e)
     else
     {
       e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ serverGroup()
+bool Central::serverGroup(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    map<string, string> r;
+    if (db("dbCentralServerGroups", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ serverGroupAdd()
+bool Central::serverGroupAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"server_id", "group_id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["server_id"]->v);
+    if (d.g || isServerAdmin(a, e))
+    {
+      string id, q;
+      if (db("dbCentralServerGroupAdd", i, id, q, e))
+      {
+        b = true;
+        o->i("id", id);
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ serverGroupRemove()
+bool Central::serverGroupRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (serverGroup(a, e) && !empty(a.p->m["o"], "server_id")))
+    {
+      radialUser c;
+      userInit(d, c);
+      if (!d.g)
+      {
+        c.p->m["i"]->i("id", a.p->m["o"]->m["server_id"]->v);
+      }
+      if (d.g || isServerAdmin(c, e))
+      {
+        b = db("dbCentralServerGroupRemove", i, e);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+      userDeinit(c);
     }
     userDeinit(a);
   }
