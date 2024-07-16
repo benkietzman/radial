@@ -1554,6 +1554,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
           f.p->m["i"]->i("Contact", "1", 'n');
           if (applicationUsersByApplicationID(f, e))
           {
+            radialUser g;
             b = true;
             for (auto &contact : f.p->m["o"]->l)
             {
@@ -1584,43 +1585,79 @@ bool Central::applicationNotify(radialUser &d, string &e)
                   o->m[contact->m["userid"]->v]->i("contact", "1", 1);
                 }
               }
-              if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
+            }
+            userInit(d, g);
+            g.p->m["i"]->i("application_id", i->m["id"]->v);
+            if (groupsByApplicationID(g, e))
+            {
+              for (auto &group : g.p->m["o"]->l)
               {
                 radialUser h;
                 userInit(d, h);
-                h.p->m["i"]->i("application_id", i->m["id"]->v);
-                h.p->m["i"]->i("contacts", "1", 'n');
-                if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+                g.p->m["i"]->i("group_id", group->m["group_id"]->v);
+                if (groupUsersByGroupID(h, e))
                 {
-                  for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+                  for (auto &contact : h.p->m["o"]->l)
                   {
-                    if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                    if (!empty(contact, "userid") && !empty(contact, "type") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                     {
-                      for (auto &contact : dependent->m["contacts"]->l)
+                      if (!exist(o, contact->m["userid"]->v))
                       {
-                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                        o->m[contact->m["userid"]->v] = new Json;
+                      }
+                      o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                      o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                      if (!empty(group, "name"))
+                      {
+                        if (!exist(o->m[contact->m["userid"]->v], "group"))
                         {
-                          if (!exist(o, contact->m["userid"]->v))
-                          {
-                            o->m[contact->m["userid"]->v] = new Json;
-                          }
-                          o->m[contact->m["userid"]->v]->i("sent", "0", '0');
-                          o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                          if (!empty(dependent, "name"))
-                          {
-                            if (!exist(o->m[contact->m["userid"]->v], "depend"))
-                            {
-                              o->m[contact->m["userid"]->v]->m["depend"] = new Json;
-                            }
-                            o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
-                          }
+                          o->m[contact->m["userid"]->v]->m["group"] = new Json;
                         }
+                        o->m[contact->m["userid"]->v]->m["group"]->pb(group->m["name"]->v);
                       }
                     }
                   }
                 }
                 userDeinit(h);
               }
+            }
+            userDeinit(g);
+            if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
+            {
+              radialUser h;
+              userInit(d, h);
+              h.p->m["i"]->i("application_id", i->m["id"]->v);
+              h.p->m["i"]->i("contacts", "1", 'n');
+              if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+              {
+                for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
+                {
+                  if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                  {
+                    for (auto &contact : dependent->m["contacts"]->l)
+                    {
+                      if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      {
+                        if (!exist(o, contact->m["userid"]->v))
+                        {
+                          o->m[contact->m["userid"]->v] = new Json;
+                        }
+                        o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                        o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                        if (!empty(dependent, "name"))
+                        {
+                          if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                          {
+                            o->m[contact->m["userid"]->v]->m["depend"] = new Json;
+                          }
+                          o->m[contact->m["userid"]->v]->m["depend"]->pb(dependent->m["name"]->v);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              userDeinit(h);
             }
             for (auto &k : o->m)
             {
@@ -1645,11 +1682,21 @@ bool Central::applicationNotify(radialUser &d, string &e)
               }
               if (exist(k.second, "depend"))
               {
-                m << "You are a developer for the following application(s) which depend on the " << c.p->m["o"]->m["name"]->v << ":";
+                m << "You are a developer for the following dependent application(s):";
                 m << endl << endl;
                 for (auto &depend : k.second->m["depend"]->l)
                 {
                   m << "* " << depend->v << endl;
+                }
+                m << endl << endl;
+              }
+              if (exist(k.second, "group"))
+              {
+                m << "You are a contact for the following associated group(s):";
+                m << endl << endl;
+                for (auto &group : k.second->m["group"]->l)
+                {
+                  m << "* " << group->v << endl;
                 }
                 m << endl << endl;
               }
@@ -4598,6 +4645,7 @@ bool Central::serverNotify(radialUser &d, string &e)
             f.p->m["i"]->i("Contact", "1", 'n');
             if (serverUsersByServerID(f, e))
             {
+              radialUser g;
               b = true;
               for (auto &contact : f.p->m["o"]->l)
               {
@@ -4629,6 +4677,42 @@ bool Central::serverNotify(radialUser &d, string &e)
                   }
                 }
               }
+              userInit(d, g);
+              g.p->m["i"]->i("server_id", i->m["id"]->v);
+              if (groupsByServerID(g, e))
+              {
+                for (auto &group : g.p->m["o"]->l)
+                {
+                  radialUser h;
+                  userInit(d, h);
+                  g.p->m["i"]->i("group_id", group->m["group_id"]->v);
+                  if (groupUsersByGroupID(h, e))
+                  {
+                    for (auto &contact : h.p->m["o"]->l)
+                    {
+                      if (!empty(contact, "userid") && !empty(contact, "type") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      {
+                        if (!exist(o, contact->m["userid"]->v))
+                        {
+                          o->m[contact->m["userid"]->v] = new Json;
+                        }
+                        o->m[contact->m["userid"]->v]->i("sent", "0", '0');
+                        o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
+                        if (!empty(group, "name"))
+                        {
+                          if (!exist(o->m[contact->m["userid"]->v], "group"))
+                          {
+                            o->m[contact->m["userid"]->v]->m["group"] = new Json;
+                          }
+                          o->m[contact->m["userid"]->v]->m["group"]->pb(group->m["name"]->v);
+                        }
+                      }
+                    }
+                  }
+                  userDeinit(h);
+                }
+              }
+              userDeinit(g);
               for (auto &k : o->m)
               {
                 stringstream m;
@@ -4649,6 +4733,16 @@ bool Central::serverNotify(radialUser &d, string &e)
                 else if (exist(k.second, "contact"))
                 {
                   m << "* You are a Contact for this server." << endl << endl;
+                }
+                if (exist(k.second, "group"))
+                {
+                  m << "You are a contact for the following associated group(s):";
+                  m << endl << endl;
+                  for (auto &group : k.second->m["group"]->l)
+                  {
+                    m << "* " << group->v << endl;
+                  }
+                  m << endl << endl;
                 }
                 m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
                 if (alert(k.first, m.str(), e))
