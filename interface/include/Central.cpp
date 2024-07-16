@@ -90,6 +90,8 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["groupNotify"] = &Central::groupNotify;
   m_functions["groupRemove"] = &Central::groupRemove;
   m_functions["groups"] = &Central::groups;
+  m_functions["groupsByApplicationID"] = &Central::groupsByApplicationID;
+  m_functions["groupsByServerID"] = &Central::groupsByServerID;
   m_functions["groupsByUserID"] = &Central::groupsByUserID;
   m_functions["groupUser"] = &Central::groupUser;
   m_functions["groupUserAdd"] = &Central::groupUserAdd;
@@ -3187,6 +3189,50 @@ bool Central::groups(radialUser &d, string &e)
       }
       o->pb(j);
       delete j;
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ groupsByApplicationID()
+bool Central::groupsByApplicationID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"application_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralGroups", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        o->pb(r);
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ groupsByServerID()
+bool Central::groupsByServerID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"server_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralGroups", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        o->pb(r);
+      }
     }
   }
 

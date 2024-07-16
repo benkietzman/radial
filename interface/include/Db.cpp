@@ -1197,9 +1197,17 @@ bool Db::dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  if (!empty(i, "contact_id"))
+  if (!empty(i, "application_id"))
+  {
+    qs << "select a.id, b.id group_id, b.name from application_group a, `group` b where a.group_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
+  }
+  else if (!empty(i, "contact_id"))
   {
     qs << "select a.id, b.id group_id, b.name, c.type from group_contact a, `group` b, contact_type c where a.group_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+  }
+  else if (!empty(i, "server_id"))
+  {
+    qs << "select a.id, b.id group_id, b.name from server_group a, `group` b where a.group_id = b.id and a.server_id = " << v(i->m["server_id"]->v) << " order by b.name";
   }
   else
   {

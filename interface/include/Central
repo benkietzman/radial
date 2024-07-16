@@ -97,6 +97,8 @@ class Central : public Interface
   bool groupNotify(radialUser &d, string &e);
   bool groupRemove(radialUser &d, string &e);
   bool groups(radialUser &d, string &e);
+  bool groupsByApplicationID(radialUser &d, string &e);
+  bool groupsByServerID(radialUser &d, string &e);
   bool groupsByUserID(radialUser &d, string &e);
   bool groupUser(radialUser &d, string &e);
   bool groupUserAdd(radialUser &d, string &e);
