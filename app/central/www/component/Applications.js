@@ -457,10 +457,6 @@ export default
                     s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet2', active: null};
                     s.application.forms_order.splice(1, 0, 'Accounts');
                   }
-                  else
-                  {
-                    s.message.v = error.message;
-                  }
                   s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                   s.application.forms_order.splice(5, 0, 'Notify');
                   s.showForm(strForm);

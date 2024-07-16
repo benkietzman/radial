@@ -177,10 +177,6 @@ export default
                     let strForm = response.Request.form;
                     s.server.bAdmin = true;
                   }
-                  else
-                  {
-                    s.message.v = error.message;
-                  }
                   s.showForm(strForm);
                 });
               }
