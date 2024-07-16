@@ -1609,7 +1609,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   for (auto &contact : h.p->m["o"]->l)
                   {
-                    if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                    if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                     {
                       if (!exist(o, contact->m["userid"]->v))
                       {
@@ -1646,7 +1646,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                   {
                     for (auto &contact : dependent->m["contacts"]->l)
                     {
-                      if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                       {
                         if (!exist(o, contact->m["userid"]->v))
                         {
@@ -4710,7 +4710,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                   {
                     for (auto &contact : h.p->m["o"]->l)
                     {
-                      if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
                       {
                         if (!exist(o, contact->m["userid"]->v))
                         {

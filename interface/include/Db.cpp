@@ -1313,7 +1313,7 @@ bool Db::dbCentralGroupUsers(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  qs << "select a.id, a.group_id, a.description, c.email, c.first_name, c.last_name, a.notify, b.type, a.type_id, c.id user_id, c.email, c.first_name, c.last_name, c.userid from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  qs << "select a.id, a.group_id, a.description, c.email, c.first_name, c.last_name, a.notify, b.type, a.type_id, c.id user_id, c.userid from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
   if (!empty(i, "id"))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
