@@ -1609,7 +1609,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   for (auto &contact : h.p->m["o"]->l)
                   {
-                    if (!empty(contact, "userid") && !empty(contact, "type") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                    if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                     {
                       if (!exist(o, contact->m["userid"]->v))
                       {
@@ -1698,7 +1698,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << "* " << depend->v << endl;
                 }
-                m << endl << endl;
+                m << endl;
               }
               if (exist(k.second, "group"))
               {
@@ -1708,7 +1708,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << "* " << group->v << endl;
                 }
-                m << endl << endl;
+                m << endl;
               }
               m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
               if (alert(k.first, m.str(), e))
@@ -4710,7 +4710,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                   {
                     for (auto &contact : h.p->m["o"]->l)
                     {
-                      if (!empty(contact, "userid") && !empty(contact, "type") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                      if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
                       {
                         if (!exist(o, contact->m["userid"]->v))
                         {
@@ -4762,7 +4762,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                   {
                     m << "* " << group->v << endl;
                   }
-                  m << endl << endl;
+                  m << endl;
                 }
                 m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
                 if (alert(k.first, m.str(), e))
