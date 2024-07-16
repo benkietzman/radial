@@ -449,8 +449,6 @@ export default
                 c.wsRequest('radial', request).then((response) =>
                 {
                   let error = {};
-                  s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                  s.application.forms_order.splice(5, 0, 'Notify');
                   if (c.wsResponse(response, error))
                   {
                     let strForm = response.Request.form;
@@ -463,6 +461,8 @@ export default
                   {
                     s.message.v = error.message;
                   }
+                  s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
+                  s.application.forms_order.splice(5, 0, 'Notify');
                   s.showForm(strForm);
                 });
               }
