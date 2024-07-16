@@ -1703,7 +1703,7 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
   }
   else if (!empty(i, "group_id"))
   {
-    qs << "select a.id, b.id server_id, b.name from group_server a, server b where a.server_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
+    qs << "select a.id, b.id server_id, b.name from server_group a, server b where a.server_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
   }
   else
   {
