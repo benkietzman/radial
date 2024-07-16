@@ -1594,7 +1594,12 @@ bool Central::applicationNotify(radialUser &d, string &e)
               {
                 radialUser h;
                 userInit(d, h);
-                g.p->m["i"]->i("group_id", group->m["group_id"]->v);
+                if (exist(h.p->m["i"], "id"))
+                {
+                  delete h.p->m["i"]->m["id"];
+                  h.p->m["i"]->m.erase("id");
+                }
+                h.p->m["i"]->i("group_id", group->m["group_id"]->v);
                 if (groupUsersByGroupID(h, e))
                 {
                   for (auto &contact : h.p->m["o"]->l)
@@ -4685,7 +4690,12 @@ bool Central::serverNotify(radialUser &d, string &e)
                 {
                   radialUser h;
                   userInit(d, h);
-                  g.p->m["i"]->i("group_id", group->m["group_id"]->v);
+                  if (exist(h.p->m["i"], "id"))
+                  {
+                    delete h.p->m["i"]->m["id"];
+                    h.p->m["i"]->m.erase("id");
+                  }
+                  h.p->m["i"]->i("group_id", group->m["group_id"]->v);
                   if (groupUsersByGroupID(h, e))
                   {
                     for (auto &contact : h.p->m["o"]->l)
