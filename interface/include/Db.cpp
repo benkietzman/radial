@@ -808,7 +808,11 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
 {
   stringstream qs;
 
-  if (!empty(i, "server_id"))
+  if (!empty(i, "group_id"))
+  {
+    qs << "select a.id, b.id application_id, b.name from application_group a, application b where a.application_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
+  }
+  else if (!empty(i, "server_id"))
   {
     qs << "select a.id, b.id application_id, b.name from application_server a, application b where a.application_id = b.id and a.server_id = " << v(i->m["server_id"]->v);
     if (!empty(i, "retired") && i->m["retired"]->v == "1")
@@ -1696,6 +1700,10 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
   else if (!empty(i, "contact_id"))
   {
     qs << "select distinct a.id, b.id server_id, b.name, c.type from server_contact a, server b, contact_type c where a.server_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+  }
+  else if (!empty(i, "group_id"))
+  {
+    qs << "select a.id, b.id server_id, b.name from group_server a, server b where a.server_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
   }
   else
   {

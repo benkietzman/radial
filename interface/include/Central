@@ -68,6 +68,7 @@ class Central : public Interface
   bool applicationRepoRemove(radialUser &d, string &e);
   bool applicationReposByApplicationID(radialUser &d, string &e);
   bool applications(radialUser &d, string &e);
+  bool applicationsByGroupID(radialUser &d, string &e);
   bool applicationsByServerID(radialUser &d, string &e);
   bool applicationsByUserID(radialUser &d, string &e);
   bool applicationServer(radialUser &d, string &e);
@@ -130,6 +131,7 @@ class Central : public Interface
   bool serverRemove(radialUser &d, string &e);
   bool servers(radialUser &d, string &e);
   bool serversByApplicationID(radialUser &d, string &e);
+  bool serversByGroupID(radialUser &d, string &e);
   bool serversByParentID(radialUser &d, string &e);
   bool serversByUserID(radialUser &d, string &e);
   bool serverUser(radialUser &d, string &e);

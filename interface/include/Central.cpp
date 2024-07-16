@@ -66,6 +66,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["applicationRepoRemove"] = &Central::applicationRepoRemove;
   m_functions["applicationReposByApplicationID"] = &Central::applicationReposByApplicationID;
   m_functions["applications"] = &Central::applications;
+  m_functions["applicationsByGroupID"] = &Central::applicationsByGroupID;
   m_functions["applicationsByServerID"] = &Central::applicationsByServerID;
   m_functions["applicationsByUserID"] = &Central::applicationsByUserID;
   m_functions["applicationServer"] = &Central::applicationServer;
@@ -122,6 +123,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["serverRemove"] = &Central::serverRemove;
   m_functions["servers"] = &Central::servers;
   m_functions["serversByApplicationID"] = &Central::serversByApplicationID;
+  m_functions["serversByGroupID"] = &Central::serversByGroupID;
   m_functions["serversByParentID"] = &Central::serversByParentID;
   m_functions["serversByUserID"] = &Central::serversByUserID;
   m_functions["serverUser"] = &Central::serverUser;
@@ -1989,6 +1991,28 @@ bool Central::applications(radialUser &d, string &e)
       }
       o->pb(j);
       delete j;
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ applicationsByGroupID()
+bool Central::applicationsByGroupID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"group_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralApplications", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        o->pb(r);
+      }
     }
   }
 
@@ -4811,6 +4835,28 @@ bool Central::serversByApplicationID(radialUser &d, string &e)
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (dep({"application_id"}, i, e))
+  {
+    list<map<string, string> > rs;
+    if (db("dbCentralServers", i, rs, e))
+    {
+      b = true;
+      for (auto &r : rs)
+      {
+        o->pb(r);
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ serversByGroupID()
+bool Central::serversByGroupID(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"group_id"}, i, e))
   {
     list<map<string, string> > rs;
     if (db("dbCentralServers", i, rs, e))
