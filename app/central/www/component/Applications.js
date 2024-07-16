@@ -109,6 +109,25 @@ export default
       });
     };
     // ]]]
+    // [[[ addGroup()
+    s.addGroup = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'applicationGroupAdd', Request: {application_id: s.application.id, group_id: s.group.v.id}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.application.groups = null;
+          s.showForm('Groups');
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
     // [[[ addIssue()
     s.addIssue = () =>
     {
@@ -397,6 +416,7 @@ export default
           General:      {value: 'General',      icon: 'info-circle', active: null},
           Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
           Depend:       {value: 'Depend',       icon: 'bezier',      active: null},
+          Groups:       {value: 'Groups',       icon: 'people',      active: null},
           Issues:       {value: 'Issues',       icon: 'ticket',      active: null},
           Repositories: {value: 'Repositories', icon: 'inbox',       active: null},
           Servers:      {value: 'Servers',      icon: 'server',      active: null}
@@ -404,7 +424,7 @@ export default
       }
       if (!c.isDefined(s.application.forms_order))
       {
-        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Issues', 'Repositories', 'Servers'];
+        s.application.forms_order = ['General', 'Contacts', 'Depend', 'Groups', 'Issues', 'Repositories', 'Servers'];
       }
     };
     // ]]]
@@ -458,7 +478,7 @@ export default
                     s.application.forms_order.splice(1, 0, 'Accounts');
                   }
                   s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                  s.application.forms_order.splice(5, 0, 'Notify');
+                  s.application.forms_order.splice(6, 0, 'Notify');
                   s.showForm(strForm);
                 });
               }
@@ -802,6 +822,28 @@ export default
       }
     };
     // ]]]
+    // [[[ removeGroup()
+    s.removeGroup = (nID) =>
+    {
+      if (confirm('Are you sure you want to remove this application group?'))
+      {
+        let request = {Interface: 'central', 'Function': 'applicationGroupRemove', Request: {id: nID}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.application.groups = null;
+            s.showForm('Groups');
+          }
+          else
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+    };
+    // ]]]
     // [[[ removeRepo()
     s.removeRepo = (nID) =>
     {
@@ -1126,6 +1168,48 @@ export default
                   if (c.wsResponse(response, error))
                   {
                     s.dependApplications = response.Response;
+                    s.u();
+                  }
+                  else
+                  {
+                    s.message.v = error.message;
+                  }
+                });
+              }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Groups
+      else if (strForm == 'Groups')
+      {
+        if (!c.isDefined(s.application.groups) || s.application.groups == null)
+        {
+          s.info.v = 'Retrieving groups...';
+          let request = {Interface: 'central', 'Function': 'groupsByApplicationID', Request: {application_id: s.application.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.application.groups = response.Response;
+              if (s.application.bDeveloper)
+              {
+                let request = {Interface: 'central', 'Function': 'groups', Request: {}};
+                c.wsRequest('radial', request).then((response) =>
+                {
+                  let error = {};
+                  if (c.wsResponse(response, error))
+                  {
+                    s.groups = response.Response;
+                    s.group = s.groups[0];
                     s.u();
                   }
                   else
@@ -1841,6 +1925,34 @@ export default
       {{#each application.dependents}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ groups -->
+  {{#if application.forms.Groups.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th style="width: 100%;">Server</th>
+        {{#if application.bDeveloper}}
+        <th colspan="2"></th>
+        {{/if}}
+      </tr>
+      {{#if application.bDeveloper}}
+      <tr>
+        <td><select class="form-control" c-model="group" c-json>{{#each groups}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addGroup()" title="Add"></button></td>
+      </tr>
+      {{/if}}
+      {{#each application.groups}}
+      <tr>
+        <td><a href="#/Groups/{{group_id}}">{{name}}</a></td>
+        {{#if @root.application.bDeveloper}}
+        <td style="white-space: nowrap;"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeGroup({{id}})" title="Remove"></button></td>
+        {{/if}}
       </tr>
       {{/each}}
     </table>

@@ -57,6 +57,25 @@ export default
       });
     };
     // ]]]
+    // [[[ addGroup()
+    s.addGroup = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'serverGroupAdd', Request: {server_id: s.server.id, group_id: s.group.v.id}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.server.groups = null;
+          s.showForm('Groups');
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
+      });
+    };
+    // ]]]
     // [[[ addServer()
     s.addServer = () =>
     {
@@ -123,11 +142,12 @@ export default
           General:      {value: 'General',      icon: 'info-circle', active: null},
           Applications: {value: 'Applications', icon: 'app',         active: null},
           Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
+          Groups:       {value: 'Groups',       icon: 'people',      active: null}
         };
       }
       if (!c.isDefined(s.server.forms_order))
       {
-        s.server.forms_order = ['General', 'Applications', 'Contacts'];
+        s.server.forms_order = ['General', 'Applications', 'Contacts', 'Groups'];
       }
     };
     // ]]]
@@ -171,7 +191,7 @@ export default
                 {
                   let error = {};
                   s.server.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                  s.server.forms_order.splice(5, 0, 'Notify');
+                  s.server.forms_order.splice(6, 0, 'Notify');
                   if (c.wsResponse(response, error))
                   {
                     let strForm = response.Request.form;
@@ -372,6 +392,28 @@ export default
       }
     };
     // ]]]
+    // [[[ removeGroup()
+    s.removeGroup = (nID) =>
+    {
+      if (confirm('Are you sure you want to remove this server group?'))
+      {
+        let request = {Interface: 'central', 'Function': 'serverGroupRemove', Request: {id: nID}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.server.groups = null;
+            s.showForm('Groups');
+          }
+          else 
+          {
+            s.message.v = error.message;
+          }
+        });
+      }
+    };
+    // ]]]
     // [[[ removeServer()
     s.removeServer = () =>
     {
@@ -550,6 +592,48 @@ export default
                   }
                 }
                 s.server.contacts.push(response.Response[i]);
+              }
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Groups
+      else if (strForm == 'Groups')
+      {
+        if (!c.isDefined(s.server.groups) || s.server.groups == null)
+        {
+          s.info.v = 'Retrieving groups...';
+          let request = {Interface: 'central', 'Function': 'groupsByServerID', Request: {server_id: s.server.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.server.groups = response.Response;
+              if (s.server.bAdmin)
+              {
+                let request = {Interface: 'central', 'Function': 'groups', Request: {}};
+                c.wsRequest('radial', request).then((response) =>
+                {
+                  let error = {};
+                  if (c.wsResponse(response, error))
+                  {
+                    s.groups = response.Response;
+                    s.group = s.groups[0];
+                    s.u();
+                  }
+                  else
+                  {
+                    s.message.v = error.message;
+                  }
+                });
               }
               s.u();
             }
@@ -1091,6 +1175,34 @@ export default
           <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditContact({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeContact({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
+        {{/if}}
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ groups -->
+  {{#if server.forms.Groups.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th style="width: 100%;">Server</th>
+        {{#if server.bAdmin}}
+        <th colspan="2"></th>
+        {{/if}}
+      </tr>
+      {{#if server.bAdmin}}
+      <tr>
+        <td><select class="form-control" c-model="group" c-json>{{#each groups}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td>
+        <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addGroup()" title="Add"></button></td>
+      </tr>
+      {{/if}}
+      {{#each server.groups}}
+      <tr>
+        <td><a href="#/Groups/{{group_id}}">{{name}}</a></td>
+        {{#if @root.server.bAdmin}}
+        <td style="white-space: nowrap;"><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeGroup({{id}})" title="Remove"></button></td>
         {{/if}}
       </tr>
       {{/each}}
