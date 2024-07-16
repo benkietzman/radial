@@ -132,14 +132,15 @@ export default
       {
         s.user.forms =
         {
-          General:      {value: 'General',      icon: 'info-circle',    active: null},
-          Applications: {value: 'Applications', icon: 'app',            active: null},
-          Servers:      {value: 'Servers',      icon: 'server',        active: null},
+          General:      {value: 'General',      icon: 'info-circle', active: null},
+          Applications: {value: 'Applications', icon: 'app',         active: null},
+          Groups:       {value: 'Groups',       icon: 'people',      active: null},
+          Servers:      {value: 'Servers',      icon: 'server',      active: null},
         };
       }
       if (!c.isDefined(s.user.forms_order))
       {
-        s.user.forms_order = ['General', 'Applications', 'Servers'];
+        s.user.forms_order = ['General', 'Applications', 'Groups', 'Servers'];
       }
     };
     // ]]]
@@ -179,13 +180,13 @@ export default
               if (s.user.bAdmin)
               {
                 s.user.forms.Reminders = {value: 'Reminders', icon: 'calendar-event', active: null};
-                s.user.forms_order.splice(2, 0, 'Reminders');
+                s.user.forms_order.splice(3, 0, 'Reminders');
                 s.showForm(strForm);
               }
               if (c.isValid())
               {
                 s.user.forms.Notify = {value: 'Notify', icon: 'megaphone', active: null};
-                s.user.forms_order.splice(2, 0, 'Notify');
+                s.user.forms_order.splice(3, 0, 'Notify');
                 s.showForm(strForm);
               }
             }
@@ -380,6 +381,30 @@ export default
             if (c.wsResponse(response, error))
             {
               s.user.applications = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
+      // [[[ Groups
+      else if (strForm == 'Groups')
+      {
+        if (!c.isDefined(s.user.groups) || s.user.groups == null)
+        {
+          s.info.v = 'Retrieving groups...';
+          let request = {Interface: 'central', 'Function': 'groupsByUserID', Request: {contact_id: s.user.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.user.groups = response.Response;
               s.u();
             }
             else
@@ -824,6 +849,22 @@ export default
       {{#each user.applications}}
       <tr>
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ groups -->
+  {{#if user.forms.Groups.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Group</td>
+      </tr>
+      {{#each user.groups}}
+      <tr>
+        <td><a href="#/Groups/{{group_id}}">{{name}}</a></td>
       </tr>
       {{/each}}
     </table>
