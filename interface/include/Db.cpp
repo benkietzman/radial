@@ -57,6 +57,14 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralApplicationUserUpdate"] = &Db::dbCentralApplicationUserUpdate;
   m_functions["dbCentralContactTypes"] = &Db::dbCentralContactTypes;
   m_functions["dbCentralDependents"] = &Db::dbCentralDependents;
+  m_functions["dbCentralGroupAdd"] = &Db::dbCentralGroupAdd;
+  m_functions["dbCentralGroupRemove"] = &Db::dbCentralGroupRemove;
+  m_functions["dbCentralGroups"] = &Db::dbCentralGroups;
+  m_functions["dbCentralGroupUpdate"] = &Db::dbCentralGroupUpdate;
+  m_functions["dbCentralGroupUserAdd"] = &Db::dbCentralGroupUserAdd;
+  m_functions["dbCentralGroupUserRemove"] = &Db::dbCentralGroupUserRemove;
+  m_functions["dbCentralGroupUsers"] = &Db::dbCentralGroupUsers;
+  m_functions["dbCentralGroupUserUpdate"] = &Db::dbCentralGroupUserUpdate;
   m_functions["dbCentralLoginTypes"] = &Db::dbCentralLoginTypes;
   m_functions["dbCentralMenuAccesses"] = &Db::dbCentralMenuAccesses;
   m_functions["dbCentralNotifyPriorities"] = &Db::dbCentralNotifyPriorities;
@@ -1099,6 +1107,213 @@ bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
   qs << " order by b.name";
 
   return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralGroupAdd()
+bool Db::dbCentralGroupAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"name"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"description", "name"};
+    stringstream qs;
+    i->i("creation_date", "now()");
+    qs << "insert into `group` (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralGroupRemove()
+bool Db::dbCentralGroupRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from `group` where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralGroups()
+bool Db::dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  if (!empty(i, "contact_id"))
+  {
+    qs << "select a.id, b.id group_id, b.name, c.type from group_contact a, `group` b, contact_type c where a.group_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+  }
+  else
+  {
+    qs << "select";
+    if (!empty(i, "count") && i->m["count"]->v == "1")
+    {
+      qs << " count(id) num";
+    }
+    else
+    {
+      qs << " id, date_format(creation_date, '%Y-%m-%d') creation_date, description, name";
+    }
+    qs << " from `group` where 1";
+    if (!empty(i, "id"))
+    {
+      qs << " and id = " << v(i->m["id"]->v);
+    }
+    if (!empty(i, "letter"))
+    {
+      qs << " and";
+      if (i->m["letter"]->v == "#")
+      {
+        qs << " name regexp '^[0-9]+'";
+      }
+      else
+      {
+        qs << " upper(name) like '" << i->m["letter"]->v << "%'";
+      }
+    }
+    if (!empty(i, "name"))
+    {
+      qs << " and name = " << v(i->m["name"]->v);
+    }
+    qs << " order by name";
+    if (!empty(i, "page"))
+    {
+      size_t unNumPerPage, unOffset, unPage;
+      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      ssNumPerPage >> unNumPerPage;
+      ssPage >> unPage;
+      unOffset = unPage * unNumPerPage;
+      qs << " limit " << unNumPerPage << " offset " << unOffset;
+    }
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralGroupUpdate()
+bool Db::dbCentralGroupUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id", "name"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update `group` set" << u(list<string>{"description", "name"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralGroupUserAdd()
+bool Db::dbCentralGroupUserAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"group_id", "contact_id"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"group_id", "contact_id", "description", "notify", "type_id"};
+    stringstream qs;
+    qs << "insert into group_contact (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralGroupUserRemove()
+bool Db::dbCentralGroupUserRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from group_contact where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralGroupUsers()
+bool Db::dbCentralGroupUsers(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select a.id, a.group_id, a.description, c.email, c.first_name, c.last_name, a.notify, b.type, a.type_id, c.id user_id, c.userid from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
+  if (!empty(i, "id"))
+  {
+    qs << " and a.id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "group_id"))
+  {
+    qs << " and a.group_id = " << v(i->m["group_id"]->v);
+  }
+  if ((!empty(i, "Primary Owner") && i->m["Primary Owner"]->v == "1") || (!empty(i, "Backup Owner") && i->m["Backup Owner"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  {
+    bool f = true;
+    qs << " and b.type in (";
+    if (!empty(i, "Primary Owner") && i->m["Primary Owner"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Owner'";
+      f = false;
+    }
+    if (!empty(i, "Backup Owner") && i->m["Backup Owner"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Backup Owner'";
+      f = false;
+    }
+    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Primary Contact'";
+      f = false;
+    }
+    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    {
+      qs << ((!f)?", ":"") << "'Contact'";
+      f = false;
+    }
+    qs << ")";
+  }
+  qs << " order by c.last_name, c.first_name, c.userid";
+  if (exist(i, "page"))
+  {
+    size_t unNumPerPage, unOffset, unPage;
+    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    ssNumPerPage >> unNumPerPage;
+    ssPage >> unPage;
+    unOffset = unPage * unNumPerPage;
+    qs << " limit " << unNumPerPage << " offset " << unOffset;
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralGroupUserUpdate()
+bool Db::dbCentralGroupUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update group_contact set" << u({"contact_id", "description", "notify", "type_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
 }
 // }}}
 // {{{ dbCentralLoginTypes()

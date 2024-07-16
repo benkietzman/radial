@@ -68,6 +68,14 @@ class Db : public Interface
   bool dbCentralApplicationUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupUpdate(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupUserAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupUserRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupUsers(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralGroupUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, string &e);

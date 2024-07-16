@@ -88,6 +88,18 @@ class Central : public Interface
   bool dbu(const string strQuery, string &strID, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
   bool footer(radialUser &d, string &e);
+  bool group(radialUser &d, string &e);
+  bool groupAdd(radialUser &d, string &e);
+  bool groupEdit(radialUser &d, string &e);
+  bool groupNotify(radialUser &d, string &e);
+  bool groupRemove(radialUser &d, string &e);
+  bool groups(radialUser &d, string &e);
+  bool groupsByUserID(radialUser &d, string &e);
+  bool groupUser(radialUser &d, string &e);
+  bool groupUserAdd(radialUser &d, string &e);
+  bool groupUserEdit(radialUser &d, string &e);
+  bool groupUserRemove(radialUser &d, string &e);
+  bool groupUsersByGroupID(radialUser &d, string &e);
   bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);

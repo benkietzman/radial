@@ -141,6 +141,7 @@ class Interface : public Base
   bool interfaceRemove(const string strNode, const string strInterface, string &strError);
   void interfaces(string strPrefix, Json *ptJson);
   bool isApplicationDeveloper(radialUser &d, string &e);
+  bool isGroupOwner(radialUser &d, string &e);
   bool isServerAdmin(radialUser &d, string &e);
   bool isLocalAdmin(radialUser &d, const string strApplication = "", const bool bAny = false, const bool bLocal = false);
   bool isMaster();

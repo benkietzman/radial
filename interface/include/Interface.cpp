@@ -2012,6 +2012,45 @@ bool Interface::isApplicationDeveloper(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ isGroupOwner()
+bool Interface::isGroupOwner(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream q;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id"))
+  {
+    if (!d.u.empty())
+    {
+      q << "select a.id from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and a.application_id = " << i->m["id"]->v << " and b.type in ('Primary Owner', 'Backup Owner') and c.userid = '" << d.u << "'";
+      auto g = dbquery("central_r", q.str(), e);
+      if (g != NULL)
+      {
+        if (!g->empty())
+        {
+          b = true;
+        }
+        else
+        {
+          e = "You are not an owner for this group.";
+        }
+      }
+      dbfree(g);
+    }
+    else
+    {
+      e = "You are not authorized to run this request.";
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ isLocalAdmin()
 bool Interface::isLocalAdmin(radialUser &d, const string strApplication, const bool bAny, const bool bLocal)
 {
