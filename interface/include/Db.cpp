@@ -810,7 +810,7 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
 
   if (!empty(i, "group_id"))
   {
-    qs << "select a.id, b.id application_id, b.name from application_group a, application b where a.application_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
+    qs << "select a.id, b.id application_id, b.name from application_group a, application b where a.application_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
   }
   else if (!empty(i, "server_id"))
   {
