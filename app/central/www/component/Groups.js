@@ -116,12 +116,14 @@ export default
         s.group.forms =
         {
           General:      {value: 'General',      icon: 'info-circle', active: null},
+          Applications: {value: 'Applications', icon: 'app',         active: null},
           Contacts:     {value: 'Contacts',     icon: 'people',      active: null},
+          Servers:      {value: 'Servers',      icon: 'server',      active: null}
         };
       }
       if (!c.isDefined(s.group.forms_order))
       {
-        s.group.forms_order = ['General', 'Contacts'];
+        s.group.forms_order = ['General', 'Applications', 'Contacts', 'Servers'];
       }
     };
     // ]]]
@@ -171,7 +173,7 @@ export default
                     s.group.bOwner = true;
                   }
                   s.group.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                  s.group.forms_order.splice(2, 0, 'Notify');
+                  s.group.forms_order.splice(3, 0, 'Notify');
                   s.showForm(strForm);
                 });
               }
@@ -465,6 +467,30 @@ export default
       {
       }
       // ]]]
+      // [[[ Applications
+      else if (strForm == 'Applications')
+      {
+        if (!c.isDefined(s.group.applications) || s.group.applications == null)
+        {
+          s.info.v = 'Retrieving applications...';
+          let request = {Interface: 'central', 'Function': 'applicationsByGroupID', Request: {group_id: s.group.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.group.applications = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
+      }
+      // ]]]
       // [[[ Contacts
       else if (strForm == 'Contacts')
       {
@@ -513,6 +539,30 @@ export default
       // [[[ Notify
       else if (strForm == 'Notify')
       {
+      }
+      // ]]]
+      // [[[ Servers
+      else if (strForm == 'Servers')
+      {
+        if (!c.isDefined(s.group.servers) || s.group.servers == null)
+        {
+          s.info.v = 'Retrieving serverss...';
+          let request = {Interface: 'central', 'Function': 'serversByGroupID', Request: {group_id: s.group.id}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            s.info.v = null;
+            if (c.wsResponse(response, error))
+            {
+              s.group.servers = response.Response;
+              s.u();
+            }
+            else
+            {
+              s.message.v = error.message;
+            }
+          });
+        }
       }
       // ]]]
       s.u();
@@ -658,6 +708,22 @@ export default
   </table>
   {{/if}}
   <!-- ]]] -->
+  <!-- [[[ applications -->
+  {{#if group.forms.Applications.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Application</td>
+      </tr>
+      {{#each group.applications}}
+      <tr>
+        <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
   <!-- [[[ contacts -->
   {{#if group.forms.Contacts.active}}
   <div class="table-responsive">
@@ -729,6 +795,22 @@ export default
   </div>
   {{/if}}
   {{/isValid}}
+  {{/if}}
+  <!-- ]]] -->
+  <!-- [[[ servers -->
+  {{#if group.forms.Servers.active}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+      <tr>
+        <th>Server</td>
+      </tr>
+      {{#each group.servers}}
+      <tr>
+        <td><a href="#/Servers/{{server_id}}">{{name}}</a></td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
   {{/if}}
   <!-- ]]] -->
   {{/if}}
