@@ -1587,6 +1587,11 @@ bool Central::applicationNotify(radialUser &d, string &e)
               }
             }
             userInit(d, g);
+            if (exist(g.p, "i"))
+            {
+              delete g.p->m["i"];
+              g.p->m["i"] = new Json;
+            }
             g.p->m["i"]->i("application_id", i->m["id"]->v);
             if (groupsByApplicationID(g, e))
             {
@@ -4683,6 +4688,11 @@ bool Central::serverNotify(radialUser &d, string &e)
                 }
               }
               userInit(d, g);
+              if (exist(g.p, "i"))
+              {
+                delete g.p->m["i"];
+                g.p->m["i"] = new Json;
+              }
               g.p->m["i"]->i("server_id", i->m["id"]->v);
               if (groupsByServerID(g, e))
               {
