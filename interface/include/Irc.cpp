@@ -183,11 +183,62 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   if (!strForm.empty())
                   {
                     ptRequest->i("Form", strForm);
+                    if (strForm == "notify")
+                    {
+                      string strMessage;
+                      getline(ssSubData, strMessage);
+                      m_manip.trim(strMessage, strMessage);
+                      if (!strMessage.empty())
+                      {
+                        ptRequest->i("Message", strMessage);
+                      }
+                    }
                   }
                 }
                 else
                 {
                   ptRequest->i("ApplicationID", strSubData);
+                }
+              }
+            }
+          }
+          // }}}
+          // {{{ group
+          else if (strFunction == "group")
+          {
+            string strSubData;
+            getline(ssData, strSubData);
+            m_manip.trim(strSubData, strSubData);
+            if (!strSubData.empty())
+            {
+              string strGroupID;
+              stringstream ssSubData(strSubData);
+              ssSubData >> strGroupID;
+              if (!strGroupID.empty())
+              {
+                ptRequest->i("GroupID", strGroupID);
+                if (m_manip.isNumeric(strGroupID))
+                {
+                  string strForm;
+                  ssSubData >> strForm;
+                  if (!strForm.empty())
+                  {
+                    ptRequest->i("Form", strForm);
+                    if (strForm == "notify")
+                    {
+                      string strMessage;
+                      getline(ssSubData, strMessage);
+                      m_manip.trim(strMessage, strMessage);
+                      if (!strMessage.empty())
+                      {
+                        ptRequest->i("Message", strMessage);
+                      }
+                    }
+                  }
+                }
+                else
+                {
+                  ptRequest->i("GroupID", strSubData);
                 }
               }
             }
@@ -214,6 +265,16 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   if (!strForm.empty())
                   {
                     ptRequest->i("Form", strForm);
+                    if (strForm == "notify")
+                    {
+                      string strMessage;
+                      getline(ssSubData, strMessage);
+                      m_manip.trim(strMessage, strMessage);
+                      if (!strMessage.empty())
+                      {
+                        ptRequest->i("Message", strMessage);
+                      }
+                    }
                   }
                 }
                 else
@@ -236,15 +297,28 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssData >> strForm;
               if (!strForm.empty())
               {
-                string strType;
                 ptRequest->i("Form", strForm);
-                getline(ssData, strType);
-                m_manip.trim(strType, strType);
-                if (strType.empty())
+                if (strForm == "notify")
                 {
-                  strType = "all";
+                  string strMessage;
+                  getline(ssData, strMessage);
+                  m_manip.trim(strMessage, strMessage);
+                  if (!strMessage.empty())
+                  {
+                    ptRequest->i("Message", strMessage);
+                  }
                 }
-                ptRequest->i("Type", strType);
+                else
+                {
+                  string strType;
+                  getline(ssData, strType);
+                  m_manip.trim(strType, strType);
+                  if (strType.empty())
+                  {
+                    strType = "all";
+                  }
+                  ptRequest->i("Type", strType);
+                }
               }
             }
           }
@@ -612,6 +686,51 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             dbfree(getApplicationContact);
           }
           // }}}
+          // {{{ notify
+          else if (strForm == "notify")
+          {
+            string strMessage = var("Message", ptData), strPayload, strValue;
+            stringstream ssTime;
+            time_t CTime;
+            Json *ptJwt = new Json;
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ptJwt->i("sl_first_name", strFirstName);
+            ptJwt->i("sl_last_name", strLastName);
+            ptJwt->i("sl_login", strIdent);
+            time(&CTime);
+            ssTime << CTime;
+            ptJwt->i("exp", ssTime.str(), 'n');
+            ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+            ptJwt->m["sl_auth"] = new Json;
+            for (auto &i : auth)
+            { 
+              ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+            }
+            if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+            {
+              Json *ptJson = new Json;
+              ptJson->i("Function", "applicationNotify");
+              ptJson->m["Request"] = new Json;
+              ptJson->m["Request"]->i("id", strApplicationID);
+              ptJson->m["Request"]->i("notification", strMessage);
+              ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+              if (hub("central", ptJson, strError))
+              {
+                ssText << ": done";
+              }
+              else
+              {
+                ssText << " error:  " << strError;
+              }
+              delete ptJson;
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            delete ptJwt;
+          }
+          // }}}
           // {{{ invalid
           else
           {
@@ -656,6 +775,157 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // }}}
     }
     // }}}
+    // {{{ group
+    else if (strFunction == "group")
+    {
+      string strGroupID = var("GroupID", ptData);
+      ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
+      // {{{ group
+      if (!strGroupID.empty())
+      {
+        // {{{ id
+        if (m_manip.isNumeric(strGroupID))
+        {
+          string strForm = var("Form", ptData);
+          ssText << " " << char(3) << "00,14 " << strGroupID << " " << char(3);
+          // {{{ general
+          if (strForm == "general")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, description from group where id = " << strGroupID;
+            list<map<string, string> > *getGroup = dbquery("central_r", ssQuery.str(), strError);
+            if (getGroup != NULL)
+            {
+              if (!getGroup->empty())
+              {
+                map<string, string> getGroupRow = getGroup->front();
+                ssText << " Group:  " << getGroupRow["name"];
+                ssText << ", Description:  " << getGroupRow["description"];
+                getGroupRow.clear();
+              }
+              else
+              {
+                ssText << " error:  The group does not exist.";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getGroup);
+          }
+          // }}}
+          // {{{ notify
+          else if (strForm == "notify")
+          {
+            string strMessage = var("Message", ptData), strPayload, strValue;
+            stringstream ssTime;
+            time_t CTime;
+            Json *ptJwt = new Json;
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ptJwt->i("sl_first_name", strFirstName);
+            ptJwt->i("sl_last_name", strLastName);
+            ptJwt->i("sl_login", strIdent);
+            time(&CTime);
+            ssTime << CTime;
+            ptJwt->i("exp", ssTime.str(), 'n');
+            ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+            ptJwt->m["sl_auth"] = new Json;
+            for (auto &i : auth)
+            { 
+              ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+            }
+            if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+            {
+              Json *ptJson = new Json;
+              ptJson->i("Function", "groupNotify");
+              ptJson->m["Request"] = new Json;
+              ptJson->m["Request"]->i("id", strGroupID);
+              ptJson->m["Request"]->i("notification", strMessage);
+              ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+              if (hub("central", ptJson, strError))
+              {
+                ssText << ": done";
+              }
+              else
+              {
+                ssText << " error:  " << strError;
+              }
+              delete ptJson;
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            delete ptJwt;
+          }
+          // }}}
+          // {{{ owners
+          else if (strForm == "owners")
+          {
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ssQuery.str("");
+            ssQuery << "select b.type, c.id, c.last_name, c.first_name, c.userid from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and (b.type = 'Primary Owner' or b.type = 'Backup Owner') and a.group_id = " << strGroupID << " order by b.id, c.last_name, c.first_name, c.userid";
+            auto getGroupContact = dbquery("central_r", ssQuery.str(), strError);
+            if (getGroupContact != NULL)
+            {
+              for (auto &getGroupContactRow : *getGroupContact)
+              {
+                ssText << endl << "Type:  " << getGroupContactRow["type"] << ", Name:  " << getGroupContactRow["last_name"] << ", " << getGroupContactRow["first_name"] << " (" << getGroupContactRow["userid"] << ")";
+              }
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            dbfree(getGroupContact);
+          }
+          // }}}
+          // {{{ invalid
+          else
+          {
+            ssText << ":  Please provide the Form immediately following the GroupID.";
+          }
+          // }}}
+        }
+        // }}}
+        // {{{ name
+        else
+        {
+          ssQuery.str("");
+          ssQuery << "select id from group where name = '" << m_manip.escape(strGroupID, strValue) << "'";
+          list<map<string, string> > *getGroup = dbquery("central_r", ssQuery.str(), strError);
+          if (getGroup != NULL)
+          {
+            if (!getGroup->empty())
+            {
+              map<string, string> getGroupRow = getGroup->front();
+              ssText << ":  The GroupID is " << getGroupRow["id"] << ".";
+              getGroupRow.clear();
+            }
+            else
+            {
+              ssText << " error:  The group does not exist.";
+            }
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          dbfree(getGroup);
+        }
+        // }}}
+      }
+      // }}}
+      // {{{ invalid
+      else
+      {
+        ssText << ":  Please provide the GroupID immediately following the group.";
+      }
+      // }}}
+    }
+    // }}}
     // {{{ server
     else if (strFunction == "server")
     {
@@ -664,6 +934,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ server
       if (!strServerID.empty())
       {
+        // {{{ id
         if (m_manip.isNumeric(strServerID))
         {
           string strForm = var("Form", ptData);
@@ -716,6 +987,51 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             dbfree(getServerContact);
           }
           // }}}
+          // {{{ notify
+          else if (strForm == "notify")
+          {
+            string strMessage = var("Message", ptData), strPayload, strValue;
+            stringstream ssTime;
+            time_t CTime;
+            Json *ptJwt = new Json;
+            ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+            ptJwt->i("sl_first_name", strFirstName);
+            ptJwt->i("sl_last_name", strLastName);
+            ptJwt->i("sl_login", strIdent);
+            time(&CTime);
+            ssTime << CTime;
+            ptJwt->i("exp", ssTime.str(), 'n');
+            ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+            ptJwt->m["sl_auth"] = new Json;
+            for (auto &i : auth)
+            { 
+              ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+            }
+            if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+            {
+              Json *ptJson = new Json;
+              ptJson->i("Function", "serverNotify");
+              ptJson->m["Request"] = new Json;
+              ptJson->m["Request"]->i("id", strServerID);
+              ptJson->m["Request"]->i("notification", strMessage);
+              ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+              if (hub("central", ptJson, strError))
+              {
+                ssText << ": done";
+              }
+              else
+              {
+                ssText << " error:  " << strError;
+              }
+              delete ptJson;
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            delete ptJwt;
+          }
+          // }}}
           // {{{ invalid
           else
           {
@@ -723,6 +1039,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           // }}}
         }
+        // }}}
+        // {{{ name
         else
         {
           ssQuery.str("");
@@ -747,6 +1065,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           dbfree(getServer);
         }
+        // }}}
       }
       // }}}
       // {{{ invalid
@@ -836,6 +1155,51 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << ":  Please provide the Contact Type immediately following applications.";
           }
           types.clear();
+        }
+        // }}}
+        // {{{ notify
+        else if (strForm == "notify")
+        {
+          string strMessage = var("Message", ptData), strPayload, strValue;
+          stringstream ssTime;
+          time_t CTime;
+          Json *ptJwt = new Json;
+          ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
+          ptJwt->i("sl_first_name", strFirstName);
+          ptJwt->i("sl_last_name", strLastName);
+          ptJwt->i("sl_login", strIdent);
+          time(&CTime);
+          ssTime << CTime;
+          ptJwt->i("exp", ssTime.str(), 'n');
+          ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+          ptJwt->m["sl_auth"] = new Json;
+          for (auto &i : auth)
+          { 
+            ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+          }
+          if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+          {
+            Json *ptJson = new Json;
+            ptJson->i("Function", "userNotify");
+            ptJson->m["Request"] = new Json;
+            ptJson->m["Request"]->i("userid", strUser);
+            ptJson->m["Request"]->i("notification", strMessage);
+            ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+            if (hub("central", ptJson, strError))
+            {
+              ssText << ": done";
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+            delete ptJson;
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          delete ptJwt;
         }
         // }}}
         // {{{ reminders
@@ -965,7 +1329,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     // {{{ invalid
     else
     {
-      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, server, user." << endl;
+      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, server, user." << endl;
     }
     // }}}
   }
