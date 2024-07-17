@@ -563,7 +563,7 @@ bool Central::applicationAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (d.g || d.auth.find("Central") != d.auth.end())
+  if (!d.u.empty())
   {
     if (dep({"name"}, i, e))
     {
@@ -3073,7 +3073,7 @@ bool Central::groupAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (d.g || d.auth.find("Central") != d.auth.end())
+  if (!d.u.empty())
   {
     if (dep({"name"}, i, e))
     {
@@ -4530,7 +4530,7 @@ bool Central::serverAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (d.g || d.auth.find("Central") != d.auth.end())
+  if (!d.u.empty())
   {
     if (dep({"name"}, i, e))
     {
