@@ -3923,7 +3923,7 @@ void Central::schedule(string strPrefix)
   map<string, time_t> reminders;
   string strError, strQuery;
   stringstream ssMessage, ssQuery;
-  time_t CTime[6] = {0, 0, 0, 0, 0, 0};
+  time_t CTime[7] = {0, 0, 0, 0, 0, 0, 0};
   Json *ptJson;
 
   threadIncrement();
@@ -4145,6 +4145,26 @@ void Central::schedule(string strPrefix)
           log(ssMessage.str());
         }
         delete ptReminder;
+      }
+      // }}}
+      // {{{ statistics
+      if ((CTime[1] - CTime[6]) > 14400)
+      {
+        CTime[6] = CTime[1];
+        ssMessage.str("");
+        ssMessage << strPrefix << ":  Start cleaning statistical data.";
+        log(ssMessage.str());
+        ssQuery.str("");
+        ssQuery << "delete from statistic where `date` < date_format(date_sub(now(), interval 6 month), '%Y-%m-%d')";
+        if (!dbupdate("central", ssQuery.str(), strError))
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::dbupdate(" << ssQuery.str() << ") error:  " << strError;
+          log(ssMessage.str());
+        } 
+        ssMessage.str("");
+        ssMessage << strPrefix << ":  Finish cleaning statistical data.";
+        log(ssMessage.str());
       }
       // }}}
       // {{{ workload
