@@ -1555,7 +1555,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
       radialUser u;
       userInit(d, u);
       u.p->m["i"]->i("userid", d.u);
-      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
+      if (d.u.empty() || (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name")))
       {
         radialUser c;
         userInit(d, c);
@@ -1717,7 +1717,10 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 }
                 m << endl;
               }
-              m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
+              if (!d.u.empty())
+              {
+                m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+              }
               if (alert(k.first, m.str(), e))
               {
                 k.second->i("sent", "1", 'n');
@@ -3151,7 +3154,7 @@ bool Central::groupNotify(radialUser &d, string &e)
       radialUser u;
       userInit(d, u);
       u.p->m["i"]->i("userid", d.u);
-      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
+      if (d.u.empty() || (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name")))
       {
         radialUser c;
         userInit(d, c);
@@ -3219,7 +3222,10 @@ bool Central::groupNotify(radialUser &d, string &e)
               {
                 m << "* You are a Contact for this group." << endl << endl;
               }
-              m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
+              if (!d.u.empty())
+              {
+                m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+              }
               if (alert(k.first, m.str(), e))
               {
                 k.second->i("sent", "1", 'n');
@@ -4699,7 +4705,7 @@ bool Central::serverNotify(radialUser &d, string &e)
       radialUser u;
       userInit(d, u);
       u.p->m["i"]->i("userid", d.u);
-      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
+      if (d.u.empty() || (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name")))
       {
         radialUser c;
         userInit(d, c);
@@ -4814,7 +4820,10 @@ bool Central::serverNotify(radialUser &d, string &e)
                 }
                 m << endl;
               }
-              m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
+              if (!d.u.empty())
+              {
+                m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+              }
               if (alert(k.first, m.str(), e))
               {
                 k.second->i("sent", "1", 'n');
@@ -4900,7 +4909,10 @@ bool Central::serverNotify(radialUser &d, string &e)
                     m << endl;
                   }
                   m << endl;
-                  m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";;
+                  if (!d.u.empty())
+                  {
+                    m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+                  }
                   alert(n.first, m.str(), e);
                 }
               }
@@ -5552,7 +5564,7 @@ bool Central::userNotify(radialUser &d, string &e)
       radialUser u;
       userInit(d, u);
       u.p->m["i"]->i("userid", d.u);
-      if (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name"))
+      if (d.u.empty() || (user(u, e) && !empty(u.p->m["o"], "first_name") && !empty(u.p->m["o"], "last_name")))
       {
         radialUser c;
         userInit(d, c);
@@ -5564,7 +5576,10 @@ bool Central::userNotify(radialUser &d, string &e)
           m << endl << endl;
           m << strNotification;
           m << endl << endl;
-          m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+          if (!d.u.empty())
+          {
+            m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+          }
           if (alert(c.p->m["o"]->m["userid"]->v, m.str(), e))
           {
             b = true;
