@@ -1528,11 +1528,14 @@ bool Central::applicationNotify(radialUser &d, string &e)
   {
     bool bAuthorized = ((!d.u.empty())?true:false), bDeveloper = false;
     string strNotification = i->m["notification"]->v;
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    bDeveloper = ((d.g || isApplicationDeveloper(a, e))?true:false);
-    userDeinit(a);
+    if (!d.u.empty())
+    {
+      radialUser a;
+      userInit(d, a);
+      a.p->m["i"]->i("id", i->m["id"]->v);
+      bDeveloper = ((d.g || isApplicationDeveloper(a, e))?true:false);
+      userDeinit(a);
+    }
     if (!bAuthorized)
     {
       radialPacket p;
@@ -4678,11 +4681,14 @@ bool Central::serverNotify(radialUser &d, string &e)
   {
     bool bAdmin = false, bAuthorized = ((!d.u.empty())?true:false);
     string strNotification = i->m["notification"]->v;
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    bAdmin = ((d.g || isServerAdmin(a, e))?true:false);
-    userDeinit(a);
+    if (!d.u.empty())
+    {
+      radialUser a;
+      userInit(d, a);
+      a.p->m["i"]->i("id", i->m["id"]->v);
+      bAdmin = ((d.g || isServerAdmin(a, e))?true:false);
+      userDeinit(a);
+    }
     if (!bAuthorized)
     {
       radialPacket p;
