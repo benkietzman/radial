@@ -3634,6 +3634,10 @@ bool Interface::user(radialUser &d, string &e)
 void Interface::userDeinit(radialUser &d)
 {
   delete d.p;
+  if (d.r != NULL)
+  {
+    delete d.r;
+  }
 }
 // }}}
 // {{{ userInit()
@@ -3643,12 +3647,17 @@ void Interface::userInit(radialUser &d)
   d.p = new Json;
   d.p->m["i"] = new Json;
   d.p->m["o"] = new Json;
+  d.r = NULL;
 }
 void Interface::userInit(radialUser &i, radialUser &o)
 {
   userInit(o);
   o.auth = i.auth;
   o.g = i.g;
+  if (i.r != NULL)
+  {
+    o.r = new Json(i.r);
+  }
   o.u = i.u;
 }
 void Interface::userInit(Json *ptJson, radialUser &d)
@@ -3697,6 +3706,7 @@ void Interface::userInit(Json *ptJson, radialUser &d)
     }
     delete ptJwt;
   }
+  d.r = new Json(ptJson);
 }
 // }}}
 }

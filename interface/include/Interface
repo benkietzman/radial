@@ -58,6 +58,7 @@ struct radialUser
   map<string, bool> auth;
   string u;
   Json *p;
+  Json *r;
 };
 // }}}
 // }}}
