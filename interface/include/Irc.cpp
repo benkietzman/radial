@@ -793,7 +793,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             ssText << " " << char(3) << "00,14 " << strForm << " " << char(3);
             ssQuery.str("");
-            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, description from group where id = " << strGroupID;
+            ssQuery << "select name, date_format(creation_date, '%Y-%m-%d') creation_date, description from `group` where id = " << strGroupID;
             list<map<string, string> > *getGroup = dbquery("central_r", ssQuery.str(), strError);
             if (getGroup != NULL)
             {
@@ -894,7 +894,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         else
         {
           ssQuery.str("");
-          ssQuery << "select id from group where name = '" << m_manip.escape(strGroupID, strValue) << "'";
+          ssQuery << "select id from `group` where name = '" << m_manip.escape(strGroupID, strValue) << "'";
           list<map<string, string> > *getGroup = dbquery("central_r", ssQuery.str(), strError);
           if (getGroup != NULL)
           {
