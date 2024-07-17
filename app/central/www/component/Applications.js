@@ -1542,7 +1542,7 @@ export default
       <tr>
         <th>Application</th><th>Website</th>
       </tr>
-      {{#isValid "Central"}}
+      {{#isValid}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.application.name" placeholder="Application Name"></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="addApplication()" title="Add Application"></button></td>

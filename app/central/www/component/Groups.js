@@ -612,7 +612,7 @@ export default
       <tr>
         <th>Group</th>
       </tr>
-      {{#isValid "Central"}}
+      {{#isValid}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.group.name" placeholder="Group Name"></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="addGroup()" title="Add Group"></button></td>

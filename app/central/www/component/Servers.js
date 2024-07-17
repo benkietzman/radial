@@ -735,7 +735,7 @@ export default
       <tr>
         <th>Server</th><th>Parent</th><th>Children</th>
       </tr>
-      {{#isValid "Central"}}
+      {{#isValid}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.server.name" placeholder="Server Name"></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="addServer()" title="Add Server"></button></td>

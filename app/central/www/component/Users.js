@@ -519,7 +519,7 @@ export default
       <tr>
         <th>User</th><th>Email</th><th>Text</th><th>Active</th><th>Admin</th><th>locked</th>
       </tr>
-      {{#isValid "Central"}}
+      {{#isValid}}
       <tr>
         <td><input type="text" class="form-control" c-model="d.user.userid" placeholder="User ID"></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="addUser()" title="Add User"></button></td>
