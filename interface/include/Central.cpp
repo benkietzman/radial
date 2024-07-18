@@ -1528,26 +1528,8 @@ bool Central::applicationNotify(radialUser &d, string &e)
   {
     if (!empty(i, "id") || !empty(i, "name"))
     {
-      bool bAuthorized = ((!d.u.empty())?true:false);
       string strNotification = i->m["notification"]->v;
-      if (!bAuthorized)
-      {
-        radialPacket p;
-        Json *ptAuth = new Json(d.r);
-        ptAuth->i("Interface", "auth");
-        if (exist(ptAuth, "Request"))
-        {
-          delete ptAuth->m["Request"];
-        }
-        ptAuth->m["Request"] = new Json;
-        ptAuth->m["Request"]->i("Interface", "central");
-        if (hub("auth", ptAuth, e))
-        {
-          bAuthorized = true;
-        }
-        delete ptAuth;
-      }
-      if (bAuthorized)
+      if (!d.u.empty() || auth(d.r, e))
       {
         radialUser u;
         userInit(d, u);
@@ -3150,26 +3132,8 @@ bool Central::groupNotify(radialUser &d, string &e)
   {
     if (!empty(i, "id") || !empty(i, "name"))
     {
-      bool bAuthorized = ((!d.u.empty())?true:false);
       string strNotification = i->m["notification"]->v;
-      if (!bAuthorized)
-      {
-        radialPacket p;
-        Json *ptAuth = new Json(d.r);
-        ptAuth->i("Interface", "auth");
-        if (exist(ptAuth, "Request"))
-        {
-          delete ptAuth->m["Request"];
-        }
-        ptAuth->m["Request"] = new Json;
-        ptAuth->m["Request"]->i("Interface", "central");
-        if (hub("auth", ptAuth, e))
-        {
-          bAuthorized = true;
-        }
-        delete ptAuth;
-      }
-      if (bAuthorized)
+      if (!d.u.empty() || auth(d.r, e))
       {
         radialUser u;
         userInit(d, u);
@@ -4714,26 +4678,8 @@ bool Central::serverNotify(radialUser &d, string &e)
   {
     if (!empty(i, "id") || !empty(i, "name"))
     {
-      bool bAuthorized = ((!d.u.empty())?true:false);
       string strNotification = i->m["notification"]->v;
-      if (!bAuthorized)
-      {
-        radialPacket p;
-        Json *ptAuth = new Json(d.r);
-        ptAuth->i("Interface", "auth");
-        if (exist(ptAuth, "Request"))
-        {
-          delete ptAuth->m["Request"];
-        }
-        ptAuth->m["Request"] = new Json;
-        ptAuth->m["Request"]->i("Interface", "central");
-        if (hub("auth", ptAuth, e))
-        {
-          bAuthorized = true;
-        }
-        delete ptAuth;
-      }
-      if (bAuthorized)
+      if (!d.u.empty() || auth(d.r, e))
       {
         radialUser u;
         userInit(d, u);
@@ -5604,26 +5550,8 @@ bool Central::userNotify(radialUser &d, string &e)
   {
     if (!empty(i, "id") || !empty(i, "userid"))
     {
-      bool bAuthorized = ((!d.u.empty())?true:false);
       string strNotification = i->m["notification"]->v;
-      if (!bAuthorized)
-      {
-        radialPacket p;
-        Json *ptAuth = new Json(d.r);
-        ptAuth->i("Interface", "auth");
-        if (exist(ptAuth, "Request"))
-        {
-          delete ptAuth->m["Request"];
-        }
-        ptAuth->m["Request"] = new Json;
-        ptAuth->m["Request"]->i("Interface", "central");
-        if (hub("auth", ptAuth, e))
-        {
-          bAuthorized = true;
-        }
-        delete ptAuth;
-      }
-      if (bAuthorized)
+      if (!d.u.empty() || auth(d.r, e))
       {
         radialUser u;
         userInit(d, u);
