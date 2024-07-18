@@ -73,6 +73,7 @@ class Interface : public Base
   int m_fdCallbackPool[2];
   int m_fdResponse[2];
   list<string> m_responses;
+  map<string, string> m_applications;
   map<string, int> m_waiting;
   queue<radialCallback *> m_callbacks;
   mutex m_mutexShare;
@@ -132,6 +133,7 @@ class Interface : public Base
   bool feedbackResultAdd(const string strUser, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData, string &strError);
   bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   bool feedbackType(const string strTypeID, Json *ptData, string &strError);
+  string getApplication(radialUser &d);
   string getUserEmail(radialUser &d);
   string getUserFirstName(radialUser &d);
   string getUserLastName(radialUser &d);

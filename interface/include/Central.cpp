@@ -1734,9 +1734,9 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
                 }
-                else if (!empty(d.r, "reqApp"))
+                else
                 {
-                  m << "-- " << d.r->m["reqApp"]->v;
+                  m << "-- " << getApplication(d);
                 }
                 if (alert(k.first, m.str(), e))
                 {
@@ -3253,9 +3253,9 @@ bool Central::groupNotify(radialUser &d, string &e)
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
                 }
-                else if (!empty(d.r, "reqApp"))
+                else
                 {
-                  m << "-- " << d.r->m["reqApp"]->v;
+                  m << "-- " << getApplication(d);
                 }
                 if (alert(k.first, m.str(), e))
                 {
@@ -4873,9 +4873,9 @@ bool Central::serverNotify(radialUser &d, string &e)
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
                 }
-                else if (!empty(d.r, "reqApp"))
+                else
                 {
-                  m << "-- " << d.r->m["reqApp"]->v;
+                  m << "-- " << getApplication(d);
                 }
                 if (alert(k.first, m.str(), e))
                 {
@@ -4966,9 +4966,9 @@ bool Central::serverNotify(radialUser &d, string &e)
                     {
                       m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
                     }
-                    else if (!empty(d.r, "reqApp"))
+                    else
                     {
-                      m << "-- " << d.r->m["reqApp"]->v;
+                      m << "-- " << getApplication(d);
                     }
                     alert(n.first, m.str(), e);
                   }
@@ -5651,9 +5651,9 @@ bool Central::userNotify(radialUser &d, string &e)
             {
               m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
             }
-            else if (!empty(d.r, "reqApp"))
+            else
             {
-              m << "-- " << d.r->m["reqApp"]->v;
+              m << "-- " << getApplication(d);
             }
             if (alert(c.p->m["o"]->m["userid"]->v, m.str(), e))
             {

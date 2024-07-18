@@ -47,7 +47,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_pThreadCallbackPool = NULL;
   if (m_pWarden != NULL)
   {
-    Json *ptAes = new Json, *ptJwt = new Json;
+    Json *ptAes = new Json, *ptJwt = new Json, *ptRadial = new Json;
     if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && !empty(ptAes, "Secret"))
     {
       m_strAesSecret = ptAes->m["Secret"]->v;
@@ -59,6 +59,17 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
       m_strJwtSigner = ptJwt->m["Signer"]->v;
     }
     delete ptJwt;
+    if (m_pWarden->vaultRetrieve({"radial"}, ptRadial, strError))
+    {
+      for (auto &user : ptRadial->m)
+      {
+        if (!empty(user.second, "Application"))
+        {
+          m_applications[user.first] = user.second->m["Application"]->v;
+        }
+      }
+    }
+    delete ptRadial;
   }
 }
 // }}}
@@ -1613,6 +1624,44 @@ bool Interface::feedbackType(const string strTypeID, Json *ptData, string &strEr
   return feedback("type", ptData, strError);
 }
 // }}}
+// }}}
+// {{{ getApplication()
+string Interface::getApplication(radialUser &d)
+{
+  string e, v;
+
+  if (d.r != NULL && !empty(d.r, "User"))
+  {
+    if (m_applications.find(d.r->m["User"]->v) != m_applications.end())
+    {
+      v = m_applications[d.r->m["User"]->v];
+    }
+    else if (m_pWarden != NULL)
+    {
+      Json *ptRadial = new Json;
+      if (m_pWarden->vaultRetrieve({"radial"}, ptRadial, e))
+      {
+        map<string, string> applications;
+        for (auto &user : ptRadial->m)
+        {
+          if (!empty(user.second, "Application"))
+          {
+            applications[user.first] = user.second->m["Application"]->v;
+          }
+        }
+        if (applications.find(d.r->m["User"]->v) != applications.end())
+        {
+          m_mutexShare.lock();
+          m_applications = applications;
+          m_mutexShare.unlock();
+        }
+      }
+      delete ptRadial;
+    }
+  }
+
+  return v;
+}
 // }}}
 // {{{ getUserEmail()
 string Interface::getUserEmail(radialUser &d)
