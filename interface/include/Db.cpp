@@ -985,10 +985,18 @@ bool Db::dbCentralApplicationServers(Json *i, Json *o, string &id, string &q, st
 {
   stringstream qs;
 
-  qs << "select id, application_id, server_id from application_server";
+  qs << "select id, application_id, server_id from application_server where 1=1";
   if (!empty(i, "id"))
   {
-    qs << " where id = " << v(i->m["id"]->v);
+    qs << " and id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "application_id"))
+  {
+    qs << " and application_id = " << v(i->m["application_id"]->v);
+  }
+  if (!empty(i, "server_id"))
+  {
+    qs << " and server_id = " << v(i->m["server_id"]->v);
   }
 
   return dbq("central_r", qs, q, o, e);
