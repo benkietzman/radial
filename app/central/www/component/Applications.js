@@ -474,13 +474,16 @@ export default
                     let strForm = response.Request.form;
                     s.application.bDeveloper = true;
                     s.application.bLocalAdmin = true;
-                    s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet2', active: null};
-                    s.application.forms_order.splice(1, 0, 'Accounts');
                   }
-                  s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
-                  s.application.forms_order.splice(6, 0, 'Notify');
-                  s.showForm(strForm);
                 });
+                if (s.application.bDeveloper)
+                {
+                  s.application.forms.Accounts = {value: 'Accounts', icon: 'wallet2', active: null};
+                  s.application.forms_order.splice(1, 0, 'Accounts');
+                }
+                s.application.forms.Notify = {value: 'Notify', icon: 'send', active: null};
+                s.application.forms_order.splice(6, 0, 'Notify');
+                s.showForm(strForm);
               }
             }
             else
