@@ -65,7 +65,7 @@ export default
       if (c.isValid())
       {
         s.info.v = 'Retrieving applications...';
-        let request = {Interface: 'central', 'Function': 'applications', Request: {}};
+        let request = {Interface: 'database', Database: 'central_r', Query: 'select id, name from application where website is not null order by name'};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
