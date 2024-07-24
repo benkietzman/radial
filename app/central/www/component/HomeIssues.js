@@ -167,6 +167,10 @@ export default
     // [[[ main
     c.setMenu('Home', 'Issues');
     s.u();
+    if (c.isParam(nav, 'id'))
+    {
+      document.location.href = '#/Applications/Issues/' + c.getParam(nav, 'id');
+    }
     if (a.ready())
     {
       s.loadApplications();
