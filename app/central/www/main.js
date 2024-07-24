@@ -43,6 +43,7 @@ let common = new Common(
     {path: '/Home', name: 'Home', component: '/central/component/Home.js'},
     {path: '/Home/Issues', name: 'HomeIssues', component: '/central/component/HomeIssues.js'},
     {path: '/Home/Issues/:id', name: 'HomeIssues', component: '/central/component/HomeIssues.js'},
+    {path: '/Home/Live', name: 'HomeLive', component: '/central/component/HomeLive.js'},
     {path: '/Home/Notify', name: 'HomeNotify', component: '/central/component/HomeNotify.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},

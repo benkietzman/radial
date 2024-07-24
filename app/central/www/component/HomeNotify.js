@@ -27,29 +27,6 @@ export default
       types: ['application', 'group', 'server', 'user']
     });
     // ]]]
-    // [[[ addIssue()
-    s.addIssue = () =>
-    {
-      s.info.v = 'Adding issue...';
-      let request = {Interface: 'central', 'Function': 'applicationIssueAdd'};
-      request.Request = c.simplify(s.issue);
-      request.Request.application_id = s.application.id;
-      request.Request.application_name = s.application.name;
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.info.v = 'Redirecting...';
-          document.location.href = '#/Applications/' + s.application.id + '/Issues/' + response.Response.id;
-        }
-        else
-        {
-          s.message.v = error.message;
-        }
-      });
-    };
-    // ]]]
     // [[[ load()
     s.load = () =>
     {
