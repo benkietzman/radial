@@ -399,7 +399,7 @@ export default
               {{else ifCond ../type.val "==" "server"}}
               {{../server.val.name}}
               {{else ifCond ../type.val "==" "user"}}
-              {{../user.val.first_name}} {{../user.val.last_name}} ({{../user.val.userid}}
+              {{../user.val.first_name}} {{../user.val.last_name}} ({{../user.val.userid}})
               {{/ifCond}}
             </div>
             <div class="card-body">
