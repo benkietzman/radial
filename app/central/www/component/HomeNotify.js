@@ -243,6 +243,10 @@ export default
           {
             s.info.v = null;
             s.users = response.Response;
+            for (let i = 0; i < s.users.length; i++)
+            {
+              s.users[i].name = s.users[i].last_name + ' ' + s.users[i].first_name + ' (' + s.users[i].userid + ')';
+            }
             s.u();
           }
           else
@@ -378,8 +382,8 @@ export default
           {{#if ../users}}
           <div class="input-group"><span class="input-group-text">User</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow"></div>
           <select class="form-control" id="user" c-model="user" c-change="loadUser()" size="2" style="height: 200px;" c-json>
-            {{#eachFilter ../users 'userid' ../narrow}}
-            <option value="{{json .}}">{{last_name}}, {{first_name}} ({{userid}})</option>
+            {{#eachFilter ../users 'name' ../narrow}}
+            <option value="{{json .}}">{{name}}</option>
             {{/eachFilter}}
           </select>
           {{/if}}
@@ -406,7 +410,7 @@ export default
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success bi bi-check-circle float-end" c-click="send()" title="Send Notification"></button>
+                  <button class="btn btn-success bi bi-send float-end" c-click="send()" title="Send Notification"></button>
                 </div>
               </div>
             </div>
