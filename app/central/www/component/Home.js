@@ -174,11 +174,11 @@ export default
     <div class="col-md-5">
       <div class="card"">
         <div class="card-header bg-success text-white" style="font-weight: bold;">
-          <i class="bi bi-door-open"></i> Front Door
+          <i class="bi bi-door-open"></i> Issues
         </div>
         <div class="card-body">
           <p>
-            Please use the <a href="/central/#/Home/FrontDoor">Front Door</a> when creating a new issue for an application.  The Front Door provides a comprehensive list of applications from which to choose.
+            Please use <a href="/central/#/Home/Issues">Issues</a> when creating a new issue for an application.  Issues provides a comprehensive list of applications from which to choose.
           </p>
           <p>
             The primary/backup developers of the given application will be notified of the newly created issue.  The developers will also receive a weekly <a href="/central/#/Applications/Workload">Workload</a> reminder of all outstanding open issues for which they are the primary/backup developers.

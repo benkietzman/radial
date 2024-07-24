@@ -13,12 +13,12 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
-    let s = c.scope('HomeFrontDoor',
+    let s = c.scope('HomeIssues',
     {
       // [[[ u()
       u: () =>
       {
-        c.update('HomeFrontDoor');
+        c.update('HomeIssues');
       },
       // ]]]
       a: a,
@@ -165,7 +165,7 @@ export default
     };
     // ]]]
     // [[[ main
-    c.setMenu('Home', 'FrontDoor');
+    c.setMenu('Home', 'Issues');
     s.u();
     if (a.ready())
     {
@@ -187,7 +187,7 @@ export default
   template: `
   <h3 class="page-header">Create an Application Issue</h3>
   <p>
-    The Front Door provides a comprehensive list of applications from which to choose.  You can use the App field to narrow the list of applications.  The primary/backup developers of the given application will be notified of the newly created issue and will receive a weekly <a href="/central/#/Applications/Workload">Workload</a> reminder of all of their outstanding open issues.
+    This provides a comprehensive list of applications from which to choose.  You can use the App field to narrow the list of applications.  The primary/backup developers of the given application will be notified of the newly created issue and will receive a weekly <a href="/central/#/Applications/Workload">Workload</a> reminder of all of their outstanding open issues.
   </p>
   <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-8">
