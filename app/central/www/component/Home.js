@@ -174,7 +174,7 @@ export default
     <div class="col-md-5">
       <div class="card"">
         <div class="card-header bg-success text-white" style="font-weight: bold;">
-          <i class="bi bi-door-open"></i> Issues
+          <i class="bi bi-ticket"></i> Issues
         </div>
         <div class="card-body">
           <p>
