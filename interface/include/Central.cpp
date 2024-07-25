@@ -3005,7 +3005,7 @@ bool Central::footer(radialUser &d, string &e)
   }
   userInit(d, a);
   a.p->m["i"]->i("name", "Radial");
-  if (application(a, e) && !empty(a.p->m["o"], "website"))
+  if (application(a, e))
   {
     a.p->m["o"]->i("application", "Radial");
     if (!empty(a.p->m["o"], "website"))
