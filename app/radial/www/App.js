@@ -108,8 +108,6 @@ class App
     this.c.menu = {left: [], right: []};
     unIndex = 0;
     this.c.menu.left[unIndex++] = {value: 'Home', href: '/Home', icon: 'house', active: null};
-    this.c.menu.left[unIndex++] = {value: 'SSH', href: '/Ssh', icon: 'terminal', active: null};
-    this.c.menu.left[unIndex++] = {value: 'Terminal', href: '/Terminal', icon: 'terminal', active: null};
     unIndex = 0;
     this.c.menu.right[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     this.c.resetMenu();

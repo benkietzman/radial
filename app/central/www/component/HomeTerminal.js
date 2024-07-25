@@ -13,12 +13,12 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
-    let s = c.scope('Terminal',
+    let s = c.scope('HomeTerminal',
     {
       // [[[ u()
       u: () =>
       {
-        c.update('Terminal');
+        c.update('HomeTerminal');
       },
       // ]]]
       a: a,
@@ -300,7 +300,7 @@ export default
     };
     // ]]]
     // [[[ main
-    c.setMenu('Terminal');
+    c.setMenu('Home', 'Terminal');
     s.u();
     // ]]]
   },

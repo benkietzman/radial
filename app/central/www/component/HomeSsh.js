@@ -13,12 +13,12 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
-    let s = c.scope('Ssh',
+    let s = c.scope('HomeSsh',
     {
       // [[[ u()
       u: () =>
       {
-        c.update('Ssh');
+        c.update('HomeSsh');
       },
       // ]]]
       a: a,
@@ -166,7 +166,7 @@ export default
     };
     // ]]]
     // [[[ main
-    c.setMenu('SSH');
+    c.setMenu('Home', 'SSH');
     s.u();
     // ]]]
   },
