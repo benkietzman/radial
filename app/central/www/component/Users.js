@@ -185,7 +185,7 @@ export default
               }
               if (c.isValid())
               {
-                s.user.forms.Notify = {value: 'Notify', icon: 'megaphone', active: null};
+                s.user.forms.Notify = {value: 'Notify', icon: 'send', active: null};
                 s.user.forms_order.splice(3, 0, 'Notify');
                 s.showForm(strForm);
               }
