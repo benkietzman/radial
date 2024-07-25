@@ -678,7 +678,7 @@ export default
     <div class="col-md-4">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for receiving alert messages."><i class="bi bi-lightning"></i> Notify Settings</span>
+          <span title="Configuration settings for receiving alert messages."><i class="bi bi-send"></i> Notify Settings</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed">
