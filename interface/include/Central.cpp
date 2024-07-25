@@ -3003,8 +3003,19 @@ bool Central::footer(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  o->i->m["power"] = new Json;
-  o->i->m["power"]->i("application", "Radial");
+  userInit(d, a);
+  a.p->m["i"]->i("name", "Radial");
+  if (application(a, e) && !empty(a.p->m["o"], "website"))
+  {
+    a.p->m["o"]->i("application", "Radial");
+    if (!empty(a.p->m["o"], "website"))
+    {
+      a.p->m["o"]->i("link", a.p->m["o"]->m["website"]->v);
+      a.p->m["o"]->i("target", "_blank");
+    }
+    o->i("power", a.p->m["o"]);
+  }
+  userDeinit(a);
 
   return b;
 }
