@@ -60,10 +60,13 @@ class App
     unIndex = 0;
     this.c.menu.left[unIndex] = {value: 'Home', href: '/Home', icon: 'house', active: null};
     this.c.menu.left[unIndex].submenu = {left: [], right: []};
-    unSubIndex = 0;
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Issues', href: '/Home/Issues', icon: 'ticket', active: null};
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Live', href: '/Home/Live', icon: 'lightning', active: null};
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Notify', href: '/Home/Notify', icon: 'send', active: null};
+    if (this.c.isValid())
+    {
+      unSubIndex = 0;
+      this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Issues', href: '/Home/Issues', icon: 'ticket', active: null};
+      this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Live', href: '/Home/Live', icon: 'lightning', active: null};
+      this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Notify', href: '/Home/Notify', icon: 'send', active: null};
+    }
     unIndex++;
     this.c.menu.left[unIndex] = {value: 'Applications', href: '/Applications', icon: 'app', active: null};
     this.c.menu.left[unIndex].submenu = {left: [], right: []};
@@ -73,7 +76,10 @@ class App
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Repositories', href: '/Applications/Repositories', icon: 'inbox', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Schedule', href: '/Applications/Schedule', icon: 'calendar', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Statistics', href: '/Applications/Statistics', icon: 'graph-up', active: null};
-    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Workload', href: '/Applications/Workload', icon: 'person-workspace', active: null};
+    if (this.c.isValid())
+    {
+      this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Workload', href: '/Applications/Workload', icon: 'person-workspace', active: null};
+    }
     unIndex++;
     this.c.menu.left[unIndex] = {value: 'Groups', href: '/Groups', icon: 'people', active: null};
     unIndex++;
@@ -86,6 +92,7 @@ class App
     if (this.c.isValid())
     {
       unIndex = 0;
+      this.c.menu.right[unIndex++] = {value: 'Chat', href: '/Chat', icon: 'chat', active: null};
       this.c.menu.right[unIndex++] = {value: 'Profile', href: '/Users/?userid='+this.c.getUserID(), icon: 'person', active: null};
       this.c.menu.right[unIndex++] = {value: 'Status', href: '/Status', icon: 'gear', active: null};
     }

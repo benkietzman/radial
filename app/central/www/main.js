@@ -37,6 +37,8 @@ let common = new Common(
     {path: '/Applications/:id/:form/:issue_id', name: 'Applications', component: '/central/component/Applications.js'},
     {path: '/Applications/:id/:form', name: 'Applications', component: '/central/component/Applications.js'},
     {path: '/Applications/:id', name: 'Applications', component: '/central/component/Applications.js'},
+    {path: '/Chat', name: 'Chat', component: '/radial/component/Chat.js'},
+    {path: '/Chat/:user', name: 'Chat', component: '/radial/component/Chat.js'},
     {path: '/Groups', name: 'Groups', component: '/central/component/Groups.js'},
     {path: '/Groups/:id/:form', name: 'Groups', component: '/central/component/Groups.js'},
     {path: '/Groups/:id', name: 'Groups', component: '/central/component/Groups.js'},

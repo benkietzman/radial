@@ -170,6 +170,7 @@ export default
   </div>
   <div c-model="info" class="text-warning"></div>
   <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  {{#isValid}}
   <div class="row">
     <div class="col-md-5">
       <div class="card"">
@@ -202,6 +203,7 @@ export default
       </div>
     </div>
   </div>
+  {{/isValid}}
   `
   // ]]]
 }
