@@ -37,6 +37,63 @@ class App
     {
       this.resetMenu();
     });
+    Handlebars.registerHelper('statusShowRestart', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
+    Handlebars.registerHelper('statusShowStart', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (!nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
+    Handlebars.registerHelper('statusShowStop', (nodes, options) =>
+    {
+      let bShow = false;
+      for (let n of Object.keys(nodes))
+      {
+        if (nodes[n].PID)
+        {
+          bShow = true;
+        }
+      }
+      if (bShow)
+      {
+        return options.fn(this);
+      }
+      else
+      {
+        return options.inverse(this);
+      }
+    });
   }
   // }}}
   // {{{ ready()
