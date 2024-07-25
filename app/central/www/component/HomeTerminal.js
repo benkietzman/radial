@@ -311,58 +311,78 @@ export default
   <div c-model="message" class="text-danger"></div>
   <div class="row">
     <div class="col-md-6">
-      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; margin: 0px; padding: 0px; white-space: pre;" c-model="screen"></div>
+      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 420px; margin: 0px; max-height: 420px; max-width: 640px; overflow: auto; padding: 10px; white-space: pre; width: 640px;" c-model="screen"></div>
       <div style="display: inline; font-family: monospace;">
         <div class="row">
           {{#each nums}}
           <div class="col-md-1">
-            <button class="btn btn-sm btn-default" c-click="sendFunction({{.}})">F{{.}}{{#ifCond . "<" "10"}}&nbsp;{{/ifCond}}</button>
+            <button class="btn btn-sm btn-secondary" c-click="sendFunction({{.}})">F{{.}}{{#ifCond . "<" "10"}}&nbsp;{{/ifCond}}</button>
           </div>
           {{/each}}
         </div>
         <div class="row">
           {{#each nums}}
           <div class="col-md-1">
-            <button class="btn btn-sm btn-default" c-click="sendShiftFunction(({{.}}))">F{{add . 10}}</button>
+            <button class="btn btn-sm btn-secondary" c-click="sendShiftFunction(({{.}}))">F{{add . 10}}</button>
           </div>
           {{/each}}
         </div>
       </div>
-    </div>
-    <div class="col-md-3" style="font-family: monospace;">
-      <div class="input-group input-group-sm"><span class="input-group-text">Wait</span><select class="form-control" c-model="useWait"><option value="no">No</option><option value="yes">Yes</option></select></div>
-      <button class="btn btn-sm btn-default" c-click="sendEnter()">Enter</button>
-      <button class="btn btn-sm btn-default" c-click="sendKeypadEnter()">Enter (Keypad)</button>
-      <button class="btn btn-sm btn-default" c-click="sendEscape()">Escape</button>
-      <button class="btn btn-sm btn-default" c-click="sendTab()">Tab</button>
-      <button class="btn btn-sm btn-default" c-click="wait()">Wait</button>
-      <div class="input-group input-group-sm"><input type="text" class="form-control" id="input" c-model="input" c-keyup="send()" placeholder="type here..."></div>
     </div>
     <div class="col-md-3">
       <h4 class="page-header">Terminal Emulation</h4>
       {{#if strSession}}
       <div class="row">
         <div class="col">
-        <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
+        <button class="btn btn-danger float-end" c-click="disconnect()">Disconnect</button>
         </div>
       </div>
       {{else}}
       <div class="row" style="margin-bottom: 10px;">
         <div class="col">
-        <div class="input-group"><span class="input-group-text">Server</span><input type="text" class="form-control" c-model="server"></div>
+          <div class="input-group"><span class="input-group-text">Server</span><input type="text" class="form-control" c-model="server"></div>
         </div>
       </div>
       <div class="row" style="margin-bottom: 10px;">
         <div class="col">
-        <div class="input-group"><span class="input-group-text">Port</span><input type="text" class="form-control" c-model="port"></div>
+          <div class="input-group"><span class="input-group-text">Port</span><input type="text" class="form-control" c-model="port"></div>
         </div>
       </div>
       <div class="row">
         <div class="col">
-        <button class="btn btn-success" c-click="connect()">Connect</button>
+          <button class="btn btn-success float-end" c-click="connect()">Connect</button>
         </div>
       </div>
       {{/if}}
+      <div class="row" style="margin-top: 20px;">
+        <div class="col">
+          <div class="input-group input-group-sm"><span class="input-group-text">Wait</span><select class="form-control" c-model="useWait"><option value="no">No</option><option value="yes">Yes</option></select></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="col-auto">
+          <button class="btn btn-sm btn-secondary" c-click="sendEnter()">Enter</button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-sm btn-secondary" c-click="sendKeypadEnter()">Enter (Keypad)</button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-sm btn-secondary" c-click="sendEscape()">Escape</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="col-auto">
+          <button class="btn btn-sm btn-secondary" c-click="sendTab()">Tab</button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-sm btn-secondary" c-click="wait()">Wait</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <div class="col">
+          <div class="input-group input-group-sm"><input type="text" class="form-control" id="input" c-model="input" c-keyup="send()" placeholder="type here..."></div>
+        </div>
+      </div>
     </div>
   </div>
   `

@@ -177,7 +177,7 @@ export default
   <div c-model="message" class="text-danger"></div>
   <div class="row">
     <div class="col-md-9">
-      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 400px; margin: 0px; max-height: 400px; max-width: 800px; overflow: auto; padding: 10px; white-space: pre; width: 800px;" c-model="screen"></div>
+      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 500px; margin: 0px; max-height: 500px; max-width: 950px; overflow: auto; padding: 10px; white-space: pre; width: 950px;" c-model="screen"></div>
       <div class="row">
         <div class="col">
           <div class="input-group"><span class="input-group-text">Send</span><input type="text" class="form-control" id="command" c-model="command" c-keyup="enter()"{{^if strSession}} disabled{{/if}}></div>
@@ -192,7 +192,7 @@ export default
       {{#if strSession}}
       <div class="row">
         <div class="col">
-        <button class="btn btn-danger" c-click="disconnect()">Disconnect</button>
+        <button class="btn btn-danger float-end" c-click="disconnect()">Disconnect</button>
         </div>
       </div>
         {{else}}
@@ -213,7 +213,7 @@ export default
       </div>
       <div class="row">
         <div class="col">
-        <button class="btn btn-success" c-click="connect()">Connect</button>
+        <button class="btn btn-success float-end" c-click="connect()">Connect</button>
         </div>
       </div>
       {{/if}}
