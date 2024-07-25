@@ -63,6 +63,7 @@ class App
     if (this.c.isValid())
     {
       unSubIndex = 0;
+      this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'IRC', href: '/Home/Irc', icon: 'chat-left', active: null};
       this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Issues', href: '/Home/Issues', icon: 'ticket', active: null};
       this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Live', href: '/Home/Live', icon: 'lightning', active: null};
       this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Notify', href: '/Home/Notify', icon: 'send', active: null};

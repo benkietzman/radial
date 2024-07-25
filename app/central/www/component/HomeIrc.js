@@ -13,12 +13,12 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
-    let s = c.scope('Irc',
+    let s = c.scope('HomeIrc',
     {
       // [[[ u()
       u: () =>
       {
-        c.update('Irc');
+        c.update('HomeIrc');
       },
       // ]]]
       a: a,
@@ -107,7 +107,7 @@ export default
     };
     // ]]]
     // [[[ main
-    c.setMenu('IRC');
+    c.setMenu('Home', 'IRC');
     s.u();
     if (a.ready())
     {
