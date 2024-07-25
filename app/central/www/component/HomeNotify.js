@@ -222,7 +222,7 @@ export default
             s.users = response.Response;
             for (let i = 0; i < s.users.length; i++)
             {
-              s.users[i].name = s.users[i].last_name + ' ' + s.users[i].first_name + ' (' + s.users[i].userid + ')';
+              s.users[i].name = s.users[i].last_name + ', ' + s.users[i].first_name + ' (' + s.users[i].userid + ')';
             }
             s.u();
           }
