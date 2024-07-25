@@ -311,7 +311,7 @@ export default
   <div c-model="message" class="text-danger"></div>
   <div class="row">
     <div class="col-md-6">
-      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 400px; margin: 0px; max-height: 400px; max-width: 640px; overflow: auto; padding: 10px; white-space: pre; width: 640px;" c-model="screen"></div>
+      <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 420px; margin: 0px; max-height: 420px; max-width: 640px; overflow: auto; padding: 10px; white-space: pre; width: 640px;" c-model="screen"></div>
       <div style="display: inline; font-family: monospace;">
         <div class="row">
           {{#each nums}}
