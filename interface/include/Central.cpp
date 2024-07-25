@@ -3003,8 +3003,8 @@ bool Central::footer(radialUser &d, string &e)
     }
     userDeinit(a);
   }
-  o->i["power"] = new Json;
-  o->i["power"]->i("application", "Radial");
+  o->i->m["power"] = new Json;
+  o->i->m["power"]->i("application", "Radial");
 
   return b;
 }
