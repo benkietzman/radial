@@ -678,7 +678,7 @@ export default
     <div class="col-md-4">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for receiving alert messages."><i class="bi bi-lightning"></i> Alert Settings</span>
+          <span title="Configuration settings for receiving alert messages."><i class="bi bi-lightning"></i> Notify Settings</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed">
@@ -746,7 +746,7 @@ export default
     <div class="col-md-8">
       <div class="card">
         <div class="card-header text-white">
-          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network"></i> Alert - Remote Connection</span>
+          <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network"></i> Notify - Remote Connection</span>
         </div>
         <div class="card-body">
           <table class="table table-condensed table-striped">
@@ -938,18 +938,18 @@ export default
           <table class="table table-condensed">
             <tr>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="reminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="reminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               </td>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="reminder.chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="reminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               </td>
             </tr>
             <tr>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="reminder.email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="reminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               </td>
               <td>
-                <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="reminder.live" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                <div class="input-group input-group-sm"><span class="input-group-text">Notify</span><select class="form-control form-control-sm" c-model="reminder.alert" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
               </td>
             </tr>
             <tr>
@@ -1016,20 +1016,11 @@ export default
             <tr>
               <td>
                 {{#if bEdit}}
-                <div class="input-group input-group-sm"><span class="input-group-text">Alert</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-                {{else}}
-                <span style="white-space: nowrap;">Alert: {{alert.name}}</span>
-                {{/if}}
-              </td>
-              <td>
-                {{#if bEdit}}
                 <div class="input-group input-group-sm"><span class="input-group-text">Chat</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].chat" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
                 {{else}}
                 <span style="white-space: nowrap;">Chat: {{chat.name}}</span>
                 {{/if}}
               </td>
-            </tr>
-            <tr>
               <td>
                 {{#if bEdit}}
                 <div class="input-group input-group-sm"><span class="input-group-text">Email</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].email" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
@@ -1037,11 +1028,20 @@ export default
                 <span style="white-space: nowrap;">Email: {{email.name}}</span>
                 {{/if}}
               </td>
+            </tr>
+            <tr>
               <td>
                 {{#if bEdit}}
                 <div class="input-group input-group-sm"><span class="input-group-text">Live</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].live" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
                 {{else}}
                 <span style="white-space: nowrap;">Live: {{live.name}}</span>
+                {{/if}}
+              </td>
+              <td>
+                {{#if bEdit}}
+                <div class="input-group input-group-sm"><span class="input-group-text">Notify</span><select class="form-control form-control-sm" c-model="user.reminders.[{{@key}}].alert" c-json>{{#each @root.a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+                {{else}}
+                <span style="white-space: nowrap;">Notify: {{alert.name}}</span>
                 {{/if}}
               </td>
             </tr>
