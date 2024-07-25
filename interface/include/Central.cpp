@@ -3011,8 +3011,14 @@ bool Central::footer(radialUser &d, string &e)
     if (!empty(a.p->m["o"], "website"))
     {
       a.p->m["o"]->i("link", a.p->m["o"]->m["website"]->v);
-      a.p->m["o"]->i("target", "_blank");
     }
+    else
+    {
+      stringstream ssLink;
+      ssLink << "https://" << m_strServer << "/central/#/Applications/" << a.p->m["o"]->m["id"]->v;
+      a.p->m["o"]->i("link", ssLink.str());
+    }
+    a.p->m["o"]->i("target", "_blank");
     o->i("power", a.p->m["o"]);
   }
   userDeinit(a);
