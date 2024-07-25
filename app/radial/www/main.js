@@ -23,10 +23,8 @@ let common = new Common(
   },
   routes:
   [
-    {path: '/Alert', name: 'Alert', component: '/radial/component/Alert.js'},
     {path: '/Home', name: 'Home', component: '/radial/component/Home.js'},
     {path: '/Irc', name: 'Irc', component: '/radial/component/Irc.js'},
-    {path: '/Live', name: 'Live', component: '/radial/component/Live.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
     {path: '/Ssh', name: 'Ssh', component: '/radial/component/Ssh.js'},
