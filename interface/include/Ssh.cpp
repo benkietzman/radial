@@ -414,11 +414,6 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
       }
       if ((nReturn = poll(fds, 1, 100)) > 0)
       {
-        if (fds[0].revents & POLLNVAL)
-        {
-          bExit = true;
-          strError = (string)"poll() Invalid socket.";
-        }
         if (fds[0].revents & POLLIN)
         {
           if ((nReturn = ssh_channel_read_nonblocking(ptSsh->channel, szBuffer, 4096, 0)) > 0)
@@ -460,6 +455,16 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
               strError = (string)"ssh_channel_write() " + ssh_get_error(ptSsh->session);
             }
           }
+        }
+        if (fds[0].revents & POLLERR)
+        {
+          bExit = true;
+          strError = "poll() Encountered a POLLERR.";
+        }
+        if (fds[0].revents & POLLNVAL)
+        {
+          bExit = true;
+          strError = "poll() Encountered a POLLNVAL.";
         }
       }
       else if (nReturn < 0)

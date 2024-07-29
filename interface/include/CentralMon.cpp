@@ -146,7 +146,7 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
           }
           if ((nReturn = poll(fds, 1, 2000)) > 0)
           {
-            if (fds[0].revents & POLLIN)
+            if (fds[0].revents & (POLLHUP | POLLIN))
             {
               if (m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))
               {
@@ -270,6 +270,20 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
                   strError = ssMessage.str();
                 }
               }
+            }
+            if (fds[0].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << "poll() Encountered a POLLERR.";
+              strError = ssMessage.str();
+            }
+            if (fds[0].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << "poll() Encountered a POLLNVAL.";
+              strError = ssMessage.str();
             }
           }
           else if (nReturn < 0)

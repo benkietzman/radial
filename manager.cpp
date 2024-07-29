@@ -170,7 +170,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
           }
           if ((nReturn = poll(fds, 1, 500)) > 0)
           {
-            if (fds[0].revents & POLLIN)
+            if (fds[0].revents & (POLLHUP | POLLIN))
             {
               if ((nReturn = read(fds[0].fd, szBuffer, 65536)) > 0)
               {
@@ -253,6 +253,20 @@ bool request(const string strFunction, const string strInterface, string &strRes
                   strError = ssMessage.str();
                 }
               }
+            }
+            if (fds[0].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << "poll() error [" << UNIX_SOCKET << "]:  Encountered a POLLERR";
+              strError = ssMessage.str();
+            }
+            if (fds[0].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << "poll() error [" << UNIX_SOCKET << "]:  Encountered a POLLNVAL";
+              strError = ssMessage.str();
             }
           }
           else if (nReturn < 0)

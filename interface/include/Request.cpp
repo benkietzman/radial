@@ -416,7 +416,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         // }}}
         if ((nReturn = poll(fds, 2, 2000)) > 0)
         {
-          if (fds[0].revents & POLLIN)
+          if (fds[0].revents & (POLLHUP | POLLIN))
           {
             if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
             {
@@ -458,7 +458,21 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               }
             }
           }
-          if (fds[1].revents & POLLIN)
+          if (fds[0].revents & POLLERR)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLERR.";
+            log(ssMessage.str());
+          }
+          if (fds[0].revents & POLLNVAL)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLNVAL.";
+            log(ssMessage.str());
+          }
+          if (fds[1].revents & (POLLHUP | POLLIN))
           {
             if ((nReturn = read(fds[1].fd, &cChar, 1)) > 0)
             {
@@ -476,6 +490,20 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                 log(ssMessage.str());
               }
             }
+          }
+          else if (fds[1].revents & POLLERR)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
+            log(ssMessage.str());
+          }
+          else if (fds[1].revents & POLLNVAL)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLNVAL.";
+            log(ssMessage.str());
           }
         }
         else if (nReturn < 0 && errno != EINTR)

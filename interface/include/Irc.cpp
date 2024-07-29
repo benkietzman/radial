@@ -2451,7 +2451,7 @@ void Irc::bot(string strPrefix)
           if ((nReturn = poll(fds, 1, 500)) > 0)
           {
             // {{{ read
-            if (fds[0].revents & POLLIN)
+            if (fds[0].revents & (POLLHUP | POLLIN))
             {
               if (m_pUtility->sslRead(ssl, strBuffer[0], nReturn))
               {
@@ -2699,6 +2699,22 @@ void Irc::bot(string strPrefix)
                   log(ssMessage.str());
                 }
               }
+            }
+            // }}}
+            // {{{ error
+            if (fds[0].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error:  Encountered a POLLERR.";
+              log(ssMessage.str());
+            }
+            if (fds[0].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error:  Encountered a POLLNVAL.";
+              log(ssMessage.str());
             }
             // }}}
           }

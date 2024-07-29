@@ -907,6 +907,22 @@ void Hub::process(string strPrefix)
                     }
                   }
                   // }}}
+                  // {{{ error
+                  if (fds[i].revents & POLLERR)
+                  {
+                    removals.push_back(s[fds[i].fd]);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->poll() error [" << s[fds[i].fd] << "," << fds[i].fd << "]:  Encountered a POLLERR.";
+                    log(ssMessage.str());
+                  }
+                  if (fds[i].revents & POLLNVAL)
+                  {
+                    removals.push_back(s[fds[i].fd]);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->poll() error [" << s[fds[i].fd] << "," << fds[i].fd << "]:  Encountered a POLLNVAL.";
+                    log(ssMessage.str());
+                  }
+                  // }}}
                 }
                 // }}}
                 // {{{ managers
@@ -1143,6 +1159,22 @@ void Hub::process(string strPrefix)
                         log(ssMessage.str());
                       }
                     }
+                  }
+                  // }}}
+                  // {{{ error
+                  if (fds[i].revents & POLLERR)
+                  {
+                    managerRemovals.push_back(fds[i].fd);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->poll() error [manager," << fds[i].fd << "]:  Encountered a POLLERR.";
+                    log(ssMessage.str());
+                  }
+                  if (fds[i].revents & POLLNVAL)
+                  {
+                    managerRemovals.push_back(fds[i].fd);
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->poll() error [manager," << fds[i].fd << "]:  Encountered a POLLNVAL.";
+                    log(ssMessage.str());
                   }
                   // }}}
                 }

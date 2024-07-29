@@ -345,10 +345,26 @@ void Interface::callbackPool()
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
+          ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
           notify(ssMessage.str());
           setShutdown();
         }
+      }
+      else if (fds[0].revents & POLLERR)
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() error:  Encountered a POLLERR.";
+        log(ssMessage.str());
+        notify(ssMessage.str());
+        setShutdown();
+      }
+      else if (fds[0].revents & POLLNVAL)
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() error:  Encountered a POLLNVAL.";
+        log(ssMessage.str());
+        notify(ssMessage.str());
+        setShutdown();
       }
     }
     else if (nReturn < 0 && errno != EINTR)
@@ -493,7 +509,7 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
           bClose = true;
         }
       }
-      else if (fds[0].revents & POLLNVAL)
+      else if (fds[0].revents & (POLLERR | POLLNVAL))
       {
         bClose = true;
       }
@@ -1803,6 +1819,16 @@ void Interface::hub(radialPacket &p, const bool bWait)
               }
             }
           }
+          else if (fds[0].revents & POLLERR)
+          {
+            bExit = true;
+            strError = "Encountered a POLLERR.";
+          }
+          else if (fds[0].revents & POLLNVAL)
+          {
+            bExit = true;
+            strError = "Encountered a POLLNVAL.";
+          }
         }
         else if (nReturn < 0 && errno != EINTR)
         {
@@ -2848,12 +2874,20 @@ void Interface::process(string strPrefix)
             bExit = true;
           }
         }
+        else if (fds[0].revents & (POLLERR | POLLNVAL))
+        {
+          bExit = true;
+        }
         if (fds[1].revents & POLLOUT)
         {
           if (!m_pUtility->fdWrite(fds[1].fd, m_strBuffers[1], nReturn))
           {
             bExit = true;
           }
+        }
+        else if (fds[1].revents & (POLLERR | POLLNVAL))
+        {
+          bExit = true;
         }
         if (fds[2].revents & POLLIN)
         {
@@ -2867,6 +2901,10 @@ void Interface::process(string strPrefix)
           {
             bExit = true;
           }
+        }
+        else if (fds[2].revents & (POLLERR | POLLNVAL))
+        {
+          bExit = true;
         }
         for (size_t i = 3; i < unIndex; i++)
         {
@@ -2890,13 +2928,23 @@ void Interface::process(string strPrefix)
               }
             }
           }
+          else if (fds[i].revents & POLLERR)
+          {
+            uniqueRemovals.push_back(fds[i].fd);
+            if (nReturn < 0)
+            {
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() [" << fds[i].fd << "]:  Encountered a POLLERR.";
+              log(ssMessage.str());
+            }
+          }
           else if (fds[i].revents & POLLNVAL)
           {
             uniqueRemovals.push_back(fds[i].fd);
             if (nReturn < 0)
             {
               ssMessage.str("");
-              ssMessage << strPrefix << "->poll(POLLNVAL) [" << fds[i].fd << "]:  Invalid request.";
+              ssMessage << strPrefix << "->poll() [" << fds[i].fd << "]:  Encountered a POLLNVAL.";
               log(ssMessage.str());
             }
           }

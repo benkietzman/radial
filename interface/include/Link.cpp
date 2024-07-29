@@ -751,6 +751,20 @@ void Link::process(string strPrefix)
                 }
               }
             }
+            else if (fds[0].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() [stdin," << fds[0].fd << "]:  Encountered a POLLERR.";
+              log(ssMessage.str());
+            }
+            else if (fds[0].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() [stdin," << fds[0].fd << "]:  Encountered a POLLNVAL.";
+              log(ssMessage.str());
+            }
             // }}}
             // {{{ stdout
             if (fds[1].revents & POLLOUT)
@@ -765,6 +779,20 @@ void Link::process(string strPrefix)
                   log(ssMessage.str());
                 }
               }
+            }
+            else if (fds[1].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() [stdout," << fds[1].fd << "]:  Encountered a POLLERR.";
+              log(ssMessage.str());
+            }
+            else if (fds[1].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() [stdout," << fds[1].fd << "]:  Encountered a POLLNVAL.";
+              log(ssMessage.str());
             }
             // }}}
             // {{{ accept
@@ -884,7 +912,7 @@ void Link::process(string strPrefix)
               if (ptLink != NULL)
               {
                 // {{{ read
-                if (fds[i].revents & POLLIN)
+                if (fds[i].revents & (POLLHUP | POLLIN))
                 {
                   if (m_pUtility->sslRead(ptLink->ssl, ptLink->strBuffers[0], nReturn))
                   {
@@ -1188,6 +1216,22 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
+                }
+                // }}}
+                // {{{ error
+                if (fds[i].revents & POLLERR)
+                {
+                  removals.push_back(ptLink->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->poll() error [" << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  Encountered a POLLERR.";
+                  log(ssMessage.str());
+                }
+                if (fds[i].revents & POLLNVAL)
+                {
+                  removals.push_back(ptLink->fdSocket);
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->poll() error [" << ptLink->strNode << "|" << ptLink->strServer << ":" << ptLink->strPort << "|" << ptLink->fdSocket << "]:  Encountered a POLLNVAL.";
+                  log(ssMessage.str());
                 }
                 // }}}
               }

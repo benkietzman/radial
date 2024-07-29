@@ -345,6 +345,20 @@ void Command::process(string strPrefix)
           }
         }
       }
+      else if (fds[0].revents & POLLERR)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() [stdin," << fds[0].fd << "]:  Encountered a POLLERR";
+        log(ssMessage.str());
+      }
+      else if (fds[0].revents & POLLNVAL)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() [stdin," << fds[0].fd << "]:  Encountered a POLLNVAL";
+        log(ssMessage.str());
+      }
       // }}}
       // {{{ stdout
       if (fds[1].revents & POLLOUT)
@@ -359,6 +373,20 @@ void Command::process(string strPrefix)
             log(ssMessage.str());
           }
         }
+      }
+      else if (fds[1].revents & POLLERR)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() [stdout," << fds[1].fd << "]:  Encountered a POLLERR";
+        log(ssMessage.str());
+      }
+      else if (fds[1].revents & POLLNVAL)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll() [stdout," << fds[1].fd << "]:  Encountered a POLLNVAL";
+        log(ssMessage.str());
       }
       // }}}
       // {{{ commands
@@ -390,6 +418,24 @@ void Command::process(string strPrefix)
                 }
               }
             }
+            else if (fds[i].revents & POLLERR)
+            {
+              if (!bRemoved)
+              {
+                bRemoved = true;
+                removals.push_back(j);
+              }
+              (*j)->strError = "poll() Encountered a POLLERR.";
+            }
+            else if (fds[i].revents & POLLNVAL)
+            {
+              if (!bRemoved)
+              {
+                bRemoved = true;
+                removals.push_back(j);
+              }
+              (*j)->strError = "poll() Encountered a POLLNVAL.";
+            }
           }
           else if (fds[i].fd == (*j)->fdWrite)
           {
@@ -417,6 +463,24 @@ void Command::process(string strPrefix)
                   (*j)->strError = ssMessage.str();
                 }
               }
+            }
+            else if (fds[i].revents & POLLERR)
+            {
+              if (!bRemoved)
+              {
+                bRemoved = true;
+                removals.push_back(j);
+              }
+              (*j)->strError = "poll() Encountered a POLLERR.";
+            }
+            else if (fds[i].revents & POLLNVAL)
+            {
+              if (!bRemoved)
+              {
+                bRemoved = true;
+                removals.push_back(j);
+              }
+              (*j)->strError = "poll() Encountered a POLLNVAL.";
             }
           }
           clock_gettime(CLOCK_REALTIME, &((*j)->stop));
