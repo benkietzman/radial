@@ -3980,7 +3980,7 @@ void Central::schedule(string strPrefix)
       ptMessage->i("Source", m_strNode);
       status(ptMessage);
       ptMessage->i("Action", "status");
-      live("Central", "", ptMessage, strError);
+      live("Central", "", ptMessage);
       delete ptMessage;
     }
     if (isMasterSettled() && isMaster())
@@ -4095,7 +4095,7 @@ void Central::schedule(string strPrefix)
               {
                 ssMessage.str("");
                 ssMessage << getReminderRow["description"] << endl << endl << "-- Central Reminder";
-                live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", ssMessage.str()}}, strError);
+                live("", getUserRow["userid"], (map<string, string>){{"Action", "message"}, {"Class", "info"}, {"Title", getReminderRow["title"]}, {"Body", ssMessage.str()}});
               }
               if (getReminderRow["text"] == "1" && !getUserRow["userid"].empty())
               {

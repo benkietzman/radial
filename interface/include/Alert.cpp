@@ -107,25 +107,13 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             }
             if (user["alert_live_audio"] == "1")
             {
-              if (live("", strUser, {{"Action", "audio"}, {"Media", "/radial/media/alert.mp3"}}, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::live(audio) " + strError);
-              }
+              bAlerted = true;
+              live("", strUser, {{"Action", "audio"}, {"Media", "/radial/media/alert.mp3"}});
             }
             if (user["alert_live_message"] == "1")
             {
-              if (live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}}, strError))
-              {
-                bAlerted = true;
-              }
-              else
-              {
-                errors.push_back((string)"Interface::live(message) " + strError);
-              }
+              bAlerted = true;
+              live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}});
             }
             if (!user["alert_remote_url"].empty())
             {

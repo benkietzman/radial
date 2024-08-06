@@ -2431,22 +2431,15 @@ void Interface::links(string strPrefix, Json *ptJson)
 }
 // }}}
 // {{{ live()
-bool Interface::live(const string strApplication, const string strUser, map<string, string> message, string &strError)
+void Interface::live(const string strApplication, const string strUser, map<string, string> message)
 {
-  bool bResult = false;
   Json *ptMessage = new Json(message);
 
-  if (live(strApplication, strUser, ptMessage, strError))
-  {
-    bResult = true;
-  }
+  live(strApplication, strUser, ptMessager);
   delete ptMessage;
-
-  return bResult;
 }
-bool Interface::live(const string strApplication, const string strUser, Json *ptMessage, string &strError)
+void Interface::live(const string strApplication, const string strUser, Json *ptMessage)
 {
-  bool bResult = false;
   Json *ptJson = new Json;
 
   ptJson->i("Function", "message");
@@ -2460,13 +2453,8 @@ bool Interface::live(const string strApplication, const string strUser, Json *pt
     ptJson->m["Request"]->i("User", strUser);
   }
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
-  if (hub("live", ptJson, strError))
-  {
-    bResult = true;
-  }
+  hub("live", ptJson, false);
   delete ptJson;
-
-  return bResult;
 }
 // }}}
 // {{{ log()

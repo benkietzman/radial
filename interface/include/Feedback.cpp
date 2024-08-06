@@ -395,7 +395,7 @@ void Feedback::schedule(string strPrefix)
       ptMessage->i("Source", m_strNode);
       status(ptMessage);
       ptMessage->i("Action", "status");
-      live("Feedback", "", ptMessage, strError);
+      live("Feedback", "", ptMessage);
       delete ptMessage;
     }
     msleep(1000);

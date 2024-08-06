@@ -294,7 +294,7 @@ void Status::schedule(string strPrefix)
         Json *ptMessage = new Json;
         status(ptMessage, strError);
         ptMessage->i("Action", "status");
-        live("Radial", "", ptMessage, strError);
+        live("Radial", "", ptMessage);
         delete ptMessage;
         if (unCount++ > 480)
         {

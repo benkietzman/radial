@@ -1989,14 +1989,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       if (isLocalAdmin(strIdent, strApplication, bAdmin, auth))
       {
-        if (live(strApplication, strUser, {{"Action", "message"}, {"Class", ((!strClass.empty())?strClass:"info")}, {"Title", ((!strTitle.empty())?strTitle:strApplication)}, {"Body", strMessage}}, strError))
-        {
-          ssText << ":  The message has been sent.";
-        }
-        else
-        {
-          ssText << " error:  " << strError;
-        }
+        live(strApplication, strUser, {{"Action", "message"}, {"Class", ((!strClass.empty())?strClass:"info")}, {"Title", ((!strTitle.empty())?strTitle:strApplication)}, {"Body", strMessage}});
+        ssText << ":  The message has been sent.";
       }
       else
       {
