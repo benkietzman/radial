@@ -2435,7 +2435,7 @@ void Interface::live(const string strApplication, const string strUser, map<stri
 {
   Json *ptMessage = new Json(message);
 
-  live(strApplication, strUser, ptMessager);
+  live(strApplication, strUser, ptMessage);
   delete ptMessage;
 }
 void Interface::live(const string strApplication, const string strUser, Json *ptMessage)
