@@ -2640,7 +2640,7 @@ void Interface::process(string strPrefix)
   strPrefix += "->Interface::process()";
   if ((nReturn = pipe(m_fdResponse)) == 0)
   {
-    bool bExit = false;
+    bool bExit = false, bMasterReceived = false;
     char cChar;
     list<int> uniqueRemovals;
     map<int, string> uniques;
@@ -2761,6 +2761,7 @@ void Interface::process(string strPrefix)
                       string strMaster = m_strMaster;
                       m_strMaster = ptJson->m["Master"]->v;
                       m_bMaster = ((m_strMaster == m_strNode)?true:false);
+                      m_bMasterReceived = true;
                       m_bMasterSettled = false;
                       time(&CMaster[1]);
                       if (m_pAutoModeCallback != NULL)
@@ -2957,7 +2958,7 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (!m_bMasterSettled && (CTime - CMaster[1]) > 10)
+        if (m_bMasterReceived && !m_bMasterSettled && (CTime - CMaster[1]) > 10)
         {
           m_bMasterSettled = true;
         }
