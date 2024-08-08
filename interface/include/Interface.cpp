@@ -2647,7 +2647,7 @@ void Interface::process(string strPrefix)
     pollfd *fds;
     size_t unIndex, unPosition;
     string strJson, strLine;
-    time_t CBroadcast, CMaster[2], CThroughput, CTime, unBroadcastSleep = 70;
+    time_t CBroadcast, CMaster[2], CThroughput, CTime, unBroadcastSleep = 10;
     m_pUtility->fdNonBlocking(0, strError);
     m_pUtility->fdNonBlocking(1, strError);
     time(&CBroadcast);
@@ -2957,7 +2957,7 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (!m_bMasterSettled && !m_strMaster.empty() && (CTime - CMaster[1]) > 10)
+        if (!m_bMasterSettled && !m_strMaster.empty() && (CTime - CMaster[1]) > 7)
         {
           m_bMasterSettled = true;
         }
