@@ -162,9 +162,9 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
         {
           bFound = true;
           ptConn->i("Application", m_conns[conn]->strApplication);
-          ptConn->i("User", m_conns[conn]->strUser);
           ptConn->i("FirstName", m_conns[conn]->strFirstName);
           ptConn->i("LastName", m_conns[conn]->strLastName);
+          ptConn->i("User", m_conns[conn]->strUser);
         }
         m_mutex.unlock();
         if (bFound)
