@@ -2755,11 +2755,11 @@ void Interface::process(string strPrefix)
                 {
                   if (!empty(ptJson, "Master"))
                   {
+                    bMasterReceived = true;
                     time(&CMaster[0]);
                     if (m_strMaster != ptJson->m["Master"]->v)
                     {
                       string strMaster = m_strMaster;
-                      bMasterReceived = true;
                       m_strMaster = ptJson->m["Master"]->v;
                       m_bMaster = ((m_strMaster == m_strNode)?true:false);
                       m_bMasterSettled = false;
