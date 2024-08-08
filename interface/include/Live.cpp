@@ -156,22 +156,17 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       {
         bool bFound = false;
         map<string, string> getUser;
-        Json *ptConn = new Json, *ptUser = new Json;
+        Json *ptConn = new Json;
         m_mutex.lock();
         if (m_conns.find(conn) != m_conns.end())
         {
           bFound = true;
           ptConn->i("Application", m_conns[conn]->strApplication);
           ptConn->i("User", m_conns[conn]->strUser);
-          ptUser->i("userid", m_conns[conn]->strUser);
+          ptConn->i("FirstName", m_conns[conn]->strFirstName);
+          ptConn->i("LastName", m_conns[conn]->strLastName);
         }
         m_mutex.unlock();
-        if (bFound && db("dbCentralUsers", ptUser, getUser, strError))
-        {
-          ptConn->i("FirstName", getUser["first_name"]);
-          ptConn->i("LastName", getUser["last_name"]);
-        }
-        delete ptUser;
         if (bFound)
         {
           ptResponse->m[conn] = ptConn;
