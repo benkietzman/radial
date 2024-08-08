@@ -2647,7 +2647,7 @@ void Interface::process(string strPrefix)
     pollfd *fds;
     size_t unIndex, unPosition;
     string strJson, strLine;
-    time_t CBroadcast, CMaster[2], CShutdown = 0, CThroughput, CTime, unBroadcastSleep = 15;
+    time_t CBroadcast, CMaster[2], CThroughput, CTime, unBroadcastSleep = 15;
     m_pUtility->fdNonBlocking(0, strError);
     m_pUtility->fdNonBlocking(1, strError);
     time(&CBroadcast);
@@ -3036,13 +3036,8 @@ void Interface::process(string strPrefix)
       }
       if (shutdown())
       {
-        time(&CTime);
-        if (CShutdown == 0)
-        {
-          CShutdown = CTime;
-        }
         m_mutexShare.lock();
-        if ((CTime - CShutdown) > 10 && m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
+        if (m_strBuffers[0].empty() && m_strBuffers[1].empty() && m_responses.empty() && m_waiting.empty())
         {
           bExit = true;
         }
