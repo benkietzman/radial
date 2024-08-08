@@ -2763,6 +2763,9 @@ void Interface::process(string strPrefix)
                       m_strMaster = ptJson->m["Master"]->v;
                       m_bMaster = ((m_strMaster == m_strNode)?true:false);
                       m_bMasterSettled = false;
+                      ssMessage.str("");
+                      ssMessage << strPrefix << ":  Master unsettled.";
+                      log(ssMessage.str());
                       time(&CMaster[1]);
                       if (m_pAutoModeCallback != NULL)
                       {
@@ -3010,6 +3013,9 @@ void Interface::process(string strPrefix)
           {
             m_bMaster = ((m_strMaster == m_strNode)?true:false);
             m_bMasterSettled = false;
+            ssMessage.str("");
+            ssMessage << strPrefix << ":  Master unsettled.";
+            log(ssMessage.str());
             time(&CMaster[1]);
             m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
           }
