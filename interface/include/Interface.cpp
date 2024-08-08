@@ -2961,6 +2961,9 @@ void Interface::process(string strPrefix)
         if (bMasterReceived && !m_bMasterSettled && (CTime - CMaster[1]) > 10)
         {
           m_bMasterSettled = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << ":  Master settled.";
+          log(ssMessage.str());
         }
         if ((CTime - CBroadcast) > unBroadcastSleep)
         {
