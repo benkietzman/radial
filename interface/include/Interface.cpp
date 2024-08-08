@@ -2957,7 +2957,7 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (!m_bMasterSettled && (CTime - CMaster[1]) > 30)
+        if (!m_bMasterSettled && (CTime - CMaster[1]) > 10)
         {
           m_bMasterSettled = true;
         }
