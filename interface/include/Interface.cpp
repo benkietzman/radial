@@ -2640,7 +2640,7 @@ void Interface::process(string strPrefix)
   strPrefix += "->Interface::process()";
   if ((nReturn = pipe(m_fdResponse)) == 0)
   {
-    bool bExit = false, bMasterReceived = false;
+    bool bExit = false;
     char cChar;
     list<int> uniqueRemovals;
     map<int, string> uniques;
@@ -2755,7 +2755,6 @@ void Interface::process(string strPrefix)
                 {
                   if (!empty(ptJson, "Master"))
                   {
-                    bMasterReceived = true;
                     time(&CMaster[0]);
                     if (m_strMaster != ptJson->m["Master"]->v)
                     {
@@ -2958,22 +2957,16 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (bMasterReceived && !m_bMasterSettled && !m_strMaster.empty() && (CTime - CMaster[1]) > 10)
+        if (!m_bMasterSettled && !m_strMaster.empty() && (CTime - CMaster[1]) > 10)
         {
-          Json *ptJson = new Json;
           m_bMasterSettled = true;
-          ptJson->i("Interface", m_strName);
-          ptJson->i("|function", "master");
-          ptJson->i("Master", m_strMaster);
-          hub("link", ptJson, false);
-          delete ptJson;
         }
         if ((CTime - CBroadcast) > unBroadcastSleep)
         {
           string strMaster = m_strMaster;
           unsigned int unSeed = CTime + getpid();
           srand(unSeed);
-          unBroadcastSleep = (rand_r(&unSeed) % ((m_bMasterSettled)?60:5)) + 1;
+          unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
           if (!m_strMaster.empty() && m_strMaster != m_strNode)
           {
             bool bFound = false;
