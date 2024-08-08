@@ -2759,9 +2759,9 @@ void Interface::process(string strPrefix)
                     if (m_strMaster != ptJson->m["Master"]->v)
                     {
                       string strMaster = m_strMaster;
+                      bMasterReceived = true;
                       m_strMaster = ptJson->m["Master"]->v;
                       m_bMaster = ((m_strMaster == m_strNode)?true:false);
-                      m_bMasterReceived = true;
                       m_bMasterSettled = false;
                       time(&CMaster[1]);
                       if (m_pAutoModeCallback != NULL)
@@ -2958,7 +2958,7 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (m_bMasterReceived && !m_bMasterSettled && (CTime - CMaster[1]) > 10)
+        if (bMasterReceived && !m_bMasterSettled && (CTime - CMaster[1]) > 10)
         {
           m_bMasterSettled = true;
         }
