@@ -2755,7 +2755,13 @@ void Interface::process(string strPrefix)
                 {
                   if (!empty(ptJson, "Master"))
                   {
-                    bMasterReceived = true;
+                    if (!bMasterReceived)
+                    {
+                      bMasterReceived = true;
+                      ssMessage.str("");
+                      ssMessage << strPrefix << ":  Received initial master broadcast.";
+                      log(ssMessage.str());
+                    }
                     time(&CMaster[0]);
                     if (m_strMaster != ptJson->m["Master"]->v)
                     {
