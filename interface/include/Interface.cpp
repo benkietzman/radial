@@ -2755,13 +2755,7 @@ void Interface::process(string strPrefix)
                 {
                   if (!empty(ptJson, "Master"))
                   {
-                    if (!bMasterReceived)
-                    {
-                      bMasterReceived = true;
-                      ssMessage.str("");
-                      ssMessage << strPrefix << ":  Received initial master broadcast.";
-                      log(ssMessage.str());
-                    }
+                    bMasterReceived = true;
                     time(&CMaster[0]);
                     if (m_strMaster != ptJson->m["Master"]->v)
                     {
@@ -2769,9 +2763,6 @@ void Interface::process(string strPrefix)
                       m_strMaster = ptJson->m["Master"]->v;
                       m_bMaster = ((m_strMaster == m_strNode)?true:false);
                       m_bMasterSettled = false;
-                      ssMessage.str("");
-                      ssMessage << strPrefix << ":  Master unsettled.";
-                      log(ssMessage.str());
                       time(&CMaster[1]);
                       if (m_pAutoModeCallback != NULL)
                       {
@@ -2967,12 +2958,15 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (bMasterReceived && !m_bMasterSettled && (CTime - CMaster[1]) > 10)
+        if (bMasterReceived && !m_bMasterSettled && !m_strMaster.empty() && (CTime - CMaster[1]) > 10)
         {
+          Json *ptJson = new Json;
           m_bMasterSettled = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << ":  Master settled.";
-          log(ssMessage.str());
+          ptJson->i("Interface", m_strName);
+          ptJson->i("|function", "master");
+          ptJson->i("Master", m_strMaster);
+          hub("link", ptJson, false);
+          delete ptJson;
         }
         if ((CTime - CBroadcast) > unBroadcastSleep)
         {
@@ -3019,9 +3013,6 @@ void Interface::process(string strPrefix)
           {
             m_bMaster = ((m_strMaster == m_strNode)?true:false);
             m_bMasterSettled = false;
-            ssMessage.str("");
-            ssMessage << strPrefix << ":  Master unsettled.";
-            log(ssMessage.str());
             time(&CMaster[1]);
             m_pAutoModeCallback(strPrefix, strMaster, m_strMaster);
           }
