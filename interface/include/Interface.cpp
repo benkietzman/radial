@@ -2647,7 +2647,7 @@ void Interface::process(string strPrefix)
     pollfd *fds;
     size_t unIndex, unPosition;
     string strJson, strLine;
-    time_t CBroadcast, CMaster[2], CThroughput, CTime, unBroadcastSleep = 15;
+    time_t CBroadcast, CMaster[2], CThroughput, CTime, unBroadcastSleep = 70;
     m_pUtility->fdNonBlocking(0, strError);
     m_pUtility->fdNonBlocking(1, strError);
     time(&CBroadcast);
@@ -2957,7 +2957,7 @@ void Interface::process(string strPrefix)
       time(&CTime);
       if (m_pAutoModeCallback != NULL)
       {
-        if (!m_bMasterSettled && (CTime - CMaster[1]) > 120)
+        if (!m_bMasterSettled && (CTime - CMaster[1]) > 30)
         {
           m_bMasterSettled = true;
         }
@@ -2966,7 +2966,7 @@ void Interface::process(string strPrefix)
           string strMaster = m_strMaster;
           unsigned int unSeed = CTime + getpid();
           srand(unSeed);
-          unBroadcastSleep = (rand_r(&unSeed) % 5) + 1;
+          unBroadcastSleep = (rand_r(&unSeed) % ((m_bMasterSettled)?60:5)) + 1;
           if (!m_strMaster.empty() && m_strMaster != m_strNode)
           {
             bool bFound = false;
@@ -2984,7 +2984,7 @@ void Interface::process(string strPrefix)
               m_strMaster.clear();
             }
           }
-          if ((CTime - CMaster[0]) > 60)
+          if ((CTime - CMaster[0]) > 120)
           {
             m_strMaster.clear();
           }
