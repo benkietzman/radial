@@ -92,18 +92,10 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
               chat(ssName.str(), strMessage);
               chat(strUser, strMessage, "live");
             }
-            if (!user["email"].empty())
+            if (user["alert_email"] == "1" && !user["email"].empty())
             {
-              if (user["alert_email"] == "1")
-              {
-                bAlerted = true;
-                email(user["email"], user["email"], "Alert", strMessage, "");
-              }
-              if (user["alert_pager"] == "1" && !user["pager"].empty())
-              {
-                bAlerted = true;
-                email(user["email"], user["pager"], "Alert", strMessage, "");
-              }
+              bAlerted = true;
+              email(user["email"], user["email"], "Alert", strMessage, "");
             }
             if (user["alert_live_audio"] == "1")
             {
@@ -114,6 +106,11 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             {
               bAlerted = true;
               live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}});
+            }
+            if (user["alert_pager"] == "1" && !user["pager"].empty())
+            {
+              bAlerted = true;
+              email(user["pager"], user["pager"], "Alert", strMessage, "");
             }
             if (!user["alert_remote_url"].empty())
             {
