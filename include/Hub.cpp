@@ -234,7 +234,7 @@ bool Hub::load(string strPrefix, string &strError)
     {
       ifstream inInterfaces;
       Json *ptInterfaces = NULL;
-      inInterfaces.open(ssInterfaces.str().c_str());
+      inInterfaces.open(ssInterfaces.str());
       if (inInterfaces)
       {
         string strLine;
@@ -690,7 +690,7 @@ void Hub::process(string strPrefix)
                                   unsigned long ulMemory = 40 * 1024;
                                   Json *ptInterfaces = NULL;
                                   ssInterfaces << m_strData << "/interfaces.json";
-                                  inInterfaces.open(ssInterfaces.str().c_str());
+                                  inInterfaces.open(ssInterfaces.str());
                                   if (inInterfaces)
                                   {
                                     string strLine;
@@ -950,7 +950,7 @@ void Hub::process(string strPrefix)
                             strInterface = ptJson->m["Interface"]->v;
                           }
                           ssInterfaces << m_strData << "/interfaces.json";
-                          inInterfaces.open(ssInterfaces.str().c_str());
+                          inInterfaces.open(ssInterfaces.str());
                           if (inInterfaces)
                           {
                             string strLine;

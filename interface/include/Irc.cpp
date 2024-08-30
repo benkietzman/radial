@@ -3595,7 +3595,7 @@ void Irc::monitorChannels(string strPrefix)
     if (tStat.st_mtime > m_CMonitorChannelsModify)
     {
       ifstream inMonitor;
-      inMonitor.open(ssFile.str().c_str());
+      inMonitor.open(ssFile.str());
       if (inMonitor)
       {
         string strLine;

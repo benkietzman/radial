@@ -248,7 +248,7 @@ void Status::schedule(string strPrefix)
         {
           ifstream inInterfaces;
           Json *ptInterfaces = NULL;
-          inInterfaces.open(ssInterfaces.str().c_str());
+          inInterfaces.open(ssInterfaces.str());
           if (inInterfaces)
           {
             string strLine;
