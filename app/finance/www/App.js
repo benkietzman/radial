@@ -609,13 +609,13 @@ class App
               {
                 if (response.Response[1].Status == 'okay')
                 {
-                  let lines = response.Response[1].Content.split('\n');
+                  let data = JSON.parse(response.Response[1].Content);
                   let dividends = {};
                   if (bPrice)
                   {
                     this.d.Asset.Stock[k].timestamp = nTimestamp;
                   }
-                  for (let [key, value] of Object.entries(response.Response[1].Content.chart.result[0].events.dividends))
+                  for (let [key, value] of Object.entries(data.chart.result[0].events.dividends))
                   {
                     if (!this.c.isDefined(dividends[key]))
                     {
