@@ -586,7 +586,7 @@ class App
             {
               console.log(response);
             }
-            let strBase = 'https://query1.finance.yahoo.com/v7/finance/download/';
+            let strBase = 'https://query2.finance.yahoo.com/v8/finance/chart/';
             let strSymbol = k;
             let date = new Date();
             let CStart = Math.floor((date.getTime() - (5 * 365 * 24 * 60 * 60 * 1000)) / 1000);
@@ -615,17 +615,13 @@ class App
                   {
                     this.d.Asset.Stock[k].timestamp = nTimestamp;
                   }
-                  for (let i = 1; i < lines.length; i++)
+                  for (let [key, value] of Object.entries(response.Response[1].Content.chart.result[0].events.dividends))
                   {
-                    let data = lines[i].split(',');
-                    if (data.length == 2)
+                    if (!this.c.isDefined(dividends[key]))
                     {
-                      if (!this.c.isDefined(dividends[data[0]]))
-                      {
-                        dividends[data[0]] = 0;
-                      }
-                      dividends[data[0]] += Number(data[1]);
+                      dividends[key] = 0;
                     }
+                    dividends[key] += Number(value.amount);
                   }
                   this.d.Asset.Stock[k].Change = dividends;
                 }
