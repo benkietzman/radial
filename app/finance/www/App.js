@@ -615,13 +615,16 @@ class App
                   {
                     this.d.Asset.Stock[k].timestamp = nTimestamp;
                   }
-                  for (let [key, value] of Object.entries(data.chart.result[0].events.dividends))
+                  if (data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].events && data.chart.result[0].events.dividends)
                   {
-                    if (!this.c.isDefined(dividends[key]))
+                    for (let [key, value] of Object.entries(data.chart.result[0].events.dividends))
                     {
-                      dividends[key] = 0;
+                      if (!this.c.isDefined(dividends[key]))
+                      {
+                        dividends[key] = 0;
+                      }
+                      dividends[key] += Number(value.amount);
                     }
-                    dividends[key] += Number(value.amount);
                   }
                   this.d.Asset.Stock[k].Change = dividends;
                 }
