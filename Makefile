@@ -11,10 +11,10 @@ prefix=/usr/local
 all: bin/hub bin/manager
 
 bin/hub: ../common/libcommon.a obj/hub.o obj/Base.o obj/Hub.o bin
-	g++ -o bin/hub obj/hub.o obj/Base.o obj/Hub.o $(LDFLAGS) -L../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/hub obj/hub.o obj/Base.o obj/Hub.o $(LDFLAGS) -L../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
 
 bin/manager: ../common/libcommon.a obj/manager.o bin
-	g++ -o bin/manager obj/manager.o $(LDFLAGS) -L../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/manager obj/manager.o $(LDFLAGS) -L../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
 
 bin:
 	if [ ! -d bin ]; then mkdir bin; fi;
