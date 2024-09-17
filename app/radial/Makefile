@@ -11,7 +11,7 @@ prefix=/usr/local
 all: bin/terminal
 
 bin/terminal: ../../../common/libcommon.a obj/terminal.o bin
-	g++ -o bin/terminal obj/terminal.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lnsl -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/terminal obj/terminal.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
 
 bin:
 	if [ ! -d bin ]; then mkdir bin; fi;
