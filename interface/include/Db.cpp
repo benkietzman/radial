@@ -810,11 +810,11 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
 
   if (!empty(i, "group_id"))
   {
-    qs << "select a.id, b.id application_id, b.name from application_group a, application b where a.application_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
+    qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date from application_group a, application b where a.application_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
   }
   else if (!empty(i, "server_id"))
   {
-    qs << "select a.id, b.id application_id, b.name from application_server a, application b where a.application_id = b.id and a.server_id = " << v(i->m["server_id"]->v);
+    qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date from application_server a, application b where a.application_id = b.id and a.server_id = " << v(i->m["server_id"]->v);
     if (!empty(i, "retired") && i->m["retired"]->v == "1")
     {
       qs << " and b.retirement_date is null";
@@ -823,7 +823,7 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
   }
   else if (!empty(i, "contact_id"))
   {
-    qs << "select a.id, b.id application_id, b.name, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
+    qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
   }
   else
   {
