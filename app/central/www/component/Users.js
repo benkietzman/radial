@@ -381,6 +381,13 @@ export default
             if (c.wsResponse(response, error))
             {
               s.user.applications = response.Response;
+              for (let i = 0; i < s.user.applications.length; i++)
+              {
+                if (s.user.applications[i].retirement_date)
+                {
+                  s.user.applications[i].style = 'opacity:0.4;filter:alpha(opacity=40);';
+                }
+              }
               s.u();
             }
             else
@@ -847,7 +854,7 @@ export default
         <th>Application</td>
       </tr>
       {{#each user.applications}}
-      <tr>
+      <tr style="{{style}}">
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
       </tr>
       {{/each}}
