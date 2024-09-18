@@ -544,11 +544,11 @@ export default
             if (c.wsResponse(response, error))
             {
               s.server.applications = response.Response;
-              for (let i = 0; i < s.user.applications.length; i++)
+              for (let i = 0; i < s.server.applications.length; i++)
               {
-                if (s.user.applications[i].retirement_date)
+                if (s.server.applications[i].retirement_date)
                 {
-                  s.user.applications[i].style = 'opacity:0.4;filter:alpha(opacity=40);';
+                  s.server.applications[i].style = 'opacity:0.4;filter:alpha(opacity=40);';
                 }
               }
               s.u();
