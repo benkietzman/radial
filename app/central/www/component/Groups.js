@@ -481,6 +481,13 @@ export default
             if (c.wsResponse(response, error))
             {
               s.group.applications = response.Response;
+              for (let i = 0; i < s.group.applications.length; i++)
+              {
+                if (s.group.applications[i].retirement_date)
+                {
+                  s.group.applications[i].style = 'opacity:0.4;filter:alpha(opacity=40);';
+                }
+              }
               s.u();
             }
             else
@@ -716,7 +723,7 @@ export default
         <th>Application</td>
       </tr>
       {{#each group.applications}}
-      <tr>
+      <tr style="{{style}}">
         <td><a href="#/Applications/{{application_id}}">{{name}}</a></td>
       </tr>
       {{/each}}
