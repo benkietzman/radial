@@ -260,7 +260,8 @@ void Base::msleep(const unsigned long ulMilliSec)
 // {{{ pack()
 string Base::pack(radialPacket &p, string &d)
 {
-  stringstream ssData;
+  string strValue;
+  stringstream ssData, ssMessage;
   Json *r = new Json;
 
   if (!p.d.empty())
@@ -306,7 +307,9 @@ string Base::pack(radialPacket &p, string &d)
           d->i("ErrorOrig", d->m["Error"]->v);
         }
         d->i("Status", "error");
-        d->i("Error", "Exceeded max payload.  Response has been removed.");
+        ssMessage.str("");
+        ssMessage << "Payload of " << m_manip.toShortByte(p.p.size(), strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
+        d->i("Error", ssMessage.str());
         ssData << d;
       }
     }
@@ -315,7 +318,9 @@ string Base::pack(radialPacket &p, string &d)
     {
       Json *e = new Json;
       e->i("Status", "error");
-      e->i("Error", "Exceeded max payload.");
+      ssMessage.str("");
+      ssMessage << "Payload of " << m_manip.toShortByte(p.p.size(), strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.";
+      d->i("Error", ssMessage.str());
       ssData << e;
       delete e;
     }
@@ -407,8 +412,8 @@ void Base::uncompress(const string strCompress, string &strUncompress)
 // {{{ unpack()
 void Base::unpack(const string d, radialPacket &p)
 {
-  string strRoute;
-  stringstream ssData(d);
+  string strRoute, strValue;
+  stringstream ssData(d), ssMessage;
   Json *r;
 
   getline(ssData, strRoute, m_cDelimiter);
@@ -426,6 +431,7 @@ void Base::unpack(const string d, radialPacket &p)
       d->j(a);
       if (a.size() < m_unMaxPayload)
       {
+        stringstream ssMessage;
         b = true;
         if (!empty(d, "Status"))
         {
@@ -436,7 +442,9 @@ void Base::unpack(const string d, radialPacket &p)
           d->i("ErrorOrig", d->m["Error"]->v);
         }
         d->i("Status", "error");
-        d->i("Error", "Exceeded max payload.  Response has been removed.");
+        ssMessage.str("");
+        ssMessage << "Payload of " << m_manip.toShortByte(p.p.size(), strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
+        d->i("Error", ssMessage.str());
         d->j(p.p);
       }
     }
@@ -445,7 +453,9 @@ void Base::unpack(const string d, radialPacket &p)
     {
       Json *e = new Json;
       e->i("Status", "error");
-      e->i("Error", "Exceeded max payload.");
+      ssMessage.str("");
+      ssMessage << "Payload of " << m_manip.toShortByte(p.p.size(), strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.";
+      d->i("Error", ssMessage.str());
       e->j(p.p);
       delete e;
     }

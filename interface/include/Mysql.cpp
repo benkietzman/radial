@@ -43,7 +43,8 @@ Mysql::~Mysql()
 void Mysql::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
-  string strError;
+  string strError, strValue;
+  stringstream ssMessage;
   Json *ptJson;
   radialPacket p;
 
@@ -120,7 +121,9 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                       {
                         delete ptJson->m["Response"];
                         ptJson->m.erase("Response");
-                        strError = "Exceeded max payload.  Response has been removed.";
+                        ssMessage.str("");
+                        ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
+                        strError = ssMessage.str();
                       }
                     }
                     else
