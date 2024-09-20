@@ -407,6 +407,7 @@ chat("#radial", "request() 0");
   ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->wsi != NULL)
   {
+chat("#radial", "request() 0a");
     lws_callback_on_writable(ptConn->wsi);
   }
   if (ptConn->unThreads > 0)
