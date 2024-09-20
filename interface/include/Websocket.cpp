@@ -568,7 +568,7 @@ chat("#radial", (string)"websocket() received - " + (*pstrBuffers[0]));
         }
         if (lws_write(wsi, &puszBuffer[LWS_PRE], nLength, (lws_write_protocol)nWriteMode) != -1)
         {
-chat("#radial", (string)"websocket() writeable - " + pstrBuffers[1]->substr(0, nLength);
+chat("#radial", (string)"websocket() writeable - " + pstrBuffers[1]->substr(0, nLength));
           pstrBuffers[1]->erase(0, nLength);
           lws_callback_on_writable(wsi);
         }
