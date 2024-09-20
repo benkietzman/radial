@@ -428,7 +428,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   ssMessage.str("");
   ssMessage << strPrefix << "->lws_create_context():  Created context.";
   log(ssMessage.str());
-  while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
+  while (!shutdown() && (nReturn = lws_service(ptContext, 50)) >= 0)
   {
 log("socket()");
     list<list<data *>::iterator> removals;
