@@ -147,7 +147,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage, ssRequestID;
 
-char("#radial", "request() 0");
+chat("#radial", "request() 0");
   threadIncrement();
   strPrefix += "->Websocket::request()";
   throughput("request");
@@ -416,7 +416,7 @@ char("#radial", "request() 0");
   ptConn->mutexShare.unlock();
   delete ptJson;
   threadDecrement();
-char("#radial", "request() 1");
+chat("#radial", "request() 1");
 }
 // }}}
 // {{{ socket()
@@ -474,7 +474,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   string *pstrBuffers[2] = {NULL, NULL}, strPrefix = "websocket->main()->Websocket::websocket()";
   stringstream ssClose;
 
-char("#radial", "websocket() 0");
+chat("#radial", "websocket() 0");
   m_mutex.lock();
   for (auto i = m_conns.begin(); !bFound && i != m_conns.end(); i++)
   {
@@ -502,7 +502,7 @@ char("#radial", "websocket() 0");
     }
   }
   m_mutex.unlock();
-char("#radial", "websocket() 1");
+chat("#radial", "websocket() 1");
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED
@@ -588,7 +588,7 @@ char("#radial", "websocket() 1");
     default: break;
     // }}}
   }
-char("#radial", "websocket() 2");
+chat("#radial", "websocket() 2");
   if (nResult < 0)
   {
     (*connIter)->bRemove = true;
@@ -597,7 +597,7 @@ char("#radial", "websocket() 2");
       log(ssClose.str());
     }
   }
-char("#radial", "websocket() 3");
+chat("#radial", "websocket() 3");
 
   return nResult;
 }
