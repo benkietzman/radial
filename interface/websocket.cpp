@@ -15,13 +15,12 @@
 #include <StringManip>
 #include <Utility>
 #include "include/Websocket"
-int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
 radial::Websocket *gpWebsocket;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "websocket->main()";
-  gpWebsocket = new radial::Websocket(strPrefix, argc, argv, &callback, &websocket);
+  gpWebsocket = new radial::Websocket(strPrefix, argc, argv, &callback);
   gpWebsocket->enableWorkers();
   thread threadSocket(&radial::Websocket::socket, gpWebsocket, strPrefix);
   pthread_setname_np(threadSocket.native_handle(), "socket");
@@ -33,8 +32,4 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   gpWebsocket->callback(strPrefix, strPacket, bResponse);
-}
-int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)
-{
-  return gpWebsocket->websocket(wsi, reason, user, in, len);
 }

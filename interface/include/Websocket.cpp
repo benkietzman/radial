@@ -20,11 +20,10 @@ extern "C++"
 namespace radial
 {
 // {{{ Websocket()
-Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
+Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
-  m_pWebsocket = pWebsocket;
   m_tProtocols[0] = {"http-only", lws_callback_http_dummy, 0, 0};
-  m_tProtocols[1] = {"radial", m_pWebsocket, 0, 0};
+  m_tProtocols[1] = {"radial", Websocket::websocket, 0, 0};
   m_tProtocols[2] = {NULL, NULL, 0, 0};
 }
 // }}}
