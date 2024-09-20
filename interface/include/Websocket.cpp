@@ -147,7 +147,6 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage, ssRequestID;
 
-chat("#radial", "request() 0");
   threadIncrement();
   strPrefix += "->Websocket::request()";
   throughput("request");
@@ -407,7 +406,7 @@ chat("#radial", "request() 0");
   ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->wsi != NULL)
   {
-chat("#radial", "request() 0a");
+chat("#radial", "request() writable");
     lws_callback_on_writable(ptConn->wsi);
   }
   if (ptConn->unThreads > 0)
@@ -417,7 +416,6 @@ chat("#radial", "request() 0a");
   ptConn->mutexShare.unlock();
   delete ptJson;
   threadDecrement();
-chat("#radial", "request() 1");
 }
 // }}}
 // {{{ socket()
@@ -432,7 +430,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   log(ssMessage.str());
   while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
   {
-chat("#radial", "socket() 0");
+chat("#radial", "socket()");
     list<list<data *>::iterator> removals;
     m_mutex.lock();
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
@@ -452,7 +450,6 @@ chat("#radial", "socket() 0");
       removals.pop_front();
     }
     m_mutex.unlock();
-chat("#radial", "socket() 1");
   }
   lws_context_destroy(ptContext);
   ssMessage.str("");
@@ -475,7 +472,6 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   string *pstrBuffers[2] = {NULL, NULL}, strPrefix = "websocket->main()->Websocket::websocket()";
   stringstream ssClose;
 
-chat("#radial", "websocket() 0");
   m_mutex.lock();
   for (auto i = m_conns.begin(); !bFound && i != m_conns.end(); i++)
   {
@@ -503,12 +499,12 @@ chat("#radial", "websocket() 0");
     }
   }
   m_mutex.unlock();
-chat("#radial", "websocket() 1");
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED
     case LWS_CALLBACK_CLOSED:
     {
+chat("#radial", "websocket() closed");
       m_mutex.lock();
       (*connIter)->wsi = NULL;
       m_mutex.unlock();
@@ -519,6 +515,7 @@ chat("#radial", "websocket() 1");
     // {{{ LWS_CALLBACK_RECEIVE
     case LWS_CALLBACK_RECEIVE:
     {
+chat("#radial", "websocket() received");
       pstrBuffers[0]->append((char *)in, len);
       if (pstrBuffers[0]->size() < m_unMaxPayload)
       {
@@ -540,6 +537,7 @@ chat("#radial", "websocket() 1");
     // {{{ LWS_CALLBACK_SERVER_WRITEABLE
     case LWS_CALLBACK_SERVER_WRITEABLE:
     {
+chat("#radial", "websocket() writeable");
       int nWriteMode = LWS_WRITE_CONTINUATION;
       if (pstrBuffers[1]->empty())
       {
@@ -589,7 +587,6 @@ chat("#radial", "websocket() 1");
     default: break;
     // }}}
   }
-chat("#radial", "websocket() 2");
   if (nResult < 0)
   {
     (*connIter)->bRemove = true;
@@ -598,7 +595,6 @@ chat("#radial", "websocket() 2");
       log(ssClose.str());
     }
   }
-chat("#radial", "websocket() 3");
 
   return nResult;
 }
