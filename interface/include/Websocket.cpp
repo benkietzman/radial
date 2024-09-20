@@ -408,6 +408,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   {
 log((string)"request() writable - " + strJson);
     lws_callback_on_writable(ptConn->wsi);
+    lws_callback_on_writable(ptConn->wsi);
   }
   if (ptConn->unThreads > 0)
   {
