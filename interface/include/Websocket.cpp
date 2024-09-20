@@ -23,6 +23,9 @@ namespace radial
 Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
   m_pWebsocket = pWebsocket;
+  m_tProtocols[0] = {"http-only", lws_callback_http_dummy, 0, 0};
+  m_tProtocols[1] = {"radial", m_pWebsocket, 0, 0};
+  m_tProtocols[2] = {NULL, NULL, 0, 0};
 }
 // }}}
 // {{{ ~Websocket()
@@ -429,14 +432,14 @@ void Websocket::socket(string strPrefix)
   stringstream ssMessage;
 
   strPrefix += "->Websocket::socket()";
-  m_utility.sslInit();
+  m_pUtility->sslInit();
   memset(&tInfo, 0, sizeof(lws_context_creation_info));
   tInfo.gid = -1;
   tInfo.iface = NULL;
   tInfo.max_http_header_data = 32767; // this is the maximum
   tInfo.options = 0 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT | LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT | LWS_SERVER_OPTION_REDIRECT_HTTP_TO_HTTPS;
   tInfo.port = 7797;
-  tInfo.protocols = gtProtocols;
+  tInfo.protocols = m_tProtocols;
   pszCert = (char *)malloc((m_strData.size()+12)*sizeof(char));
   pszCert[0] = '\0';
   strcpy(pszCert, (m_strData + "/server.crt").c_str());
@@ -488,7 +491,7 @@ log("socket() waiting");
   }
   free(pszCert);
   free(pszKey);
-  m_utility.sslDeinit();
+  m_pUtility->sslDeinit();
   setShutdown();
 }
 // }}}

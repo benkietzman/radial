@@ -16,12 +16,6 @@
 #include <Utility>
 #include "include/Websocket"
 int websocket(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
-struct lws_protocols gtProtocols[] =
-{
-  {"http-only", lws_callback_http_dummy, 0, 0},
-  {"radial", websocket, 0, 0},
-  {NULL, NULL, 0, 0}
-};
 radial::Websocket *gpWebsocket;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
