@@ -43,7 +43,6 @@ struct data
 class Websocket : public Interface
 {
   protected:
-  int (*m_pWebsocket)(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
   list<data *> m_conns;
   mutex m_mutex;
   lws_context *m_ptContext;
@@ -52,7 +51,7 @@ class Websocket : public Interface
   void request(string strPrefix, data *ptConn, Json *ptJson);
 
   public:
-  Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
+  Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
   ~Websocket();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void socket(string strPrefix);

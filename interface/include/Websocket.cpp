@@ -20,10 +20,10 @@ extern "C++"
 namespace radial
 {
 // {{{ Websocket()
-Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
+Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
   m_tProtocols[0] = {"http-only", lws_callback_http_dummy, 0, 0};
-  m_tProtocols[1] = {"radial", Websocket::websocket, 0, 0};
+  m_tProtocols[1] = {"radial", pWebsocket, 0, 0};
   m_tProtocols[2] = {NULL, NULL, 0, 0};
 }
 // }}}
@@ -408,7 +408,6 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->wsi != NULL)
   {
-log((string)"request() writable - " + strJson);
     lws_callback_on_writable(ptConn->wsi);
     lws_cancel_service(m_ptContext);
   }
@@ -455,7 +454,6 @@ void Websocket::socket(string strPrefix)
     log(ssMessage.str());
     while (!shutdown() && (nReturn = lws_service(m_ptContext, 0)) >= 0)
     {
-log("socket() event");
       list<list<data *>::iterator> removals;
       m_mutex.lock();
       for (auto i = m_conns.begin(); i != m_conns.end(); i++)
@@ -475,7 +473,6 @@ log("socket() event");
         removals.pop_front();
       }
       m_mutex.unlock();
-log("socket() waiting");
     }
     lws_context_destroy(m_ptContext);
     m_ptContext = NULL;
@@ -535,7 +532,6 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     // {{{ LWS_CALLBACK_CLOSED
     case LWS_CALLBACK_CLOSED:
     {
-log("websocket() closed");
       m_mutex.lock();
       (*connIter)->wsi = NULL;
       m_mutex.unlock();
@@ -551,7 +547,6 @@ log("websocket() closed");
       {
         if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
         {
-log((string)"websocket() received - " + (*pstrBuffers[0]));
           thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
           pthread_setname_np(threadRequest.native_handle(), "request");
           threadRequest.detach();
@@ -599,7 +594,6 @@ log((string)"websocket() received - " + (*pstrBuffers[0]));
         }
         if (lws_write(wsi, &puszBuffer[LWS_PRE], nLength, (lws_write_protocol)nWriteMode) != -1)
         {
-log((string)"websocket() writeable - " + pstrBuffers[1]->substr(0, nLength));
           pstrBuffers[1]->erase(0, nLength);
           lws_callback_on_writable(wsi);
         }
