@@ -406,7 +406,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->buffers.push_back(ptJson->j(strJson));
   if (ptConn->wsi != NULL)
   {
-chat("#radial", "request() writable");
+chat("#radial", (string)"request() writable - " + strJson);
     lws_callback_on_writable(ptConn->wsi);
   }
   if (ptConn->unThreads > 0)
