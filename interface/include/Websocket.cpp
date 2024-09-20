@@ -428,9 +428,9 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   ssMessage.str("");
   ssMessage << strPrefix << "->lws_create_context():  Created context.";
   log(ssMessage.str());
-  while (!shutdown() && (nReturn = lws_service(ptContext, 50)) >= 0)
+  while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
   {
-log("socket()");
+log("socket() event");
     list<list<data *>::iterator> removals;
     m_mutex.lock();
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
@@ -450,6 +450,7 @@ log("socket()");
       removals.pop_front();
     }
     m_mutex.unlock();
+log("socket() waiting");
   }
   lws_context_destroy(ptContext);
   ssMessage.str("");
