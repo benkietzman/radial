@@ -147,6 +147,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   string strApplication, strError, strJson, strPassword, strUser, strUserID;
   stringstream ssMessage, ssRequestID;
 
+char("#radial", "request() 0");
   threadIncrement();
   strPrefix += "->Websocket::request()";
   throughput("request");
@@ -415,6 +416,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->mutexShare.unlock();
   delete ptJson;
   threadDecrement();
+char("#radial", "request() 1");
 }
 // }}}
 // {{{ socket()
@@ -429,6 +431,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
   log(ssMessage.str());
   while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
   {
+chat("#radial", "socket() 0");
     list<list<data *>::iterator> removals;
     m_mutex.lock();
     for (auto i = m_conns.begin(); i != m_conns.end(); i++)
@@ -448,6 +451,7 @@ void Websocket::socket(string strPrefix, lws_context *ptContext)
       removals.pop_front();
     }
     m_mutex.unlock();
+chat("#radial", "socket() 1");
   }
   lws_context_destroy(ptContext);
   ssMessage.str("");
@@ -470,6 +474,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
   string *pstrBuffers[2] = {NULL, NULL}, strPrefix = "websocket->main()->Websocket::websocket()";
   stringstream ssClose;
 
+char("#radial", "websocket() 0");
   m_mutex.lock();
   for (auto i = m_conns.begin(); !bFound && i != m_conns.end(); i++)
   {
@@ -497,6 +502,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     }
   }
   m_mutex.unlock();
+char("#radial", "websocket() 1");
   switch (reason)
   {
     // {{{ LWS_CALLBACK_CLOSED
@@ -582,6 +588,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
     default: break;
     // }}}
   }
+char("#radial", "websocket() 2");
   if (nResult < 0)
   {
     (*connIter)->bRemove = true;
@@ -590,6 +597,7 @@ int Websocket::websocket(struct lws *wsi, enum lws_callback_reasons reason, void
       log(ssClose.str());
     }
   }
+char("#radial", "websocket() 3");
 
   return nResult;
 }
