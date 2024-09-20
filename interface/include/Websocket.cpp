@@ -408,7 +408,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   {
 log((string)"request() writable - " + strJson);
     lws_callback_on_writable(ptConn->wsi);
-    lws_callback_on_writable(ptConn->wsi);
+    lws_cancel_service(m_ptContext);
   }
   if (ptConn->unThreads > 0)
   {
@@ -420,48 +420,75 @@ log((string)"request() writable - " + strJson);
 }
 // }}}
 // {{{ socket()
-void Websocket::socket(string strPrefix, lws_context *ptContext)
+void Websocket::socket(string strPrefix)
 {
+  char *pszCert, *pszKey;
   int nReturn;
+  lws_context_creation_info tInfo;
+  string strData, strError;
   stringstream ssMessage;
 
   strPrefix += "->Websocket::socket()";
-  ssMessage.str("");
-  ssMessage << strPrefix << "->lws_create_context():  Created context.";
-  log(ssMessage.str());
-  while (!shutdown() && (nReturn = lws_service(ptContext, 0)) >= 0)
+  m_utility.sslInit();
+  memset(&tInfo, 0, sizeof(lws_context_creation_info));
+  tInfo.gid = -1;
+  tInfo.iface = NULL;
+  tInfo.max_http_header_data = 32767; // this is the maximum
+  tInfo.options = 0 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT | LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT | LWS_SERVER_OPTION_REDIRECT_HTTP_TO_HTTPS;
+  tInfo.port = 7797;
+  tInfo.protocols = gtProtocols;
+  pszCert = (char *)malloc((m_strData.size()+12)*sizeof(char));
+  pszCert[0] = '\0';
+  strcpy(pszCert, (m_strData + "/server.crt").c_str());
+  tInfo.ssl_cert_filepath = pszCert;
+  pszKey = (char *)malloc((m_strData.size()+12)*sizeof(char));
+  pszKey[0] = '\0';
+  strcpy(pszKey, (m_strData + "/server.key").c_str());
+  tInfo.ssl_private_key_filepath = pszKey;
+  tInfo.uid = -1;
+  if ((m_ptContext = lws_create_context(&tInfo)) != NULL)
   {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->lws_create_context():  Created context.";
+    log(ssMessage.str());
+    while (!shutdown() && (nReturn = lws_service(m_ptContext, 0)) >= 0)
+    {
 log("socket() event");
-    list<list<data *>::iterator> removals;
-    m_mutex.lock();
-    for (auto i = m_conns.begin(); i != m_conns.end(); i++)
-    {
-      if ((*i)->bRemove)
+      list<list<data *>::iterator> removals;
+      m_mutex.lock();
+      for (auto i = m_conns.begin(); i != m_conns.end(); i++)
       {
-        removals.push_back(i);
+        if ((*i)->bRemove)
+        {
+          removals.push_back(i);
+        }
       }
-    }
-    while (!removals.empty())
-    {
-      if ((*removals.front())->unThreads == 0)
+      while (!removals.empty())
       {
-        delete (*removals.front());
-        m_conns.erase(removals.front());
+        if ((*removals.front())->unThreads == 0)
+        {
+          delete (*removals.front());
+          m_conns.erase(removals.front());
+        }
+        removals.pop_front();
       }
-      removals.pop_front();
-    }
-    m_mutex.unlock();
+      m_mutex.unlock();
 log("socket() waiting");
+    }
+    lws_context_destroy(m_ptContext);
+    m_ptContext = NULL;
+    ssMessage.str("");
+    ssMessage << strPrefix << "->lws_context_destroy():  Destroyed context.";
+    log(ssMessage.str());
+    while (!m_conns.empty())
+    {
+      delete m_conns.front();
+      m_conns.pop_front();
+    }
   }
-  lws_context_destroy(ptContext);
-  ssMessage.str("");
-  ssMessage << strPrefix << "->lws_context_destroy():  Destroyed context.";
-  log(ssMessage.str());
-  while (!m_conns.empty())
-  {
-    delete m_conns.front();
-    m_conns.pop_front();
-  }
+  free(pszCert);
+  free(pszKey);
+  m_utility.sslDeinit();
   setShutdown();
 }
 // }}}

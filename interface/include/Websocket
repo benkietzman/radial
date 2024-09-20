@@ -46,6 +46,7 @@ class Websocket : public Interface
   int (*m_pWebsocket)(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
   list<data *> m_conns;
   mutex m_mutex;
+  lws_context *m_ptContext;
 
   void request(string strPrefix, data *ptConn, Json *ptJson);
 
