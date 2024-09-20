@@ -515,12 +515,12 @@ chat("#radial", "websocket() closed");
     // {{{ LWS_CALLBACK_RECEIVE
     case LWS_CALLBACK_RECEIVE:
     {
-chat("#radial", "websocket() received");
       pstrBuffers[0]->append((char *)in, len);
       if (pstrBuffers[0]->size() < m_unMaxPayload)
       {
         if (lws_remaining_packet_payload(wsi) == 0 && lws_is_final_fragment(wsi))
         {
+chat("#radial", (string)"websocket() received - " + (*pstrBuffers[0]));
           thread threadRequest(&Websocket::request, this, strPrefix, *connIter, new Json(*pstrBuffers[0]));
           pthread_setname_np(threadRequest.native_handle(), "request");
           threadRequest.detach();
@@ -537,7 +537,6 @@ chat("#radial", "websocket() received");
     // {{{ LWS_CALLBACK_SERVER_WRITEABLE
     case LWS_CALLBACK_SERVER_WRITEABLE:
     {
-chat("#radial", "websocket() writeable");
       int nWriteMode = LWS_WRITE_CONTINUATION;
       if (pstrBuffers[1]->empty())
       {
@@ -569,6 +568,7 @@ chat("#radial", "websocket() writeable");
         }
         if (lws_write(wsi, &puszBuffer[LWS_PRE], nLength, (lws_write_protocol)nWriteMode) != -1)
         {
+chat("#radial", (string)"websocket() writeable - " + pstrBuffers[1]->substr(0, nLength);
           pstrBuffers[1]->erase(0, nLength);
           lws_callback_on_writable(wsi);
         }
