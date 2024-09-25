@@ -70,6 +70,20 @@ Base::Base(int argc, char **argv)
       ssMaxResident >> m_ulMaxResident;
       m_ulMaxResident *= 1024;
     }
+    else if (strArg == "-p" || (strArg.size() > 10 && strArg.substr(0, 10) == "--payload="))
+    {
+      stringstream ssMaxPayload;
+      if (strArg == "-p" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        ssMaxPayload.str(argv[++i]);
+      }
+      else
+      {
+        ssMaxPayload.str(strArg.substr(10, strArg.size() - 10));
+      }
+      ssMaxPayload >> m_unMaxPayload;
+      m_unMaxPayload *= 1024;
+    }
     else if ((strArg.size() > 12 && strArg.substr(0, 12) == "--proxyport="))
     {
       strProxyPort = strArg.substr(12, strArg.size() - 12);
