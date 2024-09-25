@@ -68,7 +68,7 @@ Base::Base(int argc, char **argv)
         ssMaxResident.str(strArg.substr(9, strArg.size() - 9));
       }
       ssMaxResident >> m_ulMaxResident;
-      m_ulMaxResident *= 1024 * 1024;
+      m_ulMaxResident *= 1024;
     }
     else if (strArg == "-p" || (strArg.size() > 10 && strArg.substr(0, 10) == "--payload="))
     {
@@ -82,7 +82,7 @@ Base::Base(int argc, char **argv)
         ssMaxPayload.str(strArg.substr(10, strArg.size() - 10));
       }
       ssMaxPayload >> m_unMaxPayload;
-      m_unMaxPayload *= 1024;
+      m_unMaxPayload *= 1024 * 1024;
     }
     else if ((strArg.size() > 12 && strArg.substr(0, 12) == "--proxyport="))
     {
