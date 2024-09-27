@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 {
   string strPrefix = "websocket->main()";
   gpWebsocket = new radial::Websocket(strPrefix, argc, argv, &callback, &websocket);
-  gpWebsocket->enableWorkers();
+  //gpWebsocket->enableWorkers();
   thread threadSocket(&radial::Websocket::socket, gpWebsocket, strPrefix);
   pthread_setname_np(threadSocket.native_handle(), "socket");
   gpWebsocket->process(strPrefix);
