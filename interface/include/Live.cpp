@@ -250,11 +250,11 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else if (!strWsRequestID.empty())
           {
-            message(strWsRequestID, ptJson->m["Request"]->m["Message"]);
+            message(strWsRequestID, ptJson->m["Request"]->m["Message"], ((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")?true:false));
           }
           else
           {
-            message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"]);
+            message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], ((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")?true:false));
           }
         }
         else
@@ -294,14 +294,14 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
 }
 // }}}
 // {{{ message()
-void Live::message(const string strApplication, const string strUser, map<string, string> message)
+void Live::message(const string strApplication, const string strUser, map<string, string> message, const bool bWait)
 {
   Json *ptMessage = new Json(message);
 
-  Live::message(strApplication, strUser, ptMessage);
+  Live::message(strApplication, strUser, ptMessage, bWait);
   delete ptMessage;
 }
-void Live::message(const string strApplication, const string strUser, Json *ptMessage)
+void Live::message(const string strApplication, const string strUser, Json *ptMessage, const bool bWait)
 {
   map<string, Json *> requests;
 
@@ -312,7 +312,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     {
       Json *ptSubJson = new Json(ptMessage);
       ptSubJson->i("wsRequestID", conn.first);
-      hub("websocket", ptSubJson, false);
+      hub("websocket", ptSubJson, bWait);
       delete ptSubJson;
     }
   }
@@ -343,7 +343,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
           ptDeepJson->i("Interface", "websocket");
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
-          hub("link", ptDeepJson, false);
+          hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
         }
       }
@@ -351,14 +351,14 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     delete req.second;
   }
 }
-void Live::message(const string strWsRequestID, map<string, string> message)
+void Live::message(const string strWsRequestID, map<string, string> message, const bool bWait)
 {
   Json *ptMessage = new Json(message);
 
-  Live::message(strWsRequestID, ptMessage);
+  Live::message(strWsRequestID, ptMessage, bWait);
   delete ptMessage;
 }
-void Live::message(const string strWsRequestID, Json *ptMessage)
+void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWait)
 {
   map<string, Json *> requests;
 
@@ -367,7 +367,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage)
   {
     Json *ptSubJson = new Json(ptMessage);
     ptSubJson->i("wsRequestID", strWsRequestID);
-    hub("websocket", ptSubJson, false);
+    hub("websocket", ptSubJson, bWait);
     delete ptSubJson;
   }
   m_mutex.unlock();
@@ -395,7 +395,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage)
         ptDeepJson->i("Interface", "websocket");
         ptDeepJson->i("Node", req.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
-        hub("link", ptDeepJson, false);
+        hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
       }
     }

@@ -2431,14 +2431,14 @@ void Interface::links(string strPrefix, Json *ptJson)
 }
 // }}}
 // {{{ live()
-void Interface::live(const string strApplication, const string strUser, map<string, string> message)
+void Interface::live(const string strApplication, const string strUser, map<string, string> message, const bool bWait)
 {
   Json *ptMessage = new Json(message);
 
-  live(strApplication, strUser, ptMessage);
+  live(strApplication, strUser, ptMessage, bWait);
   delete ptMessage;
 }
-void Interface::live(const string strApplication, const string strUser, Json *ptMessage)
+void Interface::live(const string strApplication, const string strUser, Json *ptMessage, const bool bWait)
 {
   Json *ptJson = new Json;
 
@@ -2452,23 +2452,31 @@ void Interface::live(const string strApplication, const string strUser, Json *pt
   {
     ptJson->m["Request"]->i("User", strUser);
   }
+  if (bWait)
+  {
+    ptJson->m["Request"]->i("Wait", "1", '1');
+  }
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
   hub("live", ptJson, false);
   delete ptJson;
 }
-void Interface::live(const string strWsRequestID, map<string, string> message)
+void Interface::live(const string strWsRequestID, map<string, string> message, const bool bWait)
 {
   Json *ptMessage = new Json(message);
 
-  live(strWsRequestID, ptMessage);
+  live(strWsRequestID, ptMessage, bWait);
   delete ptMessage;
 }
-void Interface::live(const string strWsRequestID, Json *ptMessage)
+void Interface::live(const string strWsRequestID, Json *ptMessage, const bool bWait)
 {
   Json *ptJson = new Json;
 
   ptJson->i("Function", "message");
   ptJson->m["Request"] = new Json;
+  if (bWait)
+  {
+    ptJson->m["Request"]->i("Wait", "1", '1');
+  }
   ptJson->m["Request"]->i("wsRequestID", strWsRequestID);
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
   hub("live", ptJson, false);

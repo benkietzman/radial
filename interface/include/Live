@@ -41,10 +41,10 @@ class Live : public Interface
   mutex m_mutex;
   thread *m_pThreadSchedule;
 
-  void message(const string strApplication, const string strUser, map<string, string> message);
-  void message(const string strApplication, const string strUser, Json *ptMessage);
-  void message(const string strWsRequestID, map<string, string> message);
-  void message(const string strWsRequestID, Json *ptMessage);
+  void message(const string strApplication, const string strUser, map<string, string> message, const bool bWait = false);
+  void message(const string strApplication, const string strUser, Json *ptMessage, const bool bWait = false);
+  void message(const string strWsRequestID, map<string, string> message, const bool bWait = false);
+  void message(const string strWsRequestID, Json *ptMessage, const bool bWait = false);
   bool retrieve(const string strWsRequestID, string &strApplication, string &strUser);
   void schedule(string strPrefix);
 
