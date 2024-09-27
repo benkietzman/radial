@@ -156,6 +156,8 @@ class Interface : public Base
   void links(string strPrefix, Json *ptJson);
   void live(const string strApplication, const string strUser, map<string, string> message);
   void live(const string strApplication, const string strUser, Json *ptMessage);
+  void live(const string strWsRequestID, map<string, string> message);
+  void live(const string strWsRequestID, Json *ptMessage);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
   void logger(const string strFunction, map<string, string> label, const string strMessage);

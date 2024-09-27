@@ -2456,6 +2456,24 @@ void Interface::live(const string strApplication, const string strUser, Json *pt
   hub("live", ptJson, false);
   delete ptJson;
 }
+void Interface::live(const string strWsRequestID, map<string, string> message)
+{
+  Json *ptMessage = new Json(message);
+
+  live(strWsRequestID, ptMessage);
+  delete ptMessage;
+}
+void Interface::live(const string strWsRequestID, Json *ptMessage)
+{
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "message");
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("wsRequestID", strWsRequestID);
+  ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
+  hub("live", ptJson, false);
+  delete ptJson;
+}
 // }}}
 // {{{ log()
 void Interface::log(const string strMessage)

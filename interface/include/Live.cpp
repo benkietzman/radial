@@ -214,7 +214,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       {
         if (exist(ptJson->m["Request"], "Message"))
         {
-          string strApplication[2], strUser[2];
+          string strApplication[2], strUser[2], strWsRequestID;
           bResult = true;
           if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && !empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strApplication[0], strUser[0]))
           {
@@ -247,6 +247,10 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
             }
             hub("irc", ptIrc, false);
             delete ptIrc;
+          }
+          else if (!strWsRequestID.empty())
+          {
+            message(strWsRequestID, ptJson->m["Request"]->m["Message"]);
           }
           else
           {
@@ -300,6 +304,7 @@ void Live::message(const string strApplication, const string strUser, map<string
 void Live::message(const string strApplication, const string strUser, Json *ptMessage)
 {
   map<string, Json *> requests;
+
   m_mutex.lock();
   for (auto &conn : m_conns)
   {
@@ -341,6 +346,57 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
           hub("link", ptDeepJson, false);
           delete ptDeepJson;
         }
+      }
+    }
+    delete req.second;
+  }
+}
+void Live::message(const string strWsRequestID, map<string, string> message)
+{
+  Json *ptMessage = new Json(message);
+
+  Live::message(strWsRequestID, ptMessage);
+  delete ptMessage;
+}
+void Live::message(const string strWsRequestID, Json *ptMessage)
+{
+  map<string, Json *> requests;
+
+  m_mutex.lock();
+  if (m_conns.find(strWsRequestID) != m_conns.end())
+  {
+    Json *ptSubJson = new Json(ptMessage);
+    ptSubJson->i("wsRequestID", strWsRequestID);
+    hub("websocket", ptSubJson, false);
+    delete ptSubJson;
+  }
+  m_mutex.unlock();
+  m_mutexShare.lock();
+  for (auto &link : m_l)
+  {
+    if (link->interfaces.find("live") != link->interfaces.end() && link->interfaces.find("websocket") != link->interfaces.end())
+    {
+      Json *ptSubJson = new Json;
+      ptSubJson->i("Interface", "live");
+      ptSubJson->i("Node", link->strNode);
+      ptSubJson->i("Function", "list");
+      requests[link->strNode] = ptSubJson;
+    }
+  }
+  m_mutexShare.unlock();
+  for (auto &req : requests)
+  {
+    string strSubError;
+    if (hub("link", req.second, strSubError) && exist(req.second, "Response"))
+    {
+      if (req.second->m["Response"]->m.find(strWsRequestID) != req.second->m["Response"]->m.end())
+      {
+        Json *ptDeepJson = new Json(ptMessage);
+        ptDeepJson->i("Interface", "websocket");
+        ptDeepJson->i("Node", req.first);
+        ptDeepJson->i("wsRequestID", strWsRequestID);
+        hub("link", ptDeepJson, false);
+        delete ptDeepJson;
       }
     }
     delete req.second;
