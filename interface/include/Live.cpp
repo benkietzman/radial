@@ -214,7 +214,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       {
         if (exist(ptJson->m["Request"], "Message"))
         {
-          bool bWait = (((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1") || (exist(ptJson->m["Request"]->m["Message"], "Wait") && ptJson->m["Request"]->m["Message"]->m["Wait"]->v == "1"))?true:false);
+          bool bWait = ((exist(ptJson->m["Request"]->m["Message"], "Wait") && ptJson->m["Request"]->m["Message"]->m["Wait"]->v == "1")?true:false);
           string strApplication[2], strUser[2], strWsRequestID;
           bResult = true;
           if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && !empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strApplication[0], strUser[0]))
