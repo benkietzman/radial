@@ -214,6 +214,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
       {
         if (exist(ptJson->m["Request"], "Message"))
         {
+          bool bWait = ((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")?true:false);
           string strApplication[2], strUser[2], strWsRequestID;
           bResult = true;
           if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && !empty(ptJson, "wsRequestID") && retrieve(ptJson->m["wsRequestID"]->v, strApplication[0], strUser[0]))
@@ -245,16 +246,16 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
             {
               ptIrc->m["Request"]->i("Message", ptJson->m["Request"]->m["Message"]->m["Message"]->v);
             }
-            hub("irc", ptIrc, false);
+            hub("irc", ptIrc, bWait);
             delete ptIrc;
           }
           else if (!strWsRequestID.empty())
           {
-            message(strWsRequestID, ptJson->m["Request"]->m["Message"], ((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")?true:false));
+            message(strWsRequestID, ptJson->m["Request"]->m["Message"], bWait);
           }
           else
           {
-            message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], ((exist(ptJson->m["Request"], "Wait") && ptJson->m["Request"]->m["Wait"]->v == "1")?true:false));
+            message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], bWait);
           }
         }
         else
@@ -360,46 +361,49 @@ void Live::message(const string strWsRequestID, map<string, string> message, con
 }
 void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWait)
 {
-  map<string, Json *> requests;
+  bool bFound = false;
 
   m_mutex.lock();
   if (m_conns.find(strWsRequestID) != m_conns.end())
   {
     Json *ptSubJson = new Json(ptMessage);
+    bFound = true;
     ptSubJson->i("wsRequestID", strWsRequestID);
     hub("websocket", ptSubJson, bWait);
     delete ptSubJson;
   }
   m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
+  if (!bFound)
   {
-    if (link->interfaces.find("live") != link->interfaces.end() && link->interfaces.find("websocket") != link->interfaces.end())
+    map<string, Json *> requests;
+    m_mutexShare.lock();
+    for (auto &link : m_l)
     {
-      Json *ptSubJson = new Json;
-      ptSubJson->i("Interface", "live");
-      ptSubJson->i("Node", link->strNode);
-      ptSubJson->i("Function", "list");
-      requests[link->strNode] = ptSubJson;
+      if (link->interfaces.find("live") != link->interfaces.end() && link->interfaces.find("websocket") != link->interfaces.end())
+      {
+        Json *ptSubJson = new Json;
+        ptSubJson->i("Interface", "live");
+        ptSubJson->i("Node", link->strNode);
+        ptSubJson->i("Function", "list");
+        requests[link->strNode] = ptSubJson;
+      }
     }
-  }
-  m_mutexShare.unlock();
-  for (auto &req : requests)
-  {
-    string strSubError;
-    if (hub("link", req.second, strSubError) && exist(req.second, "Response"))
+    m_mutexShare.unlock();
+    for (auto &req : requests)
     {
-      if (req.second->m["Response"]->m.find(strWsRequestID) != req.second->m["Response"]->m.end())
+      string strSubError;
+      if (!bFound && hub("link", req.second, strSubError) && exist(req.second, "Response") && req.second->m["Response"]->m.find(strWsRequestID) != req.second->m["Response"]->m.end())
       {
         Json *ptDeepJson = new Json(ptMessage);
+        bFound = true;
         ptDeepJson->i("Interface", "websocket");
         ptDeepJson->i("Node", req.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
         hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
       }
+      delete req.second;
     }
-    delete req.second;
   }
 }
 // }}}

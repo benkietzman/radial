@@ -2452,10 +2452,7 @@ void Interface::live(const string strApplication, const string strUser, Json *pt
   {
     ptJson->m["Request"]->i("User", strUser);
   }
-  if (bWait)
-  {
-    ptJson->m["Request"]->i("Wait", "1", '1');
-  }
+  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
   hub("live", ptJson, bWait);
   delete ptJson;
@@ -2473,10 +2470,7 @@ void Interface::live(const string strWsRequestID, Json *ptMessage, const bool bW
 
   ptJson->i("Function", "message");
   ptJson->m["Request"] = new Json;
-  if (bWait)
-  {
-    ptJson->m["Request"]->i("Wait", "1", '1');
-  }
+  ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
   ptJson->m["Request"]->i("wsRequestID", strWsRequestID);
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
   hub("live", ptJson, bWait);
