@@ -2457,7 +2457,7 @@ void Interface::live(const string strApplication, const string strUser, Json *pt
     ptJson->m["Request"]->i("Wait", "1", '1');
   }
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
-  hub("live", ptJson, false);
+  hub("live", ptJson, bWait);
   delete ptJson;
 }
 void Interface::live(const string strWsRequestID, map<string, string> message, const bool bWait)
@@ -2479,7 +2479,7 @@ void Interface::live(const string strWsRequestID, Json *ptMessage, const bool bW
   }
   ptJson->m["Request"]->i("wsRequestID", strWsRequestID);
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
-  hub("live", ptJson, false);
+  hub("live", ptJson, bWait);
   delete ptJson;
 }
 // }}}
