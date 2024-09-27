@@ -131,7 +131,7 @@ bool Interface::action(radialUser &d, string &e)
         {
           b = true;
           ssMessage.str("");
-          ssMessage << ":  " << getUserName(d) << " (" << d.u << ") requested a " << strAction << " of the " << strInterface << " interface ";
+          ssMessage << " " << getUserName(d) << " (" << d.u << ") requested a " << strAction << " of the " << strInterface << " interface ";
           if (!strNode.empty())
           {
             ssMessage << "on the " << strNode << " node";
