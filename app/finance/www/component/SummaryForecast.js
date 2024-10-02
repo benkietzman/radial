@@ -271,41 +271,41 @@ export default
       <table class="table table-sm table-striped">
         <thead>
         <tr>
-          <th>Year</th>
-          <th>Age</th>
-          <th title="Gross Income including Employer Match">Gross</th>
-          <th title="Invest including Employer Match">Invest</th>
-          <th title="Net Income">Net</th>
-          <th title="Tithe">Tithe</th>
-          <th title="Value of Stocks">Stock</th>
-          <th title="Annual Dividend Yield">Dividend</th>
-          <th title="Dividend Tax">Div Tax</th>
-          <th title="Value of Precious Metals">Metal</th>
-          <th title="Value of Assets">Asset</th>
-          <th title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
-          <th title="Value of Expenses">Expense</th>
-          <th title="Incomes minus Expenses">Flow</th>
-          <th title="Rate of change between current Flow and previous Flow">Rate</th>
+          <th style="text-align: right;">Year</th>
+          <th style="text-align: right;">Age</th>
+          <th style="text-align: right;" title="Gross Income including Employer Match">Gross</th>
+          <th style="text-align: right;" title="Invest including Employer Match">Invest</th>
+          <th style="text-align: right;" title="Net Income">Net</th>
+          <th style="text-align: right;" title="Tithe">Tithe</th>
+          <th style="text-align: right;" title="Value of Stocks">Stock</th>
+          <th style="text-align: right;" title="Annual Dividend Yield">Dividend</th>
+          <th style="text-align: right;" title="Dividend Tax">Div Tax</th>
+          <th style="text-align: right;" title="Value of Precious Metals">Metal</th>
+          <th style="text-align: right;" title="Value of Assets">Asset</th>
+          <th style="text-align: right;" title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
+          <th style="text-align: right;" title="Value of Expenses">Expense</th>
+          <th style="text-align: right;" title="Incomes minus Expenses">Flow</th>
+          <th style="text-align: right;" title="Rate of change between current Flow and previous Flow">Rate</th>
         </tr>
         </thead>
         <tbody>
         {{#each d}}
         <tr>
-          <td>{{Year}}</td>
-          <td>{{Age}}</td>
-          <td title="{{number Gross}}">{{numberShort Gross}}</td>
-          <td title="{{number Invest}}">{{numberShort Invest}}</td>
-          <td title="{{number Net}}">{{numberShort Net}}</td>
-          <td title="{{number Tithe}}">{{numberShort Tithe}}</td>
-          <td title="{{number Stock}}">{{numberShort Stock}}</td>
-          <td title="{{number Dividend}}">{{numberShort Dividend}}</td>
-          <td title="{{number DivTax}}">{{numberShort DivTax}}</td>
-          <td title="{{number Metal}}">{{numberShort Metal}}</td>
-          <td title="{{number Asset}}">{{numberShort Asset}}</td>
-          <td title="{{number Income}}">{{numberShort Income}}</td>
-          <td title="{{number Expense}}">{{numberShort Expense}}</td>
-          <td class="text-{{#ifCond Flow '>=' 0}}success{{else}}danger{{/ifCond}}" title="{{number Flow}}">{{numberShort Flow}}</td>
-          <td class="text-{{#ifCond Rate '>=' 0}}success{{else}}danger{{/ifCond}}" title="{{number Rate}}%">{{numberShort Rate}}%</td>
+          <td style="text-align: right;">{{Year}}</td>
+          <td style="text-align: right;">{{Age}}</td>
+          <td style="text-align: right;" title="{{number Gross}}">{{numberShort Gross}}</td>
+          <td style="text-align: right;" title="{{number Invest}}">{{numberShort Invest}}</td>
+          <td style="text-align: right;" title="{{number Net}}">{{numberShort Net}}</td>
+          <td style="text-align: right;" title="{{number Tithe}}">{{numberShort Tithe}}</td>
+          <td style="text-align: right;" title="{{number Stock}}">{{numberShort Stock}}</td>
+          <td style="text-align: right;" title="{{number Dividend}}">{{numberShort Dividend}}</td>
+          <td style="text-align: right;" title="{{number DivTax}}">{{numberShort DivTax}}</td>
+          <td style="text-align: right;" title="{{number Metal}}">{{numberShort Metal}}</td>
+          <td style="text-align: right;" title="{{number Asset}}">{{numberShort Asset}}</td>
+          <td style="text-align: right;" title="{{number Income}}">{{numberShort Income}}</td>
+          <td style="text-align: right;" title="{{number Expense}}">{{numberShort Expense}}</td>
+          <td style="text-align: right;" class="text-{{#ifCond Flow '>=' 0}}success{{else}}danger{{/ifCond}}" title="{{number Flow}}">{{numberShort Flow}}</td>
+          <td style="text-align: right;" class="text-{{#ifCond Rate '>=' 0}}success{{else}}danger{{/ifCond}}" title="{{number Rate}}%">{{numberShort Rate}}%</td>
         </tr>
         {{/each}}
         </tbody>
