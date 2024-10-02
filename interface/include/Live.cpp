@@ -306,7 +306,6 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
 {
   map<string, Json *> requests;
 
-chat("BenKietzman", "0");
   m_mutex.lock();
   for (auto &conn : m_conns)
   {
@@ -319,7 +318,6 @@ chat("BenKietzman", "0");
     }
   }
   m_mutex.unlock();
-chat("BenKietzman", "1");
   m_mutexShare.lock();
   for (auto &link : m_l)
   {
@@ -333,7 +331,6 @@ chat("BenKietzman", "1");
     }
   }
   m_mutexShare.unlock();
-chat("BenKietzman", "2");
   for (auto &req : requests)
   {
     string strSubError;
@@ -343,20 +340,17 @@ chat("BenKietzman", "2");
       {
         if ((strApplication.empty() || (exist(conn.second, "Application") && conn.second->m["Application"]->v == strApplication)) && (strUser.empty() || (exist(conn.second, "User") && conn.second->m["User"]->v == strUser)))
         {
-chat("BenKietzman", "2-0");
           Json *ptDeepJson = new Json(ptMessage);
           ptDeepJson->i("Interface", "websocket");
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
           hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
-chat("BenKietzman", "2-1");
         }
       }
     }
     delete req.second;
   }
-chat("BenKietzman", "3");
 }
 void Live::message(const string strWsRequestID, map<string, string> message, const bool bWait)
 {
