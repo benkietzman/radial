@@ -306,6 +306,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
 {
   map<string, Json *> requests;
 
+chat("BenKietzman", "0");
   m_mutex.lock();
   for (auto &conn : m_conns)
   {
@@ -318,6 +319,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     }
   }
   m_mutex.unlock();
+chat("BenKietzman", "1");
   m_mutexShare.lock();
   for (auto &link : m_l)
   {
@@ -331,6 +333,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     }
   }
   m_mutexShare.unlock();
+chat("BenKietzman", "2");
   for (auto &req : requests)
   {
     string strSubError;
@@ -340,17 +343,20 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
       {
         if ((strApplication.empty() || (exist(conn.second, "Application") && conn.second->m["Application"]->v == strApplication)) && (strUser.empty() || (exist(conn.second, "User") && conn.second->m["User"]->v == strUser)))
         {
+chat("BenKietzman", "2-0");
           Json *ptDeepJson = new Json(ptMessage);
           ptDeepJson->i("Interface", "websocket");
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
           hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
+chat("BenKietzman", "2-1");
         }
       }
     }
     delete req.second;
   }
+chat("BenKietzman", "3");
 }
 void Live::message(const string strWsRequestID, map<string, string> message, const bool bWait)
 {
@@ -363,7 +369,6 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
 {
   bool bFound = false;
 
-chat("BenKietzman", "0");
   m_mutex.lock();
   if (m_conns.find(strWsRequestID) != m_conns.end())
   {
@@ -374,10 +379,8 @@ chat("BenKietzman", "0");
     delete ptSubJson;
   }
   m_mutex.unlock();
-chat("BenKietzman", "1");
   if (!bFound)
   {
-chat("BenKietzman", "1-0");
     map<string, Json *> requests;
     m_mutexShare.lock();
     for (auto &link : m_l)
@@ -392,13 +395,11 @@ chat("BenKietzman", "1-0");
       }
     }
     m_mutexShare.unlock();
-chat("BenKietzman", "1-1");
     for (auto &req : requests)
     {
       string strSubError;
       if (!bFound && hub("link", req.second, strSubError) && exist(req.second, "Response") && req.second->m["Response"]->m.find(strWsRequestID) != req.second->m["Response"]->m.end())
       {
-chat("BenKietzman", "1-1-0");
         Json *ptDeepJson = new Json(ptMessage);
         bFound = true;
         ptDeepJson->i("Interface", "websocket");
@@ -406,13 +407,10 @@ chat("BenKietzman", "1-1-0");
         ptDeepJson->i("wsRequestID", strWsRequestID);
         hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
-chat("BenKietzman", "1-1-1");
       }
       delete req.second;
     }
-chat("BenKietzman", "1-3");
   }
-chat("BenKietzman", "2");
 }
 // }}}
 // {{{ retrieve()
