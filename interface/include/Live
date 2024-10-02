@@ -38,8 +38,10 @@ class Live : public Interface
 {
   protected:
   map<string, data *> m_conns;
+  map<string, Json *> m_lists;
   mutex m_mutex;
   thread *m_pThreadSchedule;
+  time_t m_CList;
 
   void message(const string strApplication, const string strUser, map<string, string> message, const bool bWait = false);
   void message(const string strApplication, const string strUser, Json *ptMessage, const bool bWait = false);
