@@ -22,6 +22,8 @@ namespace radial
 // {{{ Request()
 Request::Request(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "request", argc, argv, pCallback)
 {
+  m_pUtility->setReadSize(67108864);
+  m_pUtility->setSslWriteSize(67108864);
 }
 // }}}
 // {{{ ~Request()
@@ -387,7 +389,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     if ((nReturn = pipe(fdResponse)) == 0)
     {
       // {{{ prep work
-      bool bActive = true, bExit = false;
+      bool bActive = true, bExit = false, bNeedWrite = false, bWantWrite = false;
       char cChar;
       list<string> responses;
       mutex mutexResponses;
@@ -400,14 +402,17 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         pollfd fds[2];
         fds[0].fd = fdSocket;
         fds[0].events = POLLIN;
-        mutexResponses.lock();
-        while (!responses.empty())
+        if (!bNeedWrite)
         {
-          strBuffers[1].append(responses.front()+"\n");
-          responses.pop_front();
+          mutexResponses.lock();
+          while (!responses.empty())
+          {
+            strBuffers[1].append(responses.front()+"\n");
+            responses.pop_front();
+          }
+          mutexResponses.unlock();
         }
-        mutexResponses.unlock();
-        if (!strBuffers[1].empty())
+        if (bWantWrite || !strBuffers[1].empty())
         {
           fds[0].events |= POLLOUT;
         }
@@ -416,10 +421,19 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         // }}}
         if ((nReturn = poll(fds, 2, 2000)) > 0)
         {
-          if (fds[0].revents & (POLLHUP | POLLIN))
+          bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+          if (bReadable)
           {
             if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
             {
+              bWantWrite = false;
+              if (nReturn <= 0)
+              {
+                switch (SSL_get_error(ssl, nReturn))
+                { 
+                  case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+                }
+              }
               while ((unPosition = strBuffers[0].find("\n")) != string::npos)
               {
                 if (strBuffers[0].substr(0, unPosition).size() < m_unMaxPayload)
@@ -445,9 +459,21 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               }
             }
           }
-          if (fds[0].revents & POLLOUT)
+          if (bWritable)
           {
-            if (!m_pUtility->sslWrite(ssl, strBuffers[1], nReturn))
+            if (m_pUtility->sslWrite(ssl, strBuffers[1], nReturn))
+            {
+              bNeedWrite = bWantWrite = false;
+              if (nReturn <= 0)
+              {
+                switch (SSL_get_error(ssl, nReturn))
+                { 
+                  case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
+                  case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
+                }
+              }
+            }
+            else
             {
               bExit = true;
               if (nReturn < 0)

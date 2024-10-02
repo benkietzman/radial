@@ -90,7 +90,9 @@ struct radialLink
   addrinfo *result;
   addrinfo *rp;
   bool bAuthenticated;
+  bool bNeedWrite;
   bool bRetry;
+  bool bWantWrite;
   int fdConnecting;
   int fdSocket;
   list<string> responses;

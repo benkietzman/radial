@@ -25,6 +25,8 @@ Link::Link(string strPrefix, int argc, char **argv) : Interface(strPrefix, "link
   ifstream inLink((m_strData + "/link.json").c_str());
   string strError;
 
+  m_pUtility->setReadSize(67108864);
+  m_pUtility->setSslWriteSize(67108864);
   m_ptLink = NULL;
   if (inLink)
   {
@@ -117,7 +119,9 @@ size_t Link::add(list<radialLink *> &links, radialLink *ptLink)
     {
       radialLink *ptAdd = new radialLink;
       ptAdd->bAuthenticated = ptLink->bAuthenticated;
+      ptAdd->bNeedWrite = false;
       ptAdd->bRetry = ptLink->bRetry;
+      ptAdd->bWantWrite = false;
       ptAdd->fdConnecting = ptLink->fdConnecting;
       ptAdd->fdSocket = ptLink->fdSocket;
       ptAdd->rp = ptLink->rp;
@@ -280,7 +284,7 @@ void Link::process(string strPrefix)
             if (!link->bRetry)
             {
               fds[unIndex].fd = link->fdSocket;
-              if (link->strBuffers[1].empty())
+              if (!link->bNeedWrite)
               {
                 while (!link->responses.empty())
                 {
@@ -288,7 +292,7 @@ void Link::process(string strPrefix)
                   link->responses.pop_front();
                 }
               }
-              if (!link->strBuffers[1].empty())
+              if (link->bWantWrite || !link->strBuffers[1].empty())
               {
                 fds[unIndex].events |= POLLOUT;
               }
@@ -461,7 +465,7 @@ void Link::process(string strPrefix)
             if (!link->bRetry)
             {
               fds[unIndex].fd = link->fdSocket;
-              if (link->strBuffers[1].empty())
+              if (!link->bNeedWrite)
               {
                 while (!link->responses.empty())
                 {
@@ -469,7 +473,7 @@ void Link::process(string strPrefix)
                   link->responses.pop_front();
                 }
               }
-              if (!link->strBuffers[1].empty())
+              if (link->bWantWrite || !link->strBuffers[1].empty())
               {
                 fds[unIndex].events |= POLLOUT;
               }
@@ -816,7 +820,9 @@ void Link::process(string strPrefix)
                   Json *ptWrite = new Json;
                   radialLink *ptLink = new radialLink;
                   ptLink->bAuthenticated = false;
+                  ptLink->bNeedWrite = false;
                   ptLink->bRetry = bRetry;
+                  ptLink->bWantWrite = false;
                   ptLink->fdConnecting = -1;
                   ptLink->fdSocket = fdLink;
                   ptLink->rp = NULL;
@@ -911,11 +917,20 @@ void Link::process(string strPrefix)
               // }}}
               if (ptLink != NULL)
               {
+                bool bReadable = (fds[i].revents & (POLLHUP | POLLIN)), bWritable = (fds[i].revents & POLLOUT);
                 // {{{ read
-                if (fds[i].revents & (POLLHUP | POLLIN))
+                if (bReadable)
                 {
                   if (m_pUtility->sslRead(ptLink->ssl, ptLink->strBuffers[0], nReturn))
                   {
+                    ptLink->bWantWrite = false;
+                    if (nReturn <= 0)
+                    {
+                      switch (SSL_get_error(ptLink->ssl, nReturn))
+                      {
+                        case SSL_ERROR_WANT_WRITE: ptLink->bWantWrite = true; break;
+                      }
+                    }
                     while ((unPosition = ptLink->strBuffers[0].find("\n")) != string::npos)
                     {
                       Json *ptJson = new Json(ptLink->strBuffers[0].substr(0, unPosition));
@@ -964,7 +979,9 @@ void Link::process(string strPrefix)
                                   size_t unReturn;
                                   radialLink *ptDeepLink = new radialLink;
                                   ptDeepLink->bAuthenticated = true;
+                                  ptDeepLink->bNeedWrite = false;
                                   ptDeepLink->bRetry = false;
+                                  ptDeepLink->bWantWrite = false;
                                   ptDeepLink->strNode = ptSubLink->m["Node"]->v;
                                   ptDeepLink->strServer = ptSubLink->m["Server"]->v;
                                   ptDeepLink->strPort = ptSubLink->m["Port"]->v;
@@ -1204,9 +1221,21 @@ void Link::process(string strPrefix)
                 }
                 // }}}
                 // {{{ write
-                if (fds[i].revents & POLLOUT)
+                if (bWritable)
                 {
-                  if (!m_pUtility->sslWrite(ptLink->ssl, ptLink->strBuffers[1], nReturn))
+                  if (m_pUtility->sslWrite(ptLink->ssl, ptLink->strBuffers[1], nReturn))
+                  {
+                    ptLink->bNeedWrite = ptLink->bWantWrite = false;
+                    if (nReturn <= 0)
+                    {
+                      switch (SSL_get_error(ptLink->ssl, nReturn))
+                      { 
+                        case SSL_ERROR_WANT_READ: ptLink->bNeedWrite = true; break;
+                        case SSL_ERROR_WANT_WRITE: ptLink->bNeedWrite = ptLink->bWantWrite = true; break;
+                      }
+                    }
+                  }
+                  else
                   {
                     removals.push_back(ptLink->fdSocket);
                     if (nReturn < 0)
@@ -1361,7 +1390,9 @@ void Link::process(string strPrefix)
               size_t unReturn;
               radialLink *ptLink = new radialLink;
               ptLink->bAuthenticated = true;
+              ptLink->bNeedWrite = false;
               ptLink->bRetry = false;
+              ptLink->bWantWrite = false;
               ptLink->strNode = ptBoot->l.front()->m["Node"]->v;
               ptLink->strServer = ptBoot->l.front()->m["Server"]->v;
               ptLink->strPort = ptBoot->l.front()->m["Port"]->v;
