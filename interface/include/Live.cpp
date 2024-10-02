@@ -352,8 +352,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     m_mutexShare.unlock();
     for (auto &list : lists)
     {
-      string strSubError;
-      hub("link", list.second, strSubError);
+      hub("link", list.second, true);
     }
   }
   for (auto &list : lists)
@@ -441,8 +440,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
       m_mutexShare.unlock();
       for (auto &list : lists)
       {
-        string strSubError;
-        hub("link", list.second, strSubError);
+        hub("link", list.second, true);
       }
     }
     for (auto &list : lists)
@@ -457,7 +455,6 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
         hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
       }
-      delete list.second;
     }
     if (bList)
     {
