@@ -2281,6 +2281,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   }
   // }}}
   // {{{ post work
+log((string)"Irc::analyze() " + ssText.str());
   chat(strTarget, ssText.str(), strSource);
   // }}}
 }
@@ -2328,6 +2329,7 @@ void Irc::analyzer(string strPrefix, const string strTarget, const string strUse
     }
   }
   m_pCentral->free(getPerson);
+log((string)"Irc::analyzer() " + ssData.str());
   analyze(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, ssData, strSource);
 }
 // }}}
@@ -2648,6 +2650,7 @@ void Irc::bot(string strPrefix)
                           }
                           getline(ssData, strData);
                           m_manip.trim(strData, strData);
+log((string)"Irc::bot() " + strData);
                           thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ((bChannel)?strTarget:strID), strID, strIdent, strData, "");
                           pthread_setname_np(threadAnalyzer.native_handle(), "analyzer");
                           threadAnalyzer.detach();
@@ -2988,6 +2991,7 @@ void Irc::chat(const string strTarget, const string strMessage, const string str
     ptLive->m["Request"]->m["Message"]->i("Action", "chat");
     ptLive->m["Request"]->m["Message"]->i("Message", strMessage);
     ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
+log((string)"Irc::chat() " + strMessage);
     hub("live", ptLive, false);
     delete ptLive;
   }
