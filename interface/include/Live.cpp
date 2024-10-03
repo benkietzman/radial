@@ -255,11 +255,6 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else
           {
-if (ptJson->m["Request"]->m["Message"]->m.find("Action") != ptJson->m["Request"]->m["Message"]->m.end() && ptJson->m["Request"]->m["Message"]->v == "chat")
-{
-string j;
-log((string)"DEBUG Live::callback() " + ptJson->m["Request"]->m["Message"]->j(j));
-}
             message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], bWait);
           }
         }
@@ -318,8 +313,6 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     {
       Json *ptSubJson = new Json(ptMessage);
       ptSubJson->i("wsRequestID", conn.first);
-string j;
-log((string)"DEBUG Live::message() [localhost] " + ptMessage->j(j));
       hub("websocket", ptSubJson, bWait);
       delete ptSubJson;
     }
@@ -351,8 +344,6 @@ log((string)"DEBUG Live::message() [localhost] " + ptMessage->j(j));
           ptDeepJson->i("Interface", "websocket");
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
-string j;
-log((string)"DEBUG Live::message() [" + req.first + (string)"] " + ptMessage->j(j));
           hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
         }
