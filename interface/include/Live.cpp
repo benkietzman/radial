@@ -255,8 +255,11 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else
           {
+if (ptJson->m["Request"]->m["Message"]->find("Action") != ptJson->m["Request"]->m["Message"]->m.end() && ptJson->m["Request"]->m["Message"]->v == "chat")
+{
 string j;
 log((string)"DEBUG Live::callback() " + ptJson->m["Request"]->m["Message"]->j(j));
+}
             message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], bWait);
           }
         }
