@@ -78,7 +78,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
           (*connIter)->buffers.push_back(ptSubJson->j(strJson));
 if (ptSubJson->m.find("Action") != ptSubJson->m.end() && ptSubJson->m["Action"]->v == "chat")
 {
-log((string)"Websocket::callback() [] " + strJson);
+log((string)"DEBUG Websocket::callback() [] " + strJson);
 }
           lws_callback_on_writable((*connIter)->wsi);
           delete ptSubJson;

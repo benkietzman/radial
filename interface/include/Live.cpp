@@ -255,7 +255,8 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else
           {
-log((string)"Live::callback() " + ptJson->m["Request"]->m["Message"]->v);
+string j;
+log((string)"DEBUG Live::callback() " + ptJson->m["Request"]->m["Message"]->j(j));
             message(strApplication[1], strUser[1], ptJson->m["Request"]->m["Message"], bWait);
           }
         }
@@ -315,7 +316,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
       Json *ptSubJson = new Json(ptMessage);
       ptSubJson->i("wsRequestID", conn.first);
 string j;
-log((string)"Live::message() [localhost] " + ptMessage->j(j));
+log((string)"DEBUG Live::message() [localhost] " + ptMessage->j(j));
       hub("websocket", ptSubJson, bWait);
       delete ptSubJson;
     }
@@ -348,7 +349,7 @@ log((string)"Live::message() [localhost] " + ptMessage->j(j));
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
 string j;
-log((string)"Live::message() [" + req.first + (string)"] " + ptMessage->j(j));
+log((string)"DEBUG Live::message() [" + req.first + (string)"] " + ptMessage->j(j));
           hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
         }
