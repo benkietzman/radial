@@ -81,6 +81,7 @@ if (ptSubJson->m.find("Action") != ptSubJson->m.end() && ptSubJson->m["Action"]-
 log((string)"DEBUG Websocket::callback() " + strJson);
 }
           lws_callback_on_writable((*connIter)->wsi);
+          lws_cancel_service(m_ptContext);
           delete ptSubJson;
         }
         else
