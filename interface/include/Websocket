@@ -43,12 +43,15 @@ struct data
 class Websocket : public Interface
 {
   protected:
+  bool m_bWritable;
   list<data *> m_conns;
   mutex m_mutex;
   lws_context *m_ptContext;
   struct lws_protocols m_tProtocols[3];
+  thread *m_pThreadSchedule;
 
   void request(string strPrefix, data *ptConn, Json *ptJson);
+  void schedule(string strPrefix);
 
   public:
   Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len));
