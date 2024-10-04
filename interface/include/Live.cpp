@@ -369,7 +369,9 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
     Json *ptSubJson = new Json(ptMessage);
     bFound = true;
     ptSubJson->i("wsRequestID", strWsRequestID);
+timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
     hub("websocket", ptSubJson, bWait);
+clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(localhost,link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
     delete ptSubJson;
   }
   m_mutex.unlock();
@@ -399,7 +401,9 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
         ptDeepJson->i("Interface", "websocket");
         ptDeepJson->i("Node", req.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
+timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
         hub("link", ptDeepJson, bWait);
+clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(" + req.first + (string)",link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
         delete ptDeepJson;
       }
       delete req.second;
