@@ -313,9 +313,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
     {
       Json *ptSubJson = new Json(ptMessage);
       ptSubJson->i("wsRequestID", conn.first);
-timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
       hub("websocket", ptSubJson, bWait);
-clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(app,localhost,link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
       delete ptSubJson;
     }
   }
@@ -346,9 +344,7 @@ clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::li
           ptDeepJson->i("Interface", "websocket");
           ptDeepJson->i("Node", req.first);
           ptDeepJson->i("wsRequestID", conn.first);
-timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
           hub("link", ptDeepJson, bWait);
-clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(app," + req.first + (string)",link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
           delete ptDeepJson;
         }
       }
@@ -373,9 +369,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
     Json *ptSubJson = new Json(ptMessage);
     bFound = true;
     ptSubJson->i("wsRequestID", strWsRequestID);
-timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
     hub("websocket", ptSubJson, bWait);
-clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(ws,localhost,link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
     delete ptSubJson;
   }
   m_mutex.unlock();
@@ -405,9 +399,7 @@ clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::li
         ptDeepJson->i("Interface", "websocket");
         ptDeepJson->i("Node", req.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
-timespec start, stop; clock_gettime(CLOCK_REALTIME, &start);
         hub("link", ptDeepJson, bWait);
-clock_gettime(CLOCK_REALTIME, &stop); chat("BenKietzman", (string)"Interface::live()->Interface::hub(ws," + req.first + (string)",link) " + to_string(((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)));
         delete ptDeepJson;
       }
       delete req.second;
