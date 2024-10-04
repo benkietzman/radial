@@ -309,6 +309,7 @@ void Live::message(const string strApplication, const string strUser, map<string
 }
 void Live::message(const string strApplication, const string strUser, Json *ptMessage, const bool bWait)
 {
+  bool bList = false;
   map<string, Json *> lists;
   time_t CLists;
 
@@ -326,12 +327,16 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
   time(&CLists);
   if ((CLists - m_CLists) > 5 || m_lists.empty())
   {
+    bList = true;
     m_CLists = CLists;
-    for (auto &list : m_lists)
-    {
-      delete list.second;
-    }
-    m_lists.clear();
+  }
+  else
+  {
+    lists = m_lists;
+  }
+  m_mutex.unlock();
+  if (bList)
+  {
     m_mutexShare.lock();
     for (auto &link : m_l)
     {
@@ -341,29 +346,35 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
         ptSubJson->i("Interface", "live");
         ptSubJson->i("Node", link->strNode);
         ptSubJson->i("Function", "list");
-        m_lists[link->strNode] = ptSubJson;
+        lists[link->strNode] = ptSubJson;
       }
     }
     m_mutexShare.unlock();
-    for (auto &req : m_lists)
+    for (auto &list : lists)
     {
-      hub("link", req.second, true);
+      hub("link", list.second, true);
     }
+    m_mutex.lock();
+    for (auto &list : m_lists)
+    {
+      delete list.second;
+    }
+    m_lists.clear();
+    m_lists = lists;
+    m_mutex.unlock();
   }
-  lists = m_lists;
-  m_mutex.unlock();
-  for (auto &req : lists)
+  for (auto &list : lists)
   {
     string strSubError;
-    if (exist(req.second, "Response"))
+    if (exist(list.second, "Response"))
     {
-      for (auto &conn : req.second->m["Response"]->m)
+      for (auto &conn : list.second->m["Response"]->m)
       {
         if ((strApplication.empty() || (exist(conn.second, "Application") && conn.second->m["Application"]->v == strApplication)) && (strUser.empty() || (exist(conn.second, "User") && conn.second->m["User"]->v == strUser)))
         {
           Json *ptDeepJson = new Json(ptMessage);
           ptDeepJson->i("Interface", "websocket");
-          ptDeepJson->i("Node", req.first);
+          ptDeepJson->i("Node", list.first);
           ptDeepJson->i("wsRequestID", conn.first);
           hub("link", ptDeepJson, bWait);
           delete ptDeepJson;
@@ -395,18 +406,23 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
   m_mutex.unlock();
   if (!bFound)
   {
+    bool bList = false;
     map<string, Json *> lists;
     time_t CLists;
-    m_mutex.lock();
     time(&CLists);
+    m_mutex.lock();
     if ((CLists - m_CLists) > 5 || m_lists.empty())
     {
+      bList = true;
       m_CLists = CLists;
-      for (auto &list : m_lists)
-      {
-        delete list.second;
-      }
-      m_lists.clear();
+    }
+    else
+    {
+      lists = m_lists;
+    }
+    m_mutex.unlock();
+    if (bList)
+    {
       m_mutexShare.lock();
       for (auto &link : m_l)
       {
@@ -416,25 +432,31 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
           ptSubJson->i("Interface", "live");
           ptSubJson->i("Node", link->strNode);
           ptSubJson->i("Function", "list");
-          m_lists[link->strNode] = ptSubJson;
+          lists[link->strNode] = ptSubJson;
         }
       }
       m_mutexShare.unlock();
-      for (auto &req : m_lists)
+      for (auto &list : lists)
       {
-        hub("link", req.second, true);
+        hub("link", list.second, true);
       }
+      m_mutex.lock();
+      for (auto &list : m_lists)
+      {
+        delete list.second;
+      }
+      m_lists.clear();
+      m_lists = lists;
+      m_mutex.unlock();
     }
-    lists = m_lists;
-    m_mutex.unlock();
-    for (auto &req : lists)
+    for (auto &list : lists)
     {
-      if (!bFound && exist(req.second, "Response") && req.second->m["Response"]->m.find(strWsRequestID) != req.second->m["Response"]->m.end())
+      if (!bFound && exist(list.second, "Response") && list.second->m["Response"]->m.find(strWsRequestID) != list.second->m["Response"]->m.end())
       {
         Json *ptDeepJson = new Json(ptMessage);
         bFound = true;
         ptDeepJson->i("Interface", "websocket");
-        ptDeepJson->i("Node", req.first);
+        ptDeepJson->i("Node", list.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
         hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
