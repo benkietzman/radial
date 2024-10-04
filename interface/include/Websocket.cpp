@@ -22,19 +22,14 @@ namespace radial
 // {{{ Websocket()
 Websocket::Websocket(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pWebsocket)(lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)) : Interface(strPrefix, "websocket", argc, argv, pCallback)
 {
-  m_bWritable = false;
   m_tProtocols[0] = {"http-only", lws_callback_http_dummy, 0, 0};
   m_tProtocols[1] = {"radial", pWebsocket, 0, 0};
   m_tProtocols[2] = {NULL, NULL, 0, 0};
-  m_pThreadSchedule = new thread(&Websocket::schedule, this, strPrefix);
-  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Websocket()
 Websocket::~Websocket()
 {
-  m_pThreadSchedule->join();
-  delete m_pThreadSchedule;
 }
 // }}}
 // {{{ callback()
@@ -82,9 +77,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
           }
           (*connIter)->buffers.push_back(ptSubJson->j(strJson));
           lws_callback_on_writable((*connIter)->wsi);
-          m_mutex.lock();
-          m_bWritable = true;
-          m_mutex.unlock();
+          lws_cancel_service(m_ptContext);
           delete ptSubJson;
         }
         else
@@ -417,9 +410,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   if (ptConn->wsi != NULL)
   {
     lws_callback_on_writable(ptConn->wsi);
-    m_mutex.lock();
-    m_bWritable = true;
-    m_mutex.unlock();
+    lws_cancel_service(m_ptContext);
   }
   if (ptConn->unThreads > 0)
   {
@@ -428,36 +419,6 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   ptConn->mutexShare.unlock();
   delete ptJson;
   threadDecrement();
-}
-// }}}
-// {{{ schedule()
-void Websocket::schedule(string strPrefix)
-{
-  // {{{ prep work
-  bool bWritable;
-  string strError;
-
-  threadIncrement();
-  strPrefix += "->WebSocket::schedule()";
-  // }}}
-  while (!shutdown())
-  {
-    m_mutex.lock();
-    bWritable = m_bWritable;
-    m_mutex.unlock();
-    if (bWritable)
-    {
-      m_mutex.lock();
-      m_bWritable = false;
-      m_mutex.unlock();
-      lws_cancel_service(m_ptContext);
-    }
-    msleep(200);
-  }
-  // {{{ post work
-  setShutdown();
-  threadDecrement();
-  // }}}
 }
 // }}}
 // {{{ socket()
