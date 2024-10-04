@@ -397,6 +397,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
   {
     map<string, Json *> lists;
     time_t CLists;
+    m_mutex.lock();
     time(&CLists);
     if ((CLists - m_CLists) > 5 || m_lists.empty())
     {
