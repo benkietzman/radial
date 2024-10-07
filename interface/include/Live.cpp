@@ -256,7 +256,9 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           else if (!strWsRequestID.empty())
           {
+chat("BenKietzman", "Live::callback() 0");
             message(strWsRequestID, ptJson->m["Request"]->m["Message"], bWait);
+chat("BenKietzman", "Live::callback() 1");
           }
           else
           {
@@ -400,7 +402,9 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
     Json *ptSubJson = new Json(ptMessage);
     bFound = true;
     ptSubJson->i("wsRequestID", strWsRequestID);
+chat("BenKietzman", "Live::message(local) 0");
     hub("websocket", ptSubJson, bWait);
+chat("BenKietzman", "Live::message(local) 1");
     delete ptSubJson;
   }
   m_mutex.unlock();
@@ -458,7 +462,9 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
         ptDeepJson->i("Interface", "websocket");
         ptDeepJson->i("Node", list.first);
         ptDeepJson->i("wsRequestID", strWsRequestID);
+chat("BenKietzman", (string)"Live::message(" + list.first + (string)") 0");
         hub("link", ptDeepJson, bWait);
+chat("BenKietzman", (string)"Live::message(" + list.first + (string)") 1");
         delete ptDeepJson;
       }
     }
