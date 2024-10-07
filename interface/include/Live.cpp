@@ -332,7 +332,10 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
   }
   else
   {
-    lists = m_lists;
+    for (auto &list: m_lists)
+    {
+      lists[list.first] = new Json(list.second);
+    }
   }
   m_mutex.unlock();
   if (bList)
@@ -360,12 +363,14 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
       delete list.second;
     }
     m_lists.clear();
-    m_lists = lists;
+    for (auto &list : lists)
+    {
+      m_lists[list.first] = new Json(list.second);
+    }
     m_mutex.unlock();
   }
   for (auto &list : lists)
   {
-    string strSubError;
     if (exist(list.second, "Response"))
     {
       for (auto &conn : list.second->m["Response"]->m)
@@ -418,7 +423,10 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
     }
     else
     {
-      lists = m_lists;
+      for (auto &list: m_lists)
+      {
+        lists[list.first] = new Json(list.second);
+      }
     }
     m_mutex.unlock();
     if (bList)
@@ -446,7 +454,10 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
         delete list.second;
       }
       m_lists.clear();
-      m_lists = lists;
+      for (auto &list : lists)
+      {
+        m_lists[list.first] = new Json(list.second);
+      }
       m_mutex.unlock();
     }
     for (auto &list : lists)
