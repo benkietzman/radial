@@ -2473,9 +2473,7 @@ void Interface::live(const string strWsRequestID, Json *ptMessage, const bool bW
   ptJson->m["Request"]->i("Wait", ((bWait)?"1":"0"), ((bWait)?'1':'0'));
   ptJson->m["Request"]->i("wsRequestID", strWsRequestID);
   ptJson->m["Request"]->m["Message"] = new Json(ptMessage);
-chat("BenKietzman", "Interface::live() 0");
   hub("live", ptJson, bWait);
-chat("BenKietzman", "Interface::live() 1");
   delete ptJson;
 }
 // }}}
