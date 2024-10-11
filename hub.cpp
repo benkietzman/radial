@@ -20,7 +20,7 @@ void sighandle(const int nSignal);
 int main(int argc, char **argv)
 {
   string strPrefix = "hub->main()";
-  gpHub = new Hub(strPrefix, argc, argv, environ, sighandle);
+  gpHub = new Hub(argc, argv, environ, sighandle);
   gpHub->process(strPrefix);
   delete gpHub;
   return 0;

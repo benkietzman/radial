@@ -20,9 +20,8 @@ extern "C++"
 namespace radial
 {
 // {{{ Hub()
-Hub::Hub(string strPrefix, int argc, char **argv, char **env, void (*function)(const int)) : Base(argc, argv)
+Hub::Hub(int argc, char **argv, char **env, void (*function)(const int)) : Base(argc, argv)
 {
-  strPrefix += "->Hub::Hub()";
   sethandles(function);
   signal(SIGBUS, SIG_IGN);
   signal(SIGCHLD, SIG_IGN);
