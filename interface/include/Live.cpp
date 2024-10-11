@@ -386,6 +386,7 @@ void Live::message(const string strApplication, const string strUser, Json *ptMe
         }
       }
     }
+    delete list.second;
   }
 }
 void Live::message(const string strWsRequestID, map<string, string> message, const bool bWait)
@@ -472,6 +473,7 @@ void Live::message(const string strWsRequestID, Json *ptMessage, const bool bWai
         hub("link", ptDeepJson, bWait);
         delete ptDeepJson;
       }
+      delete list.second;
     }
   }
 }
