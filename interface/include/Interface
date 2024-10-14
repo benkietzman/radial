@@ -138,6 +138,7 @@ class Interface : public Base
   string getUserFirstName(radialUser &d);
   string getUserLastName(radialUser &d);
   string getUserName(radialUser &d);
+  void inotify(string strPrefix, map<string, list<string> > watches, void (*pCallback)(string, const string, const string));
   bool interfaceAdd(const string strInterface, string &strError);
   bool interfaceAdd(const string strNode, const string strInterface, string &strError);
   bool interfaceRemove(const string strInterface, string &strError);

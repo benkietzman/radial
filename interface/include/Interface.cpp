@@ -1930,6 +1930,103 @@ bool Interface::hub(Json *ptJson, string &strError)
   return hub("", ptJson, strError);
 }
 // }}}
+// {{{ inotify()
+void Interface::inotify(string strPrefix, map<string, list<string> > watches, void (*pCallback)(string, const string, const string))
+{
+  int fdNotify;
+  string strError;
+  stringstream ssMessage;
+
+  threadIncrement();
+  strPrefix += "->Interface::notify()";
+  if ((fdNotify = inotify_init1(IN_NONBLOCK)) != -1)
+  {
+    bool bGood = true;
+    int wdNotify;
+    map<int, string> subWatches;
+    for (auto i = watches.begin(); bGood && i != watches.end(); i++)
+    {
+      if ((wdNotify = inotify_add_watch(fdNotify, i->first.c_str(), (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO))) != -1)
+      {
+        subWatches[wdNotify] = i->first;
+      }
+      else
+      {
+        bGood = false;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->inotify_add_watch(" << errno << ") error [" << i->first << "]:  " << strerror(errno);
+        log(ssMessage.str());
+      }
+    }
+    if (bGood)
+    {
+      bool bExit = false;
+      inotify_event *pEvent;
+      int nReturn;
+      string strNotify;
+      while (!bExit)
+      {
+        pollfd fds[1];
+        fds[0].fd = fdNotify;
+        fds[0].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
+        {
+          if (fds[0].revents & POLLIN)
+          {
+            if (m_pUtility->fdRead(fds[0].fd, strNotify, nReturn))
+            {
+              while (strNotify.size() >= sizeof(inotify_event))
+              {
+                pEvent = (inotify_event *)strNotify.c_str();
+                if (subWatches.find(pEvent->wd) != subWatches.end() && pEvent->len > 0 && (pEvent->mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)))
+                {
+                  auto watchIter = watches[subWatches[pEvent->wd]].end();
+                  for (auto i = watches[subWatches[pEvent->wd]].begin(); watchIter == watches[subWatches[pEvent->wd]].end() && i != watches[subWatches[pEvent->wd]].end(); i++)
+                  {
+                    if ((string)pEvent->name == (*i))
+                    {
+                      watchIter = i;
+                    }
+                  }
+                  if (watchIter != watches[subWatches[pEvent->wd]].end())
+                  {
+                    (*pCallback)(strPrefix, subWatches[pEvent->wd], (*watchIter));
+                  }
+                }
+                strNotify.erase(0, sizeof(inotify_event));
+              }
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                cerr << strPrefix << "->Utility::fdRead(" << errno << ") error [" << m_strData << "]:  " << strerror(errno) << endl;
+              }
+            }
+          }
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+          log(ssMessage.str());
+        }
+      }
+      inotify_rm_watch(fdNotify, wdNotify);
+    }
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->inotify_init1(" << errno << ") error:  " << strerror(errno);
+    log(ssMessage.str());
+  }
+  setShutdown();
+  threadDecrement();
+}
+// }}}
 // {{{ interfaceAdd()
 bool Interface::interfaceAdd(const string strInterface, string &strError)
 {
