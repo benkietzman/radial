@@ -37,7 +37,7 @@ class Irc : public Interface
   string m_strNick;
   string m_strPort;
   string m_strServer;
-  time_t m_CMonitorChannelsModify;
+  thread *m_pThreadInotify;
   Json *m_ptMonitor;
 
   void analyze(const string strNick, const string strTarget, const string strMessage);
@@ -68,11 +68,12 @@ class Irc : public Interface
   string var(const string strName, Json *ptData);
 
   public:
-  Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
+  Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pInotifyCallback)(string, const string, const string));
   ~Irc();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void bot(string strPrefix);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void inotifyCallback(string strPrefix, const string strPath, const string strFile);
   void setAnalyze(bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string));
 };
 // }}}

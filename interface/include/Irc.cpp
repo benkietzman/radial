@@ -20,8 +20,9 @@ extern "C++"
 namespace radial
 {
 // {{{ Irc()
-Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "irc", argc, argv, pCallback)
+Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pInotifyCallback)(string, const string, const string)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
+  map<string, list<string> > watches;
   string strError;
   Json *ptAes = new Json, *ptJwt = new Json;
 
@@ -60,7 +61,6 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   }
   // }}}
   m_bEnabled = false;
-  m_CMonitorChannelsModify = 0;
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
   { 
     if (!empty(ptAes, "Secret"))
@@ -81,11 +81,16 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     }
   }
   delete ptJwt;
+  watches[m_strData + "/irc"] = {"monitor.channels"};
+  m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pInotifyCallback);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
 // {{{ ~Irc()
 Irc::~Irc()
 {
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
 }
 // }}}
 // {{{ analyze()
@@ -2371,21 +2376,10 @@ void Irc::bot(string strPrefix)
         size_t unIndex = 0, unPosition;
         string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = "radial_bot", strUser = "radial_bot";
         SSL *ssl = NULL;
-        time_t CTime[2] = {0, 0};
         // }}}
         while (!bExit)
         {
           // {{{ prep work
-          if (enabled())
-          {
-            time(&(CTime[1]));
-            if ((CTime[1] - CTime[0]) > 120)
-            {
-              listChannels();
-              monitorChannels(strPrefix);
-              CTime[0] = CTime[1];
-            }
-          }
           // {{{ connect
           if (fdSocket == -1)
           {
@@ -3326,6 +3320,79 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
   unlock();
 }
 // }}}
+// {{{ inotifyCallback()
+void Irc::inotifyCallback(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Irc::inotifyCallback()";
+  if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
+  {
+    ifstream inMonitor;
+    stringstream ssFile, ssMessage;
+    ssFile << m_strData << "/irc/monitor.channels";
+    inMonitor.open(ssFile.str());
+    if (inMonitor)
+    {
+      string strLine;
+      stringstream ssJson;
+      while (getline(inMonitor, strLine))
+      {
+        ssJson << strLine;
+      }
+      if (!ssJson.str().empty())
+      {
+        if (m_ptMonitor != NULL)
+        {
+          if (enabled())
+          {
+            auto subChannels = m_channels;
+            for (auto &channel : subChannels)
+            {
+              if (channel.second)
+              {
+                part(channel.first);
+              }
+            }
+          }
+          delete m_ptMonitor;
+        }
+        m_ptMonitor = new Json(ssJson.str());
+        if (!m_ptMonitor->m.empty())
+        {
+          if (enabled())
+          {
+            for (auto &i : m_ptMonitor->m)
+            {
+              join(i.first);
+            }
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
+          log(ssMessage.str());
+        }
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
+        log(ssMessage.str());
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
+      log(ssMessage.str());
+    }
+    inMonitor.close();
+  }
+}
+// }}}
 // {{{ isLocalAdmin()
 bool Irc::isLocalAdmin(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth)
 {
@@ -3580,88 +3647,6 @@ Json *Irc::monitor()
   }
 
   return ptMonitor;
-}
-// }}}
-// {{{ monitorChannels()
-void Irc::monitorChannels(string strPrefix)
-{
-  struct stat tStat;
-  stringstream ssFile, ssMessage;
-
-  strPrefix += "->Irc::monitorChannels()";
-  ssFile << m_strData << "/irc/monitor.channels";
-  if (stat(ssFile.str().c_str(), &tStat) == 0)
-  {
-    if (tStat.st_mtime > m_CMonitorChannelsModify)
-    {
-      ifstream inMonitor;
-      inMonitor.open(ssFile.str());
-      if (inMonitor)
-      {
-        string strLine;
-        stringstream ssJson;
-        m_CMonitorChannelsModify = tStat.st_mtime;
-        while (getline(inMonitor, strLine))
-        {
-          ssJson << strLine;
-        }
-        if (!ssJson.str().empty())
-        {
-          if (m_ptMonitor != NULL)
-          {
-            if (enabled())
-            {
-              auto subChannels = m_channels;
-              for (auto &channel : subChannels)
-              {
-                if (channel.second)
-                {
-                  part(channel.first);
-                }
-              }
-            }
-            delete m_ptMonitor;
-          }
-          m_ptMonitor = new Json(ssJson.str());
-          if (!m_ptMonitor->m.empty())
-          {
-            if (enabled())
-            {
-              for (auto &i : m_ptMonitor->m)
-              {
-                join(i.first);
-              }
-            }
-          }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
-            log(ssMessage.str());
-          }
-        }
-        else
-        {
-          ssMessage.str("");
-          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
-          log(ssMessage.str());
-        }
-      }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
-        log(ssMessage.str());
-      }
-      inMonitor.close();
-    }
-  }
-  else
-  {
-    ssMessage.str("");
-    ssMessage << strPrefix << "->stat(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
-    log(ssMessage.str());
-  }
 }
 // }}}
 // {{{ part()
