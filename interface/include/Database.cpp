@@ -20,9 +20,9 @@ extern "C++"
 namespace radial
 {
 // {{{ Database()
-Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
+Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
 {
-  string strError;
+  map<string, list<string> > watches;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -33,22 +33,21 @@ Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(st
     }
   }
   // }}}
-  m_ptDatabases = new Json;
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"database"}, m_ptDatabases, strError))
-  {
-    for (auto &database : m_ptDatabases->m)
-    {
-      map<string, string> cred;
-      database.second->flatten(cred, true, false);
-      m_pCentral->addDatabase(database.first, cred, strError);
-    }
-  }
+  load(strPrefix);
+  watches[m_strData] = {".cred"};
+  m_pThreadInotify = new thread(&Database::inotify, this, strPrefix, watches, pCallbackInotify);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
 // {{{ ~Database()
 Database::~Database()
 {
-  delete m_ptDatabases;
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
+  if (m_ptDatabases != NULL)
+  {
+    delete m_ptDatabases;
+  }
 }
 // }}}
 // {{{ callback()
@@ -124,16 +123,69 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
   threadDecrement();
 }
 // }}}
+// {{{ callbackInotify()
+void Database::callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Database::callbackInotify()";
+  if (strPath == m_strData && strFile == ".cred")
+  {
+    load(strPrefix);
+  }
+}
+// }}}
+// {{{ Database()
+void Database::load(string strPrefix)
+{
+  string strError;
+  stringstream ssMessage;
+  Json *ptDatabases = new Json;
+
+  strPrefix += "->Database::load()";
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"database"}, ptDatabases, strError))
+  {
+    m_mutex.lock();
+    if (m_ptDatabases != NULL)
+    {
+      delete m_ptDatabases;
+    }
+    m_ptDatabases = new Json(ptDatabases);
+    m_mutex.unlock();
+    for (auto &database : ptDatabases->m)
+    {
+      map<string, string> cred;
+      database.second->flatten(cred, true, false);
+      m_pCentral->addDatabase(database.first, cred, strError);
+    }
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->Warden::vaultRetrieve() error [database]:  " << strError;
+    log(ssMessage.str());
+  }
+  delete ptDatabases;
+}
+// }}}
 // {{{ mysql()
 bool Database::mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false;
+  Json *ptJson = NULL;
 
   if (rows != NULL)
   {
     rows->clear();
   }
+  m_mutex.lock();
   if (m_ptDatabases != NULL && exist(m_ptDatabases, strName))
+  {
+    ptJson = new Json(m_ptDatabases->m[strName]);
+  }
+  m_mutex.unlock();
+  if (ptJson != NULL)
   {
     if (!strType.empty())
     {
@@ -141,7 +193,6 @@ bool Database::mysql(const string strType, const string strName, const string st
       {
         if (strType == "update" || rows != NULL)
         {
-          Json *ptJson = new Json(m_ptDatabases->m[strName]);
           ptJson->i("Type", strType);
           ptJson->i(((strType == "query")?"Query":"Update"), strQuery);
           if (hub("mysql", ptJson, strError))
@@ -167,7 +218,6 @@ bool Database::mysql(const string strType, const string strName, const string st
               ssRows >> ullRows;
             }
           }
-          delete ptJson;
         }
         else
         {
@@ -183,6 +233,7 @@ bool Database::mysql(const string strType, const string strName, const string st
     {
       strError = "Please provide the Type.";
     }
+    delete ptJson;
   }
   else
   {
