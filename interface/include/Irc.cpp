@@ -2512,10 +2512,6 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
-                            for (auto &i : m_ptMonitor->m)
-                            {
-                              join(i.first);
-                            }
                             break;
                           }
                           case 322:
@@ -2982,67 +2978,7 @@ void Irc::callbackInotify(string strPrefix, const string strPath, const string s
   strPrefix += "->Irc::callbackInotify()";
   if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
   {
-    ifstream inMonitor;
-    stringstream ssFile, ssMessage;
-    ssFile << m_strData << "/irc/monitor.channels";
-    inMonitor.open(ssFile.str());
-    if (inMonitor)
-    {
-      string strLine;
-      stringstream ssJson;
-      while (getline(inMonitor, strLine))
-      {
-        ssJson << strLine;
-      }
-      if (!ssJson.str().empty())
-      {
-        if (m_ptMonitor != NULL)
-        {
-          if (enabled())
-          {
-            auto subChannels = m_channels;
-            for (auto &channel : subChannels)
-            {
-              if (channel.second)
-              {
-                part(channel.first);
-              }
-            }
-          }
-          delete m_ptMonitor;
-        }
-        m_ptMonitor = new Json(ssJson.str());
-        if (!m_ptMonitor->m.empty())
-        {
-          if (enabled())
-          {
-            for (auto &i : m_ptMonitor->m)
-            {
-              join(i.first);
-            }
-          }
-        }
-        else
-        {
-          ssMessage.str("");
-          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
-          log(ssMessage.str());
-        }
-      }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
-        log(ssMessage.str());
-      }
-    }
-    else
-    {
-      ssMessage.str("");
-      ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
-      log(ssMessage.str());
-    }
-    inMonitor.close();
+    monitorChannels(strPrefix);
   }
 }
 // }}}
@@ -3651,6 +3587,74 @@ Json *Irc::monitor()
   }
 
   return ptMonitor;
+}
+// }}}
+// {{{ monitorChannels()
+void Irc::monitorChannels(string strPrefix)
+{
+  stringstream ssFile, ssMessage;
+
+  strPrefix += "->Irc::monitorChannels()";
+  ssFile << m_strData << "/irc/monitor.channels";
+  ifstream inMonitor;
+  inMonitor.open(ssFile.str());
+  if (inMonitor)
+  {
+    string strLine;
+    stringstream ssJson;
+    while (getline(inMonitor, strLine))
+    {
+      ssJson << strLine;
+    }
+    if (!ssJson.str().empty())
+    {
+      if (m_ptMonitor != NULL)
+      {
+        if (enabled())
+        {
+          auto subChannels = m_channels;
+          for (auto &channel : subChannels)
+          {
+            if (channel.second)
+            {
+              part(channel.first);
+            }
+          }
+        }
+        delete m_ptMonitor;
+      }
+      m_ptMonitor = new Json(ssJson.str());
+      if (!m_ptMonitor->m.empty())
+      {
+        if (enabled())
+        {
+          for (auto &i : m_ptMonitor->m)
+          {
+            join(i.first);
+          }
+        }
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
+        log(ssMessage.str());
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
+      log(ssMessage.str());
+    }
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
+    log(ssMessage.str());
+  }
+  inMonitor.close();
 }
 // }}}
 // {{{ part()
