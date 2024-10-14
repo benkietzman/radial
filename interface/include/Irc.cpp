@@ -81,6 +81,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     }
   }
   delete ptJwt;
+  monitorChannels(strPrefix);
   watches[m_strData + "/irc"] = {"monitor.channels"};
   m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
