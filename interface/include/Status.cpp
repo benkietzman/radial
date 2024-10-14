@@ -23,16 +23,9 @@ namespace radial
 Status::Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "status", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
-  string strError;
-  Json *ptConfiguration = new Json;
 
   m_functions["action"] = &Status::action;
   m_functions["status"] = &Status::status;
-  if (!storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
-  {
-    store(strPrefix);
-  }
-  delete ptConfiguration;
   watches[m_strData] = {"interfaces.json"};
   m_pThreadInotify = new thread(&Status::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
