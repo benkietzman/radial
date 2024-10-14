@@ -38,6 +38,8 @@ Status::~Status()
 {
   m_pThreadSchedule->join();
   delete m_pThreadSchedule;
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
 }
 // }}}
 // {{{ autoMode()
