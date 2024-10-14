@@ -17,11 +17,11 @@ using namespace radial;
 Irc *gpIrc;
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
-void inotifyCallback(string strPrefix, const string strPath, const string strFile);
+void callbackInotify(string strPrefix, const string strPath, const string strFile);
 int main(int argc, char *argv[])
 {
   string strError, strPrefix = "irc->main()";
-  gpIrc = new Irc(strPrefix, argc, argv, &callback, &inotifyCallback);
+  gpIrc = new Irc(strPrefix, argc, argv, &callback, &callbackInotify);
   gpIrc->enableWorkers();
   gpIrc->setAutoMode(&autoMode);
   thread threadBot(&Irc::bot, gpIrc, strPrefix);
@@ -41,7 +41,7 @@ void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   gpIrc->callback(strPrefix, strPacket, bResponse);
 }
-void inotifyCallback(string strPrefix, const string strPath, const string strFile)
+void callbackInotify(string strPrefix, const string strPath, const string strFile)
 {
-  gpIrc->inotifyCallback(strPrefix, strPath, strFile);
+  gpIrc->callbackInotify(strPrefix, strPath, strFile);
 }

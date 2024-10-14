@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Irc()
-Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pInotifyCallback)(string, const string, const string)) : Interface(strPrefix, "irc", argc, argv, pCallback)
+Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
   string strError;
@@ -82,7 +82,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   }
   delete ptJwt;
   watches[m_strData + "/irc"] = {"monitor.channels"};
-  m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pInotifyCallback);
+  m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
@@ -2969,6 +2969,79 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   threadDecrement();
 }
 // }}}
+// {{{ callbackInotify()
+void Irc::callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Irc::callbackInotify()";
+  if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
+  {
+    ifstream inMonitor;
+    stringstream ssFile, ssMessage;
+    ssFile << m_strData << "/irc/monitor.channels";
+    inMonitor.open(ssFile.str());
+    if (inMonitor)
+    {
+      string strLine;
+      stringstream ssJson;
+      while (getline(inMonitor, strLine))
+      {
+        ssJson << strLine;
+      }
+      if (!ssJson.str().empty())
+      {
+        if (m_ptMonitor != NULL)
+        {
+          if (enabled())
+          {
+            auto subChannels = m_channels;
+            for (auto &channel : subChannels)
+            {
+              if (channel.second)
+              {
+                part(channel.first);
+              }
+            }
+          }
+          delete m_ptMonitor;
+        }
+        m_ptMonitor = new Json(ssJson.str());
+        if (!m_ptMonitor->m.empty())
+        {
+          if (enabled())
+          {
+            for (auto &i : m_ptMonitor->m)
+            {
+              join(i.first);
+            }
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
+          log(ssMessage.str());
+        }
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
+        log(ssMessage.str());
+      }
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
+      log(ssMessage.str());
+    }
+    inMonitor.close();
+  }
+}
+// }}}
 // {{{ chat()
 void Irc::chat(const string strTarget, const string strMessage, const string strSource)
 {
@@ -3318,79 +3391,6 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
     m_feedbackClients.erase(strIdent);
   }
   unlock();
-}
-// }}}
-// {{{ inotifyCallback()
-void Irc::inotifyCallback(string strPrefix, const string strPath, const string strFile)
-{
-  string strError;
-  stringstream ssMessage;
-
-  strPrefix += "->Irc::inotifyCallback()";
-  if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
-  {
-    ifstream inMonitor;
-    stringstream ssFile, ssMessage;
-    ssFile << m_strData << "/irc/monitor.channels";
-    inMonitor.open(ssFile.str());
-    if (inMonitor)
-    {
-      string strLine;
-      stringstream ssJson;
-      while (getline(inMonitor, strLine))
-      {
-        ssJson << strLine;
-      }
-      if (!ssJson.str().empty())
-      {
-        if (m_ptMonitor != NULL)
-        {
-          if (enabled())
-          {
-            auto subChannels = m_channels;
-            for (auto &channel : subChannels)
-            {
-              if (channel.second)
-              {
-                part(channel.first);
-              }
-            }
-          }
-          delete m_ptMonitor;
-        }
-        m_ptMonitor = new Json(ssJson.str());
-        if (!m_ptMonitor->m.empty())
-        {
-          if (enabled())
-          {
-            for (auto &i : m_ptMonitor->m)
-            {
-              join(i.first);
-            }
-          }
-        }
-        else
-        {
-          ssMessage.str("");
-          ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
-          log(ssMessage.str());
-        }
-      }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
-        log(ssMessage.str());
-      }
-    }
-    else
-    {
-      ssMessage.str("");
-      ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);
-      log(ssMessage.str());
-    }
-    inMonitor.close();
-  }
 }
 // }}}
 // {{{ isLocalAdmin()
