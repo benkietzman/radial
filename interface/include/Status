@@ -26,17 +26,20 @@ class Status : public Interface
 {
   protected:
   map<string, bool (Status::*)(radialUser &, string &)> m_functions;
+  thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
 
   void schedule(string strPrefix);
   bool status(Json *o, string &e);
   bool status(radialUser &d, string &e);
+  void store(string strPrefix);
 
   public:
-  Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
+  Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Status();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
 };
 // }}}
 }

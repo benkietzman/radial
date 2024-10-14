@@ -20,10 +20,22 @@ extern "C++"
 namespace radial
 {
 // {{{ Status()
-Status::Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "status", argc, argv, pCallback)
+Status::Status(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "status", argc, argv, pCallback)
 {
+  map<string, list<string> > watches;
+  string strError;
+  Json *ptConfiguration = new Json;
+
   m_functions["action"] = &Status::action;
   m_functions["status"] = &Status::status;
+  if (!storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
+  {
+    store(strPrefix);
+  }
+  delete ptConfiguration;
+  watches[m_strData] = {"interfaces.json"};
+  m_pThreadInotify = new thread(&Status::inotify, this, strPrefix, watches, pCallbackInotify);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
   m_pThreadSchedule = new thread(&Status::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
@@ -106,6 +118,19 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
   }
   delete ptJson;
   threadDecrement();
+}
+// }}}
+// {{{ callbackInotify()
+void Status::callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Status::callbackInotify()";
+  if (strPath == m_strData && strFile == "interfaces.json")
+  {
+    store(strPrefix);
+  }
 }
 // }}}
 // {{{ status()
@@ -222,13 +247,56 @@ bool Status::status(radialUser &d, string &e)
   return status(d.p->m["o"], e);
 }
 // }}}
+// {{{ store()
+void Status::store(string strPrefix)
+{
+  ifstream inInterfaces;
+  string strError;
+  stringstream ssInterfaces, ssMessage;
+  Json *ptInterfaces = NULL;
+
+  strPrefix += "->Status::store()";
+  ssInterfaces << m_strData << "/interfaces.json";
+  inInterfaces.open(ssInterfaces.str());
+  if (inInterfaces)
+  {
+    string strLine;
+    stringstream ssJson;
+    while (getline(inInterfaces, strLine))
+    {
+      ssJson << strLine;
+    }
+    ptInterfaces = new Json(ssJson.str());
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssInterfaces.str() << "]:  " << strerror(errno);
+    log(ssMessage.str());
+  }
+  inInterfaces.close();
+  if (ptInterfaces != NULL)
+  {
+    for (auto &i : ptInterfaces->m)
+    {
+      if (!storageAdd({"radial", "nodes", m_strNode, "interfaces", i.first, "configuration"}, i.second, strError))
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->Interface::storageAdd() error [radial,nodes," << m_strNode << ",interfaces," << i.first << ",configuration]:  " << strError;
+        log(ssMessage.str());
+      }
+    }
+    delete ptInterfaces;
+  }
+}
+// }}}
 // {{{ schedule()
 void Status::schedule(string strPrefix)
 {
   size_t unCount = 0;
   string strError;
   stringstream ssInterfaces, ssMessage;
-  time_t CModify = 0, CTime[2];
+  time_t CTime[2];
 
   threadIncrement();
   strPrefix += "->Status::schedule()";
@@ -239,54 +307,11 @@ void Status::schedule(string strPrefix)
     time(&(CTime[1]));
     if ((CTime[1] - CTime[0]) >= 60)
     {
-      struct stat tStat;
       Json *ptConfiguration = new Json;
       CTime[0] = CTime[1];
-      if (stat(ssInterfaces.str().c_str(), &tStat) == 0)
+      if (!storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
       {
-        if (CModify != tStat.st_mtime || !storageRetrieve({"radial", "nodes", m_strNode, "interfaces", m_strName, "configuration"}, ptConfiguration, strError))
-        {
-          ifstream inInterfaces;
-          Json *ptInterfaces = NULL;
-          inInterfaces.open(ssInterfaces.str());
-          if (inInterfaces)
-          {
-            string strLine;
-            stringstream ssJson;
-            CModify = tStat.st_mtime;
-            while (getline(inInterfaces, strLine))
-            {
-              ssJson << strLine;
-            }
-            ptInterfaces = new Json(ssJson.str());
-          }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssInterfaces.str() << "]:  " << strerror(errno);
-            log(ssMessage.str());
-          }
-          inInterfaces.close();
-          if (ptInterfaces != NULL)
-          {
-            for (auto &i : ptInterfaces->m)
-            {
-              if (!storageAdd({"radial", "nodes", m_strNode, "interfaces", i.first, "configuration"}, i.second, strError))
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Interface::storageAdd() error [radial,nodes," << m_strNode << ",interfaces," << i.first << ",configuration]:  " << strError;
-                log(ssMessage.str());
-              }
-            }
-            delete ptInterfaces;
-          }
-        }
-      }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << strPrefix << "->stat(" << errno << ") error [" << ssInterfaces.str() << "]:  " << strerror(errno);
-        log(ssMessage.str());
+        store(strPrefix);
       }
       delete ptConfiguration;
       if (isMasterSettled() && isMaster())
