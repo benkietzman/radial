@@ -2013,8 +2013,15 @@ void Interface::inotify(string strPrefix, map<string, list<string> > watches, vo
           ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
           log(ssMessage.str());
         }
+        if (shutdown())
+        {
+          bExit = true;
+        }
       }
-      inotify_rm_watch(fdNotify, wdNotify);
+    }
+    for (auto &i : subWatches)
+    {
+      inotify_rm_watch(fdNotify, i.first);
     }
   }
   else
