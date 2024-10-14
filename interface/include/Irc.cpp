@@ -2512,6 +2512,10 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
+                            for (auto &i : m_ptMonitor->m)
+                            {
+                              join(i.first);
+                            }
                             break;
                           }
                           case 322:
