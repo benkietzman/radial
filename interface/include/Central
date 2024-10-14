@@ -31,7 +31,6 @@ class Central : public Interface
   string m_strEmail;
   string m_strServer;
   thread *m_pThreadSchedule;
-  Json *m_ptCred;
 
   bool accountType(radialUser &d, string &e);
   bool accountTypes(radialUser &d, string &e);

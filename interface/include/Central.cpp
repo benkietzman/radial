@@ -26,11 +26,6 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   m_bLoadReminders = false;
   m_pCallbackAddon = NULL;
-  m_ptCred = new Json;
-  if (m_pWarden != NULL)
-  {
-    m_pWarden->vaultRetrieve({"radial", "radial"}, m_ptCred, strError);
-  }
   m_functions["accountType"] = &Central::accountType;
   m_functions["accountTypes"] = &Central::accountTypes;
   m_functions["action"] = &Central::action;
@@ -152,7 +147,6 @@ Central::~Central()
 {
   m_pThreadSchedule->join();
   delete m_pThreadSchedule;
-  delete m_ptCred;
 }
 // }}}
 // {{{ accountType()
