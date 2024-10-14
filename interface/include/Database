@@ -25,17 +25,12 @@ namespace radial
 class Database : public Interface
 {
   protected:
-  mutex m_mutex;
-  thread *m_pThreadInotify;
   Json *m_ptDatabases;
 
-  void load(string strPrefix);
-
   public:
-  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
+  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
   ~Database();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void callbackInotify(string strPrefix, const string strPath, const string strFile);
   bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 };
 // }}}

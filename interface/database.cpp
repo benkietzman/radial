@@ -17,11 +17,10 @@ using namespace radial;
 Database *gpDatabase = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
-void callbackInotify(string strPrefix, const string strPath, const string strFile);
 int main(int argc, char *argv[])
 {
   string strPrefix = "database->main()";
-  gpDatabase = new Database(strPrefix, argc, argv, &callback, &callbackInotify, &mysql);
+  gpDatabase = new Database(strPrefix, argc, argv, &callback, &mysql);
   gpDatabase->enableWorkers();
   gpDatabase->process(strPrefix);
   delete gpDatabase;
@@ -30,10 +29,6 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   gpDatabase->callback(strPrefix, strPacket, bResponse);
-}
-void callbackInotify(string strPrefix, const string strPath, const string strFile)
-{
-  gpDatabase->callbackInotify(strPrefix, strPath, strFile);
 }
 bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
