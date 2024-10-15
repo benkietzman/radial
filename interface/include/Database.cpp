@@ -36,7 +36,8 @@ Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(st
   // }}}
   m_ptDatabases = NULL;
   load(strPrefix);
-  watches[m_strData] = {".cred"};
+  //watches[m_strData] = {".cred"};
+  watches[m_strData] = {"editCred.sh"};
   m_pThreadInotify = new thread(&Database::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
