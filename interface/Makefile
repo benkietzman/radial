@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
@@ -28,6 +28,7 @@ install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database 
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
 	install --mode=775 bin/session $(prefix)/radial/interface/
+	install --mode=775 bin/sqlite $(prefix)/radial/interface/
 	install --mode=775 bin/ssh $(prefix)/radial/interface/
 	install --mode=775 bin/status $(prefix)/radial/interface/
 	install --mode=775 bin/storage $(prefix)/radial/interface/
@@ -224,6 +225,16 @@ obj/session.o: session.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c session.cpp -o obj/session.o $(CPPFLAGS) -I../../common
 obj/Session.o: include/Session.cpp obj
 	g++ -ggdb -Wall -c include/Session.cpp -o obj/Session.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ sqlite
+sqlite: bin/sqlite $(prefix)/radial/interface
+	install --mode=775 bin/sqlite $(prefix)/radial/interface/
+bin/sqlite: ../../common/libcommon.a obj/sqlite.o obj/Base.o obj/Interface.o obj/Sqlite.o bin
+	g++ -o bin/sqlite obj/sqlite.o obj/Base.o obj/Interface.o obj/Sqlite.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lsqlite3 -lssl -ltar -lz
+obj/sqlite.o: sqlite.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c sqlite.cpp -o obj/sqlite.o $(CPPFLAGS) -I../../common
+obj/Sqlite.o: include/Sqlite.cpp obj
+	g++ -ggdb -Wall -c include/Sqlite.cpp -o obj/Sqlite.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ ssh
 ssh: bin/ssh $(prefix)/radial/interface

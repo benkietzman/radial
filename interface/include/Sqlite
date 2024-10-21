@@ -1,0 +1,39 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Sqlite
+// author     : Ben Kietzman
+// begin      : 2024-10-21
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_SQLITE_
+#define _RADIAL_SQLITE_
+// {{{ includes
+#include <sqlite3.h>
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Sqlite
+class Sqlite : public Interface
+{
+  int (*m_pCallbackFetch)(void *, int, char **, char **);
+
+  public:
+  Sqlite(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pCallbackFetch)(void *, int, char **, char **));
+  ~Sqlite();
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+  int callbackFetch(void *vptRows, int nCols, char *szCols[], char *szNames[]);
+};
+// }}}
+}
+}
+#endif
