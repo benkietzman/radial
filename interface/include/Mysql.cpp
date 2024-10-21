@@ -70,7 +70,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
               bRetry = false;
               list<radial_mysql *>::iterator mysqlIter;
               string strPort, strServer;
-              stringstream ssError, ssServer(ptJson->m["Server"]->v);;
+              stringstream ssError, ssServer(ptJson->m["Server"]->v);
               unsigned int unPort = 0;
               unsigned long long ullRows = 0;
               getline(ssServer, strServer, ':');
