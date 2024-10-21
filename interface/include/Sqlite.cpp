@@ -105,7 +105,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           char *pszError = NULL;
           if ((nReturn = sqlite3_exec(db, ptJson->m["Update"]->v.c_str(), NULL, NULL, &pszError)) == SQLITE_OK)
           {
+            stringstream ssRows;
             bResult = true;
+            ssRows << sqlite3_changes(db);
+            ptJson->i("Rows", ssRows.str(), 'n');
           }
           else
           {
