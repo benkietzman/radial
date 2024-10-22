@@ -367,15 +367,21 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             }
             delete ptLink;
           }
+          else
+          {
+            strError = "Please provide a valid Database.";
+          }
         }
         else
         {
+          bool bExists = false;
           string strNode;
           m_mutex.lock();
           if (m_databases.find(ptJson->m["Database"]->v) != m_databases.end())
           {
             for (auto i = m_databases[ptJson->m["Database"]->v].begin(); strNode.empty() && i != m_databases[ptJson->m["Database"]->v].end(); i++)
             {
+              bExists = true;
               if (i->second)
               {
                 strNode = i->first;
@@ -405,6 +411,14 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               }
             }
             delete ptLink;
+          }
+          else if (bExists)
+          {
+            strError = "Missing master for this Database.  Try again later.";
+          }
+          else
+          {
+            strError = "Please provide a valid Database.";
           }
         }
       }
