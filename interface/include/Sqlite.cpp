@@ -118,9 +118,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               Json *ptRows = new Json;
               if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
               {
-                if (!empty(ptRows, "last_insert_rowid()"))
+                if (!ptRows->l.empty() && !empty(ptRows->l.front(), "last_insert_rowid()"))
                 {
-                  ptJson->i("ID", ptRows->m["last_insert_rowid()"]->v, 'n');
+                  ptJson->i("ID", ptRows->l.front()->m["last_insert_rowid()"]->v, 'n');
                 }
               }
               else
