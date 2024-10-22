@@ -105,10 +105,27 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           char *pszError = NULL;
           if ((nReturn = sqlite3_exec(db, ptJson->m["Update"]->v.c_str(), NULL, NULL, &pszError)) == SQLITE_OK)
           {
-            stringstream ssRows;
+            string strAction, strLower;
+            stringstream ssQuery(ptJson->m["Update"]->v), ssRows;
             bResult = true;
             ssRows << sqlite3_changes(db);
             ptJson->i("Rows", ssRows.str(), 'n');
+            ssQuery >> strAction;
+            m_manip.toLower(strLower, strAction);
+            if (strLower == "insert")
+            {
+              char *pszError = NULL;
+              Json *ptRows = new Json;
+              if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
+              {
+                ptJson->i("ID", ptRows);
+              }
+              else
+              {
+                sqlite3_free(pszError);
+              }
+              delete ptRows;
+            }
           }
           else
           {
