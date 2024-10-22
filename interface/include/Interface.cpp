@@ -2001,7 +2001,9 @@ void Interface::inotify(string strPrefix, map<string, list<string> > watches, vo
               bExit = true;
               if (nReturn < 0)
               {
-                cerr << strPrefix << "->Utility::fdRead(" << errno << ") error [" << m_strData << "]:  " << strerror(errno) << endl;
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << fds[0].fd << "]:  " << strerror(errno);
+                log(ssMessage.str());
               }
             }
           }

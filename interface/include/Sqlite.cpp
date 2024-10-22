@@ -23,11 +23,15 @@ namespace radial
 Sqlite::Sqlite(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pCallbackFetch)(void *, int, char **, char **)) : Interface(strPrefix, "sqlite", argc, argv, pCallback)
 {
   m_pCallbackFetch = pCallbackFetch;
+  m_pThreadInotify = new thread(&Sqlite::inotify, this, strPrefix);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
 // {{{ ~Sqlite()
 Sqlite::~Sqlite()
 {
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
 }
 // }}}
 // {{{ callback()
@@ -183,6 +187,215 @@ int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szName
   ptRows->push_back(row);
 
   return nResult;
+}
+// }}}
+// {{{ inotify()
+void Sqlite::inotify(string strPrefix)
+{
+  int fdNotify;
+  string strError;
+  stringstream ssMessage;
+
+  threadIncrement();
+  strPrefix += "->Sqlite::inotify()";
+  if ((fdNotify = inotify_init1(IN_NONBLOCK)) != -1)
+  {
+    int wdNotify;
+    if ((wdNotify = inotify_add_watch(fdNotify, (m_strData + "/sqlite").c_str(), (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO))) != -1)
+    {
+      bool bExit = false;
+      inotify_event *pEvent;
+      int nReturn;
+      list<string> databases, entries;
+      string strNotify;
+      m_file.directoryList(m_strData + "/sqlite", entries);
+      for (auto &i : entries)
+      {
+        if (i.size() > 3 && i.substr((i.size() - 3), 3) == ".db")
+        {
+          databases.push_back(i.substr(0, (i.size() - 3)));
+        }
+      }
+      if (!databases.empty())
+      {
+        Json *ptData;
+        databases.sort();
+        ptData = new Json(databases);
+        databases.clear();
+        if (storageAdd({"sqlite", m_strNode}, ptData, strError))
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::storageAdd() [sqlite," << m_strNode << "]:  Added databases.";
+          log(ssMessage.str());
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::storageAdd() error [sqlite," << m_strNode << "]:  " << strError;
+          log(ssMessage.str());
+        }
+        delete ptData;
+      }
+      entries.clear();
+      while (!bExit)
+      {
+        pollfd fds[1];
+        fds[0].fd = fdNotify;
+        fds[0].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
+        {
+          if (fds[0].revents & POLLIN)
+          {
+            if (m_pUtility->fdRead(fds[0].fd, strNotify, nReturn))
+            {
+              while (strNotify.size() >= sizeof(inotify_event))
+              {
+                pEvent = (inotify_event *)strNotify.c_str();
+                if (pEvent->wd == wdNotify && pEvent->len > 0 && (pEvent->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)))
+                {
+                  string strName = pEvent->name;
+                  if (strName.size() > 3 && strName.substr((strName.size() - 3), 3) == ".db")
+                  {
+                    string strDatabase = strName.substr(0, (strName.size() - 3));
+                    if (pEvent->mask & (IN_CREATE | IN_MOVED_TO))
+                    {
+                      Json *ptData = new Json;
+                      if (storageRetrieve({"sqlite", m_strNode}, ptData, strError) || strError == "Failed to find key.")
+                      {
+                        bool bFound = false;
+                        for (auto &i : ptData->l)
+                        {
+                          if (i->v == strDatabase)
+                          {
+                            bFound = true;
+                          }
+                          databases.push_back(i->v);
+                        }
+                        if (!bFound)
+                        {
+                          databases.push_back(strDatabase);
+                          databases.sort();
+                          ptData->clear();
+                          for (auto &i : databases)
+                          {
+                            ptData->pb(i);
+                          }
+                          if (storageAdd({"sqlite", m_strNode}, ptData, strError))
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << "->Interface::storageAdd() [sqlite," << m_strNode << "," << strDatabase << "]:  Added database.";
+                            log(ssMessage.str());
+                          }
+                          else
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << "->Interface::storageAdd() error [sqlite," << m_strNode << "," << strDatabase << "]:  " << strError;
+                            log(ssMessage.str());
+                          }
+                        }
+                        databases.clear();
+                      }
+                      else
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Interface::storageRetrieve() error [sqlite," << m_strNode << "]:  " << strError;
+                        log(ssMessage.str());
+                      }
+                      delete ptData;
+                    }
+                    else if (pEvent->mask & (IN_DELETE | IN_MOVED_FROM))
+                    {
+                      Json *ptData = new Json;
+                      if (storageRetrieve({"sqlite", m_strNode}, ptData, strError))
+                      {
+                        bool bFound = false;
+                        for (auto &i : ptData->l)
+                        {
+                          if (i->v == strDatabase)
+                          {
+                            bFound = true;
+                          }
+                          else
+                          {
+                            databases.push_back(i->v);
+                          }
+                        }
+                        if (bFound)
+                        {
+                          ptData->clear();
+                          for (auto &i : databases)
+                          {
+                            ptData->pb(i);
+                          }
+                          if (storageAdd({"sqlite", m_strNode}, ptData, strError))
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << "->Interface::storageAdd() [sqlite," << m_strNode << "," << strDatabase << "]:  Removed database.";
+                            log(ssMessage.str());
+                          }
+                          else
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << "->Interface::storageAdd() error [sqlite," << m_strNode << "," << strDatabase << "]:  " << strError;
+                            log(ssMessage.str());
+                          }
+                        }
+                        databases.clear();
+                      }
+                      else
+                      {
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Interface::storageRetrieve() error [sqlite," << m_strNode << "]:  " << strError;
+                        log(ssMessage.str());
+                      }
+                      delete ptData;
+                    }
+                  }
+                }
+                strNotify.erase(0, sizeof(inotify_event));
+              }
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error [" << m_strData << "/sqlite]:  " << strerror(errno);
+                log(ssMessage.str());
+              }
+            }
+          }
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+          log(ssMessage.str());
+        }
+        if (shutdown())
+        {
+          bExit = true;
+        }
+      }
+      inotify_rm_watch(fdNotify, wdNotify);
+    }
+    else
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->inotify_add_watch(" << errno << ") error [" << m_strData << "/sqlite]:  " << strerror(errno);
+      log(ssMessage.str());
+    }
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->inotify_init1(" << errno << ") error:  " << strerror(errno);
+    log(ssMessage.str());
+  }
+  setShutdown();
+  threadDecrement();
 }
 // }}}
 }

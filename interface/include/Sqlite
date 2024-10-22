@@ -25,7 +25,11 @@ namespace radial
 // {{{ Sqlite
 class Sqlite : public Interface
 {
+  protected:
   int (*m_pCallbackFetch)(void *, int, char **, char **);
+  thread *m_pThreadInotify;
+
+  void inotify(string strPrefix);
 
   public:
   Sqlite(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pCallbackFetch)(void *, int, char **, char **));
