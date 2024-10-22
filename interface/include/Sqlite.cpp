@@ -34,138 +34,6 @@ Sqlite::~Sqlite()
   delete m_pThreadInotify;
 }
 // }}}
-// {{{ databaseAdd()
-void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &bMaster)
-{
-  list<string> nodes;
-  string strError;
-  Json *ptLink;
-
-  bMaster = false;
-  m_mutex.lock();
-  if (m_databases.find(strDatabase) == m_databases.end())
-  {
-    bMaster = true;
-    m_databases[strDatabase] = {};
-  }
-  m_databases[strDatabase][strNode] = false;
-  m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
-  {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
-    {
-      nodes.push_back(link->strNode);
-    }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "add");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
-  }
-}
-// }}}
-// {{{ databaseMaster()
-void Sqlite::databaseMaster(const string strDatabase, const string strNode)
-{
-  list<string> nodes;
-  string strError;
-  Json *ptLink;
-
-  m_mutex.lock();
-  if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
-  {
-    m_databases[strDatabase][strNode] = true;
-  }
-  m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
-  {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
-    {
-      nodes.push_back(link->strNode);
-    }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "master");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
-  }
-}
-// }}}
-// {{{ databaseRemove()
-void Sqlite::databaseRemove(const string strDatabase, const string strNode, string &strMaster)
-{
-  list<string> nodes;
-  string strError;
-  Json *ptLink;
-
-  strMaster.clear();
-  m_mutex.lock();
-  if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
-  {
-    bool bMaster = m_databases[strDatabase][strNode];
-    m_databases[strDatabase].erase(strNode);
-    if (m_databases[strDatabase].empty())
-    {
-      m_databases.erase(strDatabase);
-    }
-    else if (bMaster)
-    {
-      unsigned int unPick = 0, unSeed = time(NULL);
-      vector<string> subNodes;
-      for (auto &i : m_databases[strDatabase])
-      {
-        subNodes.push_back(i.first);
-      }
-      srand(unSeed);
-      unPick = rand_r(&unSeed) % subNodes.size();
-      strMaster = subNodes[unPick];
-    }
-  }
-  m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
-  {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
-    {
-      nodes.push_back(link->strNode);
-    }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "remove");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
-  }
-}
-// }}}
 // {{{ autoMode()
 void Sqlite::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
@@ -194,6 +62,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
+  // {{{ database
   if (!empty(ptJson, "Database"))
   {
     if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
@@ -432,9 +301,34 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       strError = "Please provide the Query or Update.";
     }
   }
+  // }}}
+  // {{{ function
   else if (!empty(ptJson, "Function"))
   {
-    if (exist(ptJson, "Request"))
+    // {{{ list
+    if (ptJson->m["Function"]->v == "list")
+    {
+      bResult = true;
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+        ptJson->m.erase("Response");
+      }
+      ptJson->m["Response"] = new Json;
+      m_mutex.lock();
+      for (auto &i : m_databases)
+      {
+        ptJson->m["Response"]->m[i.first] = new Json;
+        for (auto &j : i.second)
+        {
+          ptJson->m["Response"]->m[i.first]->i(j.first, ((j.second)?"master":"slave"));
+        }
+      }
+      m_mutex.unlock();
+    }
+    // }}}
+    // {{{ request
+    else if (exist(ptJson, "Request"))
     {
       if (!empty(ptJson->m["Request"], "Database"))
       {
@@ -442,8 +336,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
         if (!empty(ptJson->m["Request"], "Node"))
         {
           string strNode = ptJson->m["Request"]->m["Node"]->v;
+          // {{{ add
           if (ptJson->m["Function"]->v == "add")
           {
+            bResult = true;
             if (isMaster())
             {
               bool bMaster = false;
@@ -464,8 +360,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               m_mutex.unlock();
             }
           }
+          // }}}
+          // {{{ master
           else if (ptJson->m["Function"]->v == "master")
           {
+            bResult = true;
             m_mutex.lock();
             if (m_databases.find(strDatabase) != m_databases.end())
             {
@@ -473,8 +372,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             }
             m_mutex.unlock();
           }
+          // }}}
+          // {{{ remove
           else if (ptJson->m["Function"]->v == "remove")
           {
+            bResult = true;
             if (isMaster())
             {
               string strMaster;
@@ -498,10 +400,13 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               m_mutex.unlock();
             }
           }
+          // }}}
+          // {{{ invalid
           else
           {
-            strError = "Please provide a valid Function: add, master, remove.";
+            strError = "Please provide a valid Function: add, list, master, remove.";
           }
+          // }}}
         }
         else
         {
@@ -513,15 +418,21 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
         strError = "Please provide the Database within the Request.";
       }
     }
+    // }}}
+    // {{{ invalid
     else
     {
       strError = "Please provide the Request.";
     }
+    // }}}
   }
+  // }}}
+  // {{{ invalid
   else
   {
     strError = "Please provide the Database.";
   }
+  // }}}
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
@@ -550,6 +461,138 @@ int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szName
   ptRows->push_back(row);
 
   return nResult;
+}
+// }}}
+// {{{ databaseAdd()
+void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &bMaster)
+{
+  list<string> nodes;
+  string strError;
+  Json *ptLink;
+
+  bMaster = false;
+  m_mutex.lock();
+  if (m_databases.find(strDatabase) == m_databases.end())
+  {
+    bMaster = true;
+    m_databases[strDatabase] = {};
+  }
+  m_databases[strDatabase][strNode] = false;
+  m_mutex.unlock();
+  m_mutexShare.lock();
+  for (auto &link : m_l)
+  {
+    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    {
+      nodes.push_back(link->strNode);
+    }
+  }
+  m_mutexShare.unlock();
+  while (!nodes.empty())
+  {
+    ptLink = new Json;
+    ptLink->i("Interface", "sqlite");
+    ptLink->i("Node", nodes.front());
+    ptLink->i("Function", "add");
+    ptLink->m["Request"] = new Json;
+    ptLink->m["Request"]->i("Database", strDatabase);
+    ptLink->m["Request"]->i("Node", strNode);
+    hub("link", ptLink, strError);
+    delete ptLink;
+    nodes.pop_front();
+  }
+}
+// }}}
+// {{{ databaseMaster()
+void Sqlite::databaseMaster(const string strDatabase, const string strNode)
+{
+  list<string> nodes;
+  string strError;
+  Json *ptLink;
+
+  m_mutex.lock();
+  if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
+  {
+    m_databases[strDatabase][strNode] = true;
+  }
+  m_mutex.unlock();
+  m_mutexShare.lock();
+  for (auto &link : m_l)
+  {
+    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    {
+      nodes.push_back(link->strNode);
+    }
+  }
+  m_mutexShare.unlock();
+  while (!nodes.empty())
+  {
+    ptLink = new Json;
+    ptLink->i("Interface", "sqlite");
+    ptLink->i("Node", nodes.front());
+    ptLink->i("Function", "master");
+    ptLink->m["Request"] = new Json;
+    ptLink->m["Request"]->i("Database", strDatabase);
+    ptLink->m["Request"]->i("Node", strNode);
+    hub("link", ptLink, strError);
+    delete ptLink;
+    nodes.pop_front();
+  }
+}
+// }}}
+// {{{ databaseRemove()
+void Sqlite::databaseRemove(const string strDatabase, const string strNode, string &strMaster)
+{
+  list<string> nodes;
+  string strError;
+  Json *ptLink;
+
+  strMaster.clear();
+  m_mutex.lock();
+  if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
+  {
+    bool bMaster = m_databases[strDatabase][strNode];
+    m_databases[strDatabase].erase(strNode);
+    if (m_databases[strDatabase].empty())
+    {
+      m_databases.erase(strDatabase);
+    }
+    else if (bMaster)
+    {
+      unsigned int unPick = 0, unSeed = time(NULL);
+      vector<string> subNodes;
+      for (auto &i : m_databases[strDatabase])
+      {
+        subNodes.push_back(i.first);
+      }
+      srand(unSeed);
+      unPick = rand_r(&unSeed) % subNodes.size();
+      strMaster = subNodes[unPick];
+    }
+  }
+  m_mutex.unlock();
+  m_mutexShare.lock();
+  for (auto &link : m_l)
+  {
+    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    {
+      nodes.push_back(link->strNode);
+    }
+  }
+  m_mutexShare.unlock();
+  while (!nodes.empty())
+  {
+    ptLink = new Json;
+    ptLink->i("Interface", "sqlite");
+    ptLink->i("Node", nodes.front());
+    ptLink->i("Function", "remove");
+    ptLink->m["Request"] = new Json;
+    ptLink->m["Request"]->i("Database", strDatabase);
+    ptLink->m["Request"]->i("Node", strNode);
+    hub("link", ptLink, strError);
+    delete ptLink;
+    nodes.pop_front();
+  }
 }
 // }}}
 // {{{ inotify()
