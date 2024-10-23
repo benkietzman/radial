@@ -650,27 +650,37 @@ void Sqlite::inotify(string strPrefix)
           {
             if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
             {
+              bool bAdd = false;
               string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
-              if (isMaster())
+              m_mutex.lock();
+              if (m_databases.find(strDatabase) == m_databases.end() || m_databases[strDatabase].find(m_strNode) == m_databases[strDatabase].end())
               {
-                bool bMaster = false;
-                databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
-                if (bMaster)
-                {
-                  databaseMaster(strPrefix, strDatabase, m_strNode);
-                }
+                bAdd = true;
               }
-              else
+              m_mutex.unlock();
+              if (bAdd)
               {
-                ptLink = new Json;
-                ptLink->i("Interface", "sqlite");
-                ptLink->i("Node", master());
-                ptLink->i("Function", "add");
-                ptLink->m["Request"] = new Json;
-                ptLink->m["Request"]->i("Database", strDatabase);
-                ptLink->m["Request"]->i("Node", m_strNode);
-                hub("link", ptLink, strError);
-                delete ptLink;
+                if (isMaster())
+                {
+                  bool bMaster = false;
+                  databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
+                  if (bMaster)
+                  {
+                    databaseMaster(strPrefix, strDatabase, m_strNode);
+                  }
+                }
+                else
+                {
+                  ptLink = new Json;
+                  ptLink->i("Interface", "sqlite");
+                  ptLink->i("Node", master());
+                  ptLink->i("Function", "add");
+                  ptLink->m["Request"] = new Json;
+                  ptLink->m["Request"]->i("Database", strDatabase);
+                  ptLink->m["Request"]->i("Node", m_strNode);
+                  hub("link", ptLink, strError);
+                  delete ptLink;
+                }
               }
             }
             entries.pop_front();
@@ -782,39 +792,6 @@ void Sqlite::inotify(string strPrefix)
             }
           }
           inotify_rm_watch(fdNotify, wdNotify);
-          if (!shutdown())
-          {
-            m_file.directoryList(m_strData + "/sqlite", entries);
-            while (!entries.empty())
-            {
-              if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
-              {
-                string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
-                if (isMaster())
-                {
-                  string strMaster;
-                  databaseRemove(strPrefix, strDatabase, m_strNode, strMaster);
-                  if (!strMaster.empty())
-                  {
-                    databaseMaster(strPrefix, strDatabase, strMaster);
-                  }
-                }
-                else
-                {
-                  ptLink = new Json;
-                  ptLink->i("Interface", "sqlite");
-                  ptLink->i("Node", master());
-                  ptLink->i("Function", "remove");
-                  ptLink->m["Request"] = new Json;
-                  ptLink->m["Request"]->i("Database", strDatabase);
-                  ptLink->m["Request"]->i("Node", m_strNode);
-                  hub("link", ptLink, strError);
-                  delete ptLink;
-                }
-              }
-              entries.pop_front();
-            }
-          }
         }
         else
         {
@@ -829,7 +806,9 @@ void Sqlite::inotify(string strPrefix)
         ssMessage << strPrefix << "->inotify_init1(" << errno << ") error:  " << strerror(errno);
         log(ssMessage.str());
       }
+      m_mutex.lock();
       m_databases.clear();
+      m_mutex.unlock();
     }
     else
     {
