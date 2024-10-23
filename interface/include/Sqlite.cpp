@@ -627,6 +627,7 @@ void Sqlite::inotify(string strPrefix)
         m_mutexShare.unlock();
         while (!nodes.empty())
         {
+          map<string, map<string, bool> > databases;
           Json *ptJson = new Json;
           ptJson->i("Interface", "sqlite");
           ptJson->i("Node", nodes.front());
@@ -647,7 +648,10 @@ void Sqlite::inotify(string strPrefix)
             }
           }
           delete ptJson;
-          for (auto &i : m_databases)
+          mutex.lock();
+          databases = m_databases;
+          mutex.unlock();
+          for (auto &i : databases)
           {
             for (auto &j : i.second)
             {
@@ -657,7 +661,7 @@ void Sqlite::inotify(string strPrefix)
               ptJson->i("Function", "add");
               ptJson->m["Request"] = new Json;
               ptJson->m["Request"]->i("Database", i.first);
-              ptJson->m["Request"]->i("Node", i.first);
+              ptJson->m["Request"]->i("Node", j.first);
               hub("link", ptJson, strError);
               delete ptJson;
               if (j.second)
@@ -668,7 +672,7 @@ void Sqlite::inotify(string strPrefix)
                 ptJson->i("Function", "master");
                 ptJson->m["Request"] = new Json;
                 ptJson->m["Request"]->i("Database", i.first);
-                ptJson->m["Request"]->i("Node", i.first);
+                ptJson->m["Request"]->i("Node", j.first);
                 hub("link", ptJson, strError);
                 delete ptJson;
               }
