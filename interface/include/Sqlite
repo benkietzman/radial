@@ -36,6 +36,7 @@ class Sqlite : public Interface
   void databaseMaster(const string strDatabase, const string strNode);
   void databaseRemove(const string strDatabase, const string strNode, string &strMaster);
   void inotify(string strPrefix);
+  void sync(string strPrefix);
 
   public:
   Sqlite(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pCallbackFetch)(void *, int, char **, char **));
