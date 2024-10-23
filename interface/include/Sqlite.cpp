@@ -505,7 +505,7 @@ void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &b
     bMaster = true;
     m_databases[strDatabase] = {};
   }
-  m_databases[strDatabase][strNode] = false;
+  m_databases[strDatabase][strNode] = bMaster;
   m_mutex.unlock();
   m_mutexShare.lock();
   for (auto &link : m_l)
