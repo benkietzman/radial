@@ -711,7 +711,7 @@ void Sqlite::inotify(string strPrefix)
         int wdNotify;
         if ((wdNotify = inotify_add_watch(fdNotify, (m_strData + "/sqlite").c_str(), (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO))) != -1)
         {
-          bool bExit = false, bMasterUpdated;
+          bool bExit = false;
           inotify_event *pEvent;
           int nReturn;
           list<string> entries;
