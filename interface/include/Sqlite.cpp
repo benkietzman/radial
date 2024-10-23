@@ -458,9 +458,9 @@ void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const strin
     ssMessage.str("");
     ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Added database.";
     log(ssMessage.str());
-    //ssMessage.str("");
-    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
-    //chat("#radial", ssMessage.str());
+    ssMessage.str("");
+    ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
+    chat("#radial", ssMessage.str());
   }
   m_mutex.unlock();
   if (bUpdated && isMaster())
@@ -512,9 +512,9 @@ void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const st
           ssMessage.str("");
           ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
           log(ssMessage.str());
-          //ssMessage.str("");
-          //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
-          //chat("#radial", ssMessage.str());
+          ssMessage.str("");
+          ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
+          chat("#radial", ssMessage.str());
         }
       }
       else if (i.second)
@@ -586,9 +586,9 @@ void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const st
     ssMessage.str("");
     ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Removed database.";
     log(ssMessage.str());
-    //ssMessage.str("");
-    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
-    //chat("#radial", ssMessage.str());
+    ssMessage.str("");
+    ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
+    chat("#radial", ssMessage.str());
   }
   m_mutex.unlock();
   if (bUpdated && isMaster())
