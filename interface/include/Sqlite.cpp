@@ -22,6 +22,7 @@ namespace radial
 // {{{ Sqlite()
 Sqlite::Sqlite(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), int (*pCallbackFetch)(void *, int, char **, char **)) : Interface(strPrefix, "sqlite", argc, argv, pCallback)
 {
+  m_bMasterUpdated = false;
   m_pCallbackFetch = pCallbackFetch;
   m_pThreadInotify = new thread(&Sqlite::inotify, this, strPrefix);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -44,6 +45,7 @@ void Sqlite::autoMode(string strPrefix, const string strOldMaster, const string 
     stringstream ssMessage;
     ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
     log(ssMessage.str());
+    m_bMasterUpdated = true;
   }
   threadDecrement();
 }
@@ -709,7 +711,7 @@ void Sqlite::inotify(string strPrefix)
         int wdNotify;
         if ((wdNotify = inotify_add_watch(fdNotify, (m_strData + "/sqlite").c_str(), (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO))) != -1)
         {
-          bool bExit = false;
+          bool bExit = false, bMasterUpdated;
           inotify_event *pEvent;
           int nReturn;
           list<string> entries;
@@ -837,7 +839,7 @@ void Sqlite::inotify(string strPrefix)
               ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
               log(ssMessage.str());
             }
-            if (shutdown())
+            if (m_bMasterUpdated && shutdown())
             {
               bExit = true;
             }

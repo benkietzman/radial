@@ -26,6 +26,7 @@ namespace radial
 class Sqlite : public Interface
 {
   protected:
+  bool m_bMasterUpdated;
   int (*m_pCallbackFetch)(void *, int, char **, char **);
   map<string, map<string, bool> > m_databases;
   mutex m_mutex;
