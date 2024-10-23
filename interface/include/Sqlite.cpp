@@ -487,6 +487,7 @@ void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const strin
 {
   list<string> nodes;
   string strError;
+  stringstream ssMessage;
   Json *ptLink;
 
   strPrefix += "->Sqlite::databaseAdd()";
@@ -540,6 +541,7 @@ void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const st
 {
   list<string> nodes;
   string strError;
+  stringstream ssMessage;
   Json *ptLink;
 
   strPrefix += "->Sqlite::databaseMaster()";
@@ -597,6 +599,7 @@ void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const st
 {
   list<string> nodes;
   string strError;
+  stringstream ssMessage;
   Json *ptLink;
 
   strPrefix += "->Sqlite::databaseRemove()";
