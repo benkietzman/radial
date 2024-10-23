@@ -346,28 +346,12 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           // {{{ add
           if (strFunction == "add")
           {
+            bool bMaster = false;
             bResult = true;
-            if (isMaster())
+            databaseAdd(strPrefix, strDatabase, strNode, bMaster);
+            if (bMaster && isMaster())
             {
-              bool bMaster = false;
-              databaseAdd(strPrefix, strDatabase, strNode, bMaster);
-              if (bMaster)
-              {
-                databaseMaster(strPrefix, strDatabase, strNode);
-              }
-            }
-            else
-            {
-              m_mutex.lock();
-              if (m_databases.find(strDatabase) == m_databases.end())
-              {
-                m_databases[strDatabase] = {};
-              }
-              m_databases[strDatabase][strNode] = false;
-              m_mutex.unlock();
-              ssMessage.str("");
-              ssMessage << strPrefix << " [request,slave," << strDatabase << "," << strNode << "]:  Added database.";
-              log(ssMessage.str());
+              databaseMaster(strPrefix, strDatabase, strNode);
             }
           }
           // }}}
@@ -375,48 +359,18 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           else if (strFunction == "master")
           {
             bResult = true;
-            m_mutex.lock();
-            if (m_databases.find(strDatabase) != m_databases.end())
-            {
-              for (auto &i : m_databases[strDatabase])
-              {
-                i.second = ((i.first == strNode)?true:false);
-              }
-            }
-            m_mutex.unlock();
-            ssMessage.str("");
-            ssMessage << strPrefix << " [request,slave," << strDatabase << "," << strNode << "]:  Set master database.";
-            log(ssMessage.str());
+            databaseMaster(strPrefix, strDatabase, strNode);
           }
           // }}}
           // {{{ remove
           else if (strFunction == "remove")
           {
+            string strMaster;
             bResult = true;
-            if (isMaster())
+            databaseRemove(strPrefix, strDatabase, strNode, strMaster);
+            if (!strMaster.empty() && isMaster())
             {
-              string strMaster;
-              databaseRemove(strPrefix, strDatabase, strNode, strMaster);
-              if (!strMaster.empty())
-              {
-                databaseMaster(strPrefix, strDatabase, strMaster);
-              }
-            }
-            else
-            {
-              m_mutex.lock();
-              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
-              {
-                m_databases[strDatabase].erase(strNode);
-                if (m_databases[strDatabase].empty())
-                {
-                  m_databases.erase(strDatabase);
-                }
-              }
-              m_mutex.unlock();
-              ssMessage.str("");
-              ssMessage << strPrefix << " [request,slave," << strDatabase << "," << strNode << "]:  Removed database.";
-              log(ssMessage.str());
+              databaseMaster(strPrefix, strDatabase, strMaster);
             }
           }
           // }}}
@@ -485,10 +439,9 @@ int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szName
 // {{{ databaseAdd()
 void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const string strNode, bool &bMaster)
 {
-  list<string> nodes;
+  bool bUpdated = false;
   string strError;
   stringstream ssMessage;
-  Json *ptLink;
 
   strPrefix += "->Sqlite::databaseAdd()";
   bMaster = false;
@@ -498,51 +451,52 @@ void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const strin
     bMaster = true;
     m_databases[strDatabase] = {};
   }
-  if (m_databases[strDatabase][strNode] != bMaster)
+  if (m_databases[strDatabase].find(strNode) == m_databases[strDatabase].end())
   {
-    m_databases[strDatabase][strNode] = bMaster;
-    if (bMaster)
-    {
-      ssMessage.str("");
-      ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
-      log(ssMessage.str());
-      //ssMessage.str("");
-      //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
-      //chat("#radial", ssMessage.str());
-    }
+    bUpdated = true;
+    m_databases[strDatabase][strNode] = false;
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Added database.";
+    log(ssMessage.str());
+    //ssMessage.str("");
+    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
+    //chat("#radial", ssMessage.str());
   }
   m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
+  if (bUpdated && isMaster())
   {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    list<string> nodes;
+    m_mutexShare.lock();
+    for (auto &link : m_l)
     {
-      nodes.push_back(link->strNode);
+      if (link->interfaces.find("sqlite") != link->interfaces.end())
+      {
+        nodes.push_back(link->strNode);
+      }
     }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "add");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
+    m_mutexShare.unlock();
+    while (!nodes.empty())
+    {
+      Json *ptLink = new Json;
+      ptLink->i("Interface", "sqlite");
+      ptLink->i("Node", nodes.front());
+      ptLink->i("Function", "add");
+      ptLink->m["Request"] = new Json;
+      ptLink->m["Request"]->i("Database", strDatabase);
+      ptLink->m["Request"]->i("Node", strNode);
+      hub("link", ptLink, strError);
+      delete ptLink;
+      nodes.pop_front();
+    }
   }
 }
 // }}}
 // {{{ databaseMaster()
 void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const string strNode)
 {
-  list<string> nodes;
+  bool bUpdated = false;
   string strError;
   stringstream ssMessage;
-  Json *ptLink;
 
   strPrefix += "->Sqlite::databaseMaster()";
   m_mutex.lock();
@@ -554,7 +508,7 @@ void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const st
       {
         if (!i.second)
         {
-          i.second = true;
+          bUpdated = i.second = true;
           ssMessage.str("");
           ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
           log(ssMessage.str());
@@ -570,37 +524,40 @@ void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const st
     }
   }
   m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
+  if (bUpdated && isMaster())
   {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    list<string> nodes;
+    m_mutexShare.lock();
+    for (auto &link : m_l)
     {
-      nodes.push_back(link->strNode);
+      if (link->interfaces.find("sqlite") != link->interfaces.end())
+      {
+        nodes.push_back(link->strNode);
+      }
     }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "master");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
+    m_mutexShare.unlock();
+    while (!nodes.empty())
+    {
+      Json *ptLink = new Json;
+      ptLink->i("Interface", "sqlite");
+      ptLink->i("Node", nodes.front());
+      ptLink->i("Function", "master");
+      ptLink->m["Request"] = new Json;
+      ptLink->m["Request"]->i("Database", strDatabase);
+      ptLink->m["Request"]->i("Node", strNode);
+      hub("link", ptLink, strError);
+      delete ptLink;
+      nodes.pop_front();
+    }
   }
 }
 // }}}
 // {{{ databaseRemove()
 void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const string strNode, string &strMaster)
 {
-  list<string> nodes;
+  bool bUpdated = false;
   string strError;
   stringstream ssMessage;
-  Json *ptLink;
 
   strPrefix += "->Sqlite::databaseRemove()";
   strMaster.clear();
@@ -608,18 +565,13 @@ void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const st
   if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
   {
     bool bMaster = m_databases[strDatabase][strNode];
+    bUpdated = true;
     m_databases[strDatabase].erase(strNode);
-    ssMessage.str("");
-    ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Removed database.";
-    log(ssMessage.str());
-    //ssMessage.str("");
-    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
-    //chat("#radial", ssMessage.str());
     if (m_databases[strDatabase].empty())
     {
       m_databases.erase(strDatabase);
     }
-    else if (bMaster)
+    else if (bMaster && isMaster())
     {
       unsigned int unPick = 0, unSeed = time(NULL);
       vector<string> subNodes;
@@ -631,29 +583,39 @@ void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const st
       unPick = rand_r(&unSeed) % subNodes.size();
       strMaster = subNodes[unPick];
     }
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Removed database.";
+    log(ssMessage.str());
+    //ssMessage.str("");
+    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
+    //chat("#radial", ssMessage.str());
   }
   m_mutex.unlock();
-  m_mutexShare.lock();
-  for (auto &link : m_l)
+  if (bUpdated && isMaster())
   {
-    if (link->interfaces.find("sqlite") != link->interfaces.end())
+    list<string> nodes;
+    m_mutexShare.lock();
+    for (auto &link : m_l)
     {
-      nodes.push_back(link->strNode);
+      if (link->interfaces.find("sqlite") != link->interfaces.end())
+      {
+        nodes.push_back(link->strNode);
+      }
     }
-  }
-  m_mutexShare.unlock();
-  while (!nodes.empty())
-  {
-    ptLink = new Json;
-    ptLink->i("Interface", "sqlite");
-    ptLink->i("Node", nodes.front());
-    ptLink->i("Function", "remove");
-    ptLink->m["Request"] = new Json;
-    ptLink->m["Request"]->i("Database", strDatabase);
-    ptLink->m["Request"]->i("Node", strNode);
-    hub("link", ptLink, strError);
-    delete ptLink;
-    nodes.pop_front();
+    m_mutexShare.unlock();
+    while (!nodes.empty())
+    {
+      Json *ptLink = new Json;
+      ptLink->i("Interface", "sqlite");
+      ptLink->i("Node", nodes.front());
+      ptLink->i("Function", "remove");
+      ptLink->m["Request"] = new Json;
+      ptLink->m["Request"]->i("Database", strDatabase);
+      ptLink->m["Request"]->i("Node", strNode);
+      hub("link", ptLink, strError);
+      delete ptLink;
+      nodes.pop_front();
+    }
   }
 }
 // }}}
@@ -906,46 +868,18 @@ void Sqlite::sync(string strPrefix)
       ptJson->i("Function", "list");
       if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
       {
-        m_mutex.lock();
         for (auto &i : ptJson->m["Response"]->m)
         {
           for (auto &j : i.second->m)
           {
             bool bMaster = false;
-            if (m_databases.find(i.first) == m_databases.end())
-            {
-              bMaster = true;
-              m_databases[i.first] = {};
-            }
-            if (m_databases[i.first].find(j.first) == m_databases[i.first].end())
-            {
-              m_databases[i.first][j.first] = false;
-              ssMessage.str("");
-              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Added database.";
-              log(ssMessage.str());
-              //ssMessage.str("");
-              //ssMessage << char(3) << "13,06 " << i.first << " | " << j.first << " " << char(3) << " Added database.";
-              //chat("#radial", ssMessage.str());
-            }
+            databaseAdd(strPrefix, i.first, j.first, bMaster);
             if (bMaster)
             {
-              if (m_databases.find(i.first) != m_databases.end())
-              {
-                for (auto &k : m_databases[i.first])
-                {
-                  k.second = ((k.first == j.first)?true:false);
-                }
-              }
-              ssMessage.str("");
-              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Set master database.";
-              log(ssMessage.str());
-              //ssMessage.str("");
-              //ssMessage << char(3) << "13,06 " << i.first << " | " << j.first << " " << char(3) << " Set master database.";
-              //chat("#radial", ssMessage.str());
+              databaseMaster(strPrefix, i.first, j.first);
             }
           }
         }
-        m_mutex.unlock();
       }
       delete ptJson;
     }
