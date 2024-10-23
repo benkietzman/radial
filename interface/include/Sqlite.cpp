@@ -613,27 +613,69 @@ void Sqlite::inotify(string strPrefix)
     if (isMasterSettled())
     {
       int fdNotify;
-      Json *ptJson = new Json;
-      ptJson->i("Interface", "sqlite");
-      ptJson->i("Node", master());
-      ptJson->i("Function", "list");
-      if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
+      if (isMaster())
       {
-        m_mutex.lock();
-        for (auto &i : ptJson->m["Response"]->m)
+        list<string> nodes;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
         {
-          if (m_databases.find(i.first) == m_databases.end())
+          if (link->interfaces.find("sqlite") != link->interfaces.end())
           {
-            m_databases[i.first] = {};
-          }
-          for (auto &j : i.second->m)
-          {
-            m_databases[i.first][j.first] = ((j.second->v == "master")?true:false);
+            nodes.push_back(link->strNode);
           }
         }
-        m_mutex.unlock();
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptJson = new Json;
+          ptJson->i("Interface", "sqlite");
+          ptJson->i("Node", nodes.front());
+          ptJson->i("Function", "list");
+          if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
+          {
+            for (auto &i : ptJson->m["Response"]->m)
+            {
+              for (auto &j : i.second->m)
+              {
+                bool bMaster = false;
+                databaseAdd(i.first, j.first, bMaster);
+                if (bMaster)
+                {
+                  databaseMaster(i.first, j.first);
+                }
+              }
+            }
+          }
+          delete ptJson;
+          for (auto &i : m_databases)
+          {
+            for (auto &j : i.second)
+            {
+              ptJson = new Json;
+              ptJson->i("Interface", "sqlite");
+              ptJson->i("Node", nodes.front());
+              ptJson->i("Function", "add");
+              ptJson->m["Request"] = new Json;
+              ptJson->m["Request"]->i("Database", i.first);
+              ptJson->m["Request"]->i("Node", i.first);
+              hub("link", ptJson, strError);
+              delete ptJson;
+              if (j.second)
+              {
+                ptJson = new Json;
+                ptJson->i("Interface", "sqlite");
+                ptJson->i("Node", nodes.front());
+                ptJson->i("Function", "master");
+                ptJson->m["Request"] = new Json;
+                ptJson->m["Request"]->i("Database", i.first);
+                ptJson->m["Request"]->i("Node", i.first);
+                hub("link", ptJson, strError);
+                delete ptJson;
+              }
+            }
+          }
+        }
       }
-      delete ptJson;
       if ((fdNotify = inotify_init1(IN_NONBLOCK)) != -1)
       {
         int wdNotify;
@@ -773,35 +815,38 @@ void Sqlite::inotify(string strPrefix)
             }
           }
           inotify_rm_watch(fdNotify, wdNotify);
-          m_file.directoryList(m_strData + "/sqlite", entries);
-          while (!entries.empty())
+          if (!shutdown())
           {
-            if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
+            m_file.directoryList(m_strData + "/sqlite", entries);
+            while (!entries.empty())
             {
-              string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
-              if (isMaster())
+              if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
               {
-                string strMaster;
-                databaseRemove(strDatabase, m_strNode, strMaster);
-                if (!strMaster.empty())
+                string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
+                if (isMaster())
                 {
-                  databaseMaster(strDatabase, strMaster);
+                  string strMaster;
+                  databaseRemove(strDatabase, m_strNode, strMaster);
+                  if (!strMaster.empty())
+                  {
+                    databaseMaster(strDatabase, strMaster);
+                  }
+                }
+                else
+                {
+                  ptLink = new Json;
+                  ptLink->i("Interface", "sqlite");
+                  ptLink->i("Node", master());
+                  ptLink->i("Function", "remove");
+                  ptLink->m["Request"] = new Json;
+                  ptLink->m["Request"]->i("Database", strDatabase);
+                  ptLink->m["Request"]->i("Node", m_strNode);
+                  hub("link", ptLink, strError);
+                  delete ptLink;
                 }
               }
-              else
-              {
-                ptLink = new Json;
-                ptLink->i("Interface", "sqlite");
-                ptLink->i("Node", master());
-                ptLink->i("Function", "remove");
-                ptLink->m["Request"] = new Json;
-                ptLink->m["Request"]->i("Database", strDatabase);
-                ptLink->m["Request"]->i("Node", m_strNode);
-                hub("link", ptLink, strError);
-                delete ptLink;
-              }
+              entries.pop_front();
             }
-            entries.pop_front();
           }
         }
         else
