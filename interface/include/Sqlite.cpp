@@ -893,7 +893,6 @@ void Sqlite::sync(string strPrefix)
     ptJson->i("Function", "list");
     if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
     {
-      m_mutex.lock();
       for (auto &i : ptJson->m["Response"]->m)
       {
         for (auto &j : i.second->m)
@@ -906,7 +905,6 @@ void Sqlite::sync(string strPrefix)
           }
         }
       }
-      m_mutex.unlock();
     }
     delete ptJson;
   }
