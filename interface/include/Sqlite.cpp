@@ -613,6 +613,27 @@ void Sqlite::inotify(string strPrefix)
     if (isMasterSettled())
     {
       int fdNotify;
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "sqlite");
+      ptJson->i("Node", master());
+      ptJson->i("Function", "list");
+      if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
+      {
+        m_mutex.lock();
+        for (auto &i : ptJson->m["Response"]->m)
+        {
+          if (m_databases.find(i.first) == m_databases.end())
+          {
+            m_databases[i.first] = {};
+          }
+          for (auto &j : i.second->m)
+          {
+            m_databases[i.first][j.first] = ((j.second->v == "master")?true:false);
+          }
+        }
+        m_mutex.unlock();
+      }
+      delete ptJson;
       if ((fdNotify = inotify_init1(IN_NONBLOCK)) != -1)
       {
         int wdNotify;
