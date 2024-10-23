@@ -351,21 +351,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bMaster = false;
               databaseAdd(strDatabase, strNode, bMaster);
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Sqlite::databaseAdd() [request,master," << strDatabase << "," << strNode << "]:  Added database.";
-              log(ssMessage.str());
-              //ssMessage.str("");
-              //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
-              //chat("#radial", ssMessage.str());
               if (bMaster)
               {
                 databaseMaster(strDatabase, strNode);
-                ssMessage.str("");
-								ssMessage << strPrefix << "->Sqlite::databaseMaster() [request,master," << strDatabase << "," << strNode << "]:  Set master database.";
-                log(ssMessage.str());
-                //ssMessage.str("");
-                //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
-                //chat("#radial", ssMessage.str());
               }
             }
             else
@@ -409,21 +397,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               string strMaster;
               databaseRemove(strDatabase, strNode, strMaster);
-              ssMessage.str("");
-              ssMessage << strPrefix << "->Sqlite::databaseRemove() [request,master," << strDatabase << "," << strNode << "]:  Removed database.";
-              log(ssMessage.str());
-              //ssMessage.str("");
-              //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
-              //chat("#radial", ssMessage.str());
               if (!strMaster.empty())
               {
                 databaseMaster(strDatabase, strMaster);
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Sqlite::databaseMaster() [request,master," << strDatabase << "," << strMaster << "]:  Set master database.";
-                log(ssMessage.str());
-                //ssMessage.str("");
-                //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strMaster << " " << char(3) << " Set master database.";
-                //chat("#radial", ssMessage.str());
               }
             }
             else
@@ -507,12 +483,13 @@ int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szName
 }
 // }}}
 // {{{ databaseAdd()
-void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &bMaster)
+void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const string strNode, bool &bMaster)
 {
   list<string> nodes;
   string strError;
   Json *ptLink;
 
+  strPrefix += "->Sqlite::databaseAdd()";
   bMaster = false;
   m_mutex.lock();
   if (m_databases.find(strDatabase) == m_databases.end())
@@ -520,7 +497,19 @@ void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &b
     bMaster = true;
     m_databases[strDatabase] = {};
   }
-  m_databases[strDatabase][strNode] = bMaster;
+  if (m_databases[strDatabase][strNode] != bMaster)
+  {
+    m_databases[strDatabase][strNode] = bMaster;
+    if (bMaster)
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
+      log(ssMessage.str());
+      //ssMessage.str("");
+      //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
+      //chat("#radial", ssMessage.str());
+    }
+  }
   m_mutex.unlock();
   m_mutexShare.lock();
   for (auto &link : m_l)
@@ -547,18 +536,35 @@ void Sqlite::databaseAdd(const string strDatabase, const string strNode, bool &b
 }
 // }}}
 // {{{ databaseMaster()
-void Sqlite::databaseMaster(const string strDatabase, const string strNode)
+void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const string strNode)
 {
   list<string> nodes;
   string strError;
   Json *ptLink;
 
+  strPrefix += "->Sqlite::databaseMaster()";
   m_mutex.lock();
   if (m_databases.find(strDatabase) != m_databases.end())
   {
     for (auto &i : m_databases[strDatabase])
     {
-      i.second = ((i.first == strNode)?true:false);
+      if (i.first == strNode)
+      {
+        if (!i.second)
+        {
+          i.second = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
+          log(ssMessage.str());
+          //ssMessage.str("");
+          //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
+          //chat("#radial", ssMessage.str());
+        }
+      }
+      else if (i.second)
+      {
+        i.second = false;
+      }
     }
   }
   m_mutex.unlock();
@@ -587,18 +593,25 @@ void Sqlite::databaseMaster(const string strDatabase, const string strNode)
 }
 // }}}
 // {{{ databaseRemove()
-void Sqlite::databaseRemove(const string strDatabase, const string strNode, string &strMaster)
+void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const string strNode, string &strMaster)
 {
   list<string> nodes;
   string strError;
   Json *ptLink;
 
+  strPrefix += "->Sqlite::databaseRemove()";
   strMaster.clear();
   m_mutex.lock();
   if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end())
   {
     bool bMaster = m_databases[strDatabase][strNode];
     m_databases[strDatabase].erase(strNode);
+    ssMessage.str("");
+    ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Removed database.";
+    log(ssMessage.str());
+    //ssMessage.str("");
+    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
+    //chat("#radial", ssMessage.str());
     if (m_databases[strDatabase].empty())
     {
       m_databases.erase(strDatabase);
@@ -677,21 +690,9 @@ void Sqlite::inotify(string strPrefix)
               {
                 bool bMaster = false;
                 databaseAdd(strDatabase, m_strNode, bMaster);
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Sqlite::databaseAdd() [load,master," << strDatabase << "," << m_strNode << "]:  Added database.";
-                log(ssMessage.str());
-                //ssMessage.str("");
-                //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Added database.";
-                //chat("#radial", ssMessage.str());
                 if (bMaster)
                 {
                   databaseMaster(strDatabase, m_strNode);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Sqlite::databaseMaster() [load,master," << strDatabase << "," << m_strNode << "]:  Set master database.";
-                  log(ssMessage.str());
-                  //ssMessage.str("");
-                  //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Set master database.";
-                  //chat("#radial", ssMessage.str());
                 }
               }
               else
@@ -737,21 +738,9 @@ void Sqlite::inotify(string strPrefix)
                           {
                             bool bMaster = false;
                             databaseAdd(strDatabase, m_strNode, bMaster);
-                            ssMessage.str("");
-                            ssMessage << strPrefix << "->Sqlite::databaseAdd() [inotify,master," << strDatabase << "," << m_strNode << "]:  Added database.";
-                            log(ssMessage.str());
-                            //ssMessage.str("");
-                            //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Added database.";
-                            //chat("#radial", ssMessage.str());
                             if (bMaster)
                             {
                               databaseMaster(strDatabase, m_strNode);
-                              ssMessage.str("");
-                              ssMessage << strPrefix << "->Sqlite::databaseMaster() [inotify,master," << strDatabase << "," << m_strNode << "]:  Set master database.";
-                              log(ssMessage.str());
-                              //ssMessage.str("");
-                              //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Set master database.";
-                              //chat("#radial", ssMessage.str());
                             }
                           }
                           else
@@ -773,21 +762,9 @@ void Sqlite::inotify(string strPrefix)
                           {
                             string strMaster;
                             databaseRemove(strDatabase, m_strNode, strMaster);
-                            ssMessage.str("");
-                            ssMessage << strPrefix << "->Sqlite::databaseRemove() [inotify,master," << strDatabase << "," << m_strNode << "]:  Removed database.";
-                            log(ssMessage.str());
-                            //ssMessage.str("");
-                            //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Removed database.";
-                            //chat("#radial", ssMessage.str());
                             if (!strMaster.empty())
                             {
                               databaseMaster(strDatabase, strMaster);
-                              ssMessage.str("");
-                              ssMessage << strPrefix << "->Sqlite::databaseMaster() [inotify,master," << strDatabase << "," << strMaster << "]:  Set master database.";
-                              log(ssMessage.str());
-                              //ssMessage.str("");
-                              //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strMaster << " " << char(3) << " Set master database.";
-                              //chat("#radial", ssMessage.str());
                             }
                           }
                           else
@@ -851,21 +828,9 @@ void Sqlite::inotify(string strPrefix)
                 {
                   string strMaster;
                   databaseRemove(strDatabase, m_strNode, strMaster);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Sqlite::databaseRemove() [" << strDatabase << "," << m_strNode << "]:  Removed database.";
-                  log(ssMessage.str());
-                  //ssMessage.str("");
-                  //ssMessage << char(3) << "13,06 " << strDatabase << " | " << m_strNode << " " << char(3) << " Removed database.";
-                  //chat("#radial", ssMessage.str());
                   if (!strMaster.empty())
                   {
                     databaseMaster(strDatabase, strMaster);
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Sqlite::databaseMaster() [" << strDatabase << "," << strMaster << "]:  Set master database.";
-                    log(ssMessage.str());
-                    //ssMessage.str("");
-                    //ssMessage << char(3) << "13,06 " << strDatabase << " | " << strMaster << " " << char(3) << " Set master database.";
-                    //chat("#radial", ssMessage.str());
                   }
                 }
                 else
@@ -953,7 +918,7 @@ void Sqlite::sync(string strPrefix)
             {
               m_databases[i.first][j.first] = false;
               ssMessage.str("");
-              ssMessage << strPrefix << "->Sqlite::databaseAdd() [sync,master," << i.first << "," << j.first << "]:  Added database.";
+              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Added database.";
               log(ssMessage.str());
               //ssMessage.str("");
               //ssMessage << char(3) << "13,06 " << i.first << " | " << j.first << " " << char(3) << " Added database.";
@@ -969,7 +934,7 @@ void Sqlite::sync(string strPrefix)
                 }
               }
               ssMessage.str("");
-              ssMessage << strPrefix << "->Sqlite::databaseMaster() [sync,master," << i.first << "," << j.first << "]:  Set master database.";
+              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Set master database.";
               log(ssMessage.str());
               //ssMessage.str("");
               //ssMessage << char(3) << "13,06 " << i.first << " | " << j.first << " " << char(3) << " Set master database.";
@@ -1003,7 +968,7 @@ void Sqlite::sync(string strPrefix)
           {
             m_databases[i.first][j.first] = false;
             ssMessage.str("");
-            ssMessage << strPrefix << " [sync,slave," << i.first << "," << j.first << "]:  Added database.";
+            ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Added database.";
             log(ssMessage.str());
           }
           if (m_databases[i.first][j.first] != ((j.second->v == "master")?true:false))
@@ -1012,7 +977,7 @@ void Sqlite::sync(string strPrefix)
             if (j.second->v == "master")
             {
               ssMessage.str("");
-              ssMessage << strPrefix << " [sync,slave," << i.first << "," << j.first << "]:  Set master database.";
+              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Set master database.";
               log(ssMessage.str());
             }
           }

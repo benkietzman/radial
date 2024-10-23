@@ -32,9 +32,9 @@ class Sqlite : public Interface
   mutex m_mutex;
   thread *m_pThreadInotify;
 
-  void databaseAdd(const string strDatabase, const string strNode, bool &bMaster);
-  void databaseMaster(const string strDatabase, const string strNode);
-  void databaseRemove(const string strDatabase, const string strNode, string &strMaster);
+  void databaseAdd(string strPrefix, const string strDatabase, const string strNode, bool &bMaster);
+  void databaseMaster(string strPrefix, const string strDatabase, const string strNode);
+  void databaseRemove(string strPrefix, const string strDatabase, const string strNode, string &strMaster);
   void inotify(string strPrefix);
   void sync(string strPrefix);
 
