@@ -899,7 +899,7 @@ void Sqlite::sync(string strPrefix)
         {
           bool bMaster = false;
           databaseAdd(strPrefix, i.first, j.first, bMaster);
-          if (j.second.v == "master")
+          if (j.second->v == "master")
           {
             databaseMaster(strPrefix, i.first, j.first);
           }
