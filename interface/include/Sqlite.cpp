@@ -648,9 +648,9 @@ void Sqlite::inotify(string strPrefix)
             }
           }
           delete ptJson;
-          mutex.lock();
+          m_mutex.lock();
           databases = m_databases;
-          mutex.unlock();
+          m_mutex.unlock();
           for (auto &i : databases)
           {
             for (auto &j : i.second)
