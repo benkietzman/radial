@@ -632,7 +632,6 @@ void Sqlite::inotify(string strPrefix)
     if (isMasterSettled())
     {
       int fdNotify;
-      sync(strPrefix);
       if ((fdNotify = inotify_init1(IN_NONBLOCK)) != -1)
       {
         int wdNotify;
@@ -641,50 +640,11 @@ void Sqlite::inotify(string strPrefix)
           bool bExit = false;
           inotify_event *pEvent;
           int nReturn;
-          list<string> entries;
           string strNotify;
           time_t CSync, CTime;
           Json *ptLink;
-          m_file.directoryList(m_strData + "/sqlite", entries);
-          while (!entries.empty())
-          {
-            if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
-            {
-              bool bAdd = false;
-              string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
-              m_mutex.lock();
-              if (m_databases.find(strDatabase) == m_databases.end() || m_databases[strDatabase].find(m_strNode) == m_databases[strDatabase].end())
-              {
-                bAdd = true;
-              }
-              m_mutex.unlock();
-              if (bAdd)
-              {
-                if (isMaster())
-                {
-                  bool bMaster = false;
-                  databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
-                  if (bMaster)
-                  {
-                    databaseMaster(strPrefix, strDatabase, m_strNode);
-                  }
-                }
-                else
-                {
-                  ptLink = new Json;
-                  ptLink->i("Interface", "sqlite");
-                  ptLink->i("Node", master());
-                  ptLink->i("Function", "add");
-                  ptLink->m["Request"] = new Json;
-                  ptLink->m["Request"]->i("Database", strDatabase);
-                  ptLink->m["Request"]->i("Node", m_strNode);
-                  hub("link", ptLink, strError);
-                  delete ptLink;
-                }
-              }
-            }
-            entries.pop_front();
-          }
+          sync(strPrefix);
+          load(strPrefix);
           time(&CTime);
           CSync = CTime;
           while (!bExit)
@@ -814,6 +774,56 @@ void Sqlite::inotify(string strPrefix)
   }
   setShutdown();
   threadDecrement();
+}
+// }}}
+// {{{ load()
+void Sqlite::load(string strPrefix)
+{
+  list<string> entries;
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Sqlite::load()";
+  m_file.directoryList(m_strData + "/sqlite", entries);
+  while (!entries.empty())
+  {
+    if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
+    {
+      bool bAdd = false;
+      string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
+      m_mutex.lock();
+      if (m_databases.find(strDatabase) == m_databases.end() || m_databases[strDatabase].find(m_strNode) == m_databases[strDatabase].end())
+      {
+        bAdd = true;
+      }
+      m_mutex.unlock();
+      if (bAdd)
+      {
+        if (isMaster())
+        {
+          bool bMaster = false;
+          databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
+          if (bMaster)
+          {
+            databaseMaster(strPrefix, strDatabase, m_strNode);
+          }
+        }
+        else
+        {
+          Json *ptLink = new Json;
+          ptLink->i("Interface", "sqlite");
+          ptLink->i("Node", master());
+          ptLink->i("Function", "add");
+          ptLink->m["Request"] = new Json;
+          ptLink->m["Request"]->i("Database", strDatabase);
+          ptLink->m["Request"]->i("Node", m_strNode);
+          hub("link", ptLink, strError);
+          delete ptLink;
+        }
+      }
+    }
+    entries.pop_front();
+  }
 }
 // }}}
 // {{{ sync()
