@@ -882,6 +882,7 @@ void Sqlite::sync(string strPrefix)
         }
       }
       delete ptJson;
+      nodex.pop_front();
     }
   }
   else
