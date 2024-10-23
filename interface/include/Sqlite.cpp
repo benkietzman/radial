@@ -122,7 +122,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 int nReturn;
                 sqlite3 *db;
                 stringstream ssFile, ssError;
-                ssFile << "file:" << m_strData << "/sqlite/" << ptJson->m["Database"]->v << ".db";
+                ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
                 if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
                 {
                   if (strAction == "select")
