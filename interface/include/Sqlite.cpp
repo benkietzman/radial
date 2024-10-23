@@ -62,251 +62,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  // {{{ database
-  if (!empty(ptJson, "Database"))
+  if (!empty(ptJson, "Function"))
   {
-    if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
-    {
-      if (!empty(ptJson, "Query") || isMasterSettled())
-      {
-        bool bLocal = false;
-        m_mutex.lock();
-        if (m_databases.find(ptJson->m["Database"]->v) != m_databases.end() && m_databases[ptJson->m["Database"]->v].find(m_strNode) != m_databases[ptJson->m["Database"]->v].end() && (!empty(ptJson, "Query") || m_databases[ptJson->m["Database"]->v][m_strNode] || (!empty(ptJson, "Node") && ptJson->m["Node"]->v == m_strNode)))
-        {
-          bLocal = true;
-        }
-        m_mutex.unlock();
-        if (bLocal)
-        {
-          int nReturn;
-          sqlite3 *db;
-          stringstream ssFile, ssError;
-          ssFile << "file:" << m_strData << "/sqlite/" << ptJson->m["Database"]->v << ".db";
-          if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
-          {
-            if (!empty(ptJson, "Query"))
-            {
-              char *pszError = NULL;
-              list<map<string, string> > rows;
-              Json *ptRows = new Json;
-              if ((nReturn = sqlite3_exec(db, ptJson->m["Query"]->v.c_str(), m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
-              {
-                size_t unSize = 16;
-                string strJson;
-                stringstream ssRows;
-                ssRows << ptRows->l.size();
-                ptJson->i("Rows", ssRows.str(), 'n');
-                if (exist(ptJson, "Response"))
-                {
-                  delete ptJson->m["Response"];
-                  ptJson->m.erase("Response");
-                }
-                unSize += ptJson->j(strJson).size() + 13;
-                for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
-                {
-                  for (auto &j : (*i)->m)
-                  {
-                    unSize += j.first.size() + j.second->v.size() + 6;
-                  }
-                }
-                if (unSize < m_unMaxPayload)
-                {
-                  bResult = true;
-                  ptJson->m["Response"] = ptRows;
-                }
-                else
-                {
-                  delete ptRows;
-                  ssMessage.str("");
-                  ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
-                  strError = ssMessage.str();
-                }
-              }
-              else
-              {
-                ssMessage.str("");
-                ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
-                sqlite3_free(pszError);
-                strError = ssMessage.str();
-              }
-            }
-            else
-            {
-              char *pszError = NULL;
-              if ((nReturn = sqlite3_exec(db, ptJson->m["Update"]->v.c_str(), NULL, NULL, &pszError)) == SQLITE_OK)
-              {
-                list<string> nodes;
-                string strAction, strLower;
-                stringstream ssQuery(ptJson->m["Update"]->v), ssRows;
-                bResult = true;
-                ssRows << sqlite3_changes(db);
-                ptJson->i("Rows", ssRows.str(), 'n');
-                ssQuery >> strAction;
-                m_manip.toLower(strLower, strAction);
-                if (strLower == "insert")
-                {
-                  char *pszError = NULL;
-                  Json *ptRows = new Json;
-                  if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
-                  {
-                    if (!ptRows->l.empty() && !empty(ptRows->l.front(), "last_insert_rowid()"))
-                    {
-                      ptJson->i("ID", ptRows->l.front()->m["last_insert_rowid()"]->v, 'n');
-                    }
-                  }
-                  else
-                  {
-                    sqlite3_free(pszError);
-                  }
-                  delete ptRows;
-                }
-                m_mutex.lock();
-                if (m_databases.find(ptJson->m["Database"]->v) != m_databases.end() && m_databases[ptJson->m["Database"]->v].find(m_strNode) != m_databases[ptJson->m["Database"]->v].end() && m_databases[ptJson->m["Database"]->v][m_strNode])
-                {
-                  for (auto &i : m_databases[ptJson->m["Database"]->v])
-                  {
-                    if (i.first != m_strNode)
-                    {
-                      nodes.push_back(i.first);
-                    }
-                  }
-                }
-                m_mutex.unlock();
-                while (!nodes.empty())
-                {
-                  Json *ptLink = new Json(ptJson);
-                  ptLink->i("Interface", "sqlite");
-                  ptLink->i("Node", nodes.front());
-                  hub("link", ptLink, strError);
-                  delete ptLink;
-                  nodes.pop_front();
-                }
-              }
-              else
-              {
-                ssMessage.str("");
-                ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
-                sqlite3_free(pszError);
-                strError = ssMessage.str();
-              }
-            }
-          }
-          else
-          {
-            ssMessage.str("");
-            ssMessage << "sqlit3_open(" << nReturn << ") " << sqlite3_errmsg(db);
-          }
-          sqlite3_close(db);
-        }
-        else if (!empty(ptJson, "Query"))
-        {
-          vector<string> nodes;
-          m_mutex.lock();
-          if (m_databases.find(ptJson->m["Database"]->v) != m_databases.end())
-          {
-            for (auto &i : m_databases[ptJson->m["Database"]->v])
-            {
-              nodes.push_back(i.first);
-            }
-          }
-          m_mutex.unlock();
-          if (!nodes.empty())
-          {
-            unsigned int unPick = 0, unSeed = time(NULL);
-            Json *ptLink = new Json(ptJson);
-            srand(unSeed);
-            unPick = rand_r(&unSeed) % nodes.size();
-            ptLink->i("Interface", "sqlite");
-            ptLink->i("Node", nodes[unPick]);
-            if (hub("link", ptLink, strError))
-            {
-              bResult = true;
-              if (!empty(ptLink, "ID"))
-              {
-                ptJson->i("ID", ptLink->m["ID"]->v);
-              }
-              if (exist(ptLink, "Response"))
-              {
-                ptJson->i("Response", ptLink->m["Response"]);
-              }
-              if (!empty(ptLink, "Rows"))
-              {
-                ptJson->i("Rows", ptLink->m["Rows"]->v);
-              }
-            }
-            delete ptLink;
-          }
-          else
-          {
-            strError = "Please provide a valid Database.";
-          }
-        }
-        else
-        {
-          bool bExists = false;
-          string strNode;
-          m_mutex.lock();
-          if (m_databases.find(ptJson->m["Database"]->v) != m_databases.end())
-          {
-            for (auto i = m_databases[ptJson->m["Database"]->v].begin(); strNode.empty() && i != m_databases[ptJson->m["Database"]->v].end(); i++)
-            {
-              bExists = true;
-              if (i->second)
-              {
-                strNode = i->first;
-              }
-            }
-          }
-          m_mutex.unlock();
-          if (!strNode.empty())
-          {
-            Json *ptLink = new Json(ptJson);
-            ptLink->i("Interface", "sqlite");
-            ptLink->i("Node", strNode);
-            if (hub("link", ptLink, strError))
-            {
-              bResult = true;
-              if (!empty(ptLink, "ID"))
-              {
-                ptJson->i("ID", ptLink->m["ID"]->v);
-              }
-              if (exist(ptLink, "Response"))
-              {
-                ptJson->i("Response", ptLink->m["Response"]);
-              }
-              if (!empty(ptLink, "Rows"))
-              {
-                ptJson->i("Rows", ptLink->m["Rows"]->v);
-              }
-            }
-            delete ptLink;
-          }
-          else if (bExists)
-          {
-            strError = "Missing master for this Database.  Try again later.";
-          }
-          else
-          {
-            strError = "Please provide a valid Database.";
-          }
-        }
-      }
-      else
-      {
-        strError = "Master is not settled.";
-      }
-    }
-    else
-    {
-      strError = "Please provide the Query or Update.";
-    }
-  }
-  // }}}
-  // {{{ function
-  else if (!empty(ptJson, "Function"))
-  {
+    string strFunction = ptJson->m["Function"]->v;
     // {{{ list
-    if (ptJson->m["Function"]->v == "list")
+    if (strFunction == "list")
     {
       bResult = true;
       if (exist(ptJson, "Response"))
@@ -332,12 +92,257 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     {
       if (!empty(ptJson->m["Request"], "Database"))
       {
-        string strDatabase = ptJson->m["Request"]->m["Database"]->v;
+        string strDatabase = ptJson->m["Request"]->m["Database"]->v, strNode;
         if (!empty(ptJson->m["Request"], "Node"))
         {
-          string strNode = ptJson->m["Request"]->m["Node"]->v;
+          strNode = ptJson->m["Request"]->m["Node"]->v;
+        }
+        // {{{ query
+        if (strFunction == "query")
+        {
+          if (!empty(ptJson->m["Request"], "Statement"))
+          {
+            string strAction, strStatement = ptJson->m["Request"]->m["Statement"]->v, strValue;
+            stringstream ssStatement(strStatement);
+            ssStatement >> strValue;
+            m_manip.toLower(strAction, strValue);
+            if (strAction == "select" || isMasterSettled())
+            {
+              bool bLocal = false;
+              m_mutex.lock();
+              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "query" || m_databases[strDatabase][m_strNode] || (!strNode.empty() && strNode == m_strNode)))
+              {
+                bLocal = true;
+              }
+              m_mutex.unlock();
+              if (bLocal)
+              {
+                int nReturn;
+                sqlite3 *db;
+                stringstream ssFile, ssError;
+                ssFile << "file:" << m_strData << "/sqlite/" << ptJson->m["Database"]->v << ".db";
+                if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
+                {
+                  if (strAction == "select")
+                  {
+                    char *pszError = NULL;
+                    list<map<string, string> > rows;
+                    Json *ptRows = new Json;
+                    if ((nReturn = sqlite3_exec(db, strStatement.c_str(), m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
+                    {
+                      size_t unSize = 16;
+                      string strJson;
+                      stringstream ssRows;
+                      ssRows << ptRows->l.size();
+                      ptJson->i("Rows", ssRows.str(), 'n');
+                      if (exist(ptJson, "Response"))
+                      {
+                        delete ptJson->m["Response"];
+                        ptJson->m.erase("Response");
+                      }
+                      unSize += ptJson->j(strJson).size() + 13;
+                      for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
+                      {
+                        for (auto &j : (*i)->m)
+                        {
+                          unSize += j.first.size() + j.second->v.size() + 6;
+                        }
+                      }
+                      if (unSize < m_unMaxPayload)
+                      {
+                        bResult = true;
+                        ptJson->m["Response"] = ptRows;
+                      }
+                      else
+                      {
+                        delete ptRows;
+                        ssMessage.str("");
+                        ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
+                        strError = ssMessage.str();
+                      }
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
+                      sqlite3_free(pszError);
+                      strError = ssMessage.str();
+                    }
+                  }
+                  else
+                  {
+                    char *pszError = NULL;
+                    if ((nReturn = sqlite3_exec(db, strStatement.c_str(), NULL, NULL, &pszError)) == SQLITE_OK)
+                    {
+                      list<string> nodes;
+                      stringstream ssRows;
+                      bResult = true;
+                      ssRows << sqlite3_changes(db);
+                      ptJson->i("Rows", ssRows.str(), 'n');
+                      if (strAction == "insert")
+                      {
+                        char *pszError = NULL;
+                        Json *ptRows = new Json;
+                        if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
+                        {
+                          if (!ptRows->l.empty() && !empty(ptRows->l.front(), "last_insert_rowid()"))
+                          {
+                            ptJson->i("ID", ptRows->l.front()->m["last_insert_rowid()"]->v, 'n');
+                          }
+                        }
+                        else
+                        {
+                          sqlite3_free(pszError);
+                        }
+                        delete ptRows;
+                      }
+                      m_mutex.lock();
+                      if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && m_databases[strDatabase][m_strNode])
+                      {
+                        for (auto &i : m_databases[strDatabase])
+                        {
+                          if (i.first != m_strNode)
+                          {
+                            nodes.push_back(i.first);
+                          }
+                        }
+                      }
+                      m_mutex.unlock();
+                      while (!nodes.empty())
+                      {
+                        Json *ptLink = new Json(ptJson);
+                        ptLink->i("Interface", "sqlite");
+                        ptLink->i("Node", nodes.front());
+                        hub("link", ptLink, strError);
+                        delete ptLink;
+                        nodes.pop_front();
+                      }
+                    }
+                    else
+                    {
+                      ssMessage.str("");
+                      ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
+                      sqlite3_free(pszError);
+                      strError = ssMessage.str();
+                    }
+                  }
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << "sqlit3_open(" << nReturn << ") " << sqlite3_errmsg(db);
+                }
+                sqlite3_close(db);
+              }
+              else if (strAction == "select")
+              {
+                vector<string> nodes;
+                m_mutex.lock();
+                if (m_databases.find(strDatabase) != m_databases.end())
+                {
+                  for (auto &i : m_databases[strDatabase])
+                  {
+                    nodes.push_back(i.first);
+                  }
+                }
+                m_mutex.unlock();
+                if (!nodes.empty())
+                {
+                  unsigned int unPick = 0, unSeed = time(NULL);
+                  Json *ptLink = new Json(ptJson);
+                  srand(unSeed);
+                  unPick = rand_r(&unSeed) % nodes.size();
+                  ptLink->i("Interface", "sqlite");
+                  ptLink->i("Node", nodes[unPick]);
+                  if (hub("link", ptLink, strError))
+                  {
+                    bResult = true;
+                    if (!empty(ptLink, "ID"))
+                    {
+                      ptJson->i("ID", ptLink->m["ID"]->v);
+                    }
+                    if (exist(ptLink, "Response"))
+                    {
+                      ptJson->i("Response", ptLink->m["Response"]);
+                    }
+                    if (!empty(ptLink, "Rows"))
+                    {
+                      ptJson->i("Rows", ptLink->m["Rows"]->v);
+                    }
+                  }
+                  delete ptLink;
+                }
+                else
+                {
+                  strError = "Please provide a valid Database.";
+                }
+              }
+              else
+              {
+                bool bExists = false;
+                string strSubNode;
+                m_mutex.lock();
+                if (m_databases.find(strDatabase) != m_databases.end())
+                {
+                  for (auto i = m_databases[strDatabase].begin(); strSubNode.empty() && i != m_databases[strDatabase].end(); i++)
+                  {
+                    bExists = true;
+                    if (i->second)
+                    {
+                      strSubNode = i->first;
+                    }
+                  }
+                }
+                m_mutex.unlock();
+                if (!strSubNode.empty())
+                {
+                  Json *ptLink = new Json(ptJson);
+                  ptLink->i("Interface", "sqlite");
+                  ptLink->i("Node", strSubNode);
+                  if (hub("link", ptLink, strError))
+                  {
+                    bResult = true;
+                    if (!empty(ptLink, "ID"))
+                    {
+                      ptJson->i("ID", ptLink->m["ID"]->v);
+                    }
+                    if (exist(ptLink, "Response"))
+                    {
+                      ptJson->i("Response", ptLink->m["Response"]);
+                    }
+                    if (!empty(ptLink, "Rows"))
+                    {
+                      ptJson->i("Rows", ptLink->m["Rows"]->v);
+                    }
+                  }
+                  delete ptLink;
+                }
+                else if (bExists)
+                {
+                  strError = "Missing master for this Database.  Try again later.";
+                }
+                else
+                {
+                  strError = "Please provide a valid Database.";
+                }
+              }
+            }
+            else
+            {
+              strError = "Master is not settled.";
+            }
+          }
+          else
+          {
+            strError = "Please provide the Statement within the Request.";
+          }
+        }
+        // }}}
+        // {{{ node
+        else if (!strNode.empty())
+        {
           // {{{ add
-          if (ptJson->m["Function"]->v == "add")
+          if (strFunction == "add")
           {
             bResult = true;
             if (isMaster())
@@ -362,7 +367,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           }
           // }}}
           // {{{ master
-          else if (ptJson->m["Function"]->v == "master")
+          else if (strFunction == "master")
           {
             bResult = true;
             m_mutex.lock();
@@ -374,7 +379,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           }
           // }}}
           // {{{ remove
-          else if (ptJson->m["Function"]->v == "remove")
+          else if (strFunction == "remove")
           {
             bResult = true;
             if (isMaster())
@@ -404,14 +409,17 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           // {{{ invalid
           else
           {
-            strError = "Please provide a valid Function: add, list, master, remove.";
+            strError = "Please provide a valid Function:  add, list, master, query. remove.";
           }
           // }}}
         }
+        // }}}
+        // {{{ invalid
         else
         {
           strError = "Please provide the Node within the Request.";
         }
+        // }}}
       }
       else
       {
@@ -426,13 +434,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     }
     // }}}
   }
-  // }}}
-  // {{{ invalid
   else
   {
-    strError = "Please provide the Database.";
+    strError = "Please provide the Function.";
   }
-  // }}}
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
