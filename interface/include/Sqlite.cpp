@@ -350,10 +350,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             if (isMaster())
             {
               bool bMaster = false;
-              databaseAdd(strDatabase, strNode, bMaster);
+              databaseAdd(strPrefix, strDatabase, strNode, bMaster);
               if (bMaster)
               {
-                databaseMaster(strDatabase, strNode);
+                databaseMaster(strPrefix, strDatabase, strNode);
               }
             }
             else
@@ -396,10 +396,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             if (isMaster())
             {
               string strMaster;
-              databaseRemove(strDatabase, strNode, strMaster);
+              databaseRemove(strPrefix, strDatabase, strNode, strMaster);
               if (!strMaster.empty())
               {
-                databaseMaster(strDatabase, strMaster);
+                databaseMaster(strPrefix, strDatabase, strMaster);
               }
             }
             else
@@ -689,10 +689,10 @@ void Sqlite::inotify(string strPrefix)
               if (isMaster())
               {
                 bool bMaster = false;
-                databaseAdd(strDatabase, m_strNode, bMaster);
+                databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
                 if (bMaster)
                 {
-                  databaseMaster(strDatabase, m_strNode);
+                  databaseMaster(strPrefix, strDatabase, m_strNode);
                 }
               }
               else
@@ -737,10 +737,10 @@ void Sqlite::inotify(string strPrefix)
                           if (isMaster())
                           {
                             bool bMaster = false;
-                            databaseAdd(strDatabase, m_strNode, bMaster);
+                            databaseAdd(strPrefix, strDatabase, m_strNode, bMaster);
                             if (bMaster)
                             {
-                              databaseMaster(strDatabase, m_strNode);
+                              databaseMaster(strPrefix, strDatabase, m_strNode);
                             }
                           }
                           else
@@ -761,10 +761,10 @@ void Sqlite::inotify(string strPrefix)
                           if (isMaster())
                           {
                             string strMaster;
-                            databaseRemove(strDatabase, m_strNode, strMaster);
+                            databaseRemove(strPrefix, strDatabase, m_strNode, strMaster);
                             if (!strMaster.empty())
                             {
-                              databaseMaster(strDatabase, strMaster);
+                              databaseMaster(strPrefix, strDatabase, strMaster);
                             }
                           }
                           else
@@ -827,10 +827,10 @@ void Sqlite::inotify(string strPrefix)
                 if (isMaster())
                 {
                   string strMaster;
-                  databaseRemove(strDatabase, m_strNode, strMaster);
+                  databaseRemove(strPrefix, strDatabase, m_strNode, strMaster);
                   if (!strMaster.empty())
                   {
-                    databaseMaster(strDatabase, strMaster);
+                    databaseMaster(strPrefix, strDatabase, strMaster);
                   }
                 }
                 else
