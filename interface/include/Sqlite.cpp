@@ -778,6 +778,7 @@ void Sqlite::inotify(string strPrefix)
             if (m_bMasterUpdated || shutdown())
             {
               bExit = true;
+              m_bMasterUpdated = false;
             }
           }
           inotify_rm_watch(fdNotify, wdNotify);
