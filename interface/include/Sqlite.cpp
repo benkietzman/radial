@@ -852,7 +852,7 @@ void Sqlite::sync(string strPrefix)
     while (!subNodes.empty())
     {
       bool bFound = false;
-      while (auto i = nodes.begin(); !bFound && i != nodes.end(); i++)
+      for (auto i = nodes.begin(); !bFound && i != nodes.end(); i++)
       {
         if (subNodes.front() == (*i))
         {
