@@ -627,9 +627,9 @@ void Sqlite::inotify(string strPrefix)
           m_file.directoryList(m_strData + "/sqlite", entries);
           while (!entries.empty())
           {
-            if (entries.front().size() > 3 && entries.front().substr((entries.size() - 3), 3) == ".db")
+            if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
             {
-              string strDatabase = entries.front().substr(0, (entries.size() - 3));
+              string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
               if (isMaster())
               {
                 bool bMaster = false;
@@ -755,9 +755,9 @@ void Sqlite::inotify(string strPrefix)
           m_file.directoryList(m_strData + "/sqlite", entries);
           while (!entries.empty())
           {
-            if (entries.front().size() > 3 && entries.front().substr((entries.size() - 3), 3) == ".db")
+            if (entries.front().size() > 3 && entries.front().substr((entries.front().size() - 3), 3) == ".db")
             {
-              string strDatabase = entries.front().substr(0, (entries.size() - 3));
+              string strDatabase = entries.front().substr(0, (entries.front().size() - 3));
               if (isMaster())
               {
                 string strMaster;
