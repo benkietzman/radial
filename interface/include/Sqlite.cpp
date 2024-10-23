@@ -112,7 +112,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bLocal = false;
               m_mutex.lock();
-              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "query" || m_databases[strDatabase][m_strNode] || (!strNode.empty() && strNode == m_strNode)))
+              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode]))
               {
                 bLocal = true;
               }
