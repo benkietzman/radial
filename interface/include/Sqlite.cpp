@@ -775,7 +775,7 @@ void Sqlite::inotify(string strPrefix)
               CSync = CTime;
               sync(strPrefix);
             }
-            if (m_bMasterUpdated && shutdown())
+            if (m_bMasterUpdated || shutdown())
             {
               bExit = true;
             }
