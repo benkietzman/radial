@@ -836,8 +836,7 @@ void Sqlite::sync(string strPrefix)
   strPrefix += "->Sqlite::sync()";
   if (isMaster())
   {
-    list<string> nodes, subNodes;
-    map<string, map<string, bool> > databases;
+    list<string> nodes;
     m_mutexShare.lock();
     for (auto &link : m_l)
     {
@@ -847,47 +846,6 @@ void Sqlite::sync(string strPrefix)
       }
     }
     m_mutexShare.unlock();
-    m_mutex.lock();
-    databases = m_databases;
-    m_mutex.unlock();
-    for (auto &i : databases)
-    {
-      for (auto &j : i.second)
-      {
-        subNodes.push_back(j.first);
-      }
-    }
-    subNodes.sort();
-    subNodes.unique();
-    while (!subNodes.empty())
-    {
-      bool bFound = false;
-      for (auto i = nodes.begin(); !bFound && i != nodes.end(); i++)
-      {
-        if (subNodes.front() == (*i))
-        {
-          bFound = true;
-        }
-      }
-      if (!bFound)
-      {
-        for (auto &i : databases)
-        {
-          for (auto &j : i.second)
-          {
-            if (subNodes.front() == j.first)
-            {
-              string strMaster;
-              databaseRemove(strPrefix, i.first, j.first, strMaster);
-              if (!strMaster.empty())
-              {
-                databaseMaster(strPrefix, i.first, j.first);
-              }
-            }
-          }
-        }
-      }
-    }
     while (!nodes.empty())
     {
       map<string, map<string, bool> > databases;
