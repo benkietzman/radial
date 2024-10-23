@@ -806,9 +806,6 @@ void Sqlite::inotify(string strPrefix)
         ssMessage << strPrefix << "->inotify_init1(" << errno << ") error:  " << strerror(errno);
         log(ssMessage.str());
       }
-      m_mutex.lock();
-      m_databases.clear();
-      m_mutex.unlock();
     }
     else
     {
