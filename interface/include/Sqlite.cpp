@@ -832,7 +832,6 @@ void Sqlite::sync(string strPrefix)
   string strError;
   stringstream ssMessage;
 
-  threadIncrement();
   strPrefix += "->Sqlite::sync()";
   if (isMaster())
   {
