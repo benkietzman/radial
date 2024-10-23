@@ -125,78 +125,66 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
                 if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
                 {
-                  if (strAction == "select")
+                  char *pszError = NULL;
+                  Json *ptRows = new Json;
+                  if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                   {
-                    char *pszError = NULL;
-                    list<map<string, string> > rows;
-                    Json *ptRows = new Json;
-                    if ((nReturn = sqlite3_exec(db, strStatement.c_str(), m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
+                    size_t unSize = 16;
+                    string strJson;
+                    stringstream ssRows;
+                    if (strAction == "select")
                     {
-                      size_t unSize = 16;
-                      string strJson;
-                      stringstream ssRows;
                       ssRows << ptRows->l.size();
-                      ptJson->i("Rows", ssRows.str(), 'n');
-                      if (exist(ptJson, "Response"))
-                      {
-                        delete ptJson->m["Response"];
-                        ptJson->m.erase("Response");
-                      }
-                      unSize += ptJson->j(strJson).size() + 13;
-                      for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
-                      {
-                        for (auto &j : (*i)->m)
-                        {
-                          unSize += j.first.size() + j.second->v.size() + 6;
-                        }
-                      }
-                      if (unSize < m_unMaxPayload)
-                      {
-                        bResult = true;
-                        ptJson->m["Response"] = ptRows;
-                      }
-                      else
-                      {
-                        delete ptRows;
-                        ssMessage.str("");
-                        ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
-                        strError = ssMessage.str();
-                      }
                     }
                     else
                     {
+                      ssRows << sqlite3_changes(db);
+                    }
+                    ptJson->i("Rows", ssRows.str(), 'n');
+                    if (exist(ptJson, "Response"))
+                    {
+                      delete ptJson->m["Response"];
+                      ptJson->m.erase("Response");
+                    }
+                    unSize += ptJson->j(strJson).size() + 13;
+                    for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
+                    {
+                      for (auto &j : (*i)->m)
+                      {
+                        unSize += j.first.size() + j.second->v.size() + 6;
+                      }
+                    }
+                    if (unSize < m_unMaxPayload)
+                    {
+                      bResult = true;
+                      ptJson->m["Response"] = ptRows;
+                    }
+                    else
+                    {
+                      delete ptRows;
                       ssMessage.str("");
-                      ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
-                      sqlite3_free(pszError);
+                      ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
                       strError = ssMessage.str();
                     }
-                  }
-                  else
-                  {
-                    char *pszError = NULL;
-                    if ((nReturn = sqlite3_exec(db, strStatement.c_str(), NULL, NULL, &pszError)) == SQLITE_OK)
+                    if (strAction != "select")
                     {
                       list<string> nodes;
-                      stringstream ssRows;
-                      bResult = true;
-                      ssRows << sqlite3_changes(db);
-                      ptJson->i("Rows", ssRows.str(), 'n');
                       if (strAction == "insert")
                       {
-                        char *pszError = NULL;
-                        Json *ptRows = new Json;
-                        if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptRows, &pszError)) == SQLITE_OK)
+                        char *pszSubError = NULL;
+                        Json *ptSubRows = new Json;
+                        if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptSubRows, &pszSubError)) == SQLITE_OK)
                         {
-                          if (!ptRows->l.empty() && !empty(ptRows->l.front(), "last_insert_rowid()"))
+                          if (!ptSubRows->l.empty() && !empty(ptSubRows->l.front(), "last_insert_rowid()"))
                           {
-                            ptJson->i("ID", ptRows->l.front()->m["last_insert_rowid()"]->v, 'n');
+                            ptJson->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
                           }
                         }
                         else
                         {
-                          sqlite3_free(pszError);
+                          sqlite3_free(pszSubError);
                         }
-                        delete ptRows;
+                        delete ptSubRows;
                       }
                       m_mutex.lock();
                       if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && m_databases[strDatabase][m_strNode])
@@ -220,13 +208,13 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         nodes.pop_front();
                       }
                     }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
-                      sqlite3_free(pszError);
-                      strError = ssMessage.str();
-                    }
+                  }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
+                    sqlite3_free(pszError);
+                    strError = ssMessage.str();
                   }
                 }
                 else
