@@ -897,26 +897,11 @@ void Sqlite::sync(string strPrefix)
       {
         for (auto &j : i.second->m)
         {
-          if (m_databases.find(i.first) == m_databases.end())
+          bool bMaster = false;
+          databaseAdd(strPrefix, i.first, j.first, bMaster);
+          if (j.second.v == "master")
           {
-            m_databases[i.first] = {};
-          }
-          if (m_databases[i.first].find(j.first) == m_databases[i.first].end())
-          {
-            m_databases[i.first][j.first] = false;
-            ssMessage.str("");
-            ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Added database.";
-            log(ssMessage.str());
-          }
-          if (m_databases[i.first][j.first] != ((j.second->v == "master")?true:false))
-          {
-            m_databases[i.first][j.first] = ((j.second->v == "master")?true:false);
-            if (j.second->v == "master")
-            {
-              ssMessage.str("");
-              ssMessage << strPrefix << " [" << i.first << "," << j.first << "]:  Set master database.";
-              log(ssMessage.str());
-            }
+            databaseMaster(strPrefix, i.first, j.first);
           }
         }
       }
