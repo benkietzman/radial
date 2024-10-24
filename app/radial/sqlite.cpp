@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
           getline(cin, l);
           cout << "Please set the database using:  database <name>" << endl;
           cout << endl << "Obtain a list of databases using:  databases" << endl;
-          cout << endl << "Obtain a list of tables using:  tables" << endl;
+          cout << "Obtain a list of tables using:  tables" << endl;
         }
         else if (f == "tables")
         {
