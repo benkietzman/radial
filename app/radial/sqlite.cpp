@@ -91,8 +91,9 @@ int main(int argc, char *argv[])
         else if (f == "tables")
         {
           list<map<string, string> > resultSet;
+          size_t unID = 0, unRows = 0;
           getline(cin, l);
-          if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table'", resultSet, e))
+          if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table'", resultSet, unID, unRows, e))
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
             cout << endl << "# of Rows Returned:  " << unRows << endl;
