@@ -295,7 +295,7 @@ chat("#sqlite", "[r] start");
                   ptLink->i("Node", strSubNode);
                   if (hub("link", ptLink, strError))
                   {
-chat((string)"#sqlite", "[r] " + m_strNode " --> " + strSubNode);
+chat((string)"#sqlite", "[r] " + m_strNode + (string)" --> " + strSubNode);
                     bResult = true;
                     if (!empty(ptLink, "ID"))
                     {
