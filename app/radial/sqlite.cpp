@@ -88,6 +88,13 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteList() error:  " << e << endl;
           }
         }
+        else if (strDatabase.empty())
+        {
+          getline(cin, l);
+          cout << "Please set the database using:  database <name>" << endl;
+          cout << endl << "Obtain a list of databases using:  databases" << endl;
+          cout << endl << "Obtain a list of tables using:  tables" << endl;
+        }
         else if (f == "tables")
         {
           list<map<string, string> > resultSet;
@@ -139,13 +146,6 @@ int main(int argc, char *argv[])
           {
             cerr << "Radial::sqliteQuery() error:  " << e << endl;
           }
-        }
-        else if (strDatabase.empty())
-        {
-          getline(cin, l);
-          cout << "Please set the database using:  database <name>" << endl;
-          cout << endl << "Obtain a list of databases using:  databases" << endl;
-          cout << endl << "Obtain a list of tables using:  tables" << endl;
         }
         else if (!f.empty())
         {
