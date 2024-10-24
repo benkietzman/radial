@@ -132,6 +132,12 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                     size_t unSize = 16;
                     string strJson;
                     stringstream ssRows;
+                    if (exist(ptJson, "Response"))
+                    {
+                      delete ptJson->m["Response"];
+                      ptJson->m.erase("Response");
+                    }
+                    ptJson->m["Response"] = new Json;
                     if (strAction == "select")
                     {
                       ssRows << ptRows->l.size();
@@ -140,32 +146,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                     {
                       ssRows << sqlite3_changes(db);
                     }
-                    ptJson->i("Rows", ssRows.str(), 'n');
-                    if (exist(ptJson, "Response"))
-                    {
-                      delete ptJson->m["Response"];
-                      ptJson->m.erase("Response");
-                    }
-                    unSize += ptJson->j(strJson).size() + 13;
-                    for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
-                    {
-                      for (auto &j : (*i)->m)
-                      {
-                        unSize += j.first.size() + j.second->v.size() + 6;
-                      }
-                    }
-                    if (unSize < m_unMaxPayload)
-                    {
-                      bResult = true;
-                      ptJson->m["Response"] = ptRows;
-                    }
-                    else
-                    {
-                      delete ptRows;
-                      ssMessage.str("");
-                      ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
-                      strError = ssMessage.str();
-                    }
+                    ptJson->m["Response"]->i("Rows", ssRows.str(), 'n');
                     if (strAction != "select")
                     {
                       list<string> nodes;
@@ -177,7 +158,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         {
                           if (!ptSubRows->l.empty() && !empty(ptSubRows->l.front(), "last_insert_rowid()"))
                           {
-                            ptJson->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
+                            ptJson->m["Response"]->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
                           }
                         }
                         else
@@ -208,9 +189,30 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         nodes.pop_front();
                       }
                     }
+                    unSize += ptJson->j(strJson).size() + 14;
+                    for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
+                    {
+                      for (auto &j : (*i)->m)
+                      {
+                        unSize += j.first.size() + j.second->v.size() + 6;
+                      }
+                    }
+                    if (unSize < m_unMaxPayload)
+                    {
+                      bResult = true;
+                      ptJson->m["Response"]->m["ResultSet"] = ptRows;
+                    }
+                    else
+                    {
+                      delete ptRows;
+                      ssMessage.str("");
+                      ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  ResultSet has been removed.";
+                      strError = ssMessage.str();
+                    }
                   }
                   else
                   {
+                    delete ptRows;
                     ssMessage.str("");
                     ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
                     sqlite3_free(pszError);
