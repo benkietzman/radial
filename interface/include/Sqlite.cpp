@@ -117,22 +117,19 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 bLocal = true;
               }
               m_mutex.unlock();
-chat("#sqlite", "0");
               if (bLocal)
               {
-chat("#sqlite", "0-0");
+chat("#sqlite", "[l] start");
                 int nReturn;
                 sqlite3 *db;
                 stringstream ssFile, ssError;
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
                 if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
                 {
-chat("#sqlite", "0-0-0");
                   char *pszError = NULL;
                   Json *ptRows = new Json;
                   if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                   {
-chat("#sqlite", "0-0-0-0");
                     size_t unSize = 16;
                     string strJson;
                     stringstream ssRows;
@@ -170,10 +167,8 @@ chat("#sqlite", "0-0-0-0");
                       ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
                       strError = ssMessage.str();
                     }
-chat("#sqlite", "0-0-0-1");
                     if (strAction != "select")
                     {
-chat("#sqlite", "0-0-0-1-0");
                       list<string> nodes;
                       if (strAction == "insert")
                       {
@@ -204,20 +199,17 @@ chat("#sqlite", "0-0-0-1-0");
                         }
                       }
                       m_mutex.unlock();
-chat((string)"#sqlite", "0-0-0-1-1 " + to_string(nodes.size()));
                       while (!nodes.empty())
                       {
                         Json *ptLink = new Json(ptJson);
                         ptLink->i("Interface", "sqlite");
                         ptLink->i("Node", nodes.front());
-chat((string)"#sqlite", "0-0-0-1-1-0 " + nodes.front());
+chat((string)"#sqlite", "[l] " + m_strNode + (string)" --> " + nodes.front());
                         hub("link", ptLink, strError);
                         delete ptLink;
                         nodes.pop_front();
                       }
-chat("#sqlite", "0-0-0-1-2");
                     }
-chat("#sqlite", "0-0-0-2");
                   }
                   else
                   {
@@ -226,7 +218,6 @@ chat("#sqlite", "0-0-0-2");
                     sqlite3_free(pszError);
                     strError = ssMessage.str();
                   }
-chat("#sqlite", "0-0-1");
                 }
                 else
                 {
@@ -234,7 +225,7 @@ chat("#sqlite", "0-0-1");
                   ssMessage << "sqlit3_open(" << nReturn << ") " << sqlite3_errmsg(db);
                 }
                 sqlite3_close(db);
-chat("#sqlite", "0-1");
+chat("#sqlite", "[l] end");
               }
               else if (strAction == "select")
               {
@@ -281,7 +272,7 @@ chat("#sqlite", "0-1");
               }
               else
               {
-chat("#sqlite", "0-2");
+chat("#sqlite", "[r] start");
                 bool bExists = false;
                 string strSubNode;
                 m_mutex.lock();
@@ -299,13 +290,12 @@ chat("#sqlite", "0-2");
                 m_mutex.unlock();
                 if (!strSubNode.empty())
                 {
-chat("#sqlite", "0-2-0");
                   Json *ptLink = new Json(ptJson);
                   ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", strSubNode);
                   if (hub("link", ptLink, strError))
                   {
-chat("#sqlite", "0-2-0-0");
+chat((string)"#sqlite", "[r] " + m_strNode " --> " + strSubNode);
                     bResult = true;
                     if (!empty(ptLink, "ID"))
                     {
@@ -321,7 +311,6 @@ chat("#sqlite", "0-2-0-0");
                     }
                   }
                   delete ptLink;
-chat("#sqlite", "0-2-1");
                 }
                 else if (bExists)
                 {
@@ -331,9 +320,8 @@ chat("#sqlite", "0-2-1");
                 {
                   strError = "Please provide a valid Database.";
                 }
-chat("#sqlite", "0-3");
+chat("#sqlite", "[r] end");
               }
-chat("#sqlite", "1");
             }
             else
             {
