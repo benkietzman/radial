@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                 map<string, size_t> pad;
                 for (auto &col : resultSet.front())
                 {
-                  pad[col.first] = col.second.size();
+                  pad[col.first] = col.first.size();
                 }
                 for (auto &row : resultSet)
                 {
