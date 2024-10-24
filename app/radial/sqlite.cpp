@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
           cout << "Please set the database using:  database <name>" << endl;
           cout << endl << "Obtain a list of databases using:  databases" << endl;
           cout << "Obtain a list of tables using:  tables" << endl;
+          cout << "Obtain a description of a table using:  desc <name>" << endl;
         }
         else if (f == "desc")
         {
