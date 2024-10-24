@@ -95,6 +95,70 @@ int main(int argc, char *argv[])
           cout << endl << "Obtain a list of databases using:  databases" << endl;
           cout << "Obtain a list of tables using:  tables" << endl;
         }
+        else if (f == "desc")
+        {
+          string t;
+          cin >> t;
+          if (!t.empty())
+          {
+            list<map<string, string> > resultSet;
+            size_t unID = 0, unRows = 0;
+            string v;
+            stringstream ssStatement;
+            getline(cin, l);
+            ssStatement << "select sql from sqlite_master where name = '" << manip.escape(t, v) << "'";
+            if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
+            {
+              cout << "Radial::sqliteQuery():  okay" << endl;
+              cout << endl << "# of Rows Returned:  " << unRows << endl;
+              if (!resultSet.empty())
+              {
+                map<string, size_t> pad;
+                for (auto &col : resultSet.front())
+                {
+                  pad[col.first] = col.first.size();
+                }
+                for (auto &row : resultSet)
+                {
+                  for (auto &col : row)
+                  {
+                    if (col.second.size() > pad[col.first])
+                    {
+                      pad[col.first] = col.second.size();
+                    }
+                  }
+                }
+                cout << endl;
+                for (auto &col : resultSet.front())
+                {
+                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
+                }
+                cout << endl;
+                for (auto &col : resultSet.front())
+                {
+                  cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
+                }
+                cout << endl;
+                for (auto &row : resultSet)
+                {
+                  for (auto &col : row)
+                  {
+                    cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
+                  }
+                  cout << endl;
+                }
+              }
+            }
+            else
+            {
+              cerr << "Radial::sqliteQuery() error:  " << e << endl;
+            }
+          }
+          else
+          {
+            cout << "Please provide the table.";
+          }
+        }
         else if (f == "tables")
         {
           list<map<string, string> > resultSet;
