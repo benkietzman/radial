@@ -127,19 +127,19 @@ int main(int argc, char *argv[])
                 cout << endl;
                 for (auto &col : resultSet.front())
                 {
-                  cout << "  " << setw(pad[col.first]) << setfill(' ') << col.first;
+                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
                 }
                 cout << endl;
                 for (auto &col : resultSet.front())
                 {
-                  cout << "  " << setw(pad[col.first]) << setfill('-') << '-';;
+                  cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
                 }
                 cout << endl;
                 for (auto &row : resultSet)
                 {
                   for (auto &col : row)
                   {
-                    cout << "  " << setw(pad[col.first]) << setfill(' ') << col.second;
+                    cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
                   }
                   cout << endl;
                 }
