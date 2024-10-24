@@ -71,20 +71,13 @@ int main(int argc, char *argv[])
           getline(cin, l);
           if (r.sqliteList(databases, e))
           {
+            list<map<string, string> > resultSet;
             cout << "Radial::sqliteList():  okay" << endl << endl;
             for (auto &database : databases)
             {
-              cout << database.first << ":  ";
-              for (auto node = database.second.begin(); node != database.second.end(); node++)
-              {
-                if (node != database.second.begin())
-                {
-                  cout << ", ";
-                }
-                cout << node->first << " (" << node->second << ")";
-              }
-              cout << endl;
+              resultSet.push_back({{"name", database.first}});
             }
+            display(resultSet);
           }
           else
           {
