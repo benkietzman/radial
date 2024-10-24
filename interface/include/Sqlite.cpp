@@ -747,6 +747,7 @@ void Sqlite::inotify(string strPrefix)
           ssMessage << strPrefix << "->inotify_add_watch(" << errno << ") error [" << m_strData << "/sqlite]:  " << strerror(errno);
           log(ssMessage.str());
         }
+        close(fdNotify);
       }
       else
       {
