@@ -56,7 +56,41 @@ int main(int argc, char *argv[])
             cout << "Please provide the database." << endl;
           }
         }
-        else if (f == "delete" || f == "insert" || f == "select" || f == "update")
+        else if (f == "exit" || f == "quit")
+        {
+          b = true;
+        }
+        else if (f == "list")
+        {
+          map<string, map<string, string> > databases;
+          if (r.sqliteList(databases, e))
+          {
+            cout << "Radial::sqliteList():  okay" << endl;
+            for (auto &database : databases)
+            {
+              cout << database.first << ":  ";
+              for (auto node = database.second.begin(); node != database.second.end(); node++)
+              {
+                if (node != database.second.begin())
+                {
+                  cout << ", ";
+                }
+                cout << node->first << " (" << node->second << ")";
+              }
+              cout << endl;
+            }
+          }
+          else
+          {
+            cerr << "Radial::sqliteList() error:  " << e << endl;
+          }
+        }
+        else if (strDatabase.empty())
+        {
+          cout << "Please set the database using:  database <name>" << endl;
+          cout << endl << "Obtain a list of databases using:  list" << endl;
+        }
+        else if (!f.empty())
         {
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
@@ -100,39 +134,6 @@ int main(int argc, char *argv[])
           {
             cerr << "Radial::sqliteQuery() error:  " << e << endl;
           }
-        }
-        else if (f == "exit" || f == "quit")
-        {
-          b = true;
-        }
-        else if (f == "list")
-        {
-          map<string, map<string, string> > databases;
-          if (r.sqliteList(databases, e))
-          {
-            cout << "Radial::sqliteList():  okay" << endl;
-            for (auto &database : databases)
-            {
-              cout << database.first << ":  ";
-              for (auto node = database.second.begin(); node != database.second.end(); node++)
-              {
-                if (node != database.second.begin())
-                {
-                  cout << ", ";
-                }
-                cout << node->first << " (" << node->second << ")";
-              }
-              cout << endl;
-            }
-          }
-          else
-          {
-            cerr << "Radial::sqliteList() error:  " << e << endl;
-          }
-        }
-        else
-        {
-          cerr << "Please provide a valid Function:  database, delete, exit, insert, list, quit, select, update.";
         }
         if (!b)
         {
