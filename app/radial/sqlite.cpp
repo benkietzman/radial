@@ -40,16 +40,18 @@ int main(int argc, char *argv[])
       StringManip manip;
       r.setCredentials("radial", c);
       r.useSingleSocket(true);
+      cout << endl;
       cout << "> " << flush;
       while (!b && cin >> v)
       {
+        cout << endl;
         manip.toLower(f, v);
         if (f == "database")
         {
           cin >> strDatabase;
           if (!strDatabase.empty())
           {
-            cout << "Database has been set to \"" << strDatabase << "\"." << endl;
+            cout << "Database:  " << strDatabase << endl;
           }
           else
           {
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
           map<string, map<string, string> > databases;
           if (r.sqliteList(databases, e))
           {
-            cout << "Radial::sqliteList():  okay" << endl;
+            cout << "Radial::sqliteList():  okay" << endl << endl;
             for (auto &database : databases)
             {
               cout << database.first << ":  ";
@@ -103,19 +105,40 @@ int main(int argc, char *argv[])
             cout << "Radial::sqliteQuery():  okay" << endl;
             if (f == "select")
             {
-              cout << "# of Rows Returned:  " << unRows << endl;
+              cout << endl << "# of Rows Returned:  " << unRows << endl;
               if (!resultSet.empty())
               {
+                map<string, size_t> pad;
                 for (auto &col : resultSet.front())
                 {
-                  cout << "  " << col.first;
+                  pad[col.first] = col.second.size();
+                }
+                for (auto &row : resultSet)
+                {
+                  for (auto &col : row)
+                  {
+                    if (col.second.size() > pad[col.first])
+                    {
+                      pad[col.first] = col.second.size();
+                    }
+                  }
+                }
+                cout << endl;
+                for (auto &col : resultSet.front())
+                {
+                  cout << "  " << setw(pad[col.first]) << setfill(' ') << col.first;
+                }
+                cout << endl;
+                for (auto &col : resultSet.front())
+                {
+                  cout << "  " << setw(pad[col.first]) << setfill('-') << '-';;
                 }
                 cout << endl;
                 for (auto &row : resultSet)
                 {
                   for (auto &col : row)
                   {
-                    cout << "  " << col.second;
+                    cout << "  " << setw(pad[col.first]) << setfill(' ') << col.second;
                   }
                   cout << endl;
                 }
@@ -123,10 +146,10 @@ int main(int argc, char *argv[])
             }
             else if (f == "delete" || f == "insert" || f == "update")
             {
-              cout << "# of Rows " << ((f == "delete")?"Deleted":((f == "insert")?"Inserted":"Updated")) << ":  " << unRows << endl;
+              cout << endl << "# of Rows " << ((f == "delete")?"Deleted":((f == "insert")?"Inserted":"Updated")) << ":  " << unRows << endl;
               if (f == "insert")
               {
-                cout << "Lastest ID:  " << unID << endl;
+                cout << endl << "Lastest ID:  " << unID << endl;
               }
             }
           }
@@ -135,6 +158,7 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteQuery() error:  " << e << endl;
           }
         }
+        cout << endl;
         if (!b)
         {
           cout << "> " << flush;
