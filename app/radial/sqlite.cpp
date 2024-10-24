@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     if (w.vaultRetrieve({"radial", "radial", "Password"}, c, e))
     {
       bool b = false;
-      string strDatabase, f, v;
+      string f, l, strDatabase, v;
       Radial r(e);
       StringManip manip;
       r.setCredentials("radial", c);
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
         else if (f == "list")
         {
           map<string, map<string, string> > databases;
+          getline(cin, l);
           if (r.sqliteList(databases, e))
           {
             cout << "Radial::sqliteList():  okay" << endl << endl;
@@ -96,10 +97,9 @@ int main(int argc, char *argv[])
         {
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
-          string strLine;
           stringstream ssStatement;
-          getline(cin, strLine);
-          ssStatement << v << strLine;
+          getline(cin, l);
+          ssStatement << v << l;
           if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
