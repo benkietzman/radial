@@ -117,18 +117,22 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 bLocal = true;
               }
               m_mutex.unlock();
+chat("#sqlite", "0");
               if (bLocal)
               {
+chat("#sqlite", "0-0");
                 int nReturn;
                 sqlite3 *db;
                 stringstream ssFile, ssError;
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
                 if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
                 {
+chat("#sqlite", "0-0-0");
                   char *pszError = NULL;
                   Json *ptRows = new Json;
                   if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                   {
+chat("#sqlite", "0-0-0-0");
                     size_t unSize = 16;
                     string strJson;
                     stringstream ssRows;
@@ -166,8 +170,10 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                       ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
                       strError = ssMessage.str();
                     }
+chat("#sqlite", "0-0-0-1");
                     if (strAction != "select")
                     {
+chat("#sqlite", "0-0-0-1-0");
                       list<string> nodes;
                       if (strAction == "insert")
                       {
@@ -198,6 +204,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         }
                       }
                       m_mutex.unlock();
+chat((string)"#sqlite", "0-0-0-1-1 " + to_string(nodes.size()));
                       while (!nodes.empty())
                       {
                         Json *ptLink = new Json(ptJson);
@@ -207,7 +214,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         delete ptLink;
                         nodes.pop_front();
                       }
+chat("#sqlite", "0-0-0-1-2");
                     }
+chat("#sqlite", "0-0-0-2");
                   }
                   else
                   {
@@ -216,6 +225,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                     sqlite3_free(pszError);
                     strError = ssMessage.str();
                   }
+chat("#sqlite", "0-0-1");
                 }
                 else
                 {
@@ -223,6 +233,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                   ssMessage << "sqlit3_open(" << nReturn << ") " << sqlite3_errmsg(db);
                 }
                 sqlite3_close(db);
+chat("#sqlite", "0-1");
               }
               else if (strAction == "select")
               {
@@ -269,6 +280,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               }
               else
               {
+chat("#sqlite", "0-2");
                 bool bExists = false;
                 string strSubNode;
                 m_mutex.lock();
@@ -286,11 +298,13 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 m_mutex.unlock();
                 if (!strSubNode.empty())
                 {
+chat("#sqlite", "0-2-0");
                   Json *ptLink = new Json(ptJson);
                   ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", strSubNode);
                   if (hub("link", ptLink, strError))
                   {
+chat("#sqlite", "0-2-0-0");
                     bResult = true;
                     if (!empty(ptLink, "ID"))
                     {
@@ -306,6 +320,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                     }
                   }
                   delete ptLink;
+chat("#sqlite", "0-2-1");
                 }
                 else if (bExists)
                 {
@@ -315,7 +330,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 {
                   strError = "Please provide a valid Database.";
                 }
+chat("#sqlite", "0-3");
               }
+chat("#sqlite", "1");
             }
             else
             {
