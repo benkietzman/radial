@@ -8,7 +8,10 @@
 
 prefix=/usr/local
 
-all: bin/terminal
+all: bin/sqlite bin/terminal
+
+bin/sqlite: ../../../common/libcommon.a obj/sqlite.o bin
+	g++ -o bin/sqlite obj/sqlite.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
 
 bin/terminal: ../../../common/libcommon.a obj/terminal.o bin
 	g++ -o bin/terminal obj/terminal.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
@@ -25,13 +28,17 @@ bin:
 ../../../common/configure:
 	cd ../../../; git clone https://github.com/benkietzman/common.git
 
+obj/sqlite.o: sqlite.cpp ../../../common/Makefile obj
+	g++ -ggdb -Wall -c sqlite.cpp -o obj/sqlite.o $(CPPFLAGS) -I../../../common
+
 obj/terminal.o: terminal.cpp ../../../common/Makefile obj
 	g++ -ggdb -Wall -c terminal.cpp -o obj/terminal.o $(CPPFLAGS) -I../../../common
 
 obj:
 	if [ ! -d obj ]; then mkdir obj; fi;
 
-install: bin/terminal $(prefix)/radial/app/radial
+install: bin/sqlite bin/terminal $(prefix)/radial/app/radial
+	install --mode=775 bin/sqlite $(prefix)/radial/app/radial/
 	install --mode=775 bin/terminal $(prefix)/radial/app/radial/
 
 $(prefix)/radial/app/radial: $(prefix)/radial/app
