@@ -210,6 +210,7 @@ chat((string)"#sqlite", "0-0-0-1-1 " + to_string(nodes.size()));
                         Json *ptLink = new Json(ptJson);
                         ptLink->i("Interface", "sqlite");
                         ptLink->i("Node", nodes.front());
+chat((string)"#sqlite", "0-0-0-1-1-0 " + nodes.front());
                         hub("link", ptLink, strError);
                         delete ptLink;
                         nodes.pop_front();
