@@ -13,6 +13,7 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -23,6 +24,8 @@ using namespace std;
 #include <StringManip>
 #include <Warden>
 using namespace common;
+
+void display(list<map<string, string> > resultSet);
 
 int main(int argc, char *argv[])
 {
@@ -112,43 +115,7 @@ int main(int argc, char *argv[])
             {
               cout << "Radial::sqliteQuery():  okay" << endl;
               cout << endl << "# of Rows Returned:  " << unRows << endl;
-              if (!resultSet.empty())
-              {
-                map<string, size_t> pad;
-                for (auto &col : resultSet.front())
-                {
-                  pad[col.first] = col.first.size();
-                }
-                for (auto &row : resultSet)
-                {
-                  for (auto &col : row)
-                  {
-                    if (col.second.size() > pad[col.first])
-                    {
-                      pad[col.first] = col.second.size();
-                    }
-                  }
-                }
-                cout << endl;
-                for (auto &col : resultSet.front())
-                {
-                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
-                }
-                cout << endl;
-                for (auto &col : resultSet.front())
-                {
-                  cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
-                }
-                cout << endl;
-                for (auto &row : resultSet)
-                {
-                  for (auto &col : row)
-                  {
-                    cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
-                  }
-                  cout << endl;
-                }
-              }
+              display(resultSet);
             }
             else
             {
@@ -169,43 +136,7 @@ int main(int argc, char *argv[])
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
             cout << endl << "# of Rows Returned:  " << unRows << endl;
-            if (!resultSet.empty())
-            {
-              map<string, size_t> pad;
-              for (auto &col : resultSet.front())
-              {
-                pad[col.first] = col.first.size();
-              }
-              for (auto &row : resultSet)
-              {
-                for (auto &col : row)
-                {
-                  if (col.second.size() > pad[col.first])
-                  {
-                    pad[col.first] = col.second.size();
-                  }
-                }
-              }
-              cout << endl;
-              for (auto &col : resultSet.front())
-              {
-                cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
-              }
-              cout << endl;
-              for (auto &col : resultSet.front())
-              {
-                cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
-              }
-              cout << endl;
-              for (auto &row : resultSet)
-              {
-                for (auto &col : row)
-                {
-                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
-                }
-                cout << endl;
-              }
-            }
+            display(resultSet);
           }
           else
           {
@@ -225,43 +156,7 @@ int main(int argc, char *argv[])
             if (f == "select")
             {
               cout << endl << "# of Rows Returned:  " << unRows << endl;
-              if (!resultSet.empty())
-              {
-                map<string, size_t> pad;
-                for (auto &col : resultSet.front())
-                {
-                  pad[col.first] = col.first.size();
-                }
-                for (auto &row : resultSet)
-                {
-                  for (auto &col : row)
-                  {
-                    if (col.second.size() > pad[col.first])
-                    {
-                      pad[col.first] = col.second.size();
-                    }
-                  }
-                }
-                cout << endl;
-                for (auto &col : resultSet.front())
-                {
-                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
-                }
-                cout << endl;
-                for (auto &col : resultSet.front())
-                {
-                  cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
-                }
-                cout << endl;
-                for (auto &row : resultSet)
-                {
-                  for (auto &col : row)
-                  {
-                    cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
-                  }
-                  cout << endl;
-                }
-              }
+              display(resultSet);
             }
             else if (f == "delete" || f == "insert" || f == "update")
             {
@@ -295,4 +190,45 @@ int main(int argc, char *argv[])
   }
 
   return 0;
+}
+
+void display(list<map<string, string> > resultSet)
+{
+  if (!resultSet.empty())
+  {
+    map<string, size_t> pad;
+    for (auto &col : resultSet.front())
+    {
+      pad[col.first] = col.first.size();
+    }
+    for (auto &row : resultSet)
+    {
+      for (auto &col : row)
+      {
+        if (col.second.size() > pad[col.first])
+        {
+          pad[col.first] = col.second.size();
+        }
+      }
+    }
+    cout << endl;
+    for (auto &col : resultSet.front())
+    {
+      cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
+    }
+    cout << endl;
+    for (auto &col : resultSet.front())
+    {
+      cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
+    }
+    cout << endl;
+    for (auto &row : resultSet)
+    {
+      for (auto &col : row)
+      {
+        cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
+      }
+      cout << endl;
+    }
+  }
 }
