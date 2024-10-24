@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
         }
         else if (strDatabase.empty())
         {
+          getline(cin, l);
           cout << "Please set the database using:  database <name>" << endl;
           cout << endl << "Obtain a list of databases using:  list" << endl;
         }
