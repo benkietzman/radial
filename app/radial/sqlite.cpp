@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
           if (r.sqliteList(databases, e))
           {
             list<map<string, string> > resultSet;
-            cout << "Radial::sqliteList():  okay" << endl << endl;
+            cout << "Radial::sqliteList():  okay" << endl;
             for (auto &database : databases)
             {
               resultSet.push_back({{"name", database.first}});
