@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         {
           b = true;
         }
-        else if (f == "list")
+        else if (f == "databases")
         {
           map<string, map<string, string> > databases;
           getline(cin, l);
@@ -88,11 +88,63 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteList() error:  " << e << endl;
           }
         }
+        else if (f == "tables")
+        {
+          list<map<string, string> > resultSet;
+          getline(cin, l);
+          if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table'", resultSet, e))
+          {
+            cout << "Radial::sqliteQuery():  okay" << endl;
+            cout << endl << "# of Rows Returned:  " << unRows << endl;
+            if (!resultSet.empty())
+            {
+              map<string, size_t> pad;
+              for (auto &col : resultSet.front())
+              {
+                pad[col.first] = col.first.size();
+              }
+              for (auto &row : resultSet)
+              {
+                for (auto &col : row)
+                {
+                  if (col.second.size() > pad[col.first])
+                  {
+                    pad[col.first] = col.second.size();
+                  }
+                }
+              }
+              cout << endl;
+              for (auto &col : resultSet.front())
+              {
+                cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
+              }
+              cout << endl;
+              for (auto &col : resultSet.front())
+              {
+                cout << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
+              }
+              cout << endl;
+              for (auto &row : resultSet)
+              {
+                for (auto &col : row)
+                {
+                  cout << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
+                }
+                cout << endl;
+              }
+            }
+          }
+          else
+          {
+            cerr << "Radial::sqliteQuery() error:  " << e << endl;
+          }
+        }
         else if (strDatabase.empty())
         {
           getline(cin, l);
           cout << "Please set the database using:  database <name>" << endl;
-          cout << endl << "Obtain a list of databases using:  list" << endl;
+          cout << endl << "Obtain a list of databases using:  databases" << endl;
+          cout << endl << "Obtain a list of tables using:  tables" << endl;
         }
         else if (!f.empty())
         {
