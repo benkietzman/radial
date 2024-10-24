@@ -127,7 +127,6 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 {
                   char *pszError = NULL;
                   Json *ptRows = new Json;
-chat("#sqlite", m_strNode + (string)" [l] sqlite3_exec()");
                   if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                   {
                     size_t unSize = 16;
@@ -204,7 +203,6 @@ chat("#sqlite", m_strNode + (string)" [l] sqlite3_exec()");
                         Json *ptLink = new Json(ptJson);
                         ptLink->i("Interface", "sqlite");
                         ptLink->i("Node", nodes.front());
-chat((string)"#sqlite", m_strNode + (string)"[l] " + (string)" forward to " + nodes.front());
                         hub("link", ptLink, strError);
                         delete ptLink;
                         nodes.pop_front();
@@ -291,7 +289,6 @@ chat((string)"#sqlite", m_strNode + (string)"[l] " + (string)" forward to " + no
                   Json *ptLink = new Json(ptJson);
                   ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", strSubNode);
-chat((string)"#sqlite", m_strNode + (string)" [r] send to master " + strSubNode);
                   if (hub("link", ptLink, strError))
                   {
                     bResult = true;
