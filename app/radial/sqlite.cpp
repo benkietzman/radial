@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
       r.setCredentials("radial", c);
       r.useSingleSocket(true);
       cout << endl;
-      cout << "> " << flush;
+      cout << "sqlite> " << flush;
       while (!b && cin >> v)
       {
         cout << endl;
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
         cout << endl;
         if (!b)
         {
-          cout << "> " << flush;
+          cout << "sqlite> " << flush;
         }
       }
     }
