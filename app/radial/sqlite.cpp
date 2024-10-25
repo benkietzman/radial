@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
           cout << "List databases:  .databases" << endl;
           cout << "List tables:  .tables" << endl;
           cout << "Describe table:  .desc <name>" << endl;
+          cout << "SQL Statement: <statement>" << endl;
         }
         else if (f == ".desc")
         {
