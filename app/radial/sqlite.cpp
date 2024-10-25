@@ -45,22 +45,21 @@ int main(int argc, char *argv[])
       r.useSingleSocket(true);
       cout << endl;
       cout << "sqlite> " << flush;
-      while (!b && cin >> v)
+      while (!b && getline(cin, l))
       {
-        string strExtra;
-        stringstream ssExtra;
-        getline(cin, strExtra);
-        ssExtra.str(strExtra);
+        stringstream ssLine;
+        ssLine.str(l);
+        ssLine >> f;
         cout << endl;
         manip.toLower(f, v);
         if (f == ".create")
         {
           string strDatabase;
-          ssExtra >> strDatabase;
+          ssLine >> strDatabase;
           if (!strDatabase.empty())
           {
             string strNode;
-            ssExtra >> strNode;
+            ssLine >> strNode;
             if (r.sqliteCreate(strDatabase, strNode, e))
             {
               cout << "Radial::sqliteCreate():  okay" << endl;
@@ -78,11 +77,11 @@ int main(int argc, char *argv[])
         else if (f == ".drop")
         {
           string strDatabase;
-          ssExtra >> strDatabase;
+          ssLine >> strDatabase;
           if (!strDatabase.empty())
           {
             string strNode;
-            ssExtra >> strNode;
+            ssLine >> strNode;
             if (r.sqliteDrop(strDatabase, strNode, e))
             {
               cout << "Radial::sqliteDrop():  okay" << endl;
@@ -99,7 +98,7 @@ int main(int argc, char *argv[])
         }
         else if (f == ".database")
         {
-          ssExtra >> strDatabase;
+          ssLine >> strDatabase;
           if (!strDatabase.empty())
           {
             cout << "Database:  " << strDatabase << endl;
@@ -116,7 +115,7 @@ int main(int argc, char *argv[])
         else if (f == ".databases")
         {
           map<string, map<string, string> > databases;
-          getline(ssExtra, l);
+          getline(ssLine, l);
           if (r.sqliteDatabases(databases, e))
           {
             list<map<string, string> > resultSet;
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
         }
         else if (f == ".help" || f == "help" || f == "?" || strDatabase.empty())
         {
-          getline(ssExtra, l);
+          getline(ssLine, l);
           cout << "Exit:  .exit or .quit" << endl;
           cout << "Create database:  .create <name> [node]" << endl;
           cout << "Drop database:  .drop <name> [node]" << endl;
@@ -163,14 +162,14 @@ int main(int argc, char *argv[])
         else if (f == ".desc")
         {
           string t;
-          ssExtra >> t;
+          ssLine >> t;
           if (!t.empty())
           {
             list<map<string, string> > resultSet;
             size_t unID = 0, unRows = 0;
             string v;
             stringstream ssStatement;
-            getline(ssExtra, l);
+            getline(ssLine, l);
             ssStatement << "select sql from sqlite_master where name = '" << manip.escape(t, v) << "'";
             if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
             {
@@ -192,7 +191,7 @@ int main(int argc, char *argv[])
         {
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
-          getline(ssExtra, l);
+          getline(ssLine, l);
           if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table'", resultSet, unID, unRows, e))
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
@@ -209,7 +208,7 @@ int main(int argc, char *argv[])
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
           stringstream ssStatement;
-          getline(ssExtra, l);
+          getline(ssLine, l);
           ssStatement << v << l;
           if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
           {
