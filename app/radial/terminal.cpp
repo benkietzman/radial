@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
       {
         bool b = false;
         Radial r(e);
-        radialTerminalInfo t;
+        radialTerminal t;
         r.setCredentials("radial", c);
         r.useSingleSocket(true);
         if (r.terminalConnect(t, s, p, true, e))
