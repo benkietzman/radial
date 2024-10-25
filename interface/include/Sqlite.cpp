@@ -201,8 +201,8 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                   ptLink->m["Request"]->i("Node", nodes.front());
                   hub("link", ptLink, strError);
                   delete ptLink;
-                  nodes.pop_front();
                 }
+                nodes.pop_front();
               }
             }
             else
