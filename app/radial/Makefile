@@ -41,14 +41,8 @@ install: bin/sqlite bin/terminal $(prefix)/radial/app/radial
 	install --mode=775 bin/sqlite $(prefix)/radial/app/radial/
 	install --mode=775 bin/terminal $(prefix)/radial/app/radial/
 
-$(prefix)/radial/app/radial: $(prefix)/radial/app
-	mkdir $(prefix)/radial/app/radial
-
-$(prefix)/radial/app: $(prefix)/radial
-	mkdir $(prefix)/radial/app
-
-$(prefix)/radial:
-	mkdir $(prefix)/radial
+$(prefix)/radial/app/radial:
+	mkdir -p $(prefix)/radial/app/radial
 
 clean:
 	-rm -fr obj bin
