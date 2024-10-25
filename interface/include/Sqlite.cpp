@@ -182,7 +182,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 if (nodes.front() == m_strNode)
                 {
                   stringstream ssFile;
-                  ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
+                  ssFile << m_strData << "/sqlite/" << strDatabase << ".db";
                   if (remove(ssFile.str().c_str()) == 0)
                   {
                     bResult = true;
