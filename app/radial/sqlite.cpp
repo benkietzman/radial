@@ -47,11 +47,10 @@ int main(int argc, char *argv[])
       cout << "sqlite> " << flush;
       while (!b && getline(cin, l))
       {
-        stringstream ssLine;
-        ssLine.str(l);
-        ssLine >> f;
-        cout << endl;
+        stringstream ssLine(l);
+        ssLine >> v;
         manip.toLower(f, v);
+        cout << endl;
         if (f == ".create")
         {
           string strDatabase;
