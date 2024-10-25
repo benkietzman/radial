@@ -67,8 +67,8 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
-    // {{{ list
-    if (strFunction == "list")
+    // {{{ databases
+    if (strFunction == "databases")
     {
       bResult = true;
       if (exist(ptJson, "Response"))
@@ -969,7 +969,7 @@ void Sqlite::sync(string strPrefix)
       Json *ptJson = new Json;
       ptJson->i("Interface", "sqlite");
       ptJson->i("Node", nodes.front());
-      ptJson->i("Function", "list");
+      ptJson->i("Function", "databases");
       if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
       {
         for (auto &i : ptJson->m["Response"]->m)
@@ -994,7 +994,7 @@ void Sqlite::sync(string strPrefix)
     Json *ptJson = new Json;
     ptJson->i("Interface", "sqlite");
     ptJson->i("Node", master());
-    ptJson->i("Function", "list");
+    ptJson->i("Function", "databases");
     if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
     {
       for (auto &i : ptJson->m["Response"]->m)

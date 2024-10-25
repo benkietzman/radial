@@ -109,14 +109,14 @@ int main(int argc, char *argv[])
         {
           b = true;
         }
-        else if (f == ".list")
+        else if (f == ".databases")
         {
           map<string, map<string, string> > databases;
           getline(cin, l);
-          if (r.sqliteList(databases, e))
+          if (r.sqliteDatabases(databases, e))
           {
             list<map<string, string> > resultSet;
-            cout << "Radial::sqliteList():  okay" << endl;
+            cout << "Radial::sqliteDatabases():  okay" << endl;
             for (auto &database : databases)
             {
               map<string, string> row;
@@ -141,14 +141,14 @@ int main(int argc, char *argv[])
           }
           else
           {
-            cerr << "Radial::sqliteList() error:  " << e << endl;
+            cerr << "Radial::sqliteDatabases() error:  " << e << endl;
           }
         }
         else if (strDatabase.empty())
         {
           getline(cin, l);
           cout << "Please set the database using:  .database <name>" << endl;
-          cout << endl << "Obtain a list of databases using:  .list" << endl;
+          cout << endl << "Obtain a list of databases using:  .databases" << endl;
           cout << "Obtain a list of tables using:  .tables" << endl;
           cout << "Obtain a description of a table using:  .desc <name>" << endl;
         }
