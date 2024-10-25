@@ -95,9 +95,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       if (!empty(ptJson->m["Request"], "Database"))
       {
         string strDatabase = ptJson->m["Request"]->m["Database"]->v, strNode;
-        if (!empty(ptJson, "Node"))
+        if (!empty(ptJson->m["Request"], "Node"))
         {
-          strNode = ptJson->m["Node"]->v;
+          strNode = ptJson->m["Request"]->m["Node"]->v;
         }
         // {{{ query
         if (strFunction == "query")
@@ -112,7 +112,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bLocal = false;
               m_mutex.lock();
-              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode] || (!strNode.empty() && strNode == m_strNode)))
+              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode] || (!empty(ptJson, "Node") && ptJson->m["Node"]->v == m_strNode)))
               {
                 bLocal = true;
               }
