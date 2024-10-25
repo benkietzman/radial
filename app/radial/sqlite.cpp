@@ -49,7 +49,51 @@ int main(int argc, char *argv[])
       {
         cout << endl;
         manip.toLower(f, v);
-        if (f == "database")
+        if (f == ".create")
+        {
+          string strDatabase;
+          cin >> strDatabase;
+          if (!strDatabase.empty())
+          {
+            string strNode;
+            cin >> strNode;
+            if (r.sqliteCreate(strDatabase, strNode, e))
+            {
+              cout << "Radial::sqliteCreate():  okay" << endl;
+            }
+            else
+            {
+              cerr << "Radial::sqliteCreate() error:  " << e << endl;
+            }
+          }
+          else
+          {
+            cerr << "Please provide the database followed by an option node.";
+          }
+        }
+        else if (f == ".drop")
+        {
+          string strDatabase;
+          cin >> strDatabase;
+          if (!strDatabase.empty())
+          {
+            string strNode;
+            cin >> strNode;
+            if (r.sqliteDrop(strDatabase, strNode, e))
+            {
+              cout << "Radial::sqliteDrop():  okay" << endl;
+            }
+            else
+            {
+              cerr << "Radial::sqliteDrop() error:  " << e << endl;
+            }
+          }
+          else
+          {
+            cerr << "Please provide the database followed by an option node.";
+          }
+        }
+        else if (f == ".database")
         {
           cin >> strDatabase;
           if (!strDatabase.empty())
@@ -61,11 +105,11 @@ int main(int argc, char *argv[])
             cout << "Please provide the database." << endl;
           }
         }
-        else if (f == "exit" || f == "quit")
+        else if (f == ".exit" || f == ".quit")
         {
           b = true;
         }
-        else if (f == "databases")
+        else if (f == ".list")
         {
           map<string, map<string, string> > databases;
           getline(cin, l);
@@ -75,7 +119,23 @@ int main(int argc, char *argv[])
             cout << "Radial::sqliteList():  okay" << endl;
             for (auto &database : databases)
             {
-              resultSet.push_back({{"name", database.first}});
+              map<string, string> row;
+              stringstream ssNodes;
+              row["name"] = database.first;
+              for (auto node = database.second.begin(); node != database.second.end(); node++)
+              {
+                if (node != database.second.begin())
+                {
+                  ssNodes << ", ";
+                }
+                ssNodes << node->first;
+                if (node->second == "master")
+                {
+                  ssNodes << " (master)";
+                }
+              }
+              row["nodes"] = ssNodes.str();
+              resultSet.push_back(row);
             }
             display(resultSet);
           }
@@ -87,12 +147,12 @@ int main(int argc, char *argv[])
         else if (strDatabase.empty())
         {
           getline(cin, l);
-          cout << "Please set the database using:  database <name>" << endl;
-          cout << endl << "Obtain a list of databases using:  databases" << endl;
-          cout << "Obtain a list of tables using:  tables" << endl;
-          cout << "Obtain a description of a table using:  desc <name>" << endl;
+          cout << "Please set the database using:  .database <name>" << endl;
+          cout << endl << "Obtain a list of databases using:  .list" << endl;
+          cout << "Obtain a list of tables using:  .tables" << endl;
+          cout << "Obtain a description of a table using:  .desc <name>" << endl;
         }
-        else if (f == "desc")
+        else if (f == ".desc")
         {
           string t;
           cin >> t;
@@ -120,7 +180,7 @@ int main(int argc, char *argv[])
             cout << "Please provide the table.";
           }
         }
-        else if (f == "tables")
+        else if (f == ".tables")
         {
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;

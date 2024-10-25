@@ -99,8 +99,131 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
         {
           strNode = ptJson->m["Request"]->m["Node"]->v;
         }
+        // {{{ create
+        if (strFunction == "create")
+        {
+          if (strNode.empty() || strNode == m_strNode)
+          {
+            bool bExists = false;
+            m_mutex.lock();
+            if (m_databases.find(strDatabase) != m_databases.end() && (strNode.empty() || m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end()))
+            {
+              bExists = true;
+            }
+            m_mutex.unlock();
+            if (!bExists)
+            {
+              int nReturn;
+              sqlite3 *db;
+              stringstream ssFile;
+              ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
+              if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
+              {
+                bResult = true;
+              }
+              else
+              {
+                ssMessage.str("");
+                ssMessage << "sqlit3_open(" << nReturn << ") " << sqlite3_errmsg(db);
+              }
+              sqlite3_close(db);
+            }
+            else
+            {
+              strError = "Database already exists.";
+            }
+          }
+          else
+          {
+            Json *ptLink = new Json(ptJson);
+            ptLink->i("Node", strNode);
+            ptLink->m["Request"]->i("Node", strNode);
+            if (hub("link", ptLink, strError))
+            {
+              bResult = true;
+            }
+            delete ptLink;
+          }
+        }
+        // }}}
+        // {{{ drop
+        else if (strFunction == "drop")
+        {
+          if (strNode.empty() || strNode == m_strNode)
+          {
+            bool bExists = false;
+            m_mutex.lock();
+            if (m_databases.find(strDatabase) != m_databases.end() && (strNode.empty() || m_databases[strDatabase].find(strNode) != m_databases[strDatabase].end()))
+            {
+              bExists = true;
+            }
+            m_mutex.unlock();
+            if (bExists)
+            {
+              list<string> nodes;
+              if (!strNode.empty())
+              {
+                nodes.push_back(strNode);
+              }
+              else
+              {
+                m_mutex.lock();
+                if (m_databases.find(strDatabase) != m_databases.end())
+                {
+                  for (auto &i : m_databases[strDatabase])
+                  {
+                    nodes.push_back(i.first);
+                  }
+                }
+                m_mutex.unlock();
+              }
+              while (!nodes.empty())
+              {
+                if (nodes.front() == m_strNode)
+                {
+                  stringstream ssFile;
+                  ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
+                  if (remove(ssFile.str().c_str()) == 0)
+                  {
+                    bResult = true;
+                  }
+                  else
+                  {
+                    ssMessage.str("");
+                    ssMessage << "remove(" << errno << ") " << strerror(errno);
+                    strError = ssMessage.str();
+                  }
+                }
+                else
+                {
+                  Json *ptLink = new Json(ptJson);
+                  ptLink->i("Node", nodes.front());
+                  ptLink->m["Request"]->i("Node", nodes.front());
+                  hub("link", ptLink, strError);
+                  delete ptLink;
+                  nodes.pop_front();
+                }
+              }
+            }
+            else
+            {
+              strError = "Database does not exist.";
+            }
+          }
+          else
+          {
+            Json *ptLink = new Json(ptJson);
+            ptLink->i("Node", strNode);
+            if (hub("link", ptLink, strError))
+            {
+              bResult = true;
+            }
+            delete ptLink;
+          }
+        }
+        // }}}
         // {{{ query
-        if (strFunction == "query")
+        else if (strFunction == "query")
         {
           if (!empty(ptJson->m["Request"], "Statement"))
           {
@@ -121,7 +244,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               {
                 int nReturn;
                 sqlite3 *db;
-                stringstream ssFile, ssError;
+                stringstream ssFile;
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
                 if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
                 {
@@ -367,7 +490,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           // {{{ invalid
           else
           {
-            strError = "Please provide a valid Function:  add, list, master, query. remove.";
+            strError = "Please provide a valid Function:  add, create, drop, list, master, query. remove.";
           }
           // }}}
         }
