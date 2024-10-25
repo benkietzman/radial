@@ -637,6 +637,10 @@ void Sqlite::inotify(string strPrefix)
           string strNotify;
           time_t CSync, CTime;
           Json *ptLink;
+          if (isMaster())
+          {
+            chat("#sqlite", "Switched to master mode.");
+          }
           sync(strPrefix);
           load(strPrefix);
           time(&CTime);
