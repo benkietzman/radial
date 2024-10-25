@@ -95,9 +95,9 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       if (!empty(ptJson->m["Request"], "Database"))
       {
         string strDatabase = ptJson->m["Request"]->m["Database"]->v, strNode;
-        if (!empty(ptJson->m["Request"], "Node"))
+        if (!empty(ptJson, "Node"))
         {
-          strNode = ptJson->m["Request"]->m["Node"]->v;
+          strNode = ptJson->m["Node"]->v;
         }
         // {{{ query
         if (strFunction == "query")
@@ -112,7 +112,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bLocal = false;
               m_mutex.lock();
-              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode] || (!strNode.empty() && strNode == m_strNode)))
+              if ((m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode]) || (!strNode.empty() && strNode == m_strNode)))
               {
                 bLocal = true;
               }
@@ -182,10 +182,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                       while (!nodes.empty())
                       {
                         Json *ptLink = new Json(ptJson);
-                        ptLink->i("Interface", "sqlite");
                         ptLink->i("Node", nodes.front());
-chat("#sqlite", (string)"BROADCAST "+nodes.front());
-msleep(1000);
                         hub("link", ptLink, strError);
                         delete ptLink;
                         nodes.pop_front();
@@ -246,7 +243,6 @@ msleep(1000);
                   Json *ptLink = new Json(ptJson);
                   srand(unSeed);
                   unPick = rand_r(&unSeed) % nodes.size();
-                  ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", nodes[unPick]);
                   if (hub("link", ptLink, strError))
                   {
@@ -291,10 +287,7 @@ msleep(1000);
                 if (!strSubNode.empty())
                 {
                   Json *ptLink = new Json(ptJson);
-                  ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", strSubNode);
-chat("#sqlite", (string)"FORWARD "+strSubNode);
-msleep(1000);
                   if (hub("link", ptLink, strError))
                   {
                     bResult = true;
