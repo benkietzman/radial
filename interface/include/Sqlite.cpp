@@ -184,7 +184,8 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                         Json *ptLink = new Json(ptJson);
                         ptLink->i("Interface", "sqlite");
                         ptLink->i("Node", nodes.front());
-chat("#sqlite", (string)"BROADCAST "+m_strNode+(string)"-->"+nodes.front());
+chat("#sqlite", (string)"BROADCAST "+nodes.front());
+msleep(1000);
                         hub("link", ptLink, strError);
                         delete ptLink;
                         nodes.pop_front();
@@ -292,7 +293,8 @@ chat("#sqlite", (string)"BROADCAST "+m_strNode+(string)"-->"+nodes.front());
                   Json *ptLink = new Json(ptJson);
                   ptLink->i("Interface", "sqlite");
                   ptLink->i("Node", strSubNode);
-chat("#sqlite", (string)"FORWARD "+m_strNode+(string)"-->"+strSubNode);
+chat("#sqlite", (string)"FORWARD "+strSubNode);
+msleep(1000);
                   if (hub("link", ptLink, strError))
                   {
                     bResult = true;
