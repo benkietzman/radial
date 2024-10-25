@@ -47,16 +47,20 @@ int main(int argc, char *argv[])
       cout << "sqlite> " << flush;
       while (!b && cin >> v)
       {
+        string strExtra;
+        stringstream ssExtra;
+        getline(cin, strExtra);
+        ssExtra.str(strExtra);
         cout << endl;
         manip.toLower(f, v);
         if (f == ".create")
         {
           string strDatabase;
-          cin >> strDatabase;
+          ssExtra >> strDatabase;
           if (!strDatabase.empty())
           {
             string strNode;
-            cin >> strNode;
+            ssExtra >> strNode;
             if (r.sqliteCreate(strDatabase, strNode, e))
             {
               cout << "Radial::sqliteCreate():  okay" << endl;
@@ -74,11 +78,11 @@ int main(int argc, char *argv[])
         else if (f == ".drop")
         {
           string strDatabase;
-          cin >> strDatabase;
+          ssExtra >> strDatabase;
           if (!strDatabase.empty())
           {
             string strNode;
-            cin >> strNode;
+            ssExtra >> strNode;
             if (r.sqliteDrop(strDatabase, strNode, e))
             {
               cout << "Radial::sqliteDrop():  okay" << endl;
@@ -95,7 +99,7 @@ int main(int argc, char *argv[])
         }
         else if (f == ".database")
         {
-          cin >> strDatabase;
+          ssExtra >> strDatabase;
           if (!strDatabase.empty())
           {
             cout << "Database:  " << strDatabase << endl;
@@ -112,7 +116,7 @@ int main(int argc, char *argv[])
         else if (f == ".databases")
         {
           map<string, map<string, string> > databases;
-          getline(cin, l);
+          getline(ssExtra, l);
           if (r.sqliteDatabases(databases, e))
           {
             list<map<string, string> > resultSet;
@@ -144,25 +148,27 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteDatabases() error:  " << e << endl;
           }
         }
-        else if (strDatabase.empty())
+        else if (f == ".help" || f == "help" || f == "?" || strDatabase.empty())
         {
-          getline(cin, l);
-          cout << "Please set the database using:  .database <name>" << endl;
-          cout << endl << "Obtain a list of databases using:  .databases" << endl;
-          cout << "Obtain a list of tables using:  .tables" << endl;
-          cout << "Obtain a description of a table using:  .desc <name>" << endl;
+          getline(ssExtra, l);
+          cout << "Create database:  .create <name> [node]" << endl;
+          cout << "Drop database:  .drop <name> [node]" << endl;
+          cout << "Attach database:  .database <name>" << endl;
+          cout << "List databases:  .databases" << endl;
+          cout << "List tables:  .tables" << endl;
+          cout << "Describe table:  .desc <name>" << endl;
         }
         else if (f == ".desc")
         {
           string t;
-          cin >> t;
+          ssExtra >> t;
           if (!t.empty())
           {
             list<map<string, string> > resultSet;
             size_t unID = 0, unRows = 0;
             string v;
             stringstream ssStatement;
-            getline(cin, l);
+            getline(ssExtra, l);
             ssStatement << "select sql from sqlite_master where name = '" << manip.escape(t, v) << "'";
             if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
             {
@@ -184,7 +190,7 @@ int main(int argc, char *argv[])
         {
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
-          getline(cin, l);
+          getline(ssExtra, l);
           if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table'", resultSet, unID, unRows, e))
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
@@ -201,7 +207,7 @@ int main(int argc, char *argv[])
           list<map<string, string> > resultSet;
           size_t unID = 0, unRows = 0;
           stringstream ssStatement;
-          getline(cin, l);
+          getline(ssExtra, l);
           ssStatement << v << l;
           if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
           {
