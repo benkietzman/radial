@@ -115,7 +115,7 @@ string j;
 chat("#sqlite", ptJson->j(j));
 msleep(1000);
               m_mutex.lock();
-              if ((!empty(ptJson->m["Request"], "_local") && ptJson->m["Request"]->m["_local"] == "1") || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
+              if ((!empty(ptJson->m["Request"], "_local") && ptJson->m["Request"]->m["_local"]->v == "1") || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
               {
                 bLocal = true;
               }
