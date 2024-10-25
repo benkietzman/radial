@@ -151,6 +151,7 @@ int main(int argc, char *argv[])
         else if (f == ".help" || f == "help" || f == "?" || strDatabase.empty())
         {
           getline(ssExtra, l);
+          cout << "Exit:  .exit or .quit" << endl;
           cout << "Create database:  .create <name> [node]" << endl;
           cout << "Drop database:  .drop <name> [node]" << endl;
           cout << "Attach database:  .database <name>" << endl;
