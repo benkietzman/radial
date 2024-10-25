@@ -112,7 +112,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bLocal = false;
               m_mutex.lock();
-              if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode] || (!empty(ptJson, "Node") && ptJson->m["Node"]->v == m_strNode)))
+              if ((!empty(ptJson, "Node") && ptJson->m["Node"]->v == m_strNode) || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
               {
                 bLocal = true;
               }
@@ -290,7 +290,7 @@ msleep(1000);
                 {
                   Json *ptLink = new Json(ptJson);
                   ptLink->i("Node", strSubNode);
-chat("#sqlite", (string)"FORWARD "+strSubNode.front());
+chat("#sqlite", (string)"FORWARD "+strSubNode);
 msleep(1000);
                   if (hub("link", ptLink, strError))
                   {
