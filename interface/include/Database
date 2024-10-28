@@ -30,12 +30,13 @@ class Database : public Interface
   Json *m_ptDatabases;
 
   public:
-  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &));
+  Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &), bool (*pSqlite)(const string, const string, const string, list<map<string, string> > *, size_t &, size_t &, string &));
   ~Database();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
   void load(string strPrefix);
   bool mysql(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
+  bool sqlite(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, size_t &unID, size_t &unRows, string &strError);
 };
 // }}}
 }

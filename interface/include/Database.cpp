@@ -20,7 +20,7 @@ extern "C++"
 namespace radial
 {
 // {{{ Database()
-Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
+Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string), bool (*pMysql)(const string, const string, const string, list<map<string, string> > *, unsigned long long &, unsigned long long &, string &), bool (*pSqlite)(const string, const string, const string, list<map<string, string> > *, size_t &, size_t &, string &)) : Interface(strPrefix, "database", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
   string strError;
@@ -31,6 +31,10 @@ Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(st
     if (strArg == "--mysql" && pMysql != NULL)
     {
       m_pCentral->setMysql(pMysql);
+    }
+    else if (strArg == "--sqlite" && pMysql != NULL)
+    {
+      m_pCentral->setSqlite(pSqlite);
     }
   }
   // }}}
@@ -258,6 +262,87 @@ bool Database::mysql(const string strType, const string strName, const string st
   {
     strError = "Please provide a valid database Name.";
   }
+
+  return bResult;
+}
+// }}}
+// {{{ sqlite()
+bool Database::sqlite(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, size_t &unID, size_t &unRows, string &strError)
+{
+  bool bResult = false;
+  string strDatabase;
+  Json *ptJson = new Json;
+
+  if (rows != NULL)
+  {
+    rows->clear();
+  }
+  m_mutex.lock();
+  if (m_ptDatabases != NULL && exist(m_ptDatabases, strName) && !empty(m_ptDatabases->m[strName], "Database"))
+  {
+    strDatabase = m_ptDatabases->m[strName]->m["Database"]->v;
+  }
+  m_mutex.unlock();
+  if (!strDatabase.empty())
+  {
+    if (!strType.empty())
+    {
+      if (strType == "query" || strType == "update")
+      {
+        if (strType == "update" || rows != NULL)
+        {
+          ptJson->i("Interface", "sqlite");
+          ptJson->i("Function", "query");
+          ptJson->m["Request"] = new Json;
+          ptJson->m["Request"]->i("Database", strDatabase);
+          ptJson->m["Request"]->i("Statement", strQuery);
+          if (hub("sqlite", ptJson, strError))
+          {
+            bResult = true;
+            if (exist(ptJson, "Response"))
+            {
+              if (!empty(ptJson->m["Response"], "ID"))
+              {
+                stringstream ssID(ptJson->m["Response"]->m["ID"]->v);
+                ssID >> unID;
+              }
+              if (strType == "query" && rows != NULL && exist(ptJson, "Response"))
+              {
+                for (auto &i : ptJson->m["Response"]->m["ResultSet"]->l)
+                {
+                  map<string, string> row;
+                  i->flatten(row, true, false);
+                  rows->push_back(row);
+                }
+              }
+              if (!empty(ptJson->m["Response"], "Rows"))
+              {
+                stringstream ssRows(ptJson->m["Response"]->m["Rows"]->v);
+                ssRows >> unRows;
+              }
+            }
+          }
+        }
+        else
+        {
+          strError = "Please provide a placeholder for the resultant rows.";
+        }
+      }
+      else
+      {
+        strError = "Please provide a valid Type:  query, update.";
+      }
+    }
+    else
+    {
+      strError = "Please provide the Type.";
+    }
+  }
+  else
+  {
+    strError = "Please provide a valid database Name.";
+  }
+  delete ptJson;
 
   return bResult;
 }
