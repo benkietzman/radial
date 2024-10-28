@@ -540,8 +540,14 @@ int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szName
   map<string, string> row;
   Json *ptRows = (Json *)vptRows;
 
+chat("#sqlite", (string)"# COLS:  " + to_string(nCols));
+msleep(250);
   for (int i = 0; i < nCols; i++)
   {
+chat("#sqlite", (string)"NAME:  " + szNames[i]);
+msleep(250);
+chat("#sqlite", (string)"  COL: " + szCols[i]);
+msleep(250);
     row[szNames[i]] = szCols[i];
   }
   ptRows->push_back(row);
