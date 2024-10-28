@@ -2226,7 +2226,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               if (strLower == "select")
               {
                 ssText << endl << "# of Rows Returned:  " << unRows;
-                sqliteDisplay(resultSet);
+                ssText << sqliteDisplay(resultSet);
               }
               else if (strLower == "delete" || strLower == "insert" || strLower == "update")
               {
