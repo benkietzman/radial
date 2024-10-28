@@ -537,20 +537,23 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
 int Sqlite::callbackFetch(void *vptRows, int nCols, char *szCols[], char *szNames[])
 {
   int nResult = SQLITE_OK;
-  map<string, string> row;
-  Json *ptRows = (Json *)vptRows;
+  Json *ptRow = new Json, *ptRows = (Json *)vptRows;
 
-chat("#sqlite", (string)"# COLS:  " + to_string(nCols));
-msleep(250);
   for (int i = 0; i < nCols; i++)
   {
-chat("#sqlite", (string)"NAME:  " + szNames[i]);
-msleep(250);
-chat("#sqlite", (string)"  COL: " + szCols[i]);
-msleep(250);
-    row[szNames[i]] = szCols[i];
+    char cType = 's';
+    string strValue;
+    if (szCols[i] != NULL)
+    {
+      strValue = szCols[i];
+    }
+    else
+    {
+      cType = '\0';
+    }
+    ptRow->i(szNames[i], strValue, cType);
   }
-  ptRows->push_back(row);
+  ptRows->l.push_back(ptRow);
 
   return nResult;
 }
