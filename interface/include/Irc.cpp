@@ -2244,7 +2244,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  Please provide one of the following sub-Functions or an SQL statement following the database:  .desc, .tables.";
+            ssText << ":  Please provide an SQL statement or one of the following sub-Functions following the database:  .desc, .tables.";
           }
         }
       }
@@ -3888,7 +3888,7 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 }
 // }}}
 // {{{ sqliteDisplay()
-string Irc::sqliteDisplay(list<map<string, string> > resultSet)
+string Irc::sqliteDisplay(list<map<string, string> > &resultSet)
 {
   stringstream ssText;
 
