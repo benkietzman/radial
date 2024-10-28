@@ -3194,6 +3194,163 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
   m_pAutoModeCallback = pCallback;
 }
 // }}}
+// {{{ sqlite
+// {{{ sqliteCreate()
+bool Interface::sqliteCreate(const string strDatabase, const string strNode, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+  
+  ptJson->i("Interface", "sqlite");
+  ptJson->i("Function", "create");
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Database", strDatabase);
+  ptJson->m["Request"]->i("Node", strNode);
+  if (hub("sqlite", ptJson, strError))
+  {
+    bResult = true;
+  } 
+  delete ptJson;
+  
+  return bResult;
+} 
+// }}}  
+// {{{ sqliteDrop()
+bool Interface::sqliteDrop(const string strDatabase, const string strNode, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+  
+  ptJson->i("Interface", "sqlite");
+  ptJson->i("Function", "drop");
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Database", strDatabase);
+  ptJson->m["Request"]->i("Node", strNode);
+  if (hub("sqlite", ptJson, strError))
+  {
+    bResult = true;
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// {{{ sqliteDatabases()
+bool Interface::sqliteDatabases(map<string, map<string, string> > &databases, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  databases.clear();
+  ptJson->i("Interface", "sqlite");
+  ptJson->i("Function", "databases");
+  if (hub("sqlite", ptJson, strError))
+  {
+    bResult = true;
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      for (auto &database : ptJson->m["Response"]->m)
+      {
+        databases[database.first] = {};
+        for (auto &node : database.second->m)
+        {
+          databases[database.first][node.first] = node.second->v;
+        }
+      }
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
+// {{{ sqliteQuery()
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, Json *ptResultSet, size_t &unID, size_t &unRows, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptResultSet->clear();
+  ptJson->i("Interface", "sqlite");
+  ptJson->i("Function", "query");
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Database", strDatabase);
+  ptJson->m["Request"]->i("Statement", strStatement);
+  if (hub("sqlite", ptJson, strError))
+  {
+    bResult = true;
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      if (ptJson->m["Response"]->m.find("ID") != ptJson->m["Response"]->m.end() && !ptJson->m["Response"]->m["ID"]->v.empty())
+      {
+        stringstream ssID(ptJson->m["Response"]->m["ID"]->v);
+        ssID >> unID;
+      }
+      if (ptJson->m["Response"]->m.find("ResultSet") != ptJson->m["Response"]->m.end())
+      {
+        while (!ptJson->m["Response"]->m["ResultSet"]->l.empty())
+        {
+          ptResultSet->l.push_back(ptJson->m["Response"]->m["ResultSet"]->l.front());
+          ptJson->m["Response"]->m["ResultSet"]->l.pop_front();
+        }
+      }
+      if (ptJson->m["Response"]->m.find("Rows") != ptJson->m["Response"]->m.end() && !ptJson->m["Response"]->m["Rows"]->v.empty())
+      {
+        stringstream ssRows(ptJson->m["Response"]->m["Rows"]->v);
+        ssRows >> unRows;
+      }
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, Json *ptResultSet, string &strError)
+{
+  size_t unID, unRows;
+
+  return sqliteQuery(strDatabase, strStatement, ptResultSet, unID, unRows, strError);
+}
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, list<map<string, string> > &resultSet, size_t &unID, size_t &unRows, string &strError)
+{
+  bool bResult = false;
+  Json *ptResultSet = new Json;
+
+  resultSet.clear();
+  bResult = sqliteQuery(strDatabase, strStatement, ptResultSet, unID, unRows, strError);
+  while (!ptResultSet->l.empty())
+  {
+    map<string, string> r;
+    ptResultSet->l.front()->flatten(r, true, false);
+    resultSet.push_back(r);
+    delete ptResultSet->l.front();
+    ptResultSet->l.pop_front();
+  }
+  delete ptResultSet;
+
+  return bResult;
+}
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, list<map<string, string> > &resultSet, string &strError)
+{
+  size_t unID, unRows;
+
+  return sqliteQuery(strDatabase, strStatement, resultSet, unID, unRows, strError);
+}
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, string &strError)
+{
+  list<map<string, string> > resultSet;
+  size_t unID, unRows;
+
+  return sqliteQuery(strDatabase, strStatement, resultSet, unID, unRows, strError);
+}
+bool Interface::sqliteQuery(const string strDatabase, const string strStatement, size_t &unID, size_t &unRows, string &strError)
+{
+  list<map<string, string> > resultSet;
+
+  return sqliteQuery(strDatabase, strStatement, resultSet, unID, unRows, strError);
+}
+// }}}
+// }}}
 // {{{ ssh
 // {{{ sshConnect()
 bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, string &strData, string &strError)

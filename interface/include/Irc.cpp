@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -485,6 +485,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strJson.empty())
           {
             ptRequest->i("Json", strJson);
+          }
+        }
+      }
+      // }}}
+      // {{{ sqlite || sql
+      else if (strAction == "sqlite" || strAction == "sql")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          string strRemainder;
+          ptRequest->i("Function", strFunction);
+          getline(ssData, strRemainder);
+          if (!strRemainder.empty())
+          {
+            ptRequest->i("Remainder", strRemainder);
           }
         }
       }
@@ -2076,6 +2093,172 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
+  // {{{ sqlite || sql
+  else if (strAction == "sqlite" || strAction == "sql")
+  {
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth) || isValid(strIdent, "Sqlite", bAdmin, auth))
+    {
+      string strFunction = var("Function", ptData);
+      if (!strFunction.empty())
+      {
+        string strRemainder = var("Remainder", ptData);
+        ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
+        if (strFunction == ".create")
+        {
+          string strDatabase, strNode;
+          stringstream ssRemainder(strRemainder);
+          ssRemainder >> strDatabase >> strNode;
+          if (sqliteCreate(strDatabase, strNode, strError))
+          {
+            ssText << ":  Database created.";
+          }
+          else
+          {
+            ssText << ":  " << strError;
+          }
+        }
+        else if (strFunction == ".databases")
+        {
+          map<string, map<string, string> > databases;
+          if (sqliteDatabases(databases, strError))
+          {
+            list<map<string, string> > resultSet;
+            ssText << ":  okay";
+            for (auto &database : databases)
+            {
+              map<string, string> row;
+              stringstream ssNodes;
+              row["name"] = database.first;
+              for (auto node = database.second.begin(); node != database.second.end(); node++)
+              {
+                if (node != database.second.begin())
+                {
+                  ssNodes << ", ";
+                }
+                ssNodes << node->first;
+                if (node->second == "master")
+                {
+                  ssNodes << " (master)";
+                }
+              }
+              row["nodes"] = ssNodes.str();
+              resultSet.push_back(row);
+            }
+            ssText << sqliteDisplay(resultSet);
+          }
+          else
+          {
+            ssText << ":  " << strError;
+          }
+        }
+        else if (strFunction == ".drop")
+        {
+          string strDatabase, strNode;
+          stringstream ssRemainder(strRemainder);
+          ssRemainder >> strDatabase >> strNode;
+          if (sqliteDrop(strDatabase, strNode, strError))
+          {
+            ssText << ":  Database dropped.";
+          }
+          else
+          {
+            ssText << ":  " << strError;
+          }
+        }
+        else
+        {
+          string strSubFunction;
+          stringstream ssRemainder(strRemainder);
+          ssRemainder >> strSubFunction;
+          if (strSubFunction == ".desc")
+          {
+            string strTable;
+            ssRemainder >> strTable;
+            if (!strTable.empty())
+            {
+              list<map<string, string> > resultSet;
+              size_t unID = 0, unRows = 0;
+              stringstream ssStatement;
+              ssStatement << "select sql from sqlite_master where name = '" << m_manip.escape(strTable, strValue) << "'";
+              if (sqliteQuery(strFunction, ssStatement.str(), resultSet, unID, unRows, strError))
+              {
+                ssText << ":  okay";
+                ssText << endl << "# of Rows Returned:  " << unRows;
+                ssText << sqliteDisplay(resultSet);
+              }
+              else
+              {
+                ssText << ":  " << strError;
+              }
+            }
+            else
+            {
+              ssText << ":  Please provide the table following the .desc.";
+            }
+          }
+          else if (strSubFunction == ".tables")
+          {
+            list<map<string, string> > resultSet;
+            size_t unID = 0, unRows = 0;
+            if (sqliteQuery(strFunction, "select name from sqlite_master where type='table'", resultSet, unID, unRows, strError))
+            {
+              ssText << ":  okay";
+              ssText << endl << "# of Rows Returned:  " << unRows;
+              ssText << sqliteDisplay(resultSet);
+            }
+            else
+            {
+              ssText << ":  " << strError;
+            }
+          }
+          else if (!strSubFunction.empty())
+          {
+            list<map<string, string> > resultSet;
+            size_t unID = 0, unRows = 0;
+            string strExtra, strLower;
+            stringstream ssStatement;
+            m_manip.toLower(strLower, strSubFunction);
+            getline(ssRemainder, strExtra);
+            ssStatement << strSubFunction << " " << strExtra;
+            if (sqliteQuery(strFunction, ssStatement.str(), resultSet, unID, unRows, strError))
+            {
+              ssText << ":  okay";
+              if (strLower == "select")
+              {
+                ssText << endl << "# of Rows Returned:  " << unRows;
+                sqliteDisplay(resultSet);
+              }
+              else if (strLower == "delete" || strLower == "insert" || strLower == "update")
+              {
+                ssText << endl << "# of Rows " << ((strLower == "delete")?"Deleted":((strLower == "insert")?"Inserted":"Updated")) << ":  " << unRows;
+                if (strLower == "insert")
+                {
+                  ssText << endl << "Lastest ID:  " << unID;
+                }
+              }
+            }
+            else
+            {
+              ssText << ":  " << strError;
+            }
+          }
+          else
+          {
+            ssText << ":  Please provide one of the following sub-Functions or an SQL statement following the database:  .desc, .tables.";
+          }
+        }
+      }
+      else
+      {
+        ssText << ":  The sqlite action is used to interface with SQLite databases managed by Radial.  The following Functions are available:  .create, .databases, .drop, <database>.";
+      }
+    }
+    else
+    {
+      ssText << " error:  You are not authorized to access radial.  You must be registered as a local administrator for Radial.";
+    }
+  }
+  // }}}
   // {{{ ssh || s
   else if (strAction == "ssh" || strAction == "s")
   {
@@ -3340,6 +3523,12 @@ bool Irc::isLocalAdmin(const string strUserID, string strApplication, const bool
   return (bAdmin || (!strUserID.empty() && auth.find(strApplication) != auth.end() && auth[strApplication]));
 }
 // }}}
+// {{{ isValid()
+bool Irc::isValid(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth)
+{
+  return (bAdmin || (!strUserID.empty() && auth.find(strApplication) != auth.end()));
+}
+// }}}
 // {{{ join()
 void Irc::join(const string strChannel)
 {
@@ -3696,6 +3885,51 @@ void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, cons
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;
+}
+// }}}
+// {{{ sqliteDisplay()
+string Irc::sqliteDisplay(list<map<string, string> > resultSet)
+{
+  stringstream ssText;
+
+  if (!resultSet.empty())
+  {
+    map<string, size_t> pad;
+    for (auto &col : resultSet.front())
+    {
+      pad[col.first] = col.first.size();
+    }
+    for (auto &row : resultSet)
+    {
+      for (auto &col : row)
+      {
+        if (col.second.size() > pad[col.first])
+        {
+          pad[col.first] = col.second.size();
+        }
+      }
+    }
+    ssText << endl;
+    for (auto &col : resultSet.front())
+    {
+      ssText << "  " << left << setw(pad[col.first]) << setfill(' ') << col.first;
+    }
+    ssText << endl;
+    for (auto &col : resultSet.front())
+    {
+      ssText << "  " << left << setw(pad[col.first]) << setfill('-') << '-';;
+    }
+    for (auto &row : resultSet)
+    {
+      ssText << endl;
+      for (auto &col : row)
+      {
+        ssText << "  " << left << setw(pad[col.first]) << setfill(' ') << col.second;
+      }
+    }
+  }
+
+  return ssText.str();
 }
 // }}}
 // {{{ ssh

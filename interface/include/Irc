@@ -50,6 +50,7 @@ class Irc : public Interface
   void disable();
   void feedback(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> auth, const string strHash, const string strSource);
   bool isLocalAdmin(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
+  bool isValid(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
   void join(const string strChannel);
   void listChannels();
   void lock();
@@ -60,6 +61,7 @@ class Irc : public Interface
   void part(const string strChannel);
   void push(const string strMessage);
   void quit();
+  string sqliteDisplay(list<map<string, string> > resultSet);
   void ssh(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strServer, const string strPort, const string strUser, string strPassword, const string strSource);
   void sshConvert(string &strData);
   void sshConvertLine(string &strData);
