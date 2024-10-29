@@ -117,7 +117,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               sqlite3 *db;
               stringstream ssFile;
               ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
-              if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
+              if ((nReturn = sqlite3_open_v2(ssFile.str().c_str(), &db, (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE), NULL)) == SQLITE_OK)
               {
                 bResult = true;
               }
@@ -233,11 +233,15 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             m_manip.toLower(strAction, strValue);
             if (strAction == "select" || isMasterSettled())
             {
-              bool bLocal = false;
+              bool bLocal = false, bReadOnly = false;
               m_mutex.lock();
               if ((!empty(ptJson->m["Request"], "_local") && ptJson->m["Request"]->m["_local"]->v == "1") || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
               {
                 bLocal = true;
+              }
+              if (!empty(ptJson->m["Request"], "Access") && ptJson->m["Request"]->m["Access"]->v == "r")
+              {
+                bReadOnly = true;
               }
               m_mutex.unlock();
               if (bLocal)
@@ -246,7 +250,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 sqlite3 *db;
                 stringstream ssFile;
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
-                if ((nReturn = sqlite3_open(ssFile.str().c_str(), &db)) == SQLITE_OK)
+                if ((nReturn = sqlite3_open_v2(ssFile.str().c_str(), &db, ((bReadOnly)?SQLITE_OPEN_READONLY:(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)), NULL)) == SQLITE_OK)
                 {
                   char *pszError = NULL;
                   Json *ptRows = new Json;

@@ -269,7 +269,7 @@ bool Database::mysql(const string strType, const string strName, const string st
 // {{{ sqlite()
 bool Database::sqlite(const string strType, const string strName, const string strQuery, list<map<string, string> > *rows, size_t &unID, size_t &unRows, string &strError)
 {
-  bool bResult = false;
+  bool bReadOnly = true, bResult = false;
   string strDatabase;
   Json *ptJson = new Json;
 
@@ -281,6 +281,10 @@ bool Database::sqlite(const string strType, const string strName, const string s
   if (m_ptDatabases != NULL && exist(m_ptDatabases, strName) && !empty(m_ptDatabases->m[strName], "Database"))
   {
     strDatabase = m_ptDatabases->m[strName]->m["Database"]->v;
+    if (!empty(m_ptDatabases->m[strName], "Access") && m_ptDatabases->m[strName]->m["Access"]->v == "rw")
+    {
+      bReadOnly = false;
+    }
   }
   m_mutex.unlock();
   if (!strDatabase.empty())
@@ -289,11 +293,16 @@ bool Database::sqlite(const string strType, const string strName, const string s
     {
       if (strType == "query" || strType == "update")
       {
+        if (strType == "query")
+        {
+          bReadOnly = true;
+        }
         if (strType == "update" || rows != NULL)
         {
           ptJson->i("Interface", "sqlite");
           ptJson->i("Function", "query");
           ptJson->m["Request"] = new Json;
+          ptJson->m["Request"]->i("Access", ((bReadOnly)?"r":"rw"));
           ptJson->m["Request"]->i("Database", strDatabase);
           ptJson->m["Request"]->i("Statement", strQuery);
           if (hub("sqlite", ptJson, strError))
