@@ -254,7 +254,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 {
                   char *pszError = NULL;
                   Json *ptRows = new Json;
-                  if (sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, NULL, &pszError))
+                  if ((nReturn = sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, NULL, &pszError)) == SQLITE_OK)
                   {
                     if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                     {
