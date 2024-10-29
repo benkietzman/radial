@@ -234,7 +234,7 @@ bin/sqlite: ../../common/libcommon.a obj/sqlite.o obj/Base.o obj/Interface.o obj
 obj/sqlite.o: sqlite.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c sqlite.cpp -o obj/sqlite.o $(CPPFLAGS) -I../../common
 obj/Sqlite.o: include/Sqlite.cpp obj
-	g++ -ggdb -Wall -c include/Sqlite.cpp -o obj/Sqlite.o $(CPPFLAGS) -I../../common
+	g++ -ggdb -Wall -c include/Sqlite.cpp -o obj/Sqlite.o -D SQLITE_DEFAULT_FOREIGN_KEYS=1 $(CPPFLAGS) -I../../common
 # }}}
 # {{{ ssh
 ssh: bin/ssh $(prefix)/radial/interface
