@@ -230,11 +230,11 @@ obj/Session.o: include/Session.cpp obj
 sqlite: bin/sqlite $(prefix)/radial/interface
 	install --mode=775 bin/sqlite $(prefix)/radial/interface/
 bin/sqlite: ../../common/libcommon.a obj/sqlite.o obj/Base.o obj/Interface.o obj/Sqlite.o bin
-	g++ -o bin/sqlite obj/sqlite.o obj/Base.o obj/Interface.o obj/Sqlite.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lsqlite3 -lssl -ltar -lz
+	g++ -o bin/sqlite obj/sqlite.o obj/Base.o obj/Interface.o obj/Sqlite.o -DSQLITE_DEFAULT_FOREIGN_KEYS=1 $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lsqlite3 -lssl -ltar -lz
 obj/sqlite.o: sqlite.cpp ../../common/Makefile obj
-	g++ -ggdb -Wall -c sqlite.cpp -o obj/sqlite.o $(CPPFLAGS) -I../../common
+	g++ -ggdb -Wall -c sqlite.cpp -o obj/sqlite.o -DSQLITE_DEFAULT_FOREIGN_KEYS=1 $(CPPFLAGS) -I../../common
 obj/Sqlite.o: include/Sqlite.cpp obj
-	g++ -ggdb -Wall -c include/Sqlite.cpp -o obj/Sqlite.o -D SQLITE_DEFAULT_FOREIGN_KEYS=1 $(CPPFLAGS) -I../../common
+	g++ -ggdb -Wall -c include/Sqlite.cpp -o obj/Sqlite.o -DSQLITE_DEFAULT_FOREIGN_KEYS=1 $(CPPFLAGS) -I../../common
 # }}}
 # {{{ ssh
 ssh: bin/ssh $(prefix)/radial/interface
