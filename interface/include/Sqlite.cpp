@@ -254,86 +254,96 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                 {
                   char *pszError = NULL;
                   Json *ptRows = new Json;
-                  if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
+                  if (sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, NULL, &pszError))
                   {
-                    size_t unSize = 16;
-                    string strJson;
-                    stringstream ssRows;
-                    if (exist(ptJson, "Response"))
+                    if ((nReturn = sqlite3_exec(db, strStatement.c_str(), ((strAction == "select")?m_pCallbackFetch:NULL), ((strAction == "select")?ptRows:NULL), &pszError)) == SQLITE_OK)
                     {
-                      delete ptJson->m["Response"];
-                      ptJson->m.erase("Response");
-                    }
-                    ptJson->m["Response"] = new Json;
-                    if (strAction == "select")
-                    {
-                      ssRows << ptRows->l.size();
+                      size_t unSize = 16;
+                      string strJson;
+                      stringstream ssRows;
+                      if (exist(ptJson, "Response"))
+                      {
+                        delete ptJson->m["Response"];
+                        ptJson->m.erase("Response");
+                      }
+                      ptJson->m["Response"] = new Json;
+                      if (strAction == "select")
+                      {
+                        ssRows << ptRows->l.size();
+                      }
+                      else
+                      {
+                        ssRows << sqlite3_changes(db);
+                      }
+                      ptJson->m["Response"]->i("Rows", ssRows.str(), 'n');
+                      if (strAction != "select")
+                      {
+                        list<string> nodes;
+                        if (strAction == "insert")
+                        {
+                          char *pszSubError = NULL;
+                          Json *ptSubRows = new Json;
+                          if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptSubRows, &pszSubError)) == SQLITE_OK)
+                          {
+                            if (!ptSubRows->l.empty() && !empty(ptSubRows->l.front(), "last_insert_rowid()"))
+                            {
+                              ptJson->m["Response"]->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
+                            }
+                          }
+                          else
+                          {
+                            sqlite3_free(pszSubError);
+                          }
+                          delete ptSubRows;
+                        }
+                        m_mutex.lock();
+                        if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && m_databases[strDatabase][m_strNode])
+                        {
+                          for (auto &i : m_databases[strDatabase])
+                          {
+                            if (i.first != m_strNode)
+                            {
+                              nodes.push_back(i.first);
+                            }
+                          }
+                        }
+                        m_mutex.unlock();
+                        while (!nodes.empty())
+                        {
+                          Json *ptLink = new Json(ptJson);
+                          ptLink->i("Node", nodes.front());
+                          ptLink->m["Request"]->i("_local", "1", '1');
+                          hub("link", ptLink, strError);
+                          delete ptLink;
+                          nodes.pop_front();
+                        }
+                      }
+                      unSize += ptJson->j(strJson).size() + 14;
+                      for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
+                      {
+                        for (auto &j : (*i)->m)
+                        {
+                          unSize += j.first.size() + j.second->v.size() + 6;
+                        }
+                      }
+                      if (unSize < m_unMaxPayload)
+                      {
+                        bResult = true;
+                        ptJson->m["Response"]->m["ResultSet"] = ptRows;
+                      }
+                      else
+                      {
+                        delete ptRows;
+                        ssMessage.str("");
+                        ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  ResultSet has been removed.";
+                        strError = ssMessage.str();
+                      }
                     }
                     else
                     {
-                      ssRows << sqlite3_changes(db);
-                    }
-                    ptJson->m["Response"]->i("Rows", ssRows.str(), 'n');
-                    if (strAction != "select")
-                    {
-                      list<string> nodes;
-                      if (strAction == "insert")
-                      {
-                        char *pszSubError = NULL;
-                        Json *ptSubRows = new Json;
-                        if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptSubRows, &pszSubError)) == SQLITE_OK)
-                        {
-                          if (!ptSubRows->l.empty() && !empty(ptSubRows->l.front(), "last_insert_rowid()"))
-                          {
-                            ptJson->m["Response"]->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
-                          }
-                        }
-                        else
-                        {
-                          sqlite3_free(pszSubError);
-                        }
-                        delete ptSubRows;
-                      }
-                      m_mutex.lock();
-                      if (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && m_databases[strDatabase][m_strNode])
-                      {
-                        for (auto &i : m_databases[strDatabase])
-                        {
-                          if (i.first != m_strNode)
-                          {
-                            nodes.push_back(i.first);
-                          }
-                        }
-                      }
-                      m_mutex.unlock();
-                      while (!nodes.empty())
-                      {
-                        Json *ptLink = new Json(ptJson);
-                        ptLink->i("Node", nodes.front());
-                        ptLink->m["Request"]->i("_local", "1", '1');
-                        hub("link", ptLink, strError);
-                        delete ptLink;
-                        nodes.pop_front();
-                      }
-                    }
-                    unSize += ptJson->j(strJson).size() + 14;
-                    for (auto i = ptRows->l.begin(); unSize < m_unMaxPayload && i != ptRows->l.end(); i++)
-                    {
-                      for (auto &j : (*i)->m)
-                      {
-                        unSize += j.first.size() + j.second->v.size() + 6;
-                      }
-                    }
-                    if (unSize < m_unMaxPayload)
-                    {
-                      bResult = true;
-                      ptJson->m["Response"]->m["ResultSet"] = ptRows;
-                    }
-                    else
-                    {
-                      delete ptRows;
                       ssMessage.str("");
-                      ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  ResultSet has been removed.";
+                      ssMessage << "sqlite3_exec(" << nReturn << ") " << pszError;
+                      sqlite3_free(pszError);
                       strError = ssMessage.str();
                     }
                   }
