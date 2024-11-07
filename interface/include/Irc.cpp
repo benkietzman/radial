@@ -3780,7 +3780,7 @@ Json *Irc::monitor()
 }
 // }}}
 // {{{ monitorChannels()
-void Irc::monitorChannels(string strPrefix)
+void Irc::monitorChannels(string strPrefix, const bool bSilent)
 {
   stringstream ssFile, ssMessage;
 
