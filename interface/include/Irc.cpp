@@ -81,7 +81,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     }
   }
   delete ptJwt;
-  monitorChannels(strPrefix);
+  monitorChannels(strPrefix, true);
   watches[m_strData + "/irc"] = {"monitor.channels"};
   m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -3824,21 +3824,21 @@ void Irc::monitorChannels(string strPrefix)
           }
         }
       }
-      else
+      else if (!bSilent)
       {
         ssMessage.str("");
         ssMessage << strPrefix << " error [" << ssFile.str() << "]:  JSON is empty.";
         log(ssMessage.str());
       }
     }
-    else
+    else if (!bSilent)
     {
       ssMessage.str("");
       ssMessage << strPrefix << " error [" << ssFile.str() << "]:  File is empty.";
       log(ssMessage.str());
     }
   }
-  else
+  else if (!bSilent)
   {
     ssMessage.str("");
     ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << ssFile.str() << "]:  " << strerror(errno);

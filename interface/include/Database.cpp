@@ -39,7 +39,7 @@ Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(st
   }
   // }}}
   m_ptDatabases = NULL;
-  load(strPrefix);
+  load(strPrefix, true);
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Database::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -143,7 +143,7 @@ void Database::callbackInotify(string strPrefix, const string strPath, const str
 }
 // }}}
 // {{{ load()
-void Database::load(string strPrefix)
+void Database::load(string strPrefix, const bool bSilent)
 {
   string strError;
   stringstream ssMessage;
@@ -186,9 +186,12 @@ void Database::load(string strPrefix)
   else
   {
     delete ptDatabases;
-    ssMessage.str("");
-    ssMessage << strPrefix << "->Warden::vaultRetrieve() error [database]:  " << strError;
-    log(ssMessage.str());
+    if (!bSilent)
+    {
+      ssMessage.str("");
+      ssMessage << strPrefix << "->Warden::vaultRetrieve() error [database]:  " << strError;
+      log(ssMessage.str());
+    }
   }
 }
 // }}}

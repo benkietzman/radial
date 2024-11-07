@@ -57,7 +57,7 @@ class Irc : public Interface
   bool math(vector<string> e, long double &r, string &strError);
   bool message(string &strMessage);
   Json *monitor();
-  void monitorChannels(string strPrefix);
+  void monitorChannels(string strPrefix, const bool bSilent = false);
   void part(const string strChannel);
   void push(const string strMessage);
   void quit();
