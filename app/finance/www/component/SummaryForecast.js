@@ -34,16 +34,16 @@ export default
     let divTax =
     [
       {
-        single: 459751,
-        jointly: 517201,
-        separate: 258601,
-        household: 488501
+        single: 533401,
+        jointly: 600051,
+        separate: 300001,
+        household: 566701
       },
       {
-        single: 41676,
-        jointly: 83351,
-        separate: 41676,
-        household: 55801
+        single: 48351,
+        jointly: 96701,
+        separate: 48350,
+        household: 64751
       }
     ];
     let fDivTaxInc = 0.0099;
