@@ -258,7 +258,7 @@ export default
           </tr>
           {{#each @root.statistics}}
           <tr>
-            <td style="white-space: nowrap;">{{date}}</td>
+            <td style="white-space: nowrap;">{{./date}}</td>
             <td>{{name}}</td>
             <td>{{count}}</td>
           </tr>
