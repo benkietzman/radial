@@ -135,6 +135,11 @@ export default
         if (c.wsResponse(response, error))
         {
           s.statistics = response.Response;
+          s.total = 0;
+          for (let i = 0; i < s.statistics.length; i++)
+          {
+            s.total += parseInt(s.statistics[i].count);
+          }
           s.u();
         }
         else
@@ -174,7 +179,6 @@ export default
       {
         if (c.isDefined(s.statistics))
         {
-          s.total = 0;
           let d = {labels: [], datasets: []};
           let chart = {};
           let labels = {};
@@ -188,7 +192,6 @@ export default
           }
           for (let i = 0; i < s.statistics.length; i++)
           {
-            s.total += parseInt(s.statistics[i].count);
             if (!c.isDefined(s.statistics[i].name))
             {
               s.statistics[i].name = 'count';
