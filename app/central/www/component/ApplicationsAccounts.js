@@ -29,7 +29,7 @@ export default
     s.loadApplications = () =>
     {
       s.info.v = 'Retrieving applications...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.description from application a, application_account b where a.id = b.application_id and lower(b.user_id) like lower(\'%'+c.esc(s.user.v)+'%\') order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.description, b.user_id from application a, application_account b where a.id = b.application_id and lower(b.user_id) like lower(\'%'+c.esc(s.user.v)+'%\') order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -97,11 +97,13 @@ export default
       <table class="table table-condensed table-striped">
         <tr>
           <th>Application</th>
+          <th>User ID</th>
           <th>Description</th>
         </tr>
         {{#eachFilter applications "name" narrow}}
         <tr>
           <td valign="top"><a href="#/Applications/{{id}}">{{name}}</a></td>
+          <td valign="top">{{user_id}}</td>
           <td valign="top">{{description}}</td>
         </tr>
         {{/eachFilter}}
