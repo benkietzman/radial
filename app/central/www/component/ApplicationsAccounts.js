@@ -29,7 +29,7 @@ export default
     s.loadApplications = () =>
     {
       s.info.v = 'Retrieving applications...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.description from application a, application_account b where a.id = b.application_id and lower(b.user_id) = lower(\'%'+c.esc(s.user.v)+'%\') order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.description from application a, application_account b where a.id = b.application_id and lower(b.user_id) like lower(\'%'+c.esc(s.user.v)+'%\') order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
