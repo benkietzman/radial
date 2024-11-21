@@ -28,6 +28,23 @@ export default
     // [[[ init()
     s.init = () =>
     {
+      s.info.v = 'Retrieving databases...';
+      let request = {Interface: 'sqlite', 'Function': 'databases'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        s.info.v = null;
+        s.databases = null;
+        if (c.wsResponse(response, error))
+        {
+          s.databases = response.Response;
+        }
+        else
+        {
+          a.pushMessage(error.message);
+        }
+        s.u();
+      });
     };
     // ]]]
     // [[[ main
@@ -52,6 +69,7 @@ export default
   // [[[ template
   template: `
   <div c-model="info" class="text-warning"></div>
+  {{json databases}}
   `
   // ]]]
 }
