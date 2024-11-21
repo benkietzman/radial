@@ -23,10 +23,10 @@ let common = new Common(
   },
   routes:
   [
-    {path: '/Home', name: 'Home', component: '/feedback/component/Home.js'},
+    {path: '/Home', name: 'Home', component: '/sqlite/component/Home.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
-    {path: '/Status', name: 'Status', component: '/feedback/component/Status.js'},
+    {path: '/Status', name: 'Status', component: '/sqlite/component/Status.js'},
     {default: '/Home'}
   ]
 });
