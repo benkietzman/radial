@@ -67,8 +67,19 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
+    radialUser d;
+    userInit(ptJson, d);
+    // {{{ action
+    if (strFunction == "action")
+    {
+      if (action(d, strError))
+      {
+        bResult = true;
+      }
+    }
+    // }}}
     // {{{ databases
-    if (strFunction == "databases")
+    else if (strFunction == "databases")
     {
       bResult = true;
       if (exist(ptJson, "Response"))
@@ -87,6 +98,15 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
         }
       }
       m_mutex.unlock();
+    }
+    // }}}
+    // {{{ status
+    else if (strFunction == "status")
+    {
+      if (status(d, strError))
+      {
+        bResult = true;
+      }
     }
     // }}}
     // {{{ request
@@ -504,7 +524,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
           // {{{ invalid
           else
           {
-            strError = "Please provide a valid Function:  add, create, drop, list, master, query. remove.";
+            strError = "Please provide a valid Function:  action, add, create, drop, list, master, query. remove, status.";
           }
           // }}}
         }
@@ -528,6 +548,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       strError = "Please provide the Request.";
     }
     // }}}
+    userDeinit(d);
   }
   else
   {
