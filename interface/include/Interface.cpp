@@ -3431,23 +3431,17 @@ bool Interface::status(radialUser &d, string &e)
   bool b = true;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "Node"))
+  if (!empty(i, "Node") && i->m["Node"]->v != m_strNode)
   {
-    if (i->m["Node"]->v != m_strNode)
+    Json *j = new Json;
+    j->i("Interface", m_strName);
+    j->i("Function", "status");
+    j->i("Node", i->m["Node"]->v);
+    if (hub("link", j, e) && exist(j, "Response"))
     {
-      Json *j = new Json;
-      j->i("Interface", m_strName);
-      j->i("Function", "status");
-      j->i("Node", i->m["Node"]->v);
-      if (hub("link", j, e) && exist(j, "Response"))
-      {
-        o->merge(j->m["Response"], true, false);
-      }
+      o->merge(j->m["Response"], true, false);
     }
-    else
-    {
-      Interface::status(o);
-    }
+    delete j;
   }
   else
   {
