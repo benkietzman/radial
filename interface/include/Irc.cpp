@@ -2008,9 +2008,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       delete ptJson;
     }
-    if (!strApplication.empty())
+    if (!strMessage.empty())
     {
-      if (isLocalAdmin(strIdent, strApplication, bAdmin, auth))
+      if (isLocalAdmin(strIdent, "Radial", bAdmin, auth) || (!strApplication.empty() && isLocalAdmin(strIdent, strApplication, bAdmin, auth)))
       {
         live(strApplication, strUser, {{"Action", "message"}, {"Class", ((!strClass.empty())?strClass:"info")}, {"Title", ((!strTitle.empty())?strTitle:strApplication)}, {"Body", strMessage}});
         ssText << ":  The message has been sent.";
@@ -2028,7 +2028,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ptFormat->i("Message", "");
       ptFormat->i("Title", "");
       ptFormat->i("User", "");
-      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  FORMAT:  " << ptFormat;
+      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  You must provide both an Application and a Message.  Here are the available values for Class:  danger, dark, info, light, primary, secondary, success, and warning.  FORMAT:  " << ptFormat;
       delete ptFormat;
     }
   }
