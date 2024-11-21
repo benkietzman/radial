@@ -2017,7 +2017,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << " error:  You are not authorized to send a message to the Application.  You must be a registered as a local administrator for the Application.";
+        ssText << " error:  You are not authorized to send a message to the Application.  You must be registered as a local administrator for the Application.";
       }
     }
     else
