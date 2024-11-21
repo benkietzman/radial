@@ -72,7 +72,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ action
     if (strFunction == "action")
     {
-      if (Sqlite::action(d, strError))
+      if (Interface::action(d, strError))
       {
         bResult = true;
       }
@@ -103,7 +103,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ status
     else if (strFunction == "status")
     {
-      if (Sqlite::status(d, strError))
+      if (Interface::status(d, strError))
       {
         bResult = true;
       }
