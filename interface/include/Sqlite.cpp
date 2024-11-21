@@ -103,7 +103,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ status
     else if (strFunction == "status")
     {
-      if (status(d, strError))
+      if (Reports::status(d, strError))
       {
         bResult = true;
       }
