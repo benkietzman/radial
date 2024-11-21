@@ -19,7 +19,7 @@ class App
       this.m_bCommonAuthReady = true;
       this.ready();
     });
-    this.c.attachEvent('commonWsReady_Feedback', (data) =>
+    this.c.attachEvent('commonWsReady_SQLite', (data) =>
     {
       this.m_bCommonWsReady = true;
       this.ready();
