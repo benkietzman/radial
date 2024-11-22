@@ -28,19 +28,33 @@ export default
     // [[[ addDatabase()
     s.addDatabase = () =>
     {
-      let request = {Interface: 'sqlite', 'Function': 'create', Request: {Database: s.newDatabase.v, Node: s.node.v}};
-      c.wsRequest('radial', request).then((response) =>
+      if (s.node.v)
       {
-        let error = {};
-        if (c.wsResponse(response, error))
+        if (s.newDatabase.v)
         {
-          s.getDatabases();
+          let request = {Interface: 'sqlite', 'Function': 'create', Request: {Database: s.newDatabase.v, Node: s.node.v}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              s.getDatabases();
+            }
+            else
+            {
+              a.pushMessage(error.message);
+            }
+          });
         }
         else
         {
-          a.pushMessage(error.message);
+          alert('Please provide the Database.')
         }
-      });
+      }
+      else
+      {
+        alert('Please provide the Node.');
+      }
     };
     // ]]]
     // [[[ enter()
@@ -248,6 +262,34 @@ export default
       }
     };
     // ]]]
+    // [[[ removeDatabase()
+    s.removeDatabase = () =>
+    {
+      if (s.database.v)
+      {
+        if (confirm('Are you sure you want to drop the "' + s.database.v.name + '" database?'))
+        {
+          let request = {Interface: 'sqlite', 'Function': 'drop', Request: {Database: s.database.v.name}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              s.getDatabases();
+            }
+            else
+            {
+              a.pushMessage(error.message);
+            }
+          });
+        }
+      }
+      else
+      {
+        alert('Please choose a Database.');
+      }
+    };
+    // ]]]
     // [[[ main
     c.setMenu('Home');
     s.u();
@@ -271,13 +313,18 @@ export default
           <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Databases
+              {{#if database}}
+              <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
+              {{/if}}
             </div>
             <div class="card-body">
               <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 25vh; margin-bottom: 10px;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
+            {{#if nodes}}
             <div class="card-footer">
-              <div class="input-group input-group-sm"><span class="input-group-text"><select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></span><input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database"><span class="input-group-text"><button class="btn btn-sm btn-primary bi bi-plus-circle" c-click="addDatabase()"></button></span></div>
+              <div class="input-group input-group-sm"><span class="input-group-text"><select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></span><input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database"><span class="input-group-text"><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addDatabase()" title="add database"></button></span></div>
             </div>
+            {{/if}}
           </div>
         </div>
       </div>
@@ -314,7 +361,7 @@ export default
               Query
             </div>
             <div class="card-body">
-              <textarea class="form-control" c-model="statement" c-keyup="enter()"></textarea>
+              <textarea class="form-control" id="statement" c-model="statement" c-keyup="enter()"></textarea>
             </div>
           </div>
         </div>
