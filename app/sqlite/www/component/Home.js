@@ -209,24 +209,26 @@ export default
               Results
             </div>
             <div class="card-body">
-              <table class="table table-condensed table-striped">
-                <thead>
-                  <tr>
-                    {{#each result.[0]}}
-                    <th>{{@key}}</th>
+              <div class="table-responsive">
+                <table class="table table-condensed table-striped">
+                  <thead>
+                    <tr>
+                      {{#each result.[0]}}
+                      <th>{{@key}}</th>
+                      {{/each}}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each result}}
+                    <tr>
+                      {{#each .}}
+                      <td>{{.}}</td>
+                      {{/each}}
+                    </tr>
                     {{/each}}
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each result}}
-                  <tr>
-                    {{#each .}}
-                    <td>{{.}}</td>
-                    {{/each}}
-                  </tr>
-                  {{/each}}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
