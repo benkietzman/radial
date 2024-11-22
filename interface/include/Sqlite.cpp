@@ -67,7 +67,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
-    // {{{ action || status
+    // {{{ action
     if (strFunction == "action")
     {
       radialUser d;
