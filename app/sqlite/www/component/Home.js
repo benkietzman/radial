@@ -322,7 +322,17 @@ export default
             </div>
             {{#if nodes}}
             <div class="card-footer">
-              <div class="input-group input-group-sm"><span class="input-group-text"><select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></span><input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database"><span class="input-group-text"><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addDatabase()" title="add database"></button></span></div>
+              <div class="row">
+                <div class="col-md" style="padding-right: 0px;">
+                  <select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+                </div>
+                <div class="col-md" style="padding-left: 4px; padding-right: 4px;">
+                  <input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database">
+                </div>
+                <div class="col-md-2" style="padding-left: 0px;">
+                  <button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addDatabase()" title="add database"></button>
+                </div>
+              </div>
             </div>
             {{/if}}
           </div>
