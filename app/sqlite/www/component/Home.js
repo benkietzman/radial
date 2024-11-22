@@ -28,12 +28,10 @@ export default
     // [[[ getDatabases()
     s.getDatabases = () =>
     {
-      s.info.v = 'Loading databases...';
       let request = {Interface: 'sqlite', 'Function': 'databases'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         s.databases = null;
         s.databases = [];
         s.database = null;
@@ -60,12 +58,10 @@ export default
     // [[[ getStructure()
     s.getStructure = () =>
     {
-      s.info.v = 'Loading structure...';
       let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select sql from sqlite_master where name = \'' + s.table.v.name + '\''}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         s.structure = null;
         if (c.wsResponse(response, error))
         {
@@ -84,12 +80,10 @@ export default
     // [[[ getTables()
     s.getTables = () =>
     {
-      s.info.v = 'Loading tables...';
       let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select name from sqlite_master where type=\'table\''}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         s.tables = null;
         s.tables = [];
         s.table = null;
@@ -119,12 +113,10 @@ export default
     // [[[ query()
     s.query = () =>
     {
-      s.info.v = 'Processing query...';
       let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: s.statement.v}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.info.v = null;
         s.result = null;
         if (c.wsResponse(response, error))
         {
@@ -145,13 +137,8 @@ export default
     {
       s.init();
     }
-    else
-    {
-      s.info.v = 'Authenticating session...';
-    }
     c.attachEvent('appReady', (data) =>
     {
-      s.info.v = null;
       s.init();
     });
     // ]]]
@@ -159,30 +146,95 @@ export default
   // ]]]
   // [[[ template
   template: `
-  <div c-model="info" class="text-warning"></div>
-  <div class="input-group input-group-sm"><span class="input-group-text">Database</span><select class="form-control" c-model="database" c-change="getTables()" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-  <div class="input-group input-group-sm"><span class="input-group-text">Table</span><select class="form-control" c-model="table" c-change="getStructure()" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-  {{structure}}
-  <textarea class="form-control" c-model="statement"></textarea>
-  {{#if result}}
-  <table class="table table-condensed table-striped">
-    <thead>
-      <tr>
-        {{#each result.[0]}}
-        <th>{{@key}}</th>
-        {{/each}}
-      </tr>
-    </thead>
-    <tbody>
-      {{#each result}}
-      <tr>
-        {{#each .}}
-        <td>{{.}}</td>
-        {{/each}}
-      </tr>
-      {{/each}}
-    </tbody>
-  </table>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Databases
+            </div>
+            <div class="card-body">
+              <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 30vh; margin-bottom: 10px;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Tables
+            </div>
+            <div class="card-body">
+              <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 30vh; margin-bottom: 10px;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Structure
+            </div>
+            <div class="card-body">
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{structure}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Query
+            </div>
+            <div class="card-body">
+              <textarea class="form-control" c-model="statement"></textarea>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-success float-end" c-click="query()">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{#if result}}
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Results
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-condensed table-striped">
+                  <thead>
+                    <tr>
+                      {{#each result.[0]}}
+                      <th>{{@key}}</th>
+                      {{/each}}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each result}}
+                    <tr>
+                      {{#each .}}
+                      <td>{{.}}</td>
+                      {{/each}}
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   {{/if}}
   `
   // ]]]
