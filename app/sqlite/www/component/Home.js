@@ -38,6 +38,7 @@ export default
             let error = {};
             if (c.wsResponse(response, error))
             {
+              s.newDatabase = null;
               s.getDatabases();
             }
             else
