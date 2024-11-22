@@ -25,6 +25,24 @@ export default
       c: c
     });
     // ]]]
+    // [[[ addDatabase()
+    s.addDatabase = () =>
+    {
+      let request = {Interface: 'sqlite', 'Function': 'create', Request: {Database: s.newDatabase.v, Node: s.node.v}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.getDatabases();
+        }
+        else
+        {
+          a.pushMessage(error.message);
+        }
+      });
+    };
+    // ]]]
     // [[[ getDatabases()
     s.getDatabases = () =>
     {
@@ -51,36 +69,101 @@ export default
           a.pushMessage(error.message);
         }
         s.u();
+        s.getNodes();
         s.getTables();
+      });
+    };
+    // ]]]
+    // [[[ getNodes()
+    s.getNodes = () =>
+    {
+
+      let request = {Interface: 'link', 'Function': 'status'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          let strNode = response.Response.Node;
+          let nodes = [strNode];
+          for (let i = 0; i < response.Response.Links.length; i++)
+          {
+            nodes.push(response.Response.Links[i]);
+          }
+          nodes.sort();
+          s.subNodes = null;
+          s.subNodes = [];
+          for (let i = 0; i < nodes.length; i++)
+          {
+            let request = {Interface: 'sqlite', 'Function': 'status', Request: {Node: nodes[i]}};
+            if (nodes[i] != strNode)
+            {
+              request.Node = nodes[i];
+            }
+            c.wsRequest('radial', request).then((response) =>
+            {
+              let error = {};
+              if (c.wsResponse(response, error))
+              {
+                s.node = null;
+                s.nodes = null;
+                s.nodes = [];
+                s.subNodes.push(response.Request.Node);
+                s.subNodes.sort();
+                s.nodes = s.subNodes;
+                s.node = s.nodes[0];
+                s.u();
+              }
+              else
+              {
+                s.message.v = error.message;
+              }
+            });
+          }
+        }
+        else
+        {
+          s.message.v = error.message;
+        }
       });
     };
     // ]]]
     // [[[ getStructure()
     s.getStructure = () =>
     {
-      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select sql from sqlite_master where name = \'' + s.table.v.name + '\''}};
-      c.wsRequest('radial', request).then((response) =>
+      if (s.table.v)
       {
-        let error = {};
+        let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select sql from sqlite_master where name = \'' + s.table.v.name + '\''}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.structure = null;
+          if (c.wsResponse(response, error))
+          {
+            s.structure = response.Response.ResultSet[0].sql;
+          }
+          else
+          {
+            a.pushMessage(error.message);
+          }
+          s.u();
+          s.statement.v = 'select * from ' + s.table.v.name;
+          s.query();
+        });
+      }
+      else
+      {
         s.structure = null;
-        if (c.wsResponse(response, error))
-        {
-          s.structure = response.Response.ResultSet[0].sql;
-        }
-        else
-        {
-          a.pushMessage(error.message);
-        }
         s.u();
-        s.statement.v = 'select * from ' + s.table.v.name;
+        s.statement.v = null;
         s.query();
-      });
+      }
     };
     // ]]]
     // [[[ getTables()
     s.getTables = () =>
     {
-      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select name from sqlite_master where type=\'table\''}};
+      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select name from sqlite_master where type=\'table\' order by name'}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -113,21 +196,46 @@ export default
     // [[[ query()
     s.query = () =>
     {
-      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: s.statement.v}};
-      c.wsRequest('radial', request).then((response) =>
+      if (s.statement.v)
       {
-        let error = {};
         s.result = null;
-        if (c.wsResponse(response, error))
+        let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: s.statement.v}};
+        c.wsRequest('radial', request).then((response) =>
         {
-          s.result = response.Response.ResultSet;
-        }
-        else
-        {
-          a.pushMessage(error.message);
-        }
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            if (response.Response.ResultSet)
+            {
+              s.result = response.Response.ResultSet;
+            }
+            let tokens = s.statement.v.split(' ');
+            if (tokens.length > 0)
+            {
+              let strAction = tokens[0].toLowerCase();
+              if (strAction == 'create' || strAction == 'drop')
+              {
+                s.getTables();
+              }
+              else if (strAction == 'insert' || strAction == 'delete')
+              {
+                s.statement.v = 'select * from ' + s.table.v.name;
+                s.query();
+              }
+            }
+          }
+          else
+          {
+            a.pushMessage(error.message);
+          }
+          s.u();
+        });
+      }
+      else
+      {
+        s.result = null;
         s.u();
-      });
+      }
     };
     // ]]]
     // [[[ main
@@ -150,24 +258,27 @@ export default
     <div class="col-md-3">
       <div class="row">
         <div class="col">
-          <div class="card">
+          <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Databases
             </div>
             <div class="card-body">
-              <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 30vh; margin-bottom: 10px;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+              <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 25vh; margin-bottom: 10px;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            </div>
+            <div class="card-footer">
+              <div class="input-group input-group-sm"><span class="input-group-text"><select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></span><input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database"><span class="input-group-text"><button class="btn btn-sm btn-primary bi bi-plus-circle" c-click="addDatabase()"></button></span></div>
             </div>
           </div>
         </div>
       </div>
       <div class="row">
         <div class="col">
-          <div class="card">
+          <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Tables
             </div>
             <div class="card-body">
-              <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 30vh; margin-bottom: 10px;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+              <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 25vh; margin-bottom: 10px;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
           </div>
         </div>
@@ -176,7 +287,7 @@ export default
     <div class="col-md-9">
       <div class="row">
         <div class="col">
-          <div class="card">
+          <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Structure
             </div>
@@ -188,7 +299,7 @@ export default
       </div>
       <div class="row">
         <div class="col">
-          <div class="card">
+          <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Query
             </div>
@@ -204,7 +315,7 @@ export default
       {{#if result}}
       <div class="row">
         <div class="col">
-          <div class="card">
+          <div class="card" style="margin-top: 10px;">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Results
             </div>
