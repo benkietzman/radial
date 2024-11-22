@@ -175,7 +175,19 @@ export default
     </div>
     <div class="col-md-9">
       <div class="row">
-        <div class="col-md-6">
+        <div class="col">
+          <div class="card">
+            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+              Structure
+            </div>
+            <div class="card-body">
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{structure}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
           <div class="card">
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Query
@@ -185,16 +197,6 @@ export default
             </div>
             <div class="card-footer">
               <button class="btn btn-sm btn-success float-end" c-click="query()">Submit</button>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
-              Structure
-            </div>
-            <div class="card-body">
-              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{structure}}</pre>
             </div>
           </div>
         </div>
