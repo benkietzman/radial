@@ -164,6 +164,7 @@ export default
   <div class="input-group input-group-sm"><span class="input-group-text">Table</span><select class="form-control" c-model="table" c-change="getStructure()" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
   {{structure}}
   <textarea class="form-control" c-model="statement"></textarea>
+  <button class="btn btn-success" c-click="query()">Submit</button>
   {{#if result}}
   <table class="table table-condensed table-striped">
     <thead>
