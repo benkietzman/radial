@@ -43,6 +43,16 @@ export default
       });
     };
     // ]]]
+    // [[[ enter()
+    s.enter = () =>
+    {
+      if (window.event.keyCode == 13)
+      {
+        s.statement.v = s.statement.v.replace(/(?:\r\n|\r|\n)/g, '');
+        s.query();
+      }
+    };
+    // ]]]
     // [[[ getDatabases()
     s.getDatabases = () =>
     {
@@ -304,10 +314,7 @@ export default
               Query
             </div>
             <div class="card-body">
-              <textarea class="form-control" c-model="statement"></textarea>
-            </div>
-            <div class="card-footer">
-              <button class="btn btn-sm btn-success float-end" c-click="query()">Submit</button>
+              <textarea class="form-control" c-model="statement" c-keyup="enter()"></textarea>
             </div>
           </div>
         </div>
