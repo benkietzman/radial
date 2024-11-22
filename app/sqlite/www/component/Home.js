@@ -70,13 +70,13 @@ export default
     // [[[ getDatabases()
     s.getDatabases = () =>
     {
+      s.databases = null;
+      s.databases = [];
+      s.database = null;
       let request = {Interface: 'sqlite', 'Function': 'databases'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        s.databases = null;
-        s.databases = [];
-        s.database = null;
         if (c.wsResponse(response, error))
         {
           for (let key of Object.keys(response.Response))
@@ -101,7 +101,6 @@ export default
     // [[[ getNodes()
     s.getNodes = () =>
     {
-
       let request = {Interface: 'link', 'Function': 'status'};
       c.wsRequest('radial', request).then((response) =>
       {
@@ -155,13 +154,13 @@ export default
     // [[[ getStructure()
     s.getStructure = () =>
     {
+      s.structure = null;
       if (s.table.v)
       {
         let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select sql from sqlite_master where name = \'' + s.table.v.name + '\''}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
-          s.structure = null;
           if (c.wsResponse(response, error))
           {
             s.structure = response.Response.ResultSet[0].sql;
@@ -177,7 +176,6 @@ export default
       }
       else
       {
-        s.structure = null;
         s.u();
         s.statement.v = null;
         s.query();
@@ -187,28 +185,31 @@ export default
     // [[[ getTables()
     s.getTables = () =>
     {
-      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select name from sqlite_master where type=\'table\' order by name'}};
-      c.wsRequest('radial', request).then((response) =>
+      s.tables = null;
+      s.tables = [];
+      s.table = null;
+      if (s.database.v)
       {
-        let error = {};
-        s.tables = null;
-        s.tables = [];
-        s.table = null;
-        if (c.wsResponse(response, error))
+        let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select name from sqlite_master where type=\'table\' order by name'}};
+        c.wsRequest('radial', request).then((response) =>
         {
-          s.tables = response.Response.ResultSet;
-          if (s.tables.length > 0)
+          let error = {};
+          if (c.wsResponse(response, error))
           {
-            s.table = s.tables[0];
+            s.tables = response.Response.ResultSet;
+            if (s.tables.length > 0)
+            {
+              s.table = s.tables[0];
+            }
           }
-        }
-        else
-        {
-          a.pushMessage(error.message);
-        }
-        s.u();
-        s.getStructure();
-      });
+          else
+          {
+            a.pushMessage(error.message);
+          }
+          s.u();
+          s.getStructure();
+        });
+      }
     };
     // ]]]
     // [[[ init()
@@ -220,9 +221,9 @@ export default
     // [[[ query()
     s.query = () =>
     {
+      s.result = null;
       if (s.statement.v)
       {
-        s.result = null;
         let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: s.statement.v}};
         c.wsRequest('radial', request).then((response) =>
         {
@@ -257,7 +258,6 @@ export default
       }
       else
       {
-        s.result = null;
         s.u();
       }
     };
