@@ -31,7 +31,7 @@ obj/sqlite.o: sqlite.cpp ../../../common/Makefile obj
 obj:
 	if [ ! -d obj ]; then mkdir obj; fi;
 
-install: bin/sqlite $(prefix)/radial/app/radial
+install: bin/sqlite $(prefix)/radial/app/sqlite
 	install --mode=775 bin/sqlite $(prefix)/radial/app/sqlite/
 
 $(prefix)/radial/app/sqlite:
