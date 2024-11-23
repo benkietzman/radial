@@ -186,7 +186,7 @@ export default
       {{/if}}
       {{#ifCond Master.Node "==" @key}}<b>{{@key}}</b>{{else}}{{@key}}{{/ifCond}}
     </div>
-    <div class="card-body">
+    <div class="card-body bg-info-subtle">
       <b>Status</b>
       <table class="table table-sm table-condensed table-striped">
         <tr><td>Process ID</td><td style="text-align: right;">{{PID}}</td></tr>

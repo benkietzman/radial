@@ -158,7 +158,7 @@ export default
         <div class="card-header bg-info text-white" style="font-weight: bold;">
           <i class="bi bi-info-circle"></i> Useful Tools
         </div>
-        <div class="card-body">
+        <div class="card-body bg-info-subtle">
           <ul class="list-group">
             {{#each usefulTools}}
             <li class="list-group-item">{{{.}}}</li>
@@ -177,7 +177,7 @@ export default
         <div class="card-header bg-success text-white" style="font-weight: bold;">
           <i class="bi bi-ticket"></i> Issues
         </div>
-        <div class="card-body">
+        <div class="card-body bg-success-subtle">
           <p>
             Please use <a href="/central/#/Home/Issues">Issues</a> when creating a new issue for an application.  Issues provides a comprehensive list of applications from which to choose.
           </p>
@@ -192,7 +192,7 @@ export default
         <div class="card-header bg-warning text-white" style="font-weight: bold;">
           <i class="bi bi-person-workspace"></i> Workload
         </div>
-        <div class="card-body">
+        <div class="card-body bg-warning-subtle">
           <p>
             Developers may access the <a href="/central/#/Applications/Workload">Workload</a> section of Central in order to view their list of open application issues for which they are registered as a primary/backup developer.  The Workload displays issues sorted by priority, due date, and open date.  This helps to keep developers organized in how they tackle their daily issues.
           </p>

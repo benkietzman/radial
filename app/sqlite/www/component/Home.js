@@ -312,17 +312,17 @@ export default
       <div class="row">
         <div class="col">
           <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+            <div class="card-header bg-info text-white" style="font-weight: bold;">
               Databases
               {{#if database}}
               <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
               {{/if}}
             </div>
-            <div class="card-body" style="padding: 0px;">
+            <div class="card-body bg-info-subtle" style="padding: 0px;">
               <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
             {{#if nodes}}
-            <div class="card-footer">
+            <div class="card-footer bg-info-subtle">
               <div class="row">
                 <div class="col-md" style="padding-right: 0px;">
                   <select class="form-select form-select-sm" c-model="node">{{#each nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
@@ -342,10 +342,10 @@ export default
       <div class="row">
         <div class="col">
           <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+            <div class="card-header bg-info text-white" style="font-weight: bold;">
               Tables
             </div>
-            <div class="card-body" style="padding: 0px;">
+            <div class="card-body bg-info-subtle" style="padding: 0px;">
               <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
           </div>
@@ -356,10 +356,10 @@ export default
       <div class="row">
         <div class="col">
           <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+            <div class="card-header bg-success text-white" style="font-weight: bold;">
               Structure
             </div>
-            <div class="card-body">
+            <div class="card-body bg-success-subtle">
               <pre style="background: inherit; color: inherit; white-space: pre-wrap; margin-bottom: -4px;">{{structure}}</pre>
             </div>
           </div>
@@ -371,7 +371,7 @@ export default
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Query
             </div>
-            <div class="card-body" style="padding: 0px;">
+            <div class="card-body bg-primary-subtle" style="padding: 0px;">
               <textarea class="form-control" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
             </div>
           </div>
@@ -384,7 +384,7 @@ export default
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Results
             </div>
-            <div class="card-body" style="padding: 0px;">
+            <div class="card-body bg-primary-subtle" style="padding: 0px;">
               <div class="table-responsive" style="margin-bottom: -16px;">
                 <table class="table table-condensed table-striped">
                   <thead>
