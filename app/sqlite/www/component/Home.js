@@ -318,8 +318,8 @@ export default
               <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
               {{/if}}
             </div>
-            <div class="card-body">
-              <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 25vh; margin-bottom: 10px;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            <div class="card-body" style="padding: 0px;">
+              <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
             {{#if nodes}}
             <div class="card-footer">
@@ -345,8 +345,8 @@ export default
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Tables
             </div>
-            <div class="card-body">
-              <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 25vh; margin-bottom: 10px;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            <div class="card-body" style="padding: 0px;">
+              <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
           </div>
         </div>
@@ -360,7 +360,7 @@ export default
               Structure
             </div>
             <div class="card-body">
-              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{structure}}</pre>
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap; margin-bottom: -4px;">{{structure}}</pre>
             </div>
           </div>
         </div>
@@ -371,8 +371,8 @@ export default
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Query
             </div>
-            <div class="card-body">
-              <textarea class="form-control" id="statement" c-model="statement" c-keyup="enter()"></textarea>
+            <div class="card-body" style="padding: 0px;">
+              <textarea class="form-control" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
             </div>
           </div>
         </div>
@@ -384,8 +384,8 @@ export default
             <div class="card-header bg-primary text-white" style="font-weight: bold;">
               Results
             </div>
-            <div class="card-body">
-              <div class="table-responsive">
+            <div class="card-body" style="padding: 0px;">
+              <div class="table-responsive" style="margin-bottom: -16px;">
                 <table class="table table-condensed table-striped">
                   <thead>
                     <tr>
