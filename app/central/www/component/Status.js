@@ -202,7 +202,7 @@ export default
       {{/if}}
       {{@key}}
     </div>
-    <div class="card-body">
+    <div class="card-body bg-info-subtle">
       <table class="table table-sm table-condensed table-striped">
         <thead>
           <tr>
