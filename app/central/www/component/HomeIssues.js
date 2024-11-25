@@ -216,7 +216,7 @@ export default
             <div class="card-header bg-success text-white" style="font-weight:bold;">
               {{../application.name}}
             </div>
-            <div class="card-body">
+            <div class="card-body bg-success-subtle">
               <div class="row">
                 <div class="col-md-4">
                   <div class="input-group"><span class="input-group-text">Due</span><input type="text" class="form-control" c-model="issue.due_date" placeholder="YYYY-MM-DD"></div>
