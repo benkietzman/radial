@@ -155,7 +155,7 @@ export default
     </div>
     <div class="col-md-5">
       <div class="card">
-        <div class="card-header bg-info text-white" style="font-weight: bold;">
+        <div class="card-header bg-info fw-bold">
           <i class="bi bi-info-circle"></i> Useful Tools
         </div>
         <div class="card-body bg-info-subtle">
@@ -169,12 +169,12 @@ export default
     </div>
   </div>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  <div c-model="message" class="fw-bold text-danger""></div>
   {{#isValid}}
   <div class="row">
     <div class="col-md-5">
       <div class="card"">
-        <div class="card-header bg-success text-white" style="font-weight: bold;">
+        <div class="card-header bg-success fw-bold">
           <i class="bi bi-ticket"></i> Issues
         </div>
         <div class="card-body bg-success-subtle">
@@ -189,7 +189,7 @@ export default
     </div>
     <div class="col-md-7">
       <div class="card">
-        <div class="card-header bg-warning text-white" style="font-weight: bold;">
+        <div class="card-header bg-warning fw-bold">
           <i class="bi bi-person-workspace"></i> Workload
         </div>
         <div class="card-body bg-warning-subtle">

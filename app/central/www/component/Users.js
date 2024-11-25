@@ -520,7 +520,7 @@ export default
   </div>
   {{/each}}
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
+  <div c-model="message" class="fw-bold text-danger"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -684,26 +684,26 @@ export default
   <div class="row">
     <div class="col-md-4">
       <div class="card">
-        <div class="card-header text-white">
+        <div class="card-header bg-info fw-bold">
           <span title="Configuration settings for receiving alert messages."><i class="bi bi-send"></i> Notify Settings</span>
         </div>
-        <div class="card-body">
+        <div class="card-body bg-info-subtle">
           <table class="table table-condensed">
             <tr>
-              <th>
+              <th style="background: inherit;">
                 <span title="Sends a private chat message to the user on IRC.">Chat:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <select class="form-control" c-model="user.alert_chat" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
                 {{else}}
                 {{user.alert_chat.name}}
                 {{/if}}
               </td>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="Plays audio to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Audio:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <select class="form-control" c-model="user.alert_live_audio" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
                 {{else}}
@@ -712,20 +712,20 @@ export default
               </td>
             </tr>
             <tr>
-              <th>
+              <th style="background: inherit;">
                 <span title="Sends an email to the email address.">Email:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <select class="form-control" c-model="user.alert_email" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
                 {{else}}
                 {{user.alert_email.name}}
                 {{/if}}
               </td>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="Displays a notification box to the user on any website utilizing the Common framework for which the user is logged into that website.">Live Message:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <select class="form-control" c-model="user.alert_live_message" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
                 {{else}}
@@ -734,17 +734,17 @@ export default
               </td>
             </tr>
             <tr>
-              <th>
+              <th style="background: inherit;">
                 <span title="Sends an email to the text address.">Text:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <select class="form-control" c-model="user.alert_pager" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
                 {{else}}
                 {{user.alert_pager.name}}
                 {{/if}}
               </td>
-              <td colspan="2"></td>
+              <td colspan="2" style="background: inherit;"></td>
             </tr>
           </table>
         </div>
@@ -752,16 +752,16 @@ export default
     </div>
     <div class="col-md-8">
       <div class="card">
-        <div class="card-header text-white">
+        <div class="card-header bg-success fw-bold">
           <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network"></i> Notify - Remote Connection</span>
         </div>
-        <div class="card-body">
+        <div class="card-body bg-success-subtle">
           <table class="table table-condensed table-striped">
             <tr>
-              <th>
+              <th style="background: inherit;">
                 <span title="RESTful URL for the remote Radial instance.">URL:</span>
               </th>
-              <td colspan="3">
+              <td colspan="3" style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_url">
                 {{else}}
@@ -770,20 +770,20 @@ export default
               </td>
             </tr>
             <tr>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="User for the remote Radial instance.">Auth User:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_auth_user">
                 {{else}}
                 {{user.alert_remote_auth_user}}
                 {{/if}}
               </td>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="Password for the remote Radial instance.">Auth Password:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_auth_password">
                 {{else if user.bAdmin}}
@@ -794,20 +794,20 @@ export default
               </td>
             </tr>
             <tr>
-              <th>
+              <th style="background: inherit;">
                 <span title="Remote user to receive alert.">User:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_user">
                 {{else}}
                 {{user.alert_remote_user}}
                 {{/if}}
               </td>
-              <th>
+              <th style="background: inherit;">
                 <span title="Optional server:port for proxying the connection out of the local network.">Proxy:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_proxy">
                 {{else}}
@@ -816,20 +816,20 @@ export default
               </td>
             </tr>
             <tr>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="User for the proxy.">Proxy User:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_proxy_user">
                 {{else}}
                 {{user.alert_remote_proxy_user}}
                 {{/if}}
               </td>
-              <th style="white-space: nowrap;">
+              <th style="background: inherit; white-space: nowrap;">
                 <span title="Password for the proxy.">Proxy Password:</span>
               </th>
-              <td>
+              <td style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="text" class="form-control" c-model="user.alert_remote_proxy_password">
                 {{else if user.bAdmin}}
