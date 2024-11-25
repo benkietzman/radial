@@ -47,7 +47,7 @@ export default
         <h3 class="page-header">Summary</h3>
         <div style="display:inline-block;">
           <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-primary">
               Income &amp; Expense
             </div>
             <div class="card-body table-responsive">
@@ -78,7 +78,7 @@ export default
         </div>
         <div style="display:inline-block;">
           <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-primary">
               Asset &amp; Liability
             </div>
             <div class="card-body table-responsive">
@@ -109,7 +109,7 @@ export default
         </div>
         <div style="display:inline-block;">
           <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-primary">
               Ratio
             </div>
             <div class="card-body table-responsive">
@@ -137,10 +137,10 @@ export default
         <input class="btn btn-sm btn-success" id="jsonimport" type="file" accept=".json" c-change="jsonImport()" value="Import">
         <button class="btn btn-sm btn-warning bi bi-save" c-click="jsonExport()" style="margin-left: 10px;" title="Save"></button>
         <div class="card" style="margin-top: 10px;">
-          <div class="card-header">
+          <div class="card-header bg-info">
             Track Your Finances
           </div>
-          <div class="card-body">
+          <div class="card-body bg-info-subtle">
             Modify your data on this website and then use this page to Save your data into a finance.json file.  When you come back later, you can load the file into the website.  The website itself does not store your data, so saving the finance.json file to your computer/device is critical.
           </div>
           <div class="card-footer">

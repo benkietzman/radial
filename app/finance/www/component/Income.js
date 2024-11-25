@@ -62,7 +62,7 @@ export default
     <div style="display:inline-block;">
       {{#ifCond @key '==' 'Employment'}}
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-success">
           {{@key}}
         </div>
         <div class="card-body table-responsive">
@@ -106,7 +106,7 @@ export default
       </div>
       {{else}}
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-success">
           {{@key}}
         </div>
         <div class="card-body table-responsive">

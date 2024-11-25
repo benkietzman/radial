@@ -40,7 +40,7 @@ export default
           s.chart.destroy();
           delete s.chart;
         }
-        s.chart = new Chart(ctx, {type: 'doughnut', data: d, options: {plugins: {legend: {display: false}, title: {display: false}}}});
+        s.chart = new Chart(ctx, {type: 'doughnut', data: d, options: {plugins: {legend: {display: false}, title: {display: false}} }});
       }
     });
   },
@@ -53,7 +53,7 @@ export default
     <div style="display:inline-block;">
       {{#ifCond @key '==' 'Compound'}}
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-danger">
           {{@key}}
         </div>
         <div class="card-body table-responsive">
@@ -87,7 +87,7 @@ export default
       </div>
       {{else ifCond @key '==' 'Simple'}}
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-danger">
           {{@key}}
         </div>
         <div class="card-body table-responsive">

@@ -54,7 +54,7 @@ export default
     {{#each f}}
     <div style="display:inline-block;">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-danger">
           {{@key}}
         </div>
         <div class="card-body table-responsive">
@@ -84,7 +84,7 @@ export default
     {{/each}}
     <div style="display:inline-block;">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-danger">
           Withheld
         </div>
         <div class="card-body table-responsive">
