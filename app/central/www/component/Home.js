@@ -122,21 +122,21 @@ export default
       <div class="row">
         <div class="col-md-4">
           {{#if numApplications}}
-          <div class="card card-body card-inverse" style="text-align: center;">
+          <div class="card card-body bg-warning-subtle" style="text-align: center;">
             <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
           </div>
           {{/if}}
         </div>
         <div class="col-md-4">
           {{#if numServers}}
-          <div class="card card-body card-inverse" style="text-align: center;">
+          <div class="card card-body bg-success-subtle" style="text-align: center;">
             <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers 0}}</a>
           </div>
           {{/if}}
         </div>
         <div class="col-md-4">
           {{#if numUsers}}
-          <div class="card card-body card-inverse" style="text-align: center;">
+          <div class="card card-body bg-info-subtle" style="text-align: center;">
             <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
           </div>
           {{/if}}
