@@ -311,8 +311,8 @@ export default
     <div class="col-md-3">
       <div class="row">
         <div class="col">
-          <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-info text-white" style="font-weight: bold;">
+          <div class="card border border-info-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-info" style="font-weight: bold;">
               Databases
               {{#if database}}
               <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
@@ -341,8 +341,8 @@ export default
       </div>
       <div class="row">
         <div class="col">
-          <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-info text-white" style="font-weight: bold;">
+          <div class="card border border-info-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-info" style="font-weight: bold;">
               Tables
             </div>
             <div class="card-body bg-info-subtle" style="padding: 0px;">
@@ -355,8 +355,8 @@ export default
     <div class="col-md-9">
       <div class="row">
         <div class="col">
-          <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-success text-white" style="font-weight: bold;">
+          <div class="card border border-success-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-success" style="font-weight: bold;">
               Structure
             </div>
             <div class="card-body bg-success-subtle">
@@ -367,12 +367,12 @@ export default
       </div>
       <div class="row">
         <div class="col">
-          <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-primary" style="font-weight: bold;">
               Query
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
-              <textarea class="form-control" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
+              <textarea class="form-control bg-success-subtle" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
             </div>
           </div>
         </div>
@@ -380,8 +380,8 @@ export default
       {{#if result}}
       <div class="row">
         <div class="col">
-          <div class="card" style="margin-top: 10px;">
-            <div class="card-header bg-primary text-white" style="font-weight: bold;">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-primary" style="font-weight: bold;">
               Results
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
@@ -390,7 +390,7 @@ export default
                   <thead>
                     <tr>
                       {{#each result.[0]}}
-                      <th>{{@key}}</th>
+                      <th style="background: inherit;">{{@key}}</th>
                       {{/each}}
                     </tr>
                   </thead>
@@ -398,7 +398,7 @@ export default
                     {{#each result}}
                     <tr>
                       {{#each .}}
-                      <td>{{.}}</td>
+                      <td style="background: inherit;">{{.}}</td>
                       {{/each}}
                     </tr>
                     {{/each}}
