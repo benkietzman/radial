@@ -166,34 +166,34 @@ export default
     <h3 class="page-header">Liability - Simple</h3>
     {{#if f}}
     <div class="table-responsive">
-      <table class="table table-striped">
+      <table class="table table-striped bg-danger-subtle border border-danger-subtle">
         <thead>
         <tr>
-          <th>Name</th>
-          <th>Principal</th>
-          <th>Rate</th>
-          <th>Payment</th>
-          <th>Duration (yrs)</th>
-          <th></th>
+          <th style="background: inherit;">Name</th>
+          <th style="background: inherit;">Principal</th>
+          <th style="background: inherit;">Rate</th>
+          <th style="background: inherit;">Payment</th>
+          <th style="background: inherit;">Duration (yrs)</th>
+          <th style="background: inherit;"></th>
         </tr>
         </thead>
         <tbody>
         <tr>
-          <td><input type="text" class="form-control form-control-sm" c-model="d.k"></td>
-          <td><input type="text" class="form-control form-control-sm" c-model="d.Principal"></td>
-          <td><div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="d.Rate"><span class="input-group-text">%</span></div></td>
-          <td><input type="text" class="form-control form-control-sm" c-model="d.Payment"></td>
-          <td><input type="text" class="form-control form-control-sm" c-model="d.Duration"></td>
-          <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="add()" title="Add"></button></td>
+          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="d.k"></td>
+          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="d.Principal"></td>
+          <td style="background: inherit;"><div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="d.Rate"><span class="input-group-text bg-danger-subtle">%</span></div></td>
+          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="d.Payment"></td>
+          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="d.Duration"></td>
+          <td style="background: inherit;"><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="add()" title="Add"></button></td>
         </tr>
         {{#each f}}
         <tr>
-          <td>{{#ifCond @key '!=' ../k}}{{../k}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.k">{{/ifCond}}</td>
-          <td>{{#ifCond @key '!=' ../k}}{{../Principal}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Principal">{{/ifCond}}</td>
-          <td>{{#ifCond @key '!=' ../k}}{{../Rate}}%{{else}}<div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm" c-model="e.Rate"><span class="input-group-text">%</span></div>{{/ifCond}}</td>
-          <td>{{#ifCond @key '!=' ../k}}{{../Payment}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Payment">{{/ifCond}}</td>
-          <td>{{#ifCond @key '!=' ../k}}{{../Duration}}{{else}}<input type="text" class="form-control form-control-sm" c-model="e.Duration">{{/ifCond}}</td>
-          <td style="display:inline-block;">{{#ifCond @key '!=' ../k}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="edit('{{@key}}')" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="remove('{{@key}}')" title="Remove"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="update('{{@key}}')" title="Save"></button>{{/ifCond}}</td>
+          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../k}}{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e.k">{{/ifCond}}</td>
+          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Principal}}{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e.Principal">{{/ifCond}}</td>
+          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Rate}}%{{else}}<div class="input-group input-group-sm"><input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e.Rate"><span class="input-group-text bg-danger-subtle">%</span></div>{{/ifCond}}</td>
+          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Payment}}{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e.Payment">{{/ifCond}}</td>
+          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Duration}}{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e.Duration">{{/ifCond}}</td>
+          <td style="background: inherit; display:inline-block; white-space: nowrap;">{{#ifCond @key '!=' ../k}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="edit('{{@key}}')" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="remove('{{@key}}')" title="Remove"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="update('{{@key}}')" title="Save"></button>{{/ifCond}}</td>
         </tr>
         {{/each}}
         </tbody>

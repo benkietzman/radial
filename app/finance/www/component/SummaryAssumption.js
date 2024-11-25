@@ -89,10 +89,10 @@ export default
       </div>
       <div class="col-md-4">
         <div class="card">
-          <div class="card-body">
+          <div class="card-body bg-primary-subtle">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><b>Inflation Key:</b> Registration key for the Bureau of Labor and Statistics (BLS).  This key allows Finance to query inflation data from BLS.</li>
-              <li class="list-group-item"><b>Social Security Net:</b> This is the annual amount you will receive once you start collecting Social Security benefits.</li>
+              <li class="list-group-item bg-primary-subtle"><b>Inflation Key:</b> Registration key for the Bureau of Labor and Statistics (BLS).  This key allows Finance to query inflation data from BLS.</li>
+              <li class="list-group-item bg-primary-subtle"><b>Social Security Net:</b> This is the annual amount you will receive once you start collecting Social Security benefits.</li>
             </ul>
           </div>
         </div>

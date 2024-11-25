@@ -46,30 +46,30 @@ export default
       <div class="col-md-8">
         <h3 class="page-header">Summary</h3>
         <div style="display:inline-block;">
-          <div class="card">
-            <div class="card-header bg-primary">
+          <div class="card border border-primary-subtle">
+            <div class="card-header bg-primary fw-bold">
               Income &amp; Expense
             </div>
-            <div class="card-body table-responsive">
+            <div class="card-body bg-primary-subtle table-responsive" style="padding: 0px;">
               <table class="table table-striped">
                 <thead>
                 <tr>
-                  <th></th>
-                  <th style="text-align:right;">Amount</th>
+                  <th style="background: inherit;"></th>
+                  <th style="background: inherit; text-align:right;">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                  <td>Income</td>
-                  <td style="text-align:right;" title="{{number (incomeSum)}}">{{numberShort (incomeSum)}}</td>
+                  <td style="background: inherit;">Income</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (incomeSum)}}">{{numberShort (incomeSum)}}</td>
                 </tr>
                 <tr>
-                  <td>Expense</td>
-                  <td style="text-align:right;" title="{{number (expenseSum)}}">{{numberShort (expenseSum)}}</td>
+                  <td style="background: inherit;">Expense</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (expenseSum)}}">{{numberShort (expenseSum)}}</td>
                 </tr>
                 <tr>
-                  <th style="text-align:left;">Cash Flow</th>
-                  <th class="text-{{#ifCond (cashFlow) '>=' 0}}success{{else}}danger{{/ifCond}}" style="text-align:right;" title="{{number (cashFlow)}}">{{numberShort (cashFlow)}}</th>
+                  <th style="background: inherit; text-align:left;">Cash Flow</th>
+                  <th class="text-{{#ifCond (cashFlow) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit; text-align:right;" title="{{number (cashFlow)}}">{{numberShort (cashFlow)}}</th>
                 </tr>
                 </tbody>
               </table>
@@ -77,30 +77,30 @@ export default
           </div>
         </div>
         <div style="display:inline-block;">
-          <div class="card">
-            <div class="card-header bg-primary">
+          <div class="card border border-primary-subtle">
+            <div class="card-header bg-primary fw-bold">
               Asset &amp; Liability
             </div>
-            <div class="card-body table-responsive">
+            <div class="card-body bg-primary-subtle table-responsive" style="padding: 0px;">
               <table class="table table-striped">
                 <thead>
                 <tr>
-                  <th></th>
-                  <th style="text-align:right;">Amount</th>
+                  <th style="background: inherit;"></th>
+                  <th style="background: inherit; text-align:right;">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                  <td>Asset</td>
-                  <td style="text-align:right;" title="{{number (assetSum)}}">{{numberShort (assetSum)}}</td>
+                  <td style="background: inherit;">Asset</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (assetSum)}}">{{numberShort (assetSum)}}</td>
                 </tr>
                 <tr>
-                  <td>Liability</td>
-                  <td style="text-align:right;" title="{{number (liabilitySum)}}">{{numberShort (liabilitySum)}}</td>
+                  <td style="background: inherit;">Liability</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (liabilitySum)}}">{{numberShort (liabilitySum)}}</td>
                 </tr>
                 <tr>
-                  <th style="text-align:left;">Net Worth</th>
-                  <th class="text-{{#ifCond (netWorth) '>=' 0}}success{{else}}danger{{/ifCond}}" style="text-align:right;" title="{{number (netWorth)}}">{{numberShort (netWorth)}}</th>
+                  <th style="background: inherit; text-align:left;">Net Worth</th>
+                  <th class="text-{{#ifCond (netWorth) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit; text-align:right;" title="{{number (netWorth)}}">{{numberShort (netWorth)}}</th>
                 </tr>
                 </tbody>
               </table>
@@ -108,24 +108,24 @@ export default
           </div>
         </div>
         <div style="display:inline-block;">
-          <div class="card">
-            <div class="card-header bg-primary">
+          <div class="card border border-primary-subtle">
+            <div class="card-header bg-primary fw-bold">
               Ratio
             </div>
-            <div class="card-body table-responsive">
+            <div class="card-body bg-primary-subtle table-responsive" style="padding: 0px;">
               <table class="table table-striped">
                 <tbody>
                 <tr>
-                  <td>Expense : Income</td>
-                  <td style="text-align:right;" title="{{number (multiply (divide (expenseSum) (incomeSum)) 100)}}%">{{numberShort (multiply (divide (expenseSum) (incomeSum)) 100)}}%</td>
+                  <td style="background: inherit;">Expense : Income</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (expenseSum) (incomeSum)) 100)}}%">{{numberShort (multiply (divide (expenseSum) (incomeSum)) 100)}}%</td>
                 </tr>
                 <tr>
-                  <td>Metal : Net Worth</td>
-                  <td style="text-align:right;" title="{{number (multiply (divide (assetMetalSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetMetalSum) (netWorth)) 100)}}%</td>
+                  <td style="background: inherit;">Metal : Net Worth</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (assetMetalSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetMetalSum) (netWorth)) 100)}}%</td>
                 </tr>
                 <tr>
-                  <td>Stock : Net Worth</td>
-                  <td style="text-align:right;" title="{{number (multiply (divide (assetStockSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetStockSum) (netWorth)) 100)}}%</td>
+                  <td style="background: inherit;">Stock : Net Worth</td>
+                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (assetStockSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetStockSum) (netWorth)) 100)}}%</td>
                 </tr>
                 </tbody>
               </table>
@@ -136,8 +136,8 @@ export default
       <div class="col-md-4">
         <input class="btn btn-sm btn-success" id="jsonimport" type="file" accept=".json" c-change="jsonImport()" value="Import">
         <button class="btn btn-sm btn-warning bi bi-save" c-click="jsonExport()" style="margin-left: 10px;" title="Save"></button>
-        <div class="card" style="margin-top: 10px;">
-          <div class="card-header bg-info">
+        <div class="card border border-info-subtle" style="margin-top: 10px;">
+          <div class="card-header bg-info fw-bold">
             Track Your Finances
           </div>
           <div class="card-body bg-info-subtle">
