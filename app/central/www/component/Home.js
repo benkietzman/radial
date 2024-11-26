@@ -122,8 +122,8 @@ export default
       <div class="row">
         <div class="col-md-4">
           {{#if numApplications}}
-          <div class="card card-body bg-warning-subtle" style="text-align: center;">
-            <a class="text-warning" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
+          <div class="card card-body bg-primary-subtle" style="text-align: center;">
+            <a class="text-primary" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
           </div>
           {{/if}}
         </div>
@@ -136,8 +136,8 @@ export default
         </div>
         <div class="col-md-4">
           {{#if numUsers}}
-          <div class="card card-body bg-info-subtle" style="text-align: center;">
-            <a class="text-info" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
+          <div class="card card-body bg-warning-subtle" style="text-align: center;">
+            <a class="text-warning" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
           </div>
           {{/if}}
         </div>
@@ -155,8 +155,8 @@ export default
     </div>
     <div class="col-md-5">
       <div class="card" style="margin-top: 10px;">
-        <div class="card-header bg-info fw-bold">
-          <i class="bi bi-info-circle"></i> Useful Tools
+        <div class="card-header bg-primary fw-bold">
+          <i class="bi bi-primary-circle"></i> Useful Tools
         </div>
         <div class="card-body bg-info-subtle">
           <ul class="list-group">
@@ -174,10 +174,10 @@ export default
   <div class="row">
     <div class="col-md-5">
       <div class="card" style="margin-top: 10px;">
-        <div class="card-header bg-success fw-bold">
+        <div class="card-header bg-danger fw-bold">
           <i class="bi bi-ticket"></i> Issues
         </div>
-        <div class="card-body bg-success-subtle">
+        <div class="card-body bg-danger-subtle">
           <p>
             Please use <a href="/central/#/Home/Issues">Issues</a> when creating a new issue for an application.  Issues provides a comprehensive list of applications from which to choose.
           </p>
@@ -189,10 +189,10 @@ export default
     </div>
     <div class="col-md-7">
       <div class="card" style="margin-top: 10px;">
-        <div class="card-header bg-warning fw-bold">
+        <div class="card-header bg-success fw-bold">
           <i class="bi bi-person-workspace"></i> Workload
         </div>
-        <div class="card-body bg-warning-subtle">
+        <div class="card-body bg-success-subtle">
           <p>
             Developers may access the <a href="/central/#/Applications/Workload">Workload</a> section of Central in order to view their list of open application issues for which they are registered as a primary/backup developer.  The Workload displays issues sorted by priority, due date, and open date.  This helps to keep developers organized in how they tackle their daily issues.
           </p>
