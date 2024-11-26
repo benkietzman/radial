@@ -187,8 +187,8 @@ export default
   <div class="row">
   {{#each interfaces}}
   <div class="col">
-  <div class="card" style="margin-top: 10px;">
-    <div class="card-header bg-info text-white" style="font-weight: bold;">
+  <div class="card border border-info-subtle" style="margin-top: 10px;">
+    <div class="card-header bg-info-subtle fw-bold"">
       {{#if @root.bDeveloper}}
       {{#statusShowStop .}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
@@ -206,27 +206,27 @@ export default
       <table class="table table-sm table-condensed table-striped">
         <thead>
           <tr>
-            <td title="Node"><i class="bi bi-node-plus"></i></td>
-            <td style="text-align: right;" title="Process ID"><i class="bi bi-robot"></i></td>
-            <td style="text-align: right;" title="Resident Memory"><i class="bi bi-memory"></i></td>
-            <td style="text-align: right;" title="Threads"><i class="bi bi-threads"></i></td>
-            <td style="text-align: right;" title="Throughput (#/min)"><i class="bi bi-speedometer"></i></td>
+            <td style="background: inherit;" title="Node"><i class="bi bi-node-plus"></i></td>
+            <td style="background: inherit; text-align: right;" title="Process ID"><i class="bi bi-robot"></i></td>
+            <td style="background: inherit; text-align: right;" title="Resident Memory"><i class="bi bi-memory"></i></td>
+            <td style="background: inherit; text-align: right;" title="Threads"><i class="bi bi-threads"></i></td>
+            <td style="background: inherit; text-align: right;" title="Throughput (#/min)"><i class="bi bi-speedometer"></i></td>
             {{#if @root.bDeveloper}}
-            <td colspan="2"></td>
+            <td colspan="2" style="background: inherit;"></td>
             {{/if}}
           </tr>
         </thead>
         <tbody>
           {{#each .}}
-          <tr>
-            <td {{#ifCond Master.Node "==" @key}} style="font-weight: bold;" title="Master"{{/ifCond}}>{{@key}}</td>
-            <td style="text-align: right;">{{PID}}</td>
-            <td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td>
-            <td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td>
-            <td style="text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{/if}}</td>
+          <tr{{#ifCond Master.Node "==" @key}} class="bg-info" title="Master"{{/ifCond}}>
+            <td style="background: inherit;">{{@key}}</td>
+            <td style="background: inherit; text-align: right;">{{PID}}</td>
+            <td style="background: inherit; text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td>
+            <td style="background: inherit; text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td>
+            <td style="background: inherit; text-align: right;">{{#if Throughput}}{{numberShort Throughput 0}}{{/if}}</td>
             {{#if @root.bDeveloper}}
-            <td>{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
-            <td>{{#if PID}}<button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>{{else}}<button class="btn btn-sm btn-success bi bi-power" c-click="action('start', '{{@../key}}', '{{@key}}')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
+            <td style="background: inherit;">{{#if PID}}<button class="btn btn-sm btn-warning bi bi-arrow-clockwise float-end" c-click="action('restart', '{{@../key}}', '{{@key}}')" title="restart"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
+            <td style="background: inherit;">{{#if PID}}<button class="btn btn-sm btn-danger bi bi-x-circle" c-click="action('stop', '{{@../key}}', '{{@key}}')" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>{{else}}<button class="btn btn-sm btn-success bi bi-power" c-click="action('start', '{{@../key}}', '{{@key}}')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>{{/if}}</td>
             {{/if}}
           </tr>
           {{/each}}
