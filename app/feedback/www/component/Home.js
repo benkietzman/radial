@@ -488,8 +488,8 @@ export default
       <div class="card-group">
       {{#each surveys}}
       {{#showClosedOrOpen ../showClosed open}}
-      <div class="card" style="margin: 10px; min-width: 400px; max-width: 400px;">
-        <div class="card-header text-white">
+      <div class="card border border-primary-subtle" style="margin: 10px; min-width: 400px; max-width: 400px;">
+        <div class="card-header bg-primary fw-bold">
           <div class="row">
             <div class="col-md-2">
               {{#ifCond @../key "==" "Your Surveys"}}
@@ -506,7 +506,7 @@ export default
             </div>
           </div>
         </div>
-        <div class="card-body">
+        <div class="card-body bg-primary-subtle">
           <div class="row">
             <div class="col-md-6 text-center">
               {{#if ../viewResults}}
@@ -556,28 +556,30 @@ export default
       {{/each}}
     </div>
     <div class="col-md-4">
-      <div class="card card-body">
-        <p class="text-warning">
-          Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
-        </p>
-        <p class="text-info">
-          Surveys can be submitted either on this website or via a conversation with the Radial chatbot.  The Radial chatbot is known as radial_bot and can be accessed either via Internet Relay Chat (IRC) or by logging into the website and clicking the blue chat tab on the right.
-        </p>
-        <p class="text-info">
-          The chatbot responds to keywords called actions.  Provide the feedback (aka: fb) action in order to access Feedback functionalities.  Surveys are uniquely identified using hashes.  Send the following message to the chatbot in order to begin a survey:
-        </p>
-        <p class="text-success">
-          fb [hash]
-        </p>
-        <p class="text-info">
-          Replace [hash] with the hash of the survey.  Provide answers to the survey questions using the following format:
-        </p>
-        <p class="text-success">
-          fb [answer]
-        </p>
-        <p class="text-info">
-          Continue to answer questions until the survey is complete.
-        </p>
+      <div class="card border border-info-subtle">
+        <div class="card-body bg-info-subtle">
+          <p class="text-warning">
+            Welcome to the Feedback website.  You can use this website to build custom suveys as well as provide feedback for surveys.
+          </p>
+          <p class="text-info">
+            Surveys can be submitted either on this website or via a conversation with the Radial chatbot.  The Radial chatbot is known as radial_bot and can be accessed either via Internet Relay Chat (IRC) or by logging into the website and clicking the blue chat tab on the right.
+          </p>
+          <p class="text-info">
+            The chatbot responds to keywords called actions.  Provide the feedback (aka: fb) action in order to access Feedback functionalities.  Surveys are uniquely identified using hashes.  Send the following message to the chatbot in order to begin a survey:
+          </p>
+          <p class="text-success">
+            fb [hash]
+          </p>
+          <p class="text-info">
+            Replace [hash] with the hash of the survey.  Provide answers to the survey questions using the following format:
+          </p>
+          <p class="text-success">
+            fb [answer]
+          </p>
+          <p class="text-info">
+            Continue to answer questions until the survey is complete.
+          </p>
+        </div>
       </div>
     </div>
   </div>
