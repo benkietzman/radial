@@ -158,10 +158,10 @@ export default
         <div class="card-header bg-primary fw-bold">
           <i class="bi bi-primary-circle"></i> Useful Tools
         </div>
-        <div class="card-body bg-info-subtle">
+        <div class="card-body bg-primary-subtle">
           <ul class="list-group">
             {{#each usefulTools}}
-            <li class="list-group-item bg-info-subtle">{{{.}}}</li>
+            <li class="list-group-item bg-primary-subtle">{{{.}}}</li>
             {{/each}}
           </ul>
         </div>
