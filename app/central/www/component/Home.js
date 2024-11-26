@@ -154,7 +154,7 @@ export default
       </p>
     </div>
     <div class="col-md-5">
-      <div class="card">
+      <div class="card" style="margin-top: 10px;">
         <div class="card-header bg-info fw-bold">
           <i class="bi bi-info-circle"></i> Useful Tools
         </div>
@@ -173,7 +173,7 @@ export default
   {{#isValid}}
   <div class="row">
     <div class="col-md-5">
-      <div class="card"">
+      <div class="card" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           <i class="bi bi-ticket"></i> Issues
         </div>
@@ -188,7 +188,7 @@ export default
       </div>
     </div>
     <div class="col-md-7">
-      <div class="card">
+      <div class="card" style="margin-top: 10px;">
         <div class="card-header bg-warning fw-bold">
           <i class="bi bi-person-workspace"></i> Workload
         </div>
