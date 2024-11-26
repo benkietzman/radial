@@ -171,8 +171,8 @@ export default
   <div class="row">
   {{#each nodes}}
   <div class="col-auto">
-  <div class="card" style="margin-top: 10px;">
-    <div class="card-header bg-info text-white">
+  <div class="card border border-info-subtle" style="margin-top: 10px;">
+    <div class="card-header {{#ifCond Master.Node "==" @key}}bg-info fw-bold{{else}}bg-info-subtle{{/ifCond}}">
       {{#if @root.bDeveloper}}
       {{#if PID}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
@@ -184,20 +184,20 @@ export default
       <button class="btn btn-sm btn-success bi bi-power float-end" c-click="action('start', '{{@key}}')" title="start"{{#if @root.bDisabled}} disabled{{/if}}></button>
       {{/if}}
       {{/if}}
-      {{#ifCond Master.Node "==" @key}}<b>{{@key}}</b>{{else}}{{@key}}{{/ifCond}}
+      {{@key}}
     </div>
     <div class="card-body bg-info-subtle">
       <b>Status</b>
       <table class="table table-sm table-condensed table-striped">
-        <tr><td>Process ID</td><td style="text-align: right;">{{PID}}</td></tr>
-        <tr><td>Resident</td><td style="text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td></tr>
-        <tr><td>Threads</td><td style="text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td></tr>
+        <tr><td style="background: inherit;">Process ID</td><td style="background: inherit; text-align: right;">{{PID}}</td></tr>
+        <tr><td style="background: inherit;">Resident</td><td style="background: inherit; text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td></tr>
+        <tr><td style="background: inherit;">Threads</td><td style="background: inherit; text-align: right;">{{#if Threads}}{{numberShort Threads 0}}{{/if}}</td></tr>
       </table>
       {{#if Throughput}}
       <b>Throughput</b>
       <table class="table table-sm table-condensed table-striped">
       {{#each Throughput}}
-        <tr><td>{{@key}}</td><td style="text-align: right;">{{numberShort . 0}}</td></tr>
+        <tr><td style="background: inherit;">{{@key}}</td><td style="background: inherit; text-align: right;">{{numberShort . 0}}</td></tr>
       {{/each}}
       </table>
       {{/if}}
