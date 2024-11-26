@@ -458,8 +458,8 @@ export default
     {{#isValid}}
     <div class="row">
       <div class="col-md-9">
-        <div class="card border border-info-subtle">
-          <div class="card-body bg-info-subtle table-responsive" id="radial_history" style="padding: 0px;">
+        <div class="card border border-primary-subtle">
+          <div class="card-body bg-primary-subtle table-responsive" id="radial_history" style="padding: 0px;">
             <table class="table table-condensed table-striped" style="margin: 0px;">
               {{#each @root.history}}
               <tr>
