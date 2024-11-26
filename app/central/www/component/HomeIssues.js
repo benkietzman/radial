@@ -212,35 +212,35 @@ export default
         <div class="col-md-9">
           {{#if ../application}}
           {{#if ../issue}}
-          <div class="card">
-            <div class="card-header bg-success text-white" style="font-weight:bold;">
+          <div class="card border border-danger-subtle">
+            <div class="card-header bg-danger fw-bold"">
               {{../application.name}}
             </div>
-            <div class="card-body bg-success-subtle">
+            <div class="card-body bg-danger-subtle">
               <div class="row">
                 <div class="col-md-4">
-                  <div class="input-group"><span class="input-group-text">Due</span><input type="text" class="form-control" c-model="issue.due_date" placeholder="YYYY-MM-DD"></div>
+                  <div class="input-group"><span class="input-group-text bg-danger">Due</span><input type="text" class="form-control bg-danger-subtle" c-model="issue.due_date" placeholder="YYYY-MM-DD"></div>
                 </div>
                 <div class="col-md-4">
-                  <div class="input-group"><span class="input-group-text">Priority</span><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></div>
+                  <div class="input-group"><span class="input-group-text bg-danger">Priority</span><select c-model="issue.priority" class="form-control bg-danger-subtle"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></div>
                 </div>
                 <div class="col-md-4">
-                  <div class="input-group"><span class="input-group-text">Assigned</span><input type="text" class="form-control" c-model="issue.assigned_userid" placeholder="User ID"></div>
+                  <div class="input-group"><span class="input-group-text bg-danger">Assigned</span><input type="text" class="form-control bg-danger-subtle" c-model="issue.assigned_userid" placeholder="User ID"></div>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <input type="text" class="form-control" c-model="issue.summary" placeholder="enter summary" style="width: 100%;">
+                  <input type="text" class="form-control bg-danger-subtle" c-model="issue.summary" placeholder="enter summary" style="width: 100%;">
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
+                  <textarea c-model="issue.comments" class="form-control bg-danger-subtle" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success bi bi-check-circle float-end" c-click="addIssue()" title="Create Issue"></button>
+                  <button class="btn btn-danger bi bi-check-circle float-end" c-click="addIssue()" title="Create Issue"></button>
                 </div>
               </div>
             </div>

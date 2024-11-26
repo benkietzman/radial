@@ -367,8 +367,8 @@ export default
         </div>
         <div class="col-md-9">
           {{#if ../display}}
-          <div class="card">
-            <div class="card-header bg-success text-white" style="font-weight:bold;">
+          <div class="card border border-primary-subtle">
+            <div class="card-header bg-primary fw-bold">
               {{#ifCond ../type.val "==" "application"}}
               {{../application.val.name}}
               {{else ifCond ../type.val "==" "group"}}
@@ -379,21 +379,23 @@ export default
               {{../user.val.first_name}} {{../user.val.last_name}} ({{../user.val.userid}})
               {{/ifCond}}
             </div>
-            <div class="card-body">
+            <div class="card-body bg-primary-subtle">
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <textarea c-model="notification" class="form-control" rows="5" style="width: 100%;" placeholder="enter notification"></textarea>
+                  <textarea c-model="notification" class="form-control bg-primary-subtle" rows="5" style="width: 100%;" placeholder="enter notification"></textarea>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success bi bi-send float-end" c-click="send()" title="Send Notification"></button>
+                  <button class="btn btn-primary bi bi-send float-end" c-click="send()" title="Send Notification"></button>
                 </div>
               </div>
             </div>
+            {{#if notified}}
             <div class="card-footer">
               <div c-model="notified" class="text-success"></div>
             </div>
+            {{/if}}
           </div>
           {{/if}}
         </div>

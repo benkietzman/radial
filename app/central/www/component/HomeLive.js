@@ -181,33 +181,35 @@ export default
         </div>
         <div class="col-md-9">
           {{#if ../display}}
-          <div class="card">
-            <div class="card-header bg-success text-white" style="font-weight:bold;">
+          <div class="card border border-primary-subtle">
+            <div class="card-header bg-primary fw-bold">
               {{../application.val.name}}
             </div>
-            <div class="card-body bg-success-subtle">
+            <div class="card-body bg-primary-subtle">
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-4">
-                  <div class="input-group"><span class="input-group-text">Class</span><select class="form-control" c-model="class">{{#each ../classes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></div>
+                  <div class="input-group"><span class="input-group-text bg-primary">Class</span><select class="form-control bg-primary-subtle" c-model="class">{{#each ../classes}}<option value="{{.}}">{{.}}</option>{{/each}}</select></div>
                 </div>
                 <div class="col-md-8">
-                  <div class="input-group"><span class="input-group-text">Title</span><input type="text" class="form-control" c-model="title"></div>
+                  <div class="input-group"><span class="input-group-text bg-primary">Title</span><input type="text" class="form-control bg-primary-subtle" c-model="title"></div>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <textarea c-model="body" class="form-control" rows="5" style="width: 100%;" placeholder="enter message"></textarea>
+                  <textarea c-model="body" class="form-control bg-primary-subtle" rows="5" style="width: 100%;" placeholder="enter message"></textarea>
                 </div>
               </div>
               <div class="row" style="margin-top: 10px;">
                 <div class="col-md-12">
-                  <button class="btn btn-success bi bi-send float-end" c-click="send()" title="Send Message"></button>
+                  <button class="btn btn-primary bi bi-send float-end" c-click="send()" title="Send Message"></button>
                 </div>
               </div>
             </div>
+            {{#if messages}}
             <div class="card-footer">
               <div c-model="messaged" class="text-success"></div>
             </div>
+            {{/if}}
           </div>
           {{/if}}
         </div>

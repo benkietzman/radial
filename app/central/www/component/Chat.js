@@ -458,19 +458,21 @@ export default
     {{#isValid}}
     <div class="row">
       <div class="col-md-9">
-        <div class="card card-body bg-secondary-subtle table-responsive" id="radial_history" style="padding: 0px;">
-          <table class="table table-condensed table-striped" style="margin: 0px;">
-            {{#each @root.history}}
-            <tr>
-              <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{#if FirstName}}{{FirstName}}{{else}}{{User}}{{/if}}</pre></td>
-              <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{{Message}}}</pre></td>
-            </tr>
-            {{/each}}
-          </table>
+        <div class="card border border-info-subtle">
+          <div class="card-body bg-info-subtle table-responsive" id="radial_history" style="padding: 0px;">
+            <table class="table table-condensed table-striped" style="margin: 0px;">
+              {{#each @root.history}}
+              <tr>
+                <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{#if FirstName}}{{FirstName}}{{else}}{{User}}{{/if}}</pre></td>
+                <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{{Message}}}</pre></td>
+              </tr>
+              {{/each}}
+            </table>
+          </div>
         </div>
       </div>
       <div class="col-md-3">
-        <select class="form-select form-select-sm bg-success-subtle" id="radial_user" c-model="user" c-change="hist()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 60vh; margin-bottom: 10px;">
+        <select class="form-select form-select-sm bg-primary-subtle border border-primary-subtle" id="radial_user" c-model="user" c-change="hist()" size="2" style="background: inherit; color: inherit; font-family: monospace, monospace; height: 60vh; margin-bottom: 10px;">
           {{#each @root.users}}
           <option value="{{@key}}"{{#if unread}} class="bg-warning"{{/if}}>{{#if connected}}{{{icon}}}{{else}}&nbsp;{{/if}}&nbsp;{{#if LastName}}{{LastName}}, {{/if}}{{FirstName}} ({{@key}}){{#if unread}} [{{unread}}]{{/if}}</option>
           {{/each}}
@@ -479,7 +481,7 @@ export default
     </div>
     <div class="row">
       <div class="col">
-        <input type="text" class="form-control form-control-sm bg-primary-subtle" id="radial_message" c-model="message" c-keyup="enter()" placeholder="Type message and hit enter..." style="font-family: monospace, monospace; margin-top: 10px;">
+        <input type="text" class="form-control form-control-sm bg-primary-subtle border border-primary-subtle" id="radial_message" c-model="message" c-keyup="enter()" placeholder="Type message and hit enter..." style="font-family: monospace, monospace; margin-top: 10px;">
       </div>
     </div>
     {{/isValid}}
