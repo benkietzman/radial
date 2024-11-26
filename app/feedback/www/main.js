@@ -27,7 +27,7 @@ let common = new Common(
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
     {path: '/results/:hash', name: 'Home', component: '/feedback/component/Home.js'},
-    {path: '/Status', name: 'Status', component: '/include/common/js/component/Status.js'},
+    {path: '/Status', name: 'Status', component: '/include/common/js/component/RadialStatus.js'},
     {path: '/survey/:hash', name: 'Home', component: '/feedback/component/Home.js'},
     {default: '/Home'}
   ]
