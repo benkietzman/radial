@@ -13,7 +13,8 @@ class App
     this.m_bReady = false;
     this.m_bCommonAuthReady = false;
     this.m_bCommonWsReady = false;
-    this.m_strApplication = null;
+    this.m_strApplication = 'Feedback';
+    this.m_strInterface = 'feedback';
     this.c.attachEvent('commonAuthReady', (data) =>
     {
       this.m_bCommonAuthReady = true;

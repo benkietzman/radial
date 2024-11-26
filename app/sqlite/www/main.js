@@ -26,7 +26,7 @@ let common = new Common(
     {path: '/Home', name: 'Home', component: '/sqlite/component/Home.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
-    {path: '/Status', name: 'Status', component: '/sqlite/component/Status.js'},
+    {path: '/Status', name: 'Status', component: '/include/common/js/component/RadialStatus.js'},
     {default: '/Home'}
   ]
 });

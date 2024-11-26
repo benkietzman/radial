@@ -187,8 +187,8 @@ export default
   <div class="row">
   {{#each interfaces}}
   <div class="col">
-  <div class="card border border-info-subtle" style="margin-top: 10px;">
-    <div class="card-header bg-info-subtle fw-bold"">
+  <div class="card border border-primary-subtle" style="margin-top: 10px;">
+    <div class="card-header bg-primary-subtle fw-bold"">
       {{#if @root.bDeveloper}}
       {{#statusShowStop .}}
       <button class="btn btn-sm btn-danger bi bi-x-circle float-end" c-click="action('stop', '{{@key}}', '')" style="margin-left: 10px;" title="stop"{{#if @root.bDisabled}} disabled{{/if}}></button>
@@ -202,7 +202,7 @@ export default
       {{/if}}
       {{@key}}
     </div>
-    <div class="card-body bg-info-subtle">
+    <div class="card-body bg-primary-subtle">
       <table class="table table-sm table-condensed table-striped">
         <thead>
           <tr>
@@ -218,7 +218,7 @@ export default
         </thead>
         <tbody>
           {{#each .}}
-          <tr{{#ifCond Master.Node "==" @key}} class="bg-info" title="Master"{{/ifCond}}>
+          <tr{{#ifCond Master.Node "==" @key}} class="bg-primary" title="Master"{{/ifCond}}>
             <td style="background: inherit;">{{@key}}</td>
             <td style="background: inherit; text-align: right;">{{PID}}</td>
             <td style="background: inherit; text-align: right;">{{#if Memory.Resident}}{{byteShort (multiply Memory.Resident 1024) 2}}{{/if}}</td>
