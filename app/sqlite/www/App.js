@@ -32,12 +32,6 @@ class App
     });
   }
   // }}}
-  // {{{ pushMessage()
-  pushMessage(strMessage)
-  {
-    this.c.pushMessage(strMessage, 'Error Message', 'danger');
-  }
-  // }}}
   // {{{ ready()
   ready(response, error)
   {

@@ -44,7 +44,7 @@ export default
             }
             else
             {
-              a.pushMessage(error.message);
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -92,7 +92,7 @@ export default
         }
         else
         {
-          a.pushMessage(error.message);
+          c.pushErrorMessage(error.message);
         }
         s.u();
         s.getNodes();
@@ -169,7 +169,7 @@ export default
           }
           else
           {
-            a.pushMessage(error.message);
+            c.pushErrorMessage(error.message);
           }
           s.u();
           s.statement.v = 'select * from ' + s.table.v.name;
@@ -206,7 +206,7 @@ export default
           }
           else
           {
-            a.pushMessage(error.message);
+            c.pushErrorMessage(error.message);
           }
           s.u();
           s.getStructure();
@@ -261,7 +261,7 @@ export default
           }
           else
           {
-            a.pushMessage(error.message);
+            c.pushErrorMessage(error.message);
           }
           s.u();
         });
@@ -289,7 +289,7 @@ export default
             }
             else
             {
-              a.pushMessage(error.message);
+              c.pushErrorMessage(error.message);
             }
           });
         }

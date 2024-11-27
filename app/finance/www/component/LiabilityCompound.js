@@ -65,27 +65,27 @@ export default
                 }
                 else
                 {
-                  error.message = 'Please provide the Duration.';
+                  c.pushErrorMessage('Please provide the Duration.');
                 }
               }
               else
               {
-                error.message = 'Please provide the Payment.';
+                c.pushErrorMessage('Please provide the Payment.');
               }
             }
             else
             {
-              error.message = 'Please provide the Rate.';
+              c.pushErrorMessage('Please provide the Rate.');
             }
           }
           else
           {
-            error.message = 'Please provide the Principal.';
+            c.pushErrorMessage('Please provide the Principal.');
           }
         }
         else
         {
-          error.message = 'Please provide the Compound.';
+          c.pushErrorMessage('Please provide the Compound.');
         }
 
         return bResult;

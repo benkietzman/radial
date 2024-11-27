@@ -67,32 +67,32 @@ export default
                   }
                   else
                   {
-                    error.message = 'Please provide the Tax.';
+                    c.pushErrorMessage('Please provide the Tax.');
                   }
                 }
                 else
                 {
-                  error.message = 'Please provide the Match.';
+                  c.pushErrorMessage('Please provide the Match.');
                 }
               }
               else
               {
-                error.message = 'Please provide the Invest.';
+                c.pushErrorMessage('Please provide the Invest.');
               }
             }
             else
             {
-              error.message = 'Please provide the Medical.';
+              c.pushErrorMessage('Please provide the Medical.');
             }
           }
           else
           {
-            error.message = 'Please provide the Salary.';
+            c.pushErrorMessage('Please provide the Salary.');
           }
         }
         else
         {
-          error.message = 'Please provide the Employer.';
+          c.pushErrorMessage('Please provide the Employer.');
         }
 
         return bResult;

@@ -278,7 +278,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -473,7 +473,6 @@ export default
   // [[[ template
   template: `
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <!-- [[[ surveys -->
   <div class="row">
     <div class="col-md-8">

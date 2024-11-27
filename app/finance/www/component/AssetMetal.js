@@ -61,17 +61,17 @@ export default
             }
             else
             {
-              error.message = 'Please provide the Price.';
+              c.pushErrorMessage('Please provide the Price.');
             }
           }
           else
           {
-            error.message = 'Please provide the Quantity.';
+            c.pushErrorMessage('Please provide the Quantity.');
           }
         }
         else
         {
-          error.message = 'Please provide the Metal.';
+          c.pushErrorMessage('Please provide the Metal.');
         }
 
         return bResult;

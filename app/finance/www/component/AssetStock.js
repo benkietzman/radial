@@ -73,47 +73,47 @@ export default
                         }
                         else
                         {
-                          error.message = 'Please provide the Receive.';
+                          c.pushErrorMessage('Please provide the Receive.');
                         }
                       }
                       else
                       {
-                        error.message = 'Please provide the Dividend.';
+                        c.pushErrorMessage('Please provide the Dividend.');
                       }
                     }
                     else
                     {
-                      error.message = 'Please provide the Price.';
+                      c.pushErrorMessage('Please provide the Price.');
                     }
                   }
                   else
                   {
-                    error.message = 'Please provide the Shares.';
+                    c.pushErrorMessage('Please provide the Shares.');
                   }
                 }
                 else
                 {
-                  error.message = 'Please provide the Sector.';
+                  c.pushErrorMessage('Please provide the Sector.');
                 }
               }
               else
               {
-                error.message = 'Please provide the Score.';
+                c.pushErrorMessage('Please provide the Score.');
               }
             }
             else
             {
-              error.message = 'Please provide the Category.';
+              c.pushErrorMessage('Please provide the Category.');
             }
           }
           else
           {
-            error.message = 'Please provide the Account.';
+            c.pushErrorMessage('Please provide the Account.');
           }
         }
         else
         {
-          error.message = 'Please provide the Stock.';
+          c.pushErrorMessage('Please provide the Stock.');
         }
 
         return bResult;
