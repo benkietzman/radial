@@ -154,7 +154,7 @@ export default
       </p>
     </div>
     <div class="col-md-5">
-      <div class="card border border-primary-sutble" style="margin-top: 10px;">
+      <div class="card border border-primary-subtle" style="margin-top: 10px;">
         <div class="card-header bg-primary fw-bold">
           <i class="bi bi-primary-circle"></i> Useful Tools
         </div>
