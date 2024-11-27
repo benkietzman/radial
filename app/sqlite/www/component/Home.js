@@ -321,24 +321,24 @@ export default
     <div class="col-md-3">
       <div class="row">
         <div class="col">
-          <div class="card border border-info-subtle" style="margin-top: 10px;">
-            <div class="card-header bg-info" style="font-weight: bold;">
+          <div class="card border border-success-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-success fw-bold">
               Databases
               {{#if ../database}}
               <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
               {{/if}}
             </div>
-            <div class="card-body bg-info-subtle" style="padding: 0px;">
+            <div class="card-body bg-success-subtle" style="padding: 0px;">
               <select class="form-select form-select-sm" c-model="database" c-change="getTables()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each ../databases}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
             {{#if ../nodes}}
-            <div class="card-footer bg-info-subtle">
+            <div class="card-footer bg-success-subtle">
               <div class="row">
                 <div class="col-md" style="padding-right: 0px;">
-                  <select class="form-select form-select-sm" c-model="node">{{#each ../nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+                  <select class="form-select form-select-sm bg-success-subtle" c-model="node">{{#each ../nodes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
                 </div>
                 <div class="col-md" style="padding-left: 4px; padding-right: 4px;">
-                  <input type="text" class="form-control form-control-sm" c-model="newDatabase" placeholder="database">
+                  <input type="text" class="form-control form-control-sm bg-success-subtle" c-model="newDatabase" placeholder="database">
                 </div>
                 <div class="col-md-2" style="padding-left: 0px;">
                   <button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addDatabase()" title="add database"></button>
@@ -351,11 +351,11 @@ export default
       </div>
       <div class="row">
         <div class="col">
-          <div class="card border border-info-subtle" style="margin-top: 10px;">
-            <div class="card-header bg-info" style="font-weight: bold;">
+          <div class="card border border-success-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-success fw-bold">
               Tables
             </div>
-            <div class="card-body bg-info-subtle" style="padding: 0px;">
+            <div class="card-body bg-success-subtle" style="padding: 0px;">
               <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each ../tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
             </div>
           </div>
@@ -365,11 +365,11 @@ export default
     <div class="col-md-9">
       <div class="row">
         <div class="col">
-          <div class="card border border-success-subtle" style="margin-top: 10px;">
-            <div class="card-header bg-success" style="font-weight: bold;">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
+            <div class="card-header bg-primary fw-bold">
               Structure
             </div>
-            <div class="card-body bg-success-subtle">
+            <div class="card-body bg-primary-subtle">
               <pre style="background: inherit; color: inherit; white-space: pre-wrap; margin-bottom: -4px;">{{../structure}}</pre>
             </div>
           </div>
@@ -378,11 +378,11 @@ export default
       <div class="row">
         <div class="col">
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
-            <div class="card-header bg-primary" style="font-weight: bold;">
+            <div class="card-header bg-primary fw-bold">
               Query
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
-              <textarea class="form-control bg-success-subtle" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
+              <textarea class="form-control bg-primary-subtle" id="statement" c-model="statement" c-keyup="enter()" style="border-style: none;"></textarea>
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ export default
       <div class="row">
         <div class="col">
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
-            <div class="card-header bg-primary" style="font-weight: bold;">
+            <div class="card-header bg-primary fw-bold">
               Results
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
