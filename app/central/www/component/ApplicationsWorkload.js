@@ -71,7 +71,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
                 request = null;
@@ -87,7 +87,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -95,14 +95,14 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
           s.u();
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -132,7 +132,6 @@ export default
     <h5 class="page-header">Open Application Issues</h5>
     <p>This page provides your personalized workload of open application issues.  The open issues listed below are being pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>
     <div c-model="info" class="text-warning"></div>
-    <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
     {{#if issues}}
     <table class="table table-condensed table-striped">
       {{#each issues}}

@@ -40,7 +40,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -80,14 +80,14 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
                 s.u();
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
             request = null;
@@ -103,7 +103,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -111,7 +111,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -196,7 +196,6 @@ export default
     <div class="col-md-9 table-responsive">
       <h3 class="page-header">Issues</h3>
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#if issues}}
       <table class="table table-condensed table-striped">
         {{#each issues}}

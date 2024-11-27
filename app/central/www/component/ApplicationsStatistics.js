@@ -62,7 +62,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
         s.applications.unshift({id: null, name: '-- All --'});
         s.application.v = s.applications[0];
@@ -144,7 +144,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -248,7 +248,6 @@ export default
     <div class="col-md-9">
       <h3 class="page-header">Statistics</h3>
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#if statistics}}
       <canvas id="chart"></canvas>
       {{#ifCond showData.val '==' 'yes'}}

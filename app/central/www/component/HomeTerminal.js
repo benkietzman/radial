@@ -50,18 +50,18 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
         else
         {
-          s.message.v = 'Please provide the Port.';
+          c.pushErrorMessage('Please provide the Port.');
         }
       }
       else
       {
-        s.message.v = 'Please provide the Server.';
+        c.pushErrorMessage('Please provide the Server.');
       }
     };
     // ]]]
@@ -75,7 +75,7 @@ export default
         let error = {};
         if (!c.wsResponse(response, error))
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
         s.strSession = null;
         s.u();
@@ -151,7 +151,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -167,7 +167,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -186,7 +186,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -204,7 +204,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -222,7 +222,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -240,7 +240,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -258,7 +258,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -276,7 +276,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -294,7 +294,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -308,7 +308,6 @@ export default
   // [[[ template
   template: `
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger"></div>
   <div class="row">
     <div class="col-md-6">
       <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 420px; margin: 0px; max-height: 420px; max-width: 640px; overflow: auto; padding: 10px; white-space: pre; width: 640px;" c-model="screen"></div>

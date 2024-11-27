@@ -98,7 +98,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -140,7 +140,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -182,7 +182,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -228,7 +228,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -278,7 +278,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -327,7 +327,6 @@ export default
   <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-12">
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#isValid}}
       <div class="row">
         <div class="col-md-3" style="padding-top: 10px;">

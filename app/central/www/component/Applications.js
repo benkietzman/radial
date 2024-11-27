@@ -46,7 +46,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -64,7 +64,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -84,7 +84,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -104,7 +104,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -123,7 +123,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -148,7 +148,7 @@ export default
         else
         {
           s.info.v = null;
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -176,7 +176,7 @@ export default
         else
         {
           s.info.v = null;
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -195,7 +195,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -214,7 +214,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -255,7 +255,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -274,7 +274,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -293,7 +293,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -326,7 +326,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -339,7 +339,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -361,7 +361,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -380,7 +380,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -489,7 +489,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -538,7 +538,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -634,7 +634,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -654,7 +654,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -673,7 +673,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -692,7 +692,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -711,7 +711,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -730,7 +730,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -753,7 +753,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -775,7 +775,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -797,7 +797,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -820,7 +820,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -842,7 +842,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -864,7 +864,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -886,7 +886,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -937,7 +937,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -1077,21 +1077,21 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
                 s.u();
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
         }
         else
         {
-          s.message.v = 'You are not authorized to view this data.';
+          c.pushErrorMessage('You are not authorized to view this data.');
         }
       }
       // ]]]
@@ -1142,7 +1142,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -1176,7 +1176,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -1184,7 +1184,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -1218,7 +1218,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -1226,7 +1226,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -1287,7 +1287,7 @@ export default
                     }
                     else
                     {
-                      s.message.v = error.message;
+                      c.pushErrorMessage(error.message);
                     }
                   });
                 }
@@ -1295,7 +1295,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -1323,7 +1323,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -1365,7 +1365,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -1399,7 +1399,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -1407,7 +1407,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -1465,7 +1465,7 @@ export default
                     }
                     else
                     {
-                      s.message.v = error.message;
+                      c.pushErrorMessage(error.message);
                     }
                   });
                 }
@@ -1475,7 +1475,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -1489,7 +1489,7 @@ export default
         let error = {};
         if (!c.wsResponse(response, error))
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -1540,7 +1540,6 @@ export default
   </div>
   {{/each}}
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -1569,7 +1568,6 @@ export default
   {{else}}
   <h3 class="page-header">{{application.name}}{{#if application.retirement_date}}<small class="text-danger"> --- RETIRED</small>{{/if}}</h3>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <nav class="container navbar navbar-expand-lg navbar-dark bg-dark bg-gradient">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appnavigationbar" aria-controls="appnavigationbar" aria-expanded="false", aria-label="Toggle navigation">

@@ -169,7 +169,6 @@ export default
     </div>
   </div>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="fw-bold text-danger""></div>
   {{#isValid}}
   <div class="row">
     <div class="col-md-5">

@@ -54,14 +54,14 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
             s.u();
           }
         });
       }
       else
       {
-        s.message.v = 'You are not authorized to perform this action.';
+        c.pushErrorMessage('You are not authorized to perform this action.');
       }
     };
     // ]]]
@@ -95,7 +95,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -149,7 +149,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -183,7 +183,6 @@ export default
   // [[[ template
   template: `
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="row">
   {{#each interfaces}}
   <div class="col">

@@ -52,7 +52,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -71,7 +71,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -89,7 +89,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -108,7 +108,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -127,7 +127,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -224,7 +224,7 @@ export default
                 }
                 else
                 {
-                  s.message.v = error.message;
+                  c.pushErrorMessage(error.message);
                 }
               });
               if (s.server.parent_id)
@@ -240,7 +240,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -255,13 +255,13 @@ export default
                 }
                 else
                 {
-                  s.message.v = error.message;
+                  c.pushErrorMessage(error.message);
                 }
               });
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -314,7 +314,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -330,7 +330,7 @@ export default
                 }
                 else
                 {
-                  s.message.v = error.message;
+                  c.pushErrorMessage(error.message);
                 }
               });
             }
@@ -338,7 +338,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -386,7 +386,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -408,7 +408,7 @@ export default
           }
           else 
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -430,7 +430,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -457,7 +457,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -514,7 +514,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -522,7 +522,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -555,7 +555,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -604,7 +604,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -638,7 +638,7 @@ export default
                   }
                   else
                   {
-                    s.message.v = error.message;
+                    c.pushErrorMessage(error.message);
                   }
                 });
               }
@@ -646,7 +646,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -679,7 +679,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -693,7 +693,7 @@ export default
         let error = {};
         if (!c.wsResponse(response, error))
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -736,7 +736,6 @@ export default
   </div>
   {{/each}}
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -776,7 +775,6 @@ export default
   {{else}}
   <h3 class="page-header">{{server.name}}</h3>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <nav class="container navbar navbar-expand-lg navbar-dark bg-dark bg-gradient">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#srvnavigationbar" aria-controls="srvnavigationbar" aria-expanded="false", aria-label="Toggle navigation">

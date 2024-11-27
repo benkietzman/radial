@@ -60,7 +60,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
       s.u();
@@ -90,19 +90,19 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
         }
         else
         {
-          s.message.v = 'Please provide the Message.';
+          c.pushErrorMessage('Please provide the Message.');
         }
       }
       else
       {
-        s.message.v = 'Please provide the Target.';
+        c.pushErrorMessage('Please provide the Target.');
       }
     };
     // ]]]
@@ -158,7 +158,6 @@ export default
       <b class="text-warning">Please login in order to use this form.</b>
       {{/isValid}}
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger"></div>
       <div c-model="success" class="text-success"></div>
     </div>
   </div>

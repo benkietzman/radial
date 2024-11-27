@@ -42,7 +42,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -60,7 +60,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -96,7 +96,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -120,7 +120,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -192,7 +192,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -233,7 +233,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -285,7 +285,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -307,7 +307,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -334,7 +334,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -392,7 +392,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -416,7 +416,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -449,7 +449,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -473,7 +473,7 @@ export default
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -520,7 +520,6 @@ export default
   </div>
   {{/each}}
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="fw-bold text-danger"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
@@ -549,7 +548,6 @@ export default
   {{else}}
   <h3 class="page-header">{{user.last_name}}, {{user.first_name}} ({{user.userid}})</h3>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <nav class="container navbar navbar-expand-lg navbar-dark bg-dark bg-gradient">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#usrnavigationbar" aria-controls="usrnavigationbar" aria-expanded="false", aria-label="Toggle navigation">

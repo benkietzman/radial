@@ -54,7 +54,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
             request = null;
@@ -70,7 +70,7 @@ export default
               }
               else
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
             });
           }
@@ -78,7 +78,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -108,7 +108,6 @@ export default
     <h5 class="page-header">Release Schedule</h5>
     <p>This page provides the upcoming release schedule for application issues.  The issues are sorted according to release date. </p>
     <div c-model="info" class="text-warning"></div>
-    <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
     {{#if issues}}
     <table class="table table-condensed table-striped">
       {{#each issues}}

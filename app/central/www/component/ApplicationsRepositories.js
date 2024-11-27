@@ -45,7 +45,7 @@ export default
           }
           else
           {
-            s.message.v = error.message;
+            c.pushErrorMessage(error.message);
           }
         });
       }
@@ -78,7 +78,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -150,7 +150,6 @@ export default
       <h3 class="page-header">Applications</h3>
       <div class="input-group float-end"><span class="input-group-text">Narrow</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-render placeholder="Narrow Results"></div>
       <div c-model="info" class="text-warning"></div>
-      <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
       {{#if applications}}
       <table class="table table-condensed table-striped">
         <tr>

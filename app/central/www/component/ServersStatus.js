@@ -45,7 +45,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -128,7 +128,7 @@ export default
                             }
                             else
                             {
-                              s.message.v = error.message;
+                              c.pushErrorMessage(error.message);
                             }
                           });
                         }
@@ -136,7 +136,7 @@ export default
                       }
                       else
                       {
-                        s.message.v = error.message;
+                        c.pushErrorMessage(error.message);
                       }
                     });
                   }
@@ -144,14 +144,14 @@ export default
                 }
                 else
                 {
-                  s.message.v = error.message;
+                  c.pushErrorMessage(error.message);
                 }
               });
               s.u();
             }
             else
             {
-              s.message.v = error.message;
+              c.pushErrorMessage(error.message);
             }
           });
         }
@@ -181,7 +181,6 @@ export default
   template: `
   <h3 class="page-header">Server Status</h3>
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger" style="font-weight:bold;"></div>
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>

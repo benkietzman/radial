@@ -42,7 +42,7 @@ export default
               let error = {};
               if (!c.wsResponse(response, error))
               {
-                s.message.v = error.message;
+                c.pushErrorMessage(error.message);
               }
               if (c.isDefined(response.Session))
               {
@@ -59,17 +59,17 @@ export default
           }
           else
           {
-            s.message.v = 'Please provide the Password.';
+            c.pushErrorMessage('Please provide the Password.');
           }
         }
         else
         {
-          s.message.v = 'Please provide the User.';
+          c.pushErrorMessage('Please provide the User.');
         }
       }
       else
       {
-        s.message.v = 'Please provide the Server.';
+        c.pushErrorMessage('Please provide the Server.');
       }
     };
     // ]]]
@@ -124,7 +124,7 @@ export default
         }
         else
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
       });
     };
@@ -148,7 +148,7 @@ export default
         let error = {};
         if (!c.wsResponse(response, error))
         {
-          s.message.v = error.message;
+          c.pushErrorMessage(error.message);
         }
         if (!c.isDefined(response.Session))
         {
@@ -174,7 +174,6 @@ export default
   // [[[ template
   template: `
   <div c-model="info" class="text-warning"></div>
-  <div c-model="message" class="text-danger"></div>
   <div class="row">
     <div class="col-md-9">
       <div id="screen" style="background: black; color: green; display: inline-block; font-family: monospace; font-size: 11px; height: 500px; margin: 0px; max-height: 500px; max-width: 950px; overflow: auto; padding: 10px; white-space: pre; width: 950px;" c-model="screen"></div>
