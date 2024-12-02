@@ -114,7 +114,7 @@ export default
           <tr>
             <td style="background: inherit;">{{@key}}</td>
             {{#each .}}
-            <td style="background: inherit; text-align:right;">{{#ifCond @key '!=' ../../month}}<span title="{{number ../.}}">{{numberShort ../.}}</span>{{else}}<input type="text" class="form-control form-control-sm" c-model="e['{{@../key}}']" style="text-align:right;">{{/ifCond}}</td>
+            <td style="background: inherit; text-align:right;">{{#ifCond @key '!=' ../../month}}<span title="{{number ../.}}">{{numberShort ../.}}</span>{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e['{{@../key}}']" style="text-align:right;">{{/ifCond}}</td>
             {{/each}}
             <th style="background: inherit; text-align:right;" title="{{number (spendItemAverage .)}}">{{numberShort (spendItemAverage .)}}</th>
             <th style="background: inherit; text-align:right;" title="{{number (spendItemTotal .)}}">{{numberShort (spendItemTotal .)}}</th>
