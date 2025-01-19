@@ -1220,7 +1220,7 @@ export default
   {{#isValid}}
   <div class="row">
     <div class="col-md-12">
-      <textarea c-model="notification" class="form-control" placeholder="enter notification" rows="5" autofocus></textarea>
+      <textarea c-model="notification" class="form-control bg-success-subtle" placeholder="enter notification" rows="5" autofocus></textarea>
     </div>
   </div>
   <div class="row">
