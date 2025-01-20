@@ -881,10 +881,10 @@ export default
   {{#isValid}}
   <div class="row">
     <div class="col-md-12">
-      <textarea c-model="notification" class="form-control bg-success-subtle" placeholder="enter notification" rows="5" autofocus></textarea>
+      <textarea c-model="notification" class="form-control border-success-subtle bg-success-subtle" placeholder="enter notification" rows="5" autofocus></textarea>
     </div>
   </div>
-  <div class="row">
+  <div class="row" style="margin-top: 10px;">
     <div class="col-md-12">
       <button class="btn btn-success bi bi-send float-end" c-click="sendNotification()" title="Send Notification"></button>
     </div>
