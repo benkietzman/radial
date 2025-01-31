@@ -254,7 +254,7 @@ export default
         </div>
       </div>
       {{else ifCond @key '==' 'Stock'}}
-      <div class="card border border-success-subtle">
+      <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
@@ -323,7 +323,7 @@ export default
         </div>
       </div>
       {{else}}
-      <div class="card border border-success-subtle">
+      <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
