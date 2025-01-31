@@ -222,7 +222,7 @@ export default
     {{#each f}}
     <div style="display:inline-block;">
       {{#ifCond @key '==' 'Metal'}}
-      <div class="card border border-success-subtle">
+      <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
