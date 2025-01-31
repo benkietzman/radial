@@ -353,7 +353,7 @@ export default
       {{/ifCond}}
     </div>
     {{/each}}
-    <p class="fw-bold text-success">
+    <p class="fw-bold text-success" style="margin-top: 10px;">
       Total:  <span title="{{number (assetSum)}}">{{numberShort (assetSum)}}</span>
     </p>
   `
