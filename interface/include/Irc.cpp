@@ -1547,10 +1547,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           size_t unDuration = 0;
           string strOutput;
-          ssText << " " << char(3) << "00,14 " << strCommand << " " << char(3);
           if (command(strCommand, {}, "", strOutput, unDuration, strError, 300, strNode))
           {
-            ssText << ":  Command executed for a duration of " << unDuration << " seconds.";
+            ssText << ":  Command ran for " << unDuration << " seconds.";
             ssText << endl << strOutput;
           }
           else
