@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "database", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "command", "database", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -345,6 +345,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strProcess.empty())
           {
             ptRequest->i("Process", strProcess);
+          }
+        }
+      }
+      // }}}
+      // {{{ command
+      else if (strAction == "command")
+      {
+        string strNode;
+        ssData >> strNode;
+        if (!strNode.empty())
+        {
+          string strCommand;
+          getline(ssData, strCommand);
+          ptRequest->i("Node", strNode);
+          if (!strCommand.empty())
+          {
+            ptRequest->i("Command", strCommand);
           }
         }
       }
@@ -1513,6 +1530,47 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+    }
+  }
+  // }}}
+  // {{{ command
+  else if (strAction == "command")
+  {
+    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    {
+      string strNode = var("Node", ptData);
+      if (!strNode.empty())
+      {
+        string strCommand = var("Command", ptData);
+        ssText << " " << char(3) << "00,14 " << strNode << " " << char(3);
+        if (!strCommand.empty())
+        {
+          size_t unDuration = 0;
+          string strOutput;
+          ssText << " " << char(3) << "00,14 " << strCommand << " " << char(3);
+          if (command(strCommand, {}, "", strOutput, unDuration, strError, 300, strNode))
+          {
+            ssText << ":  Command executed for a duration of " << unDuration << " seconds.";
+            ssText << endl << strOutput;
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+        }
+        else
+        {
+          ssText << ":  Please provide the command immediately following the server.";
+        }
+      }
+      else
+      {
+        ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+      }
+    }
+    else
+    {
+      ssText << " error:  You are not authorized to access command.  You must be registered as a local administrator for Radial.";
     }
   }
   // }}}
