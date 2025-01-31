@@ -46,7 +46,7 @@ export default
       <div class="col-md-8">
         <h3 class="page-header">Summary</h3>
         <div style="display:inline-block;">
-          <div class="card border border-primary-subtle">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
               Income &amp; Expense
             </div>
@@ -77,7 +77,7 @@ export default
           </div>
         </div>
         <div style="display:inline-block;">
-          <div class="card border border-primary-subtle">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
               Asset &amp; Liability
             </div>
@@ -108,7 +108,7 @@ export default
           </div>
         </div>
         <div style="display:inline-block;">
-          <div class="card border border-primary-subtle">
+          <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
               Ratio
             </div>

@@ -53,7 +53,7 @@ export default
     <h3 class="page-header">Expenses</h3>
     {{#each f}}
     <div style="display:inline-block;">
-      <div class="card border border-danger-subtle">
+      <div class="card border border-danger-subtle" style="margin-top: 10px;">
         <div class="card-header bg-danger fw-bold">
           {{@key}}
         </div>
@@ -83,7 +83,7 @@ export default
     </div>
     {{/each}}
     <div style="display:inline-block;">
-      <div class="card border border-danger-subtle">
+      <div class="card border border-danger-subtle" style="margin-top: 10px;">
         <div class="card-header bg-danger fw-bold">
           Withheld
         </div>
@@ -117,7 +117,7 @@ export default
         </div>
       </div>
     </div>
-    <p class="fw-bold text-danger">
+    <p class="fw-bold text-danger" style="margin-top: 10px;">
       Total:  <span title="{{number (expenseSum)}}">{{numberShort (expenseSum)}}</span>
     </p>
   `

@@ -52,7 +52,7 @@ export default
     {{#each f}}
     <div style="display:inline-block;">
       {{#ifCond @key '==' 'Compound'}}
-      <div class="card border border-danger-subtle">
+      <div class="card border border-danger-subtle" style="margin-top: 10px;">
         <div class="card-header bg-danger fw-bold">
           {{@key}}
         </div>
@@ -86,7 +86,7 @@ export default
         </div>
       </div>
       {{else ifCond @key '==' 'Simple'}}
-      <div class="card border border-danger-subtle">
+      <div class="card border border-danger-subtle" style="margin-top: 10px;">
         <div class="card-header bg-danger fw-bold">
           {{@key}}
         </div>
@@ -122,7 +122,7 @@ export default
       {{/ifCond}}
     </div>
     {{/each}}
-    <p class="fw-bold text-danger">
+    <p class="fw-bold text-danger" style="margin-top: 10px;">
       Total:  <span title="{{number (liabilitySum)}}">{{numberShort (liabilitySum)}}</span>
     </p>
   `

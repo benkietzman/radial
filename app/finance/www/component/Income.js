@@ -61,7 +61,7 @@ export default
     {{#each f}}
     <div style="display:inline-block;">
       {{#ifCond @key '==' 'Employment'}}
-      <div class="card border border-success-subtle">
+      <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
@@ -105,7 +105,7 @@ export default
         </div>
       </div>
       {{else}}
-      <div class="card border border-success-subtle">
+      <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
@@ -135,7 +135,7 @@ export default
       {{/ifCond}}
     </div>
     {{/each}}
-    <p class="fw-bold text-success">
+    <p class="fw-bold text-success" style="margin-top: 10px;">
       Total:  <span title="{{number (incomeSum)}}">{{numberShort (incomeSum)}}</span>
     </p>
   `
