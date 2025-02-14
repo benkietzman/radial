@@ -1717,6 +1717,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
         {
+          chat("#radial", (string)"Set Time Zone:  " + strTimeZone[1]);
+          m_mutex.lock();
           setenv("TZ", strTimeZone[1].c_str(), 1);
         }
         if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
@@ -1738,6 +1740,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strTimeZone[0].empty())
     {
       setenv("TZ", strTimeZone[0].c_str(), 1);
+      if (!strTimeZone[1].empty())
+      {
+        m_mutex.unlock();
+      }
+      chat("#radial", (string)"Reset Time Zone:  " + strTimeZone[0]);
     }
     ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
     if (!strTimeZone[1].empty())
