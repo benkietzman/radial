@@ -1664,7 +1664,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         {
           strTimeZone[1] = strTime;
         }
-        if (!strTimeZone[1])
+        if (!strTimeZone[1].empty())
         {
           if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
           {
