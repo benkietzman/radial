@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)", "time"};
+  list<string> actions = {"alert", "central", "centralmon", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -387,11 +387,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ date
       else if (strAction == "date")
       {
-        string strTime;
-        ssData >> strTime;
-        if (!strTime.empty())
+        string strDate;
+        ssData >> strDate;
+        if (!strDate.empty())
         {
-          ptRequest->i("Time", strTime);
+          string strTime;
+          ptRequest->i("Date", strDate);
+          ssData >> strTime;
+          if (!strTime.empty())
+          {
+            ptRequest->i("Time", strTime);
+          }
         }
       }
       // }}}
@@ -578,23 +584,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strCommand.empty())
           {
             ptRequest->i("Command", strCommand);
-          }
-        }
-      }
-      // }}}
-      // {{{ time
-      else if (strAction == "time")
-      {
-        string strDate;
-        ssData >> strDate;
-        if (!strDate.empty())
-        {
-          string strTime;
-          ptRequest->i("Date", strDate);
-          ssData >> strTime;
-          if (!strTime.empty())
-          {
-            ptRequest->i("Time", strTime);
           }
         }
       }
@@ -1647,20 +1636,43 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ date
   else if (strAction == "date")
   {
-    string strTime = var("Time", ptData);
+    string strDate = var("Date", ptData);
     struct tm tTime;
     time_t CTime;
-    if (!strTime.empty())
+    if (!strDate.empty())
     {
-      stringstream ssTime(strTime);
-      ssTime >> CTime;
+      string strTime = var("Time", ptData);
+      if (!strTime.empty())
+      {
+        string strValue;
+        stringstream ssDate(strDate), ssTime(strTime);
+        getline(ssDate, strValue, '-');
+        tTime.tm_year = atoi(strValue.c_str()) - 1900;
+        getline(ssDate, strValue, '-');
+        tTime.tm_mon = atoi(strValue.c_str()) - 1;
+        getline(ssDate, strValue, '-');
+        tTime.tm_mday = atoi(strValue.c_str());
+        getline(ssTime, strValue, ':');
+        tTime.tm_hour = atoi(strValue.c_str());
+        getline(ssTime, strValue, ':');
+        tTime.tm_min = atoi(strValue.c_str());
+        getline(ssTime, strValue, ':');
+        tTime.tm_sec = atoi(strValue.c_str());
+        tTime.tm_isdst = -1;
+        CTime = mktime(&tTime);
+      }
+      else
+      {
+        stringstream ssTime(strTime);
+        ssTime >> CTime;
+      }
     }
     else
     {
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
-    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%s");
+    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S (%s)");
   }
   // }}}
   // {{{ db
@@ -2567,23 +2579,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     time_t CTime;
     if (!strDate.empty() && !strTime.empty())
     {
-      string strDay, strHour, strMinute, strMonth, strSecond, strYear;
-      stringstream ssDate(strDate), ssTime(strTime);
-      struct tm tTime;
-      getline(ssDate, strYear, '-');
-      tTime.tm_year = atoi(strYear.c_str()) - 1900;
-      getline(ssDate, strMonth, '-');
-      tTime.tm_mon = atoi(strMonth.c_str()) - 1;
-      getline(ssDate, strDay, '-');
-      tTime.tm_mday = atoi(strDay.c_str());
-      getline(ssTime, strHour, ':');
-      tTime.tm_hour = atoi(strHour.c_str());
-      getline(ssTime, strMinute, ':');
-      tTime.tm_min = atoi(strMinute.c_str());
-      getline(ssTime, strSecond, ':');
-      tTime.tm_sec = atoi(strSecond.c_str());
-      tTime.tm_isdst = -1;
-      CTime = mktime(&tTime);
     }
     else
     {
