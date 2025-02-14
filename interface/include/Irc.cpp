@@ -1644,20 +1644,29 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       string strTime = var("Time", ptData);
       if (!strTime.empty())
       {
-        string strValue;
+        string strDay, strHour, strMinute, strMonth, strSecond, strYear;
         stringstream ssDate(strDate), ssTime(strTime);
-        getline(ssDate, strValue, '-');
-        tTime.tm_year = atoi(strValue.c_str()) - 1900;
-        getline(ssDate, strValue, '-');
-        tTime.tm_mon = atoi(strValue.c_str()) - 1;
-        getline(ssDate, strValue, '-');
-        tTime.tm_mday = atoi(strValue.c_str());
-        getline(ssTime, strValue, ':');
-        tTime.tm_hour = atoi(strValue.c_str());
-        getline(ssTime, strValue, ':');
-        tTime.tm_min = atoi(strValue.c_str());
-        getline(ssTime, strValue, ':');
-        tTime.tm_sec = atoi(strValue.c_str());
+        if (strDate.find("-") != string::npos)
+        {
+          getline(ssDate, strYear, '-');
+          getline(ssDate, strMonth, '-');
+          getline(ssDate, strDay, '-');
+        }
+        else
+        {
+          getline(ssDate, strMonth, '/');
+          getline(ssDate, strDay, '/');
+          getline(ssDate, strYear, '/');
+        }
+        getline(ssTime, strHour, ':');
+        getline(ssTime, strMinute, ':');
+        getline(ssTime, strSecond, ':');
+        tTime.tm_year = atoi(strYear.c_str()) - 1900;
+        tTime.tm_mon = atoi(strMonth.c_str()) - 1;
+        tTime.tm_mday = atoi(strDay.c_str());
+        tTime.tm_hour = atoi(strHour.c_str());
+        tTime.tm_min = atoi(strMinute.c_str());
+        tTime.tm_sec = atoi(strSecond.c_str());
         tTime.tm_isdst = -1;
         CTime = mktime(&tTime);
       }
