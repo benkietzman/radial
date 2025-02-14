@@ -1656,52 +1656,81 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       string strTime = var("Time", ptData);
       if (!strTime.empty())
       {
-        string strDay, strHour, strMinute, strMonth, strSecond, strYear;
-        stringstream ssDate(strDate), ssTime(strTime);
-        strTimeZone[1] = var("TimeZone", ptData);
-        if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
+        if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
         {
-          strTimeZone[1] = "EST5EDT";
-        }
-        else if (strTimeZone[1] == "central" || strTimeZone[1] == "CDT" || strTimeZone[1] == "CST" || strTimeZone[1] == "CT")
-        {
-          strTimeZone[1] = "CST6CDT";
-        }
-        else if (strTimeZone[1] == "mountain" || strTimeZone[1] == "MDT" || strTimeZone[1] == "MST" || strTimeZone[1] == "MT")
-        {
-          strTimeZone[1] = "MST7MDT";
-        }
-        else if (strTimeZone[1] == "pacific" || strTimeZone[1] == "PDT" || strTimeZone[1] == "PST" || strTimeZone[1] == "PT")
-        {
-          strTimeZone[1] = "PST8PDT";
-        }
-        if (strDate.find("-") != string::npos)
-        {
-          getline(ssDate, strYear, '-');
-          getline(ssDate, strMonth, '-');
-          getline(ssDate, strDay, '-');
+          string strDay, strHour, strMinute, strMonth, strSecond, strYear;
+          stringstream ssDate(strDate), ssTime(strTime);
+          strTimeZone[1] = var("TimeZone", ptData);
+          if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
+          {
+            strTimeZone[1] = "EST5EDT";
+          }
+          else if (strTimeZone[1] == "central" || strTimeZone[1] == "CDT" || strTimeZone[1] == "CST" || strTimeZone[1] == "CT")
+          {
+            strTimeZone[1] = "CST6CDT";
+          }
+          else if (strTimeZone[1] == "mountain" || strTimeZone[1] == "MDT" || strTimeZone[1] == "MST" || strTimeZone[1] == "MT")
+          {
+            strTimeZone[1] = "MST7MDT";
+          }
+          else if (strTimeZone[1] == "pacific" || strTimeZone[1] == "PDT" || strTimeZone[1] == "PST" || strTimeZone[1] == "PT")
+          {
+            strTimeZone[1] = "PST8PDT";
+          }
+          if (strDate.find("-") != string::npos)
+          {
+            getline(ssDate, strYear, '-');
+            getline(ssDate, strMonth, '-');
+            getline(ssDate, strDay, '-');
+          }
+          else
+          {
+            getline(ssDate, strMonth, '/');
+            getline(ssDate, strDay, '/');
+            getline(ssDate, strYear, '/');
+          }
+          getline(ssTime, strHour, ':');
+          getline(ssTime, strMinute, ':');
+          getline(ssTime, strSecond, ':');
+          if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
+          {
+            setenv("TZ", strTimeZone[1].c_str(), 1);
+          }
+          tTime.tm_year = atoi(strYear.c_str()) - 1900;
+          tTime.tm_mon = atoi(strMonth.c_str()) - 1;
+          tTime.tm_mday = atoi(strDay.c_str());
+          tTime.tm_hour = atoi(strHour.c_str());
+          tTime.tm_min = atoi(strMinute.c_str());
+          tTime.tm_sec = atoi(strSecond.c_str());
+          tTime.tm_isdst = -1;
+          CTime = mktime(&tTime);
         }
         else
         {
-          getline(ssDate, strMonth, '/');
-          getline(ssDate, strDay, '/');
-          getline(ssDate, strYear, '/');
+          stringstream ssTime(strDate);
+          ssTime >> CTime;
+          strTimeZone[1] = strTime;
+          if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
+          {
+            strTimeZone[1] = "EST5EDT";
+          }
+          else if (strTimeZone[1] == "central" || strTimeZone[1] == "CDT" || strTimeZone[1] == "CST" || strTimeZone[1] == "CT")
+          {
+            strTimeZone[1] = "CST6CDT";
+          }
+          else if (strTimeZone[1] == "mountain" || strTimeZone[1] == "MDT" || strTimeZone[1] == "MST" || strTimeZone[1] == "MT")
+          {
+            strTimeZone[1] = "MST7MDT";
+          }
+          else if (strTimeZone[1] == "pacific" || strTimeZone[1] == "PDT" || strTimeZone[1] == "PST" || strTimeZone[1] == "PT")
+          {
+            strTimeZone[1] = "PST8PDT";
+          }
+          if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
+          {
+            setenv("TZ", strTimeZone[1].c_str(), 1);
+          }
         }
-        getline(ssTime, strHour, ':');
-        getline(ssTime, strMinute, ':');
-        getline(ssTime, strSecond, ':');
-        if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
-        {
-          setenv("TZ", strTimeZone[1].c_str(), 1);
-        }
-        tTime.tm_year = atoi(strYear.c_str()) - 1900;
-        tTime.tm_mon = atoi(strMonth.c_str()) - 1;
-        tTime.tm_mday = atoi(strDay.c_str());
-        tTime.tm_hour = atoi(strHour.c_str());
-        tTime.tm_min = atoi(strMinute.c_str());
-        tTime.tm_sec = atoi(strSecond.c_str());
-        tTime.tm_isdst = -1;
-        CTime = mktime(&tTime);
       }
       else
       {
