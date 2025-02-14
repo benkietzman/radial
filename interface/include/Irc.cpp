@@ -1721,7 +1721,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else if (!strTimeZone[0].empty())
     {
-      ssText << " " << strTimeZone[1];
+      ssText << " " << strTimeZone[0];
     }
     ssText << " (" << CTime << ")";
     if (!strTimeZone[0].empty())
