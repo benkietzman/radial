@@ -1735,6 +1735,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
+    if (!strTimeZone[0].empty())
+    {
+      setenv("TZ", strTimeZone[0].c_str(), 1);
+    }
     ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
     if (!strTimeZone[1].empty())
     {
@@ -1745,10 +1749,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ssText << " " << strTimeZone[0];
     }
     ssText << " (" << CTime << ")";
-    if (!strTimeZone[0].empty())
-    {
-      setenv("TZ", strTimeZone[0].c_str(), 1);
-    }
   }
   // }}}
   // {{{ db
