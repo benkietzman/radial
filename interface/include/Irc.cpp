@@ -396,13 +396,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           ssData >> strTime;
           if (!strTime.empty())
           {
-            string strTimeZone;
             ptRequest->i("Time", strTime);
-            ssData >> strTimeZone;
-            if (!strTimeZone.empty())
-            {
-              ptRequest->i("TimeZone", strTimeZone);
-            }
           }
         }
       }
@@ -1642,89 +1636,39 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ date
   else if (strAction == "date")
   {
-    ifstream inTimeZone("/etc/timezone");
-    string strDate = var("Date", ptData), strTimeZone[2];
+    string strDate = var("Date", ptData);
     struct tm tTime;
     time_t CTime;
-    if (inTimeZone)
-    {
-      inTimeZone >> strTimeZone[0];
-    }
-    inTimeZone.close();
     if (!strDate.empty())
     {
       string strTime = var("Time", ptData);
       if (!strTime.empty())
       {
-        if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
+        string strDay, strHour, strMinute, strMonth, strSecond, strYear;
+        stringstream ssDate(strDate), ssTime(strTime);
+        if (strDate.find("-") != string::npos)
         {
-          strTimeZone[1] = var("TimeZone", ptData);
+          getline(ssDate, strYear, '-');
+          getline(ssDate, strMonth, '-');
+          getline(ssDate, strDay, '-');
         }
         else
         {
-          strTimeZone[1] = strTime;
+          getline(ssDate, strMonth, '/');
+          getline(ssDate, strDay, '/');
+          getline(ssDate, strYear, '/');
         }
-        if (!strTimeZone[1].empty())
-        {
-          if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
-          {
-            strTimeZone[1] = "EST5EDT";
-          }
-          else if (strTimeZone[1] == "central" || strTimeZone[1] == "CDT" || strTimeZone[1] == "CST" || strTimeZone[1] == "CT")
-          {
-            strTimeZone[1] = "CST6CDT";
-          }
-          else if (strTimeZone[1] == "mountain" || strTimeZone[1] == "MDT" || strTimeZone[1] == "MST" || strTimeZone[1] == "MT")
-          {
-            strTimeZone[1] = "MST7MDT";
-          }
-          else if (strTimeZone[1] == "pacific" || strTimeZone[1] == "PDT" || strTimeZone[1] == "PST" || strTimeZone[1] == "PT")
-          {
-            strTimeZone[1] = "PST8PDT";
-          }
-        }
-        if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
-        {
-          string strDay, strHour, strMinute, strMonth, strSecond, strYear;
-          stringstream ssDate(strDate), ssTime(strTime);
-          if (strDate.find("-") != string::npos)
-          {
-            getline(ssDate, strYear, '-');
-            getline(ssDate, strMonth, '-');
-            getline(ssDate, strDay, '-');
-          }
-          else
-          {
-            getline(ssDate, strMonth, '/');
-            getline(ssDate, strDay, '/');
-            getline(ssDate, strYear, '/');
-          }
-          getline(ssTime, strHour, ':');
-          getline(ssTime, strMinute, ':');
-          getline(ssTime, strSecond, ':');
-          tTime.tm_year = atoi(strYear.c_str()) - 1900;
-          tTime.tm_mon = atoi(strMonth.c_str()) - 1;
-          tTime.tm_mday = atoi(strDay.c_str());
-          tTime.tm_hour = atoi(strHour.c_str());
-          tTime.tm_min = atoi(strMinute.c_str());
-          tTime.tm_sec = atoi(strSecond.c_str());
-          tTime.tm_isdst = -1;
-        }
-        else
-        {
-          stringstream ssTime(strDate);
-          ssTime >> CTime;
-        }
-        if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
-        {
-          chat("#radial", (string)"Set Time Zone:  " + strTimeZone[1]);
-          m_mutex.lock();
-          setenv("TZ", strTimeZone[1].c_str(), 1);
-        }
-        if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
-        {
-          CTime = mktime(&tTime);
-        }
+        getline(ssTime, strHour, ':');
+        getline(ssTime, strMinute, ':');
+        getline(ssTime, strSecond, ':');
+        tTime.tm_year = atoi(strYear.c_str()) - 1900;
+        tTime.tm_mon = atoi(strMonth.c_str()) - 1;
+        tTime.tm_mday = atoi(strDay.c_str());
+        tTime.tm_hour = atoi(strHour.c_str());
+        tTime.tm_min = atoi(strMinute.c_str());
+        tTime.tm_sec = atoi(strSecond.c_str());
+        tTime.tm_isdst = -1;
+        CTime = mktime(&tTime);
       }
       else
       {
@@ -1737,25 +1681,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
-    if (!strTimeZone[0].empty())
-    {
-      setenv("TZ", strTimeZone[0].c_str(), 1);
-      if (!strTimeZone[1].empty())
-      {
-        m_mutex.unlock();
-      }
-      chat("#radial", (string)"Reset Time Zone:  " + strTimeZone[0]);
-    }
-    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
-    if (!strTimeZone[1].empty())
-    {
-      ssText << " " << strTimeZone[1];
-    }
-    else if (!strTimeZone[0].empty())
-    {
-      ssText << " " << strTimeZone[0];
-    }
-    ssText << " (" << CTime << ")";
+    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S %s");
   }
   // }}}
   // {{{ db
