@@ -1663,7 +1663,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        stringstream ssTime(strTime);
+        stringstream ssTime(strDate);
         ssTime >> CTime;
       }
     }
@@ -2570,21 +2570,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server]:[port].";
     }
-  }
-  // }}}
-  // {{{ time
-  else if (strAction == "time")
-  {
-    string strDate = var("Date", ptData), strTime = var("Time", ptData);
-    time_t CTime;
-    if (!strDate.empty() && !strTime.empty())
-    {
-    }
-    else
-    {
-      time(&CTime);
-    }
-    ssText << ":  " << CTime;
   }
   // }}}
   // {{{ invalid
