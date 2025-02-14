@@ -1681,7 +1681,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
-    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S %s");
+    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S (%s)");
   }
   // }}}
   // {{{ db
