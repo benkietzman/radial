@@ -214,7 +214,7 @@ void Command::process(string strPrefix)
                     close(writepipe[0]);
                     dup2(readpipe[1], 1);
                     close(readpipe[1]);
-                    execve(args[0], args, environ);
+                    execvpe(args[0], args, environ);
                     if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
                     {
                       string strOut;
