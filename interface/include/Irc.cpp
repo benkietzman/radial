@@ -2623,11 +2623,31 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << " error:  Please provide a comma delimited list of keys immediately following the function.";
           }
         }
-        else if (strFunction == "retrieve" || strFunction == "r" || strFunction == "retrieveKeys" || strFunction == "rk")
+        else if (strFunction == "retrieve" || strFunction == "r")
         {
-          if (((strFunction == "retrieve" || strFunction == "r") && storageRetrieve(keys, ptSubData, strError)) || ((strFunction == "retrieveKeys" || strFunction == "rk") && storageRetrieveKeys(keys, ptSubData, strError)))
+          if (storageRetrieve(keys, ptSubData, strError))
           {
             ssText << ":  " << ptSubData;
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+        }
+        else if (strFunction == "retrieveKeys" || strFunction == "rk")
+        {
+          list<string> keysOut;
+          if (storageRetrieveKeys(keys, keysOut, strError))
+          {
+            ssText << ":  ";
+            for (auto i = keysOut.begin(); i != keysOut.end(); i++)
+            {
+              if (i != keysOut.begin())
+              {
+                ssText << ",";
+              }
+              ssText << (*i);
+            }
           }
           else
           {
