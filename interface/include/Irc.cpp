@@ -1582,12 +1582,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << ":  Please provide the command immediately following the server.";
+          ssText << ":  Please provide the command immediately following the node.";
         }
       }
       else
       {
-        ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+        ssText << ":  The command action is used to have Radial execute a given command on a given node under its user.  Please provide the node immediately following the action.";
       }
     }
     else
