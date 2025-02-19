@@ -567,12 +567,24 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ storage
       else if (strAction == "storage")
       {
-        string strJson, strRequest;
-        getline(ssData, strRequest);
-        m_manip.trim(strJson, strRequest);
-        if (!strJson.empty())
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
         {
-          ptRequest->i("Json", strJson);
+          string strKeys;
+          ptRequest->i("Function", strFunction);
+          ssData >> strKeys;
+          if (!strKeys.empty())
+          {
+            string strData;
+            ptRequest->i("Keys", strKeys);
+            getline(ssData, strData);
+            m_manip.trim(strData, strData);
+            if (!strData.empty())
+            {
+              ptRequest->i("Data", strData);
+            }
+          }
         }
       }
       // }}}
@@ -2560,30 +2572,77 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
-      string strJson = var("Json", ptData);
-      if (!strJson.empty())
+      string strFunction = var("Function", ptData);
+      if (!strFunction.empty())
       {
-        Json *ptJson = new Json(strJson);
-        if (hub("storage", ptJson, strError))
+        list<string> keys;
+        string strData = var("Data", ptData), strKeys = var("Keys", ptData);
+        Json *ptSubData = new Json(strData);
+        if (!strKeys.empty())
         {
-          if (exist(ptJson, "Response") && (!ptJson->m["Response"]->l.empty() || !ptJson->m["Response"]->m.empty() || !ptJson->m["Response"]->v.empty()))
+          string strKey;
+          stringstream ssKeys(strKeys);
+          while (getline(ssKeys, strKey, ','))
           {
-            ssText << ":  " << ptJson->m["Response"];
+            keys.push_back(strKey);
+          }
+        }
+        if (strFunction == "add" || strFunction == "a" || strFunction == "update" || strFunction == "u")
+        {
+          if (!keys.empty())
+          {
+            if (((strFunction == "add" || strFunction == "a") && storageAdd(keys, ptSubData, strError)) || ((strFunction == "update" || strFunction == "u") && storageUpdate(keys, ptSubData, strError)))
+            {
+              ssText << ":  Completed request.";
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
           }
           else
           {
-            ssText << ":  Completed request.";
+            ssText << " error:  Please provide a comma delimited list of keys immediately following the function.";
+          }
+        }
+        else if (strFunction == "remove" || strFunction == "rm")
+        {
+          if (!keys.empty())
+          {
+            if (storageRemove(keys, strError))
+            {
+              ssText << ":  Completed request.";
+            }
+            else
+            {
+              ssText << " error:  " << strError;
+            }
+          }
+          else
+          {
+            ssText << " error:  Please provide a comma delimited list of keys immediately following the function.";
+          }
+        }
+        else if (strFunction == "retrieve" || strFunction == "r" || strFunction == "retrieveKeys" || strFunction == "rk")
+        {
+          if (((strFunction == "retrieve" || strFunction == "r") && storageRetrieve(keys, ptSubData, strError)) || ((strFunction == "retrieveKeys" || strFunction == "rk") && storageRetrieveKeys(keys, ptSubData, strError)))
+          {
+            ssText << ":  " << ptSubData;
+          }
+          else
+          {
+            ssText << " error:  " << strError;
           }
         }
         else
         {
-          ssText << " error:  " << strError;
+          ssText << ":  Please provide a valid function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).";
         }
-        delete ptJson;
+        delete ptSubData;
       }
       else
       {
-        ssText << ":  The storage action is used to send a JSON formatted request to common storage within Radial.  Please provide a JSON formatted request immediately following the action.";
+        ssText << ":  The storage action is used to send a request to common storage within Radial.  Please provide a function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).  Follow the function with an optional list of comma delimited keys.  For and add (a) or update (u), follow the keys with JSON structured data to be added or updated into storage.";
       }
     }
     else
