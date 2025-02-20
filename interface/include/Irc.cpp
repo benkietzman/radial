@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage", "terminal (t)"};
+  list<string> actions = {"alert", "central", "centralmon", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -564,8 +564,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ storage
-      else if (strAction == "storage")
+      // {{{ storage || sto
+      else if (strAction == "storage" || strAction == "sto")
       {
         string strFunction;
         ssData >> strFunction;
@@ -2567,27 +2567,27 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
   }
   // }}}
-  // {{{ storage
-  else if (strAction == "storage")
+  // {{{ storage || sto
+  else if (strAction == "storage" || strAction == "sto")
   {
-    if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+    string strFunction = var("Function", ptData);
+    if (!strFunction.empty())
     {
-      string strFunction = var("Function", ptData);
-      if (!strFunction.empty())
+      list<string> keys;
+      string strData = var("Data", ptData), strKeys = var("Keys", ptData);
+      Json *ptSubData = new Json(strData);
+      if (!strKeys.empty())
       {
-        list<string> keys;
-        string strData = var("Data", ptData), strKeys = var("Keys", ptData);
-        Json *ptSubData = new Json(strData);
-        if (!strKeys.empty())
+        string strKey;
+        stringstream ssKeys(strKeys);
+        while (getline(ssKeys, strKey, ','))
         {
-          string strKey;
-          stringstream ssKeys(strKeys);
-          while (getline(ssKeys, strKey, ','))
-          {
-            keys.push_back(strKey);
-          }
+          keys.push_back(strKey);
         }
-        if (strFunction == "add" || strFunction == "a" || strFunction == "update" || strFunction == "u")
+      }
+      if (strFunction == "add" || strFunction == "a" || strFunction == "update" || strFunction == "u")
+      {
+        if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
         {
           if (!keys.empty())
           {
@@ -2605,7 +2605,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << " error:  Please provide a comma delimited list of keys immediately following the function.";
           }
         }
-        else if (strFunction == "remove" || strFunction == "rm")
+        else
+        {
+          ssText << " error:  You are not authorized to access storage.  You must be registered as a local administrator for Radial.";
+        }
+      }
+      else if (strFunction == "remove" || strFunction == "rm")
+      {
+        if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
         {
           if (!keys.empty())
           {
@@ -2623,51 +2630,51 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << " error:  Please provide a comma delimited list of keys immediately following the function.";
           }
         }
-        else if (strFunction == "retrieve" || strFunction == "r")
+        else
         {
-          if (storageRetrieve(keys, ptSubData, strError))
-          {
-            ssText << ":  " << ptSubData;
-          }
-          else
-          {
-            ssText << " error:  " << strError;
-          }
+          ssText << " error:  You are not authorized to access storage.  You must be registered as a local administrator for Radial.";
         }
-        else if (strFunction == "retrieveKeys" || strFunction == "rk")
+      }
+      else if (strFunction == "retrieve" || strFunction == "r")
+      {
+        if (storageRetrieve(keys, ptSubData, strError))
         {
-          list<string> keysOut;
-          if (storageRetrieveKeys(keys, keysOut, strError))
+          ssText << ":  " << ptSubData;
+        }
+        else
+        {
+          ssText << " error:  " << strError;
+        }
+      }
+      else if (strFunction == "retrieveKeys" || strFunction == "rk")
+      {
+        list<string> keysOut;
+        if (storageRetrieveKeys(keys, keysOut, strError))
+        {
+          ssText << ":  ";
+          for (auto i = keysOut.begin(); i != keysOut.end(); i++)
           {
-            ssText << ":  ";
-            for (auto i = keysOut.begin(); i != keysOut.end(); i++)
+            if (i != keysOut.begin())
             {
-              if (i != keysOut.begin())
-              {
-                ssText << ",";
-              }
-              ssText << (*i);
+              ssText << ",";
             }
-          }
-          else
-          {
-            ssText << " error:  " << strError;
+            ssText << (*i);
           }
         }
         else
         {
-          ssText << ":  Please provide a valid function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).";
+          ssText << " error:  " << strError;
         }
-        delete ptSubData;
       }
       else
       {
-        ssText << ":  The storage action is used to send a request to common storage within Radial.  Please provide a function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).  Follow the function with an optional list of comma delimited keys.  For and add (a) or update (u), follow the keys with JSON structured data to be added or updated into storage.";
+        ssText << ":  Please provide a valid function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).";
       }
+      delete ptSubData;
     }
     else
     {
-      ssText << " error:  You are not authorized to access storage.  You must be registered as a local administrator for Radial.";
+      ssText << ":  The storage action is used to send a request to common storage within Radial.  Please provide a function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).  Follow the function with an optional list of comma delimited keys.  For and add (a) or update (u), follow the keys with JSON structured data to be added or updated into storage.";
     }
   }
   // }}}
