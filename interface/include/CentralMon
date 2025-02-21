@@ -25,13 +25,18 @@ namespace radial
 class CentralMon : public Interface
 {
   protected:
+  bool m_bUpdate;
+  mutex m_mutex;
   string m_strPort;
   string m_strServer;
+  thread *m_pThreadSchedule;
 
   public:
   CentralMon(string, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~CentralMon();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void schedule(string strPrefix);
 };
 // }}}
 }

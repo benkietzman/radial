@@ -22,45 +22,33 @@ namespace radial
 // {{{ CentralMon()
 CentralMon::CentralMon(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "centralmon", argc, argv, pCallback)
 {
-  m_strPort = "4636";
-  m_strServer = "localhost";
-  // {{{ command line arguments
-  for (int i = 1; i < argc; i++)
-  {
-    string strArg = argv[i];
-    if (strArg == "-p" || (strArg.size() > 7 && strArg.substr(0, 7) == "--port="))
-    {
-      if (strArg == "-p" && i + 1 < argc && argv[i+1][0] != '-')
-      {
-        m_strPort = argv[++i];
-      }
-      else
-      {
-        m_strPort = strArg.substr(7, strArg.size() - 7);
-      }
-      m_manip.purgeChar(m_strPort, m_strPort, "'");
-      m_manip.purgeChar(m_strPort, m_strPort, "\"");
-    }
-    else if (strArg == "-s" || (strArg.size() > 9 && strArg.substr(0, 9) == "--server="))
-    {
-      if (strArg == "-s" && i + 1 < argc && argv[i+1][0] != '-')
-      {
-        m_strServer = argv[++i];
-      }
-      else
-      {
-        m_strServer = strArg.substr(9, strArg.size() - 9);
-      }
-      m_manip.purgeChar(m_strServer, m_strServer, "'");
-      m_manip.purgeChar(m_strServer, m_strServer, "\"");
-    }
-  }
-  // }}}
+  m_bUpdate = true;
+  m_pThreadSchedule = new thread(&Db::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~CentralMon()
 CentralMon::~CentralMon()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
+}
+// }}}
+// {{{ autoMode()
+void CentralMon::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  threadIncrement();
+  strPrefix += "->CentralMon::autoMode()";
+  if (strOldMaster != strNewMaster)
+  {
+    stringstream ssMessage;
+    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
+    log(ssMessage.str());
+    m_mutex.lock();
+    m_bUpdate = true;
+    m_mutex.unlock();
+  }
+  threadDecrement();
 }
 // }}}
 // {{{ callback()
@@ -79,19 +67,49 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Function"))
   {
-    bool bValid = false;
     string strFunction = ptJson->m["Function"]->v;
-    stringstream ssRequest;
-    ssRequest << ptJson->m["Function"]->v;
+    // {{{ data
+    if (strFunction == "data")
+    {
+      if (!empty(ptJson, "Server"))
+      {
+        if (exist(ptJson, "System"))
+        {
+          stringstream ssTime;
+          time_t CTime;
+          Json *ptData = new Json;
+          time(&CTime);
+          ssTime << CTime;
+          ptData->i("_time", ssTime.str());
+          ptData->m["system"] = new Json(ptJson->m["System"]);
+          if (exist(ptJson, "Processes"))
+          {
+            ptData->m["processes"] = new Json(ptJson->m["Processes"]);
+          }
+          if (storageAdd({"centralmon", "servers", ptJson->m["Server"]->v, "data"}, ptData, strError))
+          {
+            bResult = true;
+          }
+          delete ptData;
+        }
+        else
+        {
+          strError = "Please provide the System.";
+        }
+      }
+      else
+      {
+        strError = "Please provide the Server.";
+      }
+    }
+    // }}}
+    // {{{ process
     if (strFunction == "process")
     {
       if (!empty(ptJson, "Server"))
       {
-        ssRequest << " " << ptJson->m["Server"]->v;
         if (!empty(ptJson, "Process"))
         {
-          bValid = true;
-          ssRequest << " " << ptJson->m["Process"]->v;
         }
         else
         {
@@ -103,200 +121,32 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
         strError = "Please provide the Server.";
       }
     }
+    // }}}
+    // {{{ system
     else if (strFunction == "system")
     {
       if (!empty(ptJson, "Server"))
       {
-        bValid = true;
-        ssRequest << " " << ptJson->m["Server"]->v;
       }
       else
       {
         strError = "Please provide the Server.";
       }
     }
+    // }}}
+    // {{{ update
     else if (strFunction == "update")
     {
-      bValid = true;
+      bResult = true;
+      
     }
+    // }}}
+    // {{{ invalid
     else
     {
       strError = "Please provide a valid Function:  process, system, update.";
     }
-    ssRequest << endl;
-    if (bValid)
-    {
-      int fdSocket = -1;
-      if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, strError))
-      {
-        bool bExit = false;
-        int nReturn;
-        size_t unPosition;
-        string strBuffers[2];
-        strBuffers[1] = ssRequest.str();
-        m_pUtility->fdNonBlocking(fdSocket, strError);
-        while (!bExit && !shutdown())
-        {
-          pollfd fds[1];
-          fds[0].fd = fdSocket;
-          fds[0].events = POLLIN;
-          if (!strBuffers[1].empty())
-          {
-            fds[0].events |= POLLOUT;
-          }
-          if ((nReturn = poll(fds, 1, 2000)) > 0)
-          {
-            if (fds[0].revents & (POLLHUP | POLLIN))
-            {
-              if (m_pUtility->fdRead(fdSocket, strBuffers[0], nReturn))
-              {
-                if ((unPosition = strBuffers[0].find("\n")) != string::npos)
-                {
-                  bExit = true;
-                  if (strFunction == "process")
-                  {
-                    string strItem, strLine = strBuffers[0].substr(0, unPosition);
-                    vector<string> items;
-                    for (size_t i = 1; i <= 10; i++)
-                    {
-                      m_manip.getToken(strItem, strLine, i, ";", false);
-                      items.push_back(strItem);
-                    }
-                    if (items.size() == 10)
-                    {
-                      size_t unIndex = 0;
-                      stringstream ssLine;
-                      bResult = true;
-                      ptJson->m["Response"] = new Json;
-                      ptJson->m["Response"]->i("StartTime", items[unIndex++]);
-                      ptJson->m["Response"]->m["Owners"] = new Json;
-                      ssLine.str(items[unIndex++]);
-                      while (getline(ssLine, strItem, ','))
-                      {
-                        ptJson->m["Response"]->m["Owners"]->pb(strItem);
-                      }
-                      ptJson->m["Response"]->i("NumberOfProcesses", items[unIndex++]);
-                      ptJson->m["Response"]->i("ImageSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("MinImageSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("MaxImageSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("ResidentSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("MinResidentSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("MaxResidentSize", items[unIndex++]);
-                      ptJson->m["Response"]->i("Alarms", items[unIndex++]);
-                    }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << items.size() << " fields returned instead of the expected 10 lines. --- " << strLine;
-                      strError = ssMessage.str();
-                    }
-                  }
-                  else if (strFunction == "system")
-                  {
-                    string strItem, strLine = strBuffers[0].substr(0, unPosition);
-                    vector<string> items;
-                    for (size_t i = 1; i <= 14; i++)
-                    {
-                      m_manip.getToken(strItem, strLine, i, ";", false);
-                      items.push_back(strItem);
-                    }
-                    if (items.size() == 14)
-                    {
-                      size_t unIndex = 0;
-                      stringstream ssLine;
-                      bResult = true;
-                      ptJson->m["Response"] = new Json;
-                      ptJson->m["Response"]->i("Server", items[unIndex++]);
-                      ptJson->m["Response"]->i("OperatingSystem", items[unIndex++]);
-                      ptJson->m["Response"]->i("SystemRelease", items[unIndex++]);
-                      ptJson->m["Response"]->i("NumberOfProcessors", items[unIndex++]);
-                      ptJson->m["Response"]->i("CpuSpeed", items[unIndex++]);
-                      ptJson->m["Response"]->i("NumberOfProcesses", items[unIndex++]);
-                      ptJson->m["Response"]->i("CpuUsage", items[unIndex++]);
-                      ptJson->m["Response"]->i("UpTime", items[unIndex++]);
-                      ptJson->m["Response"]->i("MainUsed", items[unIndex++]);
-                      ptJson->m["Response"]->i("MainTotal", items[unIndex++]);
-                      ptJson->m["Response"]->i("SwapUsed", items[unIndex++]);
-                      ptJson->m["Response"]->i("SwapTotal", items[unIndex++]);
-                      ptJson->m["Response"]->m["Partitions"] = new Json;
-                      ssLine.str(items[unIndex++]);
-                      while (getline(ssLine, strItem, ','))
-                      {
-                        string strFirst, strSecond;
-                        stringstream ssDeepLine(strItem);
-                        getline(ssDeepLine, strFirst, '=');
-                        getline(ssDeepLine, strSecond, '=');
-                        ptJson->m["Response"]->m["Partitions"]->i(strFirst, strSecond);
-                      }
-                      ptJson->m["Response"]->i("Alarms", items[unIndex++]);
-                    }
-                    else
-                    {
-                      ssMessage.str("");
-                      ssMessage << items.size() << " fields returned instead of the expected 14 lines. --- " << strLine;
-                      strError = ssMessage.str();
-                    }
-                  }
-                  else if (strBuffers[0].substr(0, unPosition) == "okay")
-                  {
-                    bResult = true;
-                  }
-                  else
-                  {
-                    strError = "Failed to update.";
-                  }
-                }
-              }
-              else
-              {
-                bExit = true;
-                if (nReturn < 0)
-                {
-                  ssMessage.str("");
-                  ssMessage << "Utility::fdRead(" << errno << ") " << strerror(errno);
-                  strError = ssMessage.str();
-                }
-              }
-            }
-            if (fds[0].revents & POLLOUT)
-            {
-              if (!m_pUtility->fdWrite(fdSocket, strBuffers[1], nReturn))
-              {
-                bExit = true;
-                if (nReturn < 0)
-                {
-                  ssMessage.str("");
-                  ssMessage << "Utility::fdWrite(" << errno << ") " << strerror(errno);
-                  strError = ssMessage.str();
-                }
-              }
-            }
-            if (fds[0].revents & POLLERR)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << "poll() Encountered a POLLERR.";
-              strError = ssMessage.str();
-            }
-            if (fds[0].revents & POLLNVAL)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << "poll() Encountered a POLLNVAL.";
-              strError = ssMessage.str();
-            }
-          }
-          else if (nReturn < 0)
-          {
-            bExit = true;
-            ssMessage.str("");
-            ssMessage << "poll(" << errno << ") " << strerror(errno);
-            strError = ssMessage.str();
-          }
-        }
-        close(fdSocket);
-      }
-    }
+    // }}}
   }
   else
   {
@@ -313,6 +163,174 @@ void CentralMon::callback(string strPrefix, const string strPacket, const bool b
     hub(p, false);
   }
   delete ptJson;
+  threadDecrement();
+}
+// }}}
+// {{{ schedule()
+void CentralMon::schedule(string strPrefix)
+{
+  string strError;
+  stringstream ssMessage;
+  time_t CAnalyze = 0, CNow;
+
+  threadIncrement();
+  strPrefix += "->CentralMon::schedule()";
+  while (!shutdown())
+  {
+    time(&CNow);
+    if ((CNow - CAnalyze) > 10)
+    {
+      if (isMasterSettled() && isMaster())
+      {
+        bool bUpdate;
+        Json *ptJson;
+        m_mutex.lock();
+        bUpdate = m_bUpdate;
+        m_mutex.unlock();
+        if (bUpdate)
+        {
+          stringstream ssQuery;
+          ssQuery.str("");
+          ssQuery << "select c.id, c.name, c.cpu_usage, c.disk_size, c.main_memory, c.processes, c.swap_memory from application a, application_server b, `server` c where a.id = b.application_id and b.server_id = c.id and (a.name = 'Central Monitor' or a.name = 'System Information') order by c.name;";
+          auto getServer = dbquery("central_r", ssQuery.str(), strError);
+          if (getServer != NULL)
+          {
+            map<string, map<string, string> > servers;
+            m_mutex.lock();
+            m_bUpdate = false;
+            m_mutex.unlock();
+            for (auto &getServerRow : *getServer)
+            {
+              servers[getServerRow["name"]] = getServerRow;
+            }
+            ptJson = new Json;
+            if (storageRetrieve({"centralmon", "servers"}, ptJson, strError))
+            {
+              for (auto &server : ptJson->m)
+              {
+                if (servers.find(server.first) == servers.end())
+                {
+                  storageRemove({"centralmon", "servers", server.first}, strError);
+                }
+              }
+              for (auto &server : servers)
+              {
+                Json *ptConf = new Json;
+                ptConf->m["system"] = new Json;
+                ptConf->m["system"]->i("cpuUsage", server.second["cpu_usage"]);
+                ptConf->m["system"]->i("diskSize", server.second["disk_size"]);
+                ptConf->m["system"]->i("mainMemory", server.second["main_memory"]);
+                ptConf->m["system"]->i("processes", server.second["processes"]);
+                ptConf->m["system"]->i("swapMemory", server.second["swap_memory"]);
+                ssQuery.str("");
+                ssQuery << "select b.application_id, a.name, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second;
+                auto getDetail = dbQuery("central_r", ssQuery.str(), strError);
+                if (getDetail != NULL)
+                {
+                  ptConf->m["processes"] = new Json;
+                  for (auto &getDetailRow : *getDetail)
+                  {
+                    // TODO
+                  }
+                }
+                else
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Interface::dbquery(central_r," << ssQuery.str() << ") error [" << server.first << "]:  " << strError;
+                  log(ssMessage.str());
+                }
+                dbfree(getDetail);
+                if (!storageAdd({"centralmon", "servers", server.first, "conf"}, ptConf, strError))
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",conf]:  " << strError;
+                  log(ssMessage.str());
+                }
+                delete ptConf;
+              }
+            }
+            delete ptJson;
+          }
+          else
+          {
+            ssMessage.str("");
+            ssMessage << strPrefix << "->Interface::dbquery(central_r," << ssQuery.str() << ") error:  " << strError;
+            log(ssMessage.str());
+          }
+          dbfree(getServer);
+        }
+        ptJson = new Json;
+        if (storageRetrieve({"centralmon", "servers"}, ptJson, strError))
+        {
+          for (auto &server : ptJson->m)
+          {
+            if (exist(server.second, "conf"))
+            {
+              Json *ptConf = server.second->m["conf"];
+              if (!empty(ptConf, "_time"))
+              {
+                time_t CConf = atoi(ptConf->m["_time"]->v.c_str());
+                if ((CNow - CConf) < 14400)
+                {
+                  stringstream ssAlarms;
+                  if (exist(server.second, "data"))
+                  {
+                    Json *ptData = server.second->m["data"];
+                    if (!empty(ptData, "_time"))
+                    {
+                      time_t CData = atoi(ptData->m["_time"]->v.c_str());
+                      if (CData >= CAnalyze)
+                      {
+                        if (exist(ptData, "system"))
+                        {
+                          Json *ptSystem = ptData->m["system"];
+                          if (exist(ptData, "processes"))
+                          {
+                            for (auto &ptProcess : ptData->m["processes"]->m)
+                            {
+                            }
+                          }
+                        }
+                        else
+                        {
+                          // Missing system data.
+                        }
+                      }
+                    }
+                  }
+                  else
+                  {
+                    // Server might be offline.
+                  }
+                  if (!ssAlarms.str().empty())
+                  {
+                    if (empty(server.second, "alarms") || server.second->m["alarms"]->v != ssAlarms.str())
+                    {
+                    }
+                  }
+                }
+                else
+                {
+                  storageRemove({"centralmon", "servers", server.first}, strError);
+                }
+              }
+              else
+              {
+                storageRemove({"centralmon", "servers", server.first}, strError);
+              }
+            }
+            else
+            {
+              storageRemove({"centralmon", "servers", server.first}, strError);
+            }
+          }
+        }
+        delete ptJson;
+      }
+      CAnalyze = CNow;
+    }
+    msleep(1000);
+  }
   threadDecrement();
 }
 // }}}

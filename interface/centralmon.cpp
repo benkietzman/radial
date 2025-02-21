@@ -14,15 +14,23 @@
 ***********************************************************************/
 #include "include/CentralMon"
 radial::CentralMon *gpCentralMon = NULL;
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "centralMon->main()";
   gpCentralMon = new radial::CentralMon(strPrefix, argc, argv, &callback);
   gpCentralMon->enableWorkers();
+  gpCentralMon->setAutoMode(&autoMode)
   gpCentralMon->process(strPrefix);
   delete gpCentralMon;
   return 0;
+}
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  thread threadAutoMode(&CentralMon::autoMode, gpCentralMon, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
