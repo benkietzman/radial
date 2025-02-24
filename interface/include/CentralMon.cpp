@@ -187,11 +187,12 @@ void CentralMon::schedule(string strPrefix)
         m_mutex.lock();
         bUpdate = m_bUpdate;
         m_mutex.unlock();
+        // {{{ update
         if (bUpdate)
         {
           stringstream ssQuery;
           ssQuery.str("");
-          ssQuery << "select c.id, c.name, c.cpu_usage, c.disk_size, c.main_memory, c.processes, c.swap_memory from application a, application_server b, `server` c where a.id = b.application_id and b.server_id = c.id and (a.name = 'Central Monitor' or a.name = 'System Information') order by c.name;";
+          ssQuery << "select c.id, c.name, c.cpu_usage, c.disk_size, c.main_memory, c.processes, c.swap_memory from application a, application_server b, `server` c where a.id = b.application_id and b.server_id = c.id and (a.name = 'Central Monitor' or a.name = 'System Information') order by c.name";
           auto getServer = dbquery("central_r", ssQuery.str(), strError);
           if (getServer != NULL)
           {
@@ -223,14 +224,31 @@ void CentralMon::schedule(string strPrefix)
                 ptConf->m["system"]->i("processes", server.second["processes"]);
                 ptConf->m["system"]->i("swapMemory", server.second["swap_memory"]);
                 ssQuery.str("");
-                ssQuery << "select b.application_id, a.name, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second;
+                ssQuery << "select a.id application_id, a.name, b.id application_server_id, b.server_id, c.id application_server_detail_id, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second << " and c.daemon is not null and c.daemon != ''";
                 auto getDetail = dbQuery("central_r", ssQuery.str(), strError);
                 if (getDetail != NULL)
                 {
                   ptConf->m["processes"] = new Json;
                   for (auto &getDetailRow : *getDetail)
                   {
-                    // TODO
+                    if (ptConf->m["processes"]->m.find(getDetailRow["daemon"]) == ptConf->m["processes"]->m.end())
+                    {
+                      Json *ptProcess = new Json;
+                      ptProcess->i("applicationId", getDetailRow["application_id"]);
+                      ptProcess->i("applicationServerDetailId", getDetailRow["application_server_detail_id"]);
+                      ptProcess->i("applicationServerId", getDetailRow["application_server_id"]);
+                      ptProcess->i("delay", getDetailRow["delay"]);
+                      ptProcess->i("minProcesses", getDetailRow["min_processes"]);
+                      ptProcess->i("maxProcesses", getDetailRow["max_processes"]);
+                      ptProcess->i("minImage", getDetailRow["min_image"]);
+                      ptProcess->i("maxImage", getDetailRow["max_image"]);
+                      ptProcess->i("minResident", getDetailRow["min_resident"]);
+                      ptProcess->i("maxResident", getDetailRow["max_resident"]);
+                      ptProcess->i("owner", getDetailRow["owner"]);
+                      ptProcess->i("script", getDetailRow["script"]);
+                      ptProcess->i("serverId", getDetailRow["server_id"]);
+                      ptConf->m["processes"]->m[getDetailRow["daemon"]] = ptProcess;
+                    }
                   }
                 }
                 else
@@ -259,73 +277,124 @@ void CentralMon::schedule(string strPrefix)
           }
           dbfree(getServer);
         }
+        // }}}
+        // {{{ analyze
         ptJson = new Json;
         if (storageRetrieve({"centralmon", "servers"}, ptJson, strError))
         {
           for (auto &server : ptJson->m)
           {
+            stringstream ssAlarmsSystem;
+            Json *ptAlarms = server.second->m["alarms"];
+            if (!exist(server.second, "alarms"))
+            {
+              server.second->m["alarms"] = new Json;
+            }
+            ptAlarms = server.second->m["alarms"];
+            if (!exist(ptAlarms, "system"))
+            {
+              ptAlarms->m["system"] = new Json;
+            }
+            if (!exist(ptAlarms, "processes"))
+            {
+              ptAlarms->m["processes"] = new Json;
+            }
             if (exist(server.second, "conf"))
             {
               Json *ptConf = server.second->m["conf"];
-              if (!empty(ptConf, "_time"))
+              if (exist(ptConf, "system"))
               {
-                time_t CConf = atoi(ptConf->m["_time"]->v.c_str());
-                if ((CNow - CConf) < 14400)
+                Json *ptConfSystem = ptConf->m["system"];
+                if (exist(server.second, "data"))
                 {
-                  stringstream ssAlarms;
-                  if (exist(server.second, "data"))
+                  Json *ptData = server.second->m["data"];
+                  if (!empty(ptData, "_time"))
                   {
-                    Json *ptData = server.second->m["data"];
-                    if (!empty(ptData, "_time"))
+                    time_t CData = atoi(ptData->m["_time"]->v.c_str());
+                    if (CData >= CAnalyze)
                     {
-                      time_t CData = atoi(ptData->m["_time"]->v.c_str());
-                      if (CData >= CAnalyze)
+                      if (exist(ptData, "system"))
                       {
-                        if (exist(ptData, "system"))
+                        Json *ptDataSystem = ptData->m["system"];
+                        if (!empty(ptConfSystem, "maxProcesses") && atoi(ptConfSystem->m["maxProcesses"]->v.c_str()) > 0 && !empty(ptDataSystem, "processes") && atoi(ptDataSystem->m["processes"]->v.c_str()) > atoi(ptConfSystem->m["maxProcesses"]->v.c_str()))
                         {
-                          Json *ptSystem = ptData->m["system"];
-                          if (exist(ptData, "processes"))
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << ptDataSystem->m["processes"]->v << " processes are running which is more than the maximum " << ptConfSystem->m["maxProcesses"]->v << " processes.";
+                        }
+                        if (!empty(ptConfSystem, "maxCpuUsage") && atoi(ptConfSystem->m["maxCpuUsage"]->v.c_str()) > 0 && !empty(ptDataSystem, "cpuUsage") && atoi(ptDataSystem->m["cpuUsage"]->v.c_str()) > atoi(ptConfSystem->m["maxCpuUsage"]->v.c_str()))
+                        {
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using " << ptDataSystem->m["cpuUsage"]->v << "% CPU which is more than the maximum " << ptConfSystem->m["maxCpuUsage"]->v << "%";
+                          if (!empty(ptDataSystem, "cpuProcessUsage"))
                           {
-                            for (auto &ptProcess : ptData->m["processes"]->m)
-                            {
-                            }
+                            ssAlarmsSystem << " (" << ptDataSystem->m["cpuProcessUsage"]->v << ")";
+                          }
+                          ssAlarmsSystem << ".";
+                        }
+                        if (!empty(ptConfSystem, "maxMainUsage") && atoi(ptConfSystem->m["maxMainUsage"]->v.c_str()) > 0 && !empty(ptDataSystem, "mainTotal") && !empty(ptDataSystem, "mainUsed") && (size_t)(atoi(ptDataSystem->m["mainUsed"]->v.c_str()) * 100 / atoi(ptDataSystem->m["mainTotal"]->v.c_str())) > atoi(ptConfSystem->m["maxMainUsage"]->v.c_str()))
+                        {
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using " << (size_t)(atoi(ptDataSystem->m["mainUsed"]->v.c_str()) * 100 / atoi(ptDataSystem->m["mainTotal"]->v.c_str())) << "% main memory which is more than the maximum " << ptConfSystem->m["maxMainUsage"]->v << "%.";
+                        }
+                        if (exist(ptData, "processes"))
+                        {
+                          for (auto &ptProcess : ptData->m["processes"]->m)
+                          {
+                            // TODO
                           }
                         }
-                        else
-                        {
-                          // Missing system data.
-                        }
                       }
+                      else
+                      {
+                        ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "System data is missing.";
+                      }
+                    }
+                    else
+                    {
+                      ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Data is stale.";
                     }
                   }
                   else
                   {
-                    // Server might be offline.
-                  }
-                  if (!ssAlarms.str().empty())
-                  {
-                    if (empty(server.second, "alarms") || server.second->m["alarms"]->v != ssAlarms.str())
-                    {
-                    }
+                    ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Data missing time stamp.";
                   }
                 }
                 else
                 {
-                  storageRemove({"centralmon", "servers", server.first}, strError);
+                  ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Server appears to be offline.";
                 }
               }
               else
               {
+                ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "System configuration is missing.";
                 storageRemove({"centralmon", "servers", server.first}, strError);
               }
             }
             else
             {
+              ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Configuration is missing.";
               storageRemove({"centralmon", "servers", server.first}, strError);
             }
           }
+          if (ptAlarms->m["system"]->v != ssAlarmsSystem.str())
+          {
+            ptAlarms->i("systems", ssAlarmsSystem.str());
+            if (!ssAlarmsSystem.str().empty())
+            {
+              if (!storageAdd({"centralmon", "servers", server.first, "alarms", "system"}, ptAlarms->m["system"], strError))
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,system]:  " << strError;
+                log(ssMessage.str());
+              }
+            }
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::storageRetrieve() error [centralmon,servers]:  " << strError;
+          log(ssMessage.str());
         }
         delete ptJson;
+        // }}}
       }
       CAnalyze = CNow;
     }
