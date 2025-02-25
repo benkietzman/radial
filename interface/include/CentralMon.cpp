@@ -335,9 +335,43 @@ void CentralMon::schedule(string strPrefix)
                         }
                         if (exist(ptData, "processes"))
                         {
-                          for (auto &ptProcess : ptData->m["processes"]->m)
+                          for (auto &process : ptData->m["processes"]->m)
                           {
-                            // TODO
+                            Json *ptDataProcess = process.second;
+                            if (exist(ptConf, "processes") && exist(ptConf->m["processes"], process.first))
+                            {
+                              stringstream ssAlarmsProcess;
+                              Json *ptConfProcess = ptConf->m["processes"]->m[process.first];
+                              if (!exist(ptAlarms->m["processes"], process.first))
+                              {
+                                ptAlarms->m["processes"]->i(process.first, "");
+                              }
+                              if (!empty(ptDataProcess, "processes") && atoi(ptDataProcess->m["processes"]->v.c_str()) <= 0)
+                              {
+                                ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is not currently running.";
+                              }
+                              else
+                              {
+                                // TODO
+                                if (!empty(ptConfProcess, "maxProcesses") && atoi(ptConfProcess->m["maxProcesses"]->v.c_str()) > 0 && !empty(ptDataProcess, "processes") && atoi(ptDataProcess->m["processes"]->v.c_str()) > atoi(ptConfProcess->m["maxProcesses"]->v.c_str()))
+                                {
+                                  ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << ptDataProcess->m["processes"]->v << " processes are running which is more than the maximum " << ptConfProcess->m["maxProcesses"]->v << " processes.";
+                                }
+                              }
+                              if (ptAlarms->m["processes"]->m[process.first]->v != ssAlarmsProcess.str())
+                              {
+                                ptAlarms->m["processes"]->i(process.first, ssAlarmsProcess.str());
+                                if (!ssAlarmsProcess.str().empty())
+                                {
+                                  if (!storageAdd({"centralmon", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
+                                  {
+                                    ssMessage.str("");
+                                    ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
+                                    log(ssMessage.str());
+                                  }
+                                }
+                              }
+                            }
                           }
                         }
                       }
