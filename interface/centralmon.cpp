@@ -13,15 +13,16 @@
 * (at your option) any later version.                                  *
 ***********************************************************************/
 #include "include/CentralMon"
-radial::CentralMon *gpCentralMon = NULL;
+using namespace radial;
+CentralMon *gpCentralMon = NULL;
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 int main(int argc, char *argv[])
 {
   string strPrefix = "centralMon->main()";
-  gpCentralMon = new radial::CentralMon(strPrefix, argc, argv, &callback);
+  gpCentralMon = new CentralMon(strPrefix, argc, argv, &callback);
   gpCentralMon->enableWorkers();
-  gpCentralMon->setAutoMode(&autoMode)
+  gpCentralMon->setAutoMode(&autoMode);
   gpCentralMon->process(strPrefix);
   delete gpCentralMon;
   return 0;
