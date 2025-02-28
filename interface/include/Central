@@ -26,8 +26,10 @@ class Central : public Interface
 {
   protected:
   bool m_bLoadReminders;
+  bool m_bMonitorUpdate;
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
   string m_strEmail;
   string m_strServer;
   thread *m_pThreadSchedule;
@@ -110,6 +112,11 @@ class Central : public Interface
   void merge(Json *ptOuter, Json *ptInner);
   bool menuAccess(radialUser &d, string &e);
   bool menuAccesses(radialUser &d, string &e);
+  bool monitorConfig(radialUser &d, string &e);
+  bool monitorData(radialUser &d, string &e);
+  bool monitorProcess(radialUser &d, string &e);
+  bool monitorSystem(radialUser &d, string &e);
+  bool monitorUpdate(radialUser &d, string &e);
   bool notifyPriorities(radialUser &d, string &e);
   bool notifyPriority(radialUser &d, string &e);
   bool packageType(radialUser &d, string &e);

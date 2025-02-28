@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : centralmon.cpp
+// file       : monitor.cpp
 // author     : Ben Kietzman
 // begin      : 2025-02-27
 // copyright  : kietzman.org
