@@ -4133,7 +4133,7 @@ void Central::schedule(string strPrefix)
               servers[getServerRow["name"]] = getServerRow;
             }
             ptJson = new Json;
-            if (storageRetrieve({"central", "monitor", "servers"}, ptJson, strError))
+            if (storageRetrieve({"central", "monitor", "servers"}, ptJson, strError) || strError == "Failed to find key.")
             {
               for (auto &server : ptJson->m)
               {
