@@ -4214,7 +4214,7 @@ void Central::schedule(string strPrefix)
           for (auto &server : ptJson->m)
           {
             stringstream ssAlarmsSystem;
-            Json *ptAlarms = server.second->m["alarms"];
+            Json *ptAlarms;
             if (!exist(server.second, "alarms"))
             {
               server.second->m["alarms"] = new Json;
