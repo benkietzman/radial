@@ -3861,7 +3861,7 @@ bool Central::monitorProcess(radialUser &d, string &e)
   if (dep({"process", "server"}, i, e))
   {
     Json *ptAlarms = new Json, *ptConfig = new Json, *ptData = new Json;
-    if (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", i->m["process"]->v}, ptAlarms, e) || storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "processes", i->m["process"]->v}, ptConfig, e) || storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "processes", i->m["process"]->v}, ptData, e))
+    if ((storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", i->m["process"]->v}, ptAlarms, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "processes", i->m["process"]->v}, ptConfig, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "processes", i->m["process"]->v}, ptData, e) || e == "Failed to find key."))
     {
       b = true;
       o->i("alarms", ptAlarms);
@@ -3885,7 +3885,7 @@ bool Central::monitorSystem(radialUser &d, string &e)
   if (dep({"server"}, i, e))
   {
     Json *ptAlarms = new Json, *ptConfig = new Json, *ptData = new Json;
-    if (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "system"}, ptAlarms, e) || storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "system"}, ptConfig, e) || storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "system"}, ptData, e))
+    if ((storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "system"}, ptAlarms, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "system"}, ptConfig, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "system"}, ptData, e) || e == "Failed to find key."))
     {
       b = true;
       o->i("alarms", ptAlarms);
