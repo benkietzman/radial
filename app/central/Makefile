@@ -32,7 +32,7 @@ obj:
 	if [ ! -d obj ]; then mkdir obj; fi;
 
 install: bin/monitor $(prefix)/radial/app/central
-	install --mode=775 bin/monitor $(prefix)/radial/app/central/
+	install --mode=775 bin/monitor $(prefix)/radial/app/central/monitor_preload
 
 install_service:
 	if [ ! -f /lib/systemd/system/radial_central_monitor.service ]; then install --mode=644 radial_central_monitor.service /lib/systemd/system/; fi;
