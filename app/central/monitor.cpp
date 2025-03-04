@@ -384,7 +384,8 @@ int main(int argc, char *argv[])
                               }
                             }
                             pclose(pfinPipe);
-                            ptReq->m["Request"]->m["processes"]->m[process.first] = ptProcess;
+                            ptReq->m["Request"]->m["processes"]->i(process.first, ptProcess);
+                            delete ptProcess;
                           }
                         }
                         inStat.close();
