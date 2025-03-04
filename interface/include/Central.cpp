@@ -4291,7 +4291,7 @@ void Central::schedule(string strPrefix)
                                   {
                                     for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
                                     {
-                                      if (ptConfigProcess->m["owner"]->v == ownerIter->second->v)
+                                      if (ptConfigProcess->m["owner"]->v == ownerIter->first)
                                       {
                                         bFound = true;
                                       }
