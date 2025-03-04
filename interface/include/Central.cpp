@@ -3813,7 +3813,7 @@ bool Central::monitorConfig(radialUser &d, string &e)
 bool Central::monitorData(radialUser &d, string &e)
 {
   bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *i = d.p->m["i"];
 
   if (dep({"server"}, i, e))
   {
