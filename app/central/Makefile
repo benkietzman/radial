@@ -34,6 +34,9 @@ obj:
 install: bin/monitor $(prefix)/radial/app/central
 	install --mode=775 bin/monitor $(prefix)/radial/app/central/
 
+install_service:
+	if [ ! -f /lib/systemd/system/radial_central_monitor.service ]; then install --mode=644 radial_central_monitor.service /lib/systemd/system/; fi;
+
 $(prefix)/radial/app/central:
 	mkdir -p $(prefix)/radial/app/central
 
