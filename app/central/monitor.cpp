@@ -18,14 +18,17 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <pwd.h>
 #include <sstream>
 #include <string>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 using namespace std;
+#include <File>
 #include <Json>
 #include <Radial>
+#include <SignalHandling>
 #include <StringManip>
 #include <Warden>
 using namespace common;
@@ -56,7 +59,8 @@ void sighandle(const int nSignal);
 // {{{ main()
 int main(int argc, char *argv[])
 {
-  string strConf, strPrefix = "monitor->main()", strServer, strUser = "radial", strWarden = "/data/warden/socket";
+  string strConf, strError, strPrefix = "monitor->main()", strServer, strUser = "radial", strWarden = "/data/warden/socket";
+  File file;
   StringManip manip;
 
   // {{{ set signal handling
@@ -196,6 +200,7 @@ int main(int argc, char *argv[])
             // {{{ data
             if (ptConfig->m.find("system") != ptConfig->m.end())
             {
+              FILE *pfinPipe;
               map<string, bool> exclude;
               struct utsname server;
               Json *ptReq = new Json, *ptRes = new Json, *ptSystem;
@@ -223,10 +228,10 @@ int main(int argc, char *argv[])
                       {
                         inCpuSpeed >> strTemp >> strTemp >> strTemp >> fCpuSpeed;
                       }
-                      ptSystem->i("operatingSystem"], server.sysname);
+                      ptSystem->i("operatingSystem", server.sysname);
                       ptSystem->i("systemRelease", server.release);
                       ptSystem->i("processors", to_string(get_nprocs()), 'n');
-                      ptSystem->i("cpuSpeed", to_string((get_nprocs() > 0)?(size_t)fCpuSeed:0), 'n');
+                      ptSystem->i("cpuSpeed", to_string((get_nprocs() > 0)?(size_t)fCpuSpeed:0), 'n');
                       ptSystem->i("processes", to_string(sys.procs), 'n');
                       while (fscanf(pfinPipe, "%f %s%*[^\n]", &fCpu, &szProcess[0]) != EOF)
                       {
@@ -240,7 +245,7 @@ int main(int argc, char *argv[])
                           load[fCpu].push_back(szProcess);
                         }
                       }
-                      ptSystem->i("cpuUsage", to_string((size_t)(fCpuUsage / ((get_nprocs() > 0)?get_ngrocs():1))), 'n');
+                      ptSystem->i("cpuUsage", to_string((size_t)(fCpuUsage / ((get_nprocs() > 0)?get_nprocs():1))), 'n');
                       while (load.size() > 5)
                       {
                         load.begin()->second.clear();
@@ -276,7 +281,7 @@ int main(int argc, char *argv[])
                   inCpuSpeed.close();
                 }
               }
-              ptSystemn->m["partitions"] = new Json;
+              ptSystem->m["partitions"] = new Json;
               if ((pfinPipe = popen("df -kl", "r")) != NULL)
               {
                 char szField[3][128] = {"\0", "\0", "\0"};
@@ -297,8 +302,95 @@ int main(int argc, char *argv[])
                 ptReq->m["Request"]->m["processes"] = new Json;
                 for (auto &process : ptConfig->m["processes"]->m)
                 {
-                  Json *ptProcess = process->second;
-                  // TODO - process
+                  list<string> procList;
+                  Json *ptProcess = process.second;
+                  file.directoryList("/proc", procList); 
+                  for (auto &i : procList)
+                  { 
+                    if (i[0] != '.' && manip.isNumeric(i) && file.directoryExist((string)"/proc/" + i))
+                    {
+                      struct stat tStat;
+                      struct passwd *ptPasswd = NULL;
+                      if (stat(((string)"/proc/" + i).c_str(), &tStat) == 0 && file.fileExist((string)"/proc/" + i + (string)"/stat") && (ptPasswd = getpwuid(tStat.st_uid)) != NULL)
+                      {
+                        string strOwner = ptPasswd->pw_name;
+                        ifstream inStat(((string)"/proc/" + i + (string)"/stat").c_str());
+                        if (inStat.good())
+                        {
+                          string strTemp, strDaemon;
+                          long lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
+                          unsigned long ulImage = 0, ulResident = 0;
+                          inStat >> strTemp >> strDaemon;
+                          for (auto j = 0; j < 20; j++)
+                          {
+                            inStat >> strTemp;
+                          }
+                          inStat >> ulImage >> ulResident;
+                          ulImage /= 1024;
+                          ulResident *= lPageSize;
+                          if (!strDaemon.empty() && strDaemon[0] == '(')
+                          {
+                            strDaemon.erase(0, 1);
+                          }
+                          if (!strDaemon.empty() && strDaemon[strDaemon.size() - 1] == ')')
+                          {
+                            strDaemon.erase(strDaemon.size() - 1, 1);
+                          }
+                          if (process.first == strDaemon)
+                          {
+                            if (ptProcess->m.find("owners") == ptProcess->m.end())
+                            {
+                              ptProcess->m["owners"] = new Json;
+                            }
+                            if (ptProcess->m["owners"]->m.find(strOwner) == ptProcess->m["owners"]->m.end())
+                            {
+                              ptProcess->m["owners"]->i(strOwner, "0", 'n');
+                            }
+                            ptProcess->m["owners"]->i(strOwner, to_string(atoi(ptProcess->m["owners"]->m[strOwner]->v.c_str()) + 1), 'n');
+                            if (ptProcess->m.find("processes") == ptProcess->m.end())
+                            {
+                              ptProcess->i("processes", "0", 'n');
+                            }
+                            ptProcess->i("processes", to_string(atoi(ptProcess->m["processes"]->v.c_str()) + 1), 'n');
+                            if (ptProcess->m.find("image") == ptProcess->m.end())
+                            {
+                              ptProcess->i("image", "0", 'n');
+                            }
+                            ptProcess->i("image", to_string(atoi(ptProcess->m["image"]->v.c_str()) + ulImage), 'n');
+                            if (ptProcess->m.find("resident") == ptProcess->m.end())
+                            {
+                              ptProcess->i("resident", "0", 'n');
+                            }
+                            ptProcess->i("resident", to_string(atoi(ptProcess->m["resident"]->v.c_str()) + ulResident), 'n');
+                            if ((pfinPipe = popen(((string)"ps --pid=" + i + (string)" --format=lstart --no-headers").c_str(), "r")) != NULL)
+                            {
+                              char szTemp[4][10] = {"\0", "\0", "\0", "\0"};
+                              if (fscanf(pfinPipe, "%*s %s %s %s %s", szTemp[0], szTemp[1], szTemp[2], szTemp[3]) != EOF)
+                              {
+                                time_t CTime;
+                                struct tm tTime;
+                                tTime.tm_mon = (((string)szTemp[0] == "Jan")?0:((string)szTemp[0] == "Feb")?1:((string)szTemp[0] == "Mar")?2:((string)szTemp[0] == "Apr")?3:((string)szTemp[0] == "May")?4:((string)szTemp[0] == "Jun")?5:((string)szTemp[0] == "Jul")?6:((string)szTemp[0] == "Aug")?7:((string)szTemp[0] == "Sep")?8:((string)szTemp[0] == "Oct")?9:((string)szTemp[0] == "Nov")?10:((string)szTemp[0] == "Dec")?11:0);
+                                tTime.tm_mday = atoi(szTemp[1]);
+                                tTime.tm_year = atoi(szTemp[3]) - 1900;
+                                tTime.tm_hour = atoi((((string)szTemp[2]).substr(0, 2)).c_str());
+                                tTime.tm_min = atoi((((string)szTemp[2]).substr(3, 2)).c_str());
+                                tTime.tm_sec = atoi((((string)szTemp[2]).substr(6, 2)).c_str());
+                                tTime.tm_isdst = -1;
+                                CTime = mktime(&tTime);
+                                if (CTime > 0 && (ptProcess->m.find("startTime") == ptProcess->m.end() || CTime < atoi(ptProcess->m["startTime"]->v.c_str())))
+                                {
+                                  ptProcess->i("startTime", to_string(CTime));
+                                }
+                              }
+                            }
+                            pclose(pfinPipe);
+                          }
+                        }
+                        inStat.close();
+                      }
+                    }
+                  }
+                  procList.clear();
                 }
               }
               radial.request(ptReq, ptRes, strError);
@@ -325,10 +417,6 @@ int main(int argc, char *argv[])
     {
       cerr << strPrefix << "->Warden::Warden() error [" << strWarden << "]:  " << strError << endl;
     }
-  }
-  else
-  {
-    cerr << strPrefix << ":  Please provide the server." << endl;
   }
   // }}}
   // {{{ usage statement
