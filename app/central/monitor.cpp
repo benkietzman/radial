@@ -303,10 +303,9 @@ int main(int argc, char *argv[])
                 for (auto &process : ptConfig->m["processes"]->m)
                 {
                   list<string> procList;
-                  Json *ptProcess = process.second;
-                  file.directoryList("/proc", procList); 
+                  file.directoryList("/proc", procList);
                   for (auto &i : procList)
-                  { 
+                  {
                     if (i[0] != '.' && manip.isNumeric(i) && file.directoryExist((string)"/proc/" + i))
                     {
                       struct stat tStat;
@@ -338,6 +337,7 @@ int main(int argc, char *argv[])
                           }
                           if (process.first == strDaemon)
                           {
+                            Json *ptProcess = new Json;
                             if (ptProcess->m.find("owners") == ptProcess->m.end())
                             {
                               ptProcess->m["owners"] = new Json;
@@ -384,6 +384,7 @@ int main(int argc, char *argv[])
                               }
                             }
                             pclose(pfinPipe);
+                            ptReq->m["Request"]->m["processes"]->m[process.first] = ptProcess;
                           }
                         }
                         inStat.close();
