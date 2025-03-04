@@ -4347,7 +4347,9 @@ void Central::schedule(string strPrefix)
                                 }
                                 if (!ssAlarmsProcess.str().empty() && !empty(ptConfigProcess, "applicationId"))
                                 {
-                                  chat("#system", server.first + (string)" (" + process.first + (string)"):  " + ssAlarmsProcess.str(), strError);
+                                  ssMessage.str("");
+                                  ssMessage << char(3) << "13,06 " << server.first << " | " << process.first << " " << char(3) << ssAlarmsProcess.str();
+                                  chat("#system", ssMessage.str(), strError);
                                   ssQuery.str("");
                                   ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "'";
                                   auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4355,7 +4357,7 @@ void Central::schedule(string strPrefix)
                                   {
                                     for (auto &getPersonRow : *getPerson)
                                     {
-                                      alert(getPersonRow["userid"], ssAlarmsProcess.str(), strError);
+                                      alert(getPersonRow["userid"], server.first + (string)" (" + process.first + (string)"):  " + ssAlarmsProcess.str(), strError);
                                     }
                                   }
                                   dbfree(getPerson);
@@ -4407,7 +4409,9 @@ void Central::schedule(string strPrefix)
               }
               if (!ssAlarmsSystem.str().empty())
               {
-                chat("#system", server.first + (string)":  " + ssAlarmsProcess.str(), strError);
+                ssMessage.str("");
+                ssMessage << char(3) << "13,06 " << server.first << " " << char(3) << ssAlarmsProcess.str();
+                chat("#system", ssMessage.str(), strError);
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id where c.type in ('Primary Admin', 'Backup Admin') and a.name = '" << esc(server.first) << "'";
                 auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4415,7 +4419,7 @@ void Central::schedule(string strPrefix)
                 {
                   for (auto &getPersonRow : *getPerson)
                   {
-                    alert(getPersonRow["userid"], ssAlarmsSystem.str(), strError);
+                    alert(getPersonRow["userid"], server.first + (string)":  " + ssAlarmsSystem.str(), strError);
                   }
                 }
                 dbfree(getPerson);
