@@ -4339,28 +4339,25 @@ void Central::schedule(string strPrefix)
                               if (ptAlarms->m["processes"]->m[process.first]->v != ssAlarmsProcess.str())
                               {
                                 ptAlarms->m["processes"]->i(process.first, ssAlarmsProcess.str());
-                                if (!ssAlarmsProcess.str().empty())
+                                if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
                                 {
-                                  if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
+                                  ssMessage.str("");
+                                  ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
+                                  log(ssMessage.str());
+                                }
+                                if (!ssAlarmsProcess.str().empty() && !empty(ptConfigProcess, "applicationId"))
+                                {
+                                  ssQuery.str("");
+                                  ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id where b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "'";
+                                  auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                                  if (getPerson != NULL)
                                   {
-                                    ssMessage.str("");
-                                    ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
-                                    log(ssMessage.str());
-                                  }
-                                  if (!empty(ptConfigProcess, "applicationId"))
-                                  {
-                                    ssQuery.str("");
-                                    ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id where b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "'";
-                                    auto getPerson = dbquery("central_r", ssQuery.str(), strError);
-                                    if (getPerson != NULL)
+                                    for (auto &getPersonRow : *getPerson)
                                     {
-                                      for (auto &getPersonRow : *getPerson)
-                                      {
-                                        alert(getPersonRow["userid"], ssAlarmsProcess.str(), strError);
-                                      }
+                                      alert(getPersonRow["userid"], ssAlarmsProcess.str(), strError);
                                     }
-                                    dbfree(getPerson);
                                   }
+                                  dbfree(getPerson);
                                 }
                               }
                             }
@@ -4401,14 +4398,14 @@ void Central::schedule(string strPrefix)
             if (ptAlarms->m["system"]->v != ssAlarmsSystem.str())
             {
               ptAlarms->i("systems", ssAlarmsSystem.str());
+              if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "system"}, ptAlarms->m["system"], strError))
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,system]:  " << strError;
+                log(ssMessage.str());
+              }
               if (!ssAlarmsSystem.str().empty())
               {
-                if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "system"}, ptAlarms->m["system"], strError))
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,system]:  " << strError;
-                  log(ssMessage.str());
-                }
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id where c.type in ('Primary Admin', 'Backup Admin') and a.name = '" << esc(server.first) << "'";
                 auto getPerson = dbquery("central_r", ssQuery.str(), strError);
