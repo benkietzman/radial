@@ -4348,7 +4348,7 @@ void Central::schedule(string strPrefix)
                                 if (!ssAlarmsProcess.str().empty() && !empty(ptConfigProcess, "applicationId"))
                                 {
                                   ssQuery.str("");
-                                  ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id where b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "'";
+                                  ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "'";
                                   auto getPerson = dbquery("central_r", ssQuery.str(), strError);
                                   if (getPerson != NULL)
                                   {
