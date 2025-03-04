@@ -4410,7 +4410,7 @@ void Central::schedule(string strPrefix)
               if (!ssAlarmsSystem.str().empty())
               {
                 ssMessage.str("");
-                ssMessage << char(3) << "13,06 " << server.first << " " << char(3) << ssAlarmsProcess.str();
+                ssMessage << char(3) << "13,06 " << server.first << " " << char(3) << ssAlarmsSystem.str();
                 chat("#system", ssMessage.str(), strError);
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id where c.type in ('Primary Admin', 'Backup Admin') and a.name = '" << esc(server.first) << "'";
