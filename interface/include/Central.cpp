@@ -4435,8 +4435,8 @@ void Central::schedule(string strPrefix)
           log(ssMessage.str());
         }
         delete ptJson;
-        */
         // }}}
+        */
         CMonitor = CNow;
       }
       // }}}
