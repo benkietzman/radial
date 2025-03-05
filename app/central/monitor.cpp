@@ -208,6 +208,7 @@ int main(int argc, char *argv[])
               ptReq->i("Function", "monitorData");
               ptReq->m["Request"] = new Json;
               ptReq->m["Request"]->i("server", strServer);
+              // {{{ system
               ptReq->m["Request"]->m["system"] = new Json;
               ptSystem = ptReq->m["Request"]->m["system"];
               if (uname(&server) != -1)
@@ -297,12 +298,15 @@ int main(int argc, char *argv[])
                 }
                 pclose(pfinPipe);
               }
+              // }}}
+              // {{{ processes
               if (ptConfig->m.find("processes") != ptConfig->m.end())
               {
                 ptReq->m["Request"]->m["processes"] = new Json;
                 for (auto &process : ptConfig->m["processes"]->m)
                 {
                   list<string> procList;
+                  Json *ptProcess = new Json;
                   file.directoryList("/proc", procList);
                   for (auto &i : procList)
                   {
@@ -337,7 +341,6 @@ int main(int argc, char *argv[])
                           }
                           if (process.first == strDaemon)
                           {
-                            Json *ptProcess = new Json;
                             if (ptProcess->m.find("owners") == ptProcess->m.end())
                             {
                               ptProcess->m["owners"] = new Json;
@@ -384,17 +387,17 @@ int main(int argc, char *argv[])
                               }
                             }
                             pclose(pfinPipe);
-                            ptReq->m["Request"]->m["processes"]->i(process.first, ptProcess);
-                            delete ptProcess;
                           }
                         }
                         inStat.close();
                       }
                     }
                   }
-                  procList.clear();
+                  ptReq->m["Request"]->m["processes"]->i(process.first, ptProcess);
+                  delete ptProcess;
                 }
               }
+              // }}}
               radial.request(ptReq, ptRes, strError);
               delete ptReq;
               delete ptRes;
