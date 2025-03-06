@@ -7,12 +7,11 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/auth bin/central bin/centralmon bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/auth bin/central bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
-	install --mode=775 bin/centralmon $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/db $(prefix)/radial/interface/
@@ -65,16 +64,6 @@ obj/central.o: central.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c central.cpp -o obj/central.o $(CPPFLAGS) -I../../common
 obj/Central.o: include/Central.cpp obj
 	g++ -ggdb -Wall -c include/Central.cpp -o obj/Central.o $(CPPFLAGS) -I../../common
-# }}}
-# {{{ centralmon
-centralmon: bin/centralmon $(prefix)/radial/interface
-	install --mode=775 bin/centralmon $(prefix)/radial/interface/
-bin/centralmon: ../../common/libcommon.a obj/centralmon.o obj/Base.o obj/Interface.o obj/CentralMon.o bin
-	g++ -o bin/centralmon obj/centralmon.o obj/Base.o obj/Interface.o obj/CentralMon.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
-obj/centralmon.o: centralmon.cpp ../../common/Makefile obj
-	g++ -ggdb -Wall -c centralmon.cpp -o obj/centralmon.o $(CPPFLAGS) -I../../common
-obj/CentralMon.o: include/CentralMon.cpp obj
-	g++ -ggdb -Wall -c include/CentralMon.cpp -o obj/CentralMon.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ command
 command: bin/command $(prefix)/radial/interface
