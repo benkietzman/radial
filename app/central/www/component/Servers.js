@@ -526,8 +526,8 @@ export default
             }
           });
         }
-        c.addInterval('Servers', 'sysInfoStatus', s.sysInfoStatus, 60000);
-        s.sysInfoStatus();
+        c.addInterval('Servers', 'monitorStatus', s.monitorStatus, 60000);
+        s.monitorStatus();
       }
       // ]]]
       // [[[ Applications
@@ -660,21 +660,21 @@ export default
       s.u();
     };
     // ]]]
-    // [[[ sysInfoStatus()
-    s.sysInfoStatus = () =>
+    // [[[ monitorStatus()
+    s.monitorStatus = () =>
     {
       if (s.server && s.server.name)
       {
-        let request = {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'system', Server: s.server.name}]};
+        let request = {Interface: 'central', 'Function': 'monitorSystem', Request: {server: s.server.name}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.server.sysInfo = response.Response[1];
-            s.server.sysInfo.MainUsage = s.server.sysInfo.MainUsed * 100 / s.server.sysInfo.MainTotal;
-            s.server.sysInfo.SwapUsage = s.server.sysInfo.SwapUsed * 100 / s.server.sysInfo.SwapTotal;
-            s.server.sysInfo.Alarms = s.server.sysInfo.Alarms.split(',');
+            s.server.monitor = response.Response;
+            s.server.monitor.data.mainUsage = s.server.monitor.data.mainUsed * 100 / s.server.monitor.data.mainTotal;
+            s.server.monitor.data.swapUsage = s.server.monitor.data.swapUsed * 100 / s.server.monitor.data.swapTotal;
+            s.server.monitor.data.upTime = s.server.monitor.data.upTime / 60 / 60/ 24;
             s.u();
           }
           else
@@ -685,10 +685,10 @@ export default
       }
     };
     // ]]]
-    // [[[ sysInfoUpdate()
-    s.sysInfoUpdate = () =>
+    // [[[ monitorUpdate()
+    s.monitorUpdate = () =>
     {
-      c.wsRequest('radial', {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'update'}]}).then((response) =>
+      c.wsRequest('radial', {Interface: 'central', 'Function': 'monitorUpdate', Request: {}}).then((response) =>
       {
         let error = {};
         if (!c.wsResponse(response, error))
@@ -838,7 +838,7 @@ export default
         Operating System:
       </th>
       <td>
-        {{server.sysInfo.OperatingSystem}}
+        {{server.monitor.data.operatingSystem}}
       </td>
     </tr>
     <tr>
@@ -856,7 +856,7 @@ export default
         System Release:
       </th>
       <td>
-        {{server.sysInfo.SystemRelease}}
+        {{server.monitor.data.systemRelease}}
       </td>
     </tr>
     <tr>
@@ -876,7 +876,7 @@ export default
         Processors:
       </th>
       <td>
-        {{server.sysInfo.NumberOfProcessors}}@{{numberShort server.sysInfo.CpuSpeed 0}} MHz
+        {{server.monitor.data.processors}}@{{numberShort server.monitor.data.cpuSpeed 0}} MHz
       </td>
     </tr>
     <tr>
@@ -1015,8 +1015,8 @@ export default
           <th>
             # Processes:
           </th>
-          <td>
-            {{server.sysInfo.NumberOfProcesses}}
+          <td title="{{number server.monitor.data.processes 0}}">
+            {{numberShort server.monitor.data.processes 0}}
           </td>
         </tr>
         <tr>
@@ -1025,8 +1025,8 @@ export default
           </th>
           <td>
             <div class="progress" style="width: 200px;">
-              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.CpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{server.sysInfo.CpuUsage}}%;">
-                {{numberShort server.sysInfo.CpuUsage 0}}%
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.monitor.data.cpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{server.monitor.data.cpuUsage}}%;">
+                {{numberShort server.monitor.data.cpuUsage 0}}%
               </div>
             </div>
           </td>
@@ -1035,8 +1035,8 @@ export default
           <th>
             Uptime:
           </th>
-          <td>
-            {{server.sysInfo.UpTime}} days
+          <td title="{{number server.monitor.data.upTime 0}}">
+            {{numberShort server.monitor.data.upTime 0}} days
           </td>
         </tr>
       </table>
@@ -1050,30 +1050,30 @@ export default
       <table class="table table-condensed table-striped">
         <tr>
           <th></th>
-          <th>Used (MB)</th>
-          <th>Total (MB)</th>
+          <th>Used</th>
+          <th>Total</th>
           <th></th>
         </tr>
         <tr>
           <th>Main</th>
-          <td>{{numberShort server.sysInfo.MainUsed 0}}</td>
-          <td>{{numberShort server.sysInfo.MainTotal 0}}</td>
+          <td title="{{number server.monitor.data.mainUsed 0}}">{{byteShort server.monitor.data.mainUsed 0}}</td>
+          <td title="{{number server.monitor.data.mainTotal 0}}">{{byteShort server.monitor.data.mainTotal 0}}</td>
           <td>
             <div class="progress" style="width: 200px;">
-              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.MainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.sysInfo.MainUsage 0}}%;">
-                {{numberShort server.sysInfo.MainUsage 0}}%
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.monitor.data.mainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.monitor.data.mainUsage 0}}%;">
+                {{numberShort server.monitor.data.mainUsage 0}}%
               </div>
             </div>
           </td>
         </tr>
         <tr>
           <th>Swap</th>
-          <td>{{numberShort server.sysInfo.SwapUsed 0}}</td>
-          <td>{{numberShort server.sysInfo.SwapTotal 0}}</td>
+          <td title="{{number server.monitor.data.swapUsed 0}}">{{byteShort server.monitor.data.swapUsed 0}}</td>
+          <td title="{{number server.monitor.data.swapTotal 0}}">{{byteShort server.monitor.data.swapTotal 0}}</td>
           <td>
             <div class="progress" style="width: 200px;">
-              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.sysInfo.SwapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.sysInfo.SwapUsage 0}}%;">
-                {{numberShort server.sysInfo.SwapUsage 0}}%
+              <div class="progress-bar" role="progressbar" aria-valuenow="{{server.monitor.data.swapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort server.monitor.data.swapUsage 0}}%;">
+                {{numberShort server.monitor.data.swapUsage 0}}%
               </div>
             </div>
           </td>
@@ -1089,7 +1089,7 @@ export default
     </div>
     <div class="card-body">
       <table class="table table-condensed table-striped">
-        {{#each server.sysInfo.Partitions}}
+        {{#each server.monitor.data.partitions}}
         <tr>
           <th>{{@key}}</td>
           <td>
@@ -1108,14 +1108,8 @@ export default
     <div class="card-header bg-primary text-white" style="font-weight: bold;">
       Alarms
     </div>
-    <div class="card-body">
-      <table class="table table-condensed table-striped">
-        {{#each server.sysInfo.Alarms}}
-        <tr>
-          <td class="text-danger">{{.}}</td>
-        </tr>
-        {{/each}}
-      </table>
+    <div class="card-body text-danger">
+      {{server.monitor.data.alarms}}
     </div>
   </div>
   </div>

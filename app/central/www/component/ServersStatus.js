@@ -31,7 +31,7 @@ export default
       s.servers = null;
       s.u();
       s.info.v = 'Retrieving servers...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name from server a, application_server b, application c where a.id=b.server_id and b.application_id=c.id and c.name = \'System Information\' order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name from server a, application_server b, application c where a.id=b.server_id and b.application_id=c.id and (c.name = \'Central Monitor\' or c.name = \'System Information\') order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -40,8 +40,8 @@ export default
         {
           s.servers = response.Response;
           s.u();
-          c.addInterval('ServersStatus', 'sysInfo', s.sysInfo, 300000);
-          s.sysInfo();
+          c.addInterval('ServersStatus', 'monitor', s.monitor, 300000);
+          s.monitor();
         }
         else
         {
@@ -50,30 +50,30 @@ export default
       });
     };
     // ]]]
-    // [[[ sysInfo()
-    s.sysInfo = () =>
+    // [[[ monitor()
+    s.monitor = () =>
     {
       for (let i = 0; i < s.servers.length; i++)
       {
         if (s.servers[i].name)
         {
           s.info.v = 'Retrieving status for server '+s.servers[i].name+'...';
-          let request = {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'system', Server: s.servers[i].name, i: i}]};
+          let request = {Interface: 'central', 'Function': 'monitorSystem', Request: {server: s.servers[i].name, i: i}};
           c.wsRequest('radial', request).then((response) =>
           {
             let error = {};
             s.info.v = null;
             if (c.wsResponse(response, error))
             {
-              let i = response.Request[0].i;
-              s.servers[i].sysInfo = response.Response[1];
-              s.servers[i].sysInfo.CpuUsage = Math.round(s.servers[i].sysInfo.CpuUsage);
-              s.servers[i].sysInfo.MainUsage = Math.round(s.servers[i].sysInfo.MainUsed * 100 / s.servers[i].sysInfo.MainTotal);
-              s.servers[i].sysInfo.SwapUsage = Math.round(s.servers[i].sysInfo.SwapUsed * 100 / s.servers[i].sysInfo.SwapTotal);
-              s.servers[i].alarms = null;
-              if (s.servers[i].sysInfo.Alarms)
-              {
-                s.servers[i].alarms = s.servers[i].sysInfo.Alarms.split(',');
+              let i = response.Request.i;
+              s.servers[i].monitor = response.Response;
+              s.servers[i].monitor.data.cpuUsage = Math.round(s.servers[i].monitor.data.cpuUsage);
+              s.servers[i].monitor.data.mainUsage = Math.round(s.servers[i].monitor.data.mainUsed * 100 / s.servers[i].monitor.data.mainTotal);
+              s.servers[i].monitor.data.swapUsage = Math.round(s.servers[i].monitor.data.swapUsed * 100 / s.servers[i].monitor.data.swapTotal);
+              s.servers[i].alarms = [];
+              if (s.servers[i].monitor.alarms)
+              { 
+                s.servers[i].alarms.push(s.servers[i].monitor.alarms);
               }
               s.info.v = 'Retrieving applications for server '+s.servers[i].name+'...';
               let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name, b.id application_server_id from application a, application_server b, application_server_detail c where a.id=b.application_id and b.id=c.application_server_id and b.server_id = '+s.servers[i].id+' and c.daemon is not null and c.daemon != \'\' order by a.name', Request: {i: i}};
@@ -101,28 +101,20 @@ export default
                         for (let k = 0; k < s.servers[i].applications[j].daemons.length; k++)
                         {
                           s.info.v = 'Retrieving status for process '+s.servers[i].applications[j].daemons[k].daemon+' for application '+s.servers[i].applications[j].name+' for server '+s.servers[i].name+'...';
-                          let request = {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'process', Server: s.servers[i].name, Process: s.servers[i].applications[j].daemons[k].daemon, i: i, j: j, k: k}]};
+                          let request = {Interface: 'central', 'Function': 'monitorProcess', Request: {server: s.servers[i].name, process: s.servers[i].applications[j].daemons[k].daemon, i: i, j: j, k: k}};
                           c.wsRequest('radial', request).then((response) =>
                           {
                             let error = {};
                             s.info.v = null;
                             if (c.wsResponse(response, error))
                             {
-                              let i = response.Request[0].i;
-                              let j = response.Request[0].j;
-                              let k = response.Request[0].k;
-                              s.servers[i].applications[j].daemons[k].sysInfo = response.Response[1];
-                              if (s.servers[i].applications[j].daemons[k].sysInfo.Alarms)
+                              let i = response.Request.i;
+                              let j = response.Request.j;
+                              let k = response.Request.k;
+                              s.servers[i].applications[j].daemons[k].monitor = response.Response;
+                              if (s.servers[i].applications[j].daemons[k].monitor.alarms)
                               {
-                                let alarms = s.servers[i].applications[j].daemons[k].sysInfo.Alarms.split(',');
-                                if (!s.servers[i].alarms)
-                                {
-                                  s.servers[i].alarms = [];
-                                }
-                                for (let l = 0; l < alarms.length; l++)
-                                {
-                                  s.servers[i].alarms.push(s.servers[i].applications[j].name+' - '+s.servers[i].applications[j].daemons[k].daemon+' - '+alarms[l]);
-                                }
+                                s.servers[i].alarms.push(s.servers[i].applications[j].daemons[k].monitor.alarms);
                               }
                               s.u();
                             }
@@ -194,27 +186,27 @@ export default
       {{#each servers}}
       <tr>
         <td valign="top"><a href="#/Servers/{{id}}">{{name}}</a></td>
-        <td valign="top">
-          {{numberShort sysInfo.NumberOfProcesses 0}}
+        <td valign="top" title="{{number monitor.data.processes 0}}">
+          {{numberShort monitor.data.processes 0}}
         </td>
         <td valign="top">
           <div class="progress" style="width: 100px;">
-            <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.CpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.CpuUsage 0}}%;">
-              {{numberShort sysInfo.CpuUsage 0}}%
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{monitor.data.cpuUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort monitor.data.cpuUsage 0}}%;">
+              {{numberShort monitor.data.cpuUsage 0}}%
             </div>
           </div>
         </td>
         <td valign="top">
           <div class="progress" style="width: 100px;">
-            <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.MainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.MainUsage 0}}%;">
-              {{numberShort sysInfo.MainUsage 0}}%
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{monitor.data.mainUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort monitor.data.mainUsage 0}}%;">
+              {{numberShort monitor.data.mainUsage 0}}%
             </div>
           </div>
         </td>
         <td valign="top">
           <div class="progress" style="width: 100px;">
-            <div class="progress-bar" role="progressbar" aria-valuenow="{{sysInfo.SwapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort sysInfo.SwapUsage 0}}%;">
-              {{numberShort sysInfo.SwapUsage 0}}%
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{monitor.data.swapUsage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{numberShort monitor.data.swapUsage 0}}%;">
+              {{numberShort monitor.data.swapUsage 0}}%
             </div>
           </div>
         </td>
