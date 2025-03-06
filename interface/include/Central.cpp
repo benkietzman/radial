@@ -4231,6 +4231,7 @@ void Central::schedule(string strPrefix)
           dbfree(getServer);
         }
         // }}}
+        /*
         // {{{ analyze
         ptJson = new Json;
         if (storageRetrieve({"central", "monitor", "servers"}, ptJson, strError))
@@ -4460,6 +4461,7 @@ void Central::schedule(string strPrefix)
         }
         delete ptJson;
         // }}}
+        */
         CMonitor = CNow;
       }
       // }}}
