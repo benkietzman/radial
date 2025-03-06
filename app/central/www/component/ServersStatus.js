@@ -31,7 +31,7 @@ export default
       s.servers = null;
       s.u();
       s.info.v = 'Retrieving servers...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name from server a, application_server b, application c where a.id=b.server_id and b.application_id=c.id and (c.name = \'Central Monitor\' or c.name = \'System Information\') order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name from server a, application_server b, application c where a.id=b.server_id and b.application_id=c.id and c.name = \'Central Monitor\' order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};

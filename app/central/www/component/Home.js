@@ -67,19 +67,6 @@ export default
           s.centralMonitor = response.Response;
           s.u();
         }
-        else if (error.message == 'No results returned.');
-        {
-          let request = {Interface: 'central', 'Function': 'application', Request: {name: 'System Information'}};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            if (c.wsResponse(response, error))
-            {
-              s.centralMonitor = response.Response;
-              s.u();
-            }
-          });
-        }
       });
       request = {Interface: 'central', 'Function': 'homeUsefulTools'};
       c.wsRequest('radial', request).then((response) =>

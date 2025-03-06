@@ -4145,7 +4145,7 @@ void Central::schedule(string strPrefix)
         if (bUpdate)
         {
           ssQuery.str("");
-          ssQuery << "select c.id, c.name, c.cpu_usage, c.disk_size, c.main_memory, c.processes, c.swap_memory from application a, application_server b, `server` c where a.id = b.application_id and b.server_id = c.id and (a.name = 'Central Monitor' or a.name = 'System Information') order by c.name";
+          ssQuery << "select c.id, c.name, c.cpu_usage, c.disk_size, c.main_memory, c.processes, c.swap_memory from application a, application_server b, `server` c where a.id = b.application_id and b.server_id = c.id and a.name = 'Central Monitor' order by c.name";
           auto getServer = dbquery("central_r", ssQuery.str(), strError);
           if (getServer != NULL)
           { 
