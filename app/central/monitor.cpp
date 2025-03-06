@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
               delete ptRes;
             }
             // }}}
-            sleep(5);
+            sleep(10);
           }
           radial.utility()->sslDeinit();
           delete ptConfig;

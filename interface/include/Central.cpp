@@ -4135,7 +4135,7 @@ void Central::schedule(string strPrefix)
     if (isMasterSettled() && isMaster())
     {
       // {{{ monitor
-      if ((CNow - CMonitor) > 10)
+      if ((CNow - CMonitor) > 30)
       {
         bool bUpdate;
         m_mutex.lock();
