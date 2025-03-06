@@ -232,7 +232,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.serverDetails(s.modalServer.id);
-          s.sysInfoUpdate();
+          s.monitorUpdate();
         }
         else
         {
@@ -397,7 +397,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.serverDetails(s.modalServer.id);
-          s.sysInfoUpdate();
+          s.monitorUpdate();
         }
         else
         {
@@ -906,7 +906,7 @@ export default
           if (c.wsResponse(response, error))
           {
             s.serverDetails(s.modalServer.id);
-            s.sysInfoUpdate();
+            s.monitorUpdate();
           }
           else
           {
@@ -1021,8 +1021,8 @@ export default
         s.application.auto_register = a.setNoYes(s.application.auto_register);
         s.application.dependable = a.setNoYes(s.application.dependable);
         s.application.secure_port = a.setNoYes(s.application.secure_port);
-        c.addInterval('Applications', 'sysInfoStatus', s.sysInfoStatus, 60000);
-        s.sysInfoStatus();
+        c.addInterval('Applications', 'monitorStatus', s.monitorStatus, 60000);
+        s.monitorStatus();
       }
       // ]]]
       // [[[ Accounts
@@ -1416,8 +1416,8 @@ export default
       s.u();
     };
     // ]]]
-    // [[[ sysInfoStatus()
-    s.sysInfoStatus = () =>
+    // [[[ monitorStatus()
+    s.monitorStatus = () =>
     {
       if (s.application && s.application.id)
       {
@@ -1433,34 +1433,39 @@ export default
               {
                 if (response.Response[i].daemon)
                 {
-                  let request = {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'process', Server: response.Response[i].name, Process: response.Response[i].daemon, server_id: response.Response[i].server_id}]};
+                  let request = {Interface: 'central', 'Function': 'monitorProcess', Request: {server: response.Response[i].name, process: response.Response[i].daemon, server_id: response.Response[i].server_id}};
                   c.wsRequest('radial', request).then((response) =>
                   {
                     let error = {};
                     if (c.wsResponse(response, error))
                     {
                       let nIndex = -1;
-                      if (!s.application.sysInfo)
+                      if (!s.application.monitor)
                       {
-                        s.application.sysInfo = [];
+                        s.application.monitor = [];
                       }
-                      for (let i = 0; i < s.application.sysInfo.length; i++)
+                      for (let i = 0; i < s.application.monitor.length; i++)
                       {
-                        if (s.application.sysInfo[i].ServerID == response.Request[0].server_id && s.application.sysInfo[i].Daemon == response.Request[0].Process)
+                        if (s.application.monitor[i].ServerID == response.Request.server_id && s.application.monitor[i].Daemon == response.Request.process)
                         {
                           nIndex = i;
                         }
                       }
-                      if (nIndex == -1)
+                      let info = response.Response;
+                      let d = new Date(info.data.startTime * 1000);
+                      info.data.startDate = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+                      if (nIndex != -1)
                       {
-                        let info = {};
-                        nIndex = s.application.sysInfo.length;
-                        info.ServerID = response.Request[0].server_id;
-                        info.Server = response.Request[0].Server;
-                        info.Daemon = response.Request[0].Process;
-                        s.application.sysInfo[nIndex] = info;
+                        s.application.monitor[nIndex] = null;
                       }
-                      s.application.sysInfo[nIndex].data = response.Response[1];
+                      else
+                      {
+                        nIndex = s.application.monitor.length;
+                      }
+                      info.ServerID = response.Request.server_id;
+                      info.Server = response.Request.server;
+                      info.Daemon = response.Request.process;
+                      s.application.monitor[nIndex] = info;
                       s.u();
                     }
                     else
@@ -1481,10 +1486,10 @@ export default
       }
     };
     // ]]]
-    // [[[ sysInfoUpdate()
-    s.sysInfoUpdate = () =>
+    // [[[ monitorUpdate()
+    s.monitorUpdate = () =>
     {
-      c.wsRequest('radial', {Interface: 'junction', Request: [{Service: 'sysInfo', Action: 'update'}]}).then((response) =>
+      c.wsRequest('radial', {Interface: 'central', 'Function': 'monitorUpdate', Request: {}}).then((response) =>
       {
         let error = {};
         if (!c.wsResponse(response, error))
@@ -1736,7 +1741,7 @@ export default
       </td>
     </tr>
   </table>
-  {{#if application.sysInfo}}
+  {{#if application.monitor}}
   <table class="table table-condensed table-striped">
     <tr>
       <th>Server</th>
@@ -1744,20 +1749,20 @@ export default
       <th>Start Time</th>
       <th>Owner</th>
       <th>Processes</th>
-      <th>Image (KB)</th>
-      <th>Resident (KB)</th>
+      <th>Image</th>
+      <th>Resident</th>
       <th>Current Alarms</th>
     </tr>
-    {{#each application.sysInfo}}
+    {{#each application.monitor}}
     <tr>
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
-      <td>{{data.StartTime}}</td>
-      <td>{{json data.Owners}}</td>
-      <td>{{numberShort data.NumberOfProcesses}}</td>
-      <td>{{numberShort data.ImageSize}}</td>
-      <td>{{numberShort data.ResidentSize}}</td>
-      <td class="text-danger">{{data.Alarms}}</td>
+      <td>{{data.startDate}}</td>
+      <td>{{json data.owners}}</td>
+      <td title="{{number data.processes 0}}">{{numberShort data.processes 0}}</td>
+      <td title="{{number data.image 0}}">{{byteShort data.image 0}}</td>
+      <td title="{{number data.resident 0}}">{{byteShort data.resident 0}}</td>
+      <td class="text-danger">{{data.alarms}}</td>
     </tr>
     {{/each}}
   </table>
