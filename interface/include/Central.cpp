@@ -4214,7 +4214,7 @@ void Central::schedule(string strPrefix)
                 if (!storageAdd({"central", "monitor", "servers", server.first, "config"}, ptConfig, strError))
                 {
                   ssMessage.str("");
-                  ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",conf]:  " << strError;
+                  ssMessage << strPrefix << "->Interface::storageAdd() error [central,monitor,servers," << server.first << ",conf]:  " << strError;
                   log(ssMessage.str());
                 }
                 delete ptConfig;
@@ -4367,7 +4367,7 @@ void Central::schedule(string strPrefix)
                                 if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
                                 {
                                   ssMessage.str("");
-                                  ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
+                                  ssMessage << strPrefix << "->Interface::storageAdd() error [central,montor,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
                                   log(ssMessage.str());
                                 }
                                 if (!ssAlarmsProcess.str().empty() && !empty(ptConfigProcess, "applicationId"))
@@ -4415,13 +4415,13 @@ void Central::schedule(string strPrefix)
               else
               {
                 ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "System configuration is missing.";
-                storageRemove({"centralmon", "servers", server.first}, strError);
+                storageRemove({"central", "monitor", "servers", server.first}, strError);
               }
             }
             else
             {
               ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Configuration is missing.";
-              storageRemove({"centralmon", "servers", server.first}, strError);
+              storageRemove({"central", "monitor", "servers", server.first}, strError);
             }
             if (ptAlarms->m["system"]->v != ssAlarmsSystem.str())
             {
@@ -4429,7 +4429,7 @@ void Central::schedule(string strPrefix)
               if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "system"}, ptAlarms->m["system"], strError))
               {
                 ssMessage.str("");
-                ssMessage << strPrefix << "->Interface::storageAdd() error [centralmon,servers," << server.first << ",alarms,system]:  " << strError;
+                ssMessage << strPrefix << "->Interface::storageAdd() error [central,monitor,servers," << server.first << ",alarms,system]:  " << strError;
                 log(ssMessage.str());
               }
               if (!ssAlarmsSystem.str().empty())
@@ -4455,7 +4455,7 @@ void Central::schedule(string strPrefix)
         else
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->Interface::storageRetrieve() error [centralmon,servers]:  " << strError;
+          ssMessage << strPrefix << "->Interface::storageRetrieve() error [central,monitor,servers]:  " << strError;
           log(ssMessage.str());
         }
         delete ptJson;
