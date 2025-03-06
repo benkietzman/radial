@@ -3903,11 +3903,36 @@ bool Central::monitorSystem(radialUser &d, string &e)
 // {{{ monitorUpdate()
 bool Central::monitorUpdate(radialUser &d, string &e)
 {
-  m_mutex.lock();
-  m_bMonitorUpdate = true;
-  m_mutex.unlock();
+  bool b = false;
 
-  return true;
+  if (isMasterSettled())
+  {
+    if (isMaster())
+    {
+      b = true;
+      m_mutex.lock();
+      m_bMonitorUpdate = true;
+      m_mutex.unlock();
+    }
+    else
+    {
+      Json *ptLink = new Json(d.r);
+      ptLink->i("Interface", "central");
+      ptLink->i("Node", m_strMaster);
+      ptLink->i("Function", "monitorUpdate");
+      if (hub("link", ptLink, e))
+      {
+        b = true;
+      }
+      delete ptLink;
+    }
+  }
+  else
+  {
+    b = true;
+  }
+
+  return b;
 }
 // }}}
 // {{{ notifyPriorities()
