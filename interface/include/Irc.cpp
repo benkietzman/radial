@@ -1038,7 +1038,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             {
               if (!empty(ptResponse->m["data"], "startTime"))
               {
-                ssText << endl << "Start Time:  " << ptResponse->m["data"]->m["startTime"]->v;
+                struct tm tTime;
+                time_t CTime = atoi(ptResponse->m["data"]->m["startTime"]->v.c_str());
+                localtime_r(&CTime, &tTime);
+                ssText << endl << "Start Time:  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
               }
               if (!empty(ptResponse->m["data"], "processes"))
               {
