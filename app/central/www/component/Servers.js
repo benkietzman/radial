@@ -672,9 +672,12 @@ export default
           if (c.wsResponse(response, error))
           {
             s.server.monitor = response.Response;
-            s.server.monitor.data.mainUsage = s.server.monitor.data.mainUsed * 100 / s.server.monitor.data.mainTotal;
-            s.server.monitor.data.swapUsage = s.server.monitor.data.swapUsed * 100 / s.server.monitor.data.swapTotal;
-            s.server.monitor.data.upTime = s.server.monitor.data.upTime / 60 / 60/ 24;
+            if (c.isObject(s.server.monitor) && c.isObject(s.server.monitor.data))
+            {
+              s.server.monitor.data.mainUsage = s.server.monitor.data.mainUsed * 100 / s.server.monitor.data.mainTotal;
+              s.server.monitor.data.swapUsage = s.server.monitor.data.swapUsed * 100 / s.server.monitor.data.swapTotal;
+              s.server.monitor.data.upTime = s.server.monitor.data.upTime / 60 / 60/ 24;
+            }
             s.u();
           }
           else

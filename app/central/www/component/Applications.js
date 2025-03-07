@@ -1452,7 +1452,7 @@ export default
                         }
                       }
                       let info = response.Response;
-                      if (c.isObject(info.data))
+                      if (c.isObject(info) && c.isObject(info.data))
                       {
                         let d = new Date(info.data.startTime * 1000);
                         info.data.startDate = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');

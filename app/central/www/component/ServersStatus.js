@@ -67,13 +67,19 @@ export default
             {
               let i = response.Request.i;
               s.servers[i].monitor = response.Response;
-              s.servers[i].monitor.data.cpuUsage = Math.round(s.servers[i].monitor.data.cpuUsage);
-              s.servers[i].monitor.data.mainUsage = Math.round(s.servers[i].monitor.data.mainUsed * 100 / s.servers[i].monitor.data.mainTotal);
-              s.servers[i].monitor.data.swapUsage = Math.round(s.servers[i].monitor.data.swapUsed * 100 / s.servers[i].monitor.data.swapTotal);
-              s.servers[i].alarms = [];
-              if (s.servers[i].monitor.alarms)
-              { 
-                s.servers[i].alarms.push(s.servers[i].monitor.alarms);
+              if (c.isObject(s.servers[i].monitor))
+              {
+                if (c.isObject(s.servers[i].monitor.data))
+                {
+                  s.servers[i].monitor.data.cpuUsage = Math.round(s.servers[i].monitor.data.cpuUsage);
+                  s.servers[i].monitor.data.mainUsage = Math.round(s.servers[i].monitor.data.mainUsed * 100 / s.servers[i].monitor.data.mainTotal);
+                  s.servers[i].monitor.data.swapUsage = Math.round(s.servers[i].monitor.data.swapUsed * 100 / s.servers[i].monitor.data.swapTotal);
+                }
+                s.servers[i].alarms = [];
+                if (s.servers[i].monitor.alarms)
+                { 
+                  s.servers[i].alarms.push(s.servers[i].monitor.alarms);
+                }
               }
               s.info.v = 'Retrieving applications for server '+s.servers[i].name+'...';
               let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name, b.id application_server_id from application a, application_server b, application_server_detail c where a.id=b.application_id and b.id=c.application_server_id and b.server_id = '+s.servers[i].id+' and c.daemon is not null and c.daemon != \'\' order by a.name', Request: {i: i}};
