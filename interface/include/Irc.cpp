@@ -251,7 +251,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           // }}}
           // {{{ monitor
-          else if (strAction == "monitor")
+          else if (strFunction == "monitor")
           {
             string strServer;
             ssData >> strServer;
@@ -1128,7 +1128,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+        ssText << ":  The monitor function of the central action is used to obtain status information about a running system or process.  Please provide the server immediately following the function and follow the server with a process if you would like to obtain process information instead of system information.";
       }
     }
     // }}}
