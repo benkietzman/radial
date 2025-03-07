@@ -1088,15 +1088,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
               if (!empty(ptResponse->m["data"], "processors"))
               {
-                ssText << endl << "# Processors:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["NumberOfProcessors"]->v.c_str()), strValue);
+                ssText << endl << "# Processors:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processors"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "CpuSpeed"))
+              if (!empty(ptResponse->m["data"], "cpuSpeed"))
               {
-                ssText << endl << "CPU Speed:  " << ptResponse->m["data"]->m["CpuSpeed"]->v << " MHz";
+                ssText << endl << "CPU Speed:  " << ptResponse->m["data"]->m["cpuSpeed"]->v << " MHz";
               }
-              if (!empty(ptResponse->m["data"], "CpuUsage"))
+              if (!empty(ptResponse->m["data"], "cpuUsage"))
               {
-                ssText << endl << "CPU Usage:  " << ptResponse->m["data"]->m["CpuUsage"]->v << "%";
+                ssText << endl << "CPU Usage:  " << ptResponse->m["data"]->m["cpuUsage"]->v << "%";
               }
               if (!empty(ptResponse->m["data"], "processes"))
               {
