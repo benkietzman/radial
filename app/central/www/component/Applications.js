@@ -1435,12 +1435,6 @@ export default
                 if (response.Response[i].daemon)
                 {
                   s.application.monitor.push({Daemon: response.Response[i].daemon, Server: response.Response[i].name, ServerID: response.Response[i].server_id});
-                }
-              }
-              for (let i = 0; i < response.Response.length; i++)
-              {
-                if (response.Response[i].daemon)
-                {
                   let request = {Interface: 'central', 'Function': 'monitorProcess', Request: {server: response.Response[i].name, process: response.Response[i].daemon, server_id: response.Response[i].server_id}};
                   c.wsRequest('radial', request).then((response) =>
                   {
