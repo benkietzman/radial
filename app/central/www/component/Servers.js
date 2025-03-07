@@ -879,7 +879,7 @@ export default
         Processors:
       </th>
       <td>
-        {{server.monitor.data.processors}}@{{numberShort server.monitor.data.cpuSpeed 0}} MHz
+        {{server.monitor.data.processors}}@{{server.monitor.data.cpuSpeed}} MHz
       </td>
     </tr>
     <tr>
