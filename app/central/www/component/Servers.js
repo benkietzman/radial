@@ -1112,7 +1112,7 @@ export default
       Alarms
     </div>
     <div class="card-body text-danger">
-      {{server.monitor.data.alarms}}
+      {{server.monitor.alarms}}
     </div>
   </div>
   </div>
