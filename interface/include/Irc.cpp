@@ -1103,7 +1103,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
               if (!empty(ptResponse->m["data"], "processes"))
               {
-                ssText << endl << "# Processes:  " << ptResponse->m["data"]->m["processes"]->v;
+                ssText << endl << "# Processes:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processes"]->v.c_str()), strValue);
               }
               if (exist(ptResponse->m["data"], "partitions") && !ptResponse->m["data"]->m["partitions"]->m.empty())
               {
