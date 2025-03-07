@@ -1429,10 +1429,12 @@ export default
           {
             if (response.Response)
             {
+              s.application.monitor = [];
               for (let i = 0; i < response.Response.length; i++)
               {
                 if (response.Response[i].daemon)
                 {
+                  s.application.monitor.push({Daemon: response.Response[i].daemon, Server: response.Response[i].name, ServerID: response.Response[i].server_id});
                   let request = {Interface: 'central', 'Function': 'monitorProcess', Request: {server: response.Response[i].name, process: response.Response[i].daemon, server_id: response.Response[i].server_id}};
                   c.wsRequest('radial', request).then((response) =>
                   {
@@ -1440,10 +1442,6 @@ export default
                     if (c.wsResponse(response, error))
                     {
                       let nIndex = -1;
-                      if (!s.application.monitor)
-                      {
-                        s.application.monitor = [];
-                      }
                       for (let i = 0; i < s.application.monitor.length; i++)
                       {
                         if (s.application.monitor[i].ServerID == response.Request.server_id && s.application.monitor[i].Daemon == response.Request.process)
@@ -1451,25 +1449,20 @@ export default
                           nIndex = i;
                         }
                       }
-                      let info = response.Response;
-                      if (c.isObject(info) && c.isObject(info.data))
-                      {
-                        let d = new Date(info.data.startTime * 1000);
-                        info.data.startDate = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
-                      }
                       if (nIndex != -1)
                       {
-                        s.application.monitor[nIndex] = null;
+                        let info = response.Response;
+                        if (c.isObject(info) && c.isObject(info.data))
+                        {
+                          let d = new Date(info.data.startTime * 1000);
+                          info.data.startDate = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+                        }
+                        info.ServerID = response.Request.server_id;
+                        info.Server = response.Request.server;
+                        info.Daemon = response.Request.process;
+                        s.application.monitor[nIndex] = info;
+                        s.u();
                       }
-                      else
-                      {
-                        nIndex = s.application.monitor.length;
-                      }
-                      info.ServerID = response.Request.server_id;
-                      info.Server = response.Request.server;
-                      info.Daemon = response.Request.process;
-                      s.application.monitor[nIndex] = info;
-                      s.u();
                     }
                     else
                     {
