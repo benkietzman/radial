@@ -4231,7 +4231,6 @@ void Central::schedule(string strPrefix)
           dbfree(getServer);
         }
         // }}}
-        /*
         // {{{ analyze
         ptJson = new Json;
         if (storageRetrieve({"central", "monitor", "servers"}, ptJson, strError))
@@ -4310,17 +4309,14 @@ void Central::schedule(string strPrefix)
                               }
                               else
                               {
-                                if (!empty(ptConfigProcess, "owner"))
+                                if (exist(ptDataProcess, "owners") && !empty(ptConfigProcess, "owner"))
                                 {
                                   bool bFound = false;
-                                  if (exist(ptDataProcess, "owners"))
+                                  for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
                                   {
-                                    for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
+                                    if (ptConfigProcess->m["owner"]->v == ownerIter->first)
                                     {
-                                      if (ptConfigProcess->m["owner"]->v == ownerIter->first)
-                                      {
-                                        bFound = true;
-                                      }
+                                      bFound = true;
                                     }
                                   }
                                   if (!bFound)
@@ -4461,7 +4457,6 @@ void Central::schedule(string strPrefix)
         }
         delete ptJson;
         // }}}
-        */
         CMonitor = CNow;
       }
       // }}}
