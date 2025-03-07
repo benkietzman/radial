@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "centralmon", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
+  list<string> actions = {"alert", "central", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -250,6 +250,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
           }
           // }}}
+          // {{{ monitor
+          else if (strAction == "monitor")
+          {
+            string strServer;
+            ssData >> strServer;
+            if (!strServer.empty())
+            {
+              string strProcess;
+              ssData >> strProcess;
+              ptRequest->i("Server", strServer);
+              if (!strProcess.empty())
+              {
+                ptRequest->i("Process", strProcess);
+              }
+            }
+          }
+          // }}}
           // {{{ server
           else if (strFunction == "server")
           {
@@ -329,23 +346,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
           }
           // }}}
-        }
-      }
-      // }}}
-      // {{{ centralmon
-      else if (strAction == "centralmon")
-      {
-        string strServer;
-        ssData >> strServer;
-        if (!strServer.empty())
-        {
-          string strProcess;
-          ssData >> strProcess;
-          ptRequest->i("Server", strServer);
-          if (!strProcess.empty())
-          {
-            ptRequest->i("Process", strProcess);
-          }
         }
       }
       // }}}
@@ -1017,6 +1017,121 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // }}}
     }
     // }}}
+    // {{{ monitor
+    else if (strFunction == "monitor")
+    {
+      string strServer = var("Server", ptData);
+      if (!strServer.empty())
+      {
+        string strProcess = var("Process", ptData);
+        Json *ptResponse = new Json;
+        ssText << " " << char(3) << "00,14 " << strServer << " " << char(3);
+        if (!strProcess.empty())
+        {
+          ssText << " " << char(3) << "00,14 " << strProcess << " " << char(3);
+        }
+        if (centralmon(strServer, strProcess, ptResponse, strError))
+        {
+          if (exist(ptResponse, "data"))
+          {
+            if (!strProcess.empty())
+            {
+              if (!empty(ptResponse->m["data"], "startTime"))
+              {
+                ssText << endl << "Start Time:  " << ptResponse->m["data"]->m["startTime"]->v;
+              }
+              if (!empty(ptResponse->m["data"], "processes"))
+              {
+                ssText << endl << "# Processes:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processes"]->v.c_str()), strValue);
+              }
+              if (!empty(ptResponse->m["data"], "image"))
+              {
+                ssText << endl << "Image:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["image"]->v.c_str()), strValue);
+              }
+              if (!empty(ptResponse->m["data"], "resident"))
+              {
+                ssText << endl << "Resident:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["resident"]->v.c_str()), strValue);
+              }
+              if (exist(ptResponse->m["data"], "owners") && !ptResponse->m["data"]->m["owners"]->m.empty())
+              {
+                bool bFirst = true;
+                ssText << endl << "Process Owners:  (";
+                for (auto &i : ptResponse->m["data"]->m["owners"]->m)
+                {
+                  ssText << ((bFirst)?"":", ") << i.first << ":  " << m_manip.toShort(atof(i.second->v.c_str()), strValue) << " processes";
+                  bFirst = false;
+                }
+                ssText << ")";
+              }
+            }
+            else
+            {
+              if (!empty(ptResponse->m["data"], "operatingSystem"))
+              {
+                ssText << endl << "Operating System:  " << ptResponse->m["data"]->m["operatingSystem"]->v;
+              }
+              if (!empty(ptResponse->m["data"], "systemRelease"))
+              {
+                ssText << endl << "System Release:  " << ptResponse->m["data"]->m["systemRelease"]->v;
+              }
+              if (!empty(ptResponse->m["data"], "upTime"))
+              {
+                ssText << endl << "Uptime:  " << m_manip.toShort((atof(ptResponse->m["data"]->m["upTime"]->v.c_str()) / 60 / 60 / 24), strValue) << " days";
+              }
+              if (!empty(ptResponse->m["data"], "mainUsed") && !empty(ptResponse->m["data"], "mainTotal"))
+              {
+                ssText << endl << "Memory Used:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["mainUsed"]->v.c_str()), strValue) << " of " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["mainTotal"]->v.c_str()), strValue);
+              }
+              if (!empty(ptResponse->m["data"], "swapUsed") && !empty(ptResponse->m["data"], "swapTotal"))
+              {
+                ssText << endl << "Swap Used:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["swapUsed"]->v.c_str()), strValue) << " of " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["swapTotal"]->v.c_str()), strValue);
+              }
+              if (!empty(ptResponse->m["data"], "processors"))
+              {
+                ssText << endl << "# Processors:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["NumberOfProcessors"]->v.c_str()), strValue);
+              }
+              if (!empty(ptResponse->m["data"], "CpuSpeed"))
+              {
+                ssText << endl << "CPU Speed:  " << ptResponse->m["data"]->m["CpuSpeed"]->v << " MHz";
+              }
+              if (!empty(ptResponse->m["data"], "CpuUsage"))
+              {
+                ssText << endl << "CPU Usage:  " << ptResponse->m["data"]->m["CpuUsage"]->v << "%";
+              }
+              if (!empty(ptResponse->m["data"], "processes"))
+              {
+                ssText << endl << "# Processes:  " << ptResponse->m["data"]->m["processes"]->v;
+              }
+              if (exist(ptResponse->m["data"], "partitions") && !ptResponse->m["data"]->m["partitions"]->m.empty())
+              {
+                bool bFirst = true;
+                ssText << endl << "partitions:  (";
+                for (auto &i : ptResponse->m["data"]->m["partitions"]->m)
+                {
+                  ssText << ((bFirst)?"":", ") << i.first << ":  " << i.second->v << "% full";
+                  bFirst = false;
+                }
+                ssText << ")";
+              }
+            }
+          }
+          if (!empty(ptResponse, "alarms"))
+          {
+            ssText << endl << "Alarms:  " << char(3) << "04" << ptResponse->m["alarms"]->v << char(3);
+          }
+        }
+        else
+        {
+          ssText << " error:  " << strError;
+        }
+        delete ptResponse;
+      }
+      else
+      {
+        ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
+      }
+    }
+    // }}}
     // {{{ server
     else if (strFunction == "server")
     {
@@ -1439,133 +1554,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, server, user." << endl;
     }
     // }}}
-  }
-  // }}}
-  // {{{ centralmon
-  else if (strAction == "centralmon")
-  {
-    string strServer = var("Server", ptData);
-    if (!strServer.empty())
-    {
-      string strProcess = var("Process", ptData);
-      Json *ptResponse = new Json;
-      ssText << " " << char(3) << "00,14 " << strServer << " " << char(3);
-      if (!strProcess.empty())
-      {
-        ssText << " " << char(3) << "00,14 " << strProcess << " " << char(3);
-      }
-      if (centralmon(strServer, strProcess, ptResponse, strError))
-      {
-        if (!strProcess.empty())
-        {
-          if (!empty(ptResponse, "StartTime"))
-          {
-            ssText << endl << "Start Time:  " << ptResponse->m["StartTime"]->v;
-          }
-          if (!empty(ptResponse, "NumberOfProcesses"))
-          {
-            ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
-          }
-          if (!empty(ptResponse, "ImageSize"))
-          {
-            ssText << endl << "Image Size:  " << ptResponse->m["ImageSize"]->v << " KB";
-          }
-          if (!empty(ptResponse, "ResidentSize"))
-          {
-            ssText << endl << "Resident Size:  " << ptResponse->m["ResidentSize"]->v << " KB";
-          }
-          if (exist(ptResponse, "Owners") && !ptResponse->m["Owners"]->m.empty())
-          {
-            bool bFirst = true;
-            ssText << endl << "Process Owners:  (";
-            for (auto &i : ptResponse->m["Owners"]->m)
-            {
-              ssText << ((bFirst)?"":", ") << i.first << ":  " << i.second->v << " processes";
-              bFirst = false;
-            }
-            ssText << ")";
-          }
-        }
-        else
-        {
-          if (!empty(ptResponse, "OperatingSystem"))
-          {
-            ssText << endl << "Operating System:  " << ptResponse->m["OperatingSystem"]->v;
-          }
-          if (!empty(ptResponse, "SystemRelease"))
-          {
-            ssText << endl << "System Release:  " << ptResponse->m["SystemRelease"]->v;
-          }
-          if (!empty(ptResponse, "UpTime"))
-          {
-            ssText << endl << "Uptime:  " << ptResponse->m["UpTime"]->v << " days";
-          }
-          if (!empty(ptResponse, "MainUsed") && !empty(ptResponse, "MainTotal"))
-          {
-            ssText << endl << "Memory Used:  " << ptResponse->m["MainUsed"]->v << " of " << ptResponse->m["MainTotal"]->v << " MB";
-          }
-          if (!empty(ptResponse, "SwapUsed") && !empty(ptResponse, "SwapTotal"))
-          {
-            ssText << endl << "Swap Used:  " << ptResponse->m["SwapUsed"]->v << " of " << ptResponse->m["SwapTotal"]->v << " MB";
-          }
-          if (!empty(ptResponse, "NumberOfProcessors"))
-          {
-            ssText << endl << "# Processors:  " << ptResponse->m["NumberOfProcessors"]->v;
-          }
-          if (!empty(ptResponse, "CpuSpeed"))
-          {
-            ssText << endl << "CPU Speed:  " << ptResponse->m["CpuSpeed"]->v << " MHz";
-          }
-          if (!empty(ptResponse, "CpuUsage"))
-          {
-            ssText << endl << "CPU Usage:  " << ptResponse->m["CpuUsage"]->v << "%";
-          }
-          if (!empty(ptResponse, "NumberOfProcesses"))
-          {
-            ssText << endl << "# Processes:  " << ptResponse->m["NumberOfProcesses"]->v;
-          }
-          if (exist(ptResponse, "Partitions") && !ptResponse->m["Partitions"]->m.empty())
-          {
-            bool bFirst = true;
-            ssText << endl << "Partitions:  (";
-            for (auto &i : ptResponse->m["Partitions"]->m)
-            {
-              ssText << ((bFirst)?"":", ") << i.first << ":  " << i.second->v << "% full";
-              bFirst = false;
-            }
-            ssText << ")";
-          }
-        }
-        if (exist(ptResponse, "Alarms") && (!ptResponse->m["Alarms"]->l.empty() || !ptResponse->m["Alarms"]->v.empty()))
-        {
-          ssText << endl << "Alarms:  (";
-          if (!ptResponse->m["Alarms"]->l.empty())
-          {
-            bool bFirst = true;
-            for (auto &i : ptResponse->m["Alarms"]->l)
-            {
-              ssText << char(3) << "04" << ((bFirst)?"":", ") << i->v << char(3);
-              bFirst = false;
-            }
-            ssText << ")";
-          }
-          else
-          {
-            ssText << char(3) << "04" << ptResponse->m["Alarms"]->v << char(3);
-          }
-          ssText << ")";
-        }
-      }
-      else
-      {
-        ssText << " error:  " << strError;
-      }
-      delete ptResponse;
-    }
-    else
-    {
-      ssText << ":  The centralmon action is used to obtain status information about a running system or process.  Please provide the server immediately following the action and follow the server if you would like to obtain process information instead of system information.";
-    }
   }
   // }}}
   // {{{ command

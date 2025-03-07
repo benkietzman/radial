@@ -546,13 +546,14 @@ bool Interface::centralmon(const string strServer, const string strProcess, Json
   bool bResult = false;
   Json *ptJson = new Json;
 
-  ptJson->i("Function", ((!strProcess.empty())?"process":"system"));
-  ptJson->i("Server", strServer);
+  ptJson->i("Function", ((!strProcess.empty())?"monitorProcess":"monitorSystem"));
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("server", strServer);
   if (!strProcess.empty())
   {
-    ptJson->i("Process", strProcess);
+    ptJson->m["Request"]->i("process", strProcess);
   }
-  if (hub("centralmon", ptJson, strError))
+  if (hub("central", ptJson, strError))
   {
     bResult = true;
     if (exist(ptJson, "Response"))
