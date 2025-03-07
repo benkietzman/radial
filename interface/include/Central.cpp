@@ -4406,7 +4406,7 @@ void Central::schedule(string strPrefix)
                 }
                 else
                 {
-                  ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Server appears to be offline.";
+                  //ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Server appears to be offline.";
                 }
               }
               else
