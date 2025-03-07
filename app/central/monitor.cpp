@@ -146,6 +146,11 @@ int main(int argc, char *argv[])
   {
     Warden warden("Radial", strWarden, strError);
     setlocale(LC_ALL, "");
+    if (!strConf.empty())
+    {
+      strError.clear();
+      warden.utility()->setConfPath(strConf, strError);
+    }
     if (strError.empty())
     {
       string strPassword;
