@@ -4397,7 +4397,7 @@ void Central::schedule(string strPrefix)
                     else
                     {
                       ssMessage.str("");
-                      ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data is stale.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolate master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
+                      ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data is stale.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
                       chat("#system", ssMessage.str(), strError);
                     }
                   }
@@ -4409,7 +4409,7 @@ void Central::schedule(string strPrefix)
                 else
                 {
                   ssMessage.str("");
-                  ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Server appears to be offline.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolate master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
+                  ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Server appears to be offline.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
                   chat("#system", ssMessage.str(), strError);
                 }
               }
