@@ -122,7 +122,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "command", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
+  list<string> actions = {"alert", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -349,8 +349,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
       }
       // }}}
-      // {{{ command
-      else if (strAction == "command")
+      // {{{ command || cmd
+      else if (strAction == "command" || strAction == "cmd")
       {
         string strNode;
         ssData >> strNode;
@@ -1559,8 +1559,8 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     // }}}
   }
   // }}}
-  // {{{ command
-  else if (strAction == "command")
+  // {{{ command || cmd
+  else if (strAction == "command" || strAction == "cmd")
   {
     if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
     {
