@@ -34,7 +34,7 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
   load(strPrefix, true);
   m_pThreadDataAccept = new thread(&Data::dataAccept, this, strPrefix);
   pthread_setname_np(m_pThreadDataAccept->native_handle(), "dataAccept");
-  watches[m_strData] = {"data.json"};
+  watches[m_strData + "/data"] = {"config.json"};
   m_pThreadInotify = new thread(&Data::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
   m_pThreadSchedule = new thread(&Data::schedule, this, strPrefix);
@@ -139,7 +139,7 @@ void Data::callbackInotify(string strPrefix, const string strPath, const string 
   stringstream ssMessage;
 
   strPrefix += "->Data::callbackInotify()";
-  if (strPath == m_strData && strFile == "data.json")
+  if (strPath == m_strData && strFile == "config.json")
   {
     load(strPrefix);
   }
@@ -698,7 +698,7 @@ void Data::load(string strPrefix, const bool bSilent)
   stringstream ssConf, ssMessage;
 
   strPrefix += "->Data::load()";
-  ssConf << m_strData << "/data.json";
+  ssConf << m_strData << "/data/config.json";
   inConf.open(ssConf.str());
   if (inConf)
   {
@@ -719,7 +719,7 @@ void Data::load(string strPrefix, const bool bSilent)
   else if (!bSilent)
   {
     ssMessage.str("");
-    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/data.json]:  " << strerror(errno);
+    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/data/config.json]:  " << strerror(errno);
     log(ssMessage.str());
   }
   inConf.close();
