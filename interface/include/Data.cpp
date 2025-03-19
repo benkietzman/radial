@@ -789,7 +789,7 @@ bool Data::token(radialUser &d, string &e)
   m_mutex.lock();
   c = new Json(m_c);
   m_mutex.unlock();
-  if (c != NULL && exist(c, "data"))
+  if (c != NULL)
   {
     if (!empty(i, "handle"))
     {
@@ -806,93 +806,83 @@ bool Data::token(radialUser &d, string &e)
       }
       if (bValidPath)
       {
-        if (exist(c->m["data"], i->m["handle"]->v))
+        if (exist(c, i->m["handle"]->v))
         {
-          if (exist(c->m["data"]->m[i->m["handle"]->v], "nodes"))
+          auto nodeIter = c->m[i->m["handle"]->v]->m.end();
+          for (auto n = c->m[i->m["handle"]->v]->m.begin(); nodeIter == c->m[i->m["handle"]->v]->m.end() && n != c->m[i->m["handle"]->v]->m.end(); n++)
           {
-            auto nodeIter = c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l.end();
-            for (auto n = c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l.begin(); nodeIter == c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l.end() && n != c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l.end(); n++)
+            if (n->first == m_strNode)
             {
-              if ((*n)->v == m_strNode)
-              {
-                nodeIter = n;
-              }
+              nodeIter = n;
             }
-            if (nodeIter != c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l.end())
+          }
+          if (nodeIter != c->m[i->m["handle"]->v]->m.end())
+          {
+            if (!empty(c->m["data"]->m[i->m["handle"]->v], "path"))
             {
-              if (!empty(c->m["data"]->m[i->m["handle"]->v], "path"))
+              char md5string[33];
+              EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+              string t;
+              stringstream ssIdent;
+              timespec start;
+              unsigned char digest[16];
+              b = true;
+              clock_gettime(CLOCK_REALTIME, &start);
+              ssIdent << m_strNode << "," << i->m["handle"]->v << "," << start.tv_sec << "," << start.tv_nsec;
+              EVP_DigestInit(ctx, EVP_md5());
+              EVP_DigestUpdate(ctx, ssIdent.str().c_str(), ssIdent.str().size());
+              EVP_DigestFinal(ctx, digest, NULL);
+              EVP_MD_CTX_destroy(ctx);
+              for (int j = 0; j < 16; j++)
               {
-                char md5string[33];
-                EVP_MD_CTX *ctx = EVP_MD_CTX_create();
-                string t;
-                stringstream ssIdent;
-                timespec start;
-                unsigned char digest[16];
-                b = true;
-                clock_gettime(CLOCK_REALTIME, &start);
-                ssIdent << m_strNode << "," << i->m["handle"]->v << "," << start.tv_sec << "," << start.tv_nsec;
-                EVP_DigestInit(ctx, EVP_md5());
-                EVP_DigestUpdate(ctx, ssIdent.str().c_str(), ssIdent.str().size());
-                EVP_DigestFinal(ctx, digest, NULL);
-                EVP_MD_CTX_destroy(ctx);
-                for (int j = 0; j < 16; j++)
-                {
-                  sprintf(&md5string[j*2], "%02x", (unsigned int)digest[j]);
-                }
-                t = md5string;
-                o->i("node", m_strNode);
-                o->i("token", t);
-                m_mutex.lock();
-                m_dataTokens[t] = start.tv_sec;
-                i->i("_path", c->m["data"]->m[i->m["handle"]->v]->m["path"]->v);
-                delete i->m["handle"];
-                i->m.erase("handle");
-                m_dataRequests[t] = new Json(i);
-                m_mutex.unlock();
+                sprintf(&md5string[j*2], "%02x", (unsigned int)digest[j]);
               }
-              else
-              {
-                e = "Path not defined for handle.";
-              }
+              t = md5string;
+              o->i("node", m_strNode);
+              o->i("token", t);
+              m_mutex.lock();
+              m_dataTokens[t] = start.tv_sec;
+              i->i("_path", c->m[i->m["handle"]->v]->m[m_strNode]->v);
+              delete i->m["handle"];
+              i->m.erase("handle");
+              m_dataRequests[t] = new Json(i);
+              m_mutex.unlock();
             }
             else
             {
-              vector<string> nodes;
-              for (auto &node : c->m["data"]->m[i->m["handle"]->v]->m["nodes"]->l)
-              {
-                if (!node->v.empty())
-                {
-                  nodes.push_back(node->v);
-                }
-              }
-              if (!nodes.empty())
-              {
-                unsigned int unSeed = time(NULL);
-                Json *ptLink = new Json(d.r);
-                ptLink->i("Interface", "data");
-                ptLink->i("Node", nodes[rand_r(&unSeed) % nodes.size()]);
-                if (hub("link", ptLink, e))
-                {
-                  if (exist(ptLink, "Response"))
-                  {
-                    d.p->m["o"]->merge(ptLink->m["Response"], true, false);
-                  }
-                  else
-                  {
-                    e = "Failed to receive the Response.";
-                  }
-                }
-                delete ptLink;
-              }
-              else
-              {
-                e = "No available nodes for this handle.";
-              }
+              e = "Path not defined for handle.";
             }
           }
           else
           {
-            e = "Node not defined for handle.";
+            vector<string> nodes;
+            for (auto &node : c->m[i->m["handle"]->v]->m)
+            {
+              nodes.push_back(node.first);
+            }
+            if (!nodes.empty())
+            {
+              unsigned int unSeed = time(NULL);
+              Json *ptLink = new Json(d.r);
+              ptLink->i("Interface", "data");
+              ptLink->i("Node", nodes[rand_r(&unSeed) % nodes.size()]);
+              if (hub("link", ptLink, e))
+              {
+                if (exist(ptLink, "Response"))
+                {
+                  d.p->m["o"]->merge(ptLink->m["Response"], true, false);
+                }
+                else
+                {
+                  e = "Failed to receive the Response.";
+                }
+              }
+              delete ptLink;
+            }
+            else
+            {
+              e = "No available nodes for this handle.";
+            }
           }
         }
         else
@@ -912,7 +902,7 @@ bool Data::token(radialUser &d, string &e)
   }
   else
   {
-    e = "Data config not loaded.";
+    e = "Config not loaded.";
   }
   delete c;
 
