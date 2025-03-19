@@ -7,12 +7,13 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/auth bin/central bin/command bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
+	install --mode=775 bin/data $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/db $(prefix)/radial/interface/
 	install --mode=775 bin/feedback $(prefix)/radial/interface/
@@ -74,6 +75,16 @@ obj/command.o: command.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c command.cpp -o obj/command.o $(CPPFLAGS) -I../../common
 obj/Command.o: include/Command.cpp obj
 	g++ -ggdb -Wall -c include/Command.cpp -o obj/Command.o $(CPPFLAGS) -I/usr/local/include -I../../common
+# }}}
+# {{{ data
+data: bin/data $(prefix)/radial/interface
+	install --mode=775 bin/data $(prefix)/radial/interface/
+bin/data: ../../common/libcommon.a obj/data.o obj/Base.o obj/Interface.o obj/Data.o bin
+	g++ -o bin/data obj/data.o obj/Base.o obj/Interface.o obj/Data.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+obj/data.o: data.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c data.cpp -o obj/data.o $(CPPFLAGS) -I../../common
+obj/Data.o: include/Data.cpp obj
+	g++ -ggdb -Wall -c include/Data.cpp -o obj/Data.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ database
 database: bin/database $(prefix)/radial/interface

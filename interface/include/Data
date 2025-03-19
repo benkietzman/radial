@@ -1,0 +1,63 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Database
+// author     : Ben Kietzman
+// begin      : 2025-03-11
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_DATA_
+#define _RADIAL_DATA_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Data
+class Data : public Interface
+{
+  protected:
+  map<string, time_t> m_dataTokens; 
+  map<string, Json *> m_dataRequests;
+  map<string, bool (Data::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+  thread *m_pThreadDataAccept;
+  thread *m_pThreadInotify;
+  thread *m_pThreadSchedule;
+  Json *m_c;
+
+  void dataAccept(string strPrefix);
+  bool dataConnect(radialUser &d, const string h, SSL_CTX **ctx, SSL **ssl, vector<string> &buffers, string &e);
+  void dataDisconnect(SSL_CTX *ctx, SSL *ssl);
+  void dataError(int &fd, const string e);
+  void dataOkay(int &fd);
+  bool dataRead(SSL *ssl, vector<string> &buffers, map<string, string> &row, string &e);
+  bool dataRead(SSL *ssl, vector<string> &buffers, Json *row, string &e);
+  void dataResponse(const string t, int &fd);
+  void dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx);
+  void dataStatus(int &fd, const bool b, const string e = "");
+  void dataWrite(int &fd, map<string, string> row);
+  void dataWrite(int &fd, Json *row);
+  void load(string strPrefix, const bool bSilent = false);
+  void schedule(string strPrefix);
+  bool token(radialUser &d, string &e);
+
+  public:
+  Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string));
+  ~Data();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
+};
+// }}}
+}
+}
+#endif

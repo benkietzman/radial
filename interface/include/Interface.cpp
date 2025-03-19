@@ -1172,6 +1172,351 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
   return bResult;
 }
 // }}}
+// {{{ data
+// {{{ dataConnect()
+bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, vector<string> &buffers, string &e)
+{
+  bool r = false;
+  int fdSocket;
+  string n, t;
+  stringstream ssMessage;
+  Json *ptJson = new Json;
+
+  while (buffers.size() < 2)
+  {
+    buffers.push_back("");
+  }
+  ptJson->i("Function", "token");
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("handle", h);
+  if (!p.empty())
+  {
+    ptJson->m["Request"]->m["path"] = new Json;
+    for (auto &item : p)
+    {
+      ptJson->m["Request"]->m["path"]->pb(item);
+    }
+  }
+  if (hub("data", ptJson, e))
+  {
+    if (exist(ptJson, "Response"))
+    {
+      if (!empty(ptJson->m["Response"], "node"))
+      {
+        if (ptJson->m["Response"]->m["node"]->v != m_strNode)
+        {
+          n = ptJson->m["Response"]->m["node"]->v;
+        }
+        if (!empty(ptJson->m["Response"], "token"))
+        {
+          t = ptJson->m["Response"]->m["token"]->v;
+        }
+        else
+        {
+          e = "Failed to receive the token within the Response.";
+        }
+      }
+      else
+      {
+        e = "Failed to receive the node within the Response.";
+      }
+    }
+    else
+    {
+      e = "Failed to receive the Response.";
+    }
+  }
+  delete ptJson;
+  if (!t.empty())
+  {
+    string s;
+    if (n.empty())
+    {
+      s = "localhost";
+    }
+    else
+    {
+      m_mutexShare.lock();
+      auto l = m_l.end();
+      for (auto i = m_l.begin(); l == m_l.end() && i != m_l.end(); i++)
+      {
+        if ((*i)->strNode == n)
+        {
+          l = i;
+        }
+      }
+      if (l != m_l.end())
+      {
+        s = (*l)->strServer;
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << m_strNode << " does not have a link toward " << n << ".";
+        e = ssMessage.str();
+      }
+      m_mutexShare.unlock();
+    }
+    if (!s.empty())
+    {
+      if (m_pUtility->connect(s, "3282", fdSocket, e))
+      {
+        if (((*ctx) = m_pUtility->sslInitClient(e)) != NULL)
+        {
+          if (((*ssl) = m_pUtility->sslConnect((*ctx), fdSocket, e)) != NULL)
+          {
+            bool bExit = false, bWantWrite = false;
+            int nReturn;
+            size_t unPosition;
+            string strLine;
+            time_t CTime[2] = {0, 0};
+            time(&(CTime[0]));
+            CTime[1] = CTime[0];
+            buffers[1] = t + "\n";
+            while (!bExit && (CTime[1] - CTime[0]) <= 10)
+            {
+              pollfd fds[1];
+              fds[0].fd = fdSocket;
+              fds[0].events = POLLIN;
+              if (bWantWrite || !buffers[1].empty())
+              {
+                fds[0].events |= POLLOUT;
+              }
+              if ((nReturn = poll(fds, 1, 2000)) > 0)
+              {
+                bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+                if (bReadable)
+                {
+                  if (m_pUtility->sslRead((*ssl), buffers[0], nReturn))
+                  {
+                    bWantWrite = false;
+                    if (nReturn <= 0)
+                    {
+                      switch (SSL_get_error((*ssl), nReturn))
+                      {
+                        case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+                      }
+                    }
+                    if ((unPosition = buffers[0].find("\n")) != string::npos)
+                    {
+                      Json *ptJson = new Json(buffers[0].substr(0, unPosition));
+                      buffers[0].erase(0, (unPosition + 1));
+                      bExit = true;
+                      if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
+                      {
+                        r = true;
+                      }
+                      else
+                      {
+                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.");
+                      }
+                      delete ptJson;
+                    }
+                  }
+                  else
+                  {
+                    bExit = true;
+                    if (nReturn < 0 && errno != 104)
+                    {
+                      ssMessage.str("");
+                      ssMessage << "Utility::sslRead(" << SSL_get_error((*ssl), nReturn) << ") " << m_pUtility->sslstrerror((*ssl), nReturn);
+                      e = ssMessage.str();
+                    }
+                  }
+                }
+                if (bWritable)
+                {
+                  if (m_pUtility->sslWrite((*ssl), buffers[1], nReturn))
+                  {
+                    bWantWrite = false;
+                    if (nReturn <= 0)
+                    {
+                      switch (SSL_get_error((*ssl), nReturn))
+                      {
+                        case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+                      }
+                    }
+                  }
+                  else
+                  {
+                    bExit = true;
+                    if (nReturn < 0)
+                    {
+                      ssMessage.str("");
+                      ssMessage << "Utility::sslWrite(" << SSL_get_error((*ssl), nReturn) << ") " << m_pUtility->sslstrerror((*ssl), nReturn);
+                      e = ssMessage.str();
+                    }
+                  }
+                }
+                if (fds[0].revents & POLLERR)
+                {
+                  bExit = true;
+                  ssMessage.str("");
+                  ssMessage << "poll() Encountered a POLLERR.";
+                  e = ssMessage.str();
+                }
+                if (fds[0].revents & POLLNVAL)
+                {
+                  bExit = true;
+                  ssMessage.str("");
+                  ssMessage << "poll() Encountered a POLLNVAL.";
+                  e = ssMessage.str();
+                }
+              }
+              else if (nReturn < 0 && errno != EINTR)
+              {
+                bExit = true;
+                ssMessage.str("");
+                ssMessage << "poll(" << errno << ") " << strerror(errno);
+                e = ssMessage.str();
+              }
+              if (shutdown())
+              {
+                bExit = true;
+                e = "Interface is shutting down.";
+              }
+              time(&CTime[1]);
+            }
+            if (!bExit)
+            {
+              e = "Timed out waiting for response.";
+            }
+            if (!r)
+            {
+              dataDisconnect((*ctx), (*ssl));
+            }
+          }
+          else
+          {
+            SSL_CTX_free((*ctx));
+            (*ctx) = NULL;
+          }
+        }
+        else
+        {
+          close(fdSocket);
+        }
+      }
+    }
+  }
+
+  return r;
+}
+// }}}
+// {{{ dataDisconnect()
+void Interface::dataDisconnect(SSL_CTX *ctx, SSL *ssl)
+{
+  if (ssl != NULL)
+  {
+    int fdSocket = SSL_get_fd(ssl);
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+    ssl = NULL;
+    close(fdSocket);
+  }
+  if (ctx != NULL)
+  {
+    SSL_CTX_free(ctx);
+    ctx = NULL;
+  }
+}
+// }}}
+// {{{ dataRead()
+bool Interface::dataRead(SSL *ssl, vector<string> &buffers, string &e)
+{
+  bool bExit = false, bWantWrite = false, r = false;
+  int fdSocket = SSL_get_fd(ssl), nReturn;
+  string strLine;
+  stringstream ssMessage;
+
+  while (buffers.size() < 2)
+  {
+    buffers.push_back("");
+  }
+  while (!bExit)
+  {
+    pollfd fds[1];
+    fds[0].fd = fdSocket;
+    fds[0].events = POLLIN;
+    if (bWantWrite)
+    {
+      fds[0].events |= POLLOUT;
+    }
+    if ((nReturn = poll(fds, 1, 2000)) > 0)
+    {
+      bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+      if (bReadable)
+      {
+        if (m_pUtility->sslRead(ssl, buffers[0], nReturn))
+        {
+          bExit = r = true;
+          bWantWrite = false;
+          if (nReturn <= 0)
+          {
+            switch (SSL_get_error(ssl, nReturn))
+            {
+              case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+            }
+          }
+        }
+        else
+        {
+          bExit = true;
+          if (nReturn < 0 && errno != 104)
+          {
+            ssMessage.str("");
+            ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+            e = ssMessage.str();
+          }
+        }
+      }
+      if (bWritable)
+      {
+        if (m_pUtility->sslWrite(ssl, buffers[1], nReturn))
+        {
+          bWantWrite = false;
+          if (nReturn <= 0)
+          {
+            switch (SSL_get_error(ssl, nReturn))
+            {
+              case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+            }
+          }
+        }
+      }
+      if (fds[0].revents & POLLERR)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << "poll() Encountered a POLLERR.";
+        e = ssMessage.str();
+      }
+      if (fds[0].revents & POLLNVAL)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << "poll() Encountered a POLLNVAL.";
+        e = ssMessage.str();
+      }
+    }
+    else if (nReturn < 0 && errno != EINTR)
+    {
+      bExit = true;
+      ssMessage.str("");
+      ssMessage << "poll(" << errno << ") " << strerror(errno);
+      e = ssMessage.str();
+    }
+    if (shutdown())
+    {
+      bExit = true;
+      e = "Interface is shutting down.";
+    }
+  }
+
+  return r;
+}
+// }}}
+// }}}
 // {{{ db
 // {{{ db()
 bool Interface::db(const string f, Json *d, string &e)
@@ -3201,7 +3546,7 @@ bool Interface::sqliteCreate(const string strDatabase, const string strNode, str
 {
   bool bResult = false;
   Json *ptJson = new Json;
-  
+
   ptJson->i("Interface", "sqlite");
   ptJson->i("Function", "create");
   ptJson->m["Request"] = new Json;
@@ -3210,18 +3555,18 @@ bool Interface::sqliteCreate(const string strDatabase, const string strNode, str
   if (hub("sqlite", ptJson, strError))
   {
     bResult = true;
-  } 
+  }
   delete ptJson;
-  
+
   return bResult;
-} 
-// }}}  
+}
+// }}}
 // {{{ sqliteDrop()
 bool Interface::sqliteDrop(const string strDatabase, const string strNode, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
-  
+
   ptJson->i("Interface", "sqlite");
   ptJson->i("Function", "drop");
   ptJson->m["Request"] = new Json;
