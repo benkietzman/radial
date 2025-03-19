@@ -1314,7 +1314,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             if (!getPerson->empty())
             {
               map<string, string> getPersonRow = getPerson->front();
-              ssText << "Name:  " << getPersonRow["last_name"] << ", " << getPersonRow["first_name"] << "(" << strUser << "), Email:  " << getPersonRow["email"] << ", Pager:  " << getPersonRow["pager"] << ", Active:  " << ((getPersonRow["active"] == "1")?"Yes":"No") << ", Admin:  " << ((getPersonRow["admin"] == "1")?"Yes":"No") << ", Locked:  " << ((getPersonRow["locked"] == "1")?"Yes":"No");
+              ssText << " Name:  " << getPersonRow["last_name"] << ", " << getPersonRow["first_name"] << "(" << strUser << "), Email:  " << getPersonRow["email"] << ", Pager:  " << getPersonRow["pager"] << ", Active:  " << ((getPersonRow["active"] == "1")?"Yes":"No") << ", Admin:  " << ((getPersonRow["admin"] == "1")?"Yes":"No") << ", Locked:  " << ((getPersonRow["locked"] == "1")?"Yes":"No");
               getPersonRow.clear();
             }
             else
