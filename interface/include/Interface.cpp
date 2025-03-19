@@ -1174,7 +1174,7 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
 // }}}
 // {{{ data
 // {{{ dataConnect()
-bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, vector<string> &buffers, string &e)
+bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &e)
 {
   bool r = false;
   int fdSocket;
@@ -1182,10 +1182,6 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
   stringstream ssMessage;
   Json *ptJson = new Json;
 
-  while (buffers.size() < 2)
-  {
-    buffers.push_back("");
-  }
   ptJson->i("Function", "token");
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("handle", h);
@@ -1268,17 +1264,16 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
             bool bExit = false, bWantWrite = false;
             int nReturn;
             size_t unPosition;
-            string strLine;
+            string strBufferOut = t + "\n", strLine;
             time_t CTime[2] = {0, 0};
             time(&(CTime[0]));
             CTime[1] = CTime[0];
-            buffers[1] = t + "\n";
             while (!bExit && (CTime[1] - CTime[0]) <= 10)
             {
               pollfd fds[1];
               fds[0].fd = fdSocket;
               fds[0].events = POLLIN;
-              if (bWantWrite || !buffers[1].empty())
+              if (bWantWrite || !strBufferOut.empty())
               {
                 fds[0].events |= POLLOUT;
               }
@@ -1287,7 +1282,7 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                 bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
                 if (bReadable)
                 {
-                  if (m_pUtility->sslRead((*ssl), buffers[0], nReturn))
+                  if (m_pUtility->sslRead((*ssl), strBuffer, nReturn))
                   {
                     bWantWrite = false;
                     if (nReturn <= 0)
@@ -1297,10 +1292,10 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                         case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
                       }
                     }
-                    if ((unPosition = buffers[0].find("\n")) != string::npos)
+                    if ((unPosition = strBuffer.find("\n")) != string::npos)
                     {
-                      Json *ptJson = new Json(buffers[0].substr(0, unPosition));
-                      buffers[0].erase(0, (unPosition + 1));
+                      Json *ptJson = new Json(strBuffer.substr(0, unPosition));
+                      strBuffer.erase(0, (unPosition + 1));
                       bExit = true;
                       if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                       {
@@ -1326,7 +1321,7 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                 }
                 if (bWritable)
                 {
-                  if (m_pUtility->sslWrite((*ssl), buffers[1], nReturn))
+                  if (m_pUtility->sslWrite((*ssl), strBufferOut, nReturn))
                   {
                     bWantWrite = false;
                     if (nReturn <= 0)
@@ -1422,17 +1417,13 @@ void Interface::dataDisconnect(SSL_CTX *ctx, SSL *ssl)
 }
 // }}}
 // {{{ dataRead()
-bool Interface::dataRead(SSL *ssl, vector<string> &buffers, string &e)
+bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e)
 {
   bool bExit = false, bWantWrite = false, r = false;
   int fdSocket = SSL_get_fd(ssl), nReturn;
   string strLine;
   stringstream ssMessage;
 
-  while (buffers.size() < 2)
-  {
-    buffers.push_back("");
-  }
   while (!bExit)
   {
     pollfd fds[1];
@@ -1447,7 +1438,7 @@ bool Interface::dataRead(SSL *ssl, vector<string> &buffers, string &e)
       bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
       if (bReadable)
       {
-        if (m_pUtility->sslRead(ssl, buffers[0], nReturn))
+        if (m_pUtility->sslRead(ssl, strBuffer, nReturn))
         {
           bExit = r = true;
           bWantWrite = false;
@@ -1472,7 +1463,8 @@ bool Interface::dataRead(SSL *ssl, vector<string> &buffers, string &e)
       }
       if (bWritable)
       {
-        if (m_pUtility->sslWrite(ssl, buffers[1], nReturn))
+        string strBufferOut;
+        if (m_pUtility->sslWrite(ssl, strBufferOut, nReturn))
         {
           bWantWrite = false;
           if (nReturn <= 0)
