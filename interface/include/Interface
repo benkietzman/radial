@@ -108,7 +108,7 @@ class Interface : public Base
   bool cronParseMonth(string &strValue, string &strError);
   bool cronParseValue(const size_t unType, string strValue, int &nValue, string &strError);
   bool curl(const string strURL, const string strType, Json *ptAuth, Json *ptGet, Json *ptPost, Json *ptPut, const string strProxy, string &strCookies, string &strHeader, string &strContent, string &strError, const string strUserAgent = "", const bool bMobile = false, const bool bFailOnError = true, const string strCustomRequest = "");
-  bool dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &e);
+  bool dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &strType, string &e);
   void dataDisconnect(SSL_CTX *ctx, SSL *ssl);
   bool dataRead(SSL *ssl, string &strBuffer, string &e);
   bool db(const string f, Json *d, string &e);

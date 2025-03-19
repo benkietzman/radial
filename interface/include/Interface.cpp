@@ -1174,7 +1174,7 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
 // }}}
 // {{{ data
 // {{{ dataConnect()
-bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &e)
+bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &strType, string &e)
 {
   bool r = false;
   int fdSocket;
@@ -1300,6 +1300,10 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                       if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                       {
                         r = true;
+                        if (!empty(ptJson, "Type"))
+                        {
+                          strType = ptJson->m["Type"]->v;
+                        }
                       }
                       else
                       {

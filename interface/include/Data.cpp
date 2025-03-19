@@ -299,8 +299,11 @@ void Data::dataResponse(const string t, int &fd)
   {
     if (!empty(i, "_path"))
     {
-      int fdData;
+      bool bExit = false;
+      int fdData, nReturn;
+      string b, t;
       stringstream p;
+      Json *j;
       p << i->m["_path"]->v;
       delete i->m["_path"];
       i->m.erase("_path");
@@ -314,13 +317,68 @@ void Data::dataResponse(const string t, int &fd)
           }
         }
       }
-      if ((fdData = open(p.str().c_str(), O_RDONLY)) >= 0)
+      if (m_file.directoryExist(p.str()))
       {
-        bool bClose = false, bExit = false;
-        int nReturn;
-        string b, t;
-        Json *j = new Json;
+        DIR *pDir;
+        if ((pDir = opendir(p.str().c_str())) != NULL)
+        {
+          string n;
+          struct dirent *pEntry;
+          j = new Json;
+          j->i("Status", "okay");
+          j->i("Type", "directory");
+          j->j(b);
+          delete j;
+          b.append("\n");
+          j = new Json;
+          while ((pEntry = readdir(pDir)) != NULL)
+          {
+            n = pEntry->d_name;
+            if (n != "." && n != "..")
+            {
+              j->i(pEntry->d_name, ((pEntry->d_type == DT_DIR)?"directory":"file"));
+            }
+          }
+          closedir(pDir);
+          j->j(t);
+          delete j;
+          t.append("\n");
+          b.append(t);
+          while (!bExit)
+          {
+            pollfd fds[1];
+            fds[0].fd = fd;
+            fds[0].events = 0;
+            if (!b.empty())
+            {
+              fds[0].events |= POLLOUT;
+            }
+            if ((nReturn = poll(fds, 1, 2000)) > 0)
+            {
+              if (((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn)) || ((fds[0].revents & POLLOUT) && (!m_pUtility->fdWrite(fds[0].fd, b, nReturn) || b.empty())) || (fds[0].revents & (POLLERR | POLLNVAL)))
+              {
+                bExit = true;
+              }
+            }
+            else if (nReturn < 0 && errno != EINTR)
+            {
+              bExit = true;
+            }
+          }
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << "opendir(" << errno << ") " << strerror(errno);
+          dataError(fd, ssMessage.str());
+        }
+      }
+      else if ((fdData = open(p.str().c_str(), O_RDONLY)) >= 0)
+      {
+        bool bClose = false;
+        j = new Json;
         j->i("Status", "okay");
+        j->i("Type", "file");
         j->j(b);
         delete j;
         b.append("\n");
