@@ -57,23 +57,6 @@ Data::~Data()
   m_pUtility->sslDeinit();
 }
 // }}}
-// {{{ autoMode()
-void Data::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
-{
-  string strError;
-  stringstream ssMessage;
-
-  threadIncrement();
-  strPrefix += "->Data::autoMode()";
-  if (strOldMaster != strNewMaster)
-  {
-    ssMessage.str("");
-    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
-    log(ssMessage.str());
-  }
-  threadDecrement();
-}
-// }}}
 // {{{ callback()
 void Data::callback(string strPrefix, const string strPacket, const bool bResponse)
 {

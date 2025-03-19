@@ -15,7 +15,6 @@
 #include "include/Data"
 using namespace radial;
 Data *gpData = NULL;
-void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 void callbackInotify(string strPrefix, const string strPath, const string strFile);
 int main(int argc, char *argv[])
@@ -23,14 +22,9 @@ int main(int argc, char *argv[])
   string strPrefix = "data->main()";
   gpData = new Data(strPrefix, argc, argv, &callback, &callbackInotify);
   gpData->enableWorkers();
-  gpData->setAutoMode(&autoMode);
   gpData->process(strPrefix);
   delete gpData;
   return 0;
-}
-void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
-{
-  gpData->autoMode(strPrefix, strOldMaster, strNewMaster);
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
