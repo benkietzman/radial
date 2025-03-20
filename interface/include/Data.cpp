@@ -322,7 +322,7 @@ void Data::dataResponse(const string t, int &fd)
         DIR *pDir;
         if ((pDir = opendir(p.str().c_str())) != NULL)
         {
-          string n;
+          string n, strType;
           struct dirent *pEntry;
           j = new Json;
           j->i("Status", "okay");
@@ -336,7 +336,19 @@ void Data::dataResponse(const string t, int &fd)
             n = pEntry->d_name;
             if (n != "." && n != "..")
             {
-              j->i(pEntry->d_name, ((pEntry->d_type == DT_DIR)?"directory":"file"));
+              switch (pEntry->d_type)
+              {
+                case DT_BLK     : strType = "block device";           break;
+                case DT_CHR     : strType = "character device";       break;
+                case DT_DIR     : strType = "directory";              break;
+                case DT_FIFO    : strType = "named pipe";             break;
+                case DT_LNK     : strType = "symbolic link";          break;
+                case DT_REG     : strType = "regular file";           break;
+                case DT_SOCK    : strType = "UNIX domain socket";     break;
+                case DT_UNKNOWN : strType = "unknown";                break;
+                default         : strType = "undefined";
+              }
+              j->i(pEntry->d_name, strType);
             }
           }
           closedir(pDir);
