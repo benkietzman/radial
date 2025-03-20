@@ -406,7 +406,7 @@ void Data::dataResponse(const string t, int &fd)
         while (!bExit)
         {
           pollfd fds[2];
-          fds[0].fd = fdData;
+          fds[0].fd = ((b.size() < (2031616))?fdData:-1);
           fds[0].events = POLLIN;
           fds[1].fd = fd;
           fds[1].events = POLLIN;
