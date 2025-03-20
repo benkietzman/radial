@@ -448,22 +448,22 @@ chat("#radial", "fdRead[1]:  exit");
             {
               if (m_pUtility->fdWrite(fds[1].fd, b, nReturn))
               {
-chat("#radial", (string)"fdRead[1]:  " + to_string(nReturn));
-                if (bClose && b.empty())
-                {
-chat("#radial", "fdRead[1]:  complete");
-                  bExit = true;
-                }
+chat("#radial", (string)"fdWrite[1]:  " + to_string(nReturn));
               }
               else
               {
-chat("#radial", "fdRead[1]:  exit");
+chat("#radial", "fdWrite[1]:  exit");
                 bExit = true;
               }
             }
             if (fds[1].revents & (POLLERR | POLLNVAL))
             {
 chat("#radial", "fdRead[1]:  error");
+              bExit = true;
+            }
+            if (bClose && b.empty())
+            {
+chat("#radial", "fdWrite[1]:  complete");
               bExit = true;
             }
           }
