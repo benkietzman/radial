@@ -911,7 +911,10 @@ bool Data::token(radialUser &d, string &e)
             vector<string> nodes;
             for (auto &node : c->m[i->m["handle"]->v]->m)
             {
-              nodes.push_back(node.first);
+              if (node.first != m_strNode)
+              {
+                nodes.push_back(node.first);
+              }
             }
             if (!nodes.empty())
             {
