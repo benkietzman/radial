@@ -403,7 +403,7 @@ chat("#radial", b);
           fds[0].fd = fdData;
           fds[0].events = POLLIN;
           fds[1].fd = fd;
-          fds[1].events = 0;
+          fds[1].events = POLLIN;
           if (!b.empty())
           {
             fds[1].events |= POLLOUT;
