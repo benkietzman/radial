@@ -110,7 +110,7 @@ class Interface : public Base
   bool curl(const string strURL, const string strType, Json *ptAuth, Json *ptGet, Json *ptPost, Json *ptPut, const string strProxy, string &strCookies, string &strHeader, string &strContent, string &strError, const string strUserAgent = "", const bool bMobile = false, const bool bFailOnError = true, const string strCustomRequest = "");
   bool dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &strType, string &e);
   void dataDisconnect(SSL_CTX *ctx, SSL *ssl);
-  bool dataRead(SSL *ssl, string &strBuffer, string &e);
+  bool dataRead(SSL *ssl, string &strBuffer, string &e, const bool bReadAll = false);
   bool db(const string f, Json *d, string &e);
   bool db(const string f, Json *d, string &q, string &e);
   bool db(const string f, Json *d, string &id, string &q, string &e);

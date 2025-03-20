@@ -1421,7 +1421,7 @@ void Interface::dataDisconnect(SSL_CTX *ctx, SSL *ssl)
 }
 // }}}
 // {{{ dataRead()
-bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e)
+bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bReadAll)
 {
   bool bExit = false, bWantWrite = false, r = false;
   int fdSocket = SSL_get_fd(ssl), nReturn;
@@ -1444,7 +1444,10 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e)
       {
         if (m_pUtility->sslRead(ssl, strBuffer, nReturn))
         {
-          bExit = r = true;
+          if (!bReadAll)
+          {
+            bExit = r = true;
+          }
           bWantWrite = false;
           if (nReturn <= 0)
           {
@@ -1457,7 +1460,11 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e)
         else
         {
           bExit = true;
-          if (nReturn < 0 && errno != 104)
+          if (bReadAll && nReturn == 0)
+          {
+            r = true;
+          }
+          else if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
             ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
