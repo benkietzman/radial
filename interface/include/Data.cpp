@@ -208,6 +208,7 @@ void Data::dataAccept(string strPrefix)
               socklen_t clilen = sizeof(cli_addr);
               if ((fdClient = ::accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
+chat("#radial", "accept");
                 thread threadDataSocket(&Data::dataSocket, this, strPrefix, fdClient, ctx);
                 pthread_setname_np(threadDataSocket.native_handle(), "dataSocket");
                 threadDataSocket.detach();
@@ -287,7 +288,6 @@ void Data::dataResponse(const string t, int &fd)
   stringstream ssMessage;
   Json *i = NULL;
   threadIncrement();
-  // }}}
   m_mutex.lock();
   if (m_dataRequests.find(t) != m_dataRequests.end())
   {
@@ -295,6 +295,8 @@ void Data::dataResponse(const string t, int &fd)
     m_dataRequests.erase(t);
   }
   m_mutex.unlock();
+  // }}}
+chat("#radial", "dataResponse");
   if (i != NULL)
   {
     if (!empty(i, "_path"))
@@ -393,6 +395,7 @@ void Data::dataResponse(const string t, int &fd)
         j->i("Type", "file");
         j->j(b);
         delete j;
+chat("#radial", b);
         b.append("\n");
         while (!bExit)
         {
@@ -473,6 +476,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   // }}}
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
+chat("#radial", "sslAccept");
     int fdResponse[2] = {-1, -1}, nReturn;
     if ((nReturn = pipe(fdResponse)) == 0)
     {
@@ -521,6 +525,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               else if ((unPosition = strBuffers[0].find("\n")) != string::npos)
               {
                 string strToken = strBuffers[0].substr(0, unPosition);
+chat("#radial", (string)"token:  " + strToken);
                 strBuffers[0].erase(0, (unPosition + 1));
                 bToken = true;
                 m_mutex.lock();
