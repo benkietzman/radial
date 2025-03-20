@@ -336,6 +336,7 @@ void Data::dataResponse(const string t, int &fd)
             n = pEntry->d_name;
             if (n != "." && n != "..")
             {
+              j->m[n] = new Json;
               switch (pEntry->d_type)
               {
                 case DT_BLK     : strType = "block device";           break;
@@ -348,7 +349,15 @@ void Data::dataResponse(const string t, int &fd)
                 case DT_UNKNOWN : strType = "unknown";                break;
                 default         : strType = "undefined";
               }
-              j->i(pEntry->d_name, strType);
+              j->m[n]->i("Type", strType);
+              if (pEntry->d_type == DT_REG)
+              {
+                struct stat tStat;
+                if (stat((p.str() + (string)"/" + n).c_str(), &tStat) == 0)
+                {
+                  j->m[n]->i("Size", to_string(tStat.st_size), 'n');
+                }
+              }
             }
           }
           closedir(pDir);
