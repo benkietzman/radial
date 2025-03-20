@@ -871,7 +871,7 @@ bool Data::token(radialUser &d, string &e)
           }
           if (nodeIter != c->m[i->m["handle"]->v]->m.end())
           {
-            if (!empty(c->m[i->m["handle"]->v], "path"))
+            if (!nodeIter->second->v.empty())
             {
               char md5string[33];
               EVP_MD_CTX *ctx = EVP_MD_CTX_create();
@@ -895,7 +895,7 @@ bool Data::token(radialUser &d, string &e)
               o->i("token", t);
               m_mutex.lock();
               m_dataTokens[t] = start.tv_sec;
-              i->i("_path", c->m[i->m["handle"]->v]->m[m_strNode]->v);
+              i->i("_path", nodeIter->second->v);
               delete i->m["handle"];
               i->m.erase("handle");
               m_dataRequests[t] = new Json(i);
