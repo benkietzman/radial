@@ -410,19 +410,60 @@ chat("#radial", b);
           }
           if ((nReturn = poll(fds, 2, 2000)) > 0)
           {
-            if ((fds[0].revents & POLLIN) && !m_pUtility->fdRead(fds[0].fd, b, nReturn))
+            if (fds[0].revents & POLLIN)
             {
-              if (nReturn == 0)
+              if (m_pUtility->fdRead(fds[0].fd, b, nReturn))
               {
+chat("#radial", (string)"fdRead[0]:  " + to_string(nReturn));
+              }
+              else if (nReturn == 0)
+              {
+chat("#radial", "fdRead[0]:  close");
                 bClose = true;
               }
               else
               {
+chat("#radial", "fdRead[0]:  exit");
                 bExit = true;
               }
             }
-            if ((fds[0].revents & (POLLERR | POLLNVAL)) || ((fds[1].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn)) || ((fds[1].revents & POLLOUT) && (!m_pUtility->fdWrite(fds[1].fd, b, nReturn) || (bClose && b.empty()))) || (fds[1].revents & (POLLERR | POLLNVAL)))
+            if (fds[0].revents & (POLLERR | POLLNVAL))
             {
+chat("#radial", "fdRead[0]:  error");
+              bExit = true;
+            }
+            if (fds[1].revents & (POLLHUP | POLLIN))
+            {
+              if (m_pUtility->fdRead(fds[1].fd, t, nReturn))
+              {
+chat("#radial", (string)"fdRead[1]:  " + to_string(nReturn));
+              }
+              else
+              {
+chat("#radial", "fdRead[1]:  exit");
+                bExit = true;
+              }
+            }
+            if (fds[1].revents & POLLOUT)
+            {
+              if (m_pUtility->fdWrite(fds[1].fd, b, nReturn))
+              {
+chat("#radial", (string)"fdRead[1]:  " + to_string(nReturn));
+                if (bClose && b.empty())
+                {
+chat("#radial", "fdRead[1]:  complete");
+                  bExit = true;
+                }
+              }
+              else
+              {
+chat("#radial", "fdRead[1]:  exit");
+                bExit = true;
+              }
+            }
+            if (fds[1].revents & (POLLERR | POLLNVAL))
+            {
+chat("#radial", "fdRead[1]:  error");
               bExit = true;
             }
           }
