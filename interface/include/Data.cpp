@@ -208,7 +208,6 @@ void Data::dataAccept(string strPrefix)
               socklen_t clilen = sizeof(cli_addr);
               if ((fdClient = ::accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
-chat("#radial", "accept");
                 thread threadDataSocket(&Data::dataSocket, this, strPrefix, fdClient, ctx);
                 pthread_setname_np(threadDataSocket.native_handle(), "dataSocket");
                 threadDataSocket.detach();
@@ -296,7 +295,6 @@ void Data::dataResponse(const string t, int &fd)
   }
   m_mutex.unlock();
   // }}}
-chat("#radial", "dataResponse");
   if (i != NULL)
   {
     if (!empty(i, "_path"))
@@ -395,7 +393,6 @@ chat("#radial", "dataResponse");
         j->i("Type", "file");
         j->j(b);
         delete j;
-chat("#radial", b);
         b.append("\n");
         while (!bExit)
         {
@@ -412,58 +409,20 @@ chat("#radial", b);
           {
             if (fds[0].revents & POLLIN)
             {
-              if (m_pUtility->fdRead(fds[0].fd, b, nReturn))
+              if (!m_pUtility->fdRead(fds[0].fd, b, nReturn))
               {
-chat("#radial", (string)"fdRead[0]:  " + to_string(nReturn));
-              }
-              else if (nReturn == 0)
-              {
-chat("#radial", "fdRead[0]:  close");
-                bClose = true;
-              }
-              else
-              {
-chat("#radial", "fdRead[0]:  exit");
-                bExit = true;
+                if (nReturn == 0)
+                {
+                  bClose = true;
+                }
+                else
+                {
+                  bExit = true;
+                }
               }
             }
-            if (fds[0].revents & (POLLERR | POLLNVAL))
+            if ((fds[0].revents & (POLLERR | POLLNVAL)) || ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn)) || ((fds[1].revents & POLLOUT) && !m_pUtility->fdWrite(fds[1].fd, b, nReturn)) || (fds[1].revents & (POLLERR | POLLNVAL)) || (!bExit && bClose && b.empty()))
             {
-chat("#radial", "fdRead[0]:  error");
-              bExit = true;
-            }
-            if (fds[1].revents & (POLLHUP | POLLIN))
-            {
-              if (m_pUtility->fdRead(fds[1].fd, t, nReturn))
-              {
-chat("#radial", (string)"fdRead[1]:  " + to_string(nReturn));
-              }
-              else
-              {
-chat("#radial", "fdRead[1]:  exit");
-                bExit = true;
-              }
-            }
-            if (fds[1].revents & POLLOUT)
-            {
-              if (m_pUtility->fdWrite(fds[1].fd, b, nReturn))
-              {
-chat("#radial", (string)"fdWrite[1]:  " + to_string(nReturn));
-              }
-              else
-              {
-chat("#radial", "fdWrite[1]:  exit");
-                bExit = true;
-              }
-            }
-            if (fds[1].revents & (POLLERR | POLLNVAL))
-            {
-chat("#radial", "fdRead[1]:  error");
-              bExit = true;
-            }
-            if (bClose && b.empty())
-            {
-chat("#radial", "fdWrite[1]:  complete");
               bExit = true;
             }
           }
@@ -517,7 +476,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   // }}}
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
-chat("#radial", "sslAccept");
     int fdResponse[2] = {-1, -1}, nReturn;
     if ((nReturn = pipe(fdResponse)) == 0)
     {
@@ -566,7 +524,6 @@ chat("#radial", "sslAccept");
               else if ((unPosition = strBuffers[0].find("\n")) != string::npos)
               {
                 string strToken = strBuffers[0].substr(0, unPosition);
-chat("#radial", (string)"token:  " + strToken);
                 strBuffers[0].erase(0, (unPosition + 1));
                 bToken = true;
                 m_mutex.lock();
