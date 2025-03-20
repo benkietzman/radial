@@ -871,7 +871,7 @@ bool Data::token(radialUser &d, string &e)
           }
           if (nodeIter != c->m[i->m["handle"]->v]->m.end())
           {
-            if (!empty(c->m["data"]->m[i->m["handle"]->v], "path"))
+            if (!empty(c->m[i->m["handle"]->v], "path"))
             {
               char md5string[33];
               EVP_MD_CTX *ctx = EVP_MD_CTX_create();
