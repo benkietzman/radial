@@ -699,13 +699,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
 }
 // }}}
 // {{{ dataWrite()
-void Data::dataWrite(int &fd, map<string, string> row)
-{
-  Json *j = new Json(row);
-
-  dataWrite(fd, j);
-  delete j;
-}
 void Data::dataWrite(int &fd, Json *row)
 {
   string b;
