@@ -323,7 +323,7 @@ void Data::dataResponse(const string t, int &fd)
         if ((pDir = opendir(p.str().c_str())) != NULL)
         {
           string n, strType;
-          struct dirent *pEntry;
+          struct dirent *ptEntry;
           j = new Json;
           j->i("Status", "okay");
           j->i("Type", "directory");
@@ -331,13 +331,13 @@ void Data::dataResponse(const string t, int &fd)
           delete j;
           b.append("\n");
           j = new Json;
-          while ((pEntry = readdir(pDir)) != NULL)
+          while ((ptEntry = readdir(pDir)) != NULL)
           {
-            n = pEntry->d_name;
+            n = ptEntry->d_name;
             if (n != "." && n != "..")
             {
               j->m[n] = new Json;
-              switch (pEntry->d_type)
+              switch (ptEntry->d_type)
               {
                 case DT_BLK     : strType = "block device";           break;
                 case DT_CHR     : strType = "character device";       break;
@@ -350,7 +350,7 @@ void Data::dataResponse(const string t, int &fd)
                 default         : strType = "undefined";
               }
               j->m[n]->i("Type", strType);
-              if (pEntry->d_type == DT_REG)
+              if (ptEntry->d_type == DT_REG)
               {
                 struct stat tStat;
                 if (stat((p.str() + (string)"/" + n).c_str(), &tStat) == 0)
