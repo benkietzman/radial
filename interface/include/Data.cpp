@@ -269,6 +269,7 @@ void Data::dataAccept(string strPrefix)
 // {{{ dataError()
 void Data::dataError(int &fd, const string e)
 {
+  string b;
   Json *j = new Json;
 
   j->i("Status", "error");
@@ -276,8 +277,50 @@ void Data::dataError(int &fd, const string e)
   {
     j->i("Error", e);
   }
-  dataWrite(fd, j);
+  j->j(b);
   delete j;
+  b += "\n";
+  if (fd != -1 && !b.empty())
+  {
+    bool bClose = false, bExit = false;
+    int nReturn;
+    while (!bExit)
+    {
+      pollfd fds[1];
+      fds[0].fd = fd;
+      fds[0].events = POLLOUT;
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
+      {
+        if (fds[0].revents & POLLOUT)
+        {
+          if (m_pUtility->fdWrite(fds[0].fd, b, nReturn))
+          {
+            if (b.empty())
+            {
+              bExit = true;
+            }
+          }
+          else
+          {
+            bClose = bExit = true;
+          }
+        }
+        if (fds[0].revents & (POLLERR | POLLNVAL))
+        {
+          bClose = bExit = true;
+        }
+      }
+      else if (!bExit && nReturn < 0 && errno != EINTR)
+      {
+        bClose = bExit = true;
+      }
+    }
+    if (bClose)
+    {
+      close(fd);
+      fd = -1;
+    }
+  }
 }
 // }}}
 // {{{ dataResponse()
@@ -696,56 +739,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   close(fdSocket);
   threadDecrement();
   // }}}
-}
-// }}}
-// {{{ dataWrite()
-void Data::dataWrite(int &fd, Json *row)
-{
-  string b;
-
-  row->j(b);
-  b += "\n";
-  if (fd != -1 && !b.empty())
-  {
-    bool bClose = false, bExit = false;
-    int nReturn;
-    while (!bExit)
-    {
-      pollfd fds[1];
-      fds[0].fd = fd;
-      fds[0].events = POLLOUT;
-      if ((nReturn = poll(fds, 1, 2000)) > 0)
-      {
-        if (fds[0].revents & POLLOUT)
-        {
-          if (m_pUtility->fdWrite(fds[0].fd, b, nReturn))
-          {
-            if (b.empty())
-            {
-              bExit = true;
-            }
-          }
-          else
-          {
-            bClose = bExit = true;
-          }
-        }
-        if (fds[0].revents & (POLLERR | POLLNVAL))
-        {
-          bClose = bExit = true;
-        }
-      }
-      else if (!bExit && nReturn < 0 && errno != EINTR)
-      {
-        bClose = bExit = true;
-      }
-    }
-    if (bClose)
-    {
-      close(fd);
-      fd = -1;
-    }
-  }
 }
 // }}}
 // }}}
