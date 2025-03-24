@@ -346,7 +346,7 @@ void Data::dataResponse(const string t, int &fd)
     if (!empty(i, "_path"))
     {
       bool bExit = false;
-      chat szBuffer[67108864];
+      char szBuffer[67108864];
       int fdData, nReturn;
       string b, p, t;
       stringstream sp;
