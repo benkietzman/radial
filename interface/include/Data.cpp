@@ -24,8 +24,8 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
 {
   map<string, list<string> > watches;
   //m_pUtility->setReadSize(67108864);
-  m_pUtility->setReadSize(4096);
-  m_pUtility->setSslWriteSize(67108864);
+  //m_pUtility->setReadSize(4096);
+  //m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
   m_functions["status"] = &Data::status;
   m_functions["token"] = &Data::token;
@@ -462,7 +462,7 @@ void Data::dataResponse(const string t, int &fd)
         while (!bExit)
         {
           pollfd fds[2];
-          fds[0].fd = fdData;
+          fds[0].fd = ((b.size() < 262144)?fdData:-1);
           fds[0].events = POLLIN;
           fds[1].fd = fd;
           fds[1].events = POLLIN;
