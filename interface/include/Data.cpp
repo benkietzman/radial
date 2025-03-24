@@ -259,6 +259,9 @@ void Data::dataAccept(string strPrefix)
       ssMessage << strPrefix << "->" << ((!bBound[1])?"socket":"bind") << "(" << errno << ") error:  "  << strerror(errno);
       log(ssMessage.str());
     }
+    // {{{ post work
+    SSL_CTX_free(ctx);
+    // }}}
   }
   // {{{ post work
   setShutdown();
