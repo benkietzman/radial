@@ -422,7 +422,15 @@ void Data::dataResponse(const string t, int &fd)
             }
             if ((nReturn = poll(fds, 1, 2000)) > 0)
             {
-              if (((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn)) || ((fds[0].revents & POLLOUT) && (!m_pUtility->fdWrite(fds[0].fd, b, nReturn) || b.empty())) || (fds[0].revents & (POLLERR | POLLNVAL)))
+              if ((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn))
+              {
+                bExit = true;
+              }
+              if ((fds[0].revents & POLLOUT) && (!m_pUtility->fdWrite(fds[0].fd, b, nReturn) || b.empty()))
+              {
+                bExit = true;
+              }
+              if (fds[0].revents & (POLLERR | POLLNVAL))
               {
                 bExit = true;
               }
@@ -462,21 +470,30 @@ void Data::dataResponse(const string t, int &fd)
           }
           if ((nReturn = poll(fds, 2, 2000)) > 0)
           {
-            if (fds[0].revents & POLLIN)
+            if ((fds[0].revents & POLLIN) && !m_pUtility->fdRead(fds[0].fd, b, nReturn))
             {
-              if (!m_pUtility->fdRead(fds[0].fd, b, nReturn))
+              if (nReturn == 0)
               {
-                if (nReturn == 0)
-                {
-                  bClose = true;
-                }
-                else
-                {
-                  bExit = true;
-                }
+                bClose = true;
+              }
+              else
+              {
+                bExit = true;
               }
             }
-            if ((fds[0].revents & (POLLERR | POLLNVAL)) || ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn)) || ((fds[1].revents & POLLOUT) && !m_pUtility->fdWrite(fds[1].fd, b, nReturn)) || (fds[1].revents & (POLLERR | POLLNVAL)) || (!bExit && bClose && b.empty()))
+            if (fds[0].revents & (POLLERR | POLLNVAL))
+            {
+              bExit = true;
+            }
+            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
+            {
+              bExit = true;
+            }
+            if ((fds[1].revents & POLLOUT) && !m_pUtility->fdWrite(fds[1].fd, b, nReturn))
+            {
+              bExit = true;
+            }
+            if (fds[1].revents & (POLLERR | POLLNVAL))
             {
               bExit = true;
             }
@@ -487,6 +504,10 @@ void Data::dataResponse(const string t, int &fd)
           }
           if (bClose)
           {
+            if (b.empty())
+            {
+              bExit = true;
+            }
             close(fdData);
             fdData = -1;
           }
