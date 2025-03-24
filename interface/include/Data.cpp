@@ -676,14 +676,14 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               }
             }
           }
-          else if (fds[1].revents & POLLERR)
+          if (fds[1].revents & POLLERR)
           {
             bExit = true;
             ssMessage.str("");
             ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
             log(ssMessage.str());
           }
-          else if (fds[1].revents & POLLNVAL)
+          if (fds[1].revents & POLLNVAL)
           {
             bExit = true;
             ssMessage.str("");
