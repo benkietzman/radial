@@ -346,6 +346,7 @@ void Data::dataResponse(const string t, int &fd)
     if (!empty(i, "_path"))
     {
       bool bExit = false;
+      chat szBuffer[67108864];
       int fdData, nReturn;
       string b, p, t;
       stringstream sp;
@@ -423,7 +424,7 @@ void Data::dataResponse(const string t, int &fd)
             }
             if ((nReturn = poll(fds, 1, 2000)) > 0)
             {
-              if ((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn))
+              if ((fds[0].revents & (POLLIN | POLLHUP)) && (nReturn = read(fds[0].fd, szBuffer, 67108864)) <= 0)
               {
                 bExit = true;
               }
@@ -471,9 +472,13 @@ void Data::dataResponse(const string t, int &fd)
           }
           if ((nReturn = poll(fds, 2, 2000)) > 0)
           {
-            if ((fds[0].revents & POLLIN) && !m_pUtility->fdRead(fds[0].fd, b, nReturn))
+            if (fds[0].revents & POLLIN)
             {
-              if (nReturn == 0)
+              if ((nReturn = read(fds[0].fd, szBuffer, 67108864)) > 0)
+              {
+                b.append(szBuffer, nReturn);
+              }
+              else if (nReturn == 0)
               {
                 bClose = true;
               }
@@ -486,7 +491,7 @@ void Data::dataResponse(const string t, int &fd)
             {
               bExit = true;
             }
-            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
+            if ((fds[1].revents & (POLLHUP | POLLIN)) && read(fds[1].fd, szBuffer, 67108864) <= 0)
             {
               bExit = true;
             }
