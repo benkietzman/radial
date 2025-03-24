@@ -23,8 +23,8 @@ namespace radial
 Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "data", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
-  m_pUtility->setReadSize(67108864);
-  m_pUtility->setSslWriteSize(67108864);
+  m_pUtility->setReadSize(8388608);
+  m_pUtility->setSslWriteSize(8388608);
   // {{{ functions
   m_functions["status"] = &Data::status;
   m_functions["token"] = &Data::token;
@@ -406,7 +406,7 @@ void Data::dataResponse(const string t, int &fd)
         while (!bExit)
         {
           pollfd fds[2];
-          fds[0].fd = ((b.size() < (2031616))?fdData:-1);
+          fds[0].fd = ((b.empty())?fdData:-1);
           fds[0].events = POLLIN;
           fds[1].fd = fd;
           fds[1].events = POLLIN;
