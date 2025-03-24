@@ -151,9 +151,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               int nReturn;
               sqlite3 *db;
+              string strFile;
               stringstream ssFile;
               ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
-              if ((nReturn = sqlite3_open_v2(ssFile.str().c_str(), &db, (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE), NULL)) == SQLITE_OK)
+              strFile = ssFile.str();
+              if ((nReturn = sqlite3_open_v2(strFile.c_str(), &db, (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE), NULL)) == SQLITE_OK)
               {
                 bResult = true;
               }
@@ -217,9 +219,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               {
                 if (nodes.front() == m_strNode)
                 {
+                  string strFile;
                   stringstream ssFile;
                   ssFile << m_strData << "/sqlite/" << strDatabase << ".db";
-                  if (remove(ssFile.str().c_str()) == 0)
+                  strFile = ssFile.str();
+                  if (remove(strFile.c_str()) == 0)
                   {
                     bResult = true;
                   }
@@ -284,9 +288,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
               {
                 int nReturn;
                 sqlite3 *db;
+                string strFile;
                 stringstream ssFile;
                 ssFile << "file:" << m_strData << "/sqlite/" << strDatabase << ".db";
-                if ((nReturn = sqlite3_open_v2(ssFile.str().c_str(), &db, ((bReadOnly)?SQLITE_OPEN_READONLY:(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)), NULL)) == SQLITE_OK)
+                strFile = ssFile.str();
+                if ((nReturn = sqlite3_open_v2(strFile.c_str(), &db, ((bReadOnly)?SQLITE_OPEN_READONLY:(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)), NULL)) == SQLITE_OK)
                 {
                   char *pszError = NULL;
                   Json *ptRows = new Json;

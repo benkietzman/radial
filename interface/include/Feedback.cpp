@@ -491,16 +491,15 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
         if (!exist(i->m["survey"], "id") || i->m["survey"]->m["id"]->v.empty())
         {
           const EVP_MD* md = EVP_md5();
-          string strHash, strID;
-          stringstream ssTime;
+          string strHash, strID, strTime;
           time_t CTime;
           unsigned char md_value[EVP_MAX_MD_SIZE];
           unsigned int md_len;
           EVP_MD_CTX *context = EVP_MD_CTX_new();
           time(&CTime);
-          ssTime << CTime;
+          strTime = to_string(CTime);
           EVP_DigestInit_ex2(context, md, NULL);
-          EVP_DigestUpdate(context, ssTime.str().c_str(), ssTime.str().length());
+          EVP_DigestUpdate(context, strTime.c_str(), strTime.length());
           EVP_DigestFinal_ex(context, md_value, &md_len);
           EVP_MD_CTX_free(context);
           strHash.resize(md_len * 2);

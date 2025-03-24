@@ -231,7 +231,8 @@ void Command::process(string strPrefix)
                     {
                       ssMessage.str("");
                       ssMessage << "execve(" << errno << ") " << strerror(errno) << endl;
-                      write(1, ssMessage.str().c_str(), ssMessage.str().size());
+                      strError = ssMessage.str();
+                      write(1, strError.c_str(), strError.size());
                     }
                     _exit(1);
                   }

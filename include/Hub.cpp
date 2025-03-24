@@ -222,18 +222,20 @@ void Hub::links()
 bool Hub::load(string strPrefix, string &strError)
 {
   bool bResult = false;
+  string strInterfaces;
   stringstream ssInterfaces, ssMessage;
   struct stat tStat;
 
   strPrefix += "->Hub::load()";
   ssInterfaces << m_strData << "/interfaces.json";
-  if (stat(ssInterfaces.str().c_str(), &tStat) == 0)
+  strInterfaces = ssInterfaces.str();
+  if (stat(strInterfaces.c_str(), &tStat) == 0)
   {
     if (m_CLoadModify != tStat.st_mtime)
     {
       ifstream inInterfaces;
       Json *ptInterfaces = NULL;
-      inInterfaces.open(ssInterfaces.str());
+      inInterfaces.open(strInterfaces);
       if (inInterfaces)
       {
         string strLine;
@@ -248,7 +250,7 @@ bool Hub::load(string strPrefix, string &strError)
       else
       {
         ssMessage.str("");
-        ssMessage << "ifstream::open(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+        ssMessage << "ifstream::open(" << errno << ") [" << strInterfaces << "] " << strerror(errno);
         strError = ssMessage.str();
       }
       inInterfaces.close();
@@ -341,7 +343,7 @@ bool Hub::load(string strPrefix, string &strError)
         else
         {
           ssMessage.str("");
-          ssMessage << "[" << ssInterfaces.str() << "] No interfaces configured.";
+          ssMessage << "[" << strInterfaces << "] No interfaces configured.";
           strError = ssMessage.str();
         }
         delete ptInterfaces;
@@ -349,7 +351,7 @@ bool Hub::load(string strPrefix, string &strError)
       else if (strError.empty())
       {
         ssMessage.str("");
-        ssMessage << "[" << ssInterfaces.str() << "] Invalid configuration.";
+        ssMessage << "[" << strInterfaces << "] Invalid configuration.";
         strError = ssMessage.str();
       }
     }
@@ -361,7 +363,7 @@ bool Hub::load(string strPrefix, string &strError)
   else
   {
     ssMessage.str("");
-    ssMessage << "stat(" << errno << ") [" << ssInterfaces.str() << "] " << strerror(errno);
+    ssMessage << "stat(" << errno << ") [" << strInterfaces << "] " << strerror(errno);
     strError = ssMessage.str();
   }
 
@@ -422,12 +424,12 @@ void Hub::process(string strPrefix)
     {
       // {{{ prep work
       int fdUnix;
-      string strError;
-      stringstream ssUnix, ssMessage;
+      string strError, strUnix;
+      stringstream ssMessage;
       Json *ptJson;
       strPrefix += "->Hub::process()";
-      ssUnix << "/tmp/rdl_mgr";
-      ::remove(ssUnix.str().c_str());
+      strUnix = "/tmp/rdl_mgr";
+      ::remove(strUnix.c_str());
       // }}}
       if ((fdUnix = socket(AF_UNIX, SOCK_STREAM, 0)) >= 0)
       {
@@ -438,7 +440,7 @@ void Hub::process(string strPrefix)
         log(ssMessage.str());
         memset(&addr, 0, sizeof(sockaddr_un));
         addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, ssUnix.str().c_str(), sizeof(addr.sun_path) - 1);
+        strncpy(addr.sun_path, strUnix.c_str(), sizeof(addr.sun_path) - 1);
         // }}}
         if (bind(fdUnix, (sockaddr *)&addr, sizeof(sockaddr_un)) == 0)
         {
@@ -446,7 +448,7 @@ void Hub::process(string strPrefix)
           ssMessage.str("");
           ssMessage << strPrefix << "->bind():  Bound manager socket.";
           log(ssMessage.str());
-          chmod(ssUnix.str().c_str(), 00770);
+          chmod(strUnix.c_str(), 00770);
           // }}}
           if (listen(fdUnix, 5) == 0)
           {
@@ -573,7 +575,7 @@ void Hub::process(string strPrefix)
                     else
                     {
                       bExit = true;
-                      cerr << strPrefix << "->accept(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+                      cerr << strPrefix << "->accept(" << errno << ") error [" << strUnix << "]:  " << strerror(errno) << endl;
                     }
                   }
                   // }}}
@@ -1360,12 +1362,12 @@ void Hub::process(string strPrefix)
           }
           else
           {
-            cerr << strPrefix << "->listen(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+            cerr << strPrefix << "->listen(" << errno << ") error [" << strUnix << "]:  " << strerror(errno) << endl;
           }
         }
         else
         {
-          cerr << strPrefix << "->bound(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno) << endl;
+          cerr << strPrefix << "->bound(" << errno << ") error [" << strUnix << "]:  " << strerror(errno) << endl;
         }
         // {{{ post work
         close(fdUnix);
@@ -1373,10 +1375,10 @@ void Hub::process(string strPrefix)
       }
       else
       {
-        cerr << strPrefix << "->socket(" << errno << ") error [" << ssUnix.str() << "]:  " << strerror(errno);
+        cerr << strPrefix << "->socket(" << errno << ") error [" << strUnix << "]:  " << strerror(errno);
       }
       // {{{ post work
-      ::remove(ssUnix.str().c_str());
+      ::remove(strUnix.c_str());
       inotify_rm_watch(fdNotify, wdNotify);
       // }}}
     }

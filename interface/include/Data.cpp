@@ -347,10 +347,10 @@ void Data::dataResponse(const string t, int &fd)
     {
       bool bExit = false;
       int fdData, nReturn;
-      string b, t;
-      stringstream p;
+      string b, p, t;
+      stringstream sp;
       Json *j;
-      p << i->m["_path"]->v;
+      sp << i->m["_path"]->v;
       delete i->m["_path"];
       i->m.erase("_path");
       if (exist(i, "path"))
@@ -359,14 +359,15 @@ void Data::dataResponse(const string t, int &fd)
         {
           if (!item->v.empty())
           {
-            p << "/" << item->v;
+            sp << "/" << item->v;
           }
         }
       }
-      if (m_file.directoryExist(p.str()))
+      p = sp.str();
+      if (m_file.directoryExist(p))
       {
         DIR *pDir;
-        if ((pDir = opendir(p.str().c_str())) != NULL)
+        if ((pDir = opendir(p.c_str())) != NULL)
         {
           string n, strType;
           struct dirent *ptEntry;
@@ -399,7 +400,7 @@ void Data::dataResponse(const string t, int &fd)
               if (ptEntry->d_type == DT_REG)
               {
                 struct stat tStat;
-                if (stat((p.str() + (string)"/" + n).c_str(), &tStat) == 0)
+                if (stat((p + (string)"/" + n).c_str(), &tStat) == 0)
                 {
                   j->m[n]->i("Size", to_string(tStat.st_size), 'n');
                 }
@@ -448,7 +449,7 @@ void Data::dataResponse(const string t, int &fd)
           dataError(fd, ssMessage.str());
         }
       }
-      else if ((fdData = open(p.str().c_str(), O_RDONLY)) >= 0)
+      else if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
       {
         bool bClose = false;
         j = new Json;
@@ -897,15 +898,16 @@ bool Data::token(radialUser &d, string &e)
             {
               char md5string[33];
               EVP_MD_CTX *ctx = EVP_MD_CTX_create();
-              string t;
+              string strIdent, t;
               stringstream ssIdent;
               timespec start;
               unsigned char digest[16];
               b = true;
               clock_gettime(CLOCK_REALTIME, &start);
               ssIdent << m_strNode << "," << i->m["handle"]->v << "," << start.tv_sec << "," << start.tv_nsec;
+              strIdent = ssIdent.str();
               EVP_DigestInit(ctx, EVP_md5());
-              EVP_DigestUpdate(ctx, ssIdent.str().c_str(), ssIdent.str().size());
+              EVP_DigestUpdate(ctx, strIdent.c_str(), strIdent.size());
               EVP_DigestFinal(ctx, digest, NULL);
               EVP_MD_CTX_destroy(ctx);
               for (int j = 0; j < 16; j++)
