@@ -915,11 +915,11 @@ bool Data::token(radialUser &d, string &e)
               t = md5string;
               o->i("node", m_strNode);
               o->i("token", t);
-              m_mutex.lock();
-              m_dataTokens[t] = start.tv_sec;
               i->i("_path", nodeIter->second->v);
               delete i->m["handle"];
               i->m.erase("handle");
+              m_mutex.lock();
+              m_dataTokens[t] = start.tv_sec;
               m_dataRequests[t] = new Json(i);
               m_mutex.unlock();
             }
@@ -948,7 +948,7 @@ bool Data::token(radialUser &d, string &e)
               {
                 if (exist(ptLink, "Response"))
                 {
-                  d.p->m["o"]->merge(ptLink->m["Response"], true, false);
+                  o->merge(ptLink->m["Response"], true, false);
                 }
                 else
                 {
