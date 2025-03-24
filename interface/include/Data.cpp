@@ -23,7 +23,8 @@ namespace radial
 Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "data", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
-  m_pUtility->setReadSize(67108864);
+  //m_pUtility->setReadSize(67108864);
+  m_pUtility->setReadSize(4096);
   m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
   m_functions["status"] = &Data::status;
