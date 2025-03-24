@@ -23,8 +23,8 @@ namespace radial
 Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "data", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
-  m_pUtility->setReadSize(67108864);
-  m_pUtility->setSslWriteSize(67108864);
+  m_pUtility->setReadSize(268435456);
+  m_pUtility->setSslWriteSize(268435456);
   // {{{ functions
   m_functions["status"] = &Data::status;
   m_functions["token"] = &Data::token;
@@ -346,7 +346,6 @@ void Data::dataResponse(const string t, int &fd)
     if (!empty(i, "_path"))
     {
       bool bExit = false;
-      char szBuffer[67108864];
       int fdData, nReturn;
       string b, p, t;
       stringstream sp;
@@ -424,7 +423,7 @@ void Data::dataResponse(const string t, int &fd)
             }
             if ((nReturn = poll(fds, 1, 2000)) > 0)
             {
-              if ((fds[0].revents & (POLLIN | POLLHUP)) && (nReturn = read(fds[0].fd, szBuffer, 67108864)) <= 0)
+              if ((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn))
               {
                 bExit = true;
               }
@@ -462,7 +461,7 @@ void Data::dataResponse(const string t, int &fd)
         while (!bExit)
         {
           pollfd fds[2];
-          fds[0].fd = ((b.size() < 262144)?fdData:-1);
+          fds[0].fd = fdData;
           fds[0].events = POLLIN;
           fds[1].fd = fd;
           fds[1].events = POLLIN;
@@ -472,13 +471,9 @@ void Data::dataResponse(const string t, int &fd)
           }
           if ((nReturn = poll(fds, 2, 2000)) > 0)
           {
-            if (fds[0].revents & POLLIN)
+            if ((fds[0].revents & POLLIN) && !m_pUtility->fdRead(fds[0].fd, b, nReturn))
             {
-              if ((nReturn = read(fds[0].fd, szBuffer, 67108864)) > 0)
-              {
-                b.append(szBuffer, nReturn);
-              }
-              else if (nReturn == 0)
+              if (nReturn == 0)
               {
                 bClose = true;
               }
@@ -491,7 +486,7 @@ void Data::dataResponse(const string t, int &fd)
             {
               bExit = true;
             }
-            if ((fds[1].revents & (POLLHUP | POLLIN)) && read(fds[1].fd, szBuffer, 67108864) <= 0)
+            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
             {
               bExit = true;
             }
