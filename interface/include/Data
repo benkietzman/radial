@@ -44,8 +44,6 @@ class Data : public Interface
   void dataResponse(const string t, int &fd);
   void dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx);
   void dataStatus(int &fd, const bool b, const string e = "");
-  void dataWrite(int &fd, map<string, string> row);
-  void dataWrite(int &fd, Json *row);
   void load(string strPrefix, const bool bSilent = false);
   void schedule(string strPrefix);
   bool token(radialUser &d, string &e);

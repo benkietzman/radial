@@ -269,6 +269,7 @@ void Data::dataAccept(string strPrefix)
 // {{{ dataError()
 void Data::dataError(int &fd, const string e)
 {
+  string b;
   Json *j = new Json;
 
   j->i("Status", "error");
@@ -276,8 +277,50 @@ void Data::dataError(int &fd, const string e)
   {
     j->i("Error", e);
   }
-  dataWrite(fd, j);
+  j->j(b);
   delete j;
+  b += "\n";
+  if (fd != -1 && !b.empty())
+  {
+    bool bClose = false, bExit = false;
+    int nReturn;
+    while (!bExit)
+    {
+      pollfd fds[1];
+      fds[0].fd = fd;
+      fds[0].events = POLLOUT;
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
+      {
+        if (fds[0].revents & POLLOUT)
+        {
+          if (m_pUtility->fdWrite(fds[0].fd, b, nReturn))
+          {
+            if (b.empty())
+            {
+              bExit = true;
+            }
+          }
+          else
+          {
+            bClose = bExit = true;
+          }
+        }
+        if (fds[0].revents & (POLLERR | POLLNVAL))
+        {
+          bClose = bExit = true;
+        }
+      }
+      else if (!bExit && nReturn < 0 && errno != EINTR)
+      {
+        bClose = bExit = true;
+      }
+    }
+    if (bClose)
+    {
+      close(fd);
+      fd = -1;
+    }
+  }
 }
 // }}}
 // {{{ dataResponse()
@@ -323,7 +366,7 @@ void Data::dataResponse(const string t, int &fd)
         if ((pDir = opendir(p.str().c_str())) != NULL)
         {
           string n, strType;
-          struct dirent *pEntry;
+          struct dirent *ptEntry;
           j = new Json;
           j->i("Status", "okay");
           j->i("Type", "directory");
@@ -331,13 +374,13 @@ void Data::dataResponse(const string t, int &fd)
           delete j;
           b.append("\n");
           j = new Json;
-          while ((pEntry = readdir(pDir)) != NULL)
+          while ((ptEntry = readdir(pDir)) != NULL)
           {
-            n = pEntry->d_name;
+            n = ptEntry->d_name;
             if (n != "." && n != "..")
             {
               j->m[n] = new Json;
-              switch (pEntry->d_type)
+              switch (ptEntry->d_type)
               {
                 case DT_BLK     : strType = "block device";           break;
                 case DT_CHR     : strType = "character device";       break;
@@ -350,7 +393,7 @@ void Data::dataResponse(const string t, int &fd)
                 default         : strType = "undefined";
               }
               j->m[n]->i("Type", strType);
-              if (pEntry->d_type == DT_REG)
+              if (ptEntry->d_type == DT_REG)
               {
                 struct stat tStat;
                 if (stat((p.str() + (string)"/" + n).c_str(), &tStat) == 0)
@@ -696,63 +739,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   close(fdSocket);
   threadDecrement();
   // }}}
-}
-// }}}
-// {{{ dataWrite()
-void Data::dataWrite(int &fd, map<string, string> row)
-{
-  Json *j = new Json(row);
-
-  dataWrite(fd, j);
-  delete j;
-}
-void Data::dataWrite(int &fd, Json *row)
-{
-  string b;
-
-  row->j(b);
-  b += "\n";
-  if (fd != -1 && !b.empty())
-  {
-    bool bClose = false, bExit = false;
-    int nReturn;
-    while (!bExit)
-    {
-      pollfd fds[1];
-      fds[0].fd = fd;
-      fds[0].events = POLLOUT;
-      if ((nReturn = poll(fds, 1, 2000)) > 0)
-      {
-        if (fds[0].revents & POLLOUT)
-        {
-          if (m_pUtility->fdWrite(fds[0].fd, b, nReturn))
-          {
-            if (b.empty())
-            {
-              bExit = true;
-            }
-          }
-          else
-          {
-            bClose = bExit = true;
-          }
-        }
-        if (fds[0].revents & (POLLERR | POLLNVAL))
-        {
-          bClose = bExit = true;
-        }
-      }
-      else if (!bExit && nReturn < 0 && errno != EINTR)
-      {
-        bClose = bExit = true;
-      }
-    }
-    if (bClose)
-    {
-      close(fd);
-      fd = -1;
-    }
-  }
 }
 // }}}
 // }}}
