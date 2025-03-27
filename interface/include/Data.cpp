@@ -416,7 +416,7 @@ void Data::dataResponse(const string t, int &fd)
           {
             pollfd fds[1];
             fds[0].fd = fd;
-            fds[0].events = 0;
+            fds[0].events = POLLIN;
             if (!b.empty())
             {
               fds[0].events |= POLLOUT;
