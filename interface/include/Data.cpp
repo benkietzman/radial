@@ -505,12 +505,15 @@ void Data::dataResponse(const string t, int &fd)
           }
           if (bClose)
           {
+            if (fdData != -1)
+            {
+              close(fdData);
+              fdData = -1;
+            }
             if (b.empty())
             {
               bExit = true;
             }
-            close(fdData);
-            fdData = -1;
           }
         }
         if (!bClose)
