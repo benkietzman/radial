@@ -562,7 +562,7 @@ void Data::dataResponse(const string t, int &fd)
                       char *pszTemp = new char[unLength];
                       memcpy(pszTemp, (pszBuffer + nReturn), unLength);
                       memcpy(pszBuffer, pszTemp, unLength);
-                      delete pszTemp;
+                      delete[] pszTemp;
                     }
                   }
                   else
