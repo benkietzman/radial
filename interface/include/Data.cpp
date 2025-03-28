@@ -591,7 +591,9 @@ void Data::dataResponse(const string t, int &fd)
                 }
               }
             }
+            mutex.lock();
             m_buffers[unBuffer] = -1;
+            mutex.unlock();
           }
           else
           {
