@@ -54,7 +54,7 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
   {
     m_buffers.push_back(-1);
   }
-  sem_init(&m_semBuffer, 0, unBuffer);
+  sem_init(&m_semBuffer, 0, (unBuffer / (1024 * 1024)));
   m_pUtility->setReadSize(4096);
   m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
