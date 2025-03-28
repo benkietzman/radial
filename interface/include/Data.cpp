@@ -532,7 +532,7 @@ void Data::dataResponse(const string t, int &fd)
               {
                 if (fds[0].revents & POLLIN)
                 {
-                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 512 - unLength))) >= 0)
+                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 512 - unLength))) > 0)
                   {
                     unLength += nReturn;
                   }
@@ -555,7 +555,7 @@ void Data::dataResponse(const string t, int &fd)
                 }
                 if (fds[1].revents & POLLOUT)
                 {
-                  if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) >= 0)
+                  if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) > 0)
                   {
                     unLength -= nReturn;
                     if (unLength > 0)
