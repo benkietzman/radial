@@ -361,7 +361,7 @@ void Data::dataError(int &fd, const string e)
 }
 // }}}
 // {{{ dataResponse()
-void Data::dataResponse(const string t, int &fd)
+void Data::dataResponse(const string t, int &fd, const size_t unBuffer)
 {
   // {{{ prep work
   stringstream ssMessage;
@@ -486,131 +486,104 @@ void Data::dataResponse(const string t, int &fd)
       }
       // }}}
       // {{{ file
-      else
+      else if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
       {
-        sem_wait(&m_semBuffer);
-        if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
+        bool bClose = false;
+        char *pszBuffer = m_pszBuffer + (unBuffer * 1048576) + 524288;
+        size_t unLength = 0;
+        j = new Json;
+        j->i("Status", "okay");
+        j->i("Type", "file");
+        j->j(b);
+        delete j;
+        b.append("\n");
+        memcpy(pszBuffer, b.c_str(), b.size());
+        unLength = b.size();
+        b.clear();
+        while (!bExit)
         {
-          bool bClose = false;
-          char *pszBuffer = NULL;
-          size_t unBuffer;
-          m_mutex.lock();
-          for (size_t i = 0; pszBuffer == NULL && i < m_buffers.size(); i++)
+          pollfd fds[2];
+          fds[0].fd = ((unLength < 262144)?fdData:-1);
+          fds[0].events = POLLIN;
+          fds[1].fd = fd;
+          fds[1].events = POLLIN;
+          if (unLength > 0)
           {
-            if (m_buffers[i] == -1)
-            {
-              unBuffer = i;
-              m_buffers[i] = fdData;
-              pszBuffer = m_pszBuffer + i * 1024 * 1024;
-            }
+            fds[1].events |= POLLOUT;
           }
-          m_mutex.unlock();
-          if (pszBuffer != NULL)
+          if ((nReturn = poll(fds, 2, 2000)) > 0)
           {
-            size_t unLength = 0;
-            j = new Json;
-            j->i("Status", "okay");
-            j->i("Type", "file");
-            j->j(b);
-            delete j;
-            b.append("\n");
-            memcpy(pszBuffer, b.c_str(), b.size());
-            unLength = b.size();
-            b.clear();
-            while (!bExit)
+            if (fds[0].revents & POLLIN)
             {
-              pollfd fds[2];
-              fds[0].fd = ((unLength < 1024 * 512)?fdData:-1);
-              fds[0].events = POLLIN;
-              fds[1].fd = fd;
-              fds[1].events = POLLIN;
-              if (unLength > 0)
+              if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (262144 - unLength))) > 0)
               {
-                fds[1].events |= POLLOUT;
+                unLength += nReturn;
               }
-              if ((nReturn = poll(fds, 2, 2000)) > 0)
+              else if (nReturn == 0)
               {
-                if (fds[0].revents & POLLIN)
-                {
-                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 512 - unLength))) > 0)
-                  {
-                    unLength += nReturn;
-                  }
-                  else if (nReturn == 0)
-                  {
-                    bClose = true;
-                  }
-                  else
-                  {
-                    bExit = true;
-                  }
-                }
-                if (fds[0].revents & (POLLERR | POLLNVAL))
-                {
-                  bExit = true;
-                }
-                if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
-                {
-                  bExit = true;
-                }
-                if (fds[1].revents & POLLOUT)
-                {
-                  if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) > 0)
-                  {
-                    unLength -= nReturn;
-                    if (unLength > 0)
-                    {
-                      memcpy((pszBuffer + 1024 * 512), (pszBuffer + nReturn), unLength);
-                      memcpy(pszBuffer, (pszBuffer + 1024 * 512), unLength);
-                    }
-                  }
-                  else
-                  {
-                    bExit = true;
-                  }
-                }
-                if (fds[1].revents & (POLLERR | POLLNVAL))
-                {
-                  bExit = true;
-                }
+                bClose = true;
               }
-              else if (nReturn < 0 && errno != EINTR)
+              else
               {
                 bExit = true;
               }
-              if (bClose)
+            }
+            if (fds[0].revents & (POLLERR | POLLNVAL))
+            {
+              bExit = true;
+            }
+            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
+            {
+              bExit = true;
+            }
+            if (fds[1].revents & POLLOUT)
+            {
+              if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) > 0)
               {
-                if (fdData != -1)
+                unLength -= nReturn;
+                if (unLength > 0)
                 {
-                  close(fdData);
-                  fdData = -1;
-                }
-                if (unLength == 0)
-                {
-                  bExit = true;
+                  memcpy((pszBuffer + 262144), (pszBuffer + nReturn), unLength);
+                  memcpy(pszBuffer, (pszBuffer + 262144), unLength);
                 }
               }
+              else
+              {
+                bExit = true;
+              }
             }
-            m_mutex.lock();
-            m_buffers[unBuffer] = -1;
-            m_mutex.unlock();
+            if (fds[1].revents & (POLLERR | POLLNVAL))
+            {
+              bExit = true;
+            }
           }
-          else
+          else if (nReturn < 0 && errno != EINTR)
           {
-            dataError(fd, "Buffer unavailable.");
+            bExit = true;
           }
-          if (!bClose)
+          if (bClose)
           {
-            close(fdData);
+            if (fdData != -1)
+            {
+              close(fdData);
+              fdData = -1;
+            }
+            if (unLength == 0)
+            {
+              bExit = true;
+            }
           }
         }
-        else
+        if (!bClose)
         {
-          ssMessage.str("");
-          ssMessage << "open(" << errno << ") " << strerror(errno);
-          dataError(fd, ssMessage.str());
+          close(fdData);
         }
-        sem_post(&m_semBuffer);
+      }
+      else
+      {
+        ssMessage.str("");
+        ssMessage << "open(" << errno << ") " << strerror(errno);
+        dataError(fd, ssMessage.str());
       }
       // }}}
     }
@@ -642,199 +615,252 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   // }}}
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
-    int fdResponse[2] = {-1, -1}, nReturn;
-    if ((nReturn = pipe(fdResponse)) == 0)
+    char *pszBuffer = NULL;
+    size_t unBuffer;
+    sem_wait(&m_semBuffer);
+    m_mutex.lock();
+    for (size_t i = 0; pszBuffer == NULL && i < m_buffers.size(); i++)
     {
-      // {{{ prep work
-      bool bExit = false, bNeedWrite = false, bToken = false, bWantWrite = false;
-      size_t unPosition;
-      string strBuffers[3];
-      // }}}
-      while (!bExit)
+      if (m_buffers[i] == -1)
+      {
+        unBuffer = i;
+        m_buffers[i] = fdSocket;
+        pszBuffer = m_pszBuffer + (i * 1048576);
+      }
+    }
+    m_mutex.unlock();
+    if (pszBuffer != NULL)
+    {
+      int fdResponse[2] = {-1, -1}, nReturn;
+      if ((nReturn = pipe(fdResponse)) == 0)
       {
         // {{{ prep work
-        pollfd fds[2];
-        fds[0].fd = fdSocket;
-        fds[0].events = POLLIN;
-        if (!bNeedWrite && !strBuffers[1].empty())
-        {
-          strBuffers[2].append(strBuffers[1]);
-          strBuffers[1].clear();
-        }
-        if (bWantWrite || !strBuffers[2].empty())
-        {
-          fds[0].events |= POLLOUT;
-        }
-        fds[1].fd = fdResponse[0];
-        fds[1].events = POLLIN;
+        bool bExit = false, bNeedWrite = false, bToken = false, bWantWrite = false;
+        size_t unLength[2] = {0, 0}, unPosition;
+        string strBuffers[3];
         // }}}
-        if ((nReturn = poll(fds, 2, 2000)) > 0)
+        while (!bExit)
         {
-          bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
-          if (bReadable)
+          // {{{ prep work
+          pollfd fds[2];
+          fds[0].fd = fdSocket;
+          fds[0].events = POLLIN;
+          if (!bNeedWrite && unLength[0] > 0 && unLength[1] == 0)
           {
-            if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
+            memcpy((pszBuffer + 262144), pszBuffer, unLength[0]);
+            unLength[1] += unLength[0];
+            unLength[0] = 0;
+          }
+          if (bWantWrite || unLength[1] > 0)
+          {
+            fds[0].events |= POLLOUT;
+          }
+          fds[1].fd = ((unLength[0] < 131072)?fdResponse[0]:-1);
+          fds[1].events = POLLIN;
+          // }}}
+          if ((nReturn = poll(fds, 2, 2000)) > 0)
+          {
+            bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+            if (bReadable)
             {
-              bWantWrite = false;
-              if (nReturn <= 0)
+              if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
               {
-                switch (SSL_get_error(ssl, nReturn))
+                bWantWrite = false;
+                if (nReturn <= 0)
                 {
-                  case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+                  switch (SSL_get_error(ssl, nReturn))
+                  {
+                    case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+                  }
+                }
+                if (bToken)
+                {
+                  strBuffers[0].clear();
+                }
+                else if ((unPosition = strBuffers[0].find("\n")) != string::npos)
+                {
+                  string strToken = strBuffers[0].substr(0, unPosition);
+                  strBuffers[0].clear();
+                  bToken = true;
+                  m_mutex.lock();
+                  if (m_dataTokens.find(strToken) != m_dataTokens.end())
+                  {
+                    m_dataTokens.erase(strToken);
+                    thread threadDataRequest(&Data::dataResponse, this, strToken, ref(fdResponse[1]), unBuffer);
+                    pthread_setname_np(threadDataRequest.native_handle(), "dataResponse");
+                    threadDataRequest.detach();
+                  }
+                  else
+                  {
+                    Json *ptJson = new Json;
+                    close(fdResponse[0]);
+                    fdResponse[0] = -1;
+                    close(fdResponse[1]);
+                    fdResponse[1] = -1;
+                    ptJson->i("Status", "error");
+                    ptJson->i("Error", "Please provide a valid Token.");
+                    ptJson->j(strBuffers[1]);
+                    delete ptJson;
+                    strBuffers[1] += "\n";
+                  }
+                  m_mutex.unlock();
+                }
+                else if (strBuffers[0].size() > 33)
+                {
+                  bExit = true;
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::sslRead() error:  Incoming data larger than token.";
+                  log(ssMessage.str());
                 }
               }
-              if (bToken)
-              {
-                strBuffers[0].clear();
-              }
-              else if ((unPosition = strBuffers[0].find("\n")) != string::npos)
-              {
-                string strToken = strBuffers[0].substr(0, unPosition);
-                strBuffers[0].erase(0, (unPosition + 1));
-                bToken = true;
-                m_mutex.lock();
-                if (m_dataTokens.find(strToken) != m_dataTokens.end())
-                {
-                  m_dataTokens.erase(strToken);
-                  thread threadDataRequest(&Data::dataResponse, this, strToken, ref(fdResponse[1]));
-                  pthread_setname_np(threadDataRequest.native_handle(), "dataResponse");
-                  threadDataRequest.detach();
-                }
-                else
-                {
-                  Json *ptJson = new Json;
-                  close(fdResponse[0]);
-                  fdResponse[0] = -1;
-                  close(fdResponse[1]);
-                  fdResponse[1] = -1;
-                  ptJson->i("Status", "error");
-                  ptJson->i("Error", "Please provide a valid Token.");
-                  ptJson->j(strBuffers[1]);
-                  delete ptJson;
-                  strBuffers[1] += "\n";
-                }
-                m_mutex.unlock();
-              }
-              else if (strBuffers[0].size() > 33)
+              else
               {
                 bExit = true;
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslRead() error:  Incoming data larger than token.";
-                log(ssMessage.str());
+                if (nReturn < 0 && errno != 104)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                  log(ssMessage.str());
+                }
               }
             }
-            else
+            if (bWritable)
             {
-              bExit = true;
-              if (nReturn < 0 && errno != 104)
+              bool bBlocking = false;
+              long lArg, lArgOrig;
+              if ((lArg = lArgOrig = fcntl(SSL_get_fd(ssl), F_GETFL, NULL)) >= 0 && !(lArg & O_NONBLOCK))
               {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-                log(ssMessage.str());
+                bBlocking = true;
+                lArg |= O_NONBLOCK;
+                fcntl(SSL_get_fd(ssl), F_SETFL, lArg);
               }
-            }
-          }
-          if (bWritable)
-          {
-            if (m_pUtility->sslWrite(ssl, strBuffers[2], nReturn))
-            {
-              bNeedWrite = bWantWrite = false;
-              if (nReturn <= 0)
+              if ((nReturn = SSL_write(ssl, (pszBuffer + 262144), unLength[1])) > 0)
               {
+                unLength[1] -= nReturn;
+                if (unLength[1] > 0)
+                {
+                  memcpy((pszBuffer + 393216), (pszBuffer + 262144 + nReturn), unLength[1]);
+                  memcpy((pszBuffer + 262144), (pszBuffer + 393216), unLength[1]);
+                }
+              }
+              else
+              {
+                bNeedWrite = bWantWrite = false;
                 switch (SSL_get_error(ssl, nReturn))
                 {
                   case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
                   case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
+                  case SSL_ERROR_ZERO_RETURN:
+                  case SSL_ERROR_SYSCALL:
+                  case SSL_ERROR_SSL:
+                  {
+                    bExit = true;
+                    if (nReturn < 0)
+                    {
+                      ssMessage.str("");
+                      ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                      log(ssMessage.str());
+                    }
+                    break;
+                  }
+                }
+              }
+              if (bBlocking)
+              {
+                fcntl(SSL_get_fd(ssl), F_SETFL, lArgOrig);
+              }
+            }
+            if (fds[0].revents & POLLERR)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLERR.";
+              log(ssMessage.str());
+            }
+            if (fds[0].revents & POLLNVAL)
+            {
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLNVAL.";
+              log(ssMessage.str());
+            }
+            if (fds[1].revents & (POLLHUP | POLLIN))
+            {
+              if ((nReturn = read(fds[1].fd, (pszBuffer + unLength[0]), (131072 - unLength[0]))) > 0)
+              {
+                unLength[0] += nReturn;
+              }
+              else
+              {
+                close(fdResponse[0]);
+                fdResponse[0] = -1;
+                if (nReturn < 0)
+                {
+                  ssMessage.str("");
+                  ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error:  " << strerror(errno);
+                  log(ssMessage.str());
                 }
               }
             }
-            else
+            if (fds[1].revents & POLLERR)
             {
               bExit = true;
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-                log(ssMessage.str());
-              }
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
+              log(ssMessage.str());
             }
-          }
-          if (fds[0].revents & POLLERR)
-          {
-            bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLERR.";
-            log(ssMessage.str());
-          }
-          if (fds[0].revents & POLLNVAL)
-          {
-            bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLNVAL.";
-            log(ssMessage.str());
-          }
-          if (fds[1].revents & (POLLHUP | POLLIN))
-          {
-            if (!m_pUtility->fdRead(fds[1].fd, strBuffers[1], nReturn))
+            if (fds[1].revents & POLLNVAL)
             {
-              close(fdResponse[0]);
-              fdResponse[0] = -1;
-              if (nReturn < 0)
-              {
-                ssMessage.str("");
-                ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error:  " << strerror(errno);
-                log(ssMessage.str());
-              }
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLNVAL.";
+              log(ssMessage.str());
             }
           }
-          if (fds[1].revents & POLLERR)
+          else if (nReturn < 0 && errno != EINTR)
           {
             bExit = true;
             ssMessage.str("");
-            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
+            ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
             log(ssMessage.str());
           }
-          if (fds[1].revents & POLLNVAL)
+          // {{{ post work
+          if ((fdResponse[0] == -1 && strBuffers[1].empty() && strBuffers[2].empty()) || shutdown())
           {
             bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLNVAL.";
-            log(ssMessage.str());
           }
-        }
-        else if (nReturn < 0 && errno != EINTR)
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-          log(ssMessage.str());
+          // }}}
         }
         // {{{ post work
-        if ((fdResponse[0] == -1 && strBuffers[1].empty() && strBuffers[2].empty()) || shutdown())
+        if (fdResponse[0] != -1)
         {
-          bExit = true;
+          close(fdResponse[0]);
+          fdResponse[0] = -1;
+        }
+        if (fdResponse[1] != -1)
+        {
+          close(fdResponse[1]);
+          fdResponse[1] = -1;
         }
         // }}}
       }
-      // {{{ post work
-      if (fdResponse[0] != -1)
+      else
       {
-        close(fdResponse[0]);
-        fdResponse[0] = -1;
+        ssMessage.str("");
+        ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
+        log(ssMessage.str());
       }
-      if (fdResponse[1] != -1)
-      {
-        close(fdResponse[1]);
-        fdResponse[1] = -1;
-      }
-      // }}}
+      m_mutex.lock();
+      m_buffers[unBuffer] = -1;
+      m_mutex.unlock();
     }
     else
     {
       ssMessage.str("");
-      ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
+      ssMessage << strPrefix << " error:  Buffer unavailable.";
       log(ssMessage.str());
     }
+    sem_post(&m_semBuffer);
     // {{{ post work
     if (SSL_shutdown(ssl) == 0)
     {
