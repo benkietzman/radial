@@ -828,7 +828,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             log(ssMessage.str());
           }
           // {{{ post work
-          if ((fdResponse[0] == -1 && nLength[0] == 0 && nLength[1] == 0) || shutdown())
+          if ((fdResponse[0] == -1 && unLength[0] == 0 && unLength[1] == 0) || shutdown())
           {
             bExit = true;
           }
