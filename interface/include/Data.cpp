@@ -516,6 +516,7 @@ void Data::dataResponse(const string t, int &fd)
             b.append("\n");
             memcpy(pszBuffer, b.c_str(), b.size());
             unLength = b.size();
+            b.clear();
             while (!bExit)
             {
               pollfd fds[2];
