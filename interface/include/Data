@@ -25,13 +25,16 @@ namespace radial
 class Data : public Interface
 {
   protected:
+  char *m_pszBuffer;
   map<string, time_t> m_dataTokens; 
   map<string, Json *> m_dataRequests;
   map<string, bool (Data::*)(radialUser &, string &)> m_functions;
   mutex m_mutex;
+  sem_t m_semBuffer;
   thread *m_pThreadDataAccept;
   thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
+  vector<int> m_buffers;
   Json *m_c;
 
   void dataAccept(string strPrefix);

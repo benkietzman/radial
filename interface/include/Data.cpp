@@ -23,6 +23,38 @@ namespace radial
 Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "data", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
+  size_t unBuffer = 16 * 1024 * 1024;
+  string strBuffer;
+
+  // {{{ command line arguments
+  for (int i = 1; i < argc; i++)
+  {
+    string strArg = argv[i];
+    if (strArg == "-b" || (strArg.size() > 9 && strArg.substr(0, 9) == "--buffer="))
+    {
+      if (strArg == "-b" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        strBuffer = argv[++i];
+      }
+      else
+      {
+        strBuffer = strArg.substr(0, strArg.size() - 9);
+      }
+      m_manip.purgeChar(strBuffer, strBuffer, "'");
+      m_manip.purgeChar(strBuffer, strBuffer, "\"");
+    }
+  }
+  // }}}
+  if (!strBuffer.empty())
+  {
+    unBuffer = atoi(strBuffer.c_str()) * 1024 * 1024;
+  }
+  m_pszBuffer = new char[unBuffer];
+  for (size_t i = 0; i < unBuffer; i++)
+  {
+    m_buffers.push_back(-1);
+  }
+  sem_init(&m_semBuffer, 0, unBuffer);
   m_pUtility->setReadSize(4096);
   m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
@@ -55,6 +87,8 @@ Data::~Data()
     delete m_c;
   }
   m_pUtility->sslDeinit();
+  sem_destroy(&m_semBuffer);
+  delete[] m_pszBuffer;
 }
 // }}}
 // {{{ callback()
@@ -364,6 +398,7 @@ void Data::dataResponse(const string t, int &fd)
         }
       }
       p = sp.str();
+      // {{{ directory
       if (m_file.directoryExist(p))
       {
         DIR *pDir;
@@ -449,84 +484,127 @@ void Data::dataResponse(const string t, int &fd)
           dataError(fd, ssMessage.str());
         }
       }
-      else if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
+      // }}}
+      // {{{ file
+      else
       {
-        bool bClose = false;
-        j = new Json;
-        j->i("Status", "okay");
-        j->i("Type", "file");
-        j->j(b);
-        delete j;
-        b.append("\n");
-        while (!bExit)
+        sem_wait(&m_semBuffer);
+        if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
         {
-          pollfd fds[2];
-          fds[0].fd = ((b.size() < 4096)?fdData:-1);
-          fds[0].events = POLLIN;
-          fds[1].fd = fd;
-          fds[1].events = POLLIN;
-          if (!b.empty())
+          bool bClose = false;
+          char *pszBuffer = NULL;
+          size_t unBuffer;
+          m_mutex.lock();
+          for (size_t i = 0; pszBuffer == NULL && i < m_buffers.size(); i++)
           {
-            fds[1].events |= POLLOUT;
-          }
-          if ((nReturn = poll(fds, 2, 2000)) > 0)
-          {
-            if ((fds[0].revents & POLLIN) && !m_pUtility->fdRead(fds[0].fd, b, nReturn))
+            if (m_buffers[i] == -1)
             {
-              if (nReturn == 0)
+              unBuffer = i;
+              m_buffers[i] = fdData;
+              pszBuffer = m_pszBuffer + i * 1024 *1024;
+            }
+          }
+          m_mutex.unlock();
+          if (pszBuffer != NULL)
+          {
+            size_t unLength = 0;
+            j = new Json;
+            j->i("Status", "okay");
+            j->i("Type", "file");
+            j->j(b);
+            delete j;
+            b.append("\n");
+            memcpy(pszBuffer, b.c_str(), b.size());
+            unLength = b.size();
+            while (!bExit)
+            {
+              pollfd fds[2];
+              fds[0].fd = ((unLength < 1024 * 1024)?fdData:-1);
+              fds[0].events = POLLIN;
+              fds[1].fd = fd;
+              fds[1].events = POLLIN;
+              if (unLength > 0)
               {
-                bClose = true;
+                fds[1].events |= POLLOUT;
               }
-              else
+              if ((nReturn = poll(fds, 2, 2000)) > 0)
+              {
+                if (fds[0].revents & POLLIN)
+                {
+                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 1024 - unLength))) >= 0)
+                  {
+                    unLength += nReturn;
+                  }
+                  else if (nReturn == 0)
+                  {
+                    bClose = true;
+                  }
+                  else
+                  {
+                    bExit = true;
+                  }
+                }
+                if (fds[0].revents & (POLLERR | POLLNVAL))
+                {
+                  bExit = true;
+                }
+                if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
+                {
+                  bExit = true;
+                }
+                if (fds[1].revents & POLLOUT)
+                {
+                  if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) >= 0)
+                  {
+                    unLength -= nReturn;
+                  }
+                  else
+                  {
+                    bExit = true;
+                  }
+                }
+                if (fds[1].revents & (POLLERR | POLLNVAL))
+                {
+                  bExit = true;
+                }
+              }
+              else if (nReturn < 0 && errno != EINTR)
               {
                 bExit = true;
               }
+              if (bClose)
+              {
+                if (fdData != -1)
+                {
+                  close(fdData);
+                  fdData = -1;
+                }
+                if (unLength == 0)
+                {
+                  bExit = true;
+                }
+              }
             }
-            if (fds[0].revents & (POLLERR | POLLNVAL))
-            {
-              bExit = true;
-            }
-            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
-            {
-              bExit = true;
-            }
-            if ((fds[1].revents & POLLOUT) && !m_pUtility->fdWrite(fds[1].fd, b, nReturn))
-            {
-              bExit = true;
-            }
-            if (fds[1].revents & (POLLERR | POLLNVAL))
-            {
-              bExit = true;
-            }
+            m_buffers[unBuffer] = -1;
           }
-          else if (nReturn < 0 && errno != EINTR)
+          else
           {
-            bExit = true;
+            dataError(fd, "Buffer unavailable.");
           }
-          if (bClose)
+          if (!bClose)
           {
-            if (fdData != -1)
-            {
-              close(fdData);
-              fdData = -1;
-            }
-            if (b.empty())
-            {
-              bExit = true;
-            }
+            close(fdData);
           }
         }
-        if (!bClose)
+        else
         {
-          close(fdData);
+          ssMessage.str("");
+          ssMessage << "open(" << errno << ") " << strerror(errno);
+          dataError(fd, ssMessage.str());
         }
+        sem_post(&m_semBuffer);
       }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << "open(" << errno << ") " << strerror(errno);
-        dataError(fd, ssMessage.str());
-      }
+      // }}}
     }
     else
     {
