@@ -637,7 +637,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         // {{{ prep work
         bool bExit = false, bNeedWrite = false, bToken = false, bWantWrite = false;
         size_t unLength[2] = {0, 0}, unPosition;
-        string strBuffers[3];
+        string strBuffer;
         // }}}
         while (!bExit)
         {
@@ -663,7 +663,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
             if (bReadable)
             {
-              if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
+              if (m_pUtility->sslRead(ssl, strBuffer, nReturn))
               {
                 bWantWrite = false;
                 if (nReturn <= 0)
@@ -675,12 +675,12 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                 }
                 if (bToken)
                 {
-                  strBuffers[0].clear();
+                  strBuffer.clear();
                 }
-                else if ((unPosition = strBuffers[0].find("\n")) != string::npos)
+                else if ((unPosition = strBuffer.find("\n")) != string::npos)
                 {
-                  string strToken = strBuffers[0].substr(0, unPosition);
-                  strBuffers[0].clear();
+                  string strToken = strBuffer.substr(0, unPosition);
+                  strBuffer.clear();
                   bToken = true;
                   m_mutex.lock();
                   if (m_dataTokens.find(strToken) != m_dataTokens.end())
@@ -699,13 +699,16 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                     fdResponse[1] = -1;
                     ptJson->i("Status", "error");
                     ptJson->i("Error", "Please provide a valid Token.");
-                    ptJson->j(strBuffers[1]);
+                    ptJson->j(strBuffer);
                     delete ptJson;
-                    strBuffers[1] += "\n";
+                    strBuffer += "\n";
+                    memcpy((pszBuffer + 262144), strBuffer.c_str(), strBuffer.size());
+                    unLength[1] = strBuffer.size();
+                    strBuffer.clear();
                   }
                   m_mutex.unlock();
                 }
-                else if (strBuffers[0].size() > 33)
+                else if (strBuffer.size() > 33)
                 {
                   bExit = true;
                   ssMessage.str("");
@@ -825,7 +828,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             log(ssMessage.str());
           }
           // {{{ post work
-          if ((fdResponse[0] == -1 && strBuffers[1].empty() && strBuffers[2].empty()) || shutdown())
+          if ((fdResponse[0] == -1 && nLength[0] == 0 && nLength[1] == 0) || shutdown())
           {
             bExit = true;
           }
