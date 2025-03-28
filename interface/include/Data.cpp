@@ -501,7 +501,7 @@ void Data::dataResponse(const string t, int &fd)
             {
               unBuffer = i;
               m_buffers[i] = fdData;
-              pszBuffer = m_pszBuffer + i * 1024 *1024;
+              pszBuffer = m_pszBuffer + i * 1024 * 512;
             }
           }
           m_mutex.unlock();
@@ -519,7 +519,7 @@ void Data::dataResponse(const string t, int &fd)
             while (!bExit)
             {
               pollfd fds[2];
-              fds[0].fd = ((unLength < 1024 * 1024)?fdData:-1);
+              fds[0].fd = ((unLength < 1024 * 512)?fdData:-1);
               fds[0].events = POLLIN;
               fds[1].fd = fd;
               fds[1].events = POLLIN;
@@ -531,7 +531,7 @@ void Data::dataResponse(const string t, int &fd)
               {
                 if (fds[0].revents & POLLIN)
                 {
-                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 1024 - unLength))) >= 0)
+                  if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (1024 * 512 - unLength))) >= 0)
                   {
                     unLength += nReturn;
                   }
@@ -559,10 +559,8 @@ void Data::dataResponse(const string t, int &fd)
                     unLength -= nReturn;
                     if (unLength > 0)
                     {
-                      char *pszTemp = new char[unLength];
-                      memcpy(pszTemp, (pszBuffer + nReturn), unLength);
-                      memcpy(pszBuffer, pszTemp, unLength);
-                      delete[] pszTemp;
+                      memcpy((pszBuffer + 1024 * 512), (pszBuffer + nReturn), unLength);
+                      memcpy(pszBuffer, (pszBuffer + 1024 * 512), unLength);
                     }
                   }
                   else
