@@ -501,7 +501,7 @@ void Data::dataResponse(const string t, int &fd)
             {
               unBuffer = i;
               m_buffers[i] = fdData;
-              pszBuffer = m_pszBuffer + i * 1024 * 512;
+              pszBuffer = m_pszBuffer + i * 1024 * 1024;
             }
           }
           m_mutex.unlock();
