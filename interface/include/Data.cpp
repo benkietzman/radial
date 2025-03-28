@@ -557,6 +557,13 @@ void Data::dataResponse(const string t, int &fd)
                   if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) >= 0)
                   {
                     unLength -= nReturn;
+                    if (unLength > 0)
+                    {
+                      char *pszTemp = new char[unLength];
+                      memcpy(pszTemp, (pszBuffer + nReturn), unLength);
+                      memcpy(pszBuffer, pszTemp, unLength);
+                      delete pszTemp;
+                    }
                   }
                   else
                   {
