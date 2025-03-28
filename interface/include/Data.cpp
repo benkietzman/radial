@@ -993,7 +993,7 @@ bool Data::token(radialUser &d, string &e)
               unsigned char digest[16];
               b = true;
               clock_gettime(CLOCK_REALTIME, &start);
-              ssIdent << m_strNode << "," << i->m["handle"]->v << "," << start.tv_sec << "," << start.tv_nsec;
+              ssIdent << m_strNode << "," << i->m["handle"]->v << "," << d.p << "," << start.tv_sec << "," << start.tv_nsec;
               strIdent = ssIdent.str();
               EVP_DigestInit(ctx, EVP_md5());
               EVP_DigestUpdate(ctx, strIdent.c_str(), strIdent.size());
