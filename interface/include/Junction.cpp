@@ -22,12 +22,14 @@ namespace radial
 // {{{ Junction()
 Junction::Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "junction", argc, argv, pCallback)
 {
+  sem_init(&m_sem, 0, 200);
   m_pJunction->useSingleSocket(true);
 }
 // }}}
 // {{{ ~Junction()
 Junction::~Junction()
 {
+  sem_destroy(&m_sem);
 }
 // }}}
 // {{{ callback()
@@ -52,6 +54,7 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
     {
       in.push_back(i->j(strJson));
     }
+    sem_wait(&m_sem);
     if (m_pJunction->request(in, out, strError))
     {
       bResult = true;
@@ -61,6 +64,7 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
         ptJson->m["Response"]->l.push_back(new Json(i));
       }
     }
+    sem_post(&m_sem);
   }
   else
   {
