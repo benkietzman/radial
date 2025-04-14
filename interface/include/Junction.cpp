@@ -22,7 +22,7 @@ namespace radial
 // {{{ Junction()
 Junction::Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "junction", argc, argv, pCallback)
 {
-  sem_init(&m_sem, 0, 200);
+  sem_init(&m_sem, 0, 100);
   m_pJunction->useSingleSocket(true);
 }
 // }}}
