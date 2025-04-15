@@ -585,7 +585,7 @@ export default
   <!-- ]]] -->
   <!-- [[[ survey -->
   <div id="loadModalSurvey" class="modal modal-lg">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
           {{#ifCond @root.survey.action "==" "edit"}}
