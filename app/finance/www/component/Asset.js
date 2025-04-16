@@ -270,18 +270,19 @@ export default
               <th c-click="c.tableSort('stock', 5, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="# of Shares of stock">Shares</th>
               <th c-click="c.tableSort('stock', 6, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Price per Share of stock">Price</th>
               <th c-click="c.tableSort('stock', 7)" style="background: inherit; cursor: ns-resize; font-size: small; white-space: nowrap;" title="Dividend Change">Div Chg</th>
-              <th c-click="c.tableSort('stock', 8, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="52-Week Average Dividend per Share">Avg Div</th>
-              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Latest Dividend per Share">Div</th>
-              <th c-click="c.tableSort('stock', 10, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend Yield">Yield</th>
-              <th c-click="c.tableSort('stock', 11, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Allocation">Alloc</th>
-              <th c-click="c.tableSort('stock', 12, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Value">Value</th>
-              <th c-click="c.tableSort('stock', 13, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Allocation">TgtA</th>
-              <th c-click="c.tableSort('stock', 14, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Value">TgtV</th>
-              <th c-click="c.tableSort('stock', 15, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Gap between Current Value and Target Value">Gap</th>
-              <th c-click="c.tableSort('stock', 16, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Annual Dividend">Div</th>
-              <th c-click="c.tableSort('stock', 17, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
-              <th c-click="c.tableSort('stock', 18, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
-              <th c-click="c.tableSort('stock', 19, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
+              <th c-click="c.tableSort('stock', 8, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="52-Week Average Dividend per Share">x̄ Div</th>
+              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="52-Week Average Dividend Yield">x̄ Yld</th>
+              <th c-click="c.tableSort('stock', 10, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Latest Dividend per Share">Div</th>
+              <th c-click="c.tableSort('stock', 11, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend Yield">Yield</th>
+              <th c-click="c.tableSort('stock', 12, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Allocation">Alloc</th>
+              <th c-click="c.tableSort('stock', 13, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Value">Value</th>
+              <th c-click="c.tableSort('stock', 14, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Allocation">TgtA</th>
+              <th c-click="c.tableSort('stock', 15, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Value">TgtV</th>
+              <th c-click="c.tableSort('stock', 16, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Gap between Current Value and Target Value">Gap</th>
+              <th c-click="c.tableSort('stock', 17, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Annual Dividend">Div</th>
+              <th c-click="c.tableSort('stock', 18, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
+              <th c-click="c.tableSort('stock', 19, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
+              <th c-click="c.tableSort('stock', 20, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
             </tr>
             </thead>
             <tbody>
@@ -296,8 +297,9 @@ export default
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Price}}">{{numberShort Price}}</td>
               <td style="background: inherit;"><div style="max-height: 20px;"><canvas id="chartChange_{{@key}}"></canvas></div></td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Dividend}}">{{numberShort Dividend}}</td>
-              <td class="{{#ifCond ChangeDividend "<" 0}}text-danger{{/ifCond}}{{#ifCond ChangeDividend "<=" -10}} fw-bold{{/ifCond}}{{#ifCond ChangeDividend "<=" -25}} fw-bolder{{/ifCond}}{{#ifCond ChangeDividend  "<=" -50}} fst-italic{{/ifCond}}{{#ifCond ChangeDividend ">" 0}}text-success{{/ifCond}}{{#ifCond ChangeDividend ">=" 10}} fw-bold{{/ifCond}}{{#ifCond ChangeDividend ">=" 25}} fw-bolder{{/ifCond}}{{#ifCond ChangeDividend ">=" 50}} fst-italic{{/ifCond}}" style="background: inherit; font-size: small; text-align: right;" title="{{number LatestDividend}} ({{number ChangeDividend}}%)">{{numberShort LatestDividend}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply (divide Dividend Price) 100)}}%">{{numberShort (multiply (divide Dividend Price) 100)}}%</td>
+              <td class="{{#ifCond ChangeDividend "<" 0}}text-danger{{/ifCond}}{{#ifCond ChangeDividend "<=" -10}} fw-bold{{/ifCond}}{{#ifCond ChangeDividend "<=" -25}} fw-bolder{{/ifCond}}{{#ifCond ChangeDividend  "<=" -50}} fst-italic{{/ifCond}}{{#ifCond ChangeDividend ">" 0}}text-success{{/ifCond}}{{#ifCond ChangeDividend ">=" 10}} fw-bold{{/ifCond}}{{#ifCond ChangeDividend ">=" 25}} fw-bolder{{/ifCond}}{{#ifCond ChangeDividend ">=" 50}} fst-italic{{/ifCond}}" style="background: inherit; font-size: small; text-align: right;" title="{{number LatestDividend}} ({{number ChangeDividend}}%)">{{numberShort LatestDividend}}</td>
+              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply (divide LatestDividend Price) 100)}}%">{{numberShort (multiply (divide LatestDividend Price) 100)}}%</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (multiply Shares Price) 100) (assetStockSum))}}%">{{numberShort (divide (multiply (multiply Shares Price) 100) (assetStockSum))}}%</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply Shares Price)}}">{{numberShort (multiply Shares Price)}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) 100)}}%">{{numberShort (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) 100)}}%</td>
