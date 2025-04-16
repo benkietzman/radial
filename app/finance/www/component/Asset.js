@@ -269,9 +269,9 @@ export default
               <th c-click="c.tableSort('stock', 4)" style="background: inherit; cursor: ns-resize; font-size: small;" title="Sector Classification">Sector</th>
               <th c-click="c.tableSort('stock', 5, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="# of Shares of stock">Shares</th>
               <th c-click="c.tableSort('stock', 6, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Price per Share of stock">Price</th>
-              <th c-click="c.tableSort('stock', 7)" style="background: inherit; cursor: ns-resize; font-size: small; white-space: nowrap;" title="Dividend Change">Div Chg</th>
-              <th c-click="c.tableSort('stock', 8, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="52-Week Average Dividend per Share">x̄ Div</th>
-              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="52-Week Average Dividend Yield">x̄ Yld</th>
+              <th c-click="c.tableSort('stock', 7)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="5-Year Dividend Change">δ Div</th>
+              <th c-click="c.tableSort('stock', 8, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend per Share">x̄ Div</th>
+              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend Yield">x̄ Yield</th>
               <th c-click="c.tableSort('stock', 10, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Latest Dividend per Share">Div</th>
               <th c-click="c.tableSort('stock', 11, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend Yield">Yield</th>
               <th c-click="c.tableSort('stock', 12, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Allocation">Alloc</th>
