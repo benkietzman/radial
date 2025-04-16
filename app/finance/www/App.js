@@ -610,13 +610,16 @@ class App
                 if (response.Response[1].Status == 'okay')
                 {
                   let data = JSON.parse(response.Response[1].Content);
-                  let dividends = {};
                   if (bPrice)
                   {
                     this.d.Asset.Stock[k].timestamp = nTimestamp;
                   }
                   if (data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].events && data.chart.result[0].events.dividends)
                   {
+                    let CYear = Math.floor((date.getTime() - (365 * 24 * 60 * 60 * 1000)) / 1000);
+                    let dividends = {};
+                    let fDividend = 0;
+                    let fLatestDividend = 0;
                     for (let [key, value] of Object.entries(data.chart.result[0].events.dividends))
                     {
                       if (!this.c.isDefined(dividends[key]))
@@ -624,9 +627,18 @@ class App
                         dividends[key] = 0;
                       }
                       dividends[key] += Number(value.amount);
+                      if (key >= CYear)
+                      {
+                        fDividend += Number(value.amount);
+                      }
+                      fLatestDividend = Number(value.amount);
                     }
+                    this.d.Asset.Stock[k].Change = dividends;
+                    this.d.Asset.Stock[k].Dividend = fDividend;
+                    fLatestDividend *= ((this.d.Asset.Stock[k].Receive == 0)?12:4);
+                    this.d.Asset.Stock[k].LatestDividend = fLatestDividend;
+                    this.d.Asset.Stock[k].ChangeDividend = (fLatestDividend - fDividend) * 100 / fDividend;
                   }
-                  this.d.Asset.Stock[k].Change = dividends;
                 }
                 else
                 {
