@@ -104,6 +104,10 @@ class App
     {
       return this.assetStockDividendSum();
     });
+    Handlebars.registerHelper('assetStockLatestDividendSum', () =>
+    {
+      return this.assetStockLatestDividendSum();
+    });
     Handlebars.registerHelper('assetStockReceive', (nDividend, nReceive, nMonth) =>
     {
       return this.assetStockReceive(nDividend, nReceive, nMonth);
@@ -281,6 +285,19 @@ class App
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
       nSum += Number(v.Shares) * Number(v.Price);
+    }
+
+    return nSum;
+  }
+  // }}}
+  // {{{ assetStockLatestDividendSum()
+  assetStockLatestDividendSum()
+  {
+    let nSum = 0;
+
+    for (let [k, v] of Object.entries(this.d.Asset.Stock))
+    {
+      nSum += Number(v.Shares) * Number(v.LatestDividend);
     }
 
     return nSum;

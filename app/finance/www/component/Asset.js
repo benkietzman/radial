@@ -316,6 +316,7 @@ export default
             <tr>
               <th style="background: inherit; font-size: small; text-align:left;">Total</th>
               <th colspan="9" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum) 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum) 100) (assetStockSum))}}%</th>
+              <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockLatestDividendSum) 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockLatestDividendSum) 100) (assetStockSum))}}%</th>
               <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
               <th colspan="4" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockDividendSum)}}">{{numberShort (assetStockDividendSum)}}</th>
               <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 1)}}">{{numberShort (assetStockReceiveSum 1)}}</th>
