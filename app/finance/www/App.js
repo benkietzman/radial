@@ -144,6 +144,14 @@ class App
     {
       return this.incomeEmployment(k);
     });
+    Handlebars.registerHelper('incomeEmploymentInvest', (k) =>
+    {
+      return this.incomeEmploymentInvest(k);
+    });
+    Handlebars.registerHelper('incomeEmploymentInvestSum', () =>
+    {
+      return this.incomeEmploymentInvestSum();
+    });
     Handlebars.registerHelper('incomeEmploymentSum', () =>
     {
       return this.incomeEmploymentSum();
@@ -845,6 +853,25 @@ class App
   incomeEmployment(k)
   {
     return Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus) + (Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number((Number(this.d.Income.Employment[k].Invest) >= Number(this.d.Income.Employment[k].Match))?this.d.Income.Employment[k].Match:this.d.Income.Employment[k].Invest) / 100);
+  }
+  // }}}
+  // {{{ incomeEmploymentInvest()
+  incomeEmploymentInvest(k)
+  {
+    return ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number(this.d.Income.Employment[k].Invest) / 100)) + ((Number(this.d.Income.Employment[k].Salary) + Number(this.d.Income.Employment[k].Bonus)) * (Number((Number(this.d.Income.Employment[k].Invest) >= Number(this.d.Income.Employment[k].Match))?this.d.Income.Employment[k].Match:this.d.Income.Employment[k].Invest) / 100));
+  }
+  // }}}
+  // {{{ incomeEmploymentInvestSum()
+  incomeEmploymentInvestSum()
+  {
+    let nSum = 0;
+
+    for (let [k, v] of Object.entries(this.d.Income.Employment))
+    {
+      nSum += this.incomeEmploymentInvest(k);
+    }
+
+    return nSum;
   }
   // }}}
   // {{{ incomeEmploymentSum()
