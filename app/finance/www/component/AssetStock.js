@@ -212,8 +212,6 @@ export default
           <th style="background: inherit;" title="Score">Score</th>
           <th style="background: inherit;" title="Sector Classification">Sector</th>
           <th style="background: inherit;" title="# of Shares of stock">Shares</th>
-          <th style="background: inherit;" title="Price per Share of stock">$/Share</th>
-          <th style="background: inherit;" title="Dividend per Share">Dividend</th>
           <th style="background: inherit;" title="When Dividend is Received">Receive</th>
           <th style="background: inherit;" title="Are the dividends taxable?">Tax</th>
           <th style="background: inherit;"></th>
@@ -227,8 +225,6 @@ export default
           <td style="background: inherit;"><select class="form-control form-control-sm bg-success-subtle" c-model="d.Score">{{#each a.m_assetStockScores}}<option value="{{@key}}">{{.}}</option>{{/each}}</select></td>
           <td style="background: inherit;"><select class="form-control form-control-sm bg-success-subtle" c-model="d.Sector">{{#each a.m_assetStockSectors}}<option value="{{@key}}">{{.}}</option>{{/each}}</select></td>
           <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-success-subtle" c-model="d.Shares"></td>
-          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-success-subtle" c-model="d.Price"></td>
-          <td style="background: inherit;"><input type="text" class="form-control form-control-sm bg-success-subtle" c-model="d.Dividend"></td>
           <td style="background: inherit;"><select class="form-control form-control-sm bg-success-subtle" c-model="d.Receive">{{#each a.m_assetStockReceives}}<option value="{{@key}}">{{.}}</option>{{/each}}</select></td>
           <td style="background: inherit;"><select class="form-control form-control-sm bg-success-subtle" c-model="d.Taxable">{{#each a.m_noYes}}<option value="{{@key}}">{{.}}</option>{{/each}}</select></td>
           <td style="background: inherit;"><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="add()" title="Add"></button></td>
@@ -241,8 +237,6 @@ export default
           <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{#indexOf ../../a.m_assetStockScores ../Score}}{{/indexOf}}{{else}}<select class="form-control form-control-sm bg-success-subtle" c-model="e.Score">{{#each ../../a.m_assetStockScores}}<option value="{{@key}}">{{.}}</option>{{/each}}</select>{{/ifCond}}</td>
           <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{#indexOf ../../a.m_assetStockSectors ../Sector}}{{/indexOf}}{{else}}<select class="form-control form-control-sm bg-success-subtle" c-model="e.Sector">{{#each ../../a.m_assetStockSectors}}<option value="{{@key}}">{{.}}</option>{{/each}}</select>{{/ifCond}}</td>
           <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Shares}}{{else}}<input type="text" class="form-control form-control-sm bg-success-subtle" c-model="e.Shares">{{/ifCond}}</td>
-          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Price}}{{else}}<input type="text" class="form-control form-control-sm bg-success-subtle" c-model="e.Price">{{/ifCond}}</td>
-          <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{../Dividend}}{{else}}<input type="text" class="form-control form-control-sm bg-success-subtle" c-model="e.Dividend">{{/ifCond}}</td>
           <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{#indexOf ../../a.m_assetStockReceives ../Receive}}{{/indexOf}}{{else}}<select class="form-control form-control-sm bg-success-subtle" c-model="e.Receive">{{#each ../../a.m_assetStockReceives}}<option value="{{@key}}">{{.}}</option>{{/each}}</select>{{/ifCond}}</td>
           <td style="background: inherit;">{{#ifCond @key '!=' ../k}}{{#indexOf ../../a.m_noYes ../Taxable}}{{/indexOf}}{{else}}<select class="form-control form-control-sm bg-success-subtle" c-model="e.Taxable">{{#each ../../a.m_noYes}}<option value="{{@key}}">{{.}}</option>{{/each}}</select>{{/ifCond}}</td>
           <td style="background: inherit; display:inline-block; white-space: nowrap;">{{#ifCond @key '!=' ../k}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="edit('{{@key}}')" class="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="remove('{{@key}}')" title="Remove"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="update('{{@key}}')" title="Save"></button>{{/ifCond}}</td>
