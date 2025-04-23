@@ -266,6 +266,110 @@ bool Interface::alert(const string strUser, const string strMessage, string &str
   return bResult;
 }
 // }}}
+// {{{ application()
+bool Interface::application(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "name"))
+  {
+    map<string, string> r;
+    if (db("dbCentralApplications", i, r, e))
+    {
+      if (!r.empty())
+      {
+        Json *j = new Json(r);
+        b = true;
+        ny(j, "account_check");
+        ny(j, "auto_register");
+        ny(j, "dependable");
+        if (!empty(j, "login_type_id"))
+        {
+          size_t unValue;
+          stringstream ssValue(j->m["login_type_id"]->v);
+          ssValue >> unValue;
+          if (unValue > 0)
+          {
+            radialUser l;
+            userInit(d, l);
+            l.p->m["i"]->i("id", j->m["login_type_id"]->v);
+            if (loginType(l, e))
+            {
+              j->i("login_type", l.p->m["o"]);
+            }
+            userDeinit(l);
+          }
+        }
+        if (!empty(j, "menu_id"))
+        {
+          size_t unValue;
+          stringstream ssValue(j->m["menu_id"]->v);
+          ssValue >> unValue;
+          if (unValue > 0)
+          {
+            radialUser m;
+            userInit(d, m);
+            m.p->m["i"]->i("id", j->m["menu_id"]->v);
+            if (menuAccess(m, e))
+            {
+              j->i("menu_access", m.p->m["o"]);
+            }
+            userDeinit(m);
+          }
+        }
+        if (!empty(j, "notify_priority_id"))
+        {
+          size_t unValue;
+          stringstream ssValue(j->m["notify_priority_id"]->v);
+          ssValue >> unValue;
+          if (unValue > 0)
+          {
+            radialUser n;
+            userInit(d, n);
+            n.p->m["i"]->i("id", j->m["notify_priority_id"]->v);
+            if (notifyPriority(n, e))
+            {
+              j->i("notify_priority", n.p->m["o"]);
+            }
+            userDeinit(n);
+          }
+        }
+        if (!empty(j, "package_type_id"))
+        {
+          size_t unValue;
+          stringstream ssValue(j->m["package_type_id"]->v);
+          ssValue >> unValue;
+          if (unValue > 0)
+          {
+            radialUser p;
+            userInit(d, p);
+            p.p->m["i"]->i("id", j->m["package_type_id"]->v);
+            if (packageType(p, e))
+            {
+              j->i("package_type", p.p->m["o"]);
+            }
+            userDeinit(p);
+          }
+        }
+        ny(j, "secure_port");
+        d.p->i("o", j);
+        delete j;
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id or name.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ auth()
 bool Interface::auth(Json *ptJson, string &strError)
 {
@@ -1990,6 +2094,59 @@ bool Interface::feedbackType(const string strTypeID, Json *ptData, string &strEr
 }
 // }}}
 // }}}
+// {{{ footer()
+bool Interface::footer(radialUser &d, string &e)
+{ 
+  bool b = true;
+  Json *i = d.p->m["i"], *o; 
+  radialUser a;
+  
+  d.p->i("o", i);
+  o = d.p->m["o"];
+  if (!exist(i, "year"))
+  {
+    int nYear;
+    stringstream ssYear;
+    ssYear << m_date.getYear(nYear);
+    o->i("year", ssYear.str(), 'n'); 
+  }
+  if (!empty(i, "userid"))
+  {
+    userInit(d, a);
+    a.p->m["i"]->i("userid", i->m["userid"]->v);
+    if (user(a, e) && !empty(a.p->m["o"], "id"))
+    {
+      stringstream ssLink;
+      ssLink << "https://" << m_strServer << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
+      a.p->m["o"]->i("link", ssLink.str());
+      a.p->m["o"]->i("target", "_blank");
+      o->i("engineer", a.p->m["o"]);
+    }
+    userDeinit(a);
+  }
+  userInit(d, a);
+  a.p->m["i"]->i("name", "Radial");
+  if (application(a, e))
+  {
+    a.p->m["o"]->i("application", "Radial");
+    if (!empty(a.p->m["o"], "website"))
+    {
+      a.p->m["o"]->i("link", a.p->m["o"]->m["website"]->v);
+    }
+    else
+    {
+      stringstream ssLink;
+      ssLink << "https://" << m_strServer << "/central/#/Applications/" << a.p->m["o"]->m["id"]->v;
+      a.p->m["o"]->i("link", ssLink.str());
+    }
+    a.p->m["o"]->i("target", "_blank");
+    o->i("power", a.p->m["o"]);
+  }
+  userDeinit(a);
+
+  return b;
+}
+// }}}
 // {{{ getApplication()
 string Interface::getApplication(radialUser &d)
 {
@@ -2965,11 +3122,71 @@ void Interface::logger(const string strFunction, map<string, string> label, cons
   logger("Radial", strFunction, label, strMessage);
 }
 // }}}
+// {{{ loginType()
+bool Interface::loginType(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "type"))
+  {
+    map<string, string> r;
+    if (db("dbCentralLoginTypes", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id or type.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ master()
 string Interface::master()
 {
   return m_strMaster;
 }
+// }}}
+// {{{ menuAccess()
+bool Interface::menuAccess(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "type"))
+  {
+    map<string, string> r;
+    if (db("dbCentralMenuAccesses", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id or type.";
+  }
+  
+  return b;
+} 
 // }}}
 // {{{ mysql
 // {{{ mysql()
@@ -3037,6 +3254,36 @@ void Interface::notify(const string strMessage)
   log("notify", strMessage);
 }
 // }}}
+// {{{ notifyPriority()
+bool Interface::notifyPriority(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "priority"))
+  {
+    map<string, string> r;
+    if (db("dbCentralNotifyPriorities", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true;
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id or priority.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ ny()
 void Interface::ny(Json *ptJson, const string strField)
 {
@@ -3062,6 +3309,36 @@ void Interface::ny(Json *ptJson, const string strField)
       ptJson->m[strField]->i("value", "0", 'n');
     }
   }
+}
+// }}}
+// {{{ packageType()
+bool Interface::packageType(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id") || !empty(i, "type"))
+  {
+    map<string, string> r;
+    if (db("dbCentralPackageTypes", i, r, e))
+    {
+      if (!r.empty())
+      {
+        b = true; 
+        d.p->i("o", r);
+      }
+      else
+      {
+        e = "No results returned.";
+      } 
+    }
+  } 
+  else
+  {
+    e = "Please provide the id or type.";
+  }
+
+  return b;
 }
 // }}}
 // {{{ page

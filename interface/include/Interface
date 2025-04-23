@@ -91,6 +91,7 @@ class Interface : public Base
   bool action(radialUser &d, string &e);
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
+  bool application(radialUser &d, string &e);
   bool auth(Json *ptJson, string &strError);
   void boolean(Json *ptJson, const string strField);
   void callbackPool();
@@ -136,6 +137,7 @@ class Interface : public Base
   bool feedbackResultAdd(const string strUser, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData, string &strError);
   bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   bool feedbackType(const string strTypeID, Json *ptData, string &strError);
+  bool footer(radialUser &d, string &e);
   string getApplication(radialUser &d);
   string getUserEmail(radialUser &d);
   string getUserFirstName(radialUser &d);
@@ -166,12 +168,16 @@ class Interface : public Base
   void log(const string strMessage);
   void logger(const string strFunction, map<string, string> label, const string strMessage);
   void logger(const string strApplication, const string strFunction, map<string, string> label, const string strMessage);
+  bool loginType(radialUser &d, string &e);
   string master();
+  bool menuAccess(radialUser &d, string &e);
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlQuery(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);
   bool mysqlUpdate(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
   void notify(const string strMessage);
+  bool notifyPriority(radialUser &d, string &e);
   void ny(Json *ptJson, const string strField);
+  bool packageType(radialUser &d, string &e);
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);

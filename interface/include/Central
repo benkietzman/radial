@@ -30,13 +30,10 @@ class Central : public Interface
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
   mutex m_mutex;
-  string m_strEmail;
-  string m_strServer;
   thread *m_pThreadSchedule;
 
   bool accountType(radialUser &d, string &e);
   bool accountTypes(radialUser &d, string &e);
-  bool application(radialUser &d, string &e);
   bool applicationAccount(radialUser &d, string &e);
   bool applicationAccountAdd(radialUser &d, string &e);
   bool applicationAccountEdit(radialUser &d, string &e);
@@ -92,7 +89,6 @@ class Central : public Interface
   bool dbu(const string strQuery, string &e);
   bool dbu(const string strQuery, string &strID, string &e);
   bool dependentsByApplicationID(radialUser &d, string &e);
-  bool footer(radialUser &d, string &e);
   bool group(radialUser &d, string &e);
   bool groupAdd(radialUser &d, string &e);
   bool groupEdit(radialUser &d, string &e);

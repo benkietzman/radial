@@ -138,6 +138,31 @@ Base::Base(int argc, char **argv)
   {
     m_pWarden = new Warden(m_strApplication, m_strWarden, strError);
   }
+  if (!m_strData.empty())
+  {
+    ifstream inConfig(m_strData + "/config.json");
+    if (inConfig)
+    {
+      string strLine;
+      stringstream ssJson;
+      Json *ptConfig;
+      while (getline(inConfig, strLine))
+      {
+        ssJson << strLine;
+      }
+      ptConfig = new Json(ssJson.str());
+      if (!empty(ptConfig, "email"))
+      {
+        m_strEmail = ptConfig->m["email"]->v;
+      }
+      if (!empty(ptConfig, "server"))
+      {
+        m_strServer = ptConfig->m["server"]->v;
+      }
+      delete ptConfig;
+    }
+    inConfig.close();
+  }
 }
 // }}}
 // {{{ ~Base()
