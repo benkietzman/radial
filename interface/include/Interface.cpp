@@ -2103,20 +2103,13 @@ bool Interface::footer(radialUser &d, string &e)
   
   d.p->i("o", i);
   o = d.p->m["o"];
-  if (!m_strEmail.empty() && !exist(i, "email"))
+  if (!m_strEmail.empty() && empty(i, "email"))
   {
     i->i("email", m_strEmail);
   }
-  if (!m_strServer.empty())
+  if (!m_strServer.empty() && empty(i, "server"))
   {
-    if (!exist(i, "server"))
-    { 
-      i->i("server", m_strServer);
-    }
-    if (!exist(i, "website"))
-    { 
-      i->i("website", (string)"https://" + m_strServer);
-    }
+    i->i("server", m_strServer);
   }
   if (!exist(i, "year"))
   {
