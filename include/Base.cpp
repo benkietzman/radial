@@ -159,6 +159,10 @@ Base::Base(int argc, char **argv)
       {
         m_strServer = ptConfig->m["server"]->v;
       }
+      if (!empty(ptConfig, "website"))
+      {
+        m_strWebsite = ptConfig->m["website"]->v;
+      }
       delete ptConfig;
     }
     inConfig.close();

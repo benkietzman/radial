@@ -141,6 +141,7 @@ class Base
   string m_strNode;
   string m_strServer;
   string m_strWarden;
+  string m_strWebsite;
   time_t m_CMonitor[2];
   unsigned long m_ulMaxResident;
   Central *m_pCentral;

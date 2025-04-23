@@ -2111,6 +2111,10 @@ bool Interface::footer(radialUser &d, string &e)
   {
     i->i("server", m_strServer);
   }
+  if (!m_strWebsite.empty() && empty(i, "website"))
+  {
+    i->i("website", m_strWebsite);
+  }
   if (!exist(i, "year"))
   {
     int nYear;
