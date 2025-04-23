@@ -3524,36 +3524,6 @@ bool Central::groupUsersByGroupID(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ loginType()
-bool Central::loginType(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "type"))
-  {
-    map<string, string> r;
-    if (db("dbCentralLoginTypes", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or type.";
-  }
-
-  return b;
-}
-// }}}
 // {{{ loginTypes()
 bool Central::loginTypes(radialUser &d, string &e)
 {
@@ -3577,36 +3547,6 @@ bool Central::loginTypes(radialUser &d, string &e)
 void Central::merge(Json *ptOuter, Json *ptInner)
 {
   ptOuter->merge(ptInner, true, false);
-}
-// }}}
-// {{{ menuAccess()
-bool Central::menuAccess(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "type"))
-  {
-    map<string, string> r;
-    if (db("dbCentralMenuAccesses", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or type.";
-  }
-
-  return b;
 }
 // }}}
 // {{{ menuAccesses()
@@ -3792,66 +3732,6 @@ bool Central::notifyPriorities(radialUser &d, string &e)
     {
       o->pb(r);
     }
-  }
-
-  return b;
-}
-// }}}
-// {{{ notifyPriority()
-bool Central::notifyPriority(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "priority"))
-  {
-    map<string, string> r;
-    if (db("dbCentralNotifyPriorities", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or priority.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ packageType()
-bool Central::packageType(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (!empty(i, "id") || !empty(i, "type"))
-  {
-    map<string, string> r;
-    if (db("dbCentralPackageTypes", i, r, e))
-    {
-      if (!r.empty())
-      {
-        b = true;
-        d.p->i("o", r);
-      }
-      else
-      {
-        e = "No results returned.";
-      }
-    }
-  }
-  else
-  {
-    e = "Please provide the id or type.";
   }
 
   return b;

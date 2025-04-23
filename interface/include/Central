@@ -103,10 +103,8 @@ class Central : public Interface
   bool groupUserEdit(radialUser &d, string &e);
   bool groupUserRemove(radialUser &d, string &e);
   bool groupUsersByGroupID(radialUser &d, string &e);
-  bool loginType(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
-  bool menuAccess(radialUser &d, string &e);
   bool menuAccesses(radialUser &d, string &e);
   bool monitorConfig(radialUser &d, string &e);
   bool monitorData(radialUser &d, string &e);
@@ -114,8 +112,6 @@ class Central : public Interface
   bool monitorSystem(radialUser &d, string &e);
   bool monitorUpdate(radialUser &d, string &e);
   bool notifyPriorities(radialUser &d, string &e);
-  bool notifyPriority(radialUser &d, string &e);
-  bool packageType(radialUser &d, string &e);
   bool packageTypes(radialUser &d, string &e);
   bool repo(radialUser &d, string &e);
   bool repos(radialUser &d, string &e);
