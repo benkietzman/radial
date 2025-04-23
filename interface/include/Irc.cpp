@@ -1554,7 +1554,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     // {{{ invalid
     else
     {
-      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, server, user." << endl;
+      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, monitor, server, user." << endl;
     }
     // }}}
   }

@@ -3981,6 +3981,7 @@ void Central::schedule(string strPrefix)
       if ((CNow - CMonitor) > 30)
       {
         bool bUpdate;
+        CMonitor = CNow;
         m_mutex.lock();
         bUpdate = m_bMonitorUpdate;
         m_mutex.unlock();
@@ -4108,7 +4109,7 @@ void Central::schedule(string strPrefix)
                   if (!empty(ptData, "_time"))
                   {
                     time_t CData = atoi(ptData->m["_time"]->v.c_str());
-                    if (CData >= CMonitor)
+                    if (CNow < CData || (CNow - CData) <= 300)
                     {
                       if (exist(ptData, "system"))
                       {
@@ -4304,7 +4305,6 @@ void Central::schedule(string strPrefix)
         }
         delete ptJson;
         // }}}
-        CMonitor = CNow;
       }
       // }}}
       // {{{ reminders
