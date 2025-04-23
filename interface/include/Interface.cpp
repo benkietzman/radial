@@ -2097,7 +2097,6 @@ bool Interface::feedbackType(const string strTypeID, Json *ptData, string &strEr
 // {{{ footer()
 bool Interface::footer(radialUser &d, string &e)
 { 
-  bool b = true;
   Json *i = d.p->m["i"], *o; 
   radialUser a;
   
@@ -2105,19 +2104,19 @@ bool Interface::footer(radialUser &d, string &e)
   o = d.p->m["o"];
   if (!m_strCompany.empty() && empty(i, "company"))
   {
-    i->i("company", m_strCompany);
+    o->i("company", m_strCompany);
   }
   if (!m_strEmail.empty() && empty(i, "email"))
   {
-    i->i("email", m_strEmail);
+    o->i("email", m_strEmail);
   }
   if (!m_strServer.empty() && empty(i, "server"))
   {
-    i->i("server", m_strServer);
+    o->i("server", m_strServer);
   }
   if (!m_strWebsite.empty() && empty(i, "website"))
   {
-    i->i("website", m_strWebsite);
+    o->i("website", m_strWebsite);
   }
   if (!exist(i, "year"))
   {
@@ -2160,7 +2159,7 @@ bool Interface::footer(radialUser &d, string &e)
   }
   userDeinit(a);
 
-  return b;
+  return true;
 }
 // }}}
 // {{{ getApplication()
