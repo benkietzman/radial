@@ -136,6 +136,7 @@ class Base
   size_t m_unThreads;
   size_t m_unWorkers;
   string m_strApplication;
+  string m_strCompany;
   string m_strData;
   string m_strEmail;
   string m_strNode;

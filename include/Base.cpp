@@ -151,6 +151,10 @@ Base::Base(int argc, char **argv)
         ssJson << strLine;
       }
       ptConfig = new Json(ssJson.str());
+      if (!empty(ptConfig, "company"))
+      {
+        m_strCompany = ptConfig->m["company"]->v;
+      }
       if (!empty(ptConfig, "email"))
       {
         m_strEmail = ptConfig->m["email"]->v;

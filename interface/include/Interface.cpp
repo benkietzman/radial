@@ -2103,6 +2103,10 @@ bool Interface::footer(radialUser &d, string &e)
   
   d.p->i("o", i);
   o = d.p->m["o"];
+  if (!m_strCompany.empty() && empty(i, "company"))
+  {
+    i->i("company", m_strCompany);
+  }
   if (!m_strEmail.empty() && empty(i, "email"))
   {
     i->i("email", m_strEmail);
