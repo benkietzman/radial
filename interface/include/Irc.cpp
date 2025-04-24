@@ -2300,6 +2300,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
                     ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
+                    if (!empty(ptProgram, "Season"))
+                    {
+                      ssText << " [S" << ptProgram->m["Season"]->v;
+                      if (!empty(ptProgram, "Episode"))
+                      {
+                        ssText << "E" << ptProgram->m["Episode"]->v;
+                      }
+                      ssText << "]";
+                    }
                   }
                 }
               }
@@ -2339,6 +2348,15 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
                     ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
+                    if (!empty(ptProgram, "Season"))
+                    {
+                      ssText << " [S" << ptProgram->m["Season"]->v;
+                      if (!empty(ptProgram, "Episode"))
+                      {
+                        ssText << "E" << ptProgram->m["Episode"]->v;
+                      }
+                      ssText << "]";
+                    }
                   }
                 }
               }
