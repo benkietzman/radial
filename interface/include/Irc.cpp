@@ -2299,7 +2299,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 {
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
-                    ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
+                    struct tm tTime;
+                    getdate_r(ptProgram->m["StartTime"]->v.c_str(), &tTime);
+                    ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
@@ -2347,7 +2349,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 {
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
-                    ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
+                    struct tm tTime;
+                    getdate_r(ptProgram->m["StartTime"]->v.c_str(), &tTime);
+                    ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
