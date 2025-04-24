@@ -3263,6 +3263,28 @@ bool Interface::mysqlUpdate(const string strServer, const unsigned int unPort, c
 }
 // }}}
 // }}}
+// {{{ mythtv()
+bool Interface::mythtv(const string strFunction, Json *ptRequest, Json *ptResponse, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Interface", "mythtv");
+  ptJson->i("Function", strFunction);
+  ptJson->m["Request"] = new Json(ptRequest);
+  if (hub("mythtv", ptJson, strError))
+  {
+    bResult = true;
+    if (exist(ptJson, "Response"))
+    {
+      ptResponse->merge(ptJson->m["Response"], true, false);
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
+// }}}
 // {{{ notify()
 void Interface::notify(const string strMessage)
 {

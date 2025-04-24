@@ -1,0 +1,47 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : MythTv
+// author     : Ben Kietzman
+// begin      : 2025-04-24
+// copyright  : kietzman.org
+// email      : ben@kietzman.org
+/***********************************************************************
+* This program is free software; you can redistribute it and/or modify *
+* it under the terms of the GNU General Public License as published by *
+* the Free Software Foundation; either version 2 of the License, or    *
+* (at your option) any later version.                                  *
+***********************************************************************/
+#ifndef _RADIAL_MYTHTV_
+#define _RADIAL_MYTHTV_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ MythTv
+class MythTv : public Interface
+{
+  protected:
+  map<string, bool (MythTv::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+  string m_strPort;
+  string m_strServer;
+  thread *m_pThreadSchedule;
+
+  bool dvrGetRecordedList(radialUser &d, string &e);
+  bool dvrGetUpcomingList(radialUser &d, string &e);
+  bool request(const string strService, const string strFunction, Json *ptRequest, Json *ptResponse, string &strError);
+  void schedule(string strPrefix);
+
+  public:
+  MythTv(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
+  ~MythTv();
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+};
+// }}}
+}
+}
+#endif

@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
@@ -25,6 +25,7 @@ install: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db
 	install --mode=775 bin/log $(prefix)/radial/interface/
 	install --mode=775 bin/logger $(prefix)/radial/interface/
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
+	install --mode=775 bin/mythtv $(prefix)/radial/interface/
 	install --mode=775 bin/request $(prefix)/radial/interface/
 	install --mode=775 bin/secure $(prefix)/radial/interface/
 	install --mode=775 bin/session $(prefix)/radial/interface/
@@ -195,6 +196,16 @@ obj/mysql.o: mysql.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c mysql.cpp -o obj/mysql.o $(CPPFLAGS) -I../../common
 obj/Mysql.o: include/Mysql.cpp obj
 	g++ -ggdb -Wall -c include/Mysql.cpp -o obj/Mysql.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ mythtv
+mythtv: bin/mythtv $(prefix)/radial/interface
+	install --mode=775 bin/mythtv $(prefix)/radial/interface/
+bin/mythtv: ../../common/libcommon.a obj/mythtv.o obj/Base.o obj/Interface.o obj/MythTv.o bin
+	g++ -o bin/mythtv obj/mythtv.o obj/Base.o obj/Interface.o obj/MythTv.o $(LDFLAGS) -L/usr/lib64/mythtv -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+obj/mythtv.o: mythtv.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c mythtv.cpp -o obj/mythtv.o $(CPPFLAGS) -I../../common
+obj/MythTv.o: include/MythTv.cpp obj
+	g++ -ggdb -Wall -c include/MythTv.cpp -o obj/MythTv.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ request
 request: bin/request $(prefix)/radial/interface
