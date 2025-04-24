@@ -30,13 +30,13 @@ MythTv::MythTv(string strPrefix, int argc, char **argv, void (*pCallback)(string
     string strArg = argv[i];
     if (strArg.size() > 7 && strArg.substr(0, 7) == "--port=")
     {
-      m_strPort = strArg.substr(0, strArg.size() - 7);
+      m_strPort = strArg.substr(7, strArg.size() - 7);
       m_manip.purgeChar(m_strPort, m_strPort, "'");
       m_manip.purgeChar(m_strPort, m_strPort, "\"");
     }
     else if (strArg.size() > 9 && strArg.substr(0, 9) == "--server=")
     {
-      m_strServer = strArg.substr(0, strArg.size() - 9);
+      m_strServer = strArg.substr(9, strArg.size() - 9);
       m_manip.purgeChar(m_strServer, m_strServer, "'");
       m_manip.purgeChar(m_strServer, m_strServer, "\"");
     }

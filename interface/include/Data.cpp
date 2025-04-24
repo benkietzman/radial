@@ -38,7 +38,7 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
       }
       else
       {
-        strBuffer = strArg.substr(0, strArg.size() - 9);
+        strBuffer = strArg.substr(9, strArg.size() - 9);
       }
       m_manip.purgeChar(strBuffer, strBuffer, "'");
       m_manip.purgeChar(strBuffer, strBuffer, "\"");
