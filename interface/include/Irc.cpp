@@ -2316,10 +2316,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                       localtime_r(&CTime, &tTime);
                     }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    if (!empty(ptProgram, "SubTitle"))
-                    {
-                      ssText << " - " << ptProgram->m["SubTitle"]->v;
-                    }
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
@@ -2328,6 +2324,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                         ssText << "E" << ptProgram->m["Episode"]->v;
                       }
                       ssText << "]";
+                    }
+                    if (!empty(ptProgram, "SubTitle"))
+                    {
+                      ssText << " - " << ptProgram->m["SubTitle"]->v;
                     }
                   }
                 }
@@ -2383,10 +2383,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                       localtime_r(&CTime, &tTime);
                     }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    if (!empty(ptProgram, "SubTitle"))
-                    {
-                      ssText << " - " << ptProgram->m["SubTitle"]->v;
-                    }
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
@@ -2395,6 +2391,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                         ssText << "E" << ptProgram->m["Episode"]->v;
                       }
                       ssText << "]";
+                    }
+                    if (!empty(ptProgram, "SubTitle"))
+                    {
+                      ssText << " - " << ptProgram->m["SubTitle"]->v;
                     }
                   }
                 }
