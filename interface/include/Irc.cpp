@@ -2294,16 +2294,33 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             {
               if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
               {
+                ifstream inTimeZone("/etc/timezone");
+                string strTimeZone;
+                if (inTimeZone)
+                {
+                  inTimeZone >> strTimeZone;
+                }
+                inTimeZone.close();
                 ssText << ":  done";
                 for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
                 {
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
                     struct tm tTime;
-                    //getdate_r(ptProgram->m["StartTime"]->v.c_str(), &tTime);
+                    time_t CTime;
                     strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
+                    if (!strTimeZone.empty())
+                    {
+                      m_mutex.lock();
+                      setenv("TZ", "UTC", 1);
+                      tzset();
+                      CTime = mktime(&tTime);
+                      setenv("TZ", strTimeZone.c_str(), 1);
+                      tzset();
+                      m_mutex.unlock();
+                      localtime_r(&CTime, &tTime);
+                    }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    //ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
@@ -2346,16 +2363,33 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             {
               if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
               {
+                ifstream inTimeZone("/etc/timezone");
+                string strTimeZone;
+                if (inTimeZone)
+                {
+                  inTimeZone >> strTimeZone;
+                }
+                inTimeZone.close();
                 ssText << ":  done";
                 for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
                 {
                   if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
                     struct tm tTime;
-                    //getdate_r(ptProgram->m["StartTime"]->v.c_str(), &tTime);
+                    time_t CTime;
                     strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
+                    if (!strTimeZone.empty())
+                    {
+                      m_mutex.lock();
+                      setenv("TZ", "UTC", 1);
+                      tzset();
+                      CTime = mktime(&tTime);
+                      setenv("TZ", strTimeZone.c_str(), 1);
+                      tzset();
+                      m_mutex.unlock();
+                      localtime_r(&CTime, &tTime);
+                    }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    //ssText << endl << ptProgram->m["StartTime"]->v << ":  " << ptProgram->m["Title"]->v;
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
