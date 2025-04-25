@@ -23,7 +23,7 @@ let common = new Common(
   },
   routes:
   [
-    {path: '/Recordings', name: 'Home', component: '/sqlite/component/Recordings.js'},
+    {path: '/Recordings', name: 'Home', component: '/mythtv/component/Recordings.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
     {path: '/Status', name: 'Status', component: '/include/common/js/component/RadialStatus.js'},
