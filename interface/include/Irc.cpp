@@ -2298,7 +2298,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                 ssText << ":  done";
                 for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
                 {
-                  if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
+                  if (exist(ptProgram, "Recording") && !empty(ptProgram->m["Recording"], "RecGroup") && ptProgram->m["Recording"]->m["RecGroup"]->v == "Default" && !empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
                   {
                     struct tm tTime;
                     time_t CTime;
