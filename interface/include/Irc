@@ -37,6 +37,7 @@ class Irc : public Interface
   string m_strNick;
   string m_strPort;
   string m_strServer;
+  string m_strTimeZone;
   thread *m_pThreadInotify;
   Json *m_ptMonitor;
 

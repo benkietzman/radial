@@ -22,6 +22,7 @@ namespace radial
 // {{{ Irc()
 Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "irc", argc, argv, pCallback)
 {
+  ifstream inTimeZone;
   map<string, list<string> > watches;
   string strError;
   Json *ptAes = new Json, *ptJwt = new Json;
@@ -81,6 +82,12 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     }
   }
   delete ptJwt;
+  inTimeZone.open("/etc/timezone");
+  if (inTimeZone)
+  {
+    inTimeZone >> m_strTimeZone;
+  }
+  inTimeZone.close();
   monitorChannels(strPrefix, true);
   watches[m_strData + "/irc"] = {"monitor.channels"};
   m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pCallbackInotify);
@@ -1656,15 +1663,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ date
   else if (strAction == "date")
   {
-    ifstream inTimeZone("/etc/timezone");
-    string strDate = var("Date", ptData), strTimeZone[2];
+    string strDate = var("Date", ptData), strTimeZone;
     struct tm tTime;
     time_t CTime;
-    if (inTimeZone)
-    {
-      inTimeZone >> strTimeZone[0];
-    }
-    inTimeZone.close();
     if (!strDate.empty())
     {
       string strTime = var("Time", ptData);
@@ -1672,29 +1673,29 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
         {
-          strTimeZone[1] = var("TimeZone", ptData);
+          strTimeZone = var("TimeZone", ptData);
         }
         else
         {
-          strTimeZone[1] = strTime;
+          strTimeZone = strTime;
         }
-        if (!strTimeZone[1].empty())
+        if (!strTimeZone.empty())
         {
-          if (strTimeZone[1] == "eastern" || strTimeZone[1] == "EDT" || strTimeZone[1] == "EST" || strTimeZone[1] == "ET")
+          if (strTimeZone == "eastern" || strTimeZone == "EDT" || strTimeZone == "EST" || strTimeZone == "ET")
           {
-            strTimeZone[1] = "EST5EDT";
+            strTimeZone = "EST5EDT";
           }
-          else if (strTimeZone[1] == "central" || strTimeZone[1] == "CDT" || strTimeZone[1] == "CST" || strTimeZone[1] == "CT")
+          else if (strTimeZone == "central" || strTimeZone == "CDT" || strTimeZone == "CST" || strTimeZone == "CT")
           {
-            strTimeZone[1] = "CST6CDT";
+            strTimeZone = "CST6CDT";
           }
-          else if (strTimeZone[1] == "mountain" || strTimeZone[1] == "MDT" || strTimeZone[1] == "MST" || strTimeZone[1] == "MT")
+          else if (strTimeZone == "mountain" || strTimeZone == "MDT" || strTimeZone == "MST" || strTimeZone == "MT")
           {
-            strTimeZone[1] = "MST7MDT";
+            strTimeZone = "MST7MDT";
           }
-          else if (strTimeZone[1] == "pacific" || strTimeZone[1] == "PDT" || strTimeZone[1] == "PST" || strTimeZone[1] == "PT")
+          else if (strTimeZone == "pacific" || strTimeZone == "PDT" || strTimeZone == "PST" || strTimeZone == "PT")
           {
-            strTimeZone[1] = "PST8PDT";
+            strTimeZone = "PST8PDT";
           }
         }
         if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
@@ -1729,10 +1730,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           stringstream ssTime(strDate);
           ssTime >> CTime;
         }
-        if (!strTimeZone[0].empty() && !strTimeZone[1].empty())
+        if (!m_strTimeZone.empty() && !strTimeZone.empty())
         {
           m_mutex.lock();
-          setenv("TZ", strTimeZone[1].c_str(), 1);
+          setenv("TZ", strTimeZone.c_str(), 1);
           tzset();
         }
         if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
@@ -1751,23 +1752,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
-    if (!strTimeZone[0].empty())
+    if (!m_strTimeZone.empty())
     {
-      setenv("TZ", strTimeZone[0].c_str(), 1);
+      setenv("TZ", m_strTimeZone.c_str(), 1);
       tzset();
-      if (!strTimeZone[1].empty())
+      if (!strTimeZone.empty())
       {
         m_mutex.unlock();
       }
     }
     ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
-    if (!strTimeZone[1].empty())
+    if (!strTimeZone.empty())
     {
-      ssText << " " << strTimeZone[1];
+      ssText << " " << strTimeZone;
     }
-    else if (!strTimeZone[0].empty())
+    else if (!m_strTimeZone.empty())
     {
-      ssText << " " << strTimeZone[0];
+      ssText << " " << m_strTimeZone;
     }
     ssText << " (" << CTime << ")";
   }
@@ -2294,13 +2295,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             {
               if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
               {
-                ifstream inTimeZone("/etc/timezone");
-                string strTimeZone;
-                if (inTimeZone)
-                {
-                  inTimeZone >> strTimeZone;
-                }
-                inTimeZone.close();
                 ssText << ":  done";
                 for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
                 {
@@ -2309,18 +2303,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     struct tm tTime;
                     time_t CTime;
                     strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
-                    if (!strTimeZone.empty())
+                    tTime.tm_isdst = -1;
+                    if (!m_strTimeZone.empty())
                     {
                       m_mutex.lock();
                       setenv("TZ", "UTC", 1);
                       tzset();
                       CTime = mktime(&tTime);
-                      setenv("TZ", strTimeZone.c_str(), 1);
+                      setenv("TZ", m_strTimeZone.c_str(), 1);
                       tzset();
                       m_mutex.unlock();
                       localtime_r(&CTime, &tTime);
                     }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
+                    if (!empty(ptProgram, "SubTitle"))
+                    {
+                      ssText << " " << ptProgram->m["SubTitle"]->v;
+                    }
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
@@ -2363,13 +2362,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             {
               if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
               {
-                ifstream inTimeZone("/etc/timezone");
-                string strTimeZone;
-                if (inTimeZone)
-                {
-                  inTimeZone >> strTimeZone;
-                }
-                inTimeZone.close();
                 ssText << ":  done";
                 for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
                 {
@@ -2378,18 +2370,23 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     struct tm tTime;
                     time_t CTime;
                     strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
-                    if (!strTimeZone.empty())
+                    tTime.tm_isdst = -1;
+                    if (!m_strTimeZone.empty())
                     {
                       m_mutex.lock();
                       setenv("TZ", "UTC", 1);
                       tzset();
                       CTime = mktime(&tTime);
-                      setenv("TZ", strTimeZone.c_str(), 1);
+                      setenv("TZ", m_strTimeZone.c_str(), 1);
                       tzset();
                       m_mutex.unlock();
                       localtime_r(&CTime, &tTime);
                     }
                     ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
+                    if (!empty(ptProgram, "SubTitle"))
+                    {
+                      ssText << " " << ptProgram->m["SubTitle"]->v;
+                    }
                     if (!empty(ptProgram, "Season"))
                     {
                       ssText << " [S" << ptProgram->m["Season"]->v;
