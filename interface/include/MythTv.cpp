@@ -43,8 +43,10 @@ MythTv::MythTv(string strPrefix, int argc, char **argv, void (*pCallback)(string
   }
   // }}}
   // {{{ functions
+  m_functions["action"] = &MythTv::action;
   m_functions["dvrGetRecordedList"] = &MythTv::dvrGetRecordedList;
   m_functions["dvrGetUpcomingList"] = &MythTv::dvrGetUpcomingList;
+  m_functions["status"] = &MythTv::status;
   // }}}
   m_pThreadSchedule = new thread(&MythTv::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
