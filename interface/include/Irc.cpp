@@ -129,7 +129,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "mythtv", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
+  list<string> actions = {"alert", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -511,17 +511,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         if (!strEquation.empty())
         {
           ptRequest->i("Equation", strEquation);
-        }
-      }
-      // }}}
-      // {{{ mythtv
-      else if (strAction == "mythtv")
-      {
-        string strFunction;
-        ssData >> strFunction;
-        if (!strFunction.empty())
-        {
-          ptRequest->i("Function", strFunction);
         }
       }
       // }}}
@@ -2274,161 +2263,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << ":  The math action is used to perform basic mathematics.  The following Functions are available:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.  Each item in the provided equation must be space delimited.  All sub-operations must be wrapped in parenthesis.  EX:  ( ( -1 * ( ( ( ( sqrt 64 ) + 4 ) / 2 ) ^ 3 ) ) + ( floor 300.47 ) ) % 10";
-    }
-  }
-  // }}}
-  // {{{ mythtv
-  else if (strAction == "mythtv")
-  {
-    string strFunction = var("Function", ptData);
-    if (!strFunction.empty())
-    {
-      Json *ptReq = new Json, *ptRes = new Json;
-      ssText << " " << char(3) << "00,14 " << strFunction << " " << char(3);
-      if (strFunction == "dvrGetRecordedList")
-      {
-        if (mythtv(strFunction, ptReq, ptRes, strError))
-        {
-          if (exist(ptRes, "ProgramList"))
-          {
-            if (exist(ptRes->m["ProgramList"], "Programs"))
-            {
-              if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
-              {
-                ssText << ":  done";
-                for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
-                {
-                  if (exist(ptProgram, "Recording") && !empty(ptProgram->m["Recording"], "RecGroup") && ptProgram->m["Recording"]->m["RecGroup"]->v == "Default" && !empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
-                  {
-                    struct tm tTime;
-                    time_t CTime;
-                    strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
-                    tTime.tm_isdst = -1;
-                    if (!m_strTimeZone.empty())
-                    {
-                      m_mutex.lock();
-                      setenv("TZ", "UTC", 1);
-                      tzset();
-                      CTime = mktime(&tTime);
-                      setenv("TZ", m_strTimeZone.c_str(), 1);
-                      tzset();
-                      m_mutex.unlock();
-                      localtime_r(&CTime, &tTime);
-                    }
-                    ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    if (!empty(ptProgram, "Season"))
-                    {
-                      ssText << " [S" << ptProgram->m["Season"]->v;
-                      if (!empty(ptProgram, "Episode"))
-                      {
-                        ssText << "E" << ptProgram->m["Episode"]->v;
-                      }
-                      ssText << "]";
-                    }
-                    if (!empty(ptProgram, "SubTitle"))
-                    {
-                      ssText << " - " << ptProgram->m["SubTitle"]->v;
-                    }
-                  }
-                }
-              }
-              else
-              {
-                ssText << ":  Failed to find Program within Programs within ProgramList within response.";
-              }
-            }
-            else
-            {
-              ssText << ":  Failed to find Programs within ProgramList within response.";
-            }
-          }
-          else
-          {
-            ssText << ":  Failed to find ProgramList within response.";
-          }
-        }
-        else
-        {
-          ssText << ":  " << strError;
-        }
-      }
-      else if (strFunction == "dvrGetUpcomingList")
-      {
-        if (mythtv(strFunction, ptReq, ptRes, strError))
-        {
-          if (exist(ptRes, "ProgramList"))
-          {
-            if (exist(ptRes->m["ProgramList"], "Programs"))
-            {
-              if (exist(ptRes->m["ProgramList"]->m["Programs"], "Program"))
-              {
-                ssText << ":  done";
-                for (auto &ptProgram : ptRes->m["ProgramList"]->m["Programs"]->m["Program"]->l)
-                {
-                  if (!empty(ptProgram, "StartTime") && !empty(ptProgram, "Title"))
-                  {
-                    struct tm tTime;
-                    time_t CTime;
-                    strptime(ptProgram->m["StartTime"]->v.c_str(), "%Y-%m-%dT%H:%M:%S%z", &tTime);
-                    tTime.tm_isdst = -1;
-                    if (!m_strTimeZone.empty())
-                    {
-                      m_mutex.lock();
-                      setenv("TZ", "UTC", 1);
-                      tzset();
-                      CTime = mktime(&tTime);
-                      setenv("TZ", m_strTimeZone.c_str(), 1);
-                      tzset();
-                      m_mutex.unlock();
-                      localtime_r(&CTime, &tTime);
-                    }
-                    ssText << endl << put_time(&tTime, "%Y-%m-%d %H:%M:%S") << ":  " << ptProgram->m["Title"]->v;
-                    if (!empty(ptProgram, "Season"))
-                    {
-                      ssText << " [S" << ptProgram->m["Season"]->v;
-                      if (!empty(ptProgram, "Episode"))
-                      {
-                        ssText << "E" << ptProgram->m["Episode"]->v;
-                      }
-                      ssText << "]";
-                    }
-                    if (!empty(ptProgram, "SubTitle"))
-                    {
-                      ssText << " - " << ptProgram->m["SubTitle"]->v;
-                    }
-                  }
-                }
-              }
-              else
-              {
-                ssText << ":  Failed to find Program within Programs within ProgramList within response.";
-              }
-            }
-            else
-            {
-              ssText << ":  Failed to find Programs within ProgramList within response.";
-            }
-          }
-          else
-          {
-            ssText << ":  Failed to find ProgramList within response.";
-          }
-        }
-        else
-        {
-          ssText << ":  " << strError;
-        }
-      }
-      else
-      {
-        ssText << ":  Please provide a valid Function:  dvrGetRecordedList, dvrGetUpcomingList.";
-      }
-      delete ptReq;
-      delete ptRes;
-    }
-    else
-    {
-      ssText << ":  The mythtv action is used to interface with MythTV.  Please follow the action with a Function.";
     }
   }
   // }}}
