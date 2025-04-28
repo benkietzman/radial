@@ -23,12 +23,13 @@ let common = new Common(
   },
   routes:
   [
+    {path: '/Guide', name: 'Guide', component: '/mythtv/component/Guide.js'},
     {path: '/Recordings', name: 'Recordings', component: '/mythtv/component/Recordings.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
     {path: '/Logout', name: 'Logout', component: '/include/common/js/component/Logout.js'},
     {path: '/Status', name: 'Status', component: '/include/common/js/component/RadialStatus.js'},
     {path: '/Upcoming', name: 'Upcoming', component: '/mythtv/component/Upcoming.js'},
-    {default: '/Recordings'}
+    {default: '/Guide'}
   ]
 });
 common.enableJwt(true);
