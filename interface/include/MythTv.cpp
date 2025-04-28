@@ -122,35 +122,12 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
 bool MythTv::dvrGetRecordedList(radialUser &d, string &e)
 { 
   bool b = false;
-  Json *i = d.p->m["i"], *r = new Json;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (request("Dvr", "GetRecordedList", i, r, e))
+  if (request("Dvr", "GetRecordedList", i, o, e))
   {
-    if (exist(r, "ProgramList"))
-    {
-      if (exist(r->m["ProgramList"], "Programs"))
-      {
-        if (exist(r->m["ProgramList"]->m["Programs"], "Program"))
-        {
-          b = true;
-          d.p->i("o", r->m["ProgramList"]->m["Programs"]->m["Program"]);
-        }
-        else
-        {
-          e = "Failed to find Program within Programs within ProgramList within response.";
-        }
-      }
-      else
-      {
-        e = "Failed to find Programs within ProgramList within response.";
-      }
-    }
-    else
-    {
-      e = "Failed to find ProgramList within response.";
-    }
+    b = true;
   }
-  delete r;
 
   return b;
 }
@@ -159,35 +136,12 @@ bool MythTv::dvrGetRecordedList(radialUser &d, string &e)
 bool MythTv::dvrGetUpcomingList(radialUser &d, string &e)
 { 
   bool b = false;
-  Json *i = d.p->m["i"], *r = new Json;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (request("Dvr", "GetUpcomingList", i, r, e))
   {
-    if (exist(r, "ProgramList"))
-    {
-      if (exist(r->m["ProgramList"], "Programs"))
-      {
-        if (exist(r->m["ProgramList"]->m["Programs"], "Program"))
-        {
-          b = true;
-          d.p->i("o", r->m["ProgramList"]->m["Programs"]->m["Program"]);
-        }
-        else
-        {
-          e = "Failed to find Program within Programs within ProgramList within response.";
-        }
-      }
-      else
-      {
-        e = "Failed to find Programs within ProgramList within response.";
-      }
-    }
-    else
-    {
-      e = "Failed to find ProgramList within response.";
-    }
+    b = true;
   }
-  delete r;
 
   return b;
 }
