@@ -138,7 +138,7 @@ bool MythTv::dvrGetUpcomingList(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (request("Dvr", "GetUpcomingList", i, r, e))
+  if (request("Dvr", "GetUpcomingList", i, o, e))
   {
     b = true;
   }
