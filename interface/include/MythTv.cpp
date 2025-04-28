@@ -133,34 +133,6 @@ bool MythTv::backend(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ dvrGetUpcomingList()
-bool MythTv::dvrGetUpcomingList(radialUser &d, string &e)
-{ 
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (request("Dvr", "GetUpcomingList", i, o, e))
-  {
-    b = true;
-  }
-
-  return b;
-}
-// }}}
-// {{{ guideGetProgramGuide()
-bool MythTv::guideGetProgramGuide(radialUser &d, string &e)
-{ 
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (request("Guide", "GetProgramGuide", i, o, e))
-  {
-    b = true;
-  }
-
-  return b;
-}
-// }}}
 // {{{ request()
 bool MythTv::request(const string strService, const string strFunction, Json *ptRequest, Json *ptResponse, string &strError)
 { 
