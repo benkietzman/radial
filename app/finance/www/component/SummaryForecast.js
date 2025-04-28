@@ -55,7 +55,7 @@ export default
     let fDividendTotal = 0;
     for (let [key, value] of Object.entries(f.Asset.Stock))
     {
-      let fDividend = Number(value.Shares) * Number(((f.Assumption.DividendSpan == '1-year')?value.Dividend:value.LatestDividend));
+      let fDividend = Number(value.Shares) * Number(((f.Assumption.DividendSpan == '1-year')?value.Dividend:value.DividendLatest));
       fDividendTotal += fDividend;
       if (value.Taxable == 1)
       {
@@ -91,7 +91,7 @@ export default
         let nDividend = 0;
         for (let [key, value] of Object.entries(f.Asset.Stock))
         {
-          nDividend += Number(value.Shares) * Number(((f.Assumption.DividendSpan == '1-year')?value.Dividend:value.LatestDividend));
+          nDividend += Number(value.Shares) * Number(((f.Assumption.DividendSpan == '1-year')?value.Dividend:value.DividendLatest));
         }
         s.d[i].Dividend = nDividend;
         fYield = Number(s.d[i].Dividend) / Number(s.d[i].Stock);

@@ -244,17 +244,17 @@ class App
   }
   // }}}
   // {{{ assetStockReceive()
-  assetStockReceive(nShares, nDividend, nLatestDividend, nReceive, nMonth, DividendSpan)
+  assetStockReceive(nShares, nDividend, nDividendLatest, nReceive, nMonth, DividendSpan)
   {
     let nValue = 0;
 
     if (Number(nReceive) == 0)
     {
-      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nLatestDividend))) / 12;
+      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest))) / 12;
     }
     else if ((nMonth == 1 && Number(nReceive) == 1) || (nMonth == 2 && Number(nReceive) == 2) || (nMonth == 3 && Number(nReceive) == 3))
     {
-      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nLatestDividend))) / 4;
+      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest))) / 4;
     }
 
     return nValue;
@@ -267,7 +267,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockReceive(v.Shares, v.Dividend, v.LatestDividend, v.Receive, nMonth, DividendSpan);
+      nSum += this.assetStockReceive(v.Shares, v.Dividend, v.DividendLatest, v.Receive, nMonth, DividendSpan);
     }
 
     return nSum;
@@ -293,7 +293,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += Number(v.Shares) * Number(((DividendSpan == '1-year')?v.Dividend:v.LatestDividend));
+      nSum += Number(v.Shares) * Number(((DividendSpan == '1-year')?v.Dividend:v.DividendLatest));
     }
 
     return nSum;
@@ -631,7 +631,7 @@ class App
                     let CYear = Math.floor((date.getTime() - (365 * 24 * 60 * 60 * 1000)) / 1000);
                     let dividends = {};
                     let fDividend = 0;
-                    let fLatestDividend = 0;
+                    let fDividendLatest = 0;
                     for (let [key, value] of Object.entries(data.chart.result[0].events.dividends))
                     {
                       if (!this.c.isDefined(dividends[key]))
@@ -643,13 +643,13 @@ class App
                       {
                         fDividend += Number(value.amount);
                       }
-                      fLatestDividend = Number(value.amount);
+                      fDividendLatest = Number(value.amount);
                     }
                     this.d.Asset.Stock[k].Change = dividends;
                     this.d.Asset.Stock[k].Dividend = fDividend;
-                    fLatestDividend *= ((this.d.Asset.Stock[k].Receive == 0)?12:4);
-                    this.d.Asset.Stock[k].LatestDividend = fLatestDividend;
-                    this.d.Asset.Stock[k].ChangeDividend = (fLatestDividend - fDividend) * 100 / fDividend;
+                    fDividendLatest *= ((this.d.Asset.Stock[k].Receive == 0)?12:4);
+                    this.d.Asset.Stock[k].DividendLatest = fDividendLatest;
+                    this.d.Asset.Stock[k].ChangeDividend = (fDividendLatest - fDividend) * 100 / fDividend;
                   }
                 }
                 else
