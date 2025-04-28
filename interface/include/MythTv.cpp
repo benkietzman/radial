@@ -133,7 +133,7 @@ bool MythTv::dvrGetRecordedList(radialUser &d, string &e)
         if (exist(r->m["ProgramList"]->m["Programs"], "Program"))
         {
           b = true;
-          d.p->i("o", r);
+          d.p->i("o", r->m["ProgramList"]->m["Programs"]->m["Program"]);
         }
         else
         {
@@ -170,7 +170,7 @@ bool MythTv::dvrGetUpcomingList(radialUser &d, string &e)
         if (exist(r->m["ProgramList"]->m["Programs"], "Program"))
         {
           b = true;
-          d.p->i("o", r);
+          d.p->i("o", r->m["ProgramList"]->m["Programs"]->m["Program"]);
         }
         else
         {
