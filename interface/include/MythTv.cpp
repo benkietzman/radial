@@ -44,9 +44,7 @@ MythTv::MythTv(string strPrefix, int argc, char **argv, void (*pCallback)(string
   // }}}
   // {{{ functions
   m_functions["action"] = &MythTv::action;
-  m_functions["dvrGetRecordedList"] = &MythTv::dvrGetRecordedList;
-  m_functions["dvrGetUpcomingList"] = &MythTv::dvrGetUpcomingList;
-  m_functions["guideGetProgramGuide"] = &MythTv::guideGetProgramGuide;
+  m_functions["backend"] = &MythTv::backend;
   m_functions["status"] = &MythTv::status;
   // }}}
   m_pThreadSchedule = new thread(&MythTv::schedule, this, strPrefix);
@@ -118,15 +116,18 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
   threadDecrement();
 }
 // }}}
-// {{{ dvrGetRecordedList()
-bool MythTv::dvrGetRecordedList(radialUser &d, string &e)
+// {{{ backend()
+bool MythTv::backend(radialUser &d, string &e)
 { 
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (request("Dvr", "GetRecordedList", i, o, e))
+  if (dep({"Service", "Command"}, i, e))
   {
-    b = true;
+    if (request(i->m["Service"]->v, i->m["Command"]->v, i, o, e))
+    {
+      b = true;
+    }
   }
 
   return b;

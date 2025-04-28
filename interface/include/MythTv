@@ -31,9 +31,7 @@ class MythTv : public Interface
   string m_strServer;
   thread *m_pThreadSchedule;
 
-  bool dvrGetRecordedList(radialUser &d, string &e);
-  bool dvrGetUpcomingList(radialUser &d, string &e);
-  bool guideGetProgramGuide(radialUser &d, string &e);
+  bool backend(radialUser &d, string &e);
   bool request(const string strService, const string strFunction, Json *ptRequest, Json *ptResponse, string &strError);
   void schedule(string strPrefix);
 
