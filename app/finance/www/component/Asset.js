@@ -306,22 +306,22 @@ export default
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) (assetStockSum))}}">{{numberShort (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) (assetStockSum))}}</td>
               <td class="text-{{#ifCond (subtract (multiply Shares Price) (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) (assetStockSum))) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit; font-size: small; text-align: right;" title="{{number (subtract (multiply Shares Price) (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) (assetStockSum)))}}">{{numberShort (subtract (multiply Shares Price) (multiply (divide (divide Dividend Price) (divide (assetStockYieldSum) 100)) (assetStockSum)))}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply Dividend Shares)}}">{{numberShort (multiply Dividend Shares)}}</td>
-              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive (multiply Dividend Shares) Receive 1)}}">{{numberShort (assetStockReceive (multiply Dividend Shares) Receive 1)}}</td>
-              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive (multiply Dividend Shares) Receive 2)}}">{{numberShort (assetStockReceive (multiply Dividend Shares) Receive 2)}}</td>
-              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive (multiply Dividend Shares) Receive 3)}}">{{numberShort (assetStockReceive (multiply Dividend Shares) Receive 3)}}</td>
+              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive Shares Dividend LatestDividend Receive 1 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceive Shares Dividend LatestDividend Receive 1 @root.a.d.Assumption.DividendSpan)}}</td>
+              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive Shares Dividend LatestDividend Receive 2 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceive Shares Dividend LatestDividend Receive 2 @root.a.d.Assumption.DividendSpan)}}</td>
+              <td style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceive Shares Dividend LatestDividend Receive 3 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceive Shares Dividend LatestDividend Receive 3 @root.a.d.Assumption.DividendSpan)}}</td>
             </tr>
             {{/each}}
             </tbody>
             <tfoot>
             <tr>
               <th style="background: inherit; font-size: small; text-align:left;">Total</th>
-              <th colspan="9" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum) 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum) 100) (assetStockSum))}}%</th>
-              <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockLatestDividendSum) 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockLatestDividendSum) 100) (assetStockSum))}}%</th>
+              <th colspan="9" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
+              <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%</th>
               <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
-              <th colspan="4" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockDividendSum)}}">{{numberShort (assetStockDividendSum)}}</th>
-              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 1)}}">{{numberShort (assetStockReceiveSum 1)}}</th>
-              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 2)}}">{{numberShort (assetStockReceiveSum 2)}}</th>
-              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 3)}}">{{numberShort (assetStockReceiveSum 3)}}</th>
+              <th colspan="4" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}</th>
+              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 1 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceiveSum 1 @root.a.d.Assumption.DividendSpan)}}</th>
+              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 2 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceiveSum 2 @root.a.d.Assumption.DividendSpan)}}</th>
+              <th style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockReceiveSum 3 @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockReceiveSum 3 @root.a.d.Assumption.DividendSpan)}}</th>
             </tr>
             </tfoot>
           </table>

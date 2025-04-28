@@ -75,8 +75,8 @@ export default
           <tr>
             <td style="background: inherit;">Retire</td>
             <td style="background: inherit;" title="{{number (multiply (genericSum f.Expense) 2)}}">{{numberShort (multiply (genericSum f.Expense) 2)}}</td>
-            <td style="background: inherit;" title="{{number (assetStockDividendSum)}}">{{numberShort (assetStockDividendSum)}}</td>
-            <td style="background: inherit;">{{#ifCond (assetStockDividendSum) '>=' (multiply (genericSum f.Expense) 2)}}<span class="text-success">YES</span>{{else}}<span class="text-danger">NO</span>{{/ifCond}}</td>
+            <td style="background: inherit;" title="{{number (assetStockDividendSum a.d.DividendSpan)}}">{{numberShort (assetStockDividendSum a.d.DividendSpan)}}</td>
+            <td style="background: inherit;">{{#ifCond (assetStockDividendSum a.d.DividendSpan) '>=' (multiply (genericSum f.Expense) 2)}}<span class="text-success">YES</span>{{else}}<span class="text-danger">NO</span>{{/ifCond}}</td>
             <td style="background: inherit;">The goal is to earn twice your expenses in dividend income so that you live off half and use the other half to cover dividend taxes while reinvesting the remainder in order to overcome inflation as well as live more comfortably over the years.  The <a href="#/Summary/Forecast">Summary - Forecast</a> can be used to determine whether you are on track for meeting your retirement goals.</td>
           </tr>
         </tbody>

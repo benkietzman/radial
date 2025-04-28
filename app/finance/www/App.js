@@ -100,21 +100,17 @@ class App
     {
       return this.assetMetalSum();
     });
-    Handlebars.registerHelper('assetStockDividendSum', () =>
+    Handlebars.registerHelper('assetStockDividendSum', (bLatest) =>
     {
-      return this.assetStockDividendSum();
+      return this.assetStockDividendSum(bLatest);
     });
-    Handlebars.registerHelper('assetStockLatestDividendSum', () =>
+    Handlebars.registerHelper('assetStockReceive', (nShares, nDividend, nDividendLatest, nReceive, nMonth, DividendSpan) =>
     {
-      return this.assetStockLatestDividendSum();
+      return this.assetStockReceive(nShares, nDividend, nDividendLatest, nReceive, nMonth, DividendSpan);
     });
-    Handlebars.registerHelper('assetStockReceive', (nDividend, nReceive, nMonth) =>
+    Handlebars.registerHelper('assetStockReceiveSum', (nMonth, DividendSpan) =>
     {
-      return this.assetStockReceive(nDividend, nReceive, nMonth);
-    });
-    Handlebars.registerHelper('assetStockReceiveSum', (nMonth) =>
-    {
-      return this.assetStockReceiveSum(nMonth);
+      return this.assetStockReceiveSum(nMonth, DividendSpan);
     });
     Handlebars.registerHelper('assetStockSum', () =>
     {
@@ -248,30 +244,30 @@ class App
   }
   // }}}
   // {{{ assetStockReceive()
-  assetStockReceive(nDividend, nReceive, nMonth)
+  assetStockReceive(nShares, nDividend, nLatestDividend, nReceive, nMonth, DividendSpan)
   {
     let nValue = 0;
 
     if (Number(nReceive) == 0)
     {
-      nValue = nDividend / 12;
+      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nLatestDividend))) / 12;
     }
     else if ((nMonth == 1 && Number(nReceive) == 1) || (nMonth == 2 && Number(nReceive) == 2) || (nMonth == 3 && Number(nReceive) == 3))
     {
-      nValue = nDividend / 4;
+      nValue = (Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nLatestDividend))) / 4;
     }
 
     return nValue;
   }
   // }}}
   // {{{ assetStockReceiveSum()
-  assetStockReceiveSum(nMonth)
+  assetStockReceiveSum(nMonth, DividendSpan)
   {
     let nSum = 0;
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockReceive((Number(v.Dividend) * Number(v.Shares)), Number(v.Receive), nMonth);
+      nSum += this.assetStockReceive(v.Shares, v.Dividend, v.LatestDividend, v.Receive, nMonth, DividendSpan);
     }
 
     return nSum;
@@ -290,27 +286,14 @@ class App
     return nSum;
   }
   // }}}
-  // {{{ assetStockLatestDividendSum()
-  assetStockLatestDividendSum()
-  {
-    let nSum = 0;
-
-    for (let [k, v] of Object.entries(this.d.Asset.Stock))
-    {
-      nSum += Number(v.Shares) * Number(v.LatestDividend);
-    }
-
-    return nSum;
-  }
-  // }}}
   // {{{ assetStockDividendSum()
-  assetStockDividendSum()
+  assetStockDividendSum(DividendSpan)
   {
     let nSum = 0;
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += Number(v.Shares) * Number(v.Dividend);
+      nSum += Number(v.Shares) * Number(((DividendSpan == '1-year')?v.Dividend:v.LatestDividend));
     }
 
     return nSum;
@@ -417,13 +400,17 @@ class App
     {
       this.d.Assumption = {};
     }
-    if (!this.c.isDefined(this.d.Assumption.FilingStatus))
-    {
-      this.d.Assumption.FilingStatus = 'single';
-    }
     if (!this.c.isDefined(this.d.Assumption.BirthYear))
     {
       this.d.Assumption.BirthYear = null;
+    }
+    if (!this.c.isDefined(this.d.Assumption.DividendSpan))
+    {
+      this.d.Assumption.DividendSpan = '1-year';
+    }
+    if (!this.c.isDefined(this.d.Assumption.FilingStatus))
+    {
+      this.d.Assumption.FilingStatus = 'single';
     }
     if (!this.c.isDefined(this.d.Assumption.IncomeRaise))
     {
