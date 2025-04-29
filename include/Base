@@ -22,7 +22,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <curl/curl.h>
 #include <deque>
 #include <fstream>
 #include <iomanip>

@@ -120,52 +120,67 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
 bool MythTv::backend(radialUser &d, string &e)
 { 
   bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *i = d.p->m["i"];
 
   if (dep({"Service", "Command"}, i, e))
   {
-    if (request(i->m["Service"]->v, i->m["Command"]->v, i, o, e))
+    list<Json *> in, out;
+    stringstream ssUrl;
+    Json *ptReq = new Json;
+    ptReq->i("Service", "curl");
+    ptReq->i("Server", m_strServer);
+    ptReq->i("Port", m_strPort);
+    in.push_back(ptReq);
+    ptReq = new Json;
+    ssUrl << "http://" << m_strServer << ":" << m_strPort << "/" << i->m["Service"]->v << "/" << i->m["Command"]->v;
+    ptReq->i("URL", ssUrl.str());
+    ptReq->i("Display", "Content");
+    if (exist(i, "Get"))
     {
-      b = true;
+      ptReq->i("Get", i->m["Get"]);
+    }
+    if (exist(i, "Post"))
+    {
+      ptReq->i("Post", i->m["Post"]);
+    }
+    if (exist(i, "Put"))
+    {
+      ptReq->i("Putt", i->m["Putt"]);
+    }
+    in.push_back(ptReq);
+    if (junction(in, out, e))
+    {
+      if (out.size() == 2)
+      {
+        if (exist(out.back(), "Content"))
+        {
+          size_t unPosition;
+          if ((unPosition = out.back()->m["Content"]->v.find("?>")) != string::npos)
+          {
+            string strJson;
+            Json *j = new Json(out.back()->m["Content"]->v.substr((unPosition + 2), (out.back()->m["Content"]->v.size() - (unPosition + 2))));
+            b = true;
+            d.p->i("o", j->j(strJson));
+            delete j;
+          }
+          else
+          {
+            e = "Invalid response.";
+          }
+        }
+        else
+        {
+          e = "Failed to find Contenct within response.";
+        }
+      }
+      else
+      {
+        e = "Invalid number of rows returned in response.";
+      }
     }
   }
 
   return b;
-}
-// }}}
-// {{{ request()
-bool MythTv::request(const string strService, const string strFunction, Json *ptRequest, Json *ptResponse, string &strError)
-{ 
-  bool bResult = false;
-  list<Json *> in, out;
-  Json *ptReq = new Json;
-
-  ptReq->i("Service", "mythtv");
-  ptReq->i("Server", m_strServer);
-  ptReq->i("Port", m_strPort);
-  in.push_back(ptReq);
-  ptReq = new Json(ptRequest);
-  ptReq->i("Service", strService);
-  ptReq->i("Function", strFunction);
-  in.push_back(ptReq);
-  if (junction(in, out, strError))
-  {
-    bResult = true;
-    if (out.size() == 3)
-    {
-      ptResponse->merge(out.back(), true, false);
-    }
-  }
-  for (auto &i : in)
-  {
-    delete i;
-  }
-  for (auto &i : out)
-  {
-    delete i;
-  }
-
-  return bResult;
 }
 // }}}
 // {{{ schedule()
