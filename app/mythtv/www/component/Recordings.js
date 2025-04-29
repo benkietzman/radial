@@ -37,6 +37,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
+          response.Response = JSON.parse(response.Response);
           let p = response.Response.ProgramList.Programs.Program;
           for (let i = 0; i < p.length; i++)
           {
