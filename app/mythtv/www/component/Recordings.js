@@ -31,7 +31,7 @@ export default
     {
       s.programs = null;
       s.programs = [];
-      let request = {Interface: 'mythtv', 'Function': 'dvrGetRecordedList'};
+      let request = {Interface: 'mythtv', 'Function': 'backend', Request:{Service: 'Dvr', Command: 'GetRecordedList'}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
