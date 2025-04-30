@@ -33,15 +33,69 @@ export default
         {
           response.Response = JSON.parse(response.Response);
           s.details = response.Response.Program;
-          let t = new Date(s.details.Airdate);
-          t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
-          s.details.Airdate = t.toISOString().split('.')[0].replace('T', ' ');
-          t = new Date(s.details.StartTime);
+          let t = new Date(s.details.StartTime);
           t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
           s.details.StartTime = t.toISOString().split('.')[0].replace('T', ' ');
           t = new Date(s.details.EndTime);
           t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
           s.details.EndTime = t.toISOString().split('.')[0].replace('T', ' ');
+          if (s.details.Airdate)
+          {
+            t = new Date(s.details.Airdate);
+            t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+            s.details.Airdate = t.toISOString().split('.')[0].replace('T', ' ');
+          }
+          if (s.details.Recording)
+          {
+            if (s.details.Recording.StartTs)
+            {
+              t = new Date(s.details.Recording.StartTs);
+              t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+              s.details.Recording.StartTs = t.toISOString().split('.')[0].replace('T', ' ');
+            }
+            if (s.details.Recording.EndTs)
+            {
+              t = new Date(s.details.Recording.EndTs);
+              t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+              s.details.Recording.EndTs = t.toISOString().split('.')[0].replace('T', ' ');
+            }
+          }
+          s.details.actors = '';
+          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
+          {
+            if (s.details.Cast.CastMembers.CastMember[i].Role == 'actor')
+            {
+              if (s.details.actors.length > 0)
+              {
+                s.details.actors += ', ';
+              }
+              s.details.actors += s.details.Cast.CastMembers.CastMember[i].Name;
+            }
+          }
+          s.details.guests = '';
+          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
+          {
+            if (s.details.Cast.CastMembers.CastMember[i].Role == 'guest' || s.details.Cast.CastMembers.CastMember[i].Role == 'guest_star')
+            {
+              if (s.details.guests.length > 0)
+              {
+                s.details.guests += ', ';
+              }
+              s.details.guests += s.details.Cast.CastMembers.CastMember[i].Name;
+            }
+          }
+          s.details.directors = '';
+          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
+          {
+            if (s.details.Cast.CastMembers.CastMember[i].Role == 'director')
+            {
+              if (s.details.directors.length > 0)
+              {
+                s.details.directors += ', ';
+              }
+              s.details.directors += s.details.Cast.CastMembers.CastMember[i].Name;
+            }
+          }
         }
         else
         {
@@ -94,6 +148,25 @@ export default
               s.channels[strChannel] = {ChanId: response.Response.ProgramGuide.Channels.ChannelInfo[i].ChanId, programs: []};
               for (let j = 0; j < response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program.length; j++)
               {
+                if (response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Recording)
+                {
+                  if (response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Recording.StatusName == 'WillRecord')
+                  {
+                    response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].color = 'warning';
+                  }
+                  else if (response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Recording.StatusName == 'Pending' || response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Recording.StatusName == 'Recording' || response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Recording.StatusName == 'Tuning')
+                  {
+                    response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].color = 'success';
+                  }
+                  else
+                  {
+                    response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].color = 'danger';
+                  }
+                }
+                else
+                {
+                  response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].color = 'secondary';
+                }
                 response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].TitleShort = response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].Title;
                 if (response.Response.ProgramGuide.Channels.ChannelInfo[i].Programs.Program[j].TitleShort.length > 20)
                 {
@@ -201,7 +274,7 @@ export default
       <tr>
         <td class="text-left text-nowrap" style="position: sticky; left: 0;">{{@key}}</td>
         {{#each programs}}
-        <td c-click="getProgramDetails({{../ChanId}}, {{StartTimestamp}})" class="bg-success-subtle bg-gradient border border-dark text-nowrap" colspan="{{colspan}}" data-bs-target="#detailsModal" style="cursor: pointer;" title="[{{StartTimeShort}}-{{EndTimeShort}}] {{Title}}">{{TitleShort}}</td>
+        <td c-click="getProgramDetails({{../ChanId}}, {{StartTimestamp}})" class="bg-{{color}}-subtle bg-gradient border border-dark text-nowrap" colspan="{{colspan}}" data-bs-target="#detailsModal" style="cursor: pointer;" title="[{{StartTimeShort}}-{{EndTimeShort}}] {{Title}}">{{TitleShort}}</td>
         {{/each}}
       </tr>
       {{/each}}
@@ -220,36 +293,48 @@ export default
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title">{{details.Title}}</h4>
+          <h4 class="modal-title">Program Details</h4>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-          <h5>{{details.SubTitle}}</h5>
-          <div class="card card-body bg-success-subtle">{{details.Description}}</div>
-          <div class="row">
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Channel</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Channel.ChanNum}} {{details.Channel.CallSign}}" disabled></div>
-            </div>
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Aired</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Airdate}}" disabled></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Season</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Season}}" disabled></div>
-            </div>
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Start</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.StartTime}}" disabled></div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Episode</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Episode}}" disabled></div>
-            </div>
-            <div class="col">
-              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">End</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.EndTime}}" disabled></div>
-            </div>
-          </div>
+        <div class="modal-body" class="table-responsive">
+          <table class="table table-condensed table-striped">
+          <tbody>
+            {{#if details.Title}}
+            <tr><th>Title</th><td>{{details.Title}}{{#if details.SubTitle}} - {{details.SubTitle}}{{/if}}</td></tr>
+            {{/if}}
+            {{#if details.Description}}
+            <tr><th>Description</th><td>{{details.Description}}</td></tr>
+            {{/if}}
+            {{#if details.actors}}
+            <tr><th>Actors</th><td>{{details.actors}}</td></tr>
+            {{/if}}
+            {{#if details.guests}}
+            <tr><th>Guest Stars</th><td>{{details.guests}}</td></tr>
+            {{/if}}
+            {{#if details.directors}}
+            <tr><th>Directors</th><td>{{details.directors}}</td></tr>
+            {{/if}}
+            {{#if details.Category}}
+            <tr><th>Category</th><td>{{details.Category}}</td></tr>
+            {{/if}}
+            {{#if details.CatType}}
+            <tr><th>Type</th><td>{{details.CatType}}{{#if details.SeriesId}} ({{details.SeriesId}}){{/if}}</td></tr>
+            {{#ifCond details.Season ">" 0}}
+            <tr><th>Season</th><td>{{../details.Season}}</td></tr>
+            {{/ifCond}}
+            {{#ifCond details.Episode ">" 0}}
+            <tr><th>Episode</th><td>{{../details.Episode}}</td></tr>
+            {{/ifCond}}
+            {{/if}}
+            {{#if details.Airdate}}
+            <tr><th>Original Airdate</th><td>{{details.Airdate}}</td></tr>
+            {{/if}}
+            {{#if details.ProgramId}}
+            <tr><th>Program ID</th><td>{{details.ProgramId}}</td></tr>
+            {{/if}}
+            <tr><th>MythTV Status</th><td>{{#if details.Recording}}{{details.Recording.StatusName}} {{details.Recording.StartTs}}{{else}}Not Recording{{/if}}</td></tr>
+          </tbody>
+          </table>
         </div>
         <div class="modal-footer">
           <div c-model="modalServerMessage" class="text-danger fw-bold"></div>
