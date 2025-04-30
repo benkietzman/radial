@@ -48,6 +48,7 @@ export default
           s.modalServerMessage.v = error.message;
         }
         c.loadModal('Guide', 'detailsModal', true);
+        s.resize();
       });
     };
     // ]]]
