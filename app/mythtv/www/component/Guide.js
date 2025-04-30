@@ -31,14 +31,23 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.details = JSON.parse(response.Response);
-          c.loadModal('Guide', 'loadModalDetails', true);
+          response.Response = JSON.parse(response.Response);
+          s.details = response.Response.Program;
+          let t = new Date(s.details.Airdate);
+          t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+          s.details.Airdate = t.toISOString().split('.')[0].replace('T', ' ');
+          t = new Date(s.details.StartTime);
+          t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+          s.details.StartTime = t.toISOString().split('.')[0].replace('T', ' ');
+          t = new Date(s.details.EndTime);
+          t = new Date(t - t.getTimezoneOffset() * 60 * 1000);
+          s.details.EndTime = t.toISOString().split('.')[0].replace('T', ' ');
         }
         else
         {
-          c.pushErrorMessage(error.message);
+          s.modalServerMessage.v = error.message;
         }
-        s.u();
+        c.loadModal('Guide', 'detailsModal', true);
       });
     };
     // ]]]
@@ -191,7 +200,7 @@ export default
       <tr>
         <td class="text-left text-nowrap" style="position: sticky; left: 0;">{{@key}}</td>
         {{#each programs}}
-        <td c-click="getProgramDetails({{../ChanId}}, {{StartTimestamp}})" class="bg-success-subtle bg-gradient border border-dark text-nowrap" colspan="{{colspan}}" style="cursor: pointer;" title="[{{StartTimeShort}}-{{EndTimeShort}}] {{Title}}">{{TitleShort}}</td>
+        <td c-click="getProgramDetails({{../ChanId}}, {{StartTimestamp}})" class="bg-success-subtle bg-gradient border border-dark text-nowrap" colspan="{{colspan}}" data-bs-target="#detailsModal" style="cursor: pointer;" title="[{{StartTimeShort}}-{{EndTimeShort}}] {{Title}}">{{TitleShort}}</td>
         {{/each}}
       </tr>
       {{/each}}
@@ -206,15 +215,44 @@ export default
     {{/if}}
     {{/isValid}}
   </div>
-  <div id="loadModalDetails" class="modal modal-lg">
+  <div id="detailsModal" class="modal modal-lg">
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <b>{{details.Title}}</b>
+          <h4 class="modal-title">{{details.Title}}</h4>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          {{json details}}
+          <h5>{{details.SubTitle}}</h5>
+          <div class="card card-body bg-success-subtle">{{details.Description}}</div>
+          <div class="row">
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Channel</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Channel.ChanNum}} {{details.Channel.CallSign}}" disabled></div>
+            </div>
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Aired</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Airdate}}" disabled></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Season</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Season}}" disabled></div>
+            </div>
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Start</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.StartTime}}" disabled></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">Episode</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.Episode}}" disabled></div>
+            </div>
+            <div class="col">
+              <div class="input-group" style="padding-top: 10px;"><span class="input-group-text">End</span><input class="bg-success-subtle border border-success-subtle" type="text" value="{{details.EndTime}}" disabled></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div c-model="modalServerMessage" class="text-danger fw-bold"></div>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
