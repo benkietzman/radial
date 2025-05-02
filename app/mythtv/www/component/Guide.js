@@ -61,39 +61,36 @@ export default
             }
           }
           s.details.actors = '';
-          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
-          {
-            if (s.details.Cast.CastMembers.CastMember[i].Role == 'actor')
-            {
-              if (s.details.actors.length > 0)
-              {
-                s.details.actors += ', ';
-              }
-              s.details.actors += s.details.Cast.CastMembers.CastMember[i].Name;
-            }
-          }
           s.details.guests = '';
-          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
-          {
-            if (s.details.Cast.CastMembers.CastMember[i].Role == 'guest' || s.details.Cast.CastMembers.CastMember[i].Role == 'guest_star')
-            {
-              if (s.details.guests.length > 0)
-              {
-                s.details.guests += ', ';
-              }
-              s.details.guests += s.details.Cast.CastMembers.CastMember[i].Name;
-            }
-          }
           s.details.directors = '';
-          for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
+          if (s.details.Cast && s.details.Cast.CastMembers && s.details.Cast.CastMembers.CastMember)
           {
-            if (s.details.Cast.CastMembers.CastMember[i].Role == 'director')
+            for (let i = 0; i < s.details.Cast.CastMembers.CastMember.length; i++)
             {
-              if (s.details.directors.length > 0)
+              if (s.details.Cast.CastMembers.CastMember[i].Role == 'actor')
               {
-                s.details.directors += ', ';
+                if (s.details.actors.length > 0)
+                {
+                  s.details.actors += ', ';
+                }
+                s.details.actors += s.details.Cast.CastMembers.CastMember[i].Name;
               }
-              s.details.directors += s.details.Cast.CastMembers.CastMember[i].Name;
+              else if (s.details.Cast.CastMembers.CastMember[i].Role == 'director')
+              {
+                if (s.details.directors.length > 0)
+                {
+                  s.details.directors += ', ';
+                }
+                s.details.directors += s.details.Cast.CastMembers.CastMember[i].Name;
+              }
+              else if (s.details.Cast.CastMembers.CastMember[i].Role == 'guest' || s.details.Cast.CastMembers.CastMember[i].Role == 'guest_star')
+              {
+                if (s.details.guests.length > 0)
+                {
+                  s.details.guests += ', ';
+                }
+                s.details.guests += s.details.Cast.CastMembers.CastMember[i].Name;
+              }
             }
           }
         }
@@ -101,8 +98,10 @@ export default
         {
           s.modalServerMessage.v = error.message;
         }
+        let scrolls = c.scrollsSave();
         c.loadModal('Guide', 'detailsModal', true);
         s.resize();
+        c.scrollsRestore(scrolls);
       });
     };
     // ]]]
