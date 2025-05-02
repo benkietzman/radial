@@ -2,7 +2,7 @@
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2024-04-03
-// copyright  : kietzman.org
+// copyright  : Ben Kietzman
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
 export default

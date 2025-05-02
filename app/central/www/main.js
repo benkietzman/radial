@@ -1,7 +1,7 @@
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2023-07-12
-// copyright  : kietzman.org
+// copyright  : Ben Kietzman
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
 let common = new Common(

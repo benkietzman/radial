@@ -3,7 +3,7 @@
 # file       : Makefile
 # author     : Ben Kietzman
 # begin      : 2022-04-21
-# copyright  : kietzman.org
+# copyright  : Ben Kietzman
 # email      : ben@kietzman.org
 
 prefix=/usr/local

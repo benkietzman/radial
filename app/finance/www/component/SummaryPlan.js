@@ -2,7 +2,7 @@
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2022-10-29
-// copyright  : kietzman.org
+// copyright  : Ben Kietzman
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
 export default

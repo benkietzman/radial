@@ -1,7 +1,7 @@
 ///////////////////////////////////////////
 // author     : Ben Kietzman
 // begin      : 2025-04-25
-// copyright  : kietzman.org
+// copyright  : Ben Kietzman
 // email      : ben@kietzman.org
 ///////////////////////////////////////////
 class App
