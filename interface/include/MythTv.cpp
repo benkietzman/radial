@@ -124,6 +124,7 @@ bool MythTv::backend(radialUser &d, string &e)
     ptReq->i("Service", "curl");
     ptReq->i("Server", m_strServer);
     ptReq->i("Port", m_strPort);
+    ptReq->i("reqApp", "Radial");
     in.push_back(ptReq);
     ptReq = new Json;
     ssUrl << "http://" << m_strServer << ":" << m_strPort << "/" << i->m["Service"]->v << "/" << i->m["Command"]->v;
