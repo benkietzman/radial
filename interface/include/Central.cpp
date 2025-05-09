@@ -2129,6 +2129,7 @@ bool Central::applicationServerDetailAdd(radialUser &d, string &e)
       {
         b = true;
         o->i("id", id);
+        monitorUpdate(d, e);
       }
     }
     userDeinit(a);
@@ -2166,7 +2167,10 @@ bool Central::applicationServerDetailEdit(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          b = db("dbCentralApplicationServerDetailUpdate", i, e);
+          if ((b = db("dbCentralApplicationServerDetailUpdate", i, e)))
+          {
+            monitorUpdate(d, e);
+          }
         }
         else
         {
@@ -2211,7 +2215,10 @@ bool Central::applicationServerDetailRemove(radialUser &d, string &e)
         }
         if (d.g || isApplicationDeveloper(f, e))
         {
-          b = db("dbCentralApplicationServerDetailRemove", i, e);
+          if ((b = db("dbCentralApplicationServerDetailRemove", i, e)))
+          {
+            monitorUpdate(d, e);
+          }
         }
         else
         {
@@ -2271,7 +2278,10 @@ bool Central::applicationServerRemove(radialUser &d, string &e)
       }
       if (d.g || isApplicationDeveloper(c, e))
       {
-        b = db("dbCentralApplicationServerRemove", i, e);
+        if ((b = db("dbCentralApplicationServerRemove", i, e)))
+        {
+          monitorUpdate(d, e);
+        }
       }
       else
       {
@@ -4755,7 +4765,10 @@ bool Central::serverEdit(radialUser &d, string &e)
       {
         i->i("parent_id", i->m["parent"]->m["id"]->v);
       }
-      b = db("dbCentralServerUpdate", i, e);
+      if ((b = db("dbCentralServerUpdate", i, e)))
+      {
+        monitorUpdate(d, e);
+      }
     }
     else
     {
@@ -5148,7 +5161,10 @@ bool Central::serverRemove(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      b = db("dbCentralServerRemove", i, e);
+      if ((b = db("dbCentralServerRemove", i, e)))
+      {
+        monitorUpdate(d, e);
+      }
     }
     else
     {
