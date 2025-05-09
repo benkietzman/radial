@@ -4005,6 +4005,16 @@ void Central::schedule(string strPrefix)
                         {
                           ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using " << (atoi(ptDataSystem->m["mainUsed"]->v.c_str()) * 100 / atoi(ptDataSystem->m["mainTotal"]->v.c_str())) << "% main memory which is more than the maximum " << ptConfigSystem->m["maxMainUsage"]->v << "%.";
                         }
+                        if (!empty(ptConfigSystem, "diskSize") && atoi(ptConfigSystem->m["diskSize"]->v.c_str()) > 0 && exist(ptDataSystem, "partitions") && !ptDataSystem->m["partitions"]->m.empty())
+                        {
+                          for (auto &partition : ptDataSystem->m["partitions"]->m)
+                          {
+                            if (!partition.second->v.empty() && (atoi(partition.second->v.c_str()) >= atoi(ptConfigSystem->m["diskSize"]->v.c_str())))
+                            {
+                              ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << partition.first << " partition is " << partition.second->v << "% filled which is more than the maximum " << ptConfigSystem->m["diskSize"]->v << "%.";
+                            }
+                          }
+                        }
                         if (exist(ptData, "processes"))
                         {
                           for (auto &process : ptData->m["processes"]->m)
