@@ -36,8 +36,6 @@ class Data : public Interface
   void dataDisconnect(SSL_CTX *ctx, SSL *ssl);
   void dataError(int &fd, const string e);
   void dataOkay(int &fd);
-  bool dataRead(SSL *ssl, vector<string> &buffers, map<string, string> &row, string &e);
-  bool dataRead(SSL *ssl, vector<string> &buffers, Json *row, string &e);
   void dataResponse(const string t, int &fd, const size_t unBuffer);
   void dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx);
   void dataStatus(int &fd, const bool b, const string e = "");
