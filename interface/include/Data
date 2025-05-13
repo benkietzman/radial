@@ -32,13 +32,15 @@ class Data : public Interface
   Json *m_c;
 
   void dataAccept(string strPrefix);
-  bool dataConnect(radialUser &d, const string h, SSL_CTX **ctx, SSL **ssl, vector<string> &buffers, string &e);
-  void dataDisconnect(SSL_CTX *ctx, SSL *ssl);
   void dataError(int &fd, const string e);
-  void dataOkay(int &fd);
-  void dataResponse(const string t, int &fd, const size_t unBuffer);
   void dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx);
-  void dataStatus(int &fd, const bool b, const string e = "");
+  inline bool dirAdd(radialUser &d, string &e) {return token(d, e);};
+  inline bool dirList(radialUser &d, string &e) {return token(d, e);};
+  inline bool dirRemove(radialUser &d, string &e) {return token(d, e);};
+  inline bool fileAppend(radialUser &d, string &e) {return token(d, e);};
+  inline bool fileRead(radialUser &d, string &e) {return token(d, e);};
+  inline bool fileRemove(radialUser &d, string &e) {return token(d, e);};
+  inline bool fileWrite(radialUser &d, string &e) {return token(d, e);};
   void load(string strPrefix, const bool bSilent = false);
   void schedule(string strPrefix);
   bool token(radialUser &d, string &e);

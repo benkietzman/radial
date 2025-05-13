@@ -17,43 +17,57 @@ namespace radial
 Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "data", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
-  size_t unBuffer = 16 * 1024 * 1024;
-  string strBuffer;
+  size_t unSlots = 16; // Number of 1 MB slots within the buffer.
+  string strSlots;
 
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
     string strArg = argv[i];
-    if (strArg == "-b" || (strArg.size() > 9 && strArg.substr(0, 9) == "--buffer="))
+    if (strArg == "-s" || (strArg.size() > 8 && strArg.substr(0, 8) == "--slots="))
     {
       if (strArg == "-b" && i + 1 < argc && argv[i+1][0] != '-')
       {
-        strBuffer = argv[++i];
+        strSlots = argv[++i];
       }
       else
       {
-        strBuffer = strArg.substr(9, strArg.size() - 9);
+        strSlots = strArg.substr(8, strArg.size() - 8);
       }
-      m_manip.purgeChar(strBuffer, strBuffer, "'");
-      m_manip.purgeChar(strBuffer, strBuffer, "\"");
+      m_manip.purgeChar(strSlots, strSlots, "'");
+      m_manip.purgeChar(strSlots, strSlots, "\"");
     }
   }
   // }}}
-  if (!strBuffer.empty())
+  // {{{ initialize buffer
+  // [<-------------buffer------------->]
+  // [<--slot-->][<--slot-->][<--slot-->]
+  //
+  // [<------------------------------------------------slot------------------------------------------------->]
+  // [<---------------------socket---------------------->|<----------------------file----------------------->]
+  // [<---------read---------->|<---------write--------->|<---------read---------->|<---------write--------->]
+  // [<--buffer-->|<---temp--->|<--buffer-->|<---temp--->|<--buffer-->|<---temp--->|<--buffer-->|<---temp--->]
+  if (!strSlots.empty())
   {
-    unBuffer = atoi(strBuffer.c_str()) * 1024 * 1024;
+    unSlots = atoi(strSlots.c_str());
   }
-  m_pszBuffer = new char[unBuffer];
-  for (size_t i = 0; i < unBuffer; i++)
+  m_pszBuffer = new char[unSlots * 1024 * 1024];
+  for (size_t i = 0; i < unSlots; i++)
   {
     m_buffers.push_back(-1);
   }
-  sem_init(&m_semBuffer, 0, (unBuffer / (1024 * 1024)));
+  sem_init(&m_semBuffer, 0, unSlots);
+  // }}}
   m_pUtility->setReadSize(4096);
   m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
+  m_functions["dirAdd"] = &Data::dirAdd;
+  m_functions["dirList"] = &Data::dirList;
+  m_functions["fileAppend"] = &Data::fileAppend;
+  m_functions["fileRead"] = &Data::fileRead;
+  m_functions["fileRemove"] = &Data::fileRemove;
+  m_functions["fileWrite"] = &Data::fileWrite;
   m_functions["status"] = &Data::status;
-  m_functions["token"] = &Data::token;
   // }}}
   m_c = NULL;
   m_pUtility->sslInit();
@@ -103,6 +117,18 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
     userInit(ptJson, d);
+    if (strFunction == "list")
+    {
+      strFunction = "tokenList";
+    }
+    else if (strFunction == "read")
+    {
+      strFunction = "tokenRead";
+    }
+    else if (strFunction == "write")
+    {
+      strFunction = "tokenWrite";
+    }
     if (m_functions.find(strFunction) != m_functions.end())
     {
       if ((this->*m_functions[strFunction])(d, strError))
@@ -354,249 +380,6 @@ void Data::dataError(int &fd, const string e)
   }
 }
 // }}}
-// {{{ dataResponse()
-void Data::dataResponse(const string t, int &fd, const size_t unBuffer)
-{
-  // {{{ prep work
-  stringstream ssMessage;
-  Json *i = NULL;
-  threadIncrement();
-  m_mutex.lock();
-  if (m_dataRequests.find(t) != m_dataRequests.end())
-  {
-    i = m_dataRequests[t];
-    m_dataRequests.erase(t);
-  }
-  m_mutex.unlock();
-  // }}}
-  if (i != NULL)
-  {
-    if (!empty(i, "_path"))
-    {
-      bool bExit = false;
-      int fdData, nReturn;
-      string b, p, t;
-      stringstream sp;
-      Json *j;
-      sp << i->m["_path"]->v;
-      delete i->m["_path"];
-      i->m.erase("_path");
-      if (exist(i, "path"))
-      {
-        for (auto &item : i->m["path"]->l)
-        {
-          if (!item->v.empty())
-          {
-            sp << "/" << item->v;
-          }
-        }
-      }
-      p = sp.str();
-      // {{{ directory
-      if (m_file.directoryExist(p))
-      {
-        DIR *pDir;
-        if ((pDir = opendir(p.c_str())) != NULL)
-        {
-          string n, strType;
-          struct dirent *ptEntry;
-          j = new Json;
-          j->i("Status", "okay");
-          j->i("Type", "directory");
-          j->j(b);
-          delete j;
-          b.append("\n");
-          j = new Json;
-          while ((ptEntry = readdir(pDir)) != NULL)
-          {
-            n = ptEntry->d_name;
-            if (n != "." && n != "..")
-            {
-              j->m[n] = new Json;
-              switch (ptEntry->d_type)
-              {
-                case DT_BLK     : strType = "block device";           break;
-                case DT_CHR     : strType = "character device";       break;
-                case DT_DIR     : strType = "directory";              break;
-                case DT_FIFO    : strType = "named pipe";             break;
-                case DT_LNK     : strType = "symbolic link";          break;
-                case DT_REG     : strType = "regular file";           break;
-                case DT_SOCK    : strType = "UNIX domain socket";     break;
-                case DT_UNKNOWN : strType = "unknown";                break;
-                default         : strType = "undefined";
-              }
-              j->m[n]->i("Type", strType);
-              if (ptEntry->d_type == DT_REG)
-              {
-                struct stat tStat;
-                if (stat((p + (string)"/" + n).c_str(), &tStat) == 0)
-                {
-                  j->m[n]->i("Size", to_string(tStat.st_size), 'n');
-                }
-              }
-            }
-          }
-          closedir(pDir);
-          j->j(t);
-          delete j;
-          t.append("\n");
-          b.append(t);
-          while (!bExit)
-          {
-            pollfd fds[1];
-            fds[0].fd = fd;
-            fds[0].events = POLLIN;
-            if (!b.empty())
-            {
-              fds[0].events |= POLLOUT;
-            }
-            if ((nReturn = poll(fds, 1, 2000)) > 0)
-            {
-              if ((fds[0].revents & (POLLIN | POLLHUP)) && !m_pUtility->fdRead(fds[0].fd, t, nReturn))
-              {
-                bExit = true;
-              }
-              if ((fds[0].revents & POLLOUT) && (!m_pUtility->fdWrite(fds[0].fd, b, nReturn) || b.empty()))
-              {
-                bExit = true;
-              }
-              if (fds[0].revents & (POLLERR | POLLNVAL))
-              {
-                bExit = true;
-              }
-            }
-            else if (nReturn < 0 && errno != EINTR)
-            {
-              bExit = true;
-            }
-          }
-        }
-        else
-        {
-          ssMessage.str("");
-          ssMessage << "opendir(" << errno << ") " << strerror(errno);
-          dataError(fd, ssMessage.str());
-        }
-      }
-      // }}}
-      // {{{ file
-      else if ((fdData = open(p.c_str(), O_RDONLY)) >= 0)
-      {
-        bool bClose = false;
-        char *pszBuffer = m_pszBuffer + (unBuffer * 1048576) + 524288;
-        size_t unLength = 0;
-        j = new Json;
-        j->i("Status", "okay");
-        j->i("Type", "file");
-        j->j(b);
-        delete j;
-        b.append("\n");
-        memcpy(pszBuffer, b.c_str(), b.size());
-        unLength = b.size();
-        b.clear();
-        while (!bExit)
-        {
-          pollfd fds[2];
-          fds[0].fd = ((unLength < 262144)?fdData:-1);
-          fds[0].events = POLLIN;
-          fds[1].fd = fd;
-          fds[1].events = POLLIN;
-          if (unLength > 0)
-          {
-            fds[1].events |= POLLOUT;
-          }
-          if ((nReturn = poll(fds, 2, 2000)) > 0)
-          {
-            if (fds[0].revents & POLLIN)
-            {
-              if ((nReturn = read(fds[0].fd, (pszBuffer + unLength), (262144 - unLength))) > 0)
-              {
-                unLength += nReturn;
-              }
-              else if (nReturn == 0)
-              {
-                bClose = true;
-              }
-              else
-              {
-                bExit = true;
-              }
-            }
-            if (fds[0].revents & (POLLERR | POLLNVAL))
-            {
-              bExit = true;
-            }
-            if ((fds[1].revents & (POLLHUP | POLLIN)) && !m_pUtility->fdRead(fds[1].fd, t, nReturn))
-            {
-              bExit = true;
-            }
-            if (fds[1].revents & POLLOUT)
-            {
-              if ((nReturn = write(fds[1].fd, pszBuffer, unLength)) > 0)
-              {
-                unLength -= nReturn;
-                if (unLength > 0)
-                {
-                  memcpy((pszBuffer + 262144), (pszBuffer + nReturn), unLength);
-                  memcpy(pszBuffer, (pszBuffer + 262144), unLength);
-                }
-              }
-              else
-              {
-                bExit = true;
-              }
-            }
-            if (fds[1].revents & (POLLERR | POLLNVAL))
-            {
-              bExit = true;
-            }
-          }
-          else if (nReturn < 0 && errno != EINTR)
-          {
-            bExit = true;
-          }
-          if (bClose)
-          {
-            if (fdData != -1)
-            {
-              close(fdData);
-              fdData = -1;
-            }
-            if (unLength == 0)
-            {
-              bExit = true;
-            }
-          }
-        }
-        if (!bClose)
-        {
-          close(fdData);
-        }
-      }
-      else
-      {
-        ssMessage.str("");
-        ssMessage << "open(" << errno << ") " << strerror(errno);
-        dataError(fd, ssMessage.str());
-      }
-      // }}}
-    }
-    else
-    {
-      dataError(fd, "Please provide the _path.");
-    }
-    delete i;
-  }
-  else
-  {
-    dataError(fd, "Please provide a valid token.");
-  }
-  // {{{ post work
-  close(fd);
-  threadDecrement();
-  // }}}
-}
-// }}}
 // {{{ dataSocket()
 void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
 {
@@ -625,84 +408,510 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     m_mutex.unlock();
     if (pszBuffer != NULL)
     {
-      int fdResponse[2] = {-1, -1}, nReturn;
-      if ((nReturn = pipe(fdResponse)) == 0)
+      // {{{ prep work
+      bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false;
+      char *pszFileReadBuffer, *pszFileReadTemp, *pszFileWriteBuffer, *pszFileWriteTemp, *pszSocketReadBuffer, *pszSocketReadTemp, *pszSocketWriteBuffer, *pszSocketWriteTemp;
+      int fdFile = -1, nReturn;
+      size_t unFileReadLength = 0, unFileWriteLength = 0, unLength, unPosition, unSize = 131072, unSocketReadLength = 0, unSocketWriteLength = 0;
+      string strFileWriteBuffer, strFunction, strSocketReadBuffer, strSocketWriteBuffer, strPath;
+      pszSocketReadBuffer = pszBuffer;
+      pszSocketReadTemp = pszSocketReadBuffer + unSize;
+      pszSocketWriteBuffer = pszSocketReadTemp + unSize;
+      pszSocketWriteTemp = pszSocketWriteBuffer + unSize;
+      pszFileReadBuffer = pszSocketWriteTemp + unSize;
+      pszFileReadTemp = pszFileReadBuffer + unSize;
+      pszFileWriteBuffer = pszFileReadTemp + unSize;
+      pszFileWriteTemp = pszFileWriteBuffer + unSize;
+      // }}}
+      while (!bExit)
       {
         // {{{ prep work
-        bool bExit = false, bNeedWrite = false, bToken = false, bWantWrite = false;
-        size_t unLength[2] = {0, 0}, unPosition;
-        string strBuffer;
-        // }}}
-        while (!bExit)
+        pollfd fds[2];
+        fds[0].fd = -1;
+        fds[0].events = 0;
+        fds[1].fd = -1;
+        fds[1].events = 0;
+        // {{{ socket read --> socket read buffer
+        if (bToken && !strSocketReadBuffer.empty() && unSocketReadLength < unSize)
         {
-          // {{{ prep work
-          pollfd fds[2];
+          unLength = ((strSocketReadBuffer.size() > (unSize - unSocketReadLength))?(unSize - unSocketReadLength):strSocketReadBuffer.size());
+          memcpy((pszSocketReadBuffer + unSocketReadLength), strSocketReadBuffer.c_str(), unLength);
+          strSocketReadBuffer.erase(0, unLength);
+          unSocketReadLength += unLength;
+        }
+        // }}}
+        if (!bSocketClose && strSocketReadBuffer.size() < 2048)
+        {
           fds[0].fd = fdSocket;
           fds[0].events = POLLIN;
-          if (!bNeedWrite && unLength[0] > 0 && unLength[1] == 0)
+        }
+        // {{{ socket read buffer --> file write buffer
+        if (unSocketReadLength > 0 && unFileWriteLength < unSize)
+        {
+          unLength = ((unSocketReadLength > (unSize - unFileWriteLength))?(unSize - unFileWriteLength):unSocketReadLength);
+          memcpy((pszFileWriteBuffer + unFileWriteLength), pszSocketReadBuffer, unLength);
+          unFileWriteLength += unLength;
+          if (unLength < unSocketReadLength)
           {
-            memcpy((pszBuffer + 262144), pszBuffer, unLength[0]);
-            unLength[1] += unLength[0];
-            unLength[0] = 0;
+            memcpy(pszSocketReadTemp, (pszSocketReadBuffer + unLength), (unSocketReadLength - unLength));
+            memcpy(pszSocketReadBuffer, pszSocketReadTemp, (unSocketReadLength - unLength));
+            unSocketReadLength -= unLength;
           }
-          if (bWantWrite || unLength[1] > 0)
+          else
           {
-            fds[0].events |= POLLOUT;
+            unSocketReadLength = 0;
           }
-          fds[1].fd = ((unLength[0] < 131072)?fdResponse[0]:-1);
-          fds[1].events = POLLIN;
+        }
+        // }}}
+        if (!bFileClose && unFileWriteLength > 0)
+        {
+          fds[1].fd = fdFile;
+          fds[1].events = POLLOUT;
+        }
+        if (!bNeedWrite && unSocketWriteLength < unSize)
+        {
+          // {{{ socket write --> socket write buffer
+          if (!strSocketWriteBuffer.empty())
+          {
+            unLength = ((strSocketWriteBuffer.size() > (unSize - unSocketWriteLength))?(unSize - unSocketWriteLength):strSocketWriteBuffer.size());
+            memcpy((pszSocketWriteBuffer + unSocketWriteLength), strSocketWriteBuffer.c_str(), unLength);
+            strSocketWriteBuffer.erase(0, unLength);
+            unSocketWriteLength += unLength;
+          }
           // }}}
-          if ((nReturn = poll(fds, 2, 2000)) > 0)
+          // {{{ file read buffer --> socket write buffer
+          else if (unFileReadLength > 0)
           {
-            bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
-            if (bReadable)
+            unLength = ((unFileReadLength > (unSize - unSocketWriteLength))?(unSize - unSocketWriteLength):unFileReadLength);
+            memcpy((pszSocketWriteBuffer + unSocketWriteLength), pszFileReadBuffer, unLength);
+            unSocketWriteLength += unLength;
+            if (unLength < unFileReadLength)
             {
-              if (m_pUtility->sslRead(ssl, strBuffer, nReturn))
+              memcpy(pszFileReadTemp, (pszFileReadBuffer + unLength), (unFileReadLength - unLength));
+              memcpy(pszFileReadBuffer, pszFileReadTemp, (unFileReadLength - unLength));
+              unFileReadLength -= unLength;
+            }
+            else
+            {
+              unFileReadLength = 0;
+            }
+          }
+          // }}}
+        }
+        if (!bSocketClose && (bWantWrite || unSocketWriteLength > 0))
+        {
+          fds[0].fd = fdSocket;
+          fds[0].events |= POLLOUT;
+        }
+        if (!bFileClose && unFileReadLength < unSize)
+        {
+          fds[1].fd = fdFile;
+          fds[1].events |= POLLIN;
+        }
+        // }}}
+        if ((nReturn = poll(fds, 2, 2000)) > 0)
+        {
+          // {{{ socket
+          bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+          // {{{ read
+          if (bReadable)
+          {
+            if (m_pUtility->sslRead(ssl, strSocketReadBuffer, nReturn))
+            {
+              bWantWrite = false;
+              if (nReturn <= 0)
               {
-                bWantWrite = false;
-                if (nReturn <= 0)
+                switch (SSL_get_error(ssl, nReturn))
                 {
-                  switch (SSL_get_error(ssl, nReturn))
-                  {
-                    case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
-                  }
+                  case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
                 }
-                if (bToken)
+              }
+              // {{{ need token
+              if (!bToken)
+              {
+                if ((unPosition = strSocketReadBuffer.find("\n")) != string::npos)
                 {
-                  strBuffer.clear();
-                }
-                else if ((unPosition = strBuffer.find("\n")) != string::npos)
-                {
-                  string strToken = strBuffer.substr(0, unPosition);
-                  strBuffer.clear();
+                  string strToken = strSocketReadBuffer.substr(0, unPosition);
+                  Json *i = NULL, *j;
+                  strSocketReadBuffer.erase(0, (unPosition + 1));
                   bToken = true;
                   m_mutex.lock();
                   if (m_dataTokens.find(strToken) != m_dataTokens.end())
                   {
                     m_dataTokens.erase(strToken);
-                    thread threadDataRequest(&Data::dataResponse, this, strToken, ref(fdResponse[1]), unBuffer);
-                    pthread_setname_np(threadDataRequest.native_handle(), "dataResponse");
-                    threadDataRequest.detach();
+                    if (m_dataRequests.find(strToken) != m_dataRequests.end())
+                    {
+                      i = m_dataRequests[strToken];
+                      m_dataRequests.erase(strToken);
+                    }
+                    else
+                    {
+                      strError = "Failed to locate request from token.";
+                    }
                   }
                   else
                   {
-                    Json *ptJson = new Json;
-                    close(fdResponse[0]);
-                    fdResponse[0] = -1;
-                    close(fdResponse[1]);
-                    fdResponse[1] = -1;
-                    ptJson->i("Status", "error");
-                    ptJson->i("Error", "Please provide a valid Token.");
-                    ptJson->j(strBuffer);
-                    delete ptJson;
-                    strBuffer += "\n";
-                    memcpy((pszBuffer + 262144), strBuffer.c_str(), strBuffer.size());
-                    unLength[1] = strBuffer.size();
-                    strBuffer.clear();
+                    strError = "Please provide a valid token.";
                   }
                   m_mutex.unlock();
+                  if (i != NULL)
+                  {
+                    if (!empty(i, "Function"))
+                    {
+                      strFunction = i->m["Function"]->v; 
+                      if (!empty(i, "_path"))
+                      {
+                        stringstream ssPath;
+                        ssPath << i->m["_path"]->v;
+                        if (exist(i, "path"))
+                        {
+                          for (auto &item : i->m["path"]->l)
+                          {
+                            if (!item->v.empty())
+                            {
+                              ssPath << "/" << item->v;
+                            }
+                          }
+                        }
+                        strPath = ssPath.str();
+                        // {{{ dirAdd
+                        if (strFunction == "dirAdd")
+                        {
+                          mode_t mode = 00577;
+                          bFileClose = true;
+                          if (mkdir(strPath.c_str(), mode) == 0)
+                          {
+                            j = new Json;
+                            j->i("Status", "okay");
+                            j->i("Type", "directory");
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "mkdir(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ dirList
+                        else if (strFunction == "dirList")
+                        {
+                          struct stat tStat;
+                          bFileClose = true;
+                          if (stat(strPath.c_str(), &tStat) == 0)
+                          {
+                            if (S_ISDIR(tStat.st_mode))
+                            {
+                              DIR *pDir;
+                              if ((pDir = opendir(strPath.c_str())) != NULL)
+                              {
+                                string n, strType, v;
+                                struct dirent *ptEntry;
+                                j = new Json;
+                                j->i("Status", "okay");
+                                j->i("Type", "directory");
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                                j = new Json;
+                                while ((ptEntry = readdir(pDir)) != NULL)
+                                {
+                                  n = ptEntry->d_name;
+                                  if (n != "." && n != "..")
+                                  {
+                                    j->m[n] = new Json;
+                                    switch (ptEntry->d_type)
+                                    {
+                                      case DT_BLK     : strType = "block device";           break;
+                                      case DT_CHR     : strType = "character device";       break;
+                                      case DT_DIR     : strType = "directory";              break;
+                                      case DT_FIFO    : strType = "named pipe";             break;
+                                      case DT_LNK     : strType = "symbolic link";          break;
+                                      case DT_REG     : strType = "regular file";           break;
+                                      case DT_SOCK    : strType = "UNIX domain socket";     break;
+                                      case DT_UNKNOWN : strType = "unknown";                break;
+                                      default         : strType = "undefined";
+                                    }
+                                    j->m[n]->i("Type", strType);
+                                    if (ptEntry->d_type == DT_REG)
+                                    {
+                                      struct stat tStat;
+                                      if (stat((strPath + (string)"/" + n).c_str(), &tStat) == 0)
+                                      {
+                                        j->m[n]->i("Size", to_string(tStat.st_size), 'n');
+                                      }
+                                    }
+                                  }
+                                }
+                                closedir(pDir);
+                                j->j(v);
+                                delete j;
+                                v.append("\n");
+                                strSocketWriteBuffer.append(v);
+                              }
+                              else
+                              {
+                                j = new Json;
+                                j->i("Status", "error");
+                                ssMessage.str("");
+                                ssMessage << "opendir(" << errno << ") " << strerror(errno);
+                                j->i("Error", ssMessage.str());
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                              }
+                            }
+                            else
+                            {
+                              j = new Json;
+                              j->i("Status", "error");
+                              ssMessage.str("");
+                              ssMessage << "S_ISDIR() Not a directory." << endl;
+                              j->i("Error", ssMessage.str());
+                              j->j(strSocketWriteBuffer);
+                              delete j;
+                              strSocketWriteBuffer.append("\n");
+                            }
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ dirRemove
+                        else if (strFunction == "dirRemove")
+                        {
+                          struct stat tStat;
+                          bFileClose = true;
+                          if (stat(strPath.c_str(), &tStat) == 0)
+                          {
+                            if (S_ISDIR(tStat.st_mode))
+                            {
+                              if (remove(strPath.c_str()) == 0)
+                              {
+                                j = new Json;
+                                j->i("Status", "okay");
+                                j->i("Type", "directory");
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                              }
+                              else
+                              {
+                                j = new Json;
+                                j->i("Status", "error");
+                                ssMessage.str("");
+                                ssMessage << "remove(" << errno << ") " << strerror(errno) << endl;
+                                j->i("Error", ssMessage.str());
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                              }
+                            }
+                            else
+                            {
+                              j = new Json;
+                              j->i("Status", "error");
+                              ssMessage.str("");
+                              ssMessage << "S_ISDIR() Not a directory." << endl;
+                              j->i("Error", ssMessage.str());
+                              j->j(strSocketWriteBuffer);
+                              delete j;
+                              strSocketWriteBuffer.append("\n");
+                            }
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ fileAppend | fileWrite
+                        else if (strFunction == "fileAppend" || strFunction == "fileWrite")
+                        {
+                          int nFlags = O_WRONLY | O_CREAT;
+                          mode_t mode = 00466;
+                          if (strFunction == "fileAppend")
+                          {
+                            nFlags |= O_APPEND;
+                          }
+                          if ((fdFile = open(strPath.c_str(), nFlags, mode)) >= 0)
+                          {
+                            j = new Json;
+                            j->i("Status", "okay");
+                            j->i("Type", "file");
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "open(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ fileRead
+                        else if (strFunction == "fileRead")
+                        {
+                          if ((fdFile = open(strPath.c_str(), O_RDONLY)) >= 0)
+                          {
+                            j = new Json;
+                            j->i("Status", "okay");
+                            j->i("Type", "file");
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "open(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ fileRemove
+                        else if (strFunction == "fileRemove")
+                        {
+                          struct stat tStat;
+                          bFileClose = true;
+                          if (stat(strPath.c_str(), &tStat) == 0)
+                          {
+                            if (S_ISREG(tStat.st_mode))
+                            {
+                              if (remove(strPath.c_str()) == 0)
+                              {
+                                j = new Json;
+                                j->i("Status", "okay");
+                                j->i("Type", "file");
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                              }
+                              else
+                              {
+                                j = new Json;
+                                j->i("Status", "error");
+                                ssMessage.str("");
+                                ssMessage << "remove(" << errno << ") " << strerror(errno) << endl;
+                                j->i("Error", ssMessage.str());
+                                j->j(strSocketWriteBuffer);
+                                delete j;
+                                strSocketWriteBuffer.append("\n");
+                              }
+                            }
+                            else
+                            {
+                              j = new Json;
+                              j->i("Status", "error");
+                              ssMessage.str("");
+                              ssMessage << "S_ISREG() Not a regular file." << endl;
+                              j->i("Error", ssMessage.str());
+                              j->j(strSocketWriteBuffer);
+                              delete j;
+                              strSocketWriteBuffer.append("\n");
+                            }
+                          }
+                          else
+                          {
+                            j = new Json;
+                            j->i("Status", "error");
+                            ssMessage.str("");
+                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            j->i("Error", ssMessage.str());
+                            j->j(strSocketWriteBuffer);
+                            delete j;
+                            strSocketWriteBuffer.append("\n");
+                          }
+                        }
+                        // }}}
+                        // {{{ invalid
+                        else
+                        {
+                          bFileClose = true;
+                          j = new Json;
+                          j->i("Status", "error");
+                          strError = "Please provide a valid Function.";
+                          j->i("Error", strError);
+                          j->j(strSocketWriteBuffer);
+                          delete j;
+                          strSocketWriteBuffer.append("\n");
+                        }
+                        // }}}
+                      }
+                      else
+                      {
+                        bFileClose = true;
+                        j = new Json;
+                        j->i("Status", "error");
+                        strError = "Please provide the _path.";
+                        j->i("Error", strError);
+                        j->j(strSocketWriteBuffer);
+                        delete j;
+                        strSocketWriteBuffer.append("\n");
+                      }
+                    }
+                    else
+                    {
+                      bFileClose = true;
+                      j = new Json;
+                      j->i("Status", "error");
+                      strError = "Please provide the Function.";
+                      j->i("Error", strError);
+                      j->j(strSocketWriteBuffer);
+                      delete j;
+                      strSocketWriteBuffer.append("\n");
+                    }
+                    delete i;
+                  }
+                  else
+                  {
+                    bFileClose = true;
+                    j = new Json;
+                    j->i("Status", "error");
+                    strError = "Request was not allocated from token.";
+                    j->i("Error", strError);
+                    j->j(strSocketWriteBuffer);
+                    delete j;
+                    strSocketWriteBuffer.append("\n");
+                  }
                 }
-                else if (strBuffer.size() > 33)
+                else if (strSocketReadBuffer.size() > 33)
                 {
                   bExit = true;
                   ssMessage.str("");
@@ -710,143 +919,187 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                   log(ssMessage.str());
                 }
               }
-              else
+              // }}}
+            }
+            else
+            {
+              bSocketClose = true;
+              if (nReturn < 0 && errno != 104)
               {
                 bExit = true;
-                if (nReturn < 0 && errno != 104)
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-                  log(ssMessage.str());
-                }
+                ssMessage.str("");
+                ssMessage << strPrefix << "->Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                log(ssMessage.str());
               }
-            }
-            if (bWritable)
-            {
-              bool bBlocking = false;
-              long lArg, lArgOrig;
-              if ((lArg = lArgOrig = fcntl(SSL_get_fd(ssl), F_GETFL, NULL)) >= 0 && !(lArg & O_NONBLOCK))
-              {
-                bBlocking = true;
-                lArg |= O_NONBLOCK;
-                fcntl(SSL_get_fd(ssl), F_SETFL, lArg);
-              }
-              if ((nReturn = SSL_write(ssl, (pszBuffer + 262144), unLength[1])) > 0)
-              {
-                unLength[1] -= nReturn;
-                if (unLength[1] > 0)
-                {
-                  memcpy((pszBuffer + 393216), (pszBuffer + 262144 + nReturn), unLength[1]);
-                  memcpy((pszBuffer + 262144), (pszBuffer + 393216), unLength[1]);
-                }
-              }
-              else
-              {
-                bNeedWrite = bWantWrite = false;
-                switch (SSL_get_error(ssl, nReturn))
-                {
-                  case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
-                  case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
-                  case SSL_ERROR_ZERO_RETURN:
-                  case SSL_ERROR_SYSCALL:
-                  case SSL_ERROR_SSL:
-                  {
-                    bExit = true;
-                    if (nReturn < 0)
-                    {
-                      ssMessage.str("");
-                      ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-                      log(ssMessage.str());
-                    }
-                    break;
-                  }
-                }
-              }
-              if (bBlocking)
-              {
-                fcntl(SSL_get_fd(ssl), F_SETFL, lArgOrig);
-              }
-            }
-            if (fds[0].revents & POLLERR)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLERR.";
-              log(ssMessage.str());
-            }
-            if (fds[0].revents & POLLNVAL)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLNVAL.";
-              log(ssMessage.str());
-            }
-            if (fds[1].revents & (POLLHUP | POLLIN))
-            {
-              if ((nReturn = read(fds[1].fd, (pszBuffer + unLength[0]), (131072 - unLength[0]))) > 0)
-              {
-                unLength[0] += nReturn;
-              }
-              else
-              {
-                close(fdResponse[0]);
-                fdResponse[0] = -1;
-                if (nReturn < 0)
-                {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Utility::fdRead(" << errno << ") error:  " << strerror(errno);
-                  log(ssMessage.str());
-                }
-              }
-            }
-            if (fds[1].revents & POLLERR)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
-              log(ssMessage.str());
-            }
-            if (fds[1].revents & POLLNVAL)
-            {
-              bExit = true;
-              ssMessage.str("");
-              ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLNVAL.";
-              log(ssMessage.str());
             }
           }
-          else if (nReturn < 0 && errno != EINTR)
+          // }}}
+          // {{{ write
+          if (bWritable)
+          {
+            bool bBlocking = false;
+            long lArg, lArgOrig;
+            if ((lArg = lArgOrig = fcntl(SSL_get_fd(ssl), F_GETFL, NULL)) >= 0 && !(lArg & O_NONBLOCK))
+            {
+              bBlocking = true;
+              lArg |= O_NONBLOCK;
+              fcntl(SSL_get_fd(ssl), F_SETFL, lArg);
+            }
+            if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
+            {
+              if ((size_t)nReturn < unSocketWriteLength)
+              {
+                memcpy(pszSocketWriteTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
+                memcpy(pszSocketWriteBuffer, pszSocketWriteTemp, (unSocketWriteLength - nReturn));
+                unSocketWriteLength -= nReturn;
+              }
+              else
+              {
+                unSocketWriteLength = 0;
+              }
+            }
+            else
+            {
+              bNeedWrite = bWantWrite = false;
+              switch (SSL_get_error(ssl, nReturn))
+              {
+                case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
+                case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
+                case SSL_ERROR_ZERO_RETURN:
+                case SSL_ERROR_SYSCALL:
+                case SSL_ERROR_SSL:
+                {
+                  bSocketClose = true;
+                  if (nReturn < 0)
+                  {
+                    bExit = true;
+                    ssMessage.str("");
+                    ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                    log(ssMessage.str());
+                  }
+                  break;
+                }
+              }
+            }
+            if (bBlocking)
+            {
+              fcntl(SSL_get_fd(ssl), F_SETFL, lArgOrig);
+            }
+          }
+          // }}}
+          // {{{ error
+          if (fds[0].revents & POLLERR)
           {
             bExit = true;
             ssMessage.str("");
-            ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLERR.";
             log(ssMessage.str());
           }
-          // {{{ post work
-          if ((fdResponse[0] == -1 && unLength[0] == 0 && unLength[1] == 0) || shutdown())
+          if (fds[0].revents & POLLNVAL)
           {
             bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[0].fd << "]:  Encountered a POLLNVAL.";
+            log(ssMessage.str());
           }
           // }}}
+          // }}}
+          // {{{ file
+          // {{{ read
+          if (fds[1].revents & POLLIN)
+          {
+            if ((nReturn = read(fds[1].fd, (pszFileReadBuffer + unFileReadLength), (unSize - unFileReadLength))) > 0)
+            {
+              unFileReadLength += nReturn;
+            }
+            else
+            {
+              bFileClose = true;
+              if (nReturn < 0)
+              {
+                bExit = true;
+                ssMessage.str("");
+                ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
+                log(ssMessage.str());
+              }
+            }
+          }
+          // }}}
+          // {{{ write
+          if (fds[1].revents & POLLOUT)
+          {
+            if ((nReturn = write(fds[1].fd, pszFileWriteBuffer, unFileWriteLength)) > 0)
+            {
+              if ((size_t)nReturn < unFileWriteLength)
+              {
+                memcpy(pszFileWriteTemp, (pszFileWriteBuffer + nReturn), (unFileWriteLength - nReturn));
+                memcpy(pszFileWriteBuffer, pszSocketReadTemp, (unFileWriteLength - nReturn));
+                unFileWriteLength -= nReturn;
+              }
+              else
+              {
+                unFileWriteLength = 0;
+              }
+            }
+            else
+            {
+              bFileClose = true;
+              if (nReturn < 0)
+              {
+                bExit = true;
+                ssMessage.str("");
+                ssMessage << strPrefix << "->write(" << errno << ") error:  " << strerror(errno);
+                log(ssMessage.str());
+              }
+            }
+          }
+          // }}}
+          // {{{ error
+          if (fds[1].revents & POLLERR)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLERR.";
+            log(ssMessage.str());
+          }
+          if (fds[1].revents & POLLNVAL)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << strPrefix << "->poll() error [" << fds[1].fd << "]:  Encountered a POLLNVAL.";
+            log(ssMessage.str());
+          }
+          // }}}
+          // }}}
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
+          log(ssMessage.str());
         }
         // {{{ post work
-        if (fdResponse[0] != -1)
+        if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
-          close(fdResponse[0]);
-          fdResponse[0] = -1;
+          bSocketClose = true;
         }
-        if (fdResponse[1] != -1)
+        if (bSocketClose && strSocketReadBuffer.empty() && unSocketReadLength == 0 && unFileWriteLength == 0)
         {
-          close(fdResponse[1]);
-          fdResponse[1] = -1;
+          bFileClose = true;
+        }
+        if (bFileClose && bSocketClose)
+        {
+          bExit = true;
         }
         // }}}
       }
-      else
+      // {{{ post work
+      if (fdFile != -1)
       {
-        ssMessage.str("");
-        ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
-        log(ssMessage.str());
+        close(fdFile);
       }
+      // }}}
       m_mutex.lock();
       m_buffers[unBuffer] = -1;
       m_mutex.unlock();
