@@ -119,6 +119,7 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
+      d->m["i"]->insert("_function", strFunction);
       if ((this->*m_functions[strFunction])(d, strError))
       {
         bResult = true;
@@ -544,9 +545,9 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                   m_mutex.unlock();
                   if (i != NULL)
                   {
-                    if (!empty(i, "Function"))
+                    if (!empty(i, "_function"))
                     {
-                      strFunction = i->m["Function"]->v; 
+                      strFunction = i->m["_function"]->v; 
                       if (!empty(i, "_path"))
                       {
                         stringstream ssPath;
