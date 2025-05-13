@@ -1271,8 +1271,54 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
 }
 // }}}
 // {{{ data
-// {{{ dataConnect()
-bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &strBuffer, string &strType, string &e)
+// {{{ dataClose()
+void Interface::dataClose(SSL_CTX *ctx, SSL *ssl)
+{
+  if (ssl != NULL)
+  {
+    int fdSocket = SSL_get_fd(ssl);
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+    ssl = NULL;
+    close(fdSocket);
+  }
+  if (ctx != NULL)
+  {
+    SSL_CTX_free(ctx);
+    ctx = NULL;
+  }
+}
+// }}}
+// {{{ dataDirectoryAdd()
+bool Interface::dataDirectoryAdd(const string h, const list<string> p, string &e)
+{
+  return dataSend(h, p, e, "dirAdd");
+}
+// }}}
+// {{{ dataDirectoryList()
+bool Interface::dataDirectoryList(const string h, const list<string> p, Json **l, string &e)
+{
+  bool r = false;
+  string b;
+
+  (*l) = NULL;
+  if (dataRead(h, p, b, e, "dirList"))
+  {
+    r = true;
+    (*l) = new Json(b);
+  }
+
+  return r;
+}
+// }}}
+// {{{ dataDirectoryRemove()
+bool Interface::dataDirectoryRemove(const string h, const list<string> p, string &e)
+{
+  return dataSend(h, p, e, "dirRemove");
+}
+// }}}
+// {{{ dataOpen()
+bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &b, string &e, const string f)
 {
   bool r = false;
   int fdSocket;
@@ -1280,7 +1326,7 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
   stringstream ssMessage;
   Json *ptJson = new Json;
 
-  ptJson->i("Function", "token");
+  ptJson->i("Function", f);
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("handle", h);
   if (!p.empty())
@@ -1380,7 +1426,7 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                 bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
                 if (bReadable)
                 {
-                  if (m_pUtility->sslRead((*ssl), strBuffer, nReturn))
+                  if (m_pUtility->sslRead((*ssl), b, nReturn))
                   {
                     bWantWrite = false;
                     if (nReturn <= 0)
@@ -1390,18 +1436,14 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
                         case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
                       }
                     }
-                    if ((unPosition = strBuffer.find("\n")) != string::npos)
+                    if ((unPosition = b.find("\n")) != string::npos)
                     {
-                      Json *ptJson = new Json(strBuffer.substr(0, unPosition));
-                      strBuffer.erase(0, (unPosition + 1));
+                      Json *ptJson = new Json(b.substr(0, unPosition));
+                      b.erase(0, (unPosition + 1));
                       bExit = true;
                       if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                       {
                         r = true;
-                        if (!empty(ptJson, "Type"))
-                        {
-                          strType = ptJson->m["Type"]->v;
-                        }
                       }
                       else
                       {
@@ -1480,7 +1522,7 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
             }
             if (!r)
             {
-              dataDisconnect((*ctx), (*ssl));
+              dataClose((*ctx), (*ssl));
             }
           }
           else
@@ -1499,27 +1541,15 @@ bool Interface::dataConnect(const string h, const list<string> p, SSL_CTX **ctx,
 
   return r;
 }
-// }}}
-// {{{ dataDisconnect()
-void Interface::dataDisconnect(SSL_CTX *ctx, SSL *ssl)
+bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &e, const bool bAppend)
 {
-  if (ssl != NULL)
-  {
-    int fdSocket = SSL_get_fd(ssl);
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
-    ssl = NULL;
-    close(fdSocket);
-  }
-  if (ctx != NULL)
-  {
-    SSL_CTX_free(ctx);
-    ctx = NULL;
-  }
+  string b;
+
+  return dataOpen(h, p, ctx, ssl, b, e, ((bAppend)?"fileAppend":"fileWrite"));
 }
 // }}}
 // {{{ dataRead()
-bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bReadAll)
+bool Interface::dataRead(SSL *ssl, string &b, string &e)
 {
   bool bExit = false, bWantWrite = false, r = false;
   int fdSocket = SSL_get_fd(ssl), nReturn;
@@ -1540,12 +1570,9 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bRea
       bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
       if (bReadable)
       {
-        if (m_pUtility->sslRead(ssl, strBuffer, nReturn))
+        if (m_pUtility->sslRead(ssl, b, nReturn))
         {
-          if (!bReadAll)
-          {
-            bExit = r = true;
-          }
+          bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
           {
@@ -1558,11 +1585,7 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bRea
         else
         {
           bExit = true;
-          if (bReadAll && nReturn == 0)
-          {
-            r = true;
-          }
-          else if (nReturn < 0 && errno != 104)
+          if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
             ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
@@ -1582,6 +1605,16 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bRea
             {
               case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
             }
+          }
+        }
+        else
+        {
+          bExit = true;
+          if (nReturn < 0 && errno != 104)
+          {
+            ssMessage.str("");
+            ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+            e = ssMessage.str();
           }
         }
       }
@@ -1612,6 +1645,165 @@ bool Interface::dataRead(SSL *ssl, string &strBuffer, string &e, const bool bRea
       bExit = true;
       e = "Interface is shutting down.";
     }
+  }
+
+  return r;
+}
+bool Interface::dataRead(const string h, const list<string> p, string &b, string &e, const string f)
+{
+  bool r = false;
+  SSL_CTX *ctx;
+  SSL *ssl;
+
+  if (dataOpen(h, p, &ctx, &ssl, b, e, f))
+  {
+    r = true;
+    while (dataRead(ssl, b, e))
+    {
+    }
+    dataClose(ctx, ssl);
+  }
+
+  return r;
+}
+// }}}
+// {{{ dataRemove()
+bool Interface::dataRemove(const string h, const list<string> p, string &e)
+{
+  return dataSend(h, p, e, "fileRemove");
+}
+// }}}
+// {{{ dataSend()
+bool Interface::dataSend(const string h, const list<string> p, string &e, const string f)
+{
+  bool r = false;
+  SSL_CTX *ctx;
+  SSL *ssl;
+  string b;
+
+  if (dataOpen(h, p, &ctx, &ssl, b, e, f))
+  {
+    r = true;
+    dataClose(ctx, ssl);
+  }
+
+  return r;
+}
+// }}}
+// {{{ dataWrite()
+bool Interface::dataWrite(SSL *ssl, string &b, string &e)
+{
+  bool bExit = false, bWantWrite = false, r = false;
+  int fdSocket = SSL_get_fd(ssl), nReturn;
+  string strLine;
+  stringstream ssMessage;
+
+  while (!bExit)
+  {
+    pollfd fds[1];
+    fds[0].fd = fdSocket;
+    fds[0].events = POLLIN;
+    if (bWantWrite)
+    {
+      fds[0].events |= POLLOUT;
+    }
+    if ((nReturn = poll(fds, 1, 2000)) > 0)
+    {
+      bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
+      if (bReadable)
+      {
+        string strBufferIn;
+        if (m_pUtility->sslRead(ssl, strBufferIn, nReturn))
+        {
+          bWantWrite = false;
+          if (nReturn <= 0)
+          {
+            switch (SSL_get_error(ssl, nReturn))
+            {
+              case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+            }
+          }
+        }
+        else
+        {
+          bExit = true;
+          if (nReturn < 0 && errno != 104)
+          {
+            ssMessage.str("");
+            ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+            e = ssMessage.str();
+          }
+        }
+      }
+      if (bWritable)
+      {
+        if (m_pUtility->sslWrite(ssl, b, nReturn))
+        {
+          bExit = r = true;
+          bWantWrite = false;
+          if (nReturn <= 0)
+          {
+            switch (SSL_get_error(ssl, nReturn))
+            {
+              case SSL_ERROR_WANT_WRITE: bWantWrite = true; break;
+            }
+          }
+        }
+        else
+        {
+          bExit = true;
+          if (nReturn < 0 && errno != 104)
+          {
+            ssMessage.str("");
+            ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+            e = ssMessage.str();
+          }
+        }
+      }
+      if (fds[0].revents & POLLERR)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << "poll() Encountered a POLLERR.";
+        e = ssMessage.str();
+      }
+      if (fds[0].revents & POLLNVAL)
+      {
+        bExit = true;
+        ssMessage.str("");
+        ssMessage << "poll() Encountered a POLLNVAL.";
+        e = ssMessage.str();
+      }
+    }
+    else if (nReturn < 0 && errno != EINTR)
+    {
+      bExit = true;
+      ssMessage.str("");
+      ssMessage << "poll(" << errno << ") " << strerror(errno);
+      e = ssMessage.str();
+    }
+    if (shutdown())
+    {
+      bExit = true;
+      e = "Interface is shutting down.";
+    }
+  }
+
+  return r;
+}
+bool Interface::dataWrite(const string h, const list<string> p, string &b, string &e, const bool bAppend)
+{
+  bool r = false;
+  SSL_CTX *ctx;
+  SSL *ssl;
+
+  if (dataOpen(h, p, &ctx, &ssl, e, ((bAppend)?"fileAppend":"fileWrite")))
+  {
+    r = true;
+    while (dataWrite(ssl, b, e) && !b.empty())
+    {
+    }
+    dataClose(ctx, ssl);
   }
 
   return r;
@@ -2090,10 +2282,10 @@ bool Interface::feedbackType(const string strTypeID, Json *ptData, string &strEr
 // }}}
 // {{{ footer()
 bool Interface::footer(radialUser &d, string &e)
-{ 
-  Json *i = d.p->m["i"], *o; 
+{
+  Json *i = d.p->m["i"], *o;
   radialUser a;
-  
+
   d.p->i("o", i);
   o = d.p->m["o"];
   if (!m_strCompany.empty() && empty(i, "company"))
@@ -2117,7 +2309,7 @@ bool Interface::footer(radialUser &d, string &e)
     int nYear;
     stringstream ssYear;
     ssYear << m_date.getYear(nYear);
-    o->i("year", ssYear.str(), 'n'); 
+    o->i("year", ssYear.str(), 'n');
   }
   if (!empty(i, "userid"))
   {
@@ -3193,9 +3385,9 @@ bool Interface::menuAccess(radialUser &d, string &e)
   {
     e = "Please provide the id or type.";
   }
-  
+
   return b;
-} 
+}
 // }}}
 // {{{ mysql
 // {{{ mysql()
@@ -3355,15 +3547,15 @@ bool Interface::packageType(radialUser &d, string &e)
     {
       if (!r.empty())
       {
-        b = true; 
+        b = true;
         d.p->i("o", r);
       }
       else
       {
         e = "No results returned.";
-      } 
+      }
     }
-  } 
+  }
   else
   {
     e = "Please provide the id or type.";
