@@ -117,18 +117,6 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
     userInit(ptJson, d);
-    if (strFunction == "list")
-    {
-      strFunction = "tokenList";
-    }
-    else if (strFunction == "read")
-    {
-      strFunction = "tokenRead";
-    }
-    else if (strFunction == "write")
-    {
-      strFunction = "tokenWrite";
-    }
     if (m_functions.find(strFunction) != m_functions.end())
     {
       if ((this->*m_functions[strFunction])(d, strError))
