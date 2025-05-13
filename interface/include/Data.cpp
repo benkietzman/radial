@@ -583,7 +583,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           {
                             j = new Json;
                             j->i("Status", "okay");
-                            j->i("Type", "directory");
                             j->j(strSocketWriteBuffer);
                             delete j;
                             strSocketWriteBuffer.append("\n");
@@ -617,7 +616,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                                 struct dirent *ptEntry;
                                 j = new Json;
                                 j->i("Status", "okay");
-                                j->i("Type", "directory");
                                 j->j(strSocketWriteBuffer);
                                 delete j;
                                 strSocketWriteBuffer.append("\n");
@@ -707,7 +705,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                               {
                                 j = new Json;
                                 j->i("Status", "okay");
-                                j->i("Type", "directory");
                                 j->j(strSocketWriteBuffer);
                                 delete j;
                                 strSocketWriteBuffer.append("\n");
@@ -762,7 +759,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           {
                             j = new Json;
                             j->i("Status", "okay");
-                            j->i("Type", "file");
                             j->j(strSocketWriteBuffer);
                             delete j;
                             strSocketWriteBuffer.append("\n");
@@ -787,7 +783,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           {
                             j = new Json;
                             j->i("Status", "okay");
-                            j->i("Type", "file");
                             j->j(strSocketWriteBuffer);
                             delete j;
                             strSocketWriteBuffer.append("\n");
@@ -818,7 +813,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                               {
                                 j = new Json;
                                 j->i("Status", "okay");
-                                j->i("Type", "file");
                                 j->j(strSocketWriteBuffer);
                                 delete j;
                                 strSocketWriteBuffer.append("\n");
