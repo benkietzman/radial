@@ -119,7 +119,7 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
-      d->m["i"]->insert("_function", strFunction);
+      d.p->m["i"]->insert("_function", strFunction);
       if ((this->*m_functions[strFunction])(d, strError))
       {
         bResult = true;
