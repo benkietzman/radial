@@ -1655,11 +1655,16 @@ bool Interface::dataRead(const string h, const list<string> p, string &b, string
   SSL_CTX *ctx;
   SSL *ssl;
 
+  e.clear();
   if (dataOpen(h, p, &ctx, &ssl, b, e, f))
   {
     r = true;
     while (dataRead(ssl, b, e))
     {
+    }
+    if (!e.empty())
+    {
+      r = false;
     }
     dataClose(ctx, ssl);
   }
