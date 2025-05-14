@@ -581,7 +581,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "mkdir(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "mkdir(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
@@ -661,7 +661,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                               j = new Json;
                               j->i("Status", "error");
                               ssMessage.str("");
-                              ssMessage << "S_ISDIR() Not a directory." << endl;
+                              ssMessage << "S_ISDIR() Not a directory.";
                               j->i("Error", ssMessage.str());
                               j->j(strSocketWriteBuffer);
                               delete j;
@@ -673,7 +673,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "stat(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
@@ -703,7 +703,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                                 j = new Json;
                                 j->i("Status", "error");
                                 ssMessage.str("");
-                                ssMessage << "remove(" << errno << ") " << strerror(errno) << endl;
+                                ssMessage << "remove(" << errno << ") " << strerror(errno);
                                 j->i("Error", ssMessage.str());
                                 j->j(strSocketWriteBuffer);
                                 delete j;
@@ -715,7 +715,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                               j = new Json;
                               j->i("Status", "error");
                               ssMessage.str("");
-                              ssMessage << "S_ISDIR() Not a directory." << endl;
+                              ssMessage << "S_ISDIR() Not a directory.";
                               j->i("Error", ssMessage.str());
                               j->j(strSocketWriteBuffer);
                               delete j;
@@ -727,7 +727,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "stat(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
@@ -757,7 +757,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "open(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "open(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
@@ -781,7 +781,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "open(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "open(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
@@ -811,7 +811,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                                 j = new Json;
                                 j->i("Status", "error");
                                 ssMessage.str("");
-                                ssMessage << "remove(" << errno << ") " << strerror(errno) << endl;
+                                ssMessage << "remove(" << errno << ") " << strerror(errno);
                                 j->i("Error", ssMessage.str());
                                 j->j(strSocketWriteBuffer);
                                 delete j;
@@ -823,7 +823,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                               j = new Json;
                               j->i("Status", "error");
                               ssMessage.str("");
-                              ssMessage << "S_ISREG() Not a regular file." << endl;
+                              ssMessage << "S_ISREG() Not a regular file.";
                               j->i("Error", ssMessage.str());
                               j->j(strSocketWriteBuffer);
                               delete j;
@@ -835,7 +835,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
-                            ssMessage << "stat(" << errno << ") " << strerror(errno) << endl;
+                            ssMessage << "stat(" << errno << ") " << strerror(errno);
                             j->i("Error", ssMessage.str());
                             j->j(strSocketWriteBuffer);
                             delete j;
