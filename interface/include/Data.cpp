@@ -43,10 +43,9 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
   // [<-------------buffer------------->]
   // [<--slot-->][<--slot-->][<--slot-->]
   //
-  // [<------------------------------------------------slot------------------------------------------------->]
-  // [<---------------------socket---------------------->|<----------------------file----------------------->]
-  // [<---------read---------->|<---------write--------->|<---------read---------->|<---------write--------->]
-  // [<--buffer-->|<---temp--->|<--buffer-->|<---temp--->|<--buffer-->|<---temp--->|<--buffer-->|<---temp--->]
+  // [<------------------------slot------------------------->]
+  // [<----------file----------->|<--socket--->|<---temp---->]
+  // [<---read---->|<---write--->|<---write--->|<---temp---->]
   if (!strSlots.empty())
   {
     unSlots = atoi(strSlots.c_str());
@@ -399,18 +398,14 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     {
       // {{{ prep work
       bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false;
-      char *pszFileReadBuffer, *pszFileReadTemp, *pszFileWriteBuffer, *pszFileWriteTemp, *pszSocketReadBuffer, *pszSocketReadTemp, *pszSocketWriteBuffer, *pszSocketWriteTemp;
+      char *pszFileReadBuffer, *pszFileWriteBuffer, *pszSocketWriteBuffer, *pszTemp;
       int fdFile = -1, nReturn;
-      size_t unFileReadLength = 0, unFileWriteLength = 0, unLength, unPosition, unSize = 131072, unSocketReadLength = 0, unSocketWriteLength = 0;
+      size_t unFileReadLength = 0, unFileWriteLength = 0, unLength, unPosition, unSize = 262144, unSocketWriteLength = 0;
       string strFileWriteBuffer, strFunction, strSocketReadBuffer, strSocketWriteBuffer, strPath;
-      pszSocketReadBuffer = pszBuffer;
-      pszSocketReadTemp = pszSocketReadBuffer + unSize;
-      pszSocketWriteBuffer = pszSocketReadTemp + unSize;
-      pszSocketWriteTemp = pszSocketWriteBuffer + unSize;
-      pszFileReadBuffer = pszSocketWriteTemp + unSize;
-      pszFileReadTemp = pszFileReadBuffer + unSize;
-      pszFileWriteBuffer = pszFileReadTemp + unSize;
-      pszFileWriteTemp = pszFileWriteBuffer + unSize;
+      pszFileReadBuffer = pszBuffer;
+      pszFileWriteBuffer = pszFileReadBuffer + unSize;
+      pszSocketWriteBuffer = pszFileWriteBuffer + unSize;
+      pszTemp = pszSocketWriteBuffer + unSize;
       // }}}
       while (!bExit)
       {
@@ -420,13 +415,13 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         fds[0].events = 0;
         fds[1].fd = -1;
         fds[1].events = 0;
-        // {{{ socket read --> socket read buffer
-        if (bToken && !strSocketReadBuffer.empty() && unSocketReadLength < unSize)
+        // {{{ socket read --> file write buffer
+        if (bToken && !strSocketReadBuffer.empty() && unFileWriteLength < unSize)
         {
-          unLength = ((strSocketReadBuffer.size() > (unSize - unSocketReadLength))?(unSize - unSocketReadLength):strSocketReadBuffer.size());
-          memcpy((pszSocketReadBuffer + unSocketReadLength), strSocketReadBuffer.c_str(), unLength);
+          unLength = ((strSocketReadBuffer.size() > (unSize - unFileWriteLength))?(unSize - unFileWriteLength):strSocketReadBuffer.size());
+          memcpy((pszFileWriteBuffer + unFileWriteLength), strSocketReadBuffer.c_str(), unLength);
           strSocketReadBuffer.erase(0, unLength);
-          unSocketReadLength += unLength;
+          unFileWriteLength += unLength;
         }
         // }}}
         if (!bSocketClose && strSocketReadBuffer.size() < 2048)
@@ -434,24 +429,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           fds[0].fd = fdSocket;
           fds[0].events = POLLIN;
         }
-        // {{{ socket read buffer --> file write buffer
-        if (unSocketReadLength > 0 && unFileWriteLength < unSize)
-        {
-          unLength = ((unSocketReadLength > (unSize - unFileWriteLength))?(unSize - unFileWriteLength):unSocketReadLength);
-          memcpy((pszFileWriteBuffer + unFileWriteLength), pszSocketReadBuffer, unLength);
-          unFileWriteLength += unLength;
-          if (unLength < unSocketReadLength)
-          {
-            memcpy(pszSocketReadTemp, (pszSocketReadBuffer + unLength), (unSocketReadLength - unLength));
-            memcpy(pszSocketReadBuffer, pszSocketReadTemp, (unSocketReadLength - unLength));
-            unSocketReadLength -= unLength;
-          }
-          else
-          {
-            unSocketReadLength = 0;
-          }
-        }
-        // }}}
         if (!bFileClose && unFileWriteLength > 0)
         {
           fds[1].fd = fdFile;
@@ -476,8 +453,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             unSocketWriteLength += unLength;
             if (unLength < unFileReadLength)
             {
-              memcpy(pszFileReadTemp, (pszFileReadBuffer + unLength), (unFileReadLength - unLength));
-              memcpy(pszFileReadBuffer, pszFileReadTemp, (unFileReadLength - unLength));
+              memcpy(pszTemp, (pszFileReadBuffer + unLength), (unFileReadLength - unLength));
+              memcpy(pszFileReadBuffer, pszTemp, (unFileReadLength - unLength));
               unFileReadLength -= unLength;
             }
             else
@@ -738,13 +715,11 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         // {{{ fileAppend | fileWrite
                         else if (strFunction == "fileAppend" || strFunction == "fileWrite")
                         {
-                          int nFlags = O_WRONLY | O_CREAT;
-                          mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
                           if (strFunction == "fileAppend")
                           {
                             nFlags |= O_APPEND;
                           }
-                          if ((fdFile = open(strPath.c_str(), nFlags, mode)) >= 0)
+                          if ((fdFile = open(strPath.c_str(), (O_WRONLY | O_CREAT), (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH))) >= 0)
                           {
                             j = new Json;
                             j->i("Status", "okay");
@@ -754,6 +729,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           }
                           else
                           {
+                            bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
@@ -778,6 +754,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           }
                           else
                           {
+                            bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
                             ssMessage.str("");
@@ -932,8 +909,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             {
               if ((size_t)nReturn < unSocketWriteLength)
               {
-                memcpy(pszSocketWriteTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
-                memcpy(pszSocketWriteBuffer, pszSocketWriteTemp, (unSocketWriteLength - nReturn));
+                memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
+                memcpy(pszSocketWriteBuffer, pszTemp, (unSocketWriteLength - nReturn));
                 unSocketWriteLength -= nReturn;
               }
               else
@@ -1015,8 +992,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             {
               if ((size_t)nReturn < unFileWriteLength)
               {
-                memcpy(pszFileWriteTemp, (pszFileWriteBuffer + nReturn), (unFileWriteLength - nReturn));
-                memcpy(pszFileWriteBuffer, pszSocketReadTemp, (unFileWriteLength - nReturn));
+                memcpy(pszTemp, (pszFileWriteBuffer + nReturn), (unFileWriteLength - nReturn));
+                memcpy(pszFileWriteBuffer, pszTemp, (unFileWriteLength - nReturn));
                 unFileWriteLength -= nReturn;
               }
               else
@@ -1071,7 +1048,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         {
           bFileClose = true;
         }
-        if (bFileClose && bSocketClose)
+        if ((bFileClose && bSocketClose) || shutdown())
         {
           bExit = true;
         }
