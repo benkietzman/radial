@@ -537,9 +537,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         // {{{ dirAdd
                         if (strFunction == "dirAdd")
                         {
-                          mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH;
                           bFileClose = true;
-                          if (mkdir(strPath.c_str(), mode) == 0)
+                          if (mkdir(strPath.c_str(), 00775) == 0)
                           {
                             j = new Json;
                             j->i("Status", "okay");
@@ -714,7 +713,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           {
                             nFlags |= O_APPEND;
                           }
-                          if ((fdFile = open(strPath.c_str(), nFlags, (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH))) >= 0)
+                          if ((fdFile = open(strPath.c_str(), nFlags, 00664)) >= 0)
                           {
                             j = new Json;
                             j->i("Status", "okay");
