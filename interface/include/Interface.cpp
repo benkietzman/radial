@@ -1708,7 +1708,7 @@ bool Interface::dataWrite(SSL *ssl, string &b, string &e)
     pollfd fds[1];
     fds[0].fd = fdSocket;
     fds[0].events = POLLIN;
-    if (bWantWrite)
+    if (bWantWrite || !b.empty())
     {
       fds[0].events |= POLLOUT;
     }
