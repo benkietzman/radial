@@ -1744,6 +1744,7 @@ bool Interface::dataWrite(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslWrite(ssl, b, nReturn))
         {
+chat("#radial", b.substr(0, nReturn));
           bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
