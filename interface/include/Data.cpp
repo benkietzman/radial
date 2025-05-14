@@ -478,7 +478,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if (m_pUtility->sslRead(ssl, strSocketReadBuffer, nReturn))
             {
-chat("#radial", strSocketReadBuffer);
               bWantWrite = false;
               if (nReturn <= 0)
               {
@@ -538,7 +537,6 @@ chat("#radial", strSocketReadBuffer);
                         // {{{ dirAdd
                         if (strFunction == "dirAdd")
                         {
-chat("#radial", "dirAdd close");
                           bFileClose = true;
                           if (mkdir(strPath.c_str(), 00775) == 0)
                           {
@@ -565,7 +563,6 @@ chat("#radial", "dirAdd close");
                         else if (strFunction == "dirList")
                         {
                           struct stat tStat;
-chat("#radial", "dirList close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -658,7 +655,6 @@ chat("#radial", "dirList close");
                         else if (strFunction == "dirRemove")
                         {
                           struct stat tStat;
-chat("#radial", "dirRemove close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -728,7 +724,6 @@ chat("#radial", "dirRemove close");
                           }
                           else
                           {
-chat("#radial", "fileWrite close");
                             bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
@@ -754,7 +749,6 @@ chat("#radial", "fileWrite close");
                           }
                           else
                           {
-chat("#radial", "fileRead close");
                             bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
@@ -771,7 +765,6 @@ chat("#radial", "fileRead close");
                         else if (strFunction == "fileRemove")
                         {
                           struct stat tStat;
-chat("#radial", "fileRemove close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -825,7 +818,6 @@ chat("#radial", "fileRemove close");
                         // {{{ invalid
                         else
                         {
-chat("#radial", "invalid close");
                           bFileClose = true;
                           j = new Json;
                           j->i("Status", "error");
@@ -839,7 +831,6 @@ chat("#radial", "invalid close");
                       }
                       else
                       {
-chat("#radial", "_path close");
                         bFileClose = true;
                         j = new Json;
                         j->i("Status", "error");
@@ -852,7 +843,6 @@ chat("#radial", "_path close");
                     }
                     else
                     {
-chat("#radial", "Function close");
                       bFileClose = true;
                       j = new Json;
                       j->i("Status", "error");
@@ -866,7 +856,6 @@ chat("#radial", "Function close");
                   }
                   else
                   {
-chat("#radial", "token close");
                     bFileClose = true;
                     j = new Json;
                     j->i("Status", "error");
@@ -889,7 +878,6 @@ chat("#radial", "token close");
             }
             else
             {
-chat("#radial", "sslRead close");
               bSocketClose = true;
               if (nReturn < 0 && errno != 104)
               {
@@ -936,7 +924,6 @@ chat("#radial", "sslRead close");
                 case SSL_ERROR_SYSCALL:
                 case SSL_ERROR_SSL:
                 {
-chat("#radial", "sslWrite close");
                   bSocketClose = true;
                   if (nReturn < 0)
                   {
@@ -982,7 +969,6 @@ chat("#radial", "sslWrite close");
             }
             else
             {
-chat("#radial", "read close");
               bFileClose = true;
               if (nReturn < 0)
               {
@@ -1012,7 +998,6 @@ chat("#radial", "read close");
             }
             else
             {
-chat("#radial", "write close");
               bFileClose = true;
               if (nReturn < 0)
               {
@@ -1052,12 +1037,10 @@ chat("#radial", "write close");
         // {{{ post work
         if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
-chat("#radial", "post close");
           bSocketClose = true;
         }
         if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
         {
-chat("#radial", "postFile close");
           bFileClose = true;
         }
         if ((bFileClose && bSocketClose) || shutdown())
