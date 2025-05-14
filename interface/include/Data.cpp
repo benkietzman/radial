@@ -538,6 +538,7 @@ chat("#radial", strSocketReadBuffer);
                         // {{{ dirAdd
                         if (strFunction == "dirAdd")
                         {
+chat("#radial", "dirAdd close");
                           bFileClose = true;
                           if (mkdir(strPath.c_str(), 00775) == 0)
                           {
@@ -564,6 +565,7 @@ chat("#radial", strSocketReadBuffer);
                         else if (strFunction == "dirList")
                         {
                           struct stat tStat;
+chat("#radial", "dirList close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -656,6 +658,7 @@ chat("#radial", strSocketReadBuffer);
                         else if (strFunction == "dirRemove")
                         {
                           struct stat tStat;
+chat("#radial", "dirRemove close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -724,6 +727,7 @@ chat("#radial", strSocketReadBuffer);
                           }
                           else
                           {
+chat("#radial", "fileWrite close");
                             bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
@@ -749,6 +753,7 @@ chat("#radial", strSocketReadBuffer);
                           }
                           else
                           {
+chat("#radial", "fileRead close");
                             bFileClose = true;
                             j = new Json;
                             j->i("Status", "error");
@@ -765,6 +770,7 @@ chat("#radial", strSocketReadBuffer);
                         else if (strFunction == "fileRemove")
                         {
                           struct stat tStat;
+chat("#radial", "fileRemove close");
                           bFileClose = true;
                           if (stat(strPath.c_str(), &tStat) == 0)
                           {
@@ -818,6 +824,7 @@ chat("#radial", strSocketReadBuffer);
                         // {{{ invalid
                         else
                         {
+chat("#radial", "invalid close");
                           bFileClose = true;
                           j = new Json;
                           j->i("Status", "error");
@@ -831,6 +838,7 @@ chat("#radial", strSocketReadBuffer);
                       }
                       else
                       {
+chat("#radial", "_path close");
                         bFileClose = true;
                         j = new Json;
                         j->i("Status", "error");
@@ -843,6 +851,7 @@ chat("#radial", strSocketReadBuffer);
                     }
                     else
                     {
+chat("#radial", "Function close");
                       bFileClose = true;
                       j = new Json;
                       j->i("Status", "error");
@@ -856,6 +865,7 @@ chat("#radial", strSocketReadBuffer);
                   }
                   else
                   {
+chat("#radial", "token close");
                     bFileClose = true;
                     j = new Json;
                     j->i("Status", "error");
@@ -971,6 +981,7 @@ chat("#radial", "sslWrite close");
             }
             else
             {
+chat("#radial", "read close");
               bFileClose = true;
               if (nReturn < 0)
               {
@@ -1000,6 +1011,7 @@ chat("#radial", "sslWrite close");
             }
             else
             {
+chat("#radial", "write close");
               bFileClose = true;
               if (nReturn < 0)
               {
@@ -1044,6 +1056,7 @@ chat("#radial", "post close");
         }
         if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
         {
+chat("#radial", "postFile close");
           bFileClose = true;
         }
         if ((bFileClose && bSocketClose) || shutdown())
