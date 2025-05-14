@@ -708,13 +708,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         // {{{ fileAppend | fileWrite
                         else if (strFunction == "fileAppend" || strFunction == "fileWrite")
                         {
-                          int nFlags = O_WRONLY | O_CREAT;
                           bWrite = true;
-                          if (strFunction == "fileAppend")
-                          {
-                            nFlags |= O_APPEND;
-                          }
-                          if ((fdFile = open(strPath.c_str(), nFlags, 00664)) >= 0)
+                          if ((fdFile = open(strPath.c_str(), O_WRONLY | O_CREAT | ((strFunction == "fileAppend")?O_APPEND:O_TRUNC), 00664)) >= 0)
                           {
                             j = new Json;
                             j->i("Status", "okay");
