@@ -14,6 +14,7 @@ void sighandle(const int nSignal);
 int main(int argc, char **argv)
 {
   string strPrefix = "hub->main()";
+  umask(002);
   gpHub = new Hub(argc, argv, environ, sighandle);
   gpHub->process(strPrefix);
   delete gpHub;
