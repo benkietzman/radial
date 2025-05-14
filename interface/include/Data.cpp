@@ -566,7 +566,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         // {{{ dirAdd
                         if (strFunction == "dirAdd")
                         {
-                          mode_t mode = 00577;
+                          mode_t mode = 00022;
                           bFileClose = true;
                           if (mkdir(strPath.c_str(), mode) == 0)
                           {
@@ -739,7 +739,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         else if (strFunction == "fileAppend" || strFunction == "fileWrite")
                         {
                           int nFlags = O_WRONLY | O_CREAT;
-                          mode_t mode = 00466;
+                          mode_t mode = 00022;
                           if (strFunction == "fileAppend")
                           {
                             nFlags |= O_APPEND;
