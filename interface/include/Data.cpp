@@ -478,6 +478,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if (m_pUtility->sslRead(ssl, strSocketReadBuffer, nReturn))
             {
+chat("#radial", strSocketReadBuffer);
               bWantWrite = false;
               if (nReturn <= 0)
               {
