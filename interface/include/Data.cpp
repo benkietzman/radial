@@ -397,7 +397,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     if (pszBuffer != NULL)
     {
       // {{{ prep work
-      bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false;
+      bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false, bWrite = false;
       char *pszFileReadBuffer, *pszFileWriteBuffer, *pszSocketWriteBuffer, *pszTemp;
       int fdFile = -1, nReturn;
       size_t unFileReadLength = 0, unFileWriteLength = 0, unLength, unPosition, unSize = 262144, unSocketWriteLength = 0;
@@ -463,7 +463,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           fds[0].fd = fdSocket;
           fds[0].events |= POLLOUT;
         }
-        if (!bFileClose && unFileReadLength < unSize)
+        if (!bWrite && !bFileClose && unFileReadLength < unSize)
         {
           fds[1].fd = fdFile;
           fds[1].events |= POLLIN;
@@ -713,6 +713,7 @@ chat("#radial", "dirRemove close");
                         else if (strFunction == "fileAppend" || strFunction == "fileWrite")
                         {
                           int nFlags = O_WRONLY | O_CREAT;
+                          bWrite = true;
                           if (strFunction == "fileAppend")
                           {
                             nFlags |= O_APPEND;
