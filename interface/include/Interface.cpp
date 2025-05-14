@@ -1802,11 +1802,16 @@ bool Interface::dataWrite(const string h, const list<string> p, string &b, strin
   SSL_CTX *ctx;
   SSL *ssl;
 
+  e.clear();
   if (dataOpen(h, p, &ctx, &ssl, e, bAppend))
   {
     r = true;
     while (dataWrite(ssl, b, e) && !b.empty())
     {
+    }
+    if (!e.empty())
+    {
+      r = false;
     }
     dataClose(ctx, ssl);
   }
