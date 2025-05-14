@@ -715,11 +715,12 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         // {{{ fileAppend | fileWrite
                         else if (strFunction == "fileAppend" || strFunction == "fileWrite")
                         {
+                          int nFlags = O_WRONLY | O_CREAT;
                           if (strFunction == "fileAppend")
                           {
                             nFlags |= O_APPEND;
                           }
-                          if ((fdFile = open(strPath.c_str(), (O_WRONLY | O_CREAT), (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH))) >= 0)
+                          if ((fdFile = open(strPath.c_str(), nFlags, (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH))) >= 0)
                           {
                             j = new Json;
                             j->i("Status", "okay");
@@ -1044,7 +1045,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         {
           bSocketClose = true;
         }
-        if (bSocketClose && strSocketReadBuffer.empty() && unSocketReadLength == 0 && unFileWriteLength == 0)
+        if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
         {
           bFileClose = true;
         }
