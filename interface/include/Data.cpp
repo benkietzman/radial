@@ -415,7 +415,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         fds[0].events = 0;
         fds[1].fd = -1;
         fds[1].events = 0;
-        // {{{ socket read --> file write buffer
         if (bToken && !strSocketReadBuffer.empty() && unFileWriteLength < unSize)
         {
           unLength = ((strSocketReadBuffer.size() > (unSize - unFileWriteLength))?(unSize - unFileWriteLength):strSocketReadBuffer.size());
@@ -423,20 +422,18 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           strSocketReadBuffer.erase(0, unLength);
           unFileWriteLength += unLength;
         }
-        // }}}
         if (!bSocketClose && strSocketReadBuffer.size() < 2048)
         {
           fds[0].fd = fdSocket;
-          fds[0].events = POLLIN;
+          fds[0].events |= POLLIN;
         }
         if (!bFileClose && unFileWriteLength > 0)
         {
           fds[1].fd = fdFile;
-          fds[1].events = POLLOUT;
+          fds[1].events |= POLLOUT;
         }
         if (!bNeedWrite && unSocketWriteLength < unSize)
         {
-          // {{{ socket write --> socket write buffer
           if (!strSocketWriteBuffer.empty())
           {
             unLength = ((strSocketWriteBuffer.size() > (unSize - unSocketWriteLength))?(unSize - unSocketWriteLength):strSocketWriteBuffer.size());
@@ -444,8 +441,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             strSocketWriteBuffer.erase(0, unLength);
             unSocketWriteLength += unLength;
           }
-          // }}}
-          // {{{ file read buffer --> socket write buffer
           else if (unFileReadLength > 0)
           {
             unLength = ((unFileReadLength > (unSize - unSocketWriteLength))?(unSize - unSocketWriteLength):unFileReadLength);
@@ -462,7 +457,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               unFileReadLength = 0;
             }
           }
-          // }}}
         }
         if (!bSocketClose && (bWantWrite || unSocketWriteLength > 0))
         {
