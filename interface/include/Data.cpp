@@ -878,6 +878,7 @@ chat("#radial", strSocketReadBuffer);
             }
             else
             {
+chat("#radial", "sslRead close");
               bSocketClose = true;
               if (nReturn < 0 && errno != 104)
               {
@@ -924,6 +925,7 @@ chat("#radial", strSocketReadBuffer);
                 case SSL_ERROR_SYSCALL:
                 case SSL_ERROR_SSL:
                 {
+chat("#radial", "sslWrite close");
                   bSocketClose = true;
                   if (nReturn < 0)
                   {
@@ -1037,6 +1039,7 @@ chat("#radial", strSocketReadBuffer);
         // {{{ post work
         if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
+chat("#radial", "post close");
           bSocketClose = true;
         }
         if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
