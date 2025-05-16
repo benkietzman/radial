@@ -187,13 +187,12 @@ chat("#radial", "exit due to length");
               }
               else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
               {
-                string strHeader, strTrim;
+                string strHeader;
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 4));
                 while (getline(ssHeaders, strHeader))
                 {
-                  m_manip.trim(strTrim, strHeader);
-                  strHeader = strTrim;
+                  m_manip.trim(strHeader, strHeader);
 chat("#radial", strHeader);
                   if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1")
                   {
