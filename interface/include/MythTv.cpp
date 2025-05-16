@@ -184,40 +184,41 @@ bool MythTv::backend(radialUser &d, string &e)
                   live(strRequestID, data, true);
                 }
               }
-              else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
+              else
               {
-ofstream h("/tmp/h");
-h << strBuffers[0];
-h.close();
-                string strHeader;
-                stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
-                bHeaders = true;
-                strBuffers[0].erase(0, (unPosition + 4));
-                while (getline(ssHeaders, strHeader))
+                size_t unPos[2] = {strBuffers[0].find("\n\n"), strBuffers[0].find("\r\n\r\n")};
+                if (unPos[0] != string::npos || unPos[1] != string::npos)
                 {
-                  m_manip.trim(strHeader, strHeader);
-                  if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1 ")
+                  string strHeader;
+                  stringstream ssHeaders(strBuffers[0].substr(0, ((unPos[0] < unPos[1])?unPos[0]:unPos[1])));
+                  bHeaders = true;
+                  strBuffers[0].erase(0, ((unPos[0] < unPos[1])?unPos[0]+2:unPos[1]+4));
+                  while (getline(ssHeaders, strHeader))
                   {
-                    string strStatus = strHeader.substr(9, (strHeader.size() - 9));
-                    if (strStatus == "200 OK")
+                    m_manip.trim(strHeader, strHeader);
+                    if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1 ")
                     {
-                      bValid = true;
+                      string strStatus = strHeader.substr(9, (strHeader.size() - 9));
+                      if (strStatus == "200 OK")
+                      {
+                        bValid = true;
+                      }
+                      else
+                      {
+                        e = strStatus;
+                      }
                     }
-                    else
+                    else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
                     {
-                      e = strStatus;
+                      headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
                     }
                   }
-                  else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
+                  if (bValid && headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
                   {
-                    headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
+                    stringstream ssLength(headers["Content-Length"]);
+                    bLength = true;
+                    ssLength >> unLength;
                   }
-                }
-                if (bValid && headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
-                {
-                  stringstream ssLength(headers["Content-Length"]);
-                  bLength = true;
-                  ssLength >> unLength;
                 }
               }
             }
