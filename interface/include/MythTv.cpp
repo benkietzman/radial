@@ -215,6 +215,7 @@ chat("#radial", "valid");
                 {
                   if (headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
                   {
+chat("#radial", (string)"Content-Length: " + headers["Content-Length"]);
                     stringstream ssLength(headers["Content-Length"]);
                     ssLength >> unLength;
 chat("#radial", (string)"length: " + ssLength.str());
