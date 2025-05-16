@@ -277,6 +277,20 @@ bool MythTv::backend(radialUser &d, string &e)
           d.p->i("o", j->j(strJson));
           delete j;
         }
+        else if ((unPosition = strBuffers[0].find("<!DOCTYPE html>")) != string::npos)
+        {
+          Json *j = new Json(strBuffers[0].substr((unPosition + 15), (strBuffers[0].size() - (unPosition + 15))));
+          b = false;
+          if (exist(j, "HTML") && exist(j->m["HTML"], "HEAD") && !empty(j->m["HTML"]->m["HEAD"], "TITLE"))
+          {
+            e = j->m["HTML"]->m["HEAD"]->m["TITLE"]->v;
+          }
+          else if (e.empty())
+          {
+            e = "Invalid HTML response.";
+          }
+          delete j;
+        }
         else if (e.empty())
         {
           b = false;
