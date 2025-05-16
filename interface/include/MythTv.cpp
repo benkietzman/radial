@@ -192,6 +192,9 @@ bool MythTv::backend(radialUser &d, string &e)
                   string strHeader;
                   stringstream ssHeaders;
                   bHeaders = true;
+ofstream html("/tmp/html");
+html << strBuffers[0];
+html.close();
                   if (unPos[0] != string::npos && unPos[1] != string::npos)
                   {
                     unLength = ((unPos[0] < unPos[1])?2:4);
