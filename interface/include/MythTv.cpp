@@ -188,15 +188,14 @@ chat("#radial", "exit due to length");
               else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
               {
                 string strHeader;
-chat("#radial", strBuffers[0].substr(0, unPosition));
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 4));
                 while (getline(ssHeaders, strHeader))
                 {
+                  m_manip.trim(strHeader, strHeader);
                   if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1")
                   {
-                    string strStatus;
-                    m_manip.trim(strStatus, strHeader.substr(9, (strHeader.size() - 9)));
+                    string strStatus = strHeader.substr(9, (strHeader.size() - 9));
 chat("#radial", strStatus);
                     if (strStatus == "200 OK")
                     {
@@ -210,7 +209,6 @@ chat("#radial", "valid");
                   }
                   else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
                   {
-                    m_manip.trim(strHeader, strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2))));
                     headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
                   }
                 }
