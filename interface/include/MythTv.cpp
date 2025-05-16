@@ -170,7 +170,7 @@ bool MythTv::backend(radialUser &d, string &e)
             if (m_pUtility->fdRead(fds[0].fd, strBuffers[0], nReturn))
             {
 ofstream h("/tmp/h");
-h << strBuffers[1];
+h << strBuffers[0];
 h.close();
               if (bValid)
               {
