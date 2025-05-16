@@ -129,7 +129,7 @@ bool MythTv::backend(radialUser &d, string &e)
     int fdSocket;
     if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, e))
     {
-      bool bExit = false, bValid = false;
+      bool bExit = false, bHeaders = false, bLength = false, bValid = false;
       int nReturn;
       map<string, string> data, headers;
       size_t unLength = 0, unPosition, unRead = 0;
@@ -169,10 +169,10 @@ bool MythTv::backend(radialUser &d, string &e)
           {
             if (m_pUtility->fdRead(fds[0].fd, strBuffers[0], nReturn))
             {
-              if (bValid)
+              if (bHeaders)
               {
                 unRead += strBuffers[0].size();
-                if (unRead >= unLength)
+                if (bLength && unRead >= unLength)
                 {
                   b = bExit = true;
                 }
@@ -191,6 +191,7 @@ h << strBuffers[0];
 h.close();
                 string strHeader;
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
+                bHeaders = true;
                 strBuffers[0].erase(0, (unPosition + 4));
                 while (getline(ssHeaders, strHeader))
                 {
@@ -212,20 +213,11 @@ h.close();
                     headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
                   }
                 }
-                if (bValid)
+                if (bValid && headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
                 {
-                  if (headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
-                  {
-                    stringstream ssLength(headers["Content-Length"]);
-                    ssLength >> unLength;
-                  }
-                  else
-                  {
-                    bValid = false;
-                    m.str("");
-                    m << "Missing Content-Length header in response.";
-                    e = m.str();
-                  }
+                  stringstream ssLength(headers["Content-Length"]);
+                  bLength = true;
+                  ssLength >> unLength;
                 }
               }
             }
