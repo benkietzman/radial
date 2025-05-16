@@ -195,8 +195,10 @@ chat("#radial", "exit due to length");
                   if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1")
                   {
                     string strStatus = strHeader.substr(9, (strHeader.size() - 9));
+chat("#radial", strStatus);
                     if (strStatus == "200 OK")
                     {
+chat("#radial", "valid");
                       bValid = true;
                     }
                     else
