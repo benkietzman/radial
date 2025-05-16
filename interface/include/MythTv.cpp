@@ -135,7 +135,16 @@ bool MythTv::backend(radialUser &d, string &e)
       size_t unLength = 0, unPosition, unRead = 0;
       string strBase64, strBuffers[2];
       stringstream ssReq;
-      ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v << " HTTP/1.1" << endl;
+      ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v;
+      if (exist(i, "Get")
+      {
+        string strEncoded;
+        for (auto f = i->m["Get"]->m.begin(); f != i->m["Get"]->m.end(); f++)
+        {
+          ssReq << ((f == i->m["Get"]->m.begin())"?":"&") << m_manip.urlEncode(strEncoded, f->first) << "=" << m_manip.urlEncode(strEncoded, f->second->v);
+        }
+      }
+      ssReq << " HTTP/1.1" << endl;
       ssReq << "Host: " << m_strServer << endl << endl;
       strBuffers[1] = ssReq.str();
       if (!strLiveID.empty())
