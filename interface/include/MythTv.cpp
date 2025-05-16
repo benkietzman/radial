@@ -18,6 +18,7 @@ MythTv::MythTv(string strPrefix, int argc, char **argv, void (*pCallback)(string
 {
   m_strPort = "6544";
   m_strServer = "localhost";
+  m_pUtility->setReadSize(8388608);
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -112,66 +113,169 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
 // }}}
 // {{{ backend()
 bool MythTv::backend(radialUser &d, string &e)
-{ 
+{
   bool b = false;
+  string strLiveID, strRequestID;
+  stringstream m;
   Json *i = d.p->m["i"];
 
+  if (!empty(i, "Transfer") && i->m["Transfer"]->v == "live" && !empty(d.r, "wsRequestID") && !empty(i, "LiveID"))
+  {
+    strLiveID = i->m["LiveID"]->v;
+    strRequestID = d.r->m["wsRequestID"]->v;
+  }
   if (dep({"Service", "Command"}, i, e))
   {
-    list<Json *> in, out;
-    stringstream ssUrl;
-    Json *ptReq = new Json;
-    ptReq->i("Service", "curl");
-    ptReq->i("Server", m_strServer);
-    ptReq->i("Port", m_strPort);
-    ptReq->i("reqApp", "Radial");
-    in.push_back(ptReq);
-    ptReq = new Json;
-    ssUrl << "http://" << m_strServer << ":" << m_strPort << "/" << i->m["Service"]->v << "/" << i->m["Command"]->v;
-    ptReq->i("URL", ssUrl.str());
-    ptReq->i("Display", "Content");
-    if (exist(i, "Get"))
+    int fdSocket;
+    if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, e))
     {
-      ptReq->i("Get", i->m["Get"]);
-    }
-    if (exist(i, "Post"))
-    {
-      ptReq->i("Post", i->m["Post"]);
-    }
-    if (exist(i, "Put"))
-    {
-      ptReq->i("Put", i->m["Put"]);
-    }
-    in.push_back(ptReq);
-    if (junction(in, out, e))
-    {
-      if (out.size() == 2)
+      bool bExit = false, bValid = false;;
+      int nReturn;
+      map<string, string> data, headers;
+      size_t unLength = 0, unPosition, unRead = 0;
+      string strBase64, strBuffers[2];
+      stringstream ssReq;
+      ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v << " HTTP/1.1" << endl;
+      ssReq << "Host: " << m_strServer << endl << endl;
+      strBuffers[1] = ssReq.str();
+      if (!strLiveID.empty())
       {
-        if (exist(out.back(), "Content"))
+        data["Action"] = "mythtv";
+        data["Service"] = i->m["Service"]->v;
+        data["Command"] = i->m["Command"]->v;
+        data["LiveID"] = strLiveID;
+      }
+      while (!bExit && !shutdown())
+      {
+        pollfd fds[1];
+        fds[0].fd = fdSocket;
+        fds[0].events = POLLIN;
+        if (!strBuffers[1].empty())
         {
-          size_t unPosition;
-          if ((unPosition = out.back()->m["Content"]->v.find("?>")) != string::npos)
+          fds[0].events |= POLLOUT;
+        }
+        if ((nReturn = poll(fds, 1, 250)) > 0)
+        {
+          if (fds[0].revents & POLLIN)
           {
-            string strJson;
-            Json *j = new Json(out.back()->m["Content"]->v.substr((unPosition + 2), (out.back()->m["Content"]->v.size() - (unPosition + 2))));
-            b = true;
-            d.p->i("o", j->j(strJson));
-            delete j;
+            if (m_pUtility->fdRead(fds[0].fd, strBuffers[0], nReturn))
+            {
+              if (bValid)
+              {
+                unRead += strBuffers[0].size();
+                if (unRead >= unLength)
+                {
+                  b = bExit = true;
+                }
+                if (!strRequestID.empty())
+                {
+                  m_manip.encodeBase64(strBuffers[0], strBase64);
+                  strBuffers[0].clear();
+                  data["Data"] = strBase64;
+                  live(strRequestID, data, true);
+                }
+              }
+              else if ((unPosition = strBuffers[0].find("\n\n")) != string::npos)
+              {
+                string strHeader;
+                stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
+                strBuffers[0].erase(0, (unPosition + 2));
+                while (getline(ssHeaders, strHeader))
+                {
+                  if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1")
+                  {
+                    string strStatus = strHeader.substr(9, (strHeader.size() - 9));
+                    if (strStatus == "200 OK")
+                    {
+                      bValid = true;
+                    }
+                    else
+                    {
+                      e = strStatus;
+                    }
+                  }
+                  else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
+                  {
+                    headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
+                  }
+                }
+                if (bValid)
+                {
+                  if (headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
+                  {
+                    stringstream ssLength(headers["Content-Length"]);
+                    ssLength >> unLength;
+                  }
+                  else
+                  {
+                    bValid = false;
+                    m.str("");
+                    m << "Missing Content-Length header in response.";
+                    e = m.str();
+                  }
+                }
+              }
+            }
+            else
+            {
+              bExit = true;
+              if (nReturn < 0)
+              {
+                m.str("");
+                m << "Utility::fdRead(" << errno << ") error:  " << strerror(errno);
+                e = m.str();
+              }
+            }
           }
-          else
+          if ((fds[0].revents & POLLOUT) && !m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn))
           {
-            e = "Invalid response.";
+            bExit = true;
+            if (nReturn < 0)
+            {
+              m.str("");
+              m << "Utility::fdWrite(" << errno << ") error:  " << strerror(errno);
+              e = m.str();
+            }
           }
+          if (fds[0].revents & POLLERR)
+          {
+            bExit = true;
+            m.str("");
+            m << "poll() Encountered a POLLERR.";
+            e = m.str();
+          }
+          if (fds[0].revents & POLLNVAL)
+          {
+            bExit = true;
+            m.str("");
+            m << "poll() Encountered a POLLNVAL.";
+            e = m.str();
+          }
+        }
+        else if (nReturn < 0)
+        {
+          bExit = true;
+          m.str("");
+          m << "poll(" << errno << ") error:  " << strerror(errno);
+          e = m.str();
+        }
+      }
+      if (b && strRequestID.empty())
+      {
+        if ((unPosition = strBuffers[0].find("?>")) != string::npos)
+        {
+          string strJson;
+          Json *j = new Json(strBuffers[0].substr((unPosition + 2), (strBuffers[0].size() - (unPosition + 2))));
+          d.p->i("o", j->j(strJson));
+          delete j;
         }
         else
         {
-          e = "Failed to find Contenct within response.";
+          b = false;
+          e = "Invalid response.";
         }
       }
-      else
-      {
-        e = "Invalid number of rows returned in response.";
-      }
+      close(fdSocket);
     }
   }
 
