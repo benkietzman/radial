@@ -190,9 +190,25 @@ bool MythTv::backend(radialUser &d, string &e)
                 if (unPos[0] != string::npos || unPos[1] != string::npos)
                 {
                   string strHeader;
-                  stringstream ssHeaders(strBuffers[0].substr(0, ((unPos[0] < unPos[1])?unPos[0]:unPos[1])));
+                  stringstream ssHeaders;
                   bHeaders = true;
-                  strBuffers[0].erase(0, ((unPos[0] < unPos[1])?unPos[0]+2:unPos[1]+4));
+                  if (unPosion[0] != string::npos && unPos[1] != string::npos)
+                  {
+                    unLength = ((unPos[0] < unPos[1])?2:4);
+                    unPosition = ((unPos[0] < unPos[1])?unPos[0]:unPos[1]);
+                  }
+                  else if (unPosion[0] != string::npos)
+                  {
+                    unLength = 2;
+                    unPosition = unPos[0];
+                  }
+                  else
+                  {
+                    unLength = 4;
+                    unPosition = unPos[1];
+                  }
+                  ssHeaders.str(strBuffers[0].substr(0, unPosition);
+                  strBuffers[0].erase(0, (unPosition + unLength));
                   while (getline(ssHeaders, strHeader))
                   {
                     m_manip.trim(strHeader, strHeader);
