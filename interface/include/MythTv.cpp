@@ -219,7 +219,11 @@ bool MythTv::backend(radialUser &d, string &e)
             else
             {
               bExit = true;
-              if (nReturn < 0)
+              if (nReturn == 0)
+              {
+                b = true;
+              }
+              else
               {
                 m.str("");
                 m << "Utility::fdRead(" << errno << ") error:  " << strerror(errno);
@@ -230,7 +234,11 @@ bool MythTv::backend(radialUser &d, string &e)
           if ((fds[0].revents & POLLOUT) && !m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn))
           {
             bExit = true;
-            if (nReturn < 0)
+            if (nReturn == 0)
+            {
+              b = true;
+            }
+            else
             {
               m.str("");
               m << "Utility::fdWrite(" << errno << ") error:  " << strerror(errno);
