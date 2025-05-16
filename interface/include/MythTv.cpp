@@ -169,6 +169,9 @@ bool MythTv::backend(radialUser &d, string &e)
           {
             if (m_pUtility->fdRead(fds[0].fd, strBuffers[0], nReturn))
             {
+ofstream h("/tmp/h");
+h << strBuffers[1];
+h.close();
               if (bValid)
               {
                 unRead += strBuffers[0].size();
@@ -186,9 +189,6 @@ bool MythTv::backend(radialUser &d, string &e)
               }
               else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
               {
-ofstream h("/tmp/h");
-h << strBuffers[1];
-h.close();
                 string strHeader;
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 4));
