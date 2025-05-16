@@ -187,7 +187,7 @@ bool MythTv::backend(radialUser &d, string &e)
                   {
                     if (strLine.size() > 5)
                     {
-                      strBuffers.append(strLine);
+                      strBuffers[0].append(strLine);
                     }
                     else if (strLine == "0")
                     {
