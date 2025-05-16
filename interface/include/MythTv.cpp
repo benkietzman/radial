@@ -193,8 +193,7 @@ chat("#radial", "exit due to length");
                 while (getline(ssHeaders, strHeader))
                 {
                   m_manip.trim(strHeader, strHeader);
-chat("#radial", strHeader);
-                  if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1")
+                  if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1 ")
                   {
                     string strStatus = strHeader.substr(9, (strHeader.size() - 9));
 chat("#radial", strStatus);
