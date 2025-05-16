@@ -185,6 +185,10 @@ bool MythTv::backend(radialUser &d, string &e)
                   strBuffers[0].clear();
                   while (getline(ssBuffer, strLine))
                   {
+                    while ((unPosition = strLine.find("\r")) != string::npos)
+                    {
+                      strLine.erase(unPosition, 1);
+                    }
                     if (strLine.size() > 5)
                     {
                       strBuffers[0].append(strLine);
