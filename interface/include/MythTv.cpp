@@ -188,6 +188,7 @@ chat("#radial", "exit due to length");
               else if ((unPosition = strBuffers[0].find("\n\n")) != string::npos)
               {
                 string strHeader;
+chat("#radial", strBuffers[0].substr(0, unPosition));
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 2));
                 while (getline(ssHeaders, strHeader))
