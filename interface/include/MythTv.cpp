@@ -132,7 +132,7 @@ bool MythTv::backend(radialUser &d, string &e)
       bool bExit = false, bHeaders = false, bLength = false, bValid = false;
       int nReturn;
       map<string, string> data, headers;
-      size_t unLength = 0, unPosition, unRead = 0;
+      size_t unLength = 0, unPosition;
       string strBase64, strBuffers[2];
       stringstream ssReq;
       ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v;
@@ -171,8 +171,7 @@ bool MythTv::backend(radialUser &d, string &e)
             {
               if (bHeaders)
               {
-                unRead += strBuffers[0].size();
-                if (bLength && unRead >= unLength)
+                if (bLength && strBuffers[0].size() >= unLength)
                 {
                   b = bExit = true;
                 }
