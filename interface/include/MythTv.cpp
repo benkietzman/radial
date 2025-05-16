@@ -206,7 +206,6 @@ bool MythTv::backend(radialUser &d, string &e)
                   }
                   else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
                   {
-chat("#radial", strHeader);
                     headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
                   }
                 }
@@ -281,6 +280,9 @@ chat("#radial", strHeader);
       }
       if (b && strRequestID.empty())
       {
+ofstream h("/tmp/h");
+h << strBuffers[1];
+h.close();
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
           string strJson;
