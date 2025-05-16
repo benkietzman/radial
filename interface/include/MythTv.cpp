@@ -171,9 +171,29 @@ bool MythTv::backend(radialUser &d, string &e)
             {
               if (bHeaders)
               {
-                if (bLength && strBuffers[0].size() >= unLength)
+                if (bLength)
                 {
-                  b = bExit = true;
+                  if (strBuffers[0].size() >= unLength)
+                  {
+                    b = bExit = true;
+                  }
+                }
+                else
+                {
+                  string strLine;
+                  stringstream ssBuffer(strBuffers[0]);
+                  strBuffers[0].clear();
+                  while (getline(ssBuffer, strLine))
+                  {
+                    if (strLine.size() > 5)
+                    {
+                      strBuffers.append(strLine);
+                    }
+                    else if (strLine == "0")
+                    {
+                      b = bExit = true;
+                    }
+                  }
                 }
                 if (!strRequestID.empty())
                 {
