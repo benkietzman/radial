@@ -192,12 +192,12 @@ bool MythTv::backend(radialUser &d, string &e)
                   string strHeader;
                   stringstream ssHeaders;
                   bHeaders = true;
-                  if (unPosition[0] != string::npos && unPos[1] != string::npos)
+                  if (unPos[0] != string::npos && unPos[1] != string::npos)
                   {
                     unLength = ((unPos[0] < unPos[1])?2:4);
                     unPosition = ((unPos[0] < unPos[1])?unPos[0]:unPos[1]);
                   }
-                  else if (unPosition[0] != string::npos)
+                  else if (unPos[0] != string::npos)
                   {
                     unLength = 2;
                     unPosition = unPos[0];
