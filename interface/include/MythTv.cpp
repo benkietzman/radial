@@ -207,7 +207,7 @@ bool MythTv::backend(radialUser &d, string &e)
                     unLength = 4;
                     unPosition = unPos[1];
                   }
-                  ssHeaders.str(strBuffers[0].substr(0, unPosition);
+                  ssHeaders.str(strBuffers[0].substr(0, unPosition));
                   strBuffers[0].erase(0, (unPosition + unLength));
                   while (getline(ssHeaders, strHeader))
                   {
