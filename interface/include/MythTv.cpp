@@ -185,7 +185,7 @@ chat("#radial", "exit due to length");
                   live(strRequestID, data, true);
                 }
               }
-              else if ((unPosition = strBuffers[0].find("\n\n")) != string::npos)
+              else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
               {
                 string strHeader;
 chat("#radial", strBuffers[0].substr(0, unPosition));
