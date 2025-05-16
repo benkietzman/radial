@@ -136,7 +136,7 @@ bool MythTv::backend(radialUser &d, string &e)
       string strBase64, strBuffers[2];
       stringstream ssReq;
       ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v;
-      if (exist(i, "Get")
+      if (exist(i, "Get"))
       {
         string strEncoded;
         for (auto f = i->m["Get"]->m.begin(); f != i->m["Get"]->m.end(); f++)
