@@ -129,7 +129,7 @@ bool MythTv::backend(radialUser &d, string &e)
     int fdSocket;
     if (m_pUtility->connect(m_strServer, m_strPort, fdSocket, e))
     {
-      bool bExit = false, bValid = false;;
+      bool bExit = false, bValid = false;
       int nReturn;
       map<string, string> data, headers;
       size_t unLength = 0, unPosition, unRead = 0;
@@ -174,6 +174,7 @@ bool MythTv::backend(radialUser &d, string &e)
                 unRead += strBuffers[0].size();
                 if (unRead >= unLength)
                 {
+chat("#radial", "exit due to length");
                   b = bExit = true;
                 }
                 if (!strRequestID.empty())
@@ -214,6 +215,7 @@ bool MythTv::backend(radialUser &d, string &e)
                   {
                     stringstream ssLength(headers["Content-Length"]);
                     ssLength >> unLength;
+chat("#radial", (string)"length: " + ssLength.str());
                   }
                   else
                   {
@@ -227,6 +229,7 @@ bool MythTv::backend(radialUser &d, string &e)
             }
             else
             {
+chat("#radial", "exit due to read");
               bExit = true;
               if (nReturn == 0)
               {
@@ -242,6 +245,7 @@ bool MythTv::backend(radialUser &d, string &e)
           }
           if ((fds[0].revents & POLLOUT) && !m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn))
           {
+chat("#radial", "exit due to write");
             bExit = true;
             if (nReturn == 0)
             {
@@ -281,7 +285,6 @@ bool MythTv::backend(radialUser &d, string &e)
       {
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
-email("ben@kietzman.org", "ben@kietzman.org", "MythTV Debug", strBuffers[0], "");
           string strJson;
           Json *j = new Json(strBuffers[0].substr((unPosition + 2), (strBuffers[0].size() - (unPosition + 2))));
           d.p->i("o", j->j(strJson));
