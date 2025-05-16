@@ -140,7 +140,7 @@ bool MythTv::backend(radialUser &d, string &e)
     }
     if (exist(i, "Put"))
     {
-      ptReq->i("Putt", i->m["Putt"]);
+      ptReq->i("Put", i->m["Put"]);
     }
     in.push_back(ptReq);
     if (junction(in, out, e))
