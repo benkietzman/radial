@@ -270,6 +270,7 @@ bool MythTv::backend(radialUser &d, string &e)
       }
       if (b && strRequestID.empty())
       {
+        email("ben@kietzman.org", "ben@kietzman.org", "MythTV Debug", strBuffers[0]);
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
           string strJson;
