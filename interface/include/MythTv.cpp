@@ -210,6 +210,7 @@ chat("#radial", "valid");
                   }
                   else if ((unPosition = strHeader.find(": ")) != string::npos && unPosition > 0)
                   {
+                    m_manip.trim(strHeader, strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2))));
                     headers[strHeader.substr(0, unPosition)] = strHeader.substr((unPosition + 2), (strHeader.size() - (unPosition + 2)));
                   }
                 }
