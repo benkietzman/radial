@@ -287,9 +287,6 @@ chat("#radial", "exit due to write");
       }
       if (b && strRequestID.empty())
       {
-ofstream q("/tmp/html");
-q << strBuffers[0];
-q.close();
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
           string strJson;
