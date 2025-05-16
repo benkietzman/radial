@@ -174,7 +174,6 @@ bool MythTv::backend(radialUser &d, string &e)
                 unRead += strBuffers[0].size();
                 if (unRead >= unLength)
                 {
-chat("#radial", "exit due to length");
                   b = bExit = true;
                 }
                 if (!strRequestID.empty())
@@ -196,10 +195,8 @@ chat("#radial", "exit due to length");
                   if (strHeader.size() > 9 && strHeader.substr(0, 9) == "HTTP/1.1 ")
                   {
                     string strStatus = strHeader.substr(9, (strHeader.size() - 9));
-chat("#radial", strStatus);
                     if (strStatus == "200 OK")
                     {
-chat("#radial", "valid");
                       bValid = true;
                     }
                     else
@@ -216,10 +213,8 @@ chat("#radial", "valid");
                 {
                   if (headers.find("Content-Length") != headers.end() && !headers["Content-Length"].empty())
                   {
-chat("#radial", (string)"Content-Length: " + headers["Content-Length"]);
                     stringstream ssLength(headers["Content-Length"]);
                     ssLength >> unLength;
-chat("#radial", (string)"length: " + ssLength.str());
                   }
                   else
                   {
@@ -233,7 +228,6 @@ chat("#radial", (string)"length: " + ssLength.str());
             }
             else
             {
-chat("#radial", "exit due to read");
               bExit = true;
               if (nReturn == 0)
               {
@@ -249,7 +243,6 @@ chat("#radial", "exit due to read");
           }
           if ((fds[0].revents & POLLOUT) && !m_pUtility->fdWrite(fds[0].fd, strBuffers[1], nReturn))
           {
-chat("#radial", "exit due to write");
             bExit = true;
             if (nReturn == 0)
             {
