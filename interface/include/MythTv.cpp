@@ -192,9 +192,6 @@ bool MythTv::backend(radialUser &d, string &e)
                   string strHeader;
                   stringstream ssHeaders;
                   bHeaders = true;
-ofstream html("/tmp/html");
-html << strBuffers[0];
-html.close();
                   if (unPos[0] != string::npos && unPos[1] != string::npos)
                   {
                     unLength = ((unPos[0] < unPos[1])?2:4);
@@ -211,6 +208,9 @@ html.close();
                     unPosition = unPos[1];
                   }
                   ssHeaders.str(strBuffers[0].substr(0, unPosition));
+ofstream html("/tmp/myth_headers");
+html << ssHeaders.str();
+html.close();
                   strBuffers[0].erase(0, (unPosition + unLength));
                   while (getline(ssHeaders, strHeader))
                   {
@@ -295,6 +295,9 @@ html.close();
       }
       if (b && strRequestID.empty())
       {
+ofstream html("/tmp/myth_content");
+html << strBuffers[0];
+html.close();
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
           string strJson;
