@@ -281,6 +281,7 @@ bool MythTv::backend(radialUser &d, string &e)
       {
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
+email("ben@kietzman.org", "ben@kietzman.org", "MythTV Debug", strBuffers[0], "");
           string strJson;
           Json *j = new Json(strBuffers[0].substr((unPosition + 2), (strBuffers[0].size() - (unPosition + 2))));
           d.p->i("o", j->j(strJson));
