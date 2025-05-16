@@ -186,6 +186,9 @@ bool MythTv::backend(radialUser &d, string &e)
               }
               else if ((unPosition = strBuffers[0].find("\r\n\r\n")) != string::npos)
               {
+ofstream h("/tmp/h");
+h << strBuffers[1];
+h.close();
                 string strHeader;
                 stringstream ssHeaders(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 4));
@@ -280,9 +283,6 @@ bool MythTv::backend(radialUser &d, string &e)
       }
       if (b && strRequestID.empty())
       {
-ofstream h("/tmp/h");
-h << strBuffers[1];
-h.close();
         if ((unPosition = strBuffers[0].find("?>")) != string::npos)
         {
           string strJson;
