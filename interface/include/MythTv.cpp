@@ -141,7 +141,7 @@ bool MythTv::backend(radialUser &d, string &e)
         string strEncoded;
         for (auto f = i->m["Get"]->m.begin(); f != i->m["Get"]->m.end(); f++)
         {
-          ssReq << ((f == i->m["Get"]->m.begin())"?":"&") << m_manip.urlEncode(strEncoded, f->first) << "=" << m_manip.urlEncode(strEncoded, f->second->v);
+          ssReq << ((f == i->m["Get"]->m.begin())?"?":"&") << m_manip.urlEncode(strEncoded, f->first) << "=" << m_manip.urlEncode(strEncoded, f->second->v);
         }
       }
       ssReq << " HTTP/1.1" << endl;
