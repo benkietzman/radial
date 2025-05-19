@@ -1354,6 +1354,8 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   stringstream ssMessage;
   Json *ptJson = new Json;
 
+  (*ctx) = NULL;
+  (*ssl) = NULL;
   b.clear();
   ptJson->i("Function", f);
   ptJson->m["Request"] = new Json;
