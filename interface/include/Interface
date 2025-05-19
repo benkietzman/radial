@@ -107,6 +107,7 @@ class Interface : public Base
   bool dataDirectoryAdd(const string h, const list<string> p, string &e);
   bool dataDirectoryList(const string h, const list<string> p, Json **l, string &e);
   bool dataDirectoryRemove(const string h, const list<string> p, string &e);
+  bool dataGetline(SSL *ssl, string &b, string &l, string &e);
   bool dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &b, string &e, const string f = "fileRead");
   bool dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &e, const bool bAppend = false);
   bool dataRead(SSL *ssl, string &b, string &e);

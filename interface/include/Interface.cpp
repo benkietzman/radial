@@ -1317,6 +1317,34 @@ bool Interface::dataDirectoryRemove(const string h, const list<string> p, string
   return dataSend(h, p, e, "dirRemove");
 }
 // }}}
+// {{{ dataGetline()
+bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
+{
+  bool bRetry = true, r = false;
+  size_t unPosition;
+
+  while (!bRetry)
+  {
+    bRetry = false;
+    if ((unPosition = b.find("\n")) != string::npos)
+    {
+      l = b.substr(0, unPosition);
+      b.erase(0, (unPosition + 1));
+    }
+    else if (dataRead(ssl, b, e))
+    {
+      bRetry = true;
+    }
+    else if (!b.empty())
+    {
+      l = b;
+      b.clear();
+    }
+  }
+
+  return r;
+}
+// }}}
 // {{{ dataOpen()
 bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SSL **ssl, string &b, string &e, const string f)
 {
@@ -1326,6 +1354,7 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   stringstream ssMessage;
   Json *ptJson = new Json;
 
+  b.clear();
   ptJson->i("Function", f);
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("handle", h);
