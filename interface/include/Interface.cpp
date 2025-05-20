@@ -1478,7 +1478,8 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                       }
                       else
                       {
-                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.");
+                        string strTemp;
+                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.  "+ptJson->j(strTemp));
                       }
                       delete ptJson;
                     }
