@@ -963,11 +963,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if ((nReturn = read(fds[1].fd, (pszFileReadBuffer + unFileReadLength), (unSize - unFileReadLength))) > 0)
             {
-              char *pszBen = new char[nReturn+1];
-              pszBen[0] = '\0';
-              strncpy(pszBen, (pszFileReadBuffer + unFileReadLength), nReturn);
-              chat("BenKietzman", (string)"READ:  "+pszBen);
-              delete[] pszBen;
               unFileReadLength += nReturn;
             }
             else
