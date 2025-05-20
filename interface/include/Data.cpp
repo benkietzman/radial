@@ -900,10 +900,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             }
             if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
             {
-char *pszBen = new char[nReturn+1];
-pszBen[0] = '\0';
-strncpy(pszBen, pszSocketWriteBuffer, nReturn);
-chat("BenKietzman", (string)"WRITE:  "+pszBen);
               if ((size_t)nReturn < unSocketWriteLength)
               {
                 memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
