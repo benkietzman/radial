@@ -854,7 +854,10 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                     bFileClose = true;
                     j = new Json;
                     j->i("Status", "error");
-                    strError = "Request was not allocated from token.";
+                    if (strError.empty())
+                    {
+                      strError = "Request was not allocated from token.";
+                    }
                     j->i("Error", strError);
                     j->j(strSocketWriteBuffer);
                     delete j;
@@ -1265,6 +1268,7 @@ bool Data::token(radialUser &d, string &e)
               {
                 if (exist(ptLink, "Response"))
                 {
+                  b = true;
                   o->merge(ptLink->m["Response"], true, false);
                 }
                 else
