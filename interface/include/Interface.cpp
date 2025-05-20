@@ -1398,6 +1398,11 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
       e = "Failed to receive the Response.";
     }
   }
+  else if (e.find("Encountered an unknown error.") != string::npos)
+  {
+   string strTemp;
+    e += (string)"  " + ptJson->j(strTemp);
+  }
   delete ptJson;
   if (!t.empty())
   {
@@ -1471,6 +1476,7 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                     if ((unPosition = b.find("\n")) != string::npos)
                     {
                       Json *ptJson = new Json(b.substr(0, unPosition));
+                      b.erase(0, (unPosition + 1));
                       bExit = true;
                       if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                       {
@@ -1478,11 +1484,9 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                       }
                       else
                       {
-                        string strTemp;
-                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.  "+b.substr(0, unPosition));
+                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"[dataOpen] Encountered an unknown error.");
                       }
                       delete ptJson;
-                      b.erase(0, (unPosition + 1));
                     }
                   }
                   else
@@ -2670,8 +2674,7 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   }
   else
   {
-    string strTemp;
-    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.  "+ptJson->j(strTemp);
+    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.";
   }
 
   return bResult;
