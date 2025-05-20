@@ -2669,7 +2669,8 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   }
   else
   {
-    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.";
+    string strTemp;
+    strError = (string)"[hub," + strTarget + "] Encountered an unknown error.  "+ptJson->j(strTemp);
   }
 
   return bResult;
