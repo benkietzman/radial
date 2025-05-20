@@ -1604,10 +1604,6 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslRead(ssl, b, nReturn))
         {
-if (nReturn > 0)
-{
-  chat("BenKietzman", (string)"READ:  " + b);
-}
           bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
