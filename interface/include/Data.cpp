@@ -736,6 +736,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                         {
                           if ((fdFile = open(strPath.c_str(), O_RDONLY)) >= 0)
                           {
+                            chat("BenKietzman", (string)"OPEN:  "+strPath);
                             j = new Json;
                             j->i("Status", "okay");
                             j->j(strSocketWriteBuffer);
