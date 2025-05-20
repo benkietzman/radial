@@ -1470,7 +1470,6 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                     if ((unPosition = b.find("\n")) != string::npos)
                     {
                       Json *ptJson = new Json(b.substr(0, unPosition));
-                      b.erase(0, (unPosition + 1));
                       bExit = true;
                       if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
                       {
@@ -1479,9 +1478,10 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                       else
                       {
                         string strTemp;
-                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.  "+ptJson->j(strTemp));
+                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"Encountered an unknown error.  "+b.substr(0, unPosition));
                       }
                       delete ptJson;
+                      b.erase(0, (unPosition + 1));
                     }
                   }
                   else
