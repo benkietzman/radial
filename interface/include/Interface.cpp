@@ -1606,7 +1606,6 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         {
           bExit = r = true;
           bWantWrite = false;
-          log((string)"READ:  "+b);
           if (nReturn <= 0)
           {
             switch (SSL_get_error(ssl, nReturn))
