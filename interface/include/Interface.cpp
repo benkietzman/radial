@@ -1398,11 +1398,6 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
       e = "Failed to receive the Response.";
     }
   }
-  else if (e.find("Encountered an unknown error.") != string::npos)
-  {
-   string strTemp;
-    e += (string)"  " + ptJson->j(strTemp);
-  }
   delete ptJson;
   if (!t.empty())
   {
