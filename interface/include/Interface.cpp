@@ -1604,7 +1604,10 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslRead(ssl, b, nReturn))
         {
-          bExit = r = true;
+          if (nReturn > 0)
+          {
+            bExit = r = true;
+          }
           bWantWrite = false;
           if (nReturn <= 0)
           {
@@ -1743,6 +1746,10 @@ bool Interface::dataWrite(SSL *ssl, string &b, string &e)
     if (bWantWrite || !b.empty())
     {
       fds[0].events |= POLLOUT;
+    }
+    else if (b.empty())
+    {
+      bExit = true;
     }
     if ((nReturn = poll(fds, 1, 2000)) > 0)
     {
