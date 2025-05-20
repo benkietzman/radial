@@ -1330,10 +1330,12 @@ bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
     {
       l = b.substr(0, unPosition);
       b.erase(0, (unPosition + 1));
+      log((string)"LINE:  "+l);
     }
     else if (dataRead(ssl, b, e))
     {
       bRetry = true;
+      log((string)"READ:  "+b);
     }
     else if (!b.empty())
     {
