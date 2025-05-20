@@ -1604,10 +1604,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslRead(ssl, b, nReturn))
         {
-          if (nReturn > 0)
-          {
-            bExit = r = true;
-          }
+          bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
           {
