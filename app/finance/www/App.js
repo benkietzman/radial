@@ -104,9 +104,9 @@ class App
     {
       return this.assetStockDividend(nShares, nDividend, nDividendLatest);
     });
-    Handlebars.registerHelper('assetStockDividendSum', () =>
+    Handlebars.registerHelper('assetStockDividendSum', (DividendSpan) =>
     {
-      return this.assetStockDividendSum();
+      return this.assetStockDividendSum(DividendSpan);
     });
     Handlebars.registerHelper('assetStockReceive', (nShares, nDividend, nDividendLatest, nReceive, nMonth) =>
     {
@@ -119,6 +119,10 @@ class App
     Handlebars.registerHelper('assetStockSum', () =>
     {
       return this.assetStockSum();
+    });
+    Handlebars.registerHelper('assetStockYield', (nDividend, nDividendLatest, nPrice) =>
+    {
+      return this.assetStockYield(nDividend, nDividendLatest, nPrice);
     });
     Handlebars.registerHelper('assetStockYieldSum', () =>
     {
@@ -291,22 +295,28 @@ class App
   }
   // }}}
   // {{{ assetStockDividend()
-  assetStockDividend(nShares, nDividend, nDividendLatest)
+  assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan)
   {
-    return Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest));
+    return Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest));
   }
   // }}}
   // {{{ assetStockDividendSum()
-  assetStockDividendSum()
+  assetStockDividendSum(DividendSpan)
   {
     let nSum = 0;
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockDividend(v.Shares, v.Dividend, v.DividendLatest);
+      nSum += this.assetStockDividend(v.Shares, v.Dividend, v.DividendLatest, DividendSpan);
     }
 
     return nSum;
+  }
+  // }}}
+  // {{{ assetStockYield()
+  assetStockYield(Dividend, DividendLatest, Price)
+  {
+    return Number(((this.d.Assumption.DividendSpan == '1-year')?Dividend:DividendLatest)) / Number(Price) * 100;
   }
   // }}}
   // {{{ assetStockYieldSum()
@@ -316,7 +326,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += (Number(((this.d.Assumption.DividendSpan == '1-year')?v.Dividend:v.DividendLatest)) / Number(v.Price)) * 100;
+      nSum += this.assetStockYield(v.Dividend, v.DividendLatest, v.Price);
     }
 
     return nSum;
