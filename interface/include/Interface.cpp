@@ -1329,7 +1329,7 @@ bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
     if ((unPosition = b.find("\n")) != string::npos)
     {
       l = b.substr(0, unPosition);
-log((string)"Interface::dataGetline():  " + l);
+chat("BenKietzman", (string)"Interface::dataGetline():  " + l);
       b.erase(0, (unPosition + 1));
     }
     else if (dataRead(ssl, b, e))
@@ -1356,7 +1356,6 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   Json *ptJson = new Json;
 
 chat("BenKietzman", (string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
-log((string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
   (*ctx) = NULL;
   (*ssl) = NULL;
   b.clear();
@@ -1436,13 +1435,13 @@ log((string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
     {
       if (m_pUtility->connect(s, "3282", fdSocket, e))
       {
-log((string)"Interface::dataOpen()->Utility::connect() [" + s + (string)",3282]:  Connected.");
+chat("BenKietzman", (string)"Interface::dataOpen()->Utility::connect() [" + s + (string)",3282]:  Connected.");
         if (((*ctx) = m_pUtility->sslInitClient(e)) != NULL)
         {
-log((string)"Interface::dataOpen()->Utility::sslInitClient() [" + s + (string)",3282]:  Initiated.");
+chat("BenKietzman", (string)"Interface::dataOpen()->Utility::sslInitClient() [" + s + (string)",3282]:  Initiated.");
           if (((*ssl) = m_pUtility->sslConnect((*ctx), fdSocket, e)) != NULL)
           {
-log((string)"Interface::dataOpen()->Utility::sslConnect() [" + s + (string)",3282]:  Connected.");
+chat("BenKietzman", (string)"Interface::dataOpen()->Utility::sslConnect() [" + s + (string)",3282]:  Connected.");
             bool bExit = false, bWantWrite = false;
             int nReturn;
             size_t unPosition;
@@ -1466,7 +1465,7 @@ log((string)"Interface::dataOpen()->Utility::sslConnect() [" + s + (string)",328
                 {
                   if (m_pUtility->sslRead((*ssl), b, nReturn))
                   {
-log((string)"Interface::dataOpen()->Utility::sslRead() [" + s + (string)",3282]:  " + b);
+chat("BenKietzman", (string)"Interface::dataOpen()->Utility::sslRead() [" + s + (string)",3282]:  " + b);
                     bWantWrite = false;
                     if (nReturn <= 0)
                     {
@@ -1611,7 +1610,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslRead(ssl, b, nReturn))
         {
-log((string)"Interface::dataRead():  " + b);
+chat("BenKietzman", (string)"Interface::dataRead():  " + b);
           bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
