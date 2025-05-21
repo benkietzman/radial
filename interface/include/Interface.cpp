@@ -1329,6 +1329,7 @@ bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
     if ((unPosition = b.find("\n")) != string::npos)
     {
       l = b.substr(0, unPosition);
+log((string)"Interface::dataGetline():  " + l);
       b.erase(0, (unPosition + 1));
     }
     else if (dataRead(ssl, b, e))
@@ -1460,6 +1461,7 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                 {
                   if (m_pUtility->sslRead((*ssl), b, nReturn))
                   {
+log((string)"Interface::dataOpen()->Utility::sslRead():  " + b);
                     bWantWrite = false;
                     if (nReturn <= 0)
                     {
@@ -1604,6 +1606,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       {
         if (m_pUtility->sslRead(ssl, b, nReturn))
         {
+log((string)"Interface::dataRead():  " + b);
           bExit = r = true;
           bWantWrite = false;
           if (nReturn <= 0)
