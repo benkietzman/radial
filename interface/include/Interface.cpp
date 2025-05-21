@@ -1323,7 +1323,7 @@ bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
   bool bRetry = true, r = false;
   size_t unPosition;
 
-  while (!bRetry)
+  while (bRetry)
   {
     bRetry = false;
     if ((unPosition = b.find("\n")) != string::npos)
@@ -1355,7 +1355,6 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   stringstream ssMessage;
   Json *ptJson = new Json;
 
-chat("BenKietzman", (string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
   (*ctx) = NULL;
   (*ssl) = NULL;
   b.clear();
@@ -1435,10 +1434,8 @@ chat("BenKietzman", (string)"Interface::dataOpen() [" + h + (string)"]:  Start."
     {
       if (m_pUtility->connect(s, "3282", fdSocket, e))
       {
-chat("BenKietzman", (string)"Interface::dataOpen()->Utility::connect() [" + s + (string)",3282]:  Connected.");
         if (((*ctx) = m_pUtility->sslInitClient(e)) != NULL)
         {
-chat("BenKietzman", (string)"Interface::dataOpen()->Utility::sslInitClient() [" + s + (string)",3282]:  Initiated.");
           if (((*ssl) = m_pUtility->sslConnect((*ctx), fdSocket, e)) != NULL)
           {
 chat("BenKietzman", (string)"Interface::dataOpen()->Utility::sslConnect() [" + s + (string)",3282]:  Connected.");
