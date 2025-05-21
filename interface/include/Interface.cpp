@@ -1328,8 +1328,8 @@ bool Interface::dataGetline(SSL *ssl, string &b, string &l, string &e)
     bRetry = false;
     if ((unPosition = b.find("\n")) != string::npos)
     {
+      r = true;
       l = b.substr(0, unPosition);
-chat("BenKietzman", l);
       b.erase(0, (unPosition + 1));
     }
     else if (dataRead(ssl, b, e))
@@ -1338,6 +1338,7 @@ chat("BenKietzman", l);
     }
     else if (!b.empty())
     {
+      r = true;
       l = b;
       b.clear();
     }
