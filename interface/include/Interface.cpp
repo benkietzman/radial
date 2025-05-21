@@ -1355,6 +1355,7 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   stringstream ssMessage;
   Json *ptJson = new Json;
 
+chat("BenKietzman", (string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
 log((string)"Interface::dataOpen() [" + h + (string)"]:  Start.");
   (*ctx) = NULL;
   (*ssl) = NULL;
