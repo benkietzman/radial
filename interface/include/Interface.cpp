@@ -1434,10 +1434,13 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
     {
       if (m_pUtility->connect(s, "3282", fdSocket, e))
       {
+log((string)"Interface::dataOpen()->Utility::connect() [" + s + (string)",3282]:  Connected.");
         if (((*ctx) = m_pUtility->sslInitClient(e)) != NULL)
         {
+log((string)"Interface::dataOpen()->Utility::sslInitClient() [" + s + (string)",3282]:  Initiated.");
           if (((*ssl) = m_pUtility->sslConnect((*ctx), fdSocket, e)) != NULL)
           {
+log((string)"Interface::dataOpen()->Utility::sslConnect() [" + s + (string)",3282]:  Connected.");
             bool bExit = false, bWantWrite = false;
             int nReturn;
             size_t unPosition;
@@ -1461,7 +1464,7 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                 {
                   if (m_pUtility->sslRead((*ssl), b, nReturn))
                   {
-log((string)"Interface::dataOpen()->Utility::sslRead():  " + b);
+log((string)"Interface::dataOpen()->Utility::sslRead() [" + s + (string)",3282]:  " + b);
                     bWantWrite = false;
                     if (nReturn <= 0)
                     {
