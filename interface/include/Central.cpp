@@ -4109,7 +4109,7 @@ void Central::schedule(string strPrefix)
                                 {
                                   ssMessage.str("");
                                   ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
-                                  chat("#system", ssMessage.str(), strError);
+                                  chat("#central", ssMessage.str(), strError);
                                   ssQuery.str("");
                                   ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and a.notify = 1";
                                   auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4136,7 +4136,7 @@ void Central::schedule(string strPrefix)
                     {
                       ssMessage.str("");
                       ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data is stale.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
-                      chat("#system", ssMessage.str(), strError);
+                      chat("#central", ssMessage.str(), strError);
                     }
                   }
                   else
@@ -4148,7 +4148,7 @@ void Central::schedule(string strPrefix)
                 {
                   ssMessage.str("");
                   ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Server appears to be offline.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
-                  chat("#system", ssMessage.str(), strError);
+                  chat("#central", ssMessage.str(), strError);
                 }
               }
               else
@@ -4175,7 +4175,7 @@ void Central::schedule(string strPrefix)
               {
                 ssMessage.str("");
                 ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
-                chat("#system", ssMessage.str(), strError);
+                chat("#central", ssMessage.str(), strError);
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Admin', 'Backup Admin', 'Primary Contact') and a.name = '" << esc(server.first) << "' and b.notify = 1";
                 auto getPerson = dbquery("central_r", ssQuery.str(), strError);
