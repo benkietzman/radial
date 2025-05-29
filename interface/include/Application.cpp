@@ -234,7 +234,7 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
         fds[0].events |= POLLOUT;
       }
       // }}}
-      if ((nReturn = poll(fds, 1, 250)) > 0)
+      if ((nReturn = poll(fds, 1, 100)) > 0)
       {
         bool bReadable = (fds[0].revents & (POLLHUP | POLLIN)), bWritable = (fds[0].revents & POLLOUT);
         // {{{ read
