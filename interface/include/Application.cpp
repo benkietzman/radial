@@ -489,7 +489,19 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   {
     if (exist(ptJson, "Request"))
     {
-      // forward request to application
+      radialUser d;
+      userInit(ptJson, d);
+      if (request(d, strError))
+      {
+        bResult = true;
+        if (exist(ptJson, "Response"))
+        {
+          delete ptJson->m["Response"];
+        }
+        ptJson->m["Response"] = d.p->m["o"];
+        d.p->m.erase("o");
+      }
+      userDeinit(d);
     }
     else
     {
@@ -507,20 +519,17 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
       if ((this->*m_functions[strFunction])(d, strError))
       {
         bResult = true;
+        if (exist(ptJson, "Response"))
+        {
+          delete ptJson->m["Response"];
+        }
+        ptJson->m["Response"] = d.p->m["o"];
+        d.p->m.erase("o");
       }
     }
     else
     {
       strError = "Please provide a valid Function.";
-    }
-    if (bResult)
-    {
-      if (exist(ptJson, "Response"))
-      {
-        delete ptJson->m["Response"];
-      }
-      ptJson->m["Response"] = d.p->m["o"];
-      d.p->m.erase("o");
     }
     userDeinit(d);
   }
