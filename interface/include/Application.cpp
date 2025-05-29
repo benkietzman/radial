@@ -902,6 +902,10 @@ bool Application::request(radialUser &d, string &e)
           e = "Please provide a valid Application.";
         }
       }
+      else if (e == "Failed to find key.")
+      {
+        e = "Please provide a valid Application.";
+      }
       delete ptData;
     }
   }
