@@ -876,8 +876,12 @@ bool Application::request(radialUser &d, string &e)
         }
         if (!strNode.empty())
         {
-          Json *ptLink = new Json(d.r);
+          Json *ptLink = new Json;
+          ptLink->i("Interface", "application");
+          ptLink->i("Application", strApplication);
+          ptLink->i("Function", "request");
           ptLink->i("Node", strNode);
+          ptLink->m["Request"] = new Json(i);
           if (hub("link", ptLink, strError))
           {
             if (exist(ptLink, "Response"))
