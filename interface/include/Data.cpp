@@ -200,7 +200,7 @@ void Data::dataAccept(string strPrefix)
       for (rp = result; !bBound[2] && rp != NULL; rp = rp->ai_next)
       {
         bBound[1] = false;
-        if ((fdSocket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
+        if ((fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) >= 0)
         {
           int nOn = 1;
           bBound[1] = true;
@@ -248,7 +248,7 @@ void Data::dataAccept(string strPrefix)
               int fdClient;
               sockaddr_in cli_addr;
               socklen_t clilen = sizeof(cli_addr);
-              if ((fdClient = ::accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
+              if ((fdClient = accept(fds[0].fd, (sockaddr *)&cli_addr, &clilen)) >= 0)
               {
                 thread threadDataSocket(&Data::dataSocket, this, strPrefix, fdClient, ctx);
                 pthread_setname_np(threadDataSocket.native_handle(), "dataSocket");
@@ -380,6 +380,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
   // }}}
   if ((ssl = m_pUtility->sslAccept(ctx, fdSocket, strError)) != NULL)
   {
+    // {{{ prep work
     char *pszBuffer = NULL;
     size_t unBuffer;
     sem_wait(&m_semBuffer);
@@ -394,6 +395,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       }
     }
     m_mutex.unlock();
+    // }}}
     if (pszBuffer != NULL)
     {
       // {{{ prep work
@@ -1052,10 +1054,10 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       {
         close(fdFile);
       }
-      // }}}
       m_mutex.lock();
       m_buffers[unBuffer] = -1;
       m_mutex.unlock();
+      // }}}
     }
     else
     {
@@ -1063,8 +1065,8 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       ssMessage << strPrefix << " error:  Buffer unavailable.";
       log(ssMessage.str());
     }
-    sem_post(&m_semBuffer);
     // {{{ post work
+    sem_post(&m_semBuffer);
     if (SSL_shutdown(ssl) == 0)
     {
       SSL_shutdown(ssl);

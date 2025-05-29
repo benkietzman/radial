@@ -7,9 +7,10 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/application bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/application bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
+	install --mode=775 bin/application $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
@@ -46,6 +47,16 @@ obj/alert.o: alert.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c alert.cpp -o obj/alert.o $(CPPFLAGS) -I../../common
 obj/Alert.o: include/Alert.cpp obj
 	g++ -ggdb -Wall -c include/Alert.cpp -o obj/Alert.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ application
+application: bin/application $(prefix)/radial/interface
+	install --mode=775 bin/application $(prefix)/radial/interface/
+bin/application: ../../common/libcommon.a obj/application.o obj/Base.o obj/Interface.o obj/Application.o bin
+	g++ -o bin/application obj/application.o obj/Base.o obj/Interface.o obj/Application.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+obj/application.o: application.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c application.cpp -o obj/application.o $(CPPFLAGS) -I../../common
+obj/Application.o: include/Application.cpp obj
+	g++ -ggdb -Wall -c include/Application.cpp -o obj/Application.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ auth
 auth: bin/auth $(prefix)/radial/interface

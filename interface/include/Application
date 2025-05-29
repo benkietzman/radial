@@ -1,0 +1,53 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Application
+// author     : Ben Kietzman
+// begin      : 2025-05-27
+// copyright  : Ben Kietzman
+// email      : ben@kietzman.org
+#ifndef _RADIAL_APPLICATION_
+#define _RADIAL_APPLICATION_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Application
+class Application : public Interface
+{
+  protected:
+  char *m_pszBuffer;
+  map<string, string> m_applications;
+  map<size_t, int> m_clients;
+  map<string, map<int, map<size_t, Json *> > > m_res;
+  map<string, map<int, queue<string> > > m_req;
+  map<string, bool (Application::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+  size_t m_unUniqueID;
+  thread *m_pThreadApplicationAccept;
+  thread *m_pThreadInotify;
+  thread *m_pThreadSchedule;
+
+  void applicationAccept(string strPrefix);
+  void applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx);
+  bool connect(radialUser &d, string &e);
+  bool connectorAdd(const string strApplication, const int fdSocket, string &strError);
+  bool connectorRemove(const string strApplication, const int fdSocket, string &strError);
+  void load(string strPrefix, const bool bSilent = false);
+  bool request(radialUser &d, string &e);
+  void schedule(string strPrefix);
+
+  public:
+  Application(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string));
+  ~Application();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
+};
+// }}}
+}
+}
+#endif

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : database.cpp
+// file       : data.cpp
 // author     : Ben Kietzman
 // begin      : 2025-03-11
 // copyright  : Ben Kietzman
