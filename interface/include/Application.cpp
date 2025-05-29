@@ -857,6 +857,7 @@ bool Application::request(radialUser &d, string &e)
         {
           delete d.p->m["o"];
         }
+        ptJson->i("_served", "local");
         d.p->m["o"] = ptJson;
         if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
         {
@@ -897,6 +898,7 @@ bool Application::request(radialUser &d, string &e)
           {
             if (exist(ptLink, "Response"))
             {
+              ptLink->m["Response"]->i("_served", "remote");
               if (d.p->m.find("o") != d.p->m.end())
               {
                 delete d.p->m["o"];
