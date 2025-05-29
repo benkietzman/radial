@@ -257,6 +257,9 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                 int fdClient = -1;
                 ptJson = new Json(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 1));
+ssMessage.str("");
+ssMessage << "JSON:  " << ptJson;
+log(ssMessage.str());
                 m_mutex.lock();
                 if (!empty(ptJson, "_key"))
                 {
@@ -280,6 +283,7 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                 m_mutex.unlock();
                 if (fdClient != -1)
                 {
+log("WROTE");
                   write(fdClient, &cChar, 1);
                   close(fdClient);
                 }
@@ -492,7 +496,6 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
-      d.p->m["i"]->insert("_function", strFunction);
       if ((this->*m_functions[strFunction])(d, strError))
       {
         bResult = true;
