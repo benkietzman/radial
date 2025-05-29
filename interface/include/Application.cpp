@@ -827,7 +827,7 @@ bool Application::request(radialUser &d, string &e)
             e = "poll() Encountered a POLLNVAL.";
           }
         }
-        else
+        else if (nReturn < 0 && errno != EINTR)
         {
           bExit = true;
           ssMessage.str("");
