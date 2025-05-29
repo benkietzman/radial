@@ -301,6 +301,7 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
               bToken = true;
               if (storageRetrieve({"application", "tokens", strToken}, ptToken, strError))
               {
+                Json *ptData = new Json;
                 if (!empty(ptToken, "application"))
                 {
                   if (connectorAdd(ptToken->m["application"]->v, fdSocket, strError))
@@ -314,12 +315,10 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                     log(ssMessage.str());
                   }
                 }
-                if (!storageRemove({"application", "tokens", strToken}, strError))
+                if (storageRemove({"application", "tokens", strToken}, strError) && storageRetrieve({"application", "tokens"}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "tokens"}, strError) && storageRetrieve({"application"}, ptData, strError) && ptData->m.empty() && storageRemove({"application"}, strError))
                 {
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->Interface::storageRemove() error [application,token," << strToken << "]:  " << strError;
-                  log(ssMessage.str());
                 }
+                delete ptData;
               }
               delete ptToken;
               if (!strApplication.empty())
@@ -650,7 +649,7 @@ bool Application::connectorRemove(const string strApplication, int fdSocket, str
   {
     Json *ptData = new Json;
     bResult = true;
-    if (storageRetrieve({"application", "connectors", strApplication, m_strNode}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors", strApplication, m_strNode}, strError) && storageRetrieve({"application", "connectors", strApplication}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors", strApplication}, strError) && storageRetrieve({"application", "connectors"}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors"}, strError))
+    if (storageRetrieve({"application", "connectors", strApplication, m_strNode}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors", strApplication, m_strNode}, strError) && storageRetrieve({"application", "connectors", strApplication}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors", strApplication}, strError) && storageRetrieve({"application", "connectors"}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors"}, strError) && storageRetrieve({"application"}, ptData, strError) && ptData->m.empty() && storageRemove({"application"}, strError))
     {
     }
     delete ptData;
