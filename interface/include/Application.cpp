@@ -848,6 +848,11 @@ bool Application::request(radialUser &d, string &e)
       close(fdPipe[0]);
       if (ptJson != NULL)
       {
+        if (exist(ptJson, "_key"))
+        {
+          delete ptJson->m["_key"];
+          ptJson->m.erase("_key");
+        }
         if (d.p->m.find("o") != d.p->m.end())
         {
           delete d.p->m["o"];
