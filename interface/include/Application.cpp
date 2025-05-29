@@ -869,7 +869,7 @@ bool Application::request(radialUser &d, string &e)
         string strNode;
         for (auto nodeIter = ptData->m.begin(); strNode.empty() && nodeIter != ptData->m.end(); nodeIter++)
         {
-          if (!nodeIter->second.empty())
+          if (!nodeIter->second->m.empty())
           {
             strNode = nodeIter->first;
           }
@@ -882,7 +882,7 @@ bool Application::request(radialUser &d, string &e)
           ptLink->i("Function", "request");
           ptLink->i("Node", strNode);
           ptLink->m["Request"] = new Json(i);
-          if (hub("link", ptLink, strError))
+          if (hub("link", ptLink, e))
           {
             if (exist(ptLink, "Response"))
             {
@@ -891,7 +891,7 @@ bool Application::request(radialUser &d, string &e)
                 delete d.p->m["o"];
               }
               d.p->m["o"] = ptLink->m["Response"];
-              ptLink->erase("Response");
+              ptLink->m.erase("Response");
             }
           }
           delete ptLink;
