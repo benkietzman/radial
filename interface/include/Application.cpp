@@ -485,36 +485,14 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Application"))
-  {
-    if (exist(ptJson, "Request"))
-    {
-      radialUser d;
-      userInit(ptJson, d);
-      if (request(d, strError))
-      {
-        bResult = true;
-        if (exist(ptJson, "Response"))
-        {
-          delete ptJson->m["Response"];
-        }
-        ptJson->m["Response"] = d.p->m["o"];
-        d.p->m.erase("o");
-      }
-      userDeinit(d);
-    }
-    else
-    {
-      strError = "Please provide the Request.";
-    }
-  }
-  else if (!empty(ptJson, "Function"))
+  if (!empty(ptJson, "Function"))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
+log((string)"FUNCTION:  " + strFunction);
       d.p->m["i"]->insert("_function", strFunction);
       if ((this->*m_functions[strFunction])(d, strError))
       {
@@ -535,7 +513,7 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   }
   else
   {
-    strError = "Please provide the Application or Function.";
+    strError = "Please provide the Function.";
   }
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
@@ -570,7 +548,7 @@ bool Application::connect(radialUser &d, string &e)
   bool b = false;
   Json *o = d.p->m["o"];
 
-  if (!empty(d.r, "User"))
+  if (dep({"User"}, d.r, e))
   {
     string strApplication, strUser = d.r->m["User"]->v;
     m_mutex.lock();
@@ -613,10 +591,6 @@ bool Application::connect(radialUser &d, string &e)
     {
       e = "Unable to retrieve Application based on User.";
     }
-  }
-  else
-  {
-    e = "Please provide the User.";
   }
 
   return b;
@@ -758,154 +732,147 @@ bool Application::request(radialUser &d, string &e)
   stringstream ssMessage;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "Application"))
+  if (dep({"Application"}, d.r, e))
   {
-    string strApplication = i->m["Application"]->v;
-    if (exist(i, "Request"))
+    int fdPipe[2] = {0, 0}, nReturn;
+    string strApplication = d.r->m["Application"]->v;
+    if ((nReturn = pipe(fdPipe)) == 0)
     {
-      int fdPipe[2] = {0, 0}, nReturn;
-      if ((nReturn = pipe(fdPipe)) == 0)
+      bool bFound = false;
+      int fdSocket = -1;
+      size_t unKey = 0;
+      m_mutex.lock();
+      if (m_req.find(strApplication) != m_req.end() && !m_req[strApplication].empty())
       {
-        bool bFound = false;
-        int fdSocket = -1;
-        size_t unKey = 0;
-        m_mutex.lock();
-        if (m_req.find(strApplication) != m_req.end() && !m_req[strApplication].empty())
+        auto connIter = m_req[strApplication].begin();
+        int fdSocket = -1, unPick = 0;
+        string strMessage;
+        time_t CTime;
+        unsigned int unSeed = time(&CTime);
+        bFound = true;
+        unKey = m_unUniqueID++;
+        m_clients[unKey] = fdPipe[1];
+        m_clients[unKey] = CTime;
+        i->i("_key", to_string(unKey), 'n');
+        m_unUniqueID++;
+        i->j(strMessage);
+        srand(unSeed);
+        unPick = rand_r(&unSeed) % m_req[strApplication].size();
+        for (int i = 0; i < unPick; i++)
         {
-          auto connIter = m_req[strApplication].begin();
-          int fdSocket = -1, unPick = 0;
-          string strMessage;
-          time_t CTime;
-          unsigned int unSeed = time(&CTime);
-          bFound = true;
-          unKey = m_unUniqueID++;
-          m_clients[unKey] = fdPipe[1];
-          m_clients[unKey] = CTime;
-          i->i("_key", to_string(unKey), 'n');
-          m_unUniqueID++;
-          i->j(strMessage);
-          srand(unSeed);
-          unPick = rand_r(&unSeed) % m_req[strApplication].size();
-          for (int i = 0; i < unPick; i++)
-          {
-            connIter++;
-          }
-          fdSocket = connIter->first;
-          m_req[strApplication][fdSocket].push(strMessage);
+          connIter++;
         }
-        m_mutex.unlock();
-        if (bFound)
+        fdSocket = connIter->first;
+        m_req[strApplication][fdSocket].push(strMessage);
+      }
+      m_mutex.unlock();
+      if (bFound)
+      {
+        bool bExit = false;
+        char cChar;
+        Json *ptJson = NULL;
+        while (!bExit)
         {
-          bool bExit = false;
-          char cChar;
-          Json *ptJson = NULL;
-          while (!bExit)
+          pollfd fds[1];
+          fds[0].fd = fdPipe[0];
+          fds[0].events = POLLIN;
+          if ((nReturn = poll(fds, 1, 2000)) > 0)
           {
-            pollfd fds[1];
-            fds[0].fd = fdPipe[0];
-            fds[0].events = POLLIN;
-            if ((nReturn = poll(fds, 1, 2000)) > 0)
+            if (fds[0].revents & (POLLHUP | POLLIN))
             {
-              if (fds[0].revents & (POLLHUP | POLLIN))
+              if (read(fds[0].fd, &cChar, 1) > 0)
               {
-                if (read(fds[0].fd, &cChar, 1) > 0)
+                bExit = true;
+                m_mutex.lock();
+                if (m_res.find(strApplication) != m_res.end() && m_res[strApplication].find(fdSocket) != m_res[strApplication].end())
                 {
-                  bExit = true;
-                  m_mutex.lock();
-                  if (m_res.find(strApplication) != m_res.end() && m_res[strApplication].find(fdSocket) != m_res[strApplication].end())
+                  if (m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] != NULL)
                   {
-                    if (m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] != NULL)
-                    {
-                      ptJson = m_res[strApplication][fdSocket][unKey];
-                      m_res[strApplication][fdSocket].erase(unKey);
-                    }
-                    else
-                    {
-                      e = "Failed to find response.";
-                    }
+                    ptJson = m_res[strApplication][fdSocket][unKey];
+                    m_res[strApplication][fdSocket].erase(unKey);
                   }
                   else
                   {
-                    e = "Failed to find Application.";
+                    e = "Failed to find response.";
                   }
-                  m_mutex.unlock();
                 }
                 else
                 {
-                  bExit = true;
-                  ssMessage.str("");
-                  ssMessage << "read(" << errno << ") " << strerror(errno);
-                  e = ssMessage.str();
+                  e = "Failed to find Application.";
                 }
+                m_mutex.unlock();
               }
-              if (fds[0].revents & POLLERR)
+              else
               {
                 bExit = true;
-                e = "poll() Encountered a POLLERR.";
-              }
-              if (fds[0].revents & POLLNVAL)
-              {
-                bExit = true;
-                e = "poll() Encountered a POLLNVAL.";
+                ssMessage.str("");
+                ssMessage << "read(" << errno << ") " << strerror(errno);
+                e = ssMessage.str();
               }
             }
-            else
+            if (fds[0].revents & POLLERR)
             {
               bExit = true;
-              ssMessage.str("");
-              ssMessage << "poll(" << errno << ") " << strerror(errno);
-              e = ssMessage.str();
+              e = "poll() Encountered a POLLERR.";
             }
-            if (shutdown())
+            if (fds[0].revents & POLLNVAL)
             {
               bExit = true;
+              e = "poll() Encountered a POLLNVAL.";
             }
           }
-          close(fdPipe[0]);
-          if (ptJson != NULL)
+          else
           {
-            if (d.p->m.find("o") != d.p->m.end())
-            {
-              delete d.p->m["o"];
-            }
-            d.p->m["o"] = ptJson;
-            if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
-            {
-              b = true;
-            }
-            else if (!empty(ptJson, "Error"))
-            {
-              e = ptJson->m["Error"]->v;
-            }
-            else
-            {
-              e = "Application failed to return an Error.";
-            }
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << "poll(" << errno << ") " << strerror(errno);
+            e = ssMessage.str();
+          }
+          if (shutdown())
+          {
+            bExit = true;
           }
         }
-        else
+        close(fdPipe[0]);
+        if (ptJson != NULL)
         {
-          close(fdPipe[0]);
-          close(fdPipe[1]);
-          e = "Please provide a valid Application.";
+          if (d.p->m.find("o") != d.p->m.end())
+          {
+            delete d.p->m["o"];
+          }
+          d.p->m["o"] = ptJson;
+          if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
+          {
+            b = true;
+          }
+          else if (!empty(ptJson, "Error"))
+          {
+            e = ptJson->m["Error"]->v;
+          }
+          else
+          {
+            e = "Application failed to return an Error.";
+          }
         }
       }
       else
       {
-        ssMessage.str("");
-        ssMessage << "pipe(" << errno << ") " << strerror(errno);
-        e = ssMessage.str();
+        close(fdPipe[0]);
+        close(fdPipe[1]);
+        e = "Please provide a valid Application.";
       }
     }
     else
     {
-      e = "Please provide the Request.";
+      ssMessage.str("");
+      ssMessage << "pipe(" << errno << ") " << strerror(errno);
+      e = ssMessage.str();
     }
   }
-  else
-  {
-    e = "Please provide the Application.";
-  }
+else
+{
+log("HERE");
+}
 
   return b;
 }
