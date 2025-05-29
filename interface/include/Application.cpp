@@ -848,6 +848,7 @@ bool Application::request(radialUser &d, string &e)
       close(fdPipe[0]);
       if (ptJson != NULL)
       {
+        b = true;
         if (exist(ptJson, "_key"))
         {
           delete ptJson->m["_key"];
@@ -858,18 +859,6 @@ bool Application::request(radialUser &d, string &e)
           delete d.p->m["o"];
         }
         d.p->m["o"] = ptJson;
-        if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
-        {
-          b = true;
-        }
-        else if (!empty(ptJson, "Error"))
-        {
-          e = ptJson->m["Error"]->v;
-        }
-        else
-        {
-          e = "Application failed to return an Error.";
-        }
       }
     }
     else if (!bFound)
