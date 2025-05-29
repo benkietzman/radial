@@ -278,25 +278,16 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                   }
                   else
                   {
-ssMessage.str("");
-ssMessage << strPrefix << ": NOT FOUND (m_clients, m_clientTimeouts)";
-log(ssMessage.str());
                     delete ptJson;
                   }
                 }
                 else
                 {
-ssMessage.str("");
-ssMessage << strPrefix << ": NOT FOUND (_key)";
-log(ssMessage.str());
                   delete ptJson;
                 }
                 m_mutex.unlock();
                 if (fdClient != -1)
                 {
-ssMessage.str("");
-ssMessage << strPrefix << ": FOUND";
-log(ssMessage.str());
                   write(fdClient, &cChar, 1);
                   close(fdClient);
                 }
@@ -767,7 +758,7 @@ bool Application::request(radialUser &d, string &e)
         bPipe = true;
         unKey = m_unUniqueID++;
         m_clients[unKey] = fdPipe[1];
-        m_clients[unKey] = CTime;
+        m_clientTimeouts[unKey] = CTime;
         i->i("_key", to_string(unKey), 'n');
         m_unUniqueID++;
         i->j(strMessage);
