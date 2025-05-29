@@ -924,17 +924,19 @@ void Application::schedule(string strPrefix)
   while (!shutdown())
   {
     time(&(CTime[0]));
-    // {{{ status
     if ((CTime[0] - CTime[1]) >= 60)
     {
       list<string> removals;
       Json *ptMessage = new Json;
       CTime[1] = CTime[0];
+      // {{{ status
       ptMessage->i("Source", m_strNode);
       status(ptMessage);
       ptMessage->i("Action", "status");
       live("Data", "", ptMessage);
       delete ptMessage;
+      // }}}
+      // {{{ storage
       if (isMasterSettled() && isMaster())
       {
         list<size_t> removals;
@@ -946,7 +948,7 @@ void Application::schedule(string strPrefix)
           {
             if (!empty(token.second, "_time"))
             {
-              if ((CTime[0] - atoi(token.second->m["_time"]->v.c_str())) > 60)
+              if (CTime[0] > atoi(token.second->m["_time"]->v.c_str()) && (CTime[0] - atoi(token.second->m["_time"]->v.c_str())) > 60)
               {
                 removals.push_back(token.first);
               }
@@ -962,6 +964,7 @@ void Application::schedule(string strPrefix)
             {
               delete ptTokens->m[removals.front()];
               ptTokens->m.erase(removals.front());
+              removals.pop_front();
             }
             if (!storageAdd({"application", "tokens"}, ptTokens, strError))
             {
@@ -1030,8 +1033,8 @@ void Application::schedule(string strPrefix)
         }
         m_mutex.unlock();
       }
+      // }}}
     }
-    // }}}
     msleep(1000);
   }
   // {{{ post work
