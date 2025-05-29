@@ -492,7 +492,6 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
-log((string)"FUNCTION:  " + strFunction);
       d.p->m["i"]->insert("_function", strFunction);
       if ((this->*m_functions[strFunction])(d, strError))
       {
@@ -734,22 +733,22 @@ bool Application::request(radialUser &d, string &e)
 
   if (dep({"Application"}, d.r, e))
   {
-    int fdPipe[2] = {0, 0}, nReturn;
+    bool bFound = false, bPipe = false;
+    int fdPipe[2] = {-1, -1}, fdSocket = -1, nReturn;
+    size_t unKey = 0;
     string strApplication = d.r->m["Application"]->v;
-    if ((nReturn = pipe(fdPipe)) == 0)
+    m_mutex.lock();
+    if (m_req.find(strApplication) != m_req.end() && !m_req[strApplication].empty())
     {
-      bool bFound = false;
-      int fdSocket = -1;
-      size_t unKey = 0;
-      m_mutex.lock();
-      if (m_req.find(strApplication) != m_req.end() && !m_req[strApplication].empty())
+      bFound = true;
+      if ((nReturn = pipe(fdPipe)) == 0)
       {
         auto connIter = m_req[strApplication].begin();
         int fdSocket = -1, unPick = 0;
         string strMessage;
         time_t CTime;
         unsigned int unSeed = time(&CTime);
-        bFound = true;
+        bPipe = true;
         unKey = m_unUniqueID++;
         m_clients[unKey] = fdPipe[1];
         m_clients[unKey] = CTime;
@@ -765,114 +764,142 @@ bool Application::request(radialUser &d, string &e)
         fdSocket = connIter->first;
         m_req[strApplication][fdSocket].push(strMessage);
       }
-      m_mutex.unlock();
-      if (bFound)
+      else
       {
-        bool bExit = false;
-        char cChar;
-        Json *ptJson = NULL;
-        while (!bExit)
+        ssMessage.str("");
+        ssMessage << "pipe(" << errno << ") " << strerror(errno);
+        e = ssMessage.str();
+      }
+    }
+    m_mutex.unlock();
+    if (bPipe)
+    {
+      bool bExit = false;
+      char cChar;
+      Json *ptJson = NULL;
+      while (!bExit)
+      {
+        pollfd fds[1];
+        fds[0].fd = fdPipe[0];
+        fds[0].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
         {
-          pollfd fds[1];
-          fds[0].fd = fdPipe[0];
-          fds[0].events = POLLIN;
-          if ((nReturn = poll(fds, 1, 2000)) > 0)
+          if (fds[0].revents & (POLLHUP | POLLIN))
           {
-            if (fds[0].revents & (POLLHUP | POLLIN))
+            if (read(fds[0].fd, &cChar, 1) > 0)
             {
-              if (read(fds[0].fd, &cChar, 1) > 0)
+              bExit = true;
+              m_mutex.lock();
+              if (m_res.find(strApplication) != m_res.end() && m_res[strApplication].find(fdSocket) != m_res[strApplication].end())
               {
-                bExit = true;
-                m_mutex.lock();
-                if (m_res.find(strApplication) != m_res.end() && m_res[strApplication].find(fdSocket) != m_res[strApplication].end())
+                if (m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] != NULL)
                 {
-                  if (m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] != NULL)
-                  {
-                    ptJson = m_res[strApplication][fdSocket][unKey];
-                    m_res[strApplication][fdSocket].erase(unKey);
-                  }
-                  else
-                  {
-                    e = "Failed to find response.";
-                  }
+                  ptJson = m_res[strApplication][fdSocket][unKey];
+                  m_res[strApplication][fdSocket].erase(unKey);
                 }
                 else
                 {
-                  e = "Failed to find Application.";
+                  e = "Failed to find response.";
                 }
-                m_mutex.unlock();
               }
               else
               {
-                bExit = true;
-                ssMessage.str("");
-                ssMessage << "read(" << errno << ") " << strerror(errno);
-                e = ssMessage.str();
+                e = "Failed to find Application.";
               }
+              m_mutex.unlock();
             }
-            if (fds[0].revents & POLLERR)
+            else
             {
               bExit = true;
-              e = "poll() Encountered a POLLERR.";
-            }
-            if (fds[0].revents & POLLNVAL)
-            {
-              bExit = true;
-              e = "poll() Encountered a POLLNVAL.";
+              ssMessage.str("");
+              ssMessage << "read(" << errno << ") " << strerror(errno);
+              e = ssMessage.str();
             }
           }
-          else
+          if (fds[0].revents & POLLERR)
           {
             bExit = true;
-            ssMessage.str("");
-            ssMessage << "poll(" << errno << ") " << strerror(errno);
-            e = ssMessage.str();
+            e = "poll() Encountered a POLLERR.";
           }
-          if (shutdown())
+          if (fds[0].revents & POLLNVAL)
           {
             bExit = true;
+            e = "poll() Encountered a POLLNVAL.";
           }
         }
-        close(fdPipe[0]);
-        if (ptJson != NULL)
+        else
         {
-          if (d.p->m.find("o") != d.p->m.end())
-          {
-            delete d.p->m["o"];
-          }
-          d.p->m["o"] = ptJson;
-          if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
-          {
-            b = true;
-          }
-          else if (!empty(ptJson, "Error"))
-          {
-            e = ptJson->m["Error"]->v;
-          }
-          else
-          {
-            e = "Application failed to return an Error.";
-          }
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << "poll(" << errno << ") " << strerror(errno);
+          e = ssMessage.str();
+        }
+        if (shutdown())
+        {
+          bExit = true;
         }
       }
-      else
+      close(fdPipe[0]);
+      if (ptJson != NULL)
       {
-        close(fdPipe[0]);
-        close(fdPipe[1]);
-        e = "Please provide a valid Application.";
+        if (d.p->m.find("o") != d.p->m.end())
+        {
+          delete d.p->m["o"];
+        }
+        d.p->m["o"] = ptJson;
+        if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
+        {
+          b = true;
+        }
+        else if (!empty(ptJson, "Error"))
+        {
+          e = ptJson->m["Error"]->v;
+        }
+        else
+        {
+          e = "Application failed to return an Error.";
+        }
       }
     }
-    else
+    else if (!bFound)
     {
-      ssMessage.str("");
-      ssMessage << "pipe(" << errno << ") " << strerror(errno);
-      e = ssMessage.str();
+      Json *ptData = new Json;
+      if (storageRetrieve({"application", "connectors", strApplication}, ptData, e))
+      {
+        string strNode;
+        for (auto nodeIter = ptData->m.begin(); strNode.empty() && nodeIter != ptData->m.end(); nodeIter++)
+        {
+          if (!nodeIter->second.empty())
+          {
+            strNode = nodeIter->first;
+          }
+        }
+        if (!strNode.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Node", strNode);
+          if (hub("link", ptLink, strError))
+          {
+            if (exist(ptLink, "Response"))
+            {
+              if (d.p->m.find("o") != d.p->m.end())
+              {
+                delete d.p->m["o"];
+              }
+              d.p->m["o"] = ptLink->m["Response"];
+              ptLink->erase("Response");
+            }
+          }
+          delete ptLink;
+        }
+        else
+        {
+          e = "Please provide a valid Application.";
+        }
+      }
+      delete ptData;
     }
   }
-else
-{
-log("HERE");
-}
 
   return b;
 }
