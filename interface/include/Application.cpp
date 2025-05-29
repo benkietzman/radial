@@ -760,7 +760,6 @@ bool Application::request(radialUser &d, string &e)
         m_clients[unKey] = fdPipe[1];
         m_clientTimeouts[unKey] = CTime;
         i->i("_key", to_string(unKey), 'n');
-        m_unUniqueID++;
         i->j(strMessage);
         srand(unSeed);
         unPick = rand_r(&unSeed) % m_req[strApplication].size();
