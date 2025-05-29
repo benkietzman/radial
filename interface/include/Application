@@ -22,6 +22,7 @@ class Application : public Interface
   char *m_pszBuffer;
   map<string, string> m_applications;
   map<size_t, int> m_clients;
+  map<size_t, time_t> m_clientTimeouts;
   map<string, map<int, map<size_t, Json *> > > m_res;
   map<string, map<int, queue<string> > > m_req;
   map<string, bool (Application::*)(radialUser &, string &)> m_functions;

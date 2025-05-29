@@ -261,11 +261,12 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                 if (!empty(ptJson, "_key"))
                 {
                   size_t unKey = atoi(ptJson->m["_key"]->v.c_str());
-                  if (m_clients.find(unKey) != m_clients.end() && m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] == NULL)
+                  if (m_clients.find(unKey) != m_clients.end() && m_clientTimeouts.find(unKey) != m_clientTimeouts.end() && m_res[strApplication][fdSocket].find(unKey) != m_res[strApplication][fdSocket].end() && m_res[strApplication][fdSocket][unKey] == NULL)
                   {
                     m_res[strApplication][fdSocket][unKey] = ptJson;
                     fdClient = m_clients[unKey];
                     m_clients.erase(unKey);
+                    m_clientTimeouts.erase(unKey);
                   }
                   else
                   {
@@ -693,6 +694,10 @@ bool Application::connectorRemove(const string strApplication, int fdSocket, str
           close(m_clients[client.first]);
           m_clients.erase(client.first);
         }
+        if (m_clientTimeouts.find(client.first) != m_clientTimeouts.end())
+        {
+          m_clientTimeouts.erase(client.first);
+        }
       }
       m_res[strApplication].erase(fdSocket);
     }
@@ -761,10 +766,12 @@ bool Application::request(radialUser &d, string &e)
           auto connIter = m_req[strApplication].begin();
           int fdSocket = -1, unPick = 0;
           string strMessage;
-          unsigned int unSeed = time(NULL);
+          time_t CTime;
+          unsigned int unSeed = time(&CTime);
           bFound = true;
           unKey = m_unUniqueID++;
           m_clients[unKey] = fdPipe[1];
+          m_clients[unKey] = CTime;
           i->i("_key", to_string(unKey), 'n');
           m_unUniqueID++;
           i->j(strMessage);
@@ -922,6 +929,7 @@ void Application::schedule(string strPrefix)
       delete ptMessage;
       if (isMasterSettled() && isMaster())
       {
+        list<size_t> removals;
         Json *ptTokens = new Json;
         if (storageRetrieve({"application", "tokens"}, ptTokens, strError))
         {
@@ -962,6 +970,57 @@ void Application::schedule(string strPrefix)
           log(ssMessage.str());
         }
         delete ptTokens;
+        m_mutex.lock();
+        for (auto &client : m_clientTimeouts)
+        {
+          if ((CTime[0] > client.second) && (CTime[0] - client.second) > 300)
+          {
+            removals.push_back(client.first);
+          }
+        }
+        while (!removals.empty())
+        {
+          string strApplication;
+          m_clientTimeouts.erase(removals.front());
+          if (m_clients.find(removals.front()) != m_clients.end())
+          {
+            close(m_clients[removals.front()]);
+            m_clients.erase(removals.front());
+          }
+          for (auto &app : m_res)
+          {
+            int fdSocket = -1;
+            for (auto &sock : app.second)
+            {
+              if (sock.second.find(removals.front()) != sock.second.end())
+              {
+                if (sock.second[removals.front()] != NULL)
+                {
+                  delete sock.second[removals.front()];
+                }
+                sock.second.erase(removals.front());
+                if (sock.second.empty())
+                {
+                  fdSocket = sock.first;
+                }
+              }
+            }
+            if (fdSocket != -1)
+            {
+              app.second.erase(fdSocket);
+              if (app.second.empty())
+              {
+                strApplication = app.first;
+              }
+            }
+          }
+          if (!strApplication.empty())
+          {
+            m_res.erase(strApplication);
+          }
+          removals.pop_front();
+        }
+        m_mutex.unlock();
       }
     }
     // }}}
