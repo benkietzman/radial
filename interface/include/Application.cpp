@@ -751,7 +751,7 @@ bool Application::request(radialUser &d, string &e)
       if ((nReturn = pipe(fdPipe)) == 0)
       {
         auto connIter = m_req[strApplication].begin();
-        int fdSocket = -1, unPick = 0;
+        int unPick = 0;
         string strMessage;
         time_t CTime;
         unsigned int unSeed = time(&CTime);
