@@ -977,7 +977,7 @@ void Application::schedule(string strPrefix)
             }
           }
         }
-        else
+        else if (strError != "Failed to find key.")
         {
           ssMessage.str("");
           ssMessage << strPrefix << "->storageRetrieve() error [application,tokens]:  " << strError;
