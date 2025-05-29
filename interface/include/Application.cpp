@@ -943,11 +943,11 @@ void Application::schedule(string strPrefix)
       if (isMasterSettled() && isMaster())
       {
         list<size_t> removals;
-        Json *ptTokens = new Json;
-        if (storageRetrieve({"application", "tokens"}, ptTokens, strError))
+        Json *ptData = new Json;
+        if (storageRetrieve({"application", "tokens"}, ptData, strError))
         {
           list<string> removals;
-          for (auto &token : ptTokens->m)
+          for (auto &token : ptData->m)
           {
             if (!empty(token.second, "_time"))
             {
@@ -965,15 +965,21 @@ void Application::schedule(string strPrefix)
           {
             while (!removals.empty())
             {
-              delete ptTokens->m[removals.front()];
-              ptTokens->m.erase(removals.front());
+              delete ptData->m[removals.front()];
+              ptData->m.erase(removals.front());
               removals.pop_front();
             }
-            if (!storageAdd({"application", "tokens"}, ptTokens, strError))
+            if (!ptData->m.empty())
             {
-              ssMessage.str("");
-              ssMessage << strPrefix << "->storageAdd() error [application,tokens]:  " << strError;
-              log(ssMessage.str());
+              if (!storageAdd({"application", "tokens"}, ptData, strError))
+              {
+                ssMessage.str("");
+                ssMessage << strPrefix << "->storageAdd() error [application,tokens]:  " << strError;
+                log(ssMessage.str());
+              }
+            }
+            else if (storageRemove({"application", "tokens"}, strError) && storageRetrieve({"application"}, ptData, strError) && ptData->m.empty() && storageRemove({"application"}, strError))
+            {
             }
           }
         }
@@ -983,7 +989,7 @@ void Application::schedule(string strPrefix)
           ssMessage << strPrefix << "->storageRetrieve() error [application,tokens]:  " << strError;
           log(ssMessage.str());
         }
-        delete ptTokens;
+        delete ptData;
         m_mutex.lock();
         for (auto &client : m_clientTimeouts)
         {
