@@ -606,6 +606,7 @@ bool Application::connect(radialUser &d, string &e)
 bool Application::connectorAdd(const string strApplication, int fdSocket, string &strError)
 {
   bool bResult = false;
+  stringstream ssMessage;
   Json *ptConnector = new Json;
 
   m_mutex.lock();
@@ -647,6 +648,7 @@ bool Application::connectorAdd(const string strApplication, int fdSocket, string
 bool Application::connectorRemove(const string strApplication, int fdSocket, string &strError)
 {
   bool bResult = false;
+  stringstream ssMessage;
 
   if (storageRemove({"application", "connectors", strApplication, m_strNode, to_string(fdSocket)}, strError))
   {
