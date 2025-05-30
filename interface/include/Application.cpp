@@ -632,7 +632,7 @@ bool Application::connectorAdd(const string strApplication, int fdSocket, string
   {
     bResult = true;
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strApplication << " | " << m_strNode << " | " << fdSocket << " " << char(3) << " Added connector.";
+    ssMessage << char(3) << "13,06 " << strApplication << " " << char(3) << " Added connector.";
     chat("#application", ssMessage.str());
   }
   else
@@ -659,7 +659,7 @@ bool Application::connectorRemove(const string strApplication, int fdSocket, str
     }
     delete ptData;
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strApplication << " | " << m_strNode << " | " << fdSocket << " " << char(3) << " Removed connector.";
+    ssMessage << char(3) << "13,06 " << strApplication << " " << char(3) << " Removed connector.";
     chat("#application", ssMessage.str());
   }
   m_mutex.lock();
@@ -973,9 +973,6 @@ void Application::schedule(string strPrefix)
           {
             while (!removals.empty())
             {
-              ssMessage.str("");
-              ssMessage << char(3) << "13,06 " << ((!empty(ptData->m[removals.front()], "application"))?ptData->m[removals.front()]->m["application"]->v:"") << " " << char(3) << " Removed expired token.";
-              chat("#application", ssMessage.str());
               delete ptData->m[removals.front()];
               ptData->m.erase(removals.front());
               removals.pop_front();
