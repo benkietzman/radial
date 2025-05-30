@@ -23,7 +23,6 @@ Application::Application(string strPrefix, int argc, char **argv, void (*pCallba
   m_pUtility->setSslWriteSize(67108864);
   // {{{ functions
   m_functions["connect"] = &Application::connect;
-  m_functions["request"] = &Application::request;
   m_functions["status"] = &Application::status;
   // }}}
   m_pUtility->sslInit();
@@ -510,9 +509,15 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
         d.p->m.erase("o");
       }
     }
-    else
+    else if (request(d, strError))
     {
-      strError = "Please provide a valid Function.";
+      bResult = true;
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = d.p->m["o"];
+      d.p->m.erase("o");
     }
     userDeinit(d);
   }
@@ -745,12 +750,12 @@ bool Application::request(radialUser &d, string &e)
   stringstream ssMessage;
   Json *i = d.p->m["i"];
 
-  if (dep({"Application"}, d.r, e))
+  if (!empty(d.r, "Function"))
   {
     bool bFound = false, bPipe = false;
     int fdPipe[2] = {-1, -1}, fdSocket = -1, nReturn;
     size_t unKey = 0;
-    string strApplication = d.r->m["Application"]->v;
+    string strApplication = d.r->m["Function"]->v;
     m_mutex.lock();
     if (m_req.find(strApplication) != m_req.end() && !m_req[strApplication].empty())
     {
@@ -817,7 +822,7 @@ bool Application::request(radialUser &d, string &e)
               }
               else
               {
-                e = "Failed to find Application.";
+                e = "Failed to find application.";
               }
               m_mutex.unlock();
             }
@@ -885,8 +890,7 @@ bool Application::request(radialUser &d, string &e)
         {
           Json *ptLink = new Json;
           ptLink->i("Interface", "application");
-          ptLink->i("Application", strApplication);
-          ptLink->i("Function", "request");
+          ptLink->i("Function", strApplication);
           ptLink->i("Node", strNode);
           ptLink->m["Request"] = new Json(i);
           if (hub("link", ptLink, e))
@@ -906,15 +910,19 @@ bool Application::request(radialUser &d, string &e)
         }
         else
         {
-          e = "Please provide a valid Application.";
+          e = "Please provide a valid application within Function.";
         }
       }
       else if (e == "Failed to find key.")
       {
-        e = "Please provide a valid Application.";
+        e = "Please provide a valid application within Function.";
       }
       delete ptData;
     }
+  }
+  else
+  {
+    e = "Please provide the application within Function.";
   }
 
   return b;
