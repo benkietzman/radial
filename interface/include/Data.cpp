@@ -1085,10 +1085,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     }
     // {{{ post work
     sem_post(&m_semBuffer);
-    if (SSL_shutdown(ssl) == 0)
-    {
-      SSL_shutdown(ssl);
-    }
+    SSL_shutdown(ssl);
     SSL_free(ssl);
     // }}}
   }
