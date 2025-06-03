@@ -892,53 +892,71 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           // {{{ write
           if (bWritable)
           {
-            bool bBlocking = false;
             long lArg, lArgOrig;
-            if ((lArg = lArgOrig = fcntl(SSL_get_fd(ssl), F_GETFL, NULL)) >= 0 && !(lArg & O_NONBLOCK))
+            if ((lArg = lArgOrig = fcntl(SSL_get_fd(ssl), F_GETFL, NULL)) >= 0)
             {
-              bBlocking = true;
-              lArg |= O_NONBLOCK;
-              fcntl(SSL_get_fd(ssl), F_SETFL, lArg);
-            }
-            if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
-            {
-              if ((size_t)nReturn < unSocketWriteLength)
+              bool bBlocking = ((!(lArg & O_NONBLOCK))?true:false);
+              if (bBlocking)
               {
-                memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
-                memcpy(pszSocketWriteBuffer, pszTemp, (unSocketWriteLength - nReturn));
-                unSocketWriteLength -= nReturn;
+                lArg |= O_NONBLOCK;
+              }
+              if (!bBlocking || fcntl(SSL_get_fd(ssl), F_SETFL, lArg) == 0)
+              {
+                if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
+                {
+                  if ((size_t)nReturn < unSocketWriteLength)
+                  {
+                    memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
+                    memcpy(pszSocketWriteBuffer, pszTemp, (unSocketWriteLength - nReturn));
+                    unSocketWriteLength -= nReturn;
+                  }
+                  else
+                  {
+                    unSocketWriteLength = 0;
+                  }
+                }
+                else
+                {
+                  bNeedWrite = bWantWrite = false;
+                  switch (SSL_get_error(ssl, nReturn))
+                  {
+                    case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
+                    case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
+                    case SSL_ERROR_ZERO_RETURN:
+                    case SSL_ERROR_SYSCALL:
+                    case SSL_ERROR_SSL:
+                    {
+                      bSocketClose = true;
+                      if (nReturn < 0)
+                      {
+                        bExit = true;
+                        ssMessage.str("");
+                        ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+                        log(ssMessage.str());
+                      }
+                      break;
+                    }
+                  }
+                }
               }
               else
               {
-                unSocketWriteLength = 0;
+                bExit = true;
+                ssMessage.str("");
+                ssMessage << strPrefix << "->fcntl(F_SETFL," << errno << ") error:  " << strerror(errno);
+                log(ssMessage.str());
+              }
+              if (bBlocking)
+              {
+                fcntl(SSL_get_fd(ssl), F_SETFL, lArgOrig);
               }
             }
             else
             {
-              bNeedWrite = bWantWrite = false;
-              switch (SSL_get_error(ssl, nReturn))
-              {
-                case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
-                case SSL_ERROR_WANT_WRITE: bNeedWrite = bWantWrite = true; break;
-                case SSL_ERROR_ZERO_RETURN:
-                case SSL_ERROR_SYSCALL:
-                case SSL_ERROR_SSL:
-                {
-                  bSocketClose = true;
-                  if (nReturn < 0)
-                  {
-                    bExit = true;
-                    ssMessage.str("");
-                    ssMessage << strPrefix << "->Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-                    log(ssMessage.str());
-                  }
-                  break;
-                }
-              }
-            }
-            if (bBlocking)
-            {
-              fcntl(SSL_get_fd(ssl), F_SETFL, lArgOrig);
+              bExit = true;
+              ssMessage.str("");
+              ssMessage << strPrefix << "->fcntl(F_GETFL," << errno << ") error:  " << strerror(errno);
+              log(ssMessage.str());
             }
           }
           // }}}
