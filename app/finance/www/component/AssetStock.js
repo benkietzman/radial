@@ -63,27 +63,13 @@ export default
                 {
                   if (!c.isNull(d.Shares) && String(d.Shares).length > 0)
                   {
-                    if (!c.isNull(d.Price) && String(d.Price).length > 0)
+                    if (!c.isNull(d.Receive) && String(d.Receive).length > 0)
                     {
-                      if (!c.isNull(d.Dividend) && String(d.Dividend).length > 0)
-                      {
-                        if (!c.isNull(d.Receive) && String(d.Receive).length > 0)
-                        {
-                          bResult = true;
-                        }
-                        else
-                        {
-                          c.pushErrorMessage('Please provide the Receive.');
-                        }
-                      }
-                      else
-                      {
-                        c.pushErrorMessage('Please provide the Dividend.');
-                      }
+                      bResult = true;
                     }
                     else
                     {
-                      c.pushErrorMessage('Please provide the Price.');
+                      c.pushErrorMessage('Please provide the Receive.');
                     }
                   }
                   else
