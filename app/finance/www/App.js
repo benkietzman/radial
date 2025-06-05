@@ -295,9 +295,9 @@ class App
   }
   // }}}
   // {{{ assetStockDividend()
-  assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan)
+  assetStockDividend(nShares, nDividend, nDividendLatest)
   {
-    return Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest));
+    return Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest));
   }
   // }}}
   // {{{ assetStockDividendSum()
