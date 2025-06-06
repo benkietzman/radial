@@ -100,9 +100,9 @@ class App
     {
       return this.assetMetalSum();
     });
-    Handlebars.registerHelper('assetStockDividend', (nShares, nDividend, nDividendLatest) =>
+    Handlebars.registerHelper('assetStockDividend', (nShares, nDividend, nDividendLatest, DividendSpan) =>
     {
-      return this.assetStockDividend(nShares, nDividend, nDividendLatest);
+      return this.assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan);
     });
     Handlebars.registerHelper('assetStockDividendSum', (DividendSpan) =>
     {
@@ -295,9 +295,9 @@ class App
   }
   // }}}
   // {{{ assetStockDividend()
-  assetStockDividend(nShares, nDividend, nDividendLatest)
+  assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan)
   {
-    return Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest));
+    return Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest));
   }
   // }}}
   // {{{ assetStockDividendSum()
