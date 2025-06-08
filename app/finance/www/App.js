@@ -31,7 +31,8 @@ class App
       'Monthly',
       '1st Mth/Qtr',
       '2nd Mth/Qtr',
-      '3rd Mth/Qtr'
+      '3rd Mth/Qtr',
+      'Weekly'
     ],
     this.m_assetStockScores =
     [
@@ -256,7 +257,7 @@ class App
   {
     let nValue = 0;
 
-    if (Number(nReceive) == 0)
+    if (Number(nReceive) == 0 || Number(nReceive) == 4)
     {
       nValue = (Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest))) / 12;
     }
@@ -667,7 +668,7 @@ class App
                     }
                     this.d.Asset.Stock[k].Change = dividends;
                     this.d.Asset.Stock[k].Dividend = fDividend;
-                    fDividendLatest *= ((this.d.Asset.Stock[k].Receive == 0)?12:4);
+                    fDividendLatest *= ((this.d.Asset.Stock[k].Receive == 4)?52:((this.d.Asset.Stock[k].Receive == 0)?12:4));
                     this.d.Asset.Stock[k].DividendLatest = fDividendLatest;
                     this.d.Asset.Stock[k].ChangeDividend = (fDividendLatest - fDividend) * 100 / fDividend;
                   }
