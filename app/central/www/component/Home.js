@@ -110,21 +110,21 @@ export default
         <div class="col-md-4">
           {{#if numApplications}}
           <div class="card card-body bg-primary-subtle" style="text-align: center;">
-            <a class="text-primary" href="#/Applications"><b>Applications:</b> {{numberShort numApplications 0}}</a>
+            <a class="text-primary" href="#/Applications"><b>Applications:</b> {{#ifCond numApplications "<" 1000}}{{../numApplications}}{{else}}{{numberShort ../numApplications 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
         <div class="col-md-4">
           {{#if numServers}}
           <div class="card card-body bg-success-subtle" style="text-align: center;">
-            <a class="text-success" href="#/Servers"><b>Servers:</b> {{numberShort numServers 0}}</a>
+            <a class="text-success" href="#/Servers"><b>Servers:</b> {{#ifCond numServers "<" 1000}}{{../numServers}}{{else}}{{numberShort ../numServers 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
         <div class="col-md-4">
           {{#if numUsers}}
           <div class="card card-body bg-warning-subtle" style="text-align: center;">
-            <a class="text-warning" href="#/Users"><b>Users:</b> {{numberShort numUsers 0}}</a>
+            <a class="text-warning" href="#/Users"><b>Users:</b> {{#ifCond numUsers "<" 1000}}{{../numUsers}}{{else}}{{numberShort ../numUsers 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
