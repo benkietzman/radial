@@ -1236,8 +1236,7 @@ void Hub::process(string strPrefix)
                   managerRemovals.pop_front();
                 }
                 time(&CTime);
-                /*
-                if ((CTime - CLoad) > 60)
+                if ((CTime - CLoad) > 3600)
                 {
                   CLoad = CTime;
                   if (!load(strPrefix, strError))
@@ -1248,7 +1247,6 @@ void Hub::process(string strPrefix)
                   }
                   interfaces();
                 }
-                */
                 if ((CTime - CThroughput) >= 3600)
                 {
                   CThroughput = CTime;
