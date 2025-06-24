@@ -3905,7 +3905,7 @@ void Central::schedule(string strPrefix)
                 ptConfig->m["system"]->i("processes", server.second["processes"]);
                 ptConfig->m["system"]->i("swapMemory", server.second["swap_memory"]);
                 ssQuery.str("");
-                ssQuery << "select a.id application_id, a.name, b.id application_server_id, b.server_id, c.id application_server_detail_id, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second["id"] << " and c.daemon is not null and c.daemon != ''";
+                ssQuery << "select a.id application_id, a.name application_name, b.id application_server_id, b.server_id, c.id application_server_detail_id, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second["id"] << " and c.daemon is not null and c.daemon != ''";
                 auto getDetail = dbquery("central_r", ssQuery.str(), strError);
                 if (getDetail != NULL)
                 {
@@ -3916,6 +3916,7 @@ void Central::schedule(string strPrefix)
                     {
                       Json *ptProcess = new Json;
                       ptProcess->i("applicationId", getDetailRow["application_id"]);
+                      ptProcess->i("applicationName", getDetailRow["application_name"]);
                       ptProcess->i("applicationServerDetailId", getDetailRow["application_server_detail_id"]);
                       ptProcess->i("applicationServerId", getDetailRow["application_server_id"]);
                       ptProcess->i("delay", getDetailRow["delay"]);
@@ -4030,106 +4031,153 @@ void Central::schedule(string strPrefix)
                           for (auto &process : ptData->m["processes"]->m)
                           {
                             Json *ptDataProcess = process.second;
-                            if (exist(ptConfig, "processes") && exist(ptConfig->m["processes"], process.first))
+                            if (exist(ptConfig, "processes"))
                             {
-                              stringstream ssAlarmsProcess;
-                              Json *ptConfigProcess = ptConfig->m["processes"]->m[process.first];
-                              if (!exist(ptAlarms->m["processes"], process.first))
+                              if (exist(ptConfig->m["processes"], process.first))
                               {
-                                ptAlarms->m["processes"]->i(process.first, "");
-                              }
-                              if (!empty(ptDataProcess, "processes") && atoi(ptDataProcess->m["processes"]->v.c_str()) <= 0)
-                              {
-                                if (empty(ptConfigProcess, "delay") || atoi(ptConfigProcess->m["delay"]->v.c_str()) <= 0 || empty(ptDataProcess, "time") || atoi(ptDataProcess->m["time"]->v.c_str()) <= 0 || (CNow > atoi(ptDataProcess->m["time"]->v.c_str()) && (CNow - atoi(ptDataProcess->m["time"]->v.c_str())) >= atoi(ptConfigProcess->m["delay"]->v.c_str())))
+                                stringstream ssAlarmsProcess;
+                                Json *ptConfigProcess = ptConfig->m["processes"]->m[process.first];
+                                if (!exist(ptAlarms->m["processes"], process.first))
                                 {
-                                  ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is not currently running.";
+                                  ptAlarms->m["processes"]->i(process.first, "");
+                                }
+                                if (!empty(ptDataProcess, "processes") && atoi(ptDataProcess->m["processes"]->v.c_str()) <= 0)
+                                {
+                                  if (empty(ptConfigProcess, "delay") || atoi(ptConfigProcess->m["delay"]->v.c_str()) <= 0 || empty(ptDataProcess, "time") || atoi(ptDataProcess->m["time"]->v.c_str()) <= 0 || (CNow > atoi(ptDataProcess->m["time"]->v.c_str()) && (CNow - atoi(ptDataProcess->m["time"]->v.c_str())) >= atoi(ptConfigProcess->m["delay"]->v.c_str())))
+                                  {
+                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is not currently running.";
+                                  }
+                                }
+                                else
+                                {
+                                  if (exist(ptDataProcess, "owners") && !empty(ptConfigProcess, "owner"))
+                                  {
+                                    bool bFound = false;
+                                    for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
+                                    {
+                                      if (ptConfigProcess->m["owner"]->v == ownerIter->first)
+                                      {
+                                        bFound = true;
+                                      }
+                                    }
+                                    if (!bFound)
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is not running under the required " << ptConfigProcess->m["owner"]->v << " account.";
+                                    }
+                                  }
+                                  if (!empty(ptDataProcess, "processes"))
+                                  {
+                                    if (!empty(ptConfigProcess, "minProcesses") && atoi(ptConfigProcess->m["minProcesses"]->v.c_str()) > 0 && atoi(ptDataProcess->m["processes"]->v.c_str()) < atoi(ptConfigProcess->m["minProcesses"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has " << ptDataProcess->m["processes"]->v << " processes running which is less than the minimum " << ptConfigProcess->m["minProcesses"]->v << " processes.";
+                                    }
+                                    else if (!empty(ptConfigProcess, "maxProcesses") && atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()) > 0 && atoi(ptDataProcess->m["processes"]->v.c_str()) > atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has " << ptDataProcess->m["processes"]->v << " processes running which is more than the maximum " << ptConfigProcess->m["maxProcesses"]->v << " processes.";
+                                    }
+                                  }
+                                  if (!empty(ptDataProcess, "image"))
+                                  {
+                                    if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
+                                    }
+                                    else if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
+                                    }
+                                  }
+                                  if (!empty(ptDataProcess, "resident"))
+                                  {
+                                    if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
+                                    }
+                                    else if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
+                                    {
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
+                                    }
+                                  }
+                                }
+                                if (ptAlarms->m["processes"]->m[process.first]->v != ssAlarmsProcess.str())
+                                {
+                                  ptAlarms->m["processes"]->i(process.first, ssAlarmsProcess.str());
+                                  if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
+                                  {
+                                    ssMessage.str("");
+                                    ssMessage << strPrefix << "->Interface::storageAdd() error [central,montor,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
+                                    log(ssMessage.str());
+                                  }
+                                  if (!ssAlarmsProcess.str().empty())
+                                  {
+                                    if (!empty(ptConfigProcess, "applicationId"))
+                                    {
+                                      if (!empty(ptConfigProcess, "applicationName"))
+                                      {
+                                        ssMessage.str("");
+                                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
+                                        chat("#central", ssMessage.str(), strError);
+                                        ssMessage.str("");
+                                        ssMessage << "Central Monitor - Application Alert:  " << ptConfigProcess->m["applicationName"]->v << " - (" << process.first << " running on " << server.first << ")";
+                                        ssMessage << endl << endl;
+                                        ssMessage << ssAlarmsProcess.str();
+                                        ssMessage << endl << endl;
+                                        ssMessage << "-- Central";
+                                        ssQuery.str("");
+                                        ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and a.notify = 1";
+                                        auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                                        if (getPerson != NULL)
+                                        {
+                                          for (auto &getPersonRow : *getPerson)
+                                          {
+                                            alert(getPersonRow["userid"], ssMessage.str(), strError);
+                                          }
+                                        }
+                                        dbfree(getPerson);
+                                      }
+                                      else
+                                      {
+                                        ssMessage.str("");
+                                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application name is missing missing within the processes configuration.  This is an unexpected situation.";
+                                        chat("#central", ssMessage.str(), strError);
+                                      }
+                                    }
+                                    else
+                                    {
+                                      ssMessage.str("");
+                                      ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application ID is missing missing within the processes configuration.  This is an unexpected situation.";
+                                      chat("#central", ssMessage.str(), strError);
+                                    }
+                                  }
                                 }
                               }
                               else
                               {
-                                if (exist(ptDataProcess, "owners") && !empty(ptConfigProcess, "owner"))
-                                {
-                                  bool bFound = false;
-                                  for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
-                                  {
-                                    if (ptConfigProcess->m["owner"]->v == ownerIter->first)
-                                    {
-                                      bFound = true;
-                                    }
-                                  }
-                                  if (!bFound)
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is not running under the required " << ptConfigProcess->m["owner"]->v << " account.";
-                                  }
-                                }
-                                if (!empty(ptDataProcess, "processes"))
-                                {
-                                  if (!empty(ptConfigProcess, "minProcesses") && atoi(ptConfigProcess->m["minProcesses"]->v.c_str()) > 0 && atoi(ptDataProcess->m["processes"]->v.c_str()) < atoi(ptConfigProcess->m["minProcesses"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has " << ptDataProcess->m["processes"]->v << " processes running which is less than the minimum " << ptConfigProcess->m["minProcesses"]->v << " processes.";
-                                  }
-                                  else if (!empty(ptConfigProcess, "maxProcesses") && atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()) > 0 && atoi(ptDataProcess->m["processes"]->v.c_str()) > atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has " << ptDataProcess->m["processes"]->v << " processes running which is more than the maximum " << ptConfigProcess->m["maxProcesses"]->v << " processes.";
-                                  }
-                                }
-                                if (!empty(ptDataProcess, "image"))
-                                {
-                                  if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
-                                  }
-                                  else if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
-                                  }
-                                }
-                                if (!empty(ptDataProcess, "resident"))
-                                {
-                                  if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
-                                  }
-                                  else if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
-                                  {
-                                    ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
-                                  }
-                                }
-                              }
-                              if (ptAlarms->m["processes"]->m[process.first]->v != ssAlarmsProcess.str())
-                              {
-                                ptAlarms->m["processes"]->i(process.first, ssAlarmsProcess.str());
-                                if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
-                                {
-                                  ssMessage.str("");
-                                  ssMessage << strPrefix << "->Interface::storageAdd() error [central,montor,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
-                                  log(ssMessage.str());
-                                }
-                                if (!ssAlarmsProcess.str().empty() && !empty(ptConfigProcess, "applicationId"))
-                                {
-                                  ssMessage.str("");
-                                  ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
-                                  chat("#central", ssMessage.str(), strError);
-                                  ssQuery.str("");
-                                  ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and a.notify = 1";
-                                  auto getPerson = dbquery("central_r", ssQuery.str(), strError);
-                                  if (getPerson != NULL)
-                                  {
-                                    for (auto &getPersonRow : *getPerson)
-                                    {
-                                      alert(getPersonRow["userid"], server.first + (string)" (" + process.first + (string)"):  " + ssAlarmsProcess.str(), strError);
-                                    }
-                                  }
-                                  dbfree(getPerson);
-                                }
+                                ssMessage.str("");
+                                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Process is missing within the processes configuration.  This is an unexpected situation.";
+                                chat("#central", ssMessage.str(), strError);
                               }
                             }
+                            else
+                            {
+                              ssMessage.str("");
+                              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes configuration is missing.  This is an unexpected situation.";
+                              chat("#central", ssMessage.str(), strError);
+                            }
                           }
+                        }
+                        else
+                        {
+                          ssMessage.str("");
+                          ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes data is missing.  This is an unexpected situation.";
+                          chat("#central", ssMessage.str(), strError);
                         }
                       }
                       else
                       {
-                        ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "System data is missing.";
+                        ssMessage.str("");
+                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System data is missing.  This is an unexpected situation.";
+                        chat("#central", ssMessage.str(), strError);
                       }
                     }
                     else
@@ -4141,7 +4189,9 @@ void Central::schedule(string strPrefix)
                   }
                   else
                   {
-                    ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Data missing time stamp.";
+                    ssMessage.str("");
+                    ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data missing timestamp.  This is an unexpected situation.";
+                    chat("#central", ssMessage.str(), strError);
                   }
                 }
                 else
@@ -4153,14 +4203,16 @@ void Central::schedule(string strPrefix)
               }
               else
               {
-                ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "System configuration is missing.";
+                ssMessage.str("");
+                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System configuration is missing.  This is an unexpected situation.";
+                chat("#central", ssMessage.str(), strError);
                 storageRemove({"central", "monitor", "servers", server.first}, strError);
               }
             }
             else
             {
               ssMessage.str("");
-              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
+              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could be a new server that was registered in Central but has not yet had its configuration pulled and stored.";
               chat("#central", ssMessage.str(), strError);
               storageRemove({"central", "monitor", "servers", server.first}, strError);
             }
@@ -4178,6 +4230,12 @@ void Central::schedule(string strPrefix)
                 ssMessage.str("");
                 ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
                 chat("#central", ssMessage.str(), strError);
+                ssMessage.str("");
+                ssMessage << "Central Monitor - Server Alert:  " << server.first;
+                ssMessage << endl << endl;
+                ssMessage << ssAlarmsSystem.str();
+                ssMessage << endl << endl;
+                ssMessage << "-- Central";
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Admin', 'Backup Admin', 'Primary Contact') and a.name = '" << esc(server.first) << "' and b.notify = 1";
                 auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4185,7 +4243,7 @@ void Central::schedule(string strPrefix)
                 {
                   for (auto &getPersonRow : *getPerson)
                   {
-                    alert(getPersonRow["userid"], server.first + (string)":  " + ssAlarmsSystem.str(), strError);
+                    alert(getPersonRow["userid"], ssMessage.str(), strError);
                   }
                 }
                 dbfree(getPerson);
