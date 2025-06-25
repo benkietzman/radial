@@ -4154,7 +4154,7 @@ void Central::schedule(string strPrefix)
                               else
                               {
                                 ssMessage.str("");
-                                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Process is missing within the processes configuration.  This is an unexpected situation.";
+                                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Process is missing within the processes configuration.  The daemon was likely removed from the server details in Central.";
                                 chat("#central", ssMessage.str(), strError);
                               }
                             }
