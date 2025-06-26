@@ -695,32 +695,36 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
     ptJson->i("Node", strNode);
   }
   ptJson->i("Command", strCommand);
+  ptJson->m["Request"] = new Json;
   if (!arguments.empty())
   {
-    ptJson->i("Arguments", arguments);
+    ptJson->m["Request"]->i("Arguments", arguments);
   }
   if (!strInput.empty())
   {
-    ptJson->i("Input", strInput);
+    ptJson->m["Request"]->i("Input", strInput);
   }
   if (CTimeout > 0)
   {
     stringstream ssTimeout;
     ssTimeout << CTimeout;
-    ptJson->i("Timeout", ssTimeout.str(), 'n');
+    ptJson->m["Request"]->i("Timeout", ssTimeout.str(), 'n');
   }
   unDuration = 0;
   if ((!bRemote && hub("command", ptJson, strError)) || (bRemote && hub("link", ptJson, strError)))
   {
     bResult = true;
-    if (!empty(ptJson, "Duration"))
+    if (exist(ptJson, "Response"))
     {
-      stringstream ssDuration(ptJson->m["Duration"]->v);
-      ssDuration >> unDuration;
-    }
-    if (!empty(ptJson, "Output"))
-    {
-      strOutput = ptJson->m["Output"]->v;
+      if (!empty(ptJson->m["Response"], "Duration"))
+      {
+        stringstream ssDuration(ptJson->m["Response"]->m["Duration"]->v);
+        ssDuration >> unDuration;
+      }
+      if (!empty(ptJson->m["Response"], "Output"))
+      {
+        strOutput = ptJson->m["Response"]->m["Output"]->v;
+      }
     }
   }
   delete ptJson;
