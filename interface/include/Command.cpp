@@ -183,9 +183,9 @@ void Command::process(string strPrefix)
                 strcpy(pszArgument, strArgument.c_str());
                 args[unIndex++] = pszArgument;
               }
-              if (exist(ptJson, "Arguments"))
+              if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Arguments"))
               {
-                for (auto &i : ptJson->m["Arguments"]->l)
+                for (auto &i : ptJson->m["Request"]->m["Arguments"]->l)
                 {
                   if (!i->v.empty())
                   {
@@ -209,7 +209,7 @@ void Command::process(string strPrefix)
                     dup2(readpipe[1], 1);
                     close(readpipe[1]);
                     execvpe(args[0], args, environ);
-                    if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
+                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Format") && ptJson->m["Request"]->m["Format"]->v == "json")
                     {
                       string strOut;
                       Json *ptOut = new Json;
@@ -239,9 +239,9 @@ void Command::process(string strPrefix)
                     ptCommand->bJson = false;
                     ptCommand->bProcessed = false;
                     ptCommand->CTimeout = 1800;
-                    if (!empty(ptJson, "Timeout"))
+                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Timeout"))
                     {
-                      stringstream ssTimeout(ptJson->m["Timeout"]->v);
+                      stringstream ssTimeout(ptJson->m["Request"]->m["Timeout"]->v);
                       ssTimeout >> ptCommand->CTimeout;
                     }
                     if (ptCommand->CTimeout <= 0 || ptCommand->CTimeout > 1800)
@@ -260,20 +260,20 @@ void Command::process(string strPrefix)
                       lArg |= O_NONBLOCK;
                       fcntl(ptCommand->fdWrite, F_SETFL, lArg);
                     }
-                    if (!empty(ptJson, "Format") && ptJson->m["Format"]->v == "json")
+                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Format") && ptJson->m["Request"]->m["Format"]->v == "json")
                     {
                       ptCommand->bJson = true;
                     }
-                    if (exist(ptJson, "Input"))
+                    if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Input"))
                     {
                       if (ptCommand->bJson)
                       {
-                        ptJson->m["Input"]->j(ptCommand->strBuffer[1]);
+                        ptJson->m["Request"]->m["Input"]->j(ptCommand->strBuffer[1]);
                         ptCommand->strBuffer[1] += "\n";
                       }
                       else
                       {
-                        ptCommand->strBuffer[1] = ptJson->m["Input"]->v;
+                        ptCommand->strBuffer[1] = ptJson->m["Request"]->m["Input"]->v;
                       }
                     }
                     if (ptCommand->strBuffer[1].empty())
@@ -512,16 +512,21 @@ void Command::process(string strPrefix)
       unpack((*i)->strPacket, p);
       ptJson = new Json(p.p);
       ssDuration << unDuration;
-      ptJson->insert("Duration", ssDuration.str(), 'n');
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json;
+      ptJson->m["Response"]->i("Duration", ssDuration.str(), 'n');
       if ((*i)->bJson)
       {
         Json *ptOutput = new Json((*i)->strBuffer[0]);
-        ptJson->i("Output", ptOutput);
+        ptJson->m["Response"]->i("Output", ptOutput);
         delete ptOutput;
       }
       else
       {
-        ptJson->i("Output", (*i)->strBuffer[0]);
+        ptJson->m["Response"]->i("Output", (*i)->strBuffer[0]);
       }
       if ((retWait = waitpid((*i)->execPid, NULL, WNOHANG)) == 0)
       {
