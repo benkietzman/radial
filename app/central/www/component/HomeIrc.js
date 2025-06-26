@@ -76,7 +76,6 @@ export default
           let channels = s.target.v.split(',');
           for (let i = 0; i < channels.length; i++)
           {
-            s.message.v = null;
             s.success.v = null;
             s.info.v = 'Sending chat...';
             let request = {Interface: 'irc', 'Function': 'chat', Target: channels[i].trim(), Message: '<ETX>08,03 ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ') <ETX> ' + s.mess.v};
