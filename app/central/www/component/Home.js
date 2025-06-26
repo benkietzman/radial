@@ -38,6 +38,16 @@ export default
           s.u()
         }
       });
+      request = {Interface: 'central', 'Function': 'groups', Request: {count: 1}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.numGroups = response.Response[0].num;
+          s.u();
+        }
+      });
       request = {Interface: 'central', 'Function': 'servers', Request: {count: 1}};
       c.wsRequest('radial', request).then((response) =>
       {
@@ -102,29 +112,36 @@ export default
   // [[[ template
   template: `
   <div class="page-header row" style="margin-top: 0px;">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <h4 style="margin-top: 0px;">Welcome to Central</h4>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-8">
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
           {{#if numApplications}}
           <div class="card card-body bg-primary-subtle" style="text-align: center;">
-            <a class="text-primary" href="#/Applications"><b>Applications:</b> {{#ifCond numApplications "<" 1000}}{{../numApplications}}{{else}}{{numberShort ../numApplications 2}}{{/ifCond}}</a>
+            <a class="text-primary" href="#/Applications" title="{{number numApplications 0}}"><b>Applications:</b> {{#ifCond numApplications "<" 1000}}{{../numApplications}}{{else}}{{numberShort ../numApplications 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          {{#if numGroups}}
+          <div class="card card-body bg-info-subtle" style="text-align: center;">
+            <a class="text-info" href="#/Groups" title="{{number numGroups 0}}"><b>Groups:</b> {{#ifCond numGroups "<" 1000}}{{../numGroups}}{{else}}{{numberShort ../numGroups 2}}{{/ifCond}}</a>
+          </div>
+          {{/if}}
+        </div>
+        <div class="col-md-3">
           {{#if numServers}}
           <div class="card card-body bg-success-subtle" style="text-align: center;">
-            <a class="text-success" href="#/Servers"><b>Servers:</b> {{#ifCond numServers "<" 1000}}{{../numServers}}{{else}}{{numberShort ../numServers 2}}{{/ifCond}}</a>
+            <a class="text-success" href="#/Servers" title="{{number numServers 0}}"><b>Servers:</b> {{#ifCond numServers "<" 1000}}{{../numServers}}{{else}}{{numberShort ../numServers 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           {{#if numUsers}}
           <div class="card card-body bg-warning-subtle" style="text-align: center;">
-            <a class="text-warning" href="#/Users"><b>Users:</b> {{#ifCond numUsers "<" 1000}}{{../numUsers}}{{else}}{{numberShort ../numUsers 2}}{{/ifCond}}</a>
+            <a class="text-warning" href="#/Users" title="{{number numUsers 0}}"><b>Users:</b> {{#ifCond numUsers "<" 1000}}{{../numUsers}}{{else}}{{numberShort ../numUsers 2}}{{/ifCond}}</a>
           </div>
           {{/if}}
         </div>
