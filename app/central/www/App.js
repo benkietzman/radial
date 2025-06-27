@@ -10,6 +10,7 @@ class App
   constructor(options)
   {
     this.c = options.common;
+    this.j = options.junction;
     this.m_bReady = false;
     this.m_bCommonAuthReady = false;
     this.m_bCommonFooterReady = false;

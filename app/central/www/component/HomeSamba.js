@@ -13,6 +13,7 @@ export default
     // [[[ prep work
     let a = app;
     let c = common;
+    let j = junction;
     let s = c.scope('HomeSamba',
     {
       // [[[ u()
@@ -92,9 +93,19 @@ export default
                           let error = {};
                           if (j.response(response, error))
                           {
+                            s.items[response.Response[0].i].icon = 'folder';
                             s.items[response.Response[0].i].type = 'directory';
-                            s.u();
                           }
+                          else
+                          {
+                            let unPosition;
+                            if ((unPosition = s.items[response.Response[0].i].name.lastIndexOf('.')) != -1)
+                            {
+                              s.items[response.Response[0].i].icon = 'filetype-' + s.items[response.Response[0].i].name.substr((unPosition + 1), (s.items[response.Response[0].i].name.length - (unPosition + 1)));
+                            }
+                            s.items[response.Response[0].i].type = 'file';
+                          }
+                          s.u();
                         });
                       }
                     }
@@ -157,36 +168,19 @@ export default
         let error = {};
         if (j.response(response, error))
         {
-          let element = document.createElement('a');
-          element.setAttribute('href', 'data:application/octet-stream;base64,' + encodeURIComponent(response.Response[1].Data));
-          element.setAttribute('download', strItem);
-          element.style.display = 'none';
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
+          let a = document.createElement('a');
+          a.href = 'data:application/octet-stream;base64,' + encodeURIComponent(response.Response[1].Data);
+          a.download = strItem;
+          a.click();
         }
         else
         {
           c.pushErrorMessage(error.message);
         }
-        s.u();
       });
     };
     // ]]]
     // [[[ main
-    if (a.ready())
-    {
-      document.getElementById('user').focus();
-    }
-    else
-    {
-      s.info.v = 'Authenticating session...';
-    }
-    c.attachEvent('appReady', (data) =>
-    {
-      s.info.v = null;
-      document.getElementById('user').focus();
-    });
     c.setMenu('Home', 'Samba');
     s.u();
     // ]]]
@@ -194,7 +188,6 @@ export default
   // ]]]
   // [[[ template
   template: `
-  <div c-model="info" class="text-warning"></div>
   <div class="row" style="margin-top: 20px;">
     <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" id="user" c-model="user" placeholder="User"></div>
     <div class="col input-group"><input type="password" class="form-control" c-keyup="enter()" c-model="password" placeholder="Password"></div>
@@ -206,13 +199,22 @@ export default
   </div>
   <div class="row">
     {{#each items}}
-    <div class="col input-group" style="margin: 10px;">
-      {{#ifCond type "==" "directory"}}
-      <button class="btn btn-warning bi bi-folder" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
-      {{else}}
-      <button class="btn btn-primary bi bi-download" click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
-      {{/ifCond}}
+    {{#if type}}
+    {{#ifCond type "==" "directory"}}
+    <div class="col" style="margin: 10px;">
+      <button class="btn btn-warning bi bi-{{../icon}}" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
     </div>
+    {{/ifCond}}
+    {{/if}}
+    {{/each}}
+    {{#each items}}
+    {{#if type}}
+    {{#ifCond type "!=" "directory"}}
+    <div class="col" style="margin: 10px;">
+      <button class="btn btn-secondary bi bi-{{../icon}}" c-click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
+    </div>
+    {{/ifCond}}
+    {{/if}}
     {{/each}}
   </div>
   `
