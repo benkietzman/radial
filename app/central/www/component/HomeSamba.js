@@ -196,7 +196,7 @@ export default
     {{#if type}}
     {{#ifCond type "==" "directory"}}
     <div class="col" style="margin: 10px;">
-      <button class="btn btn-secondary bi bi-folder" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
+      <button class="btn btn-warning bi bi-folder" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
     </div>
     {{/ifCond}}
     {{/if}}
@@ -205,7 +205,7 @@ export default
     {{#if type}}
     {{#ifCond type "!=" "directory"}}
     <div class="col" style="margin: 10px;">
-      <button class="btn btn-link" c-click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
+      <button class="btn btn-secondary" c-click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
     </div>
     {{/ifCond}}
     {{/if}}
