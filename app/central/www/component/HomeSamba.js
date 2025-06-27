@@ -93,16 +93,10 @@ export default
                           let error = {};
                           if (j.response(response, error))
                           {
-                            s.items[response.Response[0].i].icon = 'folder';
                             s.items[response.Response[0].i].type = 'directory';
                           }
                           else
                           {
-                            let unPosition;
-                            if ((unPosition = s.items[response.Response[0].i].name.lastIndexOf('.')) != -1)
-                            {
-                              s.items[response.Response[0].i].icon = 'filetype-' + s.items[response.Response[0].i].name.substr((unPosition + 1), (s.items[response.Response[0].i].name.length - (unPosition + 1))).toLowerCase();
-                            }
                             s.items[response.Response[0].i].type = 'file';
                           }
                           s.u();
@@ -202,7 +196,7 @@ export default
     {{#if type}}
     {{#ifCond type "==" "directory"}}
     <div class="col" style="margin: 10px;">
-      <button class="btn btn-warning bi bi-{{../icon}}" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
+      <button class="btn btn-secondary bi bi-folder" c-click="directory('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
     </div>
     {{/ifCond}}
     {{/if}}
@@ -211,7 +205,7 @@ export default
     {{#if type}}
     {{#ifCond type "!=" "directory"}}
     <div class="col" style="margin: 10px;">
-      <button class="btn btn-secondary bi bi-{{../icon}}" c-click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
+      <button class="btn btn-link" c-click="get('{{../name}}')" style="white-space: nowrap;"> {{../name}}</button>
     </div>
     {{/ifCond}}
     {{/if}}
