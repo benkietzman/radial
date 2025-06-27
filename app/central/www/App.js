@@ -125,6 +125,7 @@ class App
       this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Live', href: '/Home/Live', icon: 'lightning', active: null};
       this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Notify', href: '/Home/Notify', icon: 'send', active: null};
     }
+    this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Samba', href: '/Home/Samba', icon: 'hdd-network', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'SSH', href: '/Home/Ssh', icon: 'terminal', active: null};
     this.c.menu.left[unIndex].submenu.left[unSubIndex++] = {value: 'Terminal', href: '/Home/Terminal', icon: 'terminal', active: null};
     unIndex++;
