@@ -1672,10 +1672,10 @@ export default
       <td style="white-space: nowrap;">
         {{#if application.bEdit}}
         <select class="form-control" c-model="application.login_type" c-json>{{#each login_types}}<option value="{{json .}}">{{type}}</option>{{/each}}</select>
-        <div class="form-inline">
-          <div class="input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
-          <div class="input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+        <div class="row">
+          <div class="col input-group"><span class="input-group-text">Secure</span><select class="form-control" c-model="application.secure_port" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="col input-group"><span class="input-group-text">Auto-Register</span><select class="form-control" c-model="application.auto_register" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
+          <div class="col input-group"><span class="input-group-text">Account Check</span><select class="form-control" c-model="application.account_check" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></div>
         </div>
         {{else}}
         {{application.login_type.type}}
