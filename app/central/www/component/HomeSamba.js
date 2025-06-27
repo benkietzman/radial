@@ -185,7 +185,7 @@ export default
   <div class="row" style="margin-top: 20px;">
     <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" id="user" c-model="user" placeholder="User"></div>
     <div class="col input-group"><input type="password" class="form-control" c-keyup="enter()" c-model="password" placeholder="Password"></div>
-    <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" c-model="ip" placeholder="IP/Server"></div>
+    <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" c-model="ip" placeholder="Server"></div>
     <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" c-model="domain" placeholder="Domain"></div>
     <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" c-model="share" placeholder="Share"></div>
     <div class="col input-group"><input type="text" class="form-control" c-keyup="enter()" c-model="path" placeholder="Path"></div>
