@@ -101,7 +101,7 @@ export default
                             let unPosition;
                             if ((unPosition = s.items[response.Response[0].i].name.lastIndexOf('.')) != -1)
                             {
-                              s.items[response.Response[0].i].icon = 'filetype-' + s.items[response.Response[0].i].name.substr((unPosition + 1), (s.items[response.Response[0].i].name.length - (unPosition + 1)));
+                              s.items[response.Response[0].i].icon = 'filetype-' + s.items[response.Response[0].i].name.substr((unPosition + 1), (s.items[response.Response[0].i].name.length - (unPosition + 1))).toLowerCase();
                             }
                             s.items[response.Response[0].i].type = 'file';
                           }
