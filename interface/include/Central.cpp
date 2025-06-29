@@ -4001,11 +4001,11 @@ void Central::schedule(string strPrefix)
                         Json *ptDataSystem = ptData->m["system"];
                         if (!empty(ptConfigSystem, "maxProcesses") && atoi(ptConfigSystem->m["maxProcesses"]->v.c_str()) > 0 && !empty(ptDataSystem, "processes") && atoi(ptDataSystem->m["processes"]->v.c_str()) > atoi(ptConfigSystem->m["maxProcesses"]->v.c_str()))
                         {
-                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << ptDataSystem->m["processes"]->v << " processes are running which is more than the maximum " << ptConfigSystem->m["maxProcesses"]->v << " processes.";
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Running more than " << ptConfigSystem->m["maxProcesses"]->v << " processes.";
                         }
                         if (!empty(ptConfigSystem, "maxCpuUsage") && atoi(ptConfigSystem->m["maxCpuUsage"]->v.c_str()) > 0 && !empty(ptDataSystem, "cpuUsage") && atoi(ptDataSystem->m["cpuUsage"]->v.c_str()) > atoi(ptConfigSystem->m["maxCpuUsage"]->v.c_str()))
                         {
-                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using " << ptDataSystem->m["cpuUsage"]->v << "% CPU which is more than the maximum " << ptConfigSystem->m["maxCpuUsage"]->v << "%";
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using more than " << ptConfigSystem->m["maxCpuUsage"]->v << "% CPU";
                           if (!empty(ptDataSystem, "cpuProcessUsage"))
                           {
                             ssAlarmsSystem << " (" << ptDataSystem->m["cpuProcessUsage"]->v << ")";
@@ -4014,7 +4014,7 @@ void Central::schedule(string strPrefix)
                         }
                         if (!empty(ptConfigSystem, "maxMainUsage") && atoi(ptConfigSystem->m["maxMainUsage"]->v.c_str()) > 0 && !empty(ptDataSystem, "mainTotal") && !empty(ptDataSystem, "mainUsed") && (atoi(ptDataSystem->m["mainUsed"]->v.c_str()) * 100 / atoi(ptDataSystem->m["mainTotal"]->v.c_str())) > atoi(ptConfigSystem->m["maxMainUsage"]->v.c_str()))
                         {
-                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using " << (atoi(ptDataSystem->m["mainUsed"]->v.c_str()) * 100 / atoi(ptDataSystem->m["mainTotal"]->v.c_str())) << "% main memory which is more than the maximum " << ptConfigSystem->m["maxMainUsage"]->v << "%.";
+                          ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using more than " << ptConfigSystem->m["maxMainUsage"]->v << "% main memory.";
                         }
                         if (!empty(ptConfigSystem, "diskSize") && atoi(ptConfigSystem->m["diskSize"]->v.c_str()) > 0 && exist(ptDataSystem, "partitions") && !ptDataSystem->m["partitions"]->m.empty())
                         {
@@ -4022,7 +4022,7 @@ void Central::schedule(string strPrefix)
                           {
                             if (!partition.second->v.empty() && (atoi(partition.second->v.c_str()) >= atoi(ptConfigSystem->m["diskSize"]->v.c_str())))
                             {
-                              ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << partition.first << " partition is " << partition.second->v << "% filled which is more than the maximum " << ptConfigSystem->m["diskSize"]->v << "%.";
+                              ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << partition.first << " partition is more than " << ptConfigSystem->m["diskSize"]->v << "% full.";
                             }
                           }
                         }
@@ -4073,29 +4073,29 @@ void Central::schedule(string strPrefix)
                                     }
                                     else if (!empty(ptConfigProcess, "maxProcesses") && atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()) > 0 && atoi(ptDataProcess->m["processes"]->v.c_str()) > atoi(ptConfigProcess->m["maxProcesses"]->v.c_str()))
                                     {
-                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has " << ptDataProcess->m["processes"]->v << " processes running which is more than the maximum " << ptConfigProcess->m["maxProcesses"]->v << " processes.";
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " is running more than " << ptConfigProcess->m["maxProcesses"]->v << " processes.";
                                     }
                                   }
                                   if (!empty(ptDataProcess, "image"))
                                   {
                                     if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
                                     {
-                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size less than " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
                                     }
-                                    else if (!empty(ptConfigProcess, "minImage") && atoi(ptConfigProcess->m["minImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) < atoi(ptConfigProcess->m["minImage"]->v.c_str()))
+                                    else if (!empty(ptConfigProcess, "maxImage") && atoi(ptConfigProcess->m["maxImage"]->v.c_str()) > 0 && atoi(ptDataProcess->m["image"]->v.c_str()) > atoi(ptConfigProcess->m["maxImage"]->v.c_str()))
                                     {
-                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size of " << m_manip.toShortByte((atof(ptDataProcess->m["image"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minImage"]->v.c_str()) * 1024), strValue) << ".";
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an image size more than " << m_manip.toShortByte((atof(ptConfigProcess->m["maxImage"]->v.c_str()) * 1024), strValue) << ".";
                                     }
                                   }
                                   if (!empty(ptDataProcess, "resident"))
                                   {
                                     if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
                                     {
-                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has a resident size less than " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
                                     }
-                                    else if (!empty(ptConfigProcess, "minResident") && atoi(ptConfigProcess->m["minResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) < atoi(ptConfigProcess->m["minResident"]->v.c_str()))
+                                    else if (!empty(ptConfigProcess, "maxResident") && atoi(ptConfigProcess->m["maxResident"]->v.c_str()) > 0 && atoi(ptDataProcess->m["resident"]->v.c_str()) > atoi(ptConfigProcess->m["maxResident"]->v.c_str()))
                                     {
-                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has an resident size of " << m_manip.toShortByte((atof(ptDataProcess->m["resident"]->v.c_str()) * 1024), strValue) << " which is less than the minimum " << m_manip.toShortByte((atof(ptConfigProcess->m["minResident"]->v.c_str()) * 1024), strValue) << ".";
+                                      ssAlarmsProcess << ((!ssAlarmsProcess.str().empty())?"  ":"") << process.first << " has a resident size more than " << m_manip.toShortByte((atof(ptConfigProcess->m["maxResident"]->v.c_str()) * 1024), strValue) << ".";
                                     }
                                   }
                                 }
