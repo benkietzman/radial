@@ -3994,7 +3994,7 @@ void Central::schedule(string strPrefix)
                   if (!empty(ptData, "_time"))
                   {
                     time_t CData = atoi(ptData->m["_time"]->v.c_str());
-                    if (CNow < CData || (CNow - CData) <= 600)
+                    if (CNow < CData || (CNow - CData) <= 300)
                     {
                       if (exist(ptData, "system"))
                       {
