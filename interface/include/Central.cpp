@@ -3630,7 +3630,7 @@ bool Central::monitorData(radialUser &d, string &e)
         {
           for (auto &p : ptAlarms->m)
           {
-            if (!exist(p.second, "sent") && exist(ptConfig, p.first) && !empty(ptConfig->m[p.first], "script"))
+            if (!empty(p.second, "alarms") && !exist(p.second, "sent") && exist(ptConfig, p.first) && !empty(ptConfig->m[p.first], "script"))
             {
               Json *ptScript;
               p.second->i("sent", "1", '1');
