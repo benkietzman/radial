@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
           size_t unMinImage;
           stringstream ssMinImage(ptJson->m["minImage"]->v);
           ssMinImage >> unMinImage;
-          if (unImage > unMinImage)
+          if (unMinImage > 0 && unImage > unMinImage)
           {
             bRestart = true;
           }
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
           size_t unMaxImage;
           stringstream ssMaxImage(ptJson->m["maxImage"]->v);
           ssMaxImage >> unMaxImage;
-          if (unImage > unMaxImage)
+          if (unMaxImage > 0 && unImage > unMaxImage)
           {
             bRestart = true;
           }
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
           size_t unMinProcesses;
           stringstream ssMinProcesses(ptJson->m["minProcesses"]->v);
           ssMinProcesses >> unMinProcesses;
-          if (unProcesses < unMinProcesses)
+          if (unMinProcesses > 0 && unProcesses < unMinProcesses)
           {
             bRestart = true;
           }
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
           size_t unMaxProcesses;
           stringstream ssMaxProcesses(ptJson->m["maxProcesses"]->v);
           ssMaxProcesses >> unMaxProcesses;
-          if (unProcesses > unMaxProcesses)
+          if (unMaxProcesses > 0 && unProcesses > unMaxProcesses)
           {
             bRestart = true;
           }
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
           size_t unMinResident;
           stringstream ssMinResident(ptJson->m["minResident"]->v);
           ssMinResident >> unMinResident;
-          if (unResident < unMinResident)
+          if (unMinResident > 0 && unResident < unMinResident)
           {
             bRestart = true;
           }
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
           size_t unMaxResident;
           stringstream ssMaxResident(ptJson->m["maxResident"]->v);
           ssMaxResident >> unMaxResident;
-          if (unResident > unMaxResident)
+          if (unMaxResident > 0 && unResident > unMaxResident)
           {
             bRestart = true;
           }
