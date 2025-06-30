@@ -399,6 +399,25 @@ int main(int argc, char *argv[])
               // }}}
               radial.request(ptReq, ptRes, strError);
               delete ptReq;
+              if (ptRes->m.find("Response") != ptRes->m.end() && ptRes->m["Response"]->m.find("scripts") != ptRes->m["Response"]->m.end())
+              {
+                for (auto &s : ptRes->m["Response"]->m["scripts"]->l)
+                {
+                  if (s->m.find("script") != s->m.end() && !s->m["script"]->v.empty())
+                  {
+                    FILE *pfScript = NULL;
+                    string strData;
+                    stringstream ssData;
+                    ssData << s << endl;
+                    strData = ssData.str();
+                    if ((pfScript = popen(s->m["script"]->v.c_str(), "w")) != NULL)
+                    {
+                      fwrite(strData.c_str(), sizeof(char), strData.size(), pfScript);
+                      pclose(pfScript);
+                    }
+                  }
+                }
+              }
               delete ptRes;
             }
             // }}}

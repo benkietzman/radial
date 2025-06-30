@@ -3600,7 +3600,8 @@ bool Central::monitorConfig(radialUser &d, string &e)
 bool Central::monitorData(radialUser &d, string &e)
 {
   bool b = false;
-  Json *i = d.p->m["i"];
+  stringstream ssMessage;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   if (dep({"server"}, i, e))
   {
@@ -3610,7 +3611,7 @@ bool Central::monitorData(radialUser &d, string &e)
       {
         stringstream ssTime;
         time_t CTime;
-        Json *ptData = new Json;
+        Json *ptAlarms = new Json, *ptConfig = new Json, *ptData = new Json;
         time(&CTime);
         ssTime << CTime;
         ptData->i("_time", ssTime.str());
@@ -3623,6 +3624,32 @@ bool Central::monitorData(radialUser &d, string &e)
         {
           b = true;
         }
+        delete ptData;
+        ptData = new Json;
+        if (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes"}, ptAlarms, e) && storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "processes"}, ptConfig, e) && storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "processes"}, ptData, e))
+        {
+          for (auto &p : ptAlarms->m)
+          {
+            if (!exist(p.second, "sent") && exist(ptConfig, p.first) && !empty(ptConfig->m[p.first], "script"))
+            {
+              Json *ptScript;
+              p.second->i("sent", "1", '1');
+              storageAdd({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", p.first, "sent"}, p.second->m["sent"], e);
+              if (!exist(o, "scripts"))
+              {
+                o->m["scripts"] = new Json;
+              }
+              ptScript = new Json(ptConfig->m[p.first]);
+              merge(ptScript, ptData->m[p.first]);
+              o->m["scripts"]->l.push_back(ptScript);
+              ssMessage.str("");
+              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << i->m["server"]->v << " " << char(3) << " " << char(3) << "00,14 " << p.first << " " << char(3) << " Remotely executed the following script:  " << ptConfig->m[p.first]->m["script"]->v;
+              chat("#central", ssMessage.str(), e);
+            }
+          }
+        }
+        delete ptAlarms;
+        delete ptConfig;
         delete ptData;
       }
       else
@@ -3648,7 +3675,7 @@ bool Central::monitorProcess(radialUser &d, string &e)
   if (dep({"process", "server"}, i, e))
   {
     Json *ptAlarms = new Json, *ptConfig = new Json, *ptData = new Json;
-    if ((storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", i->m["process"]->v}, ptAlarms, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "processes", i->m["process"]->v}, ptConfig, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "processes", i->m["process"]->v}, ptData, e) || e == "Failed to find key."))
+    if ((storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", i->m["process"]->v, "alarms"}, ptAlarms, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "config", "processes", i->m["process"]->v}, ptConfig, e) || e == "Failed to find key.") && (storageRetrieve({"central", "monitor", "servers", i->m["server"]->v, "data", "processes", i->m["process"]->v}, ptData, e) || e == "Failed to find key."))
     {
       b = true;
       o->i("alarms", ptAlarms);
@@ -4039,7 +4066,11 @@ void Central::schedule(string strPrefix)
                                 Json *ptConfigProcess = ptConfig->m["processes"]->m[process.first];
                                 if (!exist(ptAlarms->m["processes"], process.first))
                                 {
-                                  ptAlarms->m["processes"]->i(process.first, "");
+                                  ptAlarms->m["processes"]->m[process.first] = new Json;
+                                }
+                                if (!exist(ptAlarms->m["processes"]->m[process.first], "alarms"))
+                                {
+                                  ptAlarms->m["processes"]->m[process.first]->i("alarms", "");
                                 }
                                 if (!empty(ptDataProcess, "processes") && atoi(ptDataProcess->m["processes"]->v.c_str()) <= 0)
                                 {
@@ -4099,13 +4130,18 @@ void Central::schedule(string strPrefix)
                                     }
                                   }
                                 }
-                                if (ptAlarms->m["processes"]->m[process.first]->v != ssAlarmsProcess.str())
+                                if (ptAlarms->m["processes"]->m[process.first]->m["alarms"]->v != ssAlarmsProcess.str())
                                 {
-                                  ptAlarms->m["processes"]->i(process.first, ssAlarmsProcess.str());
+                                  ptAlarms->m["processes"]->m[process.first]->i("alarms", ssAlarmsProcess.str());
+                                  if (exist(ptAlarms->m["processes"]->m[process.first], "sent"))
+                                  {
+                                    delete ptAlarms->m["processes"]->m[process.first]->m["sent"];
+                                    ptAlarms->m["processes"]->m[process.first]->m.erase("sent");
+                                  }
                                   if (!storageAdd({"central", "monitor", "servers", server.first, "alarms", "processes", process.first}, ptAlarms->m["processes"]->m[process.first], strError))
                                   {
                                     ssMessage.str("");
-                                    ssMessage << strPrefix << "->Interface::storageAdd() error [central,montor,servers," << server.first << ",alarms,processes," << process.first << "]:  " << strError;
+                                    ssMessage << strPrefix << "->Interface::storageAdd() error [central,montor,servers," << server.first << ",alarms,processes," << process.first << ",alarm]:  " << strError;
                                     log(ssMessage.str());
                                   }
                                   if (!ssAlarmsProcess.str().empty())
