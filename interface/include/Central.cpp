@@ -3932,7 +3932,7 @@ void Central::schedule(string strPrefix)
                 ptConfig->m["system"]->i("processes", server.second["processes"]);
                 ptConfig->m["system"]->i("swapMemory", server.second["swap_memory"]);
                 ssQuery.str("");
-                ssQuery << "select a.id application_id, a.name application_name, b.id application_server_id, b.server_id, c.id application_server_detail_id, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second["id"] << " and c.daemon is not null and c.daemon != ''";
+                ssQuery << "select a.id application_id, a.name application_name, b.id application_server_id, b.server_id, c.id application_server_detail_id, c.daemon, c.owner, c.delay, c.min_processes, c.max_processes, c.min_image, c.max_image, c.min_resident, c.max_resident, c.script from application a, application_server b, application_server_detail c where a.id = b.application_id and b.id = c.application_server_id and b.server_id = " << server.second["id"] << " and c.daemon is not null and c.daemon != ''";
                 auto getDetail = dbquery("central_r", ssQuery.str(), strError);
                 if (getDetail != NULL)
                 {
