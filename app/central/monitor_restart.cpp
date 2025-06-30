@@ -27,9 +27,7 @@ int main(int argc, char *argv[])
     if (getline(cin, strJson))
     {
       bool bRestart = false;
-      string strCommand;
       Json *ptJson = new Json(strJson);
-      strCommand = (string)"/usr/bin/systemctl restart" + argv[1];
       if (ptJson->m.find("image") != ptJson->m.end() && !ptJson->m["image"]->v.empty())
       {
         size_t unImage;
@@ -66,7 +64,7 @@ int main(int argc, char *argv[])
           size_t unMinProcesses;
           stringstream ssMinProcesses(ptJson->m["minProcesses"]->v);
           ssMinProcesses >> unMinProcesses;
-          if (unProcesses > unMinProcesses)
+          if (unProcesses < unMinProcesses)
           {
             bRestart = true;
           }
@@ -92,7 +90,7 @@ int main(int argc, char *argv[])
           size_t unMinResident;
           stringstream ssMinResident(ptJson->m["minResident"]->v);
           ssMinResident >> unMinResident;
-          if (unResident > unMinResident)
+          if (unResident < unMinResident)
           {
             bRestart = true;
           }
@@ -111,7 +109,7 @@ int main(int argc, char *argv[])
       delete ptJson;
       if (bRestart)
       {
-        system(strCommand.c_str());
+        system(((string)"systemctl restart " + argv[1]).c_str());
       }
     }
   }
