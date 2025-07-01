@@ -4158,6 +4158,11 @@ void Central::schedule(string strPrefix)
                                         ssMessage << endl << endl;
                                         ssMessage << ssAlarmsProcess.str();
                                         ssMessage << endl << endl;
+                                        if (!empty(ptConfigProcess, "script"))
+                                        {
+                                          ssMessage << "The following remote script has been executed:" << endl << endl;
+                                          ssMessage << ptConfigProcess->m["script"]->v << endl << endl;
+                                        }
                                         ssMessage << "-- Central";
                                         ssQuery.str("");
                                         ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and a.notify = 1";
