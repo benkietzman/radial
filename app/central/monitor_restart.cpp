@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
       delete ptJson;
       if (bRestart)
       {
-        if (argc == 3)
+        if (argc >= 3)
         {
           ifstream inProc("/proc/stat");
           list<string> items;
