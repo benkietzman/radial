@@ -3946,6 +3946,7 @@ void Central::schedule(string strPrefix)
                       ptProcess->i("applicationName", getDetailRow["application_name"]);
                       ptProcess->i("applicationServerDetailId", getDetailRow["application_server_detail_id"]);
                       ptProcess->i("applicationServerId", getDetailRow["application_server_id"]);
+                      ptProcess->i("daemon", getDetailRow["daemon"]);
                       ptProcess->i("delay", getDetailRow["delay"]);
                       ptProcess->i("minProcesses", getDetailRow["min_processes"]);
                       ptProcess->i("maxProcesses", getDetailRow["max_processes"]);
