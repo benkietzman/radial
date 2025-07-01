@@ -11,17 +11,26 @@
 ///////////////////////////////////////////
 // {{{ includes
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <list>
 #include <sstream>
 #include <string>
+#include <unistd.h>
+#include <vector>
 using namespace std;
+#include <File>
 #include <Json>
+#include <StringManip>
 using namespace common;
+// }}}
+// {{{ prototypes
+Json *getProcess(const string strPid, list<Json *> &processes);
 // }}}
 // {{{ main()
 int main(int argc, char *argv[])
 {
-  if (argc == 2)
+  if (argc >= 2)
   {
     string strJson;
     if (getline(cin, strJson))
@@ -109,6 +118,118 @@ int main(int argc, char *argv[])
       delete ptJson;
       if (bRestart)
       {
+        if (argc == 3)
+        {
+          ifstream inProc("/proc/stat");
+          list<string> items;
+          list<Json *> processes;
+          long long llBootTime = 0;
+          ofstream outData;
+          string strPid, strProc = "/proc";
+          stringstream ssProc;
+          File file;
+          StringManip manip;
+          if (inProc)
+          {
+            string strLine;
+            while (llBootTime == 0 && getline(inProc, strLine))
+            {
+              string strField;
+              stringstream ssLine(strLine);
+              ssLine >> strField;
+              if (strField == "btime")
+              {
+                ssLine >> llBootTime;
+              }
+            }
+            file.directoryList(strProc.c_str(), items);
+            for (auto &item : items)
+            {
+              if (manip.isNumeric(item))
+              {
+                ifstream inStat;
+                stringstream ssStat;
+                ssStat << "/proc/" << item << "/stat";
+                inStat.open(ssStat.str().c_str());
+                if (inStat)
+                {
+                  string strField;
+                  vector<string> fields;
+                  while (inStat >> strField)
+                  {
+                    fields.push_back(strField);
+                  }
+                  if (fields.size() >= 24)
+                  {
+                    char cState = fields[2][0];
+                    long lJiffies = sysconf(_SC_CLK_TCK), lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
+                    long long llStartTime;
+                    string strState = "Unknown";
+                    stringstream ssImage[2], ssResident[2], ssStartTime[2];
+                    time_t CStartTime;
+                    unsigned long ulImage, ulResident;
+                    Json *ptProc = new Json;
+                    if (fields[1] == "(junction)" && fields[3] == "1")
+                    {
+                      strPid = fields[0];
+                    }
+                    ptProc->i("pid", fields[0], 'n');
+                    ptProc->i("comm", fields[1]);
+                    switch (cState)
+                    {
+                      case 'R': strState = "running"; break;
+                      case 'S': strState = "sleeping"; break;
+                      case 'D': strState = "waiting"; break;
+                      case 'Z': strState = "zombie"; break;
+                      case 'T': strState = "stopped"; break;
+                      case 't': strState = "tracing stop"; break;
+                      case 'X': strState = "dead"; break;
+                      case 'I': strState = "idle"; break;
+                    }
+                    ptProc->i("state", strState);
+                    ptProc->i("ppid", fields[3], 'n');
+                    ssStartTime[0].str(fields[21]);
+                    ssStartTime[0] >> llStartTime;
+                    CStartTime = llBootTime + (llStartTime / lJiffies);
+                    ssStartTime[1] << CStartTime;
+                    ptProc->i("starttime", ssStartTime[1].str(), 'n');
+                    ssImage[0].str(fields[22]);
+                    ssImage[0] >> ulImage;
+                    ulImage /= 1024;
+                    ssImage[1] << ulImage;
+                    ptProc->i("image", ssImage[1].str(), 'n');
+                    ssResident[0].str(fields[23]);
+                    ssResident[0] >> ulResident;
+                    ulResident *= lPageSize;
+                    ssResident[1] << ulResident;
+                    ptProc->i("resident", ssResident[1].str(), 'n');
+                    processes.push_back(ptProc);
+                  }
+                  inStat.close();
+                }
+              }
+            }
+          }
+          inProc.close(); 
+          if (!strPid.empty())
+          {
+            Json *ptData = getProcess(strPid, processes);
+            if (ptData != NULL)
+            {
+              outData.open(argv[2]);
+              if (outData)
+              {
+                outData << ptData << endl;
+              }
+              outData.close();
+              delete ptData;
+            }
+          }
+          for (auto &process : processes)
+          {
+            delete process;
+          }
+        }
         system(((string)"systemctl restart " + argv[1]).c_str());
       }
     }
@@ -119,5 +240,40 @@ int main(int argc, char *argv[])
   }
 
   return 0;
+}
+// }}}
+// {{{ getProcess()
+Json *getProcess(const string strPid, list<Json *> &processes)
+{
+  Json *ptProcess = NULL;
+
+  for (auto i = processes.begin(); ptProcess == NULL && i != processes.end(); i++)
+  {
+    if ((*i)->m["pid"]->v == strPid)
+    {
+      ptProcess = new Json(*i);
+    }
+  }
+  if (ptProcess != NULL)
+  {
+    Json *ptChildren = new Json;
+    for (auto i = processes.begin(); i != processes.end(); i++)
+    {
+      if ((*i)->m["ppid"]->v == strPid)
+      {
+        ptChildren->l.push_back(getProcess((*i)->m["pid"]->v, processes));
+      }
+    }
+    if (!ptChildren->l.empty())
+    {
+      ptProcess->m["children"] = ptChildren;
+    }
+    else
+    {
+      delete ptChildren;
+    }
+  }
+
+  return ptProcess;
 }
 // }}}

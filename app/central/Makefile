@@ -14,7 +14,7 @@ bin/monitor: ../../../common/libcommon.a obj/monitor.o bin
 	g++ -o bin/monitor obj/monitor.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
 
 bin/monitor_restart: ../../../common/libcommon.a obj/monitor_restart.o bin
-	g++ -o bin/monitor_restart obj/monitor_restart.o $(LDFLAGS) -L../../../common -lcommon -lexpat -lmjson
+	g++ -o bin/monitor_restart obj/monitor_restart.o $(LDFLAGS) -L../../../common -lcommon -lb64 -lcrypto -lexpat -lmjson -lssl
 
 bin:
 	if [ ! -d bin ]; then mkdir bin; fi;
