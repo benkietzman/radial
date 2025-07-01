@@ -118,14 +118,14 @@ int main(int argc, char *argv[])
       delete ptJson;
       if (bRestart)
       {
-        if (argc >= 3)
+        if (argc >= 3 && ptJson->m.find("daemon") != ptJson->m.end() && !ptJson->m["daemon"]->v.empty())
         {
           ifstream inProc("/proc/stat");
           list<string> items;
           list<Json *> processes;
           long long llBootTime = 0;
           ofstream outData;
-          string strPid, strProc = "/proc";
+          string strDaemon = (string)"(" + ptJson->m["daemon"]->v + ")", strPid, strProc = "/proc";
           stringstream ssProc;
           File file;
           StringManip manip;
@@ -164,12 +164,12 @@ int main(int argc, char *argv[])
                     char cState = fields[2][0];
                     long lJiffies = sysconf(_SC_CLK_TCK), lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
                     long long llStartTime;
-                    string strState = "Unknown";
+                    string strState = "unknown";
                     stringstream ssImage[2], ssResident[2], ssStartTime[2];
                     time_t CStartTime;
                     unsigned long ulImage, ulResident;
                     Json *ptProc = new Json;
-                    if (fields[1] == "(junction)" && fields[3] == "1")
+                    if (fields[1] == strDaemon && fields[3] == "1")
                     {
                       strPid = fields[0];
                     }
