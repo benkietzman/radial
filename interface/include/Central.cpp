@@ -4160,7 +4160,7 @@ void Central::schedule(string strPrefix)
                                         ssMessage << endl << endl;
                                         if (!empty(ptConfigProcess, "script"))
                                         {
-                                          ssMessage << "The following remote script has been executed:" << endl << endl;
+                                          ssMessage << "Remotely executed the following script:" << endl << endl;
                                           ssMessage << ptConfigProcess->m["script"]->v << endl << endl;
                                         }
                                         ssMessage << "-- Central";
