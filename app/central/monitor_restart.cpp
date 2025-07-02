@@ -115,7 +115,6 @@ int main(int argc, char *argv[])
           }
         }
       }
-      delete ptJson;
       if (bRestart)
       {
         if (argc >= 3 && ptJson->m.find("daemon") != ptJson->m.end() && !ptJson->m["daemon"]->v.empty())
@@ -232,6 +231,7 @@ int main(int argc, char *argv[])
         }
         system(((string)"systemctl restart " + argv[1]).c_str());
       }
+      delete ptJson;
     }
   }
   else
