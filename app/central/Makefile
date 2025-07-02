@@ -43,7 +43,7 @@ obj/monitor_restart.o: monitor_restart.cpp ../../../common/Makefile obj
 obj:
 	if [ ! -d obj ]; then mkdir obj; fi;
 
-install: bin/monitor bin/monitor_restart $(prefix)/radial/app/central
+install: bin/monitor bin/monitor_read bin/monitor_restart $(prefix)/radial/app/central
 	install --mode=775 bin/monitor $(prefix)/radial/app/central/monitor_preload
 	install --mode=775 bin/monitor_read $(prefix)/radial/app/central/
 	install --mode=775 bin/monitor_restart $(prefix)/radial/app/central/
