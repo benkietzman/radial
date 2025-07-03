@@ -26,6 +26,7 @@ using namespace common;
 // }}}
 // {{{ prototypes
 void display(Json *ptData, map<string, size_t> width, string strIndent);
+void setWidths(Json *ptData, map<string, size_t> &width);
 // }}}
 // {{{ main()
 int main(int argc, char *argv[])
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     inFile.open(argv[1]);
     if (inFile)
     {
-      list<string> fields = {"comm", "pid", "ppid", "state"};
+      list<string> fields = {"cmdline", "comm", "pid", "ppid", "state"};
       map<string, size_t> width;
       string strLine;
       stringstream ssJson;
@@ -48,18 +49,23 @@ int main(int argc, char *argv[])
       ptData = new Json(ssJson.str());
       for (auto &i : fields)
       {
-        width[i] = 0;
+        width[i] = i.size();
       }
-      for (auto &i : ptData->l)
-      {
-        for (auto &j : fields)
-        {
-          if (i->m.find(j) != i->m.end() && i->m[j]->v.size() > width[j])
-          {
-            width[j] = i->m[j]->v.size();
-          }
-        }
-      }
+      setWidths(ptData, width);
+      cout << setfill(' ') << setw(width["comm"]) << left << "comm";
+      cout << " " << setfill(' ') << setw(width["pid"]) << right << "pid";
+      cout << " " << setfill(' ') << setw(width["ppid"]) << right << "ppid";
+      cout << " " << setfill(' ') << setw(6) << right << "img";
+      cout << " " << setfill(' ') << setw(6) << right << "res";
+      cout << " " << setfill(' ') << setw(19) << left << "starttime";
+      cout << " cmdline" << endl;
+      cout << setfill('-') << setw(width["comm"]) << left << "-";
+      cout << " " << setfill('-') << setw(width["pid"]) << right << "-";
+      cout << " " << setfill('-') << setw(width["ppid"]) << right << "-";
+      cout << " " << setfill('-') << setw(6) << right << "-";
+      cout << " " << setfill('-') << setw(6) << right << "-";
+      cout << " " << setfill('-') << setw(19) << left << "-";
+      cout << " -------" << endl;
       display(ptData, width, "");
       delete ptData;
     }
@@ -98,30 +104,57 @@ void display(Json *ptData, map<string, size_t> width, string strIndent)
   ssStartTime >> CTime;
   time(&CTime);
   localtime_r(&CTime, &tTime);
-
-  cout << setfill(' ') << setw(width["comm"]) << data["comm"];
-  cout << " " << setfill(' ') << setw(width["pid"]) << data["pid"];
-  cout << " " << setfill(' ') << setw(width["ppid"]) << data["ppid"];
-  cout << " " << setfill(' ') << setw(width["state"]) << data["state"];
+  cout << setfill(' ') << setw(width["comm"]) << left << data["comm"];
+  cout << " " << setfill(' ') << setw(width["pid"]) << right << data["pid"];
+  cout << " " << setfill(' ') << setw(width["ppid"]) << right << data["ppid"];
   ssImage.str(data["image"]);
   ssImage >> fImage;
   fImage *= 1024;
-  cout << " " << setfill(' ') << setw(6) << manip.toShortByte(fImage, strValue, 0);
+  cout << " " << setfill(' ') << setw(6) << right << manip.toShortByte(fImage, strValue, 0);
   ssResident.str(data["resident"]);
   ssResident >> fResident;
   fResident *= 1024;
-  cout << " " << setfill(' ') << setw(6) << manip.toShortByte(fResident, strValue, 0);
-  cout << " " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
-  cout << " " << strIndent;
-  cout << data["cmdline"];
-  cout << endl;
+  cout << " " << setfill(' ') << setw(6) << right << manip.toShortByte(fResident, strValue, 0);
+  cout << " " << left << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
+  cout << " " << strIndent << left << data["cmdline"] << endl;
+  if (strIndent.size() >= 4 && strIndent.substr((strIndent.size()-4), 4) == " \\_ ")
+  {
+    strIndent.replace((strIndent.size()-4), 4, " |  ");
+  }
   if (ptChildren != NULL)
   {
+    bool bFirst = true;
     for (auto &i : ptChildren->l)
     {
-      display(i, width, strIndent + "  ");
+      if (bFirst)
+      {
+        display(i, width, strIndent + " \\_ ");
+      }
+      else
+      {
+        display(i, width, strIndent + " |  ");
+      }
     }
     delete ptChildren;
+  }
+}
+// }}}
+// {{{ setWidths()
+void setWidths(Json *ptData, map<string, size_t> &width)
+{
+  for (auto &i : width)
+  {
+    if (ptData->m.find(i.first) != ptData->m.end() && ptData->m[i.first]->v.size() > i.second)
+    {
+      i.second = ptData->m[i.first]->v.size();
+    }
+  }
+  if (ptData->m.find("children") != ptData->m.end())
+  {
+    for (auto &i : ptData->m["children"]->l)
+    {
+      setWidths(i, width);
+    }
   }
 }
 // }}}
