@@ -12,8 +12,10 @@
 // {{{ includes
 #include <cerrno>
 #include <cstring>
+#include <iomanip>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <map>
 #include <sstream>
 #include <string>
@@ -23,7 +25,7 @@ using namespace std;
 using namespace common;
 // }}}
 // {{{ prototypes
-void display(Json *ptData, string strIndent);
+void display(Json *ptData, map<string, size_t> width, string strIndent);
 // }}}
 // {{{ main()
 int main(int argc, char *argv[])
@@ -34,6 +36,8 @@ int main(int argc, char *argv[])
     inFile.open(argv[1]);
     if (inFile)
     {
+      list<string> fields = {"comm", "pid", "ppid", "state"};
+      map<string, size_t> width;
       string strLine;
       stringstream ssJson;
       Json *ptData;
@@ -42,7 +46,21 @@ int main(int argc, char *argv[])
         ssJson << strLine;
       }
       ptData = new Json(ssJson.str());
-      display(ptData, "");
+      for (auto &i : fields)
+      {
+        width[i] = 0;
+      }
+      for (auto &i : ptData->l)
+      {
+        for (auto &j : fields)
+        {
+          if (i->m.find(j) != i->m.end() && i->m[j]->v.size() > width[j])
+          {
+            width[j] = i->m[j]->v.size();
+          }
+        }
+      }
+      display(ptData, width, "");
       delete ptData;
     }
     else
@@ -60,7 +78,7 @@ int main(int argc, char *argv[])
 }
 // }}}
 // {{{ display()
-void display(Json *ptData, string strIndent)
+void display(Json *ptData, map<string, size_t> width, string strIndent)
 {
   float fImage, fResident;
   map<string, string> data;
@@ -76,36 +94,32 @@ void display(Json *ptData, string strIndent)
     ptData->m.erase("children");
   }
   ptData->flatten(data, true, false);
-  if (!data["comm"].empty() && data["comm"][0] == '(')
-  {
-    data["comm"].erase(0, 1);
-  }
-  if (!data["comm"].empty() && data["comm"][data["comm"].size()-1] == ')')
-  {
-    data["comm"].erase((data["comm"].size()-1), 1);
-  }
   ssStartTime.str(data["starttime"]);
   ssStartTime >> CTime;
   time(&CTime);
   localtime_r(&CTime, &tTime);
-  cout << strIndent;
-  cout << data["comm"] << " [pid=" << data["pid"] << "] ";
-  cout << "starttime=" << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
-  cout << ", state=" << data["state"];
+
+  cout << setfill(' ') << setw(width["comm"]) << data["comm"];
+  cout << " " << setfill(' ') << setw(width["pid"]) << data["pid"];
+  cout << " " << setfill(' ') << setw(width["ppid"]) << data["ppid"];
+  cout << " " << setfill(' ') << setw(width["state"]) << data["state"];
   ssImage.str(data["image"]);
   ssImage >> fImage;
   fImage *= 1024;
-  cout << " image=" << manip.toShortByte(fImage, strValue, 2);
+  cout << " " << setfill(' ') << setw(6) << manip.toShortByte(fImage, strValue, 0);
   ssResident.str(data["resident"]);
   ssResident >> fResident;
   fResident *= 1024;
-  cout << ", resident=" << manip.toShortByte(fResident, strValue, 2);
+  cout << " " << setfill(' ') << setw(6) << manip.toShortByte(fResident, strValue, 0);
+  cout << " " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
+  cout << " " << strIndent;
+  cout << data["cmdline"];
   cout << endl;
   if (ptChildren != NULL)
   {
     for (auto &i : ptChildren->l)
     {
-      display(i, strIndent + "  ");
+      display(i, width, strIndent + "  ");
     }
     delete ptChildren;
   }

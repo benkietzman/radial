@@ -174,12 +174,19 @@ int main(int argc, char *argv[])
                       strPid = fields[0];
                     }
                     ptProc->i("pid", fields[0], 'n');
+                    if (!fields[1].empty() && fields[1][0] == '(')
+                    {
+                      fields[1].erase(0, 1);
+                    }
+                    if (!fields[1].empty() && fields[1][fields[1].size()-1] == ')')
+                    {
+                      fields[1].erase((fields[1].size()-1), 1);
+                    }
                     ptProc->i("comm", fields[1]);
                     ssCmdLine << "/proc/" << item << "/cmdline";
                     inCmdLine.open(ssCmdLine.str());
                     if (inCmdLine)
                     {
-                      bool bFirst = true;
                       size_t unPosition;
                       stringstream ssLine;
                       getline(inCmdLine, strLine);
@@ -192,7 +199,7 @@ int main(int argc, char *argv[])
                       {
                         strLine[unPosition] = ' ';
                       }
-                      ptProc->("cmdline", strLine)
+                      ptProc->i("cmdline", strLine);
                     }
                     inCmdLine.close();
                     switch (cState)
