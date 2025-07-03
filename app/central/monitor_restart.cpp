@@ -161,10 +161,11 @@ int main(int argc, char *argv[])
                   if (fields.size() >= 24)
                   {
                     char cState = fields[2][0];
+                    ifstream inCmdLine;
                     long lJiffies = sysconf(_SC_CLK_TCK), lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
                     long long llStartTime;
                     string strState = "unknown";
-                    stringstream ssImage[2], ssResident[2], ssStartTime[2];
+                    stringstream ssCmdLine, ssImage[2], ssResident[2], ssStartTime[2];
                     time_t CStartTime;
                     unsigned long ulImage, ulResident;
                     Json *ptProc = new Json;
@@ -174,6 +175,26 @@ int main(int argc, char *argv[])
                     }
                     ptProc->i("pid", fields[0], 'n');
                     ptProc->i("comm", fields[1]);
+                    ssCmdLine << "/proc/" << item << "/cmdline";
+                    inCmdLine.open(ssCmdLine.str());
+                    if (inCmdLine)
+                    {
+                      bool bFirst = true;
+                      size_t unPosition;
+                      stringstream ssLine;
+                      getline(inCmdLine, strLine);
+                      ssCmdLine.clear();
+                      if (strLine[strLine.size()-1] == '\0')
+                      {
+                        strLine.erase((strLine.size()-1), 1);
+                      }
+                      while ((unPosition = strLine.find("\0")) != string::npos)
+                      {
+                        strLine[unPosition] = ' ';
+                      }
+                      ptProc->("cmdline", strLine)
+                    }
+                    inCmdLine.close();
                     switch (cState)
                     {
                       case 'R': strState = "running"; break;
