@@ -692,7 +692,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssTExt << ":  " << strError;
+      ssText << ":  " << strError;
     }
   }
   // }}}
