@@ -389,6 +389,8 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       mutex mutexResponses;
       size_t unActive = 0, unPosition;
       string strBuffers[2], strJson;
+      time_t CActivity, CTime;
+      time(&CActvity);
       // }}}
       while (!bExit)
       {
@@ -420,6 +422,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if (m_pUtility->sslRead(ssl, strBuffers[0], nReturn))
             {
+              time(&CActivity);
               bWantWrite = false;
               if (nReturn <= 0)
               {
@@ -457,6 +460,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           {
             if (m_pUtility->sslWrite(ssl, strBuffers[1], nReturn))
             {
+              time(&CActivity);
               bNeedWrite = bWantWrite = false;
               if (nReturn <= 0)
               {
@@ -534,9 +538,17 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           log(ssMessage.str());
         }
         // {{{ post work
+        time(&CTime);
         if (shutdown())
         {
           bExit = true;
+        }
+        else if ((CTime - CActivity) > 3600)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << strPrefix << ":  Closing due to over one hour of inactivity.";
+          log(ssMessage.str());
         }
         // }}}
       }
