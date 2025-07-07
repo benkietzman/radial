@@ -390,7 +390,7 @@ void Request::socket(string strPrefix, int fdSocket, SSL_CTX *ctx)
       size_t unActive = 0, unPosition;
       string strBuffers[2], strJson;
       time_t CActivity, CTime;
-      time(&CActvity);
+      time(&CActivity);
       // }}}
       while (!bExit)
       {
