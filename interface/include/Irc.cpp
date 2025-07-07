@@ -123,7 +123,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
+  list<string> actions = {"alert", "application (app)", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -150,6 +150,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ptRequest->i("Message", strMessage);
           }
         }
+      }
+      // }}}
+      // {{{ application || app
+      else if (strAction == "application" || strAction == "app")
+      {
       }
       // }}}
       // {{{ central
@@ -658,6 +663,36 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << ":  The alert action is used to send an alert message through the Alert framework.  Please provide the user immediately following the action.";
+    }
+  }
+  // }}}
+  // {{{ application || app
+  else if (strAction == "application" || strAction == "app")
+  {
+    Json *ptData = new Json;
+    if (storageRetrieve({"application", "connectors"}, ptData, strError))
+    {
+      ssText << ":  done";
+      for (auto &i : ptData->m)
+      {
+        ssText << endl << i.first << ":  ";
+        for (auto j = i.second->m.begin(); j != i.second->m.end(); j++)
+        {
+          if (j != i.second->m.begin())
+          {
+            ssText << ", ";
+          }
+          ssText << j->first;
+        }
+      }
+    }
+    else if (strError == "Failed to find key.")
+    {
+      ssText << ":  No applications are connected.";
+    }
+    else
+    {
+      ssTExt << ":  " << strError;
     }
   }
   // }}}
