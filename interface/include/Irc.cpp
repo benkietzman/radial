@@ -1685,6 +1685,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ date
   else if (strAction == "date")
   {
+    bool bUseTimeZone = false;
     string strDate = var("Date", ptData), strTimeZone;
     struct tm tTime;
     time_t CTime;
@@ -1720,6 +1721,18 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             strTimeZone = "PST8PDT";
           }
         }
+        if (!m_strTimeZone.empty() && !strTimeZone.empty())
+        {
+          string strStat;
+          stringstream ssStat;
+          struct stat tStat;
+          ssStat << "/usr/share/zoneinfo/" << strTimeZone;
+          strStat = ssStat.str();
+          if (stat(strStat.c_str(), &tStat) == 0 && (S_ISREG(tStat.st_mode) || S_ISLNK(tStat.st_mode)))
+          {
+            bUseTimeZone = true;
+          }
+        }
         if (strDate.find("-") != string::npos || strDate.find("/") != string::npos)
         {
           string strDay, strHour, strMinute, strMonth, strSecond, strYear;
@@ -1752,7 +1765,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           stringstream ssTime(strDate);
           ssTime >> CTime;
         }
-        if (!m_strTimeZone.empty() && !strTimeZone.empty())
+        if (bUseTimeZone)
         {
           m_mutex.lock();
           setenv("TZ", strTimeZone.c_str(), 1);
@@ -1774,7 +1787,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       time(&CTime);
     }
     localtime_r(&CTime, &tTime);
-    if (!m_strTimeZone.empty())
+    if (bUseTimeZone)
     {
       setenv("TZ", m_strTimeZone.c_str(), 1);
       tzset();
@@ -1784,7 +1797,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
     }
     ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
-    if (!strTimeZone.empty())
+    if (bUseTimeZone)
     {
       ssText << " " << strTimeZone;
     }
