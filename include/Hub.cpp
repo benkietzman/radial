@@ -120,11 +120,17 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
         else
         {
           ssMessage << "->fork(" << errno << ") error [" << strName << "]:  " << strerror(errno);
+          close(readpipe[0]);
+          close(readpipe[1]);
+          close(writepipe[0]);
+          close(writepipe[1]);
         }
       }
       else
       {
         ssMessage << "->pipe(write," << errno << ") error [" << strName << "]:  " << strerror(errno);
+        close(readpipe[0]);
+        close(readpipe[1]);
       }
     }
     else
@@ -624,6 +630,10 @@ void Hub::process(string strPrefix)
                                   {
                                     Json *ptJson = new Json(p.p);
                                     p.d = "t";
+                                    if (empty(ptJson, "Interface"))
+                                    {
+                                      ptJson->insert("Interface", p.t);
+                                    }
                                     ptJson->i("Node", (*linkIter)->strNode);
                                     ptJson->j(p.p);
                                     delete ptJson;
