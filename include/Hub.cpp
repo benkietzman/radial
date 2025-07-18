@@ -37,7 +37,7 @@ Hub::~Hub()
 }
 // }}}
 // {{{ add()
-bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted)
+bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted, list<int> sockets)
 {
   bool bResult = false;
   string strError;
@@ -73,6 +73,15 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           close(writepipe[0]);
           dup2(readpipe[1], 1);
           close(readpipe[1]);
+          for (auto &i : sockets)
+          {
+            close(i);
+          }
+          for (auto &i : m_i)
+          {
+            close(i.second->fdRead);
+            close(i.second->fdWrite);
+          }
           execve(args[0], args, m_env);
           for (size_t i = 0; i < unIndex; i++)
           {
@@ -213,7 +222,7 @@ void Hub::links()
 }
 // }}}
 // {{{ load()
-bool Hub::load(string strPrefix, string &strError)
+bool Hub::load(string strPrefix, string &strError, list<int> sockets)
 {
   bool bResult = false;
   string strInterfaces;
@@ -259,7 +268,7 @@ bool Hub::load(string strPrefix, string &strError)
             unsigned long ulMemory;
             ssMemory >> ulMemory;
             ulMemory *= 1024;
-            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false)))
+            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false), sockets))
             {
               bResult = false;
             }
@@ -292,7 +301,7 @@ bool Hub::load(string strPrefix, string &strError)
                 }
                 m_i[i.first]->ulMemory = ulMemory;
               }
-              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false)))
+              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false), sockets))
               {
                 bResult = false;
               }
@@ -451,7 +460,7 @@ void Hub::process(string strPrefix)
             ssMessage << strPrefix << "->listen():  Listening to manager socket.";
             log(ssMessage.str());
             // }}}
-            if (load(strPrefix, strError))
+            if (load(strPrefix, strError, {fdNotify, fdUnix}))
             {
               // {{{ prep work
               bool bExit = false;
@@ -471,18 +480,22 @@ void Hub::process(string strPrefix)
               {
                 // {{{ prep work
                 list<int> managerRemovals;
+                list<int> sockets;
                 list<string> removals;
                 map<int, string> s;
                 fds = new pollfd[(2+m.size()+m_i.size()*2)];
                 unIndex = 0;
+                sockets.push_back(fdNotify);
                 fds[unIndex].fd = fdNotify;
                 fds[unIndex].events = POLLIN;
                 unIndex++;
+                sockets.push_back(fdUnix);
                 fds[unIndex].fd = fdUnix;
                 fds[unIndex].events = POLLIN;
                 unIndex++;
                 for (auto &manager : m)
                 {
+                  sockets.push_back(manager.first);
                   fds[unIndex].fd = manager.first;
                   fds[unIndex].events = POLLIN;
                   if (!manager.second[1].empty())
@@ -535,7 +548,7 @@ void Hub::process(string strPrefix)
                         pEvent = (inotify_event *)strNotify.c_str();
                         if (pEvent->len > 0 && (string)pEvent->name == "interfaces.json" && (pEvent->mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)))
                         {
-                          if (!load(strPrefix, strError))
+                          if (!load(strPrefix, strError, sockets))
                           {
                             ssMessage.str("");
                             ssMessage << strPrefix << "->Hub::load() error:  " << strError;
@@ -789,7 +802,7 @@ void Hub::process(string strPrefix)
                                       {
                                         bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
                                       }
-                                      if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted))
+                                      if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted, sockets))
                                       {
                                         bResult = true;
                                         interfaces();
@@ -1070,7 +1083,7 @@ void Hub::process(string strPrefix)
                                         unsigned long ulMemory;
                                         ssMemory >> ulMemory;
                                         ulMemory *= 1024;
-                                        if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false)))
+                                        if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false), sockets))
                                         {
                                           bProcessed = true;
                                           interfaces();
@@ -1239,7 +1252,7 @@ void Hub::process(string strPrefix)
                 if ((CTime - CLoad) > 3600)
                 {
                   CLoad = CTime;
-                  if (!load(strPrefix, strError))
+                  if (!load(strPrefix, strError, sockets))
                   {
                     ssMessage.str("");
                     ssMessage << strPrefix << "->Hub::load() error:  " << strError;
@@ -1305,7 +1318,7 @@ void Hub::process(string strPrefix)
                 {
                   for (auto &i : removals)
                   {
-                    remove(strPrefix, i);
+                    remove(strPrefix, i, sockets);
                   }
                   interfaces();
                 }
@@ -1391,7 +1404,7 @@ void Hub::process(string strPrefix)
 }
 // }}}
 // {{{ remove()
-void Hub::remove(string strPrefix, const string strName)
+void Hub::remove(string strPrefix, const string strName, list<int> sockets)
 {
   stringstream ssMessage;
 
@@ -1411,7 +1424,7 @@ void Hub::remove(string strPrefix, const string strName)
     log(ssMessage.str());
     if (!shutdown() && m_i[strName]->bRespawn)
     {
-      add(strPrefix, strName, m_i[strName]->strAccessFunction, m_i[strName]->strCommand, m_i[strName]->ulMemory, true, m_i[strName]->bRestricted);
+      add(strPrefix, strName, m_i[strName]->strAccessFunction, m_i[strName]->strCommand, m_i[strName]->ulMemory, true, m_i[strName]->bRestricted, sockets);
     }
     else
     {
