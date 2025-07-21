@@ -618,17 +618,22 @@ void Hub::process(string strPrefix)
                                 }
                                 else
                                 {
-                                  list<radialLink *>::iterator linkIter = m_l.end();
-                                  for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
+                                  vector<list<radialLink *>::iterator> linkIters;
+                                  for (auto i = m_l.begin(); i != m_l.end(); i++)
                                   {
                                     if ((*i)->interfaces.find(p.t) != (*i)->interfaces.end())
                                     {
-                                      linkIter = i;
+                                      linkIters.push_back(i);
                                     }
                                   }
-                                  if (linkIter != m_l.end() && m_i.find("link") != m_i.end())
+                                  if (!linkIters.empty() && m_i.find("link") != m_i.end())
                                   {
+                                    list<radialLink *>::iterator linkIter;
+                                    unsigned int unPick = 0, unSeed = time(NULL);
                                     Json *ptJson = new Json(p.p);
+                                    srand(unSeed);
+                                    unPick = rand_r(&unSeed) % linkIters.size();
+                                    linkIter = linkIters[unPick];
                                     p.d = "t";
                                     if (empty(ptJson, "Interface"))
                                     {
