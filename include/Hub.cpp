@@ -632,7 +632,7 @@ void Hub::process(string strPrefix)
                                     p.d = "t";
                                     if (empty(ptJson, "Interface"))
                                     {
-                                      ptJson->insert("Interface", p.t);
+                                      ptJson->i("Interface", p.t);
                                     }
                                     ptJson->i("Node", (*linkIter)->strNode);
                                     ptJson->j(p.p);
