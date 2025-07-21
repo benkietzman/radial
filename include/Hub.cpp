@@ -479,8 +479,10 @@ void Hub::process(string strPrefix)
               size_t unIndex, unPosition;
               string strJson, strNotify, strValue;
               time_t CLoad, CShutdownTime[2] = {0, 0}, CThroughput, CTime;
+              unsigned int unSeed;
               time(&CLoad);
-              CThroughput = CLoad;
+              CThroughput = unSeed = CLoad;
+              srand(unSeed);
               // }}}
               while (!bExit)
               {
@@ -629,9 +631,8 @@ void Hub::process(string strPrefix)
                                   if (!linkIters.empty() && m_i.find("link") != m_i.end())
                                   {
                                     list<radialLink *>::iterator linkIter;
-                                    unsigned int unPick = 0, unSeed = time(NULL);
+                                    unsigned int unPick = 0;
                                     Json *ptJson = new Json(p.p);
-                                    srand(unSeed);
                                     unPick = rand_r(&unSeed) % linkIters.size();
                                     linkIter = linkIters[unPick];
                                     p.d = "t";
