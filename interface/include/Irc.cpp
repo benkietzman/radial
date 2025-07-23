@@ -715,6 +715,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssText << ":  Failed to receive the Response.";
           }
         }
+        else if (strError == "Please provide a valid application within Function.")
+        {
+          ssText << ":  Please provide a valid Application.";
+        }
         else
         {
           ssText << ":  " << strError;
@@ -723,7 +727,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  Please provide a valid application.";
+        ssText << ":  Please provide a valid Application.";
       }
     }
     else
