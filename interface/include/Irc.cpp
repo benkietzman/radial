@@ -155,6 +155,19 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ application || app
       else if (strAction == "application" || strAction == "app")
       {
+        string strApplication;
+        ssData >> strApplication;
+        if (!strApplication.empty())
+        {
+          string strMessage;
+          ptRequest->i("Application", strApplication);
+          getline(ssData, strMessage);
+          m_manip.trim(strMessage, strMessage);
+          if (!strMessage.empty())
+          {
+            ptRequest->i("Message", strMessage);
+          }
+        }
       }
       // }}}
       // {{{ central
@@ -669,34 +682,82 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   // {{{ application || app
   else if (strAction == "application" || strAction == "app")
   {
-    Json *ptData = new Json;
-    if (storageRetrieve({"application", "connectors"}, ptData, strError))
+    string strApplication = var("Application", ptData);
+    if (!strApplication.empty())
     {
-      ssText << ":  done";
-      for (auto &i : ptData->m)
+      string strMessage = var("Message", ptData);
+      ssText << " " << char(3) << "00,14 " << strApplication << " " << char(3);
+      if (strApplication != "connect" && strApplication != "status")
       {
-        ssText << endl << i.first << ":  ";
-        for (auto j = i.second->m.begin(); j != i.second->m.end(); j++)
+        Json *ptJson = new Json;
+        ptJson->i("Function", strApplication);
+        ptJson->m["Request"] = new Json;
+        ptJson->m["Request"]->i("Function", "irc");
+        if (!strMessage.empty())
         {
-          if (j != i.second->m.begin())
+          ptJson->m["Request"]->i("Message", strMessage);
+        }
+        if (hub("application", ptJson, strError))
+        {
+          if (exist(ptJson, "Response"))
           {
-            ssText << ", ";
+            if (!empty(ptJson->m["Response"], "Message"))
+            {
+              ssText << ":  " << ptJson->m["Response"]->m["Message"]->v;
+            }
+            else
+            {
+              ssText << ":  Failed to receive the Message within the Response.";
+            }
           }
-          ssText << j->first;
-          if (i.second->m.size() > 1)
+          else
           {
-            ssText << " (" << i.second->m.size() << ")";
+            ssText << ":  Failed to receive the Response.";
           }
         }
+        else
+        {
+          ssText << ":  " << strError;
+        }
+        delete ptJson;
       }
-    }
-    else if (strError == "Failed to find key.")
-    {
-      ssText << ":  No applications are connected.";
+      else
+      {
+        ssText << ":  Please provide a valid application.";
+      }
     }
     else
     {
-      ssText << ":  " << strError;
+      Json *ptJson = new Json;
+      if (storageRetrieve({"application", "connectors"}, ptJson, strError))
+      {
+        ssText << ":  done";
+        for (auto &i : ptJson->m)
+        {
+          ssText << endl << i.first << ":  ";
+          for (auto j = i.second->m.begin(); j != i.second->m.end(); j++)
+          {
+            if (j != i.second->m.begin())
+            {
+              ssText << ", ";
+            }
+            ssText << j->first;
+            if (i.second->m.size() > 1)
+            {
+              ssText << " (" << i.second->m.size() << ")";
+            }
+          }
+        }
+      }
+      else if (strError == "Failed to find key.")
+      {
+        ssText << ":  No applications are connected.";
+      }
+      else
+      {
+        ssText << ":  " << strError;
+      }
+      delete ptJson;
     }
   }
   // }}}
