@@ -18,9 +18,6 @@ namespace radial
 // {{{ Junction
 class Junction : public Interface
 {
-  protected:
-  sem_t m_sem;
-
   public:
   Junction(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
   ~Junction();
