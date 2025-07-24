@@ -693,6 +693,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ptJson->i("Function", strApplication);
         ptJson->m["Request"] = new Json;
         ptJson->m["Request"]->i("Function", "irc");
+        ptJson->m["Request"]->i("Target", strTarget);
+        ptJson->m["Request"]->i("UserID", strUserID);
+        ptJson->m["Request"]->i("Ident", strIdent);
+        ptJson->m["Request"]->i("FirstName", strFirstName);
+        ptJson->m["Request"]->i("LastName", strLastName);
+        ptJson->m["Request"]->i("Admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+        ptJson->m["Request"]->m["Auth"] = new Json;
+        for (auto &i : auth)
+        {
+          ptJson->m["Request"]->m["Auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+        }
         if (!strMessage.empty())
         {
           ptJson->m["Request"]->i("Message", strMessage);
