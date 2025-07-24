@@ -3976,7 +3976,7 @@ void Irc::load(string strPrefix, const bool bSilent)
         }
         else
         {
-          for (auto &alias : cred.second->m["Aliases"]->l)
+          for (auto &alias : cred.second->m["Alias"]->l)
           {
             if (!alias->v.empty())
             {
