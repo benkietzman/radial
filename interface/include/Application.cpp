@@ -17,6 +17,8 @@ namespace radial
 Application::Application(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "application", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
+  string strError;
+  Json *ptData = new Json;
 
   m_unUniqueID = 0;
   m_pUtility->setReadSize(4096);
@@ -27,6 +29,17 @@ Application::Application(string strPrefix, int argc, char **argv, void (*pCallba
   // }}}
   m_pUtility->sslInit();
   load(strPrefix, true);
+  if (storageRetrieve({"application", "connectors"}, ptData, strError))
+  {
+    for (auto &i : ptData->m)
+    {
+      if (exist(i.second, m_strNode))
+      {
+        storageRemove({"application", "connectors", i.first, m_strNode}, strError);
+      }
+    }
+  }
+  delete ptData;
   m_pThreadApplicationAccept = new thread(&Application::applicationAccept, this, strPrefix);
   pthread_setname_np(m_pThreadApplicationAccept->native_handle(), "applicationAccept");
   watches[m_strData] = {".cred"};
@@ -960,6 +973,19 @@ void Application::schedule(string strPrefix)
       {
         list<size_t> removals;
         Json *ptData = new Json;
+        if (storageRetrieve({"application", "connectors"}, ptData, strError))
+        {
+          for (auto &i : ptData->m)
+          {
+            if (i.second->m.empty())
+            {
+              storageRemove({"application", "connectors", i.first}, strError);
+            }
+          }
+          if (storageRetrieve({"application", "connectors"}, ptData, strError) && ptData->m.empty() && storageRemove({"application", "connectors"}, strError) && storageRetrieve({"application"}, ptData, strError) && ptData->m.empty() && storageRemove({"application"}, strError))
+          {
+          }
+        }
         if (storageRetrieve({"application", "tokens"}, ptData, strError))
         {
           list<string> removals;
