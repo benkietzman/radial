@@ -24,6 +24,7 @@ class Irc : public Interface
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string);
   map<string, bool> m_channels;
   list<string> m_messages;
+  map<string, string> m_aliases;
   map<string, list<string> > m_feedbackClients;
   map<string, list<string> > m_sshClients;
   map<string, list<string> > m_terminalClients;
@@ -48,6 +49,7 @@ class Irc : public Interface
   bool isValid(const string strUserID, string strApplication, const bool bAdmin, map<string, bool> auth);
   void join(const string strChannel);
   void listChannels();
+  void load(string strPrefix, const bool bSilent = false);
   void lock();
   bool math(vector<string> e, long double &r, string &strError);
   bool message(string &strMessage);

@@ -82,7 +82,9 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     inTimeZone >> m_strTimeZone;
   }
   inTimeZone.close();
+  load(strPrefix, true);
   monitorChannels(strPrefix, true);
+  watches[m_strData] = {".cred"};
   watches[m_strData + "/irc"] = {"monitor.channels"};
   m_pThreadInotify = new thread(&Irc::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -690,6 +692,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (strApplication != "connect" && strApplication != "status")
       {
         Json *ptJson = new Json;
+        m_mutex.lock();
+        if (m_aliases.find(strApplication) != m_aliases.end())
+        {
+          strApplication = m_aliases[strApplication];
+        }
+        m_mutex.unlock();
         ptJson->i("Function", strApplication);
         ptJson->m["Request"] = new Json;
         ptJson->m["Request"]->i("Function", "irc");
@@ -3556,7 +3564,11 @@ void Irc::callbackInotify(string strPrefix, const string strPath, const string s
   stringstream ssMessage;
 
   strPrefix += "->Irc::callbackInotify()";
-  if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
+  if (strPath == m_strData && strFile == ".cred")
+  {
+    load(strPrefix);
+  }
+  else if (strPath == (m_strData + "/irc") && strFile == "monitor.channels")
   {
     monitorChannels(strPrefix);
   }
@@ -3941,6 +3953,49 @@ void Irc::listChannels()
 
   ssMessage << ":" << m_strNick << " LIST\r\n";
   push(ssMessage.str());
+}
+// }}}
+// {{{ load()
+void Irc::load(string strPrefix, const bool bSilent)
+{
+  map<string, string> aliases;
+  string strError;
+  stringstream ssMessage;
+  Json *ptCred = new Json;
+
+  strPrefix += "->Irc::load()";
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
+  {
+    for (auto &cred : ptCred->m)
+    {
+      if (!empty(cred.second, "Application") && exist(cred.second, "Alias"))
+      {
+        if (!empty(cred.second, "Alias"))
+        {
+          aliases[cred.second->m["Alias"]->v] = cred.second->m["Application"]->v;
+        }
+        else
+        {
+          for (auto &alias : cred.second->m["Aliases"]->l)
+          {
+            if (!alias->v.empty())
+            {
+              aliases[alias->v] = cred.second->m["Application"]->v;
+            }
+          }
+        }
+      }
+    }
+    m_mutex.lock();
+    m_aliases = aliases;
+    m_mutex.unlock();
+  }
+  else if (!bSilent)
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->Warden::vaultRetrieve() error [radial]:  " << strError;
+    log(ssMessage.str());
+  }
 }
 // }}}
 // {{{ lock()
