@@ -18,7 +18,6 @@ Application::Application(string strPrefix, int argc, char **argv, void (*pCallba
 {
   map<string, list<string> > watches;
   string strError;
-  Json *ptData = new Json;
 
   m_unUniqueID = 0;
   m_pUtility->setReadSize(4096);
@@ -29,17 +28,6 @@ Application::Application(string strPrefix, int argc, char **argv, void (*pCallba
   // }}}
   m_pUtility->sslInit();
   load(strPrefix, true);
-  if (storageRetrieve({"application", "connectors"}, ptData, strError))
-  {
-    for (auto &i : ptData->m)
-    {
-      if (exist(i.second, m_strNode))
-      {
-        storageRemove({"application", "connectors", i.first, m_strNode}, strError);
-      }
-    }
-  }
-  delete ptData;
   m_pThreadApplicationAccept = new thread(&Application::applicationAccept, this, strPrefix);
   pthread_setname_np(m_pThreadApplicationAccept->native_handle(), "applicationAccept");
   watches[m_strData] = {".cred"};
@@ -71,10 +59,42 @@ void Application::applicationAccept(string strPrefix)
   SSL_CTX *ctx = NULL;
   string strError;
   stringstream ssMessage;
+  Json *ptData = new Json;
 
   threadIncrement();
   strPrefix += "->Application::applicationAccept()";
   SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
+  if (storageRetrieve({"application", "connectors"}, ptData, strError))
+  {
+    for (auto &i : ptData->m)
+    {
+      if (exist(i.second, m_strNode))
+      {
+        if (storageRemove({"application", "connectors", i.first, m_strNode}, strError))
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::storageRemove() [application,connectors," << i.first << "," << m_strNode << "]:  Removed abandoned connector.";
+          log(ssMessage.str());
+          ssMessage.str("");
+          ssMessage << char(3) << "13,06 " << i.first << " " << char(3) << " Removed abandoned connector.";
+          chat("#application", ssMessage.str());
+        }
+        else
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->Interface::storageRemove() error [application,connectors," << i.first << "," << m_strNode << "]:  " << strError;
+          log(ssMessage.str());
+        }
+      }
+    }
+  }
+  else if (strError != "Failed to find key.")
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->Interface::storageRetrieve() error [application,connectors]:  " << strError;
+    log(ssMessage.str());
+  }
+  delete ptData;
   // }}}
   if ((ctx = m_pUtility->sslInitServer(m_strData + "/server.crt", m_strData + "/server.key", strError)) != NULL)
   {
