@@ -73,9 +73,6 @@ void Application::applicationAccept(string strPrefix)
         if (storageRemove({"application", "connectors", i.first, m_strNode}, strError))
         {
           ssMessage.str("");
-          ssMessage << strPrefix << "->Interface::storageRemove() [application,connectors," << i.first << "," << m_strNode << "]:  Removed abandoned connector.";
-          log(ssMessage.str());
-          ssMessage.str("");
           ssMessage << char(3) << "13,06 " << i.first << " " << char(3) << " Removed abandoned connector.";
           chat("#application", ssMessage.str());
         }
