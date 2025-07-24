@@ -1501,6 +1501,7 @@ void Hub::target(const string t, Json *j, const string s)
 
   if (!s.empty())
   {
+    p.o = s;
     p.s = s;
   }
   p.t = t;

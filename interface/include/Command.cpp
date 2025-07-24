@@ -561,7 +561,7 @@ void Command::process(string strPrefix)
       Json *ptJson = new Json;
       radialPacket p;
       CThroughput = CTime;
-      p.s = m_strName;
+      p.o = p.s = m_strName;
       ssThroughput << unThroughput;
       unThroughput = 0;
       ptJson->i("Function", "throughput");

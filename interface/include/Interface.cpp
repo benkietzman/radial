@@ -2516,6 +2516,10 @@ void Interface::hub(radialPacket &p, const bool bWait)
   {
     int fdUnique[2] = {-1, -1}, nReturn;
     stringstream ssMessage;
+    if (p.o.empty())
+    {
+      p.o = m_strName;
+    }
     p.s = m_strName;
     if ((nReturn = pipe(fdUnique)) == 0)
     {

@@ -1091,6 +1091,10 @@ void Link::process(string strPrefix)
                             delete ptJson->m["_d"];
                             ptJson->m.erase("_d");
                           }
+                          if (!empty(ptJson, "_o"))
+                          {
+                            p.o = ptJson->m["_o"]->v;
+                          }
                           p.s = m_strName;
                           if (!empty(ptJson, "_t"))
                           {
@@ -1133,6 +1137,12 @@ void Link::process(string strPrefix)
                             delete ptJson->m["_d"];
                             ptJson->m.erase("_d");
                           }
+                          if (!empty(ptJson, "_o"))
+                          {
+                            p.o = ptJson->m["_o"]->v;
+                            delete ptJson->m["_o"];
+                            ptJson->m.erase("_o");
+                          }
                           if (!empty(ptJson, "_s"))
                           {
                             p.s = ptJson->m["_s"]->v;
@@ -1168,7 +1178,7 @@ void Link::process(string strPrefix)
                               stringstream ssUnique;
                               radialPacket p;
                               keyRemovals(ptJson);
-                              p.s = m_strName;
+                              p.o = p.s = m_strName;
                               p.t = ptJson->m["Interface"]->v;
                               ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                               p.u = ssUnique.str();
@@ -1414,7 +1424,7 @@ void Link::process(string strPrefix)
             Json *ptJson = new Json;
             radialPacket p;
             CThroughput = CTime;
-            p.s = m_strName;
+            p.o = p.s = m_strName;
             ssThroughput << unThroughput;
             unThroughput = 0;
             ptJson->i("Function", "throughput");
