@@ -539,7 +539,7 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
         d.p->m.erase("o");
       }
     }
-    else if (!exist(d.p->m["i"], "Function") || d.p->m["i"]->m["Function"]->v != "irc" || d.o == "irc")
+    else if (!exist(d.p->m["i"], "Function") || d.p->m["i"]->m["Function"]->v != "irc" || p.o == "irc")
     {
       if (request(d, strError))
       {
