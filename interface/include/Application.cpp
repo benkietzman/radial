@@ -525,11 +525,6 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
-if (exist(ptJson, "Request"))
-{
-  ptJson->m["Request"]->i("_ORIGIN", p.o);
-  ptJson->m["Request"]->i("_SOURCE", p.s);
-}
     userInit(ptJson, d);
     if (m_functions.find(strFunction) != m_functions.end())
     {
@@ -544,15 +539,22 @@ if (exist(ptJson, "Request"))
         d.p->m.erase("o");
       }
     }
-    else if (request(d, strError))
+    else if (!exist(d.p->m["i"], "Function") || d.p->m["i"]->m["Function"]->v != "irc" || d.o == "irc")
     {
-      bResult = true;
-      if (exist(ptJson, "Response"))
+      if (request(d, strError))
       {
-        delete ptJson->m["Response"];
+        bResult = true;
+        if (exist(ptJson, "Response"))
+        {
+          delete ptJson->m["Response"];
+        }
+        ptJson->m["Response"] = d.p->m["o"];
+        d.p->m.erase("o");
       }
-      ptJson->m["Response"] = d.p->m["o"];
-      d.p->m.erase("o");
+    }
+    else
+    {
+      strError = "You are not authorized to perform this Function.";
     }
     userDeinit(d);
   }
