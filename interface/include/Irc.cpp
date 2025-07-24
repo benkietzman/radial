@@ -2896,23 +2896,20 @@ void Irc::analyzer(string strPrefix, const string strTarget, const string strUse
       {
         bAdmin = true;
       }
-      else
+      ssQuery.str("");
+      ssQuery << "select a.name, b.admin from application a, application_contact b where a.id = b.application_id and b.contact_id = " << getPersonRow["id"] << " and b.locked = 0";
+      auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
+      if (getApplicationContact != NULL)
       {
-        ssQuery.str("");
-        ssQuery << "select a.name, b.admin from application a, application_contact b where a.id = b.application_id and b.contact_id = " << getPersonRow["id"] << " and b.locked = 0";
-        auto getApplicationContact = dbquery("central_r", ssQuery.str(), strError);
-        if (getApplicationContact != NULL)
+        if (!getApplicationContact->empty())
         {
-          if (!getApplicationContact->empty())
+          for (auto &getApplicationContactRow : *getApplicationContact)
           {
-            for (auto &getApplicationContactRow : *getApplicationContact)
-            {
-              auth[getApplicationContactRow["name"]] = ((getApplicationContactRow["admin"] == "1")?true:false);
-            }
+            auth[getApplicationContactRow["name"]] = ((getApplicationContactRow["admin"] == "1")?true:false);
           }
         }
-        m_pCentral->free(getApplicationContact);
       }
+      m_pCentral->free(getApplicationContact);
     }
   }
   m_pCentral->free(getPerson);
