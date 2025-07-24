@@ -722,7 +722,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             if (!empty(ptJson->m["Response"], "Message"))
             {
-              ssText << ":  " << ptJson->m["Response"]->m["Message"]->v;
+              ssText << ptJson->m["Response"]->m["Message"]->v;
             }
             else
             {
