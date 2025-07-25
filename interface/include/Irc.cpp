@@ -3970,6 +3970,7 @@ void Irc::load(string strPrefix, const bool bSilent)
     ssMessage << strPrefix << "->Warden::vaultRetrieve() error [radial]:  " << strError;
     log(ssMessage.str());
   }
+  delete ptCred;
 }
 // }}}
 // {{{ lock()
