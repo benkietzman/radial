@@ -276,9 +276,6 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
     else
     {
       bool bRestricted = false;
-      string strTarget = ptJson->m["Interface"]->v, strTargetAuth = "auth";
-      stringstream ssUnique;
-      radialPacket p;
       m_mutexShare.lock();
       if (m_i.find(ptJson->m["Interface"]->v) != m_i.end())
       {
@@ -294,44 +291,23 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
             linkIter = j;
           }
         }
-        if (linkIter != m_l.end() && m_i.find("link") != m_i.end())
+        if (linkIter != m_l.end())
         {
           bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
-          ptJson->i("Node", (*linkIter)->strNode);
-          strTarget = strTargetAuth = "link";
         }
       }
       m_mutexShare.unlock();
-      p.t = strTarget;
-      ptJson->j(p.p);
-      if (!bRestricted)
+      if (!bRestricted || auth(ptJson, strError))
       {
-        hub(p);
+        hub(ptJson->m["Interface"]->v, ptJson);
       }
       else
       {
-        Json *ptAuth = new Json(ptJson);
-        ptAuth->i("Interface", "auth");
-        if (exist(ptAuth, "Request"))
-        {
-          delete ptAuth->m["Request"];
-        }
-        ptAuth->m["Request"] = new Json;
-        ptAuth->m["Request"]->i("Interface", ptJson->m["Interface"]->v);
-        if (hub(strTargetAuth, ptAuth, strError))
-        {
-          hub(p);
-        }
-        else
-        {
-          ptJson->i("Status", "error");
-          ptJson->i("Error", strError);
-          ptJson->j(p.p);
-        }
-        delete ptAuth;
+        ptJson->i("Status", "error");
+        ptJson->i("Error", strError);
       }
       mutexResponses.lock();
-      responses.push_back(p.p);
+      responses.push_back(ptJson->j(strJson));
       if (!bResponse && fdResponse != -1)
       {
         bResponse = true;
