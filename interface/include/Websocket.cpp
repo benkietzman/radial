@@ -371,8 +371,9 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             linkIter = i;
           }
         }
-        if (linkIter != m_l.end() && m_i.find("link") != m_i.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
+        if (linkIter != m_l.end() && m_i.find("link") != m_i.end())
         {
+          bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
           ptJson->i("Node", (*linkIter)->strNode);
           strTarget = "link";
         }
