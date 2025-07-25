@@ -3452,53 +3452,27 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
         {
           if (!empty(ptJson, "Target"))
           {
-            size_t unCount = 0;
-            while (unCount++ < 40 && !isMasterSettled())
+            size_t unPosition;
+            string strMessage = ptJson->m["Message"]->v;
+            stringstream ssEtx;
+            ssEtx << char(3);
+            while ((unPosition = strMessage.find("<ETX>")) != string::npos)
+            {
+              strMessage.replace(unPosition, 5, ssEtx.str());
+            }
+            unCount = 0;
+            while (unCount++ < 40 && !enabled())
             {
               msleep(250);
             }
-            if (isMasterSettled())
+            if (enabled())
             {
-              if (isMaster())
-              {
-                size_t unPosition;
-                string strMessage = ptJson->m["Message"]->v;
-                stringstream ssEtx;
-                ssEtx << char(3);
-                while ((unPosition = strMessage.find("<ETX>")) != string::npos)
-                {
-                  strMessage.replace(unPosition, 5, ssEtx.str());
-                }
-                unCount = 0;
-                while (unCount++ < 40 && !enabled())
-                {
-                  msleep(250);
-                }
-                if (enabled())
-                {
-                  bResult = true;
-                  chat(ptJson->m["Target"]->v, strMessage, ((!empty(ptJson, "Source"))?ptJson->m["Source"]->v:""));
-                }
-                else
-                {
-                  strError = "IRC disabled.";
-                }
-              }
-              else
-              {
-                Json *ptLink = new Json(ptJson);
-                ptLink->i("Interface", "irc");
-                ptLink->i("Node", master());
-                if (hub("link", ptLink, strError))
-                {
-                  bResult = true;
-                }
-                delete ptLink;
-              }
+              bResult = true;
+              chat(ptJson->m["Target"]->v, strMessage, ((!empty(ptJson, "Source"))?ptJson->m["Source"]->v:""));
             }
             else
             {
-              strError = "Master not known.";
+              strError = "IRC disabled.";
             }
           }
           else
