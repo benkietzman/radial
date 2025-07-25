@@ -4191,19 +4191,6 @@ bool Irc::message(string &strMessage)
   return bResult;
 }
 // }}}
-// {{{ monitor()
-Json *Irc::monitor()
-{
-  Json *ptMonitor = NULL;
-
-  if (m_ptMonitor != NULL)
-  {
-    ptMonitor = new Json(m_ptMonitor);
-  }
-
-  return ptMonitor;
-}
-// }}}
 // {{{ monitorChannels()
 void Irc::monitorChannels(string strPrefix, const bool bSilent)
 {
