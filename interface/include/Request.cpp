@@ -294,8 +294,9 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
             linkIter = j;
           }
         }
-        if (linkIter != m_l.end() && m_i.find("link") != m_i.end() && (bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted))
+        if (linkIter != m_l.end() && m_i.find("link") != m_i.end())
         {
+          bRestricted = (*linkIter)->interfaces[ptJson->m["Interface"]->v]->bRestricted;
           ptJson->i("Node", (*linkIter)->strNode);
           strTarget = strTargetAuth = "link";
         }
