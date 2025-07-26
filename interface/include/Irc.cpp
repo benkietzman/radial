@@ -23,6 +23,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
 
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
+  m_ptMonitor = NULL;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -95,6 +96,10 @@ Irc::~Irc()
 {
   m_pThreadInotify->join();
   delete m_pThreadInotify;
+  if (m_ptMonitor != NULL)
+  {
+    delete m_ptMonitor;
+  }
 }
 // }}}
 // {{{ analyze()
