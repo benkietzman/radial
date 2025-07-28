@@ -1454,6 +1454,10 @@ void Link::process(string strPrefix)
           {
             close(link->fdSocket);
           }
+          for (auto &interface : link->interfaces)
+          {
+            delete interface.second;
+          }
           delete link;
         }
         links.clear();
@@ -1467,6 +1471,10 @@ void Link::process(string strPrefix)
           if (link->fdSocket != -1)
           {
             close(link->fdSocket);
+          }
+          for (auto &interface : link->interfaces)
+          {
+            delete interface.second;
           }
           delete link;
         }
