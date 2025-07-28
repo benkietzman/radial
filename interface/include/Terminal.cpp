@@ -157,7 +157,7 @@ bool Terminal::connect(radialUser &d, string &e)
     {
       bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
-      t->unDisconnecting = false;
+      t->bDisconnecting = false;
       t->unActive = 0;
       if (!empty(i, "Cols"))
       {
@@ -274,7 +274,7 @@ bool Terminal::disconnect(radialUser &d, string &e)
       while (!bDisconnected && unAttempts++ < 600)
       {
         m_mutex.lock();
-        if (m_sessions.find(i->m["Session"]->v) == m_session.end())
+        if (m_sessions.find(i->m["Session"]->v) == m_sessions.end())
         {
           bDisconnected = true;
         }
