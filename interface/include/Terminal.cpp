@@ -157,6 +157,7 @@ bool Terminal::connect(radialUser &d, string &e)
     {
       bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
+      t->unDisconnecting = false;
       t->unActive = 0;
       if (!empty(i, "Cols"))
       {
@@ -266,23 +267,61 @@ bool Terminal::disconnect(radialUser &d, string &e)
 
   if ((t = pre(d, w, c, k, e)) != NULL)
   {
-    bool bRemoved = false;
-    b = true;
-    t->t.disconnect();
-    while (!bRemoved)
+    if (t->bDisconnecting)
     {
-      m_mutex.lock();
-      if (t->unActive == 1)
+      bool bDisconnected = false;
+      size_t unAttempts = 0;
+      while (!bDisconnected && unAttempts++ < 600)
       {
-        bRemoved = true;
-        delete t;
-        t = NULL;
-        m_sessions.erase(i->m["Session"]->v);
+        m_mutex.lock();
+        if (m_sessions.find(i->m["Session"]->v) == m_session.end())
+        {
+          bDisconnected = true;
+        }
+        m_mutex.unlock();
+        if (!bDisconnected)
+        {
+          msleep(100);
+        }
       }
-      m_mutex.unlock();
-      if (!bRemoved)
+      if (bDisconnected)
       {
-        msleep(100);
+        b = true;
+      }
+      else
+      {
+        e = "Timed out attempting to disconnect.";
+      }
+    }
+    else
+    {
+      bool bRemoved = false;
+      size_t unAttempts = 0;
+      t->bDisconnecting = true;
+      t->t.disconnect();
+      while (!bRemoved && unAttempts++ < 600)
+      {
+        m_mutex.lock();
+        if (t->unActive == 1)
+        {
+          bRemoved = true;
+          delete t;
+          t = NULL;
+          m_sessions.erase(i->m["Session"]->v);
+        }
+        m_mutex.unlock();
+        if (!bRemoved)
+        {
+          msleep(100);
+        }
+      }
+      if (bRemoved)
+      {
+        b = true;
+      }
+      else
+      {
+        e = "Timed out attempting to disconnect.";
       }
     }
     delete o->m["Session"];

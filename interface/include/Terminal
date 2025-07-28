@@ -19,6 +19,7 @@ namespace radial
 // {{{ radialTerminal
 struct radialTerminal
 {
+  bool bDisconnecting;
   int fdSocket;
   size_t unActive;
   time_t CTime;
