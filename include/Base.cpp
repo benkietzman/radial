@@ -174,11 +174,15 @@ Base::~Base()
 
   for (auto &i : m_i)
   {
-    delete (i.second);
+    delete i.second;
   }
   m_i.clear();
   for (auto &i : m_l)
   {
+    for (auto &j : i->interfaces)
+    {
+      delete j.second;
+    }
     delete i;
   }
   m_l.clear();
