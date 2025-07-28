@@ -323,13 +323,17 @@ bool Terminal::disconnect(radialUser &d, string &e)
       {
         b = true;
       }
-      else if (shutdown())
-      {
-        e = "Interface is shutting down.";
-      }
       else
       {
-        e = "Timed out attempting to disconnect.";
+        t->bDisconnecting = false;
+        if (shutdown())
+        {
+          e = "Interface is shutting down.";
+        }
+        else
+        {
+          e = "Timed out attempting to disconnect.";
+        }
       }
     }
     delete o->m["Session"];
