@@ -1310,6 +1310,10 @@ void Link::process(string strPrefix)
                 {
                   close((*removeIter)->fdSocket);
                 }
+                for (auto &interface : (*removeIter)->interfaces)
+                {
+                  delete interface.second;
+                }
                 delete (*removeIter);
                 links.erase(removeIter);
               }
@@ -1334,6 +1338,10 @@ void Link::process(string strPrefix)
                 if ((*removeIter)->fdSocket != -1)
                 {
                   close((*removeIter)->fdSocket);
+                }
+                for (auto &interface : (*removeIter)->interfaces)
+                {
+                  delete interface.second;
                 }
                 delete (*removeIter);
                 m_l.erase(removeIter);
