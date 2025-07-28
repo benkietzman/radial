@@ -271,7 +271,7 @@ bool Terminal::disconnect(radialUser &d, string &e)
     {
       bool bDisconnected = false;
       size_t unAttempts = 0;
-      while (!bDisconnected && unAttempts++ < 600)
+      while (!shutdown() && !bDisconnected && unAttempts++ < 600)
       {
         m_mutex.lock();
         if (m_sessions.find(i->m["Session"]->v) == m_sessions.end())
@@ -288,6 +288,10 @@ bool Terminal::disconnect(radialUser &d, string &e)
       {
         b = true;
       }
+      else if (shutdown())
+      {
+        e = "Interface is shutting down.";
+      }
       else
       {
         e = "Timed out attempting to disconnect.";
@@ -299,7 +303,7 @@ bool Terminal::disconnect(radialUser &d, string &e)
       size_t unAttempts = 0;
       t->bDisconnecting = true;
       t->t.disconnect();
-      while (!bRemoved && unAttempts++ < 600)
+      while (!shutdown() && !bRemoved && unAttempts++ < 600)
       {
         m_mutex.lock();
         if (t->unActive == 1)
@@ -318,6 +322,10 @@ bool Terminal::disconnect(radialUser &d, string &e)
       if (bRemoved)
       {
         b = true;
+      }
+      else if (shutdown())
+      {
+        e = "Interface is shutting down.";
       }
       else
       {
