@@ -42,6 +42,8 @@ Application::~Application()
 {
   m_pThreadSchedule->join();
   delete m_pThreadSchedule;
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
   m_pThreadApplicationAccept->join();
   delete m_pThreadApplicationAccept;
   m_pUtility->sslDeinit();
