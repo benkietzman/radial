@@ -16,6 +16,7 @@ namespace radial
 // {{{ Db()
 Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "db", argc, argv, pCallback)
 {
+  m_pCallbackAddon = NULL;
   m_functions["dbCentralAccountTypes"] = &Db::dbCentralAccountTypes;
   m_functions["dbCentralApplicationAccountAdd"] = &Db::dbCentralApplicationAccountAdd;
   m_functions["dbCentralApplicationAccountRemove"] = &Db::dbCentralApplicationAccountRemove;
