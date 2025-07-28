@@ -241,6 +241,7 @@ void Command::process(string strPrefix)
                     long lArg;
                     close(writepipe[0]);
                     close(readpipe[1]);
+                    ptCommand->execPid = execPid;
                     ptCommand->bJson = false;
                     ptCommand->bProcessed = false;
                     ptCommand->CTimeout = 1800;
