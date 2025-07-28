@@ -327,7 +327,7 @@ void Mysql::disconnect(list<radial_mysql *>::iterator &iter, const bool bForce)
     list<list<radial_mysql *>::iterator> removeConn;
     for (auto j = i->second.begin(); j != i->second.end(); j++)
     {
-      if ((*j)->unThreads == 0 && (CTime - (*j)->CTime) > 60)
+      if ((*j)->bClose || ((*j)->unThreads == 0 && (CTime - (*j)->CTime) > 60))
       {
         removeConn.push_back(j);
       }
