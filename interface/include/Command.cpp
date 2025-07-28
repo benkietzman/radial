@@ -169,39 +169,40 @@ void Command::process(string strPrefix)
             }
             else if (!empty(ptJson, "Command"))
             {
-              char *args[100], *pszArgument;
-              int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
-              pid_t execPid;
-              size_t unIndex = 0;
-              string strArgument;
-              stringstream ssCommand;
+              int readpipe[2] = {-1, -1};
               unThroughput++;
-              ssCommand.str(ptJson->m["Command"]->v);
-              while (ssCommand >> strArgument)
-              {
-                pszArgument = new char[strArgument.size() + 1];
-                strcpy(pszArgument, strArgument.c_str());
-                args[unIndex++] = pszArgument;
-              }
-              if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Arguments"))
-              {
-                for (auto &i : ptJson->m["Request"]->m["Arguments"]->l)
-                {
-                  if (!i->v.empty())
-                  {
-                    pszArgument = new char[i->v.size() + 1];
-                    strcpy(pszArgument, i->v.c_str());
-                    args[unIndex++] = pszArgument;
-                  }
-                }
-              }
-              args[unIndex] = NULL;
               if (pipe(readpipe) == 0)
               {
+                int writepipe[2] = {-1, -1};
                 if (pipe(writepipe) == 0)
                 {
+                  pid_t execPid;
                   if ((execPid = fork()) == 0)
                   {
+                    char *args[100], *pszArgument;
+                    size_t unIndex = 0;
+                    string strArgument;
+                    stringstream ssCommand;
+                    ssCommand.str(ptJson->m["Command"]->v);
+                    while (ssCommand >> strArgument)
+                    {
+                      pszArgument = new char[strArgument.size() + 1];
+                      strcpy(pszArgument, strArgument.c_str());
+                      args[unIndex++] = pszArgument;
+                    }
+                    if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Arguments"))
+                    {
+                      for (auto &i : ptJson->m["Request"]->m["Arguments"]->l)
+                      {
+                        if (!i->v.empty())
+                        {
+                          pszArgument = new char[i->v.size() + 1];
+                          strcpy(pszArgument, i->v.c_str());
+                          args[unIndex++] = pszArgument;
+                        }
+                      }
+                    }
+                    args[unIndex] = NULL;
                     close(readpipe[0]);
                     close(writepipe[1]);
                     dup2(writepipe[0], 0);
@@ -209,6 +210,10 @@ void Command::process(string strPrefix)
                     dup2(readpipe[1], 1);
                     close(readpipe[1]);
                     execvpe(args[0], args, environ);
+                    for (size_t i = 0; i < unIndex; i++)
+                    {
+                      delete[] args[i];
+                    }
                     if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Format") && ptJson->m["Request"]->m["Format"]->v == "json")
                     {
                       string strOut;
