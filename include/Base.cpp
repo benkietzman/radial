@@ -172,6 +172,16 @@ Base::~Base()
 {
   size_t unThreads;
 
+  do 
+  {
+    m_mutexBase.lock();
+    unThreads = m_unThreads;
+    m_mutexBase.unlock();
+    if (unThreads > 0)
+    {
+      msleep(100);
+    }
+  } while (unThreads > 0);
   for (auto &i : m_i)
   {
     delete i.second;
@@ -186,16 +196,6 @@ Base::~Base()
     delete i;
   }
   m_l.clear();
-  do 
-  {
-    m_mutexBase.lock();
-    unThreads = m_unThreads;
-    m_mutexBase.unlock();
-    if (unThreads > 0)
-    {
-      msleep(100);
-    }
-  } while (unThreads > 0);
   delete m_pCentral;
   delete m_pJunction;
   delete m_pUtility;
