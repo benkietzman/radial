@@ -520,10 +520,12 @@ void Interface::callbackPool()
     }
     if (!workers.empty())
     {
+      bool bDone = false;
       time(&CTime);
       workerIter = workers.begin();
-      while (workerIter != workers.end())
+      while (!bDone)
       {
+        bDone = true;
         workerIter = workers.end();
         for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
@@ -534,6 +536,7 @@ void Interface::callbackPool()
         }
         if (workerIter != workers.end())
         {
+          bDone = false;
           if ((*workerIter)->fdWorker[1] != -1)
           {
             close((*workerIter)->fdWorker[1]);
