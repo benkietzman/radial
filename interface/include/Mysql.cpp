@@ -251,7 +251,6 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
     {
       if (!strName.empty())
       {
-        bool bConnected = false;
         radial_mysql *ptMysql = new radial_mysql;
         ptMysql->bClose = false;
         if ((ptMysql->conn = mysql_init(NULL)) != NULL)
@@ -262,7 +261,10 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
           mysql_options(ptMysql->conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
           if (mysql_real_connect(ptMysql->conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
           {
-            bConnected = true;
+            ptMysql->unThreads = 0;
+            m_conn[strName].push_back(ptMysql);
+            iter = m_conn[strName].end();
+            iter--;
           }
           else
           {
@@ -270,21 +272,12 @@ bool Mysql::connect(const string strServer, const unsigned int unPort, const str
             ssError << "mysql_real_connect(" << mysql_errno(ptMysql->conn) << ") [" << strServer << "," << strUser << "," << strDatabase << "]:  " << mysql_error(ptMysql->conn);
             strError = ssError.str();
             mysql_close(ptMysql->conn);
+            delete ptMysql;
           }
         }
         else
         {
           strError = "mysql_init():  Failed to initialize MySQL library.";
-        }
-        if (bConnected)
-        {
-          ptMysql->unThreads = 0;
-          m_conn[strName].push_back(ptMysql);
-          iter = m_conn[strName].end();
-          iter--;
-        }
-        else
-        {
           delete ptMysql;
         }
       }
