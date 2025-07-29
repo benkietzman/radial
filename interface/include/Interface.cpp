@@ -512,6 +512,7 @@ void Interface::callbackPool()
           write(ptWorker->fdWorker[1], &cChar, 1);
         }
         workers.push_back(ptWorker);
+        threadIncrement();
         thread threadWorker(&Interface::callbackWorker, this, ptWorker);
         pthread_setname_np(threadWorker.native_handle(), "callbackWorker");
         threadWorker.detach();
@@ -539,6 +540,7 @@ void Interface::callbackPool()
             (*workerIter)->fdWorker[1] = -1;
           }
           workers.erase(workerIter);
+          threadDecrement();
         }
       }
     }
@@ -551,6 +553,7 @@ void Interface::callbackPool()
       close(worker->fdWorker[1]);
       worker->fdWorker[1] = -1;
     }
+    threadDecrement();
   }
   close(m_fdCallbackPool[0]);
   m_fdCallbackPool[0] = -1;
@@ -586,7 +589,6 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
   int nReturn;
   radialCallback *ptCallback;
 
-  threadIncrement();
   while (ptWorker->fdWorker[1] != -1 || !ptWorker->callbacks.empty())
   {
     pollfd fds[1];
@@ -634,7 +636,6 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
     }
   }
   delete ptWorker;
-  threadDecrement();
 }
 // }}}
 // }}}
