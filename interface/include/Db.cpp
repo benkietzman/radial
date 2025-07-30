@@ -174,7 +174,6 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Db::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -245,7 +244,6 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ db

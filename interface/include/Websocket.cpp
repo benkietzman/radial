@@ -35,7 +35,6 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Websocket::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -135,7 +134,6 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ request()

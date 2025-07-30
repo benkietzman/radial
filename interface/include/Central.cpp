@@ -2656,7 +2656,6 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Central::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -2711,7 +2710,6 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ contactType()

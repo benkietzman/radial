@@ -3364,7 +3364,6 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Irc::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -3533,7 +3532,6 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ callbackInotify()

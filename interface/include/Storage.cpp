@@ -99,7 +99,6 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Storage::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -188,7 +187,6 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
   {
     m_unCallbacks--;
   }
-  mutexCallback.unlock();
 }
 // }}}
 // {{{ callbacks()

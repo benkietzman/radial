@@ -71,7 +71,6 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Ssh::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -334,7 +333,6 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ schedule()

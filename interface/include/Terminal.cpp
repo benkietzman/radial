@@ -64,12 +64,10 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Terminal::callback()";
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-
   if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Session"))
   {
     string strNode;
@@ -142,7 +140,6 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ connect()

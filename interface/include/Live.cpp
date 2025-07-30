@@ -45,7 +45,6 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Live::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -290,7 +289,6 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ message()

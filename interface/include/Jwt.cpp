@@ -31,7 +31,6 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Jwt::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -176,7 +175,6 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 }

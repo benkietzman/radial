@@ -33,7 +33,6 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Junction::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -71,7 +70,6 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 }

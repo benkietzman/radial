@@ -42,7 +42,6 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Mysql::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -192,7 +191,6 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ conn()

@@ -62,7 +62,6 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Secure::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -459,7 +458,6 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ setLogin()

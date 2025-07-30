@@ -32,7 +32,6 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Session::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -115,7 +114,6 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 }

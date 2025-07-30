@@ -61,7 +61,6 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->MythTv::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -108,7 +107,6 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ backend()

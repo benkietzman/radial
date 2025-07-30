@@ -58,7 +58,6 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Database::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -120,7 +119,6 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ callbackInotify()

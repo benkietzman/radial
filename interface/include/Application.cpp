@@ -518,7 +518,6 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Application::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -575,7 +574,6 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ callbackInotify()

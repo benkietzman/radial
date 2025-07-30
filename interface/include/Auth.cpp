@@ -32,7 +32,6 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Auth::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -125,7 +124,6 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 // {{{ init()

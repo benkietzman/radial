@@ -31,7 +31,6 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   Json *ptJson;
   radialPacket p;
 
-  threadIncrement();
   strPrefix += "->Alert::callback()";
   throughput("callback");
   unpack(strPacket, p);
@@ -225,7 +224,6 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
 }
 // }}}
 }
