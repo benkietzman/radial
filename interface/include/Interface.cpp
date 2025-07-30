@@ -597,7 +597,7 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
     pollfd fds[1];
     fds[0].fd = ptWorker->fdWorker[0];
     fds[0].events = POLLIN;
-    if ((nReturn = poll(fds, 1, 2000)) > 0)
+    if ((nReturn = poll(fds, 1, 250)) > 0)
     {
       if (fds[0].revents & (POLLHUP | POLLIN))
       {

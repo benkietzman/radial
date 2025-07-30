@@ -179,7 +179,7 @@ Base::~Base()
     m_mutexBase.unlock();
     if (unThreads > 0)
     {
-      msleep(100);
+      msleep(500);
     }
   } while (unThreads > 0);
   for (auto &i : m_i)
