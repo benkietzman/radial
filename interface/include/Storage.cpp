@@ -181,12 +181,12 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
     hub(p, false);
   }
   delete ptJson;
-  threadDecrement();
   mutexCallback.lock();
   if (m_unCallbacks > 0)
   {
     m_unCallbacks--;
   }
+  mutexCallback.unlock();
 }
 // }}}
 // {{{ callbacks()
