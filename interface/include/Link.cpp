@@ -1119,7 +1119,7 @@ void Link::process(string strPrefix)
                           stringstream ssUnique;
                           p.l = ptJson->m["_l"]->v;
                           p.s = m_strName;
-                          p.t.empty();
+                          p.t.clear();
                           if (!empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
