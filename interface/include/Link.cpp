@@ -1077,11 +1077,11 @@ void Link::process(string strPrefix)
                       // {{{ _l
                       else if (exist(ptJson, "_l"))
                       {
+                        Json *ptSubLink = new Json(ptJson->m["_l"]);
+                        radialPacket p;
                         if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
-                          Json *ptSubLink = new Json(ptJson->m["_l"]);
-                          radialPacket p;
                           delete ptJson->m["_l"];
                           ptJson->m.erase("_l");
                           if (!empty(ptSubLink, "_l"))
@@ -1096,7 +1096,6 @@ void Link::process(string strPrefix)
                           {
                             p.t = ptSubLink->m["_t"]->v;
                           }
-                          delete ptSubLink;
                           p.s = m_strName;
                           if (p.t == "link" && !empty(ptJson, "Interface"))
                           {
@@ -1118,8 +1117,6 @@ void Link::process(string strPrefix)
                         }
                         else
                         {
-                          Json *ptSubLink = new Json(ptJson->m["_l"]);
-                          radialPacket p;
                           delete ptJson->m["_l"];
                           ptJson->m.erase("_l");
                           if (!empty(ptSubLink, "_d"))
@@ -1146,10 +1143,10 @@ void Link::process(string strPrefix)
                           {
                             p.u = ptSubLink->m["_u"]->v;
                           }
-                          delete ptSubLink;
                           ptJson->j(p.p);
                           hub(p, false);
                         }
+                        delete ptSubLink;
                       }
                       // }}}
                       // {{{ Interface
