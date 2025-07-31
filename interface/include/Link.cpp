@@ -502,7 +502,7 @@ void Link::process(string strPrefix)
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
                   ptJson = new Json(p.p);
-                  if (p.s == m_strName && p.d = "s")
+                  if (p.s == m_strName && p.d == "s")
                   {
                     int fdLink;
                     size_t unUnique;
