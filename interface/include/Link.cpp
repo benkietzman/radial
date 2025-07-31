@@ -502,7 +502,156 @@ void Link::process(string strPrefix)
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
                   ptJson = new Json(p.p);
-                  if (p.s == m_strName && p.d == "s")
+                  if (p.d == "t")
+                  {
+                    if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v != "link")
+                    {
+                      if (!empty(ptJson, "Node"))
+                      {
+                        list<radialLink *>::iterator linkIter = m_l.end();
+                        for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
+                        {
+                          if ((*i)->strNode == ptJson->m["Node"]->v)
+                          {
+                            linkIter = i;
+                          }
+                        }
+                        if (linkIter != m_l.end())
+                        {
+                          Json *ptLink = new Json;
+                          string strLink;
+                          delete ptJson->m["Node"];
+                          ptJson->m.erase("Node");
+                          if (!p.d.empty())
+                          {
+                            ptLink->i("_d", p.d);
+                          }
+                          if (!p.l.empty())
+                          {
+                            ptLink->i("_l", p.l);
+                          }
+                          if (!p.o.empty())
+                          {
+                            ptLink->i("_o", p.o);
+                          }
+                          if (!p.s.empty())
+                          {
+                            ptLink->i("_s", p.s);
+                          }
+                          if (!p.t.empty())
+                          {
+                            ptLink->i("_t", p.t);
+                          }
+                          if (!p.u.empty())
+                          {
+                            ptLink->i("_u", p.u);
+                          }
+                          ptJson->i("_l", ptLink->j(strLink));
+                          delete ptLink;
+                          (*linkIter)->responses.push_back(ptJson->j(strJson));
+                        }
+                        else
+                        {
+                          ptJson->i("Status", "error");
+                          ptJson->i("Error", "Linked Node does not exist.");
+                          ptJson->j(p.p);
+                          hub(p, false);
+                        }
+                      }
+                      else
+                      {
+                        for (auto &link : m_l)
+                        {
+                          if ((!exist(ptJson, "Node") || empty(ptJson, "Node") || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
+                          {
+                            link->responses.push_back(strLine);
+                          }
+                        }
+                      }
+                    }
+                    else
+                    {
+                      bool bProcessed = false;
+                      strError.clear();
+                      if (!empty(ptJson, "|function"))
+                      {
+                        if (ptJson->m["|function"]->v == "status")
+                        {
+                          float fCpu = 0, fMem = 0;
+                          pid_t nPid = getpid();
+                          stringstream ssImage, ssPid, ssResident;
+                          time_t CTime = 0;
+                          unsigned long ulImage = 0, ulResident = 0;
+                          bProcessed = true;
+                          if (exist(ptJson, "Response"))
+                          {
+                            delete ptJson->m["Response"];
+                          }
+                          ptJson->m["Response"] = new Json;
+                          m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
+                          ptJson->m["Response"]->m["Memory"] = new Json;
+                          ssImage << ulImage;
+                          ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
+                          ssResident << ulResident;
+                          ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
+                          ssPid << nPid;
+                          ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
+                        }
+                        else
+                        {
+                          strError = "Please provide a valid |function.";
+                        }
+                      }
+                      else if (!empty(ptJson, "Function"))
+                      {
+                        if (ptJson->m["Function"]->v == "ping")
+                        {
+                          bProcessed = true;
+                        }
+                        else if (ptJson->m["Function"]->v == "status")
+                        {
+                          list<string> subLinks;
+                          Json *ptStatus = new Json;
+                          bProcessed = true;
+                          if (!empty(m_ptLink, "Node"))
+                          {
+                            ptStatus->i("Node", m_ptLink->m["Node"]->v);
+                          }
+                          for (auto &link : m_l)
+                          {
+                            if (!link->strNode.empty())
+                            {
+                              subLinks.push_back(link->strNode);
+                            }
+                          }
+                          subLinks.sort();
+                          subLinks.unique();
+                          if (!subLinks.empty())
+                          {
+                            ptStatus->i("Links", subLinks);
+                          }
+                          ptJson->i("Response", ptStatus);
+                          delete ptStatus;
+                        }
+                        else
+                        {
+                          strError = "Please provide a valid Function:  ping, status.";
+                        }
+                      }
+                      else
+                      {
+                        strError = "Please provide the Function.";
+                      }
+                      ptJson->i("Status", ((bProcessed)?"okay":"error"));
+                      if (!strError.empty())
+                      {
+                        ptJson->i("Error", strError);
+                      }
+                      ptJson->j(p.p);
+                      hub(p, false);
+                    }
+                  }
+                  else if (p.s == m_strName)
                   {
                     int fdLink;
                     size_t unUnique;
@@ -593,153 +742,6 @@ void Link::process(string strPrefix)
                       ssMessage << strPrefix << " error [stdin,hub]:  Please provide a Function.";
                       log(ssMessage.str());
                     }
-                  }
-                  else if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v != "link")
-                  {
-                    if (!empty(ptJson, "Node"))
-                    {
-                      list<radialLink *>::iterator linkIter = m_l.end();
-                      for (auto i = m_l.begin(); linkIter == m_l.end() && i != m_l.end(); i++)
-                      {
-                        if ((*i)->strNode == ptJson->m["Node"]->v)
-                        {
-                          linkIter = i;
-                        }
-                      }
-                      if (linkIter != m_l.end())
-                      {
-                        Json *ptLink = new Json;
-                        string strLink;
-                        delete ptJson->m["Node"];
-                        ptJson->m.erase("Node");
-                        keyRemovals(ptJson);
-                        if (!p.d.empty())
-                        {
-                          ptLink->i("_d", p.d);
-                        }
-                        if (!p.l.empty())
-                        {
-                          ptLink->i("_l", p.l);
-                        }
-                        if (!p.o.empty())
-                        {
-                          ptLink->i("_o", p.o);
-                        }
-                        if (!p.s.empty())
-                        {
-                          ptLink->i("_s", p.s);
-                        }
-                        if (!p.t.empty())
-                        {
-                          ptLink->i("_t", p.t);
-                        }
-                        if (!p.u.empty())
-                        {
-                          ptLink->i("_u", p.u);
-                        }
-                        ptJson->i("_l", ptLink->j(strLink));
-                        delete ptLink;
-                        (*linkIter)->responses.push_back(ptJson->j(strJson));
-                      }
-                      else
-                      {
-                        ptJson->i("Status", "error");
-                        ptJson->i("Error", "Linked Node does not exist.");
-                        ptJson->j(p.p);
-                        hub(p, false);
-                      }
-                    }
-                    else
-                    {
-                      for (auto &link : m_l)
-                      {
-                        if ((!exist(ptJson, "Node") || empty(ptJson, "Node") || link->strNode == ptJson->m["Node"]->v) && link->interfaces.find(ptJson->m["Interface"]->v) != link->interfaces.end())
-                        {
-                          link->responses.push_back(strLine);
-                        }
-                      }
-                    }
-                  }
-                  else
-                  {
-                    bool bProcessed = false;
-                    strError.clear();
-                    if (!empty(ptJson, "|function"))
-                    {
-                      if (ptJson->m["|function"]->v == "status")
-                      {
-                        float fCpu = 0, fMem = 0;
-                        pid_t nPid = getpid();
-                        stringstream ssImage, ssPid, ssResident;
-                        time_t CTime = 0;
-                        unsigned long ulImage = 0, ulResident = 0;
-                        bProcessed = true;
-                        if (exist(ptJson, "Response"))
-                        {
-                          delete ptJson->m["Response"];
-                        }
-                        ptJson->m["Response"] = new Json;
-                        m_pCentral->getProcessStatus(nPid, CTime, fCpu, fMem, ulImage, ulResident);
-                        ptJson->m["Response"]->m["Memory"] = new Json;
-                        ssImage << ulImage;
-                        ptJson->m["Response"]->m["Memory"]->i("Image", ssImage.str(), 'n');
-                        ssResident << ulResident;
-                        ptJson->m["Response"]->m["Memory"]->i("Resident", ssResident.str(), 'n');
-                        ssPid << nPid;
-                        ptJson->m["Response"]->i("PID", ssPid.str(), 'n');
-                      }
-                      else
-                      {
-                        strError = "Please provide a valid |function.";
-                      }
-                    }
-                    else if (!empty(ptJson, "Function"))
-                    {
-                      if (ptJson->m["Function"]->v == "ping")
-                      {
-                        bProcessed = true;
-                      }
-                      else if (ptJson->m["Function"]->v == "status")
-                      {
-                        list<string> subLinks;
-                        Json *ptStatus = new Json;
-                        bProcessed = true;
-                        if (!empty(m_ptLink, "Node"))
-                        {
-                          ptStatus->i("Node", m_ptLink->m["Node"]->v);
-                        }
-                        for (auto &link : m_l)
-                        {
-                          if (!link->strNode.empty())
-                          {
-                            subLinks.push_back(link->strNode);
-                          }
-                        }
-                        subLinks.sort();
-                        subLinks.unique();
-                        if (!subLinks.empty())
-                        {
-                          ptStatus->i("Links", subLinks);
-                        }
-                        ptJson->i("Response", ptStatus);
-                        delete ptStatus;
-                      }
-                      else
-                      {
-                        strError = "Please provide a valid Function:  ping, status.";
-                      }
-                    }
-                    else
-                    {
-                      strError = "Please provide the Function.";
-                    }
-                    ptJson->i("Status", ((bProcessed)?"okay":"error"));
-                    if (!strError.empty())
-                    {
-                      ptJson->i("Error", strError);
-                    }
-                    ptJson->j(p.p);
-                    hub(p, false);
                   }
                   delete ptJson;
                 }
@@ -1077,7 +1079,7 @@ void Link::process(string strPrefix)
                       // {{{ _l
                       else if (exist(ptJson, "_l"))
                       {
-                        Json *ptSubLink = new Json(ptJson->m["_l"]);
+                        Json *ptSubLink = new Json(ptJson->m["_l"]->v);
                         radialPacket p;
                         delete ptJson->m["_l"];
                         ptJson->m.erase("_l");
