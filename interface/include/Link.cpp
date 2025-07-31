@@ -502,7 +502,7 @@ void Link::process(string strPrefix)
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
                   ptJson = new Json(p.p);
-                  if (p.s == m_strName && !p.u.empty())
+                  if (p.s == m_strName && p.d = "s")
                   {
                     int fdLink;
                     size_t unUnique;
@@ -1079,23 +1079,35 @@ void Link::process(string strPrefix)
                       {
                         Json *ptSubLink = new Json(ptJson->m["_l"]);
                         radialPacket p;
-                        if (!exist(ptJson, "Status"))
+                        delete ptJson->m["_l"];
+                        ptJson->m.erase("_l");
+                        if (!empty(ptSubLink, "_d"))
+                        {
+                          p.d = ptSubLink->m["_d"]->v;
+                        }
+                        if (!empty(ptSubLink, "_l"))
+                        {
+                          p.l = ptSubLink->m["_l"]->v;
+                        }
+                        if (!empty(ptSubLink, "_o"))
+                        {
+                          p.o = ptSubLink->m["_o"]->v;
+                        }
+                        if (!empty(ptSubLink, "_s"))
+                        {
+                          p.s = ptSubLink->m["_s"]->v;
+                        }
+                        if (!empty(ptSubLink, "_t"))
+                        {
+                          p.t = ptSubLink->m["_t"]->v;
+                        }
+                        if (!empty(ptSubLink, "_u"))
+                        {
+                          p.u = ptSubLink->m["_u"]->v;
+                        }
+                        if (p.d == "s")
                         {
                           stringstream ssUnique;
-                          delete ptJson->m["_l"];
-                          ptJson->m.erase("_l");
-                          if (!empty(ptSubLink, "_l"))
-                          {
-                            p.l = ptSubLink->m["_l"]->v;
-                          }
-                          if (!empty(ptSubLink, "_o"))
-                          {
-                            p.o = ptSubLink->m["_o"]->v;
-                          }
-                          if (!empty(ptSubLink, "_t"))
-                          {
-                            p.t = ptSubLink->m["_t"]->v;
-                          }
                           p.s = m_strName;
                           if (p.t == "link" && !empty(ptJson, "Interface"))
                           {
@@ -1112,41 +1124,10 @@ void Link::process(string strPrefix)
                           }
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           p.u = ssUnique.str();
-                          ptJson->j(p.p);
-                          hub(p, false);
-                        }
-                        else
-                        {
-                          delete ptJson->m["_l"];
-                          ptJson->m.erase("_l");
-                          if (!empty(ptSubLink, "_d"))
-                          {
-                            p.d = ptSubLink->m["_d"]->v;
-                          }
-                          if (!empty(ptSubLink, "_l"))
-                          {
-                            p.l = ptSubLink->m["_l"]->v;
-                          }
-                          if (!empty(ptSubLink, "_o"))
-                          {
-                            p.o = ptSubLink->m["_o"]->v;
-                          }
-                          if (!empty(ptSubLink, "_s"))
-                          {
-                            p.s = ptSubLink->m["_s"]->v;
-                          }
-                          if (!empty(ptSubLink, "_t"))
-                          {
-                            p.t = ptSubLink->m["_t"]->v;
-                          }
-                          if (!empty(ptSubLink, "_u"))
-                          {
-                            p.u = ptSubLink->m["_u"]->v;
-                          }
-                          ptJson->j(p.p);
-                          hub(p, false);
                         }
                         delete ptSubLink;
+                        ptJson->j(p.p);
+                        hub(p, false);
                       }
                       // }}}
                       // {{{ Interface
