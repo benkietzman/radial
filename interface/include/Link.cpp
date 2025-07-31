@@ -1083,7 +1083,7 @@ void Link::process(string strPrefix)
                         // }}}
                       }
                       // }}}
-                      // {{{ _l link <--> link
+                      // {{{ _l
                       else if (exist(ptJson, "_l"))
                       {
                         Json *ptSubLink = new Json(ptJson->m["_l"]->v);
@@ -1112,12 +1112,14 @@ void Link::process(string strPrefix)
                         {
                           p.u = ptSubLink->m["_u"]->v;
                         }
+                        delete ptSubLink;
                         // {{{ source --> target
                         if (p.d == "t")
                         {
                           stringstream ssUnique;
                           p.l = ptJson->m["_l"]->v;
                           p.s = m_strName;
+                          p.t.empty();
                           if (!empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
@@ -1137,7 +1139,6 @@ void Link::process(string strPrefix)
                         // }}}
                         delete ptJson->m["_l"];
                         ptJson->m.erase("_l");
-                        delete ptSubLink;
                         ptJson->j(p.p);
                         hub(p, false);
                       }
