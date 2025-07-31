@@ -502,6 +502,7 @@ void Link::process(string strPrefix)
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
                   ptJson = new Json(p.p);
+                  // {{{ source --> target
                   if (p.d == "t")
                   {
                     if (!empty(ptJson, "Interface") && ptJson->m["Interface"]->v != "link")
@@ -651,6 +652,8 @@ void Link::process(string strPrefix)
                       hub(p, false);
                     }
                   }
+                  // }}}
+                  // {{{ source <-- target
                   else if (p.s == m_strName)
                   {
                     int fdLink;
@@ -678,10 +681,13 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink != NULL)
                     {
-                      keyRemovals(ptJson);
                       if (!p.l.empty())
                       {
-                        ptJson->i("_l", p.l);
+                        string strSubLink;
+                        Json *ptSubLink = new Json(p.l);
+                        ptSubLink->i("_d", "s");
+                        ptJson->i("_l", ptSubLink->j(strSubLink));
+                        delete ptSubLink;
                       }
                       ptLink->responses.push_back(ptJson->j(strJson));
                     }
@@ -743,6 +749,7 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
+                  // }}}
                   delete ptJson;
                 }
               }
@@ -1076,13 +1083,11 @@ void Link::process(string strPrefix)
                         // }}}
                       }
                       // }}}
-                      // {{{ _l
+                      // {{{ _l link <--> link
                       else if (exist(ptJson, "_l"))
                       {
                         Json *ptSubLink = new Json(ptJson->m["_l"]->v);
                         radialPacket p;
-                        delete ptJson->m["_l"];
-                        ptJson->m.erase("_l");
                         if (!empty(ptSubLink, "_d"))
                         {
                           p.d = ptSubLink->m["_d"]->v;
@@ -1107,11 +1112,13 @@ void Link::process(string strPrefix)
                         {
                           p.u = ptSubLink->m["_u"]->v;
                         }
-                        if (p.d == "s")
+                        // {{{ source --> target
+                        if (p.d == "t")
                         {
                           stringstream ssUnique;
+                          p.l = ptJson->m["_l"]->v;
                           p.s = m_strName;
-                          if (p.t == "link" && !empty(ptJson, "Interface"))
+                          if (!empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
                             {
@@ -1127,6 +1134,9 @@ void Link::process(string strPrefix)
                           ssUnique << m_strName << " " << ptLink->fdSocket << " " << ptLink->unUnique;
                           p.u = ssUnique.str();
                         }
+                        // }}}
+                        delete ptJson->m["_l"];
+                        ptJson->m.erase("_l");
                         delete ptSubLink;
                         ptJson->j(p.p);
                         hub(p, false);
