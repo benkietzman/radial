@@ -313,6 +313,10 @@ string Base::pack(radialPacket &p, string &d)
   {
     r->i("_d", p.d);
   }
+  if (!p.l.empty())
+  {
+    r->i("_l", p.l);
+  }
   if (!p.o.empty())
   {
     r->i("_o", p.o);
@@ -512,6 +516,10 @@ void Base::unpack(const string d, radialPacket &p)
   if (!empty(r, "_d"))
   {
     p.d = r->m["_d"]->v;
+  }
+  if (!empty(r, "_l"))
+  {
+    p.l = r->m["_l"]->v;
   }
   if (!empty(r, "_o"))
   {

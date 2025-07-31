@@ -494,27 +494,20 @@ void Link::process(string strPrefix)
               {
                 while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
                 {
-                  string strPayload, strRoute;
-                  stringstream ssData;
-                  Json *ptJson, *ptRoute;
+                  string strPayload;
+                  Json *ptJson;
                   radialPacket p;
                   unThroughput++;
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
-                  ssData.str(strLine);
-                  getline(ssData, strRoute, m_cDelimiter);
-                  ptRoute = new Json(strRoute);
                   ptJson = new Json(p.p);
-                  ptJson->merge(ptRoute, true, false);
-                  delete ptRoute;
-                  ptJson->j(strLine);
-                  if (exist(ptJson, "_s") && ptJson->m["_s"]->v == m_strName && !empty(ptJson, "_u"))
+                  if (p.s == m_strName && !p.u.empty())
                   {
                     int fdLink;
                     size_t unUnique;
                     string strValue;
-                    stringstream ssUnique(ptJson->m["_u"]->v);
+                    stringstream ssUnique(p.u);
                     radialLink *ptLink = NULL;
                     ssUnique >> strValue >> fdLink >> unUnique;
                     for (auto i = links.begin(); ptLink == NULL && i != links.end(); i++)
@@ -536,16 +529,10 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink != NULL)
                     {
-                      Json *ptSubLink = NULL;
-                      if (exist(ptJson, "_l"))
-                      {
-                        ptSubLink = ptJson->m["_l"];
-                        ptJson->m.erase("_l");
-                      }
                       keyRemovals(ptJson);
-                      if (ptSubLink != NULL)
+                      if (!p.l.empty())
                       {
-                        ptJson->m["_l"] = ptSubLink;
+                        ptJson->i("_l", p.l);
                       }
                       ptLink->responses.push_back(ptJson->j(strJson));
                     }
@@ -556,7 +543,7 @@ void Link::process(string strPrefix)
                       log(ssMessage.str());
                     }
                   }
-                  else if (exist(ptJson, "_s") && ptJson->m["_s"]->v == "hub")
+                  else if (p.s == "hub")
                   {
                     if (!empty(ptJson, "Function"))
                     {
@@ -622,17 +609,36 @@ void Link::process(string strPrefix)
                       if (linkIter != m_l.end())
                       {
                         Json *ptLink = new Json;
+                        string strLink;
                         delete ptJson->m["Node"];
                         ptJson->m.erase("Node");
-                        for (auto &i : ptJson->m)
-                        {
-                          if (!i.first.empty() && i.first[0] == '_')
-                          {
-                            ptLink->i(i.first, i.second);
-                          }
-                        }
                         keyRemovals(ptJson);
-                        ptJson->m["_l"] = ptLink;
+                        if (!p.d.empty())
+                        {
+                          ptLink->i("_d", p.d);
+                        }
+                        if (!p.l.empty())
+                        {
+                          ptLink->i("_l", p.l);
+                        }
+                        if (!p.o.empty())
+                        {
+                          ptLink->i("_o", p.o);
+                        }
+                        if (!p.s.empty())
+                        {
+                          ptLink->i("_s", p.s);
+                        }
+                        if (!p.t.empty())
+                        {
+                          ptLink->i("_t", p.t);
+                        }
+                        if (!p.u.empty())
+                        {
+                          ptLink->i("_u", p.u);
+                        }
+                        ptJson->i("_l", ptLink->j(strLink));
+                        delete ptLink;
                         (*linkIter)->responses.push_back(ptJson->j(strJson));
                       }
                       else
@@ -1074,34 +1080,24 @@ void Link::process(string strPrefix)
                         if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
-                          Json *ptSubLink = ptJson->m["_l"];
+                          Json *ptSubLink = new Json(ptJson->m["_l"]);
                           radialPacket p;
+                          delete ptJson->m["_l"];
                           ptJson->m.erase("_l");
-                          for (auto &j : ptSubLink->m)
+                          if (!empty(ptSubLink, "_l"))
                           {
-                            ptJson->i(j.first, j.second);
+                            p.l = ptSubLink->m["_l"]->v;
                           }
-                          if (ptJson->m.find("_l") == ptJson->m.end())
+                          if (!empty(ptSubLink, "_o"))
                           {
-                            ptJson->i("_l", ptSubLink);
+                            p.o = ptSubLink->m["_o"]->v;
+                          }
+                          if (!empty(ptSubLink, "_t"))
+                          {
+                            p.t = ptSubLink->m["_t"]->v;
                           }
                           delete ptSubLink;
-                          if (exist(ptJson, "_d"))
-                          {
-                            delete ptJson->m["_d"];
-                            ptJson->m.erase("_d");
-                          }
-                          if (!empty(ptJson, "_o"))
-                          {
-                            p.o = ptJson->m["_o"]->v;
-                          }
                           p.s = m_strName;
-                          if (!empty(ptJson, "_t"))
-                          {
-                            p.t = ptJson->m["_t"]->v;
-                            delete ptJson->m["_t"];
-                            ptJson->m.erase("_t");
-                          }
                           if (p.t == "link" && !empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
@@ -1122,45 +1118,35 @@ void Link::process(string strPrefix)
                         }
                         else
                         {
-                          Json *ptSubLink = ptJson->m["_l"];
+                          Json *ptSubLink = new Json(ptJson->m["_l"]);
                           radialPacket p;
+                          delete ptJson->m["_l"];
                           ptJson->m.erase("_l");
-                          keyRemovals(ptJson);
-                          for (auto &j : ptSubLink->m)
+                          if (!empty(ptSubLink, "_d"))
                           {
-                            ptJson->i(j.first, j.second);
+                            p.d = ptSubLink->m["_d"]->v;
+                          }
+                          if (!empty(ptSubLink, "_l"))
+                          {
+                            p.l = ptSubLink->m["_l"]->v;
+                          }
+                          if (!empty(ptSubLink, "_o"))
+                          {
+                            p.o = ptSubLink->m["_o"]->v;
+                          }
+                          if (!empty(ptSubLink, "_s"))
+                          {
+                            p.s = ptSubLink->m["_s"]->v;
+                          }
+                          if (!empty(ptSubLink, "_t"))
+                          {
+                            p.t = ptSubLink->m["_t"]->v;
+                          }
+                          if (!empty(ptSubLink, "_u"))
+                          {
+                            p.u = ptSubLink->m["_u"]->v;
                           }
                           delete ptSubLink;
-                          if (!empty(ptJson, "_d"))
-                          {
-                            p.d = ptJson->m["_d"]->v;
-                            delete ptJson->m["_d"];
-                            ptJson->m.erase("_d");
-                          }
-                          if (!empty(ptJson, "_o"))
-                          {
-                            p.o = ptJson->m["_o"]->v;
-                            delete ptJson->m["_o"];
-                            ptJson->m.erase("_o");
-                          }
-                          if (!empty(ptJson, "_s"))
-                          {
-                            p.s = ptJson->m["_s"]->v;
-                            delete ptJson->m["_s"];
-                            ptJson->m.erase("_s");
-                          }
-                          if (!empty(ptJson, "_t"))
-                          {
-                            p.t = ptJson->m["_t"]->v;
-                            delete ptJson->m["_t"];
-                            ptJson->m.erase("_t");
-                          }
-                          if (!empty(ptJson, "_u"))
-                          {
-                            p.u = ptJson->m["_u"]->v;
-                            delete ptJson->m["_u"];
-                            ptJson->m.erase("_u");
-                          }
                           ptJson->j(p.p);
                           hub(p, false);
                         }

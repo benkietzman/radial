@@ -107,6 +107,7 @@ struct radialLink
 struct radialPacket
 {
   string d;
+  string l;
   string o;
   string p;
   string s;
