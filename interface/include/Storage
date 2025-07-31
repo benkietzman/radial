@@ -21,9 +21,7 @@ class Storage : public Interface
 {
   protected:
   bool m_bInitialized;
-  mutex mutexCallback;
   mutex mutexInitialize;
-  size_t m_unCallbacks;
   string m_strEmail;
   common::Storage m_storage;
 
@@ -32,7 +30,6 @@ class Storage : public Interface
   ~Storage();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  size_t callbacks();
 };
 // }}}
 }

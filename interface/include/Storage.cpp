@@ -17,7 +17,6 @@ namespace radial
 Storage::Storage(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "storage", argc, argv, pCallback)
 {
   m_bInitialized = false;
-  m_unCallbacks = 0;
 }
 // }}}
 // {{{ ~Storage()
@@ -103,9 +102,6 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  mutexCallback.lock();
-  m_unCallbacks++;
-  mutexCallback.unlock();
   if (!empty(ptJson, "Function"))
   {
     list<string> keys;
@@ -181,24 +177,6 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
     hub(p, false);
   }
   delete ptJson;
-  mutexCallback.lock();
-  if (m_unCallbacks > 0)
-  {
-    m_unCallbacks--;
-  }
-  mutexCallback.unlock();
-}
-// }}}
-// {{{ callbacks()
-size_t Storage::callbacks()
-{
-  size_t unCallbacks;
-
-  mutexCallback.lock();
-  unCallbacks = m_unCallbacks;
-  mutexCallback.unlock();
-
-  return unCallbacks;
 }
 // }}}
 }
