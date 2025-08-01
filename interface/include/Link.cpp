@@ -494,14 +494,18 @@ void Link::process(string strPrefix)
               {
                 while ((unPosition = m_strBuffers[0].find("\n")) != string::npos)
                 {
-                  string strPayload;
+                  string strPayload, strRoute;
+                  stringstream ssData;
                   Json *ptJson;
                   radialPacket p;
                   unThroughput++;
                   strLine = m_strBuffers[0].substr(0, unPosition);
                   m_strBuffers[0].erase(0, (unPosition + 1));
                   unpack(strLine, p);
+                  ssData.str(strLine);
+                  getline(ssData, strRoute, m_cDelimiter);
                   ptJson = new Json(p.p);
+                  ptJson->i("_r", strRoute);
                   // {{{ source <-- target
                   if (p.s == m_strName && !p.u.empty())
                   {
