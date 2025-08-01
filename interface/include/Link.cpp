@@ -1115,13 +1115,13 @@ void Link::process(string strPrefix)
                         }
                         delete ptSubLink;
                         // {{{ source --> target
-                        if (p.d == "t")
+                        if (!exist(ptJson, "Status"))
                         {
                           stringstream ssUnique;
                           p.l = ptJson->m["_l"]->v;
+                          p.d.clear();
                           p.s = m_strName;
-                          p.t.clear();
-                          if (!empty(ptJson, "Interface"))
+                          if (p.t == "link" && !empty(ptJson, "Interface"))
                           {
                             if (ptJson->m["Interface"]->v == "hub")
                             {
