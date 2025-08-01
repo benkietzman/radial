@@ -505,7 +505,7 @@ void Link::process(string strPrefix)
                   ssData.str(strLine);
                   getline(ssData, strRoute, m_cDelimiter);
                   ptJson = new Json(p.p);
-                  ptJson->i("_r", strRoute);
+                  ptJson->i("_l", strRoute);
                   ptJson->j(strLine);
                   // {{{ source <-- target
                   if (p.s == m_strName && !p.u.empty())
@@ -535,11 +535,19 @@ void Link::process(string strPrefix)
                     }
                     if (ptLink != NULL)
                     {
+                      Json *ptSubLink = NULL;
                       if (!p.l.empty())
                       {
+                        ptSubLink = new Json(p.l);
+                      }
+                      if (exist(ptJson, "_l"))
+                      {
+                        delete ptJson->m["_l"];
+                        ptJson->m.erase("_l");
+                      }
+                      if (ptSubLink != NULL)
+                      {
                         string strSubLink;
-                        Json *ptSubLink = new Json(p.l);
-                        ptSubLink->i("_d", "s");
                         ptJson->i("_l", ptSubLink->j(strSubLink));
                         delete ptSubLink;
                       }
