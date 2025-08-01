@@ -506,6 +506,7 @@ void Link::process(string strPrefix)
                   getline(ssData, strRoute, m_cDelimiter);
                   ptJson = new Json(p.p);
                   ptJson->i("_r", strRoute);
+                  ptJson->j(strLine);
                   // {{{ source <-- target
                   if (p.s == m_strName && !p.u.empty())
                   {
