@@ -584,7 +584,7 @@ void Interface::callbackPool()
     threadDecrement();
   }
   m_mutexShare.lock();
-  while (m_callbacks.empty())
+  while (!m_callbacks.empty())
   {
     delete m_callbacks.front();
     m_callbacks.pop();
