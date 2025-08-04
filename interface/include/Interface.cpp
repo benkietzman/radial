@@ -596,18 +596,20 @@ void Interface::callbackPool()
 // {{{ callbackPush()
 void Interface::callbackPush(string strPrefix, const string strPacket, const bool bResponse)
 {
-  radialCallback *ptCallback = new radialCallback;
-
-  ptCallback->strPrefix = strPrefix;
-  ptCallback->strPacket = strPacket;
-  ptCallback->bResponse = bResponse;
   m_mutexShare.lock();
-  m_callbacks.push(ptCallback);
-  if (!m_bCallbackPool && m_fdCallbackPool[1] != -1)
+  if (m_fdCallbackPool[1] != -1)
   {
-    char cChar = '\n';
-    m_bCallbackPool = true;
-    write(m_fdCallbackPool[1], &cChar, 1);
+    radialCallback *ptCallback = new radialCallback;
+    ptCallback->strPrefix = strPrefix;
+    ptCallback->strPacket = strPacket;
+    ptCallback->bResponse = bResponse;
+    m_callbacks.push(ptCallback);
+    if (!m_bCallbackPool)
+    {
+      char cChar = '\n';
+      m_bCallbackPool = true;
+      write(m_fdCallbackPool[1], &cChar, 1);
+    }
   }
   m_mutexShare.unlock();
 }
