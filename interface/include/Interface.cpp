@@ -560,6 +560,10 @@ void Interface::callbackPool()
     }
     m_mutexShare.unlock();
   }
+  close(m_fdCallbackPool[0]);
+  m_fdCallbackPool[0] = -1;
+  close(m_fdCallbackPool[1]);
+  m_fdCallbackPool[1] = -1;
   for (auto &worker : workers)
   {
     if (worker->fdWorker[1] != -1)
@@ -586,10 +590,6 @@ void Interface::callbackPool()
     m_callbacks.pop();
   }
   m_mutexShare.unlock();
-  close(m_fdCallbackPool[0]);
-  m_fdCallbackPool[0] = -1;
-  close(m_fdCallbackPool[1]);
-  m_fdCallbackPool[1] = -1;
   threadDecrement();
 }
 // }}}
