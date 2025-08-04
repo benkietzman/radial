@@ -474,7 +474,7 @@ void Interface::callbackPool()
       setShutdown();
     }
     m_mutexShare.lock();
-    while (!m_callbacks.empty())
+    while (!shutdown() && !m_callbacks.empty())
     {
       ptCallback = m_callbacks.front();
       m_callbacks.pop();
@@ -530,7 +530,7 @@ void Interface::callbackPool()
         workerIter = workers.end();
         for (auto i = workers.begin(); workerIter == workers.end() && i != workers.end(); i++)
         {
-          if ((*i)->callbacks.empty() && ((*i)->fdWorker[0] == -1 || (*i)->fdWorker[1] == -1 || (CTime - (*i)->CTime) > 10))
+          if ((*i)->fdWorker[0] == -1 || ((*i)->callbacks.empty() && (CTime - (*i)->CTime) > 10))
           {
             workerIter = i;
           }
@@ -543,6 +543,16 @@ void Interface::callbackPool()
             close((*workerIter)->fdWorker[1]);
             (*workerIter)->fdWorker[1] = -1;
           }
+          while ((*workerIter)->fdWorker[0] != -1)
+          {
+            msleep(10);
+          }
+          while (!(*workerIter)->callbacks.empty())
+          {
+            delete (*workerIter)->callbacks.front();
+            (*workerIter)->callbacks.pop();
+          }
+          delete (*workerIter);
           workers.erase(workerIter);
           threadDecrement();
         }
@@ -557,6 +567,16 @@ void Interface::callbackPool()
       close(worker->fdWorker[1]);
       worker->fdWorker[1] = -1;
     }
+    while (worker->fdWorker[0] != -1)
+    {
+      msleep(10);
+    }
+    while (!worker->callbacks.empty())
+    {
+      delete worker->callbacks.front();
+      worker->callbacks.pop();
+    }
+    delete worker;
     threadDecrement();
   }
   m_mutexShare.lock();
@@ -600,7 +620,7 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
   int nReturn;
   radialCallback *ptCallback;
 
-  while (!shutdown() && (ptWorker->fdWorker[1] != -1 || !ptWorker->callbacks.empty()))
+  while (ptWorker->fdWorker[1] != -1 && !ptWorker->callbacks.empty())
   {
     pollfd fds[1];
     fds[0].fd = ptWorker->fdWorker[0];
@@ -634,24 +654,23 @@ void Interface::callbackWorker(radialCallbackWorker *ptWorker)
       close(ptWorker->fdWorker[0]);
       ptWorker->fdWorker[0] = -1;
     }
-    while (!shutdown() && !ptWorker->callbacks.empty())
+    while (ptWorker->fdWorker[1] != -1 && !ptWorker->callbacks.empty())
     {
       ptCallback = ptWorker->callbacks.front();
-      ptWorker->callbacks.pop();
       time(&(ptWorker->CTime));
       if (m_pCallback != NULL)
       {
         m_pCallback(ptCallback->strPrefix, ptCallback->strPacket, ptCallback->bResponse);
       }
+      ptWorker->callbacks.pop();
       delete ptCallback;
     }
   }
-  while (!ptWorker->callbacks.empty())
+  if (ptWorker->fdWorker[0] != -1)
   {
-    delete ptWorker->callbacks.front();
-    ptWorker->callbacks.pop();
+    close(ptWorker->fdWorker[0]);
+    ptWorker->fdWorker[0] = -1;
   }
-  delete ptWorker;
 }
 // }}}
 // }}}
