@@ -16,6 +16,7 @@ namespace radial
 // {{{ Mysql()
 Mysql::Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "mysql", argc, argv, pCallback)
 {
+  mysql_library_init(0, NULL, NULL);
 }
 // }}}
 // {{{ ~Mysql()
@@ -31,6 +32,7 @@ Mysql::~Mysql()
     i.second.clear();
   }
   m_conn.clear();
+  mysql_library_end();
 }
 // }}}
 // {{{ callback()
