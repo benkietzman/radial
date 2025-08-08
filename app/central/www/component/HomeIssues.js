@@ -87,7 +87,7 @@ export default
       if (c.isValid())
       {
         s.info.v = 'Retrieving applications...';
-        let request = {Interface: 'central', 'Function': 'applications', Request: {}};
+        let request = {Interface: 'central', 'Function': 'applications', Request: {retired: false}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
