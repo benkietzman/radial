@@ -172,7 +172,7 @@ export default
             c.pushErrorMessage(error.message);
           }
           s.u();
-          s.statement.v = 'select * from ' + s.table.v.name;
+          s.statement.v = 'select * from `' + s.table.v.name + '`';
           s.query();
         });
       }
@@ -254,7 +254,7 @@ export default
               }
               else if (strAction == 'insert' || strAction == 'delete')
               {
-                s.statement.v = 'select * from ' + s.table.v.name;
+                s.statement.v = 'select * from `' + s.table.v.name + '`';
                 s.query();
               }
             }
