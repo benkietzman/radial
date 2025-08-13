@@ -116,7 +116,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                         ofstream outCred(m_strData + "/.cred");
                         outCred.close();
                         bResult = true;
-                        if (empty(ptJson, "Node"))
+                        if (!exist(ptJson->m["Request"], "_broadcast"))
                         {
                           list<string> nodes;
                           m_mutexShare.lock();
@@ -131,9 +131,11 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                           for (auto &node : nodes)
                           {
                             Json *ptLink = new Json(ptJson);
+                            ptLink->i("Interface", "auth");
+                            ptLink->i("Node", node);
+                            ptLink->m["Request"]->i("_broadcast", "1", '1');
                             ptLink->m["Request"]->i("Action", "put");
                             ptLink->m["Request"]->i("Password", ptData);
-                            ptLink->i("Node", node);
                             hub("link", ptLink, strError);
                             delete ptLink;
                           }
