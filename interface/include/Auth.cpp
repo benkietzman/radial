@@ -108,8 +108,8 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                       }
                       else if (ptData->l.size() > 1)
                       {
-                        delete ptData->l.back();
-                        ptData->l.pop_back();
+                        delete ptData->l.front();
+                        ptData->l.pop_front();
                       }
                       if (m_pWarden->vaultAdd({"radial", ptJson->m["User"]->v, "Password"}, ptData, strError))
                       {
