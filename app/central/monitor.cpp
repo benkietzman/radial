@@ -147,9 +147,6 @@ int main(int argc, char *argv[])
     }
     if (strError.empty())
     {
-      string strPassword;
-      if (warden.vaultRetrieve({"radial", strUser, "Password"}, strPassword, strError))
-      {
         Radial radial(strError);
         if (!strConf.empty())
         {
@@ -158,15 +155,42 @@ int main(int argc, char *argv[])
         }
         if (strError.empty())
         {
-          time_t CConfig = 0, CNow;
+          string strPassword;
+          time_t CConfig = 0, CCred = 0, CNow;
           Json *ptConfig = new Json;
-          radial.setCredentials(strUser, strPassword);
           radial.setTimeout("10");
           radial.utility()->sslInit();
           radial.useSingleSocket();
           while (!gbShutdown)
           {
             time(&CNow);
+            if ((CNow - CCred) > 600)
+            {
+              Json *ptData = new Json;
+              if (warden.vaultRetrieve({"radial", strUser, "Password"}, ptData, strError))
+              {
+                if (!ptData->l.empty())
+                {
+                  for (auto &i = ptData->l.begin(); strPassword.empty() && i != ptData->l.end(); i++)
+                  {
+                    if (!(*i)->v.empty())
+                    {
+                      strPassword = (*i)->v;
+                    }
+                  }
+                }
+                else if (!ptData->v.empty())
+                {
+                  strPassword = ptData->v;
+                }
+                radial.setCredentials(strUser, strPassword);
+              }
+              else
+              {
+                cerr << strPrefix << "->Warden::vaultRetrieve() error [radial," << strUser << ",Password]:  " << strError << endl;
+              }
+              delete ptData;
+            }
             // {{{ config
             if ((CNow - CConfig) > 60)
             {
@@ -430,11 +454,6 @@ int main(int argc, char *argv[])
         {
           cerr << strPrefix << "->Radial::Radial() error:  " << strError << endl;
         }
-      }
-      else
-      {
-        cerr << strPrefix << "->Warden::vaultRetrieve() error [radial," << strUser << ",Password]:  " << strError << endl;
-      }
     }
     else
     {
