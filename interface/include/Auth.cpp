@@ -42,7 +42,120 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
     {
       if (exist(ptJson, "Request"))
       {
-        if (!empty(ptJson->m["Request"], "Interface"))
+        if (!empty(ptJson, "Function"))
+        {
+          string strFunction = ptJson->m["Function"]->v;
+          if (strFunction == "password")
+          {
+            if (!empty(ptJson->m["Request"], "Action"))
+            {
+              if (m_pWarden != NULL && m_pWarden->radial(ptJson->m["User"]->v, ptJson->m["Password"]->v, strError))
+              {
+                string strAction = ptJson->m["Request"]->m["Action"]->v;
+                if (strAction == "get" || strAction == "pop" || strAction == "push" || strAction == "put")
+                {
+                  Json *ptData = new Json;
+                  if (m_pWarden->vaultRetrieve({"radial", ptJson->m["User"]->v, "Password"}, ptData, strError))
+                  {
+                    if (strAction == "pop" || strAction == "push" || strAction == "put")
+                    {
+                      if (!ptData->v.empty())
+                      {
+                        ptData->pb(ptData->v);
+                      }
+                      if (strAction == "push")
+                      {
+                        if (!empty(ptJson->m["Request"], "Password"))
+                        {
+                          ptData->pb(ptJson->m["Request"]->m["Password"]->v);
+                        }
+                      }
+                      else if (strAction == "put")
+                      {
+                        if (exist(ptJson->m["Request"], "Password"))
+                        {
+                          Json *ptPut = new Json;
+                          if (!empty(ptJson->m["Request"], "Password"))
+                          {
+                            ptPut->pb(ptJson->m["Request"]->m["Password"]->v);
+                          }
+                          else
+                          {
+                            for (auto &i : ptJson->m["Request"]->m["Password"]->l)
+                            {
+                              if (!i->v.empty())
+                              {
+                                ptPut->pb(i->v);
+                              }
+                            }
+                          }
+                          if (!ptPut->l.empty())
+                          {
+                            ptData->i("Password", ptPut);
+                          }
+                          delete ptPut;
+                        }
+                      }
+                      else if (ptData->l.size() > 1)
+                      {
+                        delete ptData->l.back();
+                        ptData->l.pop_back();
+                      }
+                      if (m_pWarden->vaultAdd({"radial", ptJson->m["User"]->v, "Password"}, ptData, strError))
+                      {
+                        ofstream outCred(m_strData + "/.cred");
+                        outCred.close();
+                        if (empty(ptJson, "Node"))
+                        {
+                          list<string> nodes;
+                          m_mutexShare.lock();
+                          for (auto &link : m_l)
+                          {
+                            if (link->strNode != m_strNode && link->interfaces.find("auth") != link->interfaces.end())
+                            {
+                              nodes.push_back(link->strNode);
+                            }
+                          }
+                          m_mutexShare.unlock();
+                          for (auto &node : nodes)
+                          {
+                            Json *ptLink = new Json(ptJson);
+                            ptLink->m["Request"]->i("Action", "put");
+                            ptLink->m["Request"]->i("Password", ptData);
+                            ptLink->i("Node", node);
+                            delete ptLink;
+                          }
+                        }
+                      }
+                    }
+                    else
+                    {
+                      ptJson->i("Resposne", ptData);
+                    }
+                  }
+                  delete ptData;
+                }
+                else
+                {
+                  strError = "Please provide a valid Action within the Request:  get. pop, push, put.";
+                }
+              }
+              else if (m_pWarden == NULL)
+              {
+                strError = "Please initialize Warden.";
+              }
+            }
+            else
+            {
+              strError = "Please provide the Action within the Request.";
+            }
+          }
+          else
+          {
+            strError = "Please provide a valid Function:  password.";
+          }
+        }
+        else if (!empty(ptJson->m["Request"], "Interface"))
         {
           Json *ptData = new Json(ptJson);
           if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
@@ -96,7 +209,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
         }
         else
         {
-          strError = "Please provide the Interface within the Request.";
+          strError = "Please provide the Function or the Interface within the Request.";
         }
       }
       else
