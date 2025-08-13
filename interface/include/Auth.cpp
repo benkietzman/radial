@@ -42,7 +42,59 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
     {
       if (exist(ptJson, "Request"))
       {
-        if (!empty(ptJson, "Function"))
+        if (!empty(ptJson->m["Request"], "Interface"))
+        {
+          Json *ptData = new Json(ptJson);
+          if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
+          {
+            if (exist(ptData, "radial") && exist(ptData->m["radial"], "Access") && exist(ptData->m["radial"]->m["Access"], ptJson->m["Request"]->m["Interface"]->v))
+            {
+              string strAccessFunction = "Function";
+              if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
+              {
+                strAccessFunction = m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v];
+              }
+              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == "all")
+              {
+                bResult = true;
+              }
+              else if (!empty(ptJson, strAccessFunction))
+              {
+                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
+                {
+                  bResult = true;
+                }
+                else
+                {
+                  for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->l)
+                  {
+                    if (access->v == ptJson->m[strAccessFunction]->v)
+                    {
+                      bResult = true;
+                    }
+                  }
+                }
+              }
+            }
+            if (!bResult)
+            {
+              if (m_pAnalyzeCallback != NULL)
+              {
+                bResult = m_pAnalyzeCallback(strPrefix, ptJson, ptData, strError);
+              }
+              else
+              {
+                strError = "Authorization denied.";
+              }
+            }
+          }
+          else if (m_pWarden == NULL)
+          {
+            strError = "Please initialize Warden.";
+          }
+          delete ptData;
+        }
+        else if (!empty(ptJson, "Function"))
         {
           string strFunction = ptJson->m["Function"]->v;
           if (strFunction == "password")
@@ -169,58 +221,6 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
           {
             strError = "Please provide a valid Function:  password.";
           }
-        }
-        else if (!empty(ptJson->m["Request"], "Interface"))
-        {
-          Json *ptData = new Json(ptJson);
-          if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
-          {
-            if (exist(ptData, "radial") && exist(ptData->m["radial"], "Access") && exist(ptData->m["radial"]->m["Access"], ptJson->m["Request"]->m["Interface"]->v))
-            {
-              string strAccessFunction = "Function";
-              if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
-              {
-                strAccessFunction = m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v];
-              }
-              if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == "all")
-              {
-                bResult = true;
-              }
-              else if (!empty(ptJson, strAccessFunction))
-              {
-                if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
-                {
-                  bResult = true;
-                }
-                else
-                {
-                  for (auto &access : ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->l)
-                  {
-                    if (access->v == ptJson->m[strAccessFunction]->v)
-                    {
-                      bResult = true;
-                    }
-                  }
-                }
-              }
-            }
-            if (!bResult)
-            {
-              if (m_pAnalyzeCallback != NULL)
-              {
-                bResult = m_pAnalyzeCallback(strPrefix, ptJson, ptData, strError);
-              }
-              else
-              {
-                strError = "Authorization denied.";
-              }
-            }
-          }
-          else if (m_pWarden == NULL)
-          {
-            strError = "Please initialize Warden.";
-          }
-          delete ptData;
         }
         else
         {
