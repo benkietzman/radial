@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
               {
                 if (!ptData->l.empty())
                 {
-                  for (auto &i = ptData->l.begin(); strPassword.empty() && i != ptData->l.end(); i++)
+                  for (auto i = ptData->l.begin(); strPassword.empty() && i != ptData->l.end(); i++)
                   {
                     if (!(*i)->v.empty())
                     {
