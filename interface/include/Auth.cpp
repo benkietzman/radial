@@ -63,37 +63,47 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                       {
                         ptData->pb(ptData->v);
                       }
-                      if (strAction == "push")
-                      {
-                        if (!empty(ptJson->m["Request"], "Password"))
-                        {
-                          ptData->pb(ptJson->m["Request"]->m["Password"]->v);
-                        }
-                      }
-                      else if (strAction == "put")
+                      if (strAction == "push" || strAction == "put")
                       {
                         if (exist(ptJson->m["Request"], "Password"))
                         {
-                          Json *ptPut = new Json;
+                          list<string> passwords;
                           if (!empty(ptJson->m["Request"], "Password"))
                           {
-                            ptPut->pb(ptJson->m["Request"]->m["Password"]->v);
+                            passwords.push_back(ptJson->m["Request"]->m["Password"]->v);
                           }
-                          else
+                          else if (!ptJson->m["Request"]->m["Password"]->l.empty())
                           {
                             for (auto &i : ptJson->m["Request"]->m["Password"]->l)
                             {
                               if (!i->v.empty())
                               {
-                                ptPut->pb(i->v);
+                                passwords.push_back(i->v);
                               }
                             }
                           }
-                          if (!ptPut->l.empty())
+                          if (!passwords.empty())
                           {
-                            ptData->i("Password", ptPut);
+                            if (strAction == "put")
+                            {
+                              ptData->clear();
+                            }
+                            for (auto &i : passwords)
+                            {
+                              bool bDuplicate = false;
+                              for (auto j = ptData->l.begin(); !bDuplicate && j != ptData->l.end(); j++)
+                              {
+                                if (i == (*j)->v)
+                                {
+                                  bDuplicate = true;
+                                }
+                              }
+                              if (!bDuplicate)
+                              {
+                                ptData->pb(i);
+                              }
+                            }
                           }
-                          delete ptPut;
                         }
                       }
                       else if (ptData->l.size() > 1)
@@ -124,6 +134,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                             ptLink->m["Request"]->i("Action", "put");
                             ptLink->m["Request"]->i("Password", ptData);
                             ptLink->i("Node", node);
+                            hub("link", ptLink, strError);
                             delete ptLink;
                           }
                         }
