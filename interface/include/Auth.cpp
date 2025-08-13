@@ -105,6 +105,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                       {
                         ofstream outCred(m_strData + "/.cred");
                         outCred.close();
+                        bResult = true;
                         if (empty(ptJson, "Node"))
                         {
                           list<string> nodes;
@@ -130,6 +131,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                     }
                     else
                     {
+                      bResult = true;
                       ptJson->i("Resposne", ptData);
                     }
                   }
