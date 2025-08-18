@@ -270,13 +270,17 @@ int main(int argc, char *argv[])
                           }
                           outFile << "`" << col->first << "`";
                         }
-                        outFile << ") values";
-                        for (auto row : subResultSet)
+                        outFile << ") values ";
+                        for (auto row = subResultSet.begin(); row != subResultSet.end(); row++)
                         {
-                          outFile << " (";
-                          for (auto col = row.begin(); col != row.end(); col++)
+                          if (row != subResultSet.begin())
                           {
-                            if (col != row.begin())
+                            outFile << ", ";
+                          }
+                          outFile << "(";
+                          for (auto col = row->begin(); col != row->end(); col++)
+                          {
+                            if (col != row->begin())
                             {
                               outFile << ", ";
                             }
