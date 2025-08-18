@@ -69,6 +69,98 @@ export default
       }
     };
     // ]]]
+    // [[[ exportTable()
+    s.exportTable = () =>
+    {
+      let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select sql from sqlite_master where name = \'' + c.esc(s.table.v.name) + '\''}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          if (response.Response.ResultSet && response.Response.ResultSet.length == 1 && response.Response.ResultSet[0].sql)
+          {
+            s.exportData = response.Response.ResultSet[0].sql + '\n';
+            let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: 'select * from \`' + s.table.v.name + '\`'}};
+            c.wsRequest('radial', request).then((response) =>
+            {
+              let error = {};
+              if (c.wsResponse(response, error))
+              {
+                s.exportData += 'insert into `' + s.table.v.name + '` (';
+                if (response.Response.ResultSet && response.Response.ResultSet.length > 0)
+                {
+                  let bFirst = true;
+                  for (let key of Object.keys(response.Response.ResultSet[0]))
+                  {
+                    if (bFirst)
+                    {
+                      bFirst = false;
+                    }
+                    else
+                    {
+                      s.exportData += ', ';
+                    }
+                    s.exportData += '\'' + key + '\''
+                  };
+                  s.exportData += ') values ';
+                  for (let i = 0; i < response.Response.ResultSet.length; i++)
+                  {
+                    let bSubFirst = true;
+                    if (i != 0)
+                    {
+                      s.exportData += ', ';
+                    }
+                    s.exportData += '(';
+                    for (let key of Object.keys(response.Response.ResultSet[i]))
+                    {
+                      if (bSubFirst)
+                      {
+                        bSubFirst = false;
+                      }
+                      else
+                      {
+                        s.exportData += ', ';
+                      }
+                      if (response.Response.ResultSet[i][key] != '')
+                      {
+                        s.exportData += '\'' + c.esc(response.Response.ResultSet[i][key]) + '\'';
+                      }
+                      else
+                      {
+                        s.exportData += 'null';
+                      }
+                    };
+                    s.exportData += ')';
+                  }
+                  s.exportData += '\n';
+                }
+                const a = document.createElement('a');
+                const file = new Blob([s.exportData], {type: 'application/sql'});
+                a.href = URL.createObjectURL(file);
+                a.download = s.table.v.name + '.sql';
+                a.click();
+                URL.revokeObjectURL(a.href);
+              }
+              else
+              {
+                c.pushErrorMessage(error.message);
+              }
+              s.exportData = null;
+            });
+          }
+          else
+          {
+            c.pushErrorMessage('Table does not exist.');
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+      });
+    },
+    // ]]]
     // [[[ getDatabases()
     s.getDatabases = () =>
     {
@@ -213,6 +305,55 @@ export default
         });
       }
     };
+    // ]]]
+    // [[[ importSql()
+    s.importSql = () =>
+    {
+      if (s.importLines.length > 0)
+      {
+        let strSql = s.importLines.shift().trim();
+        if (strSql != '')
+        {
+          let request = {Interface: 'sqlite', 'Function': 'query', Request: {Database: s.database.v.name, Statement: strSql}};
+          c.wsRequest('radial', request).then((response) =>
+          {
+            let error = {};
+            if (c.wsResponse(response, error))
+            {
+              s.importSql();
+            }
+            else
+            {
+              c.pushErrorMessage(error.message);
+              s.getTables();
+            }
+          });
+        }
+        else
+        {
+          s.importSql();
+        }
+      }
+      else
+      {
+        s.getTables();
+      }
+    };
+    // ]]]
+    // [[[ importTable()
+    s.importTable = () =>
+    {
+      let file = document.getElementById('importtable').files[0];
+      const reader = new FileReader()
+      reader.addEventListener('load', (e) =>
+      {
+        let bExit = false;
+        s.importLines = null;
+        s.importLines = e.target.result.split('\n');
+        s.importSql();
+      });
+      reader.readAsText(file);
+    },
     // ]]]
     // [[[ init()
     s.init = () =>
@@ -368,6 +509,8 @@ export default
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
               Structure
+              <button class="btn btn-sm btn-warning bi bi-save float-end" c-click="exportTable()" style="margin-left: 10px;" title="Export"></button>
+              <input class="btn btn-sm btn-success float-end" id="importtable" type="file" accept=".sql" c-change="importTable()" title="Import" value="Import">
             </div>
             <div class="card-body bg-primary-subtle">
               <pre style="background: inherit; color: inherit; white-space: pre-wrap; margin-bottom: -4px;">{{../structure}}</pre>
