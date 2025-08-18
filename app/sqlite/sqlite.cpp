@@ -420,6 +420,10 @@ int main(int argc, char *argv[])
                 cout << endl << "Lastest ID:  " << unID << endl;
               }
             }
+            else
+            {
+              cout << "Operation completed." << endl;
+            }
           }
           else
           {
