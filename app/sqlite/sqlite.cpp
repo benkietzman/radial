@@ -174,16 +174,16 @@ int main(int argc, char *argv[])
           cout << endl;
           cout << "DATABASE FUNCTIONS" << endl;
           cout << "  Create database:  .create [name] <node>" << endl;
-          cout << "  Drop database:  .drop [name] <node>" << endl;
+          cout << "  Drop database:    .drop [name] <node>" << endl;
           cout << "  Attach database:  .database [name]" << endl;
-          cout << "  List databases:  .databases" << endl;
+          cout << "  List databases:   .databases" << endl;
           cout << endl;
           cout << "TABLE FUNCTIONS (must be attached to a database)" << endl;
-          cout << "  List tables:  .tables" << endl;
+          cout << "  List tables:     .tables" << endl;
           cout << "  Describe table:  .desc [name]" << endl;
-          cout << "  Export table:  .export [name] [file]" << endl;
-          cout << "  Import table:  .import [name] [file]" << endl;
-          cout << "  SQL statement: [statement]" << endl;
+          cout << "  Export table:    .export [name] [file]" << endl;
+          cout << "  Import table:    .import [name] [file]" << endl;
+          cout << "  SQL statement:   [statement]" << endl;
         }
         // }}}
         // {{{ .desc
