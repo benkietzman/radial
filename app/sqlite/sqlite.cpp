@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
           cout << "List databases:  .databases" << endl;
           cout << "List tables:  .tables" << endl;
           cout << "Describe table:  .desc <name>" << endl;
-          cout << "SQL Statement: <statement>" << endl;
+          cout << "SQL statement: <statement>" << endl;
         }
         else if (f == ".desc")
         {
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
             if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
             {
               cout << "Radial::sqliteQuery():  okay" << endl;
-              cout << endl << "# of Rows Returned:  " << unRows << endl;
+              cout << endl << "# of rows returned:  " << unRows << endl;
               display(resultSet);
             }
             else
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
           if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table' order by name", resultSet, unID, unRows, e))
           {
             cout << "Radial::sqliteQuery():  okay" << endl;
-            cout << endl << "# of Rows Returned:  " << unRows << endl;
+            cout << endl << "# of rows returned:  " << unRows << endl;
             display(resultSet);
           }
           else
@@ -208,12 +208,12 @@ int main(int argc, char *argv[])
             cout << "Radial::sqliteQuery():  okay" << endl;
             if (f == "select")
             {
-              cout << endl << "# of Rows Returned:  " << unRows << endl;
+              cout << endl << "# of rows returned:  " << unRows << endl;
               display(resultSet);
             }
             else if (f == "delete" || f == "insert" || f == "update")
             {
-              cout << endl << "# of Rows " << ((f == "delete")?"Deleted":((f == "insert")?"Inserted":"Updated")) << ":  " << unRows << endl;
+              cout << endl << "# of rows " << ((f == "delete")?"deleted":((f == "insert")?"inserted":"updated")) << ":  " << unRows << endl;
               if (f == "insert")
               {
                 cout << endl << "Lastest ID:  " << unID << endl;
