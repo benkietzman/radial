@@ -255,20 +255,20 @@ int main(int argc, char *argv[])
                     size_t unSubID = 0, unSubRows = 0;
                     stringstream ssSubStatement;
                     outFile << resultSet.front()["sql"] << endl;
-                    ssSubStatement << "select * from '" << t << "'";
+                    ssSubStatement << "select * from `" << t << "`";
                     if (r.sqliteQuery(strDatabase, ssSubStatement.str(), subResultSet, unSubID, unSubRows, e))
                     {
                       cout << "Table exported." << endl;
                       if (!subResultSet.empty())
                       {
-                        outFile << "insert into '" << t << "' (";
+                        outFile << "insert into `" << t << "` (";
                         for (auto col = subResultSet.front().begin(); col != subResultSet.front().end(); col++)
                         {
                           if (col != subResultSet.front().begin())
                           {
                             outFile << ", ";
                           }
-                          outFile << "'" << col->first << "'";
+                          outFile << "`" << col->first << "`";
                         }
                         outFile << ") values ";
                         for (auto row = subResultSet.begin(); row != subResultSet.end(); row++)
