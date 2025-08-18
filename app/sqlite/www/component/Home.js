@@ -509,8 +509,8 @@ export default
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
               Structure
-              <button class="btn btn-sm btn-warning bi bi-save float-end" c-click="exportTable()" style="margin-left: 10px;" title="Export"></button>
-              <input class="btn btn-sm btn-success float-end" id="importtable" type="file" accept=".sql" c-change="importTable()" title="Import" value="Import">
+              <button class="btn btn-sm btn-warning bi bi-save float-end" c-click="exportTable()" style="margin-left: 10px;" title="export"></button>
+              <input class="btn btn-sm btn-success float-end" id="importtable" type="file" accept=".sql" c-change="importTable()" title="import" value="Import">
             </div>
             <div class="card-body bg-primary-subtle">
               <pre style="background: inherit; color: inherit; white-space: pre-wrap; margin-bottom: -4px;">{{../structure}}</pre>
