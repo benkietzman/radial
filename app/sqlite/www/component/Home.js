@@ -537,7 +537,7 @@ export default
         <div class="col">
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
-              Results <span class="fw-normal>[{{../result.length}}]</span>
+              Results <span class="fw-normal">[{{../result.length}}]</span>
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
               <div class="table-responsive" style="margin-bottom: -16px;">
