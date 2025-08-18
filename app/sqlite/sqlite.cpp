@@ -30,14 +30,28 @@ int main(int argc, char *argv[])
 
   if (e.empty())
   {
-    string c;
+    Json *c = new Json;
     if (w.vaultRetrieve({"radial", "radial", "Password"}, c, e))
     {
       bool b = false;
-      string f, l, strDatabase, v;
+      string f, l, p, strDatabase, v;
       Radial r(e);
       StringManip manip;
-      r.setCredentials("radial", c);
+      if (!c->v.empty())
+      {
+        p = c->v;
+      }
+      else
+      {
+        for (auto i = c->l.begin(); p.empty() && i != c->l.end(); i++)
+        {
+          if (!(*i)->v.empty())
+          {
+            p = (*i)->v;
+          }
+        }
+      }
+      r.setCredentials("radial", p);
       r.useSingleSocket(true);
       cout << endl;
       cout << "sqlite> " << flush;
