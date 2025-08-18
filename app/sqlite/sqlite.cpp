@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
                             }
                             if (!col->second.empty())
                             {
-                              outFile << "'" << col->second << "'";
+                              outFile << "'" << manip.escape(col->second, v) << "'";
                             }
                             else
                             {
