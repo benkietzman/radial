@@ -464,7 +464,7 @@ export default
         <div class="col">
           <div class="card border border-success-subtle" style="margin-top: 10px;">
             <div class="card-header bg-success fw-bold">
-              Databases{{#if ../databases}} [{{../databases.length}}]{{/if}}
+              Databases{{#if ../databases}} <span class="fw-normal">[{{../databases.length}}]</span>{{/if}}
               {{#if ../database}}
               <button class="btn btn-sm btn-danger bi bi-dash-circle float-end" c-click="removeDatabase()" title="remove database"></button>
               {{/if}}
@@ -495,7 +495,7 @@ export default
         <div class="col">
           <div class="card border border-success-subtle" style="margin-top: 10px;">
             <div class="card-header bg-success fw-bold">
-              Tables{{#if ../tables}} [{{../tables.length}}]{{/if}}
+              Tables{{#if ../tables}} <span class="fw-normal">[{{../tables.length}}]</span>{{/if}}
             </div>
             <div class="card-body bg-success-subtle" style="padding: 0px;">
               <select class="form-select form-select-sm" c-model="table" c-change="getStructure()" size="2" style="background: inherit; border-style: none; color: inherit; font-family: monospace, monospace; height: 25vh;" c-json>{{#each ../tables}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
@@ -537,7 +537,7 @@ export default
         <div class="col">
           <div class="card border border-primary-subtle" style="margin-top: 10px;">
             <div class="card-header bg-primary fw-bold">
-              Results [{{../result.length}}]
+              Results <span class="fw-normal>[{{../result.length}}]</span>
             </div>
             <div class="card-body bg-primary-subtle" style="padding: 0px;">
               <div class="table-responsive" style="margin-bottom: -16px;">
