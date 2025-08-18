@@ -6,7 +6,7 @@
 // begin      : 2024-10-24
 // copyright  : Ben Kietzman
 // email      : ben@kietzman.org
-
+// {{{ includes
 #include <iomanip>
 #include <iostream>
 #include <list>
@@ -18,9 +18,11 @@ using namespace std;
 #include <StringManip>
 #include <Warden>
 using namespace common;
-
+// }}}
+// {{{ prototypes
 void display(list<map<string, string> > resultSet);
-
+// }}}
+// {{{ main()
 int main(int argc, char *argv[])
 {
   string d = ((argc >= 2)?argv[1]:"/data/warden/socket"), e;
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
         ssLine >> v;
         manip.toLower(f, v);
         cout << endl;
+        // {{{ .create
         if (f == ".create")
         {
           string strDatabase;
@@ -55,7 +58,7 @@ int main(int argc, char *argv[])
             ssLine >> strNode;
             if (r.sqliteCreate(strDatabase, strNode, e))
             {
-              cout << "Radial::sqliteCreate():  okay" << endl;
+              cout << "Database created." << endl;
             }
             else
             {
@@ -64,9 +67,11 @@ int main(int argc, char *argv[])
           }
           else
           {
-            cerr << "Please provide the database followed by an option node.";
+            cerr << "Please provide the database followed by an optional node." << endl;
           }
         }
+        // }}}
+        // {{{ .drop
         else if (f == ".drop")
         {
           string strDatabase;
@@ -77,7 +82,7 @@ int main(int argc, char *argv[])
             ssLine >> strNode;
             if (r.sqliteDrop(strDatabase, strNode, e))
             {
-              cout << "Radial::sqliteDrop():  okay" << endl;
+              cout << "Database dropped." << endl;
             }
             else
             {
@@ -86,9 +91,11 @@ int main(int argc, char *argv[])
           }
           else
           {
-            cerr << "Please provide the database followed by an option node.";
+            cerr << "Please provide the database followed by an optional node.";
           }
         }
+        // }}}
+        // {{{ .database
         else if (f == ".database")
         {
           ssLine >> strDatabase;
@@ -98,13 +105,17 @@ int main(int argc, char *argv[])
           }
           else
           {
-            cout << "Please provide the database." << endl;
+            cerr << "Please provide the database." << endl;
           }
         }
-        else if (f == ".exit" || f == ".quit")
+        // }}}
+        // {{{ .exit
+        else if (f == ".exit")
         {
           b = true;
         }
+        // }}}
+        // {{{ .databases
         else if (f == ".databases")
         {
           map<string, map<string, string> > databases;
@@ -112,7 +123,6 @@ int main(int argc, char *argv[])
           if (r.sqliteDatabases(databases, e))
           {
             list<map<string, string> > resultSet;
-            cout << "Radial::sqliteDatabases():  okay" << endl;
             for (auto &database : databases)
             {
               map<string, string> row;
@@ -140,18 +150,29 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteDatabases() error:  " << e << endl;
           }
         }
-        else if (f == ".help" || f == "help" || f == "?" || strDatabase.empty())
+        // }}}
+        // {{{ .help
+        else if (f == ".help" || strDatabase.empty())
         {
           getline(ssLine, l);
-          cout << "Exit:  .exit or .quit" << endl;
-          cout << "Create database:  .create <name> [node]" << endl;
-          cout << "Drop database:  .drop <name> [node]" << endl;
-          cout << "Attach database:  .database <name>" << endl;
-          cout << "List databases:  .databases" << endl;
-          cout << "List tables:  .tables" << endl;
-          cout << "Describe table:  .desc <name>" << endl;
-          cout << "SQL statement: <statement>" << endl;
+          cout << "Help:  .help" << endl;
+          cout << "Exit:  .exit" << endl;
+          cout << endl;
+          cout << "DATABASE FUNCTIONS" << endl;
+          cout << "  Create database:  .create [name] <node>" << endl;
+          cout << "  Drop database:  .drop [name] <node>" << endl;
+          cout << "  Attach database:  .database [name]" << endl;
+          cout << "  List databases:  .databases" << endl;
+          cout << endl;
+          cout << "TABLE FUNCTIONS (must be attached to a database)" << endl;
+          cout << "  List tables:  .tables" << endl;
+          cout << "  Describe table:  .desc [name]" << endl;
+          cout << "  Export table:  .export [name] [file]" << endl;
+          cout << "  Import table:  .import [name] [file]" << endl;
+          cout << "  SQL statement: [statement]" << endl;
         }
+        // }}}
+        // {{{ .desc
         else if (f == ".desc")
         {
           string t;
@@ -166,9 +187,19 @@ int main(int argc, char *argv[])
             ssStatement << "select sql from sqlite_master where name = '" << manip.escape(t, v) << "'";
             if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
             {
-              cout << "Radial::sqliteQuery():  okay" << endl;
-              cout << endl << "# of rows returned:  " << unRows << endl;
-              display(resultSet);
+              if (unRows == 1 && resultSet.front().find("sql") != resultSet.front().end())
+              {
+                cout << resultSet.front()["sql"] << endl;
+              }
+              else if (unRows == 0)
+              {
+                cerr << "Table does not exist." << endl;
+              }
+              else
+              {
+                cout << "# of rows returned:  " << unRows << endl;
+                display(resultSet);
+              }
             }
             else
             {
@@ -177,9 +208,165 @@ int main(int argc, char *argv[])
           }
           else
           {
-            cout << "Please provide the table.";
+            cerr << "Please provide the table." << endl;
           }
         }
+        // }}}
+        // {{{ .export
+        else if (f == ".export")
+        {
+          string t;
+          ssLine >> t;
+          if (!t.empty())
+          {
+            string strFile;
+            ssLine >> strFile;
+            if (!strFile.empty())
+            {
+              ofstream outFile;
+              outFile.open(strFile);
+              if (outFile)
+              {
+                list<map<string, string> > resultSet;
+                size_t unID = 0, unRows = 0;
+                string v;
+                stringstream ssStatement;
+                getline(ssLine, l);
+                ssStatement << "select sql from sqlite_master where name = '" << manip.escape(t, v) << "'";
+                if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
+                {
+                  if (resultSet.size() == 1 && resultSet.front().find("sql") != resultSet.front().end())
+                  {
+                    list<map<string, string> > subResultSet;
+                    size_t unSubID = 0, unSubRows = 0;
+                    stringstream ssSubStatement;
+                    outFile << resultSet.front()["sql"] << endl;
+                    ssSubStatement << "select * from `" << t << "`";
+                    if (r.sqliteQuery(strDatabase, ssSubStatement.str(), subResultSet, unSubID, unSubRows, e))
+                    {
+                      cout << "Table exported." << endl;
+                      if (!subResultSet.empty())
+                      {
+                        outFile << "insert into `" << t << "` (";
+                        for (auto col = subResultSet.front().begin(); col != subResultSet.front().end(); col++)
+                        {
+                          if (col != subResultSet.front().begin())
+                          {
+                            outFile << ", ";
+                          }
+                          outFile << "`" << col->first << "`";
+                        }
+                        outFile << ") values";
+                        for (auto row : subResultSet)
+                        {
+                          outFile << " (";
+                          for (auto col = row.begin(); col != row.end(); col++)
+                          {
+                            if (col != row.begin())
+                            {
+                              outFile << ", ";
+                            }
+                            if (!col->second.empty())
+                            {
+                              outFile << "`" << col->second << "`";
+                            }
+                            else
+                            {
+                              outFile << "null";
+                            }
+                          }
+                          outFile << ")";
+                        }
+                        outFile << endl;
+                      }
+                    }
+                    else
+                    {
+                      cerr << "Radial::sqliteQuery() error:  " << e << endl;
+                    }
+                  }
+                  else if (resultSet.size() == 0)
+                  {
+                    cerr << "Table does not exist." << endl;
+                  }
+                  else
+                  {
+                    cerr << "Radial::sqliteQuery() error:  Invalid number of rows returned." << endl;
+                  }
+                }
+                else
+                {
+                  cerr << "Radial::sqliteQuery() error:  " << e << endl;
+                }
+              }
+              else
+              {
+                cerr << "ofstream::open(" << errno << ") error [" << strFile << "]:  " << strerror(errno) << endl;
+              }
+              outFile.close();
+            }
+            else
+            {
+              cerr << "Please provide the file." << endl;
+            }
+          }
+          else
+          {
+            cerr << "Please provide the table." << endl;
+          }
+        }
+        // }}}
+        // {{{ .import
+        else if (f == ".import")
+        {
+          string t;
+          ssLine >> t;
+          if (!t.empty())
+          {
+            string strFile;
+            ssLine >> strFile;
+            if (!strFile.empty())
+            {
+              ifstream inFile;
+              inFile.open(strFile);
+              if (inFile)
+              {
+                bool bExit = false;
+                string l;
+                while (!bExit && getline(inFile, l))
+                {
+                  if (!r.sqliteQuery(strDatabase, l, e))
+                  {
+                    bExit = true;
+                  }
+                }
+                if (!bExit)
+                {
+                  cout << "Table imported." << endl;
+                }
+                else
+                {
+                  cerr << "Radial::sqliteQuery() error:  " << e << endl;
+                }
+              }
+              else
+              {
+                cerr << "ifstream::open(" << errno << ") error [" << strFile << "]:  " << strerror(errno) << endl;
+              }
+              inFile.close();
+            }
+            else
+            {
+              cerr << "Please provide the file." << endl;
+            }
+          }
+          else
+          {
+            cerr << "Please provide the table." << endl;
+          }
+        }
+        // }}}
+        // {{{ .tables
         else if (f == ".tables")
         {
           list<map<string, string> > resultSet;
@@ -187,8 +374,7 @@ int main(int argc, char *argv[])
           getline(ssLine, l);
           if (r.sqliteQuery(strDatabase, "select name from sqlite_master where type='table' order by name", resultSet, unID, unRows, e))
           {
-            cout << "Radial::sqliteQuery():  okay" << endl;
-            cout << endl << "# of rows returned:  " << unRows << endl;
+            cout << "# of rows returned:  " << unRows << endl;
             display(resultSet);
           }
           else
@@ -196,6 +382,8 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteQuery() error:  " << e << endl;
           }
         }
+        // }}}
+        // {{{ sql
         else if (!f.empty())
         {
           list<map<string, string> > resultSet;
@@ -205,15 +393,14 @@ int main(int argc, char *argv[])
           ssStatement << v << l;
           if (r.sqliteQuery(strDatabase, ssStatement.str(), resultSet, unID, unRows, e))
           {
-            cout << "Radial::sqliteQuery():  okay" << endl;
             if (f == "select")
             {
-              cout << endl << "# of rows returned:  " << unRows << endl;
+              cout << "# of rows returned:  " << unRows << endl;
               display(resultSet);
             }
             else if (f == "delete" || f == "insert" || f == "update")
             {
-              cout << endl << "# of rows " << ((f == "delete")?"deleted":((f == "insert")?"inserted":"updated")) << ":  " << unRows << endl;
+              cout << "# of rows " << ((f == "delete")?"deleted":((f == "insert")?"inserted":"updated")) << ":  " << unRows << endl;
               if (f == "insert")
               {
                 cout << endl << "Lastest ID:  " << unID << endl;
@@ -225,6 +412,7 @@ int main(int argc, char *argv[])
             cerr << "Radial::sqliteQuery() error:  " << e << endl;
           }
         }
+        // }}}
         cout << endl;
         if (!b)
         {
@@ -244,7 +432,8 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-
+// }}}
+// {{{ display()
 void display(list<map<string, string> > resultSet)
 {
   if (!resultSet.empty())
@@ -285,3 +474,4 @@ void display(list<map<string, string> > resultSet)
     }
   }
 }
+// }}}
