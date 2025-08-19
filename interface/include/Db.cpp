@@ -2306,7 +2306,7 @@ string Db::ib(const string k, const string i, bool &f)
   {
     os << ",";
   }
-  os << " " << (((i.size() > 15 && i.substr(0, 14) == "from_unixtime(" && i[i.size()-1] == ')') || i == "now()")?i:v(i));
+  os << " " << (((i.size() > 10 && i.substr(0, 9) == "datetime(" && i[i.size()-1] == ')') || (i.size() > 15 && i.substr(0, 14) == "from_unixtime(" && i[i.size()-1] == ')') || i == "now()" || i == "unixepoch()")?i:v(i));
 
   s = os.str();
   return s;
@@ -2413,7 +2413,7 @@ string Db::u(const string k, const string i, bool &f)
   string s;
   stringstream os;
 
-  os << ((f)?"":",") << " `" << k << "` = " << (((i.size() > 15 && i.substr(0, 14) == "from_unixtime(" && i[i.size()-1] == ')') || i == "now()")?i:v(i));
+  os << ((f)?"":",") << " `" << k << "` = " << (((i.size() > 10 && i.substr(0, 9) == "datetime(" && i[i.size()-1] == ')') || (i.size() > 15 && i.substr(0, 14) == "from_unixtime(" && i[i.size()-1] == ')') || i == "now()" || i == "unixepoch()")?i:v(i));
   f = false;
 
   s = os.str();
