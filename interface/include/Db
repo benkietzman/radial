@@ -127,7 +127,7 @@ class Db : public Interface
   string u(const string k, Json *i, bool &f);
   string u(const string k, const string i);
   string u(const string k, const string i, bool &f);
-  string v(const string i);
+  string v(const string i, const char '\'');
 
   public:
   Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));

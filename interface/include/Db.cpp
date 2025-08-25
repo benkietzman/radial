@@ -2421,14 +2421,14 @@ string Db::u(const string k, const string i, bool &f)
 }
 // }}}
 // {{{ v()
-string Db::v(const string i)
+string Db::v(const string i, const char t)
 {
   string o;
 
   if (!i.empty())
   {
     stringstream os;
-    os << "'" << esc(i) << "'";
+    os << t << esc(i) << t;
     o = os.str();
   }
   else
