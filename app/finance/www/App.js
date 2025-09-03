@@ -339,7 +339,7 @@ class App
     let fYield = fDividend / fPrice * 100;
 
     fAdjust += (fChangeDividend / 100) * fAdjust;
-    fAdjust += (fChangePrice / 100) * fAdjust;
+    fAdjust += (fChangePrice / 100 / 2) * fAdjust;
 
     return fYield * fAdjust;
   }
