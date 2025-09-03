@@ -125,6 +125,14 @@ class App
     {
       return this.assetStockYield(nDividend, nDividendLatest, nPrice);
     });
+    Handlebars.registerHelper('assetStockYieldAdjust', (strStock, nDividend, nDividendLatest, nPrice) =>
+    {
+      return this.assetStockYieldAdjust(strStock, nDividend, nDividendLatest, nPrice);
+    });
+    Handlebars.registerHelper('assetStockYieldAdjustSum', () =>
+    {
+      return this.assetStockYieldAdjustSum();
+    });
     Handlebars.registerHelper('assetStockYieldSum', () =>
     {
       return this.assetStockYieldSum();
@@ -318,6 +326,35 @@ class App
   assetStockYield(Dividend, DividendLatest, Price)
   {
     return Number(((this.d.Assumption.DividendSpan == '1-year')?Dividend:DividendLatest)) / Number(Price) * 100;
+  }
+  // }}}
+  // {{{ assetStockYieldAdjust()
+  assetStockYieldAdjust(Stock, Dividend, DividendLatest, Price)
+  {
+    let fAdjust = 1;
+    let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend);
+    let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice);
+    let fDividend = Number((this.d.Assumption.DividendSpan == '1-year')?Dividend:DividendLatest);
+    let fPrice = Number(Price);
+    let fYield = fDividend / fPrice * 100;
+
+    fAdjust += (fChangeDividend / 100) * fAdjust;
+    fAdjust += (fChangePrice / 100) * fAdjust;
+
+    return fYield * fAdjust;
+  }
+  // }}}
+  // {{{ assetStockYieldAdjustSum()
+  assetStockYieldAdjustSum()
+  {
+    let nSum = 0;
+
+    for (let [k, v] of Object.entries(this.d.Asset.Stock))
+    {
+      nSum += this.assetStockYieldAdjust(k, v.Dividend, v.DividendLatest, v.Price);
+    }
+
+    return nSum;
   }
   // }}}
   // {{{ assetStockYieldSum()
@@ -661,6 +698,9 @@ class App
                   }
                   if (data.chart.result[0].timestamp && data.chart.result[0].indicators && data.chart.result[0].indicators.quote && data.chart.result[0].indicators.quote[0] && data.chart.result[0].indicators.quote[0].close)
                   {
+                    let CYear = Math.floor((date.getTime() - (365 * 24 * 60 * 60 * 1000)) / 1000);
+                    let fPrice = 0;
+                    let fPriceLatest = 0;
                     let nCount = 0;
                     let nLength = data.chart.result[0].timestamp.length;
                     let nPrice = 0;
@@ -677,12 +717,18 @@ class App
                         nCount = 0;
                         nPrice = 0;
                       }
+                      if (nTimestamp >= CYear)
+                      {
+                        fPrice += Number(nPrice);
+                      }
+                      fPriceLatest = Number(nPrice);
                     }
                     if (nTimestamp != prices[prices.length-1])
                     {
                       prices[nTimestamp] = nPrice / nCount;
                     }
                     this.d.Asset.Stock[k].Prices = prices;
+                    this.d.Asset.Stock[k].ChangePrice = (fPriceLatest - fPrice) * 100 / fPrice;
                   }
                 }
               }
