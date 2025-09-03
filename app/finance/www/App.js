@@ -332,14 +332,17 @@ class App
   assetStockYieldAdjust(Stock, Dividend, DividendLatest, Price)
   {
     let fAdjust = 1;
-    let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend);
-    let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice);
+    let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend) / 100;
+    let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice) / 100 / 2;
+    let fChangeScore = 1;
     let fDividend = Number((this.d.Assumption.DividendSpan == '1-year')?Dividend:DividendLatest);
     let fPrice = Number(Price);
+    let fScore = (Number(this.d.Asset.Stock[Stock].Score) - 1) / -10;
     let fYield = fDividend / fPrice * 100;
 
-    fAdjust += (fChangeDividend / 100) * fAdjust;
-    fAdjust += (fChangePrice / 100 / 2) * fAdjust;
+    fAdjust += fScore * fAdjust;
+    fAdjust += fChangeDividend * fAdjust;
+    fAdjust += fChangePrice * fAdjust;
 
     return fYield * fAdjust;
   }
