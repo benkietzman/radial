@@ -333,7 +333,7 @@ export default
             <tfoot>
             <tr>
               <th style="background: inherit; font-size: small; text-align:left;">Total</th>
-              <th colspan="9" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
+              <th colspan="11" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
               <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%</th>
               <th colspan="2" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
               <th colspan="4" style="background: inherit; font-size: small; text-align: right;" title="{{number (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}</th>
