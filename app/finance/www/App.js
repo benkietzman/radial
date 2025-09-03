@@ -600,54 +600,35 @@ class App
       let nTimestamp = Date.now();
       for (let [k, v] of Object.entries(this.d.Asset.Stock))
       {
-        if ((!this.c.isDefined(v.timestamp) || bIgnoreTimestamp || (nTimestamp - v.timestamp) > this.m_nExpired))
+        if (!this.c.isDefined(v.timestamp) || bIgnoreTimestamp || (nTimestamp - v.timestamp) > this.m_nExpired)
         {
-          let request = [{Service: 'finance', 'Function': 'stock', Symbol: k, reqApp: 'Finance'}];
+          let strBase = 'https://query2.finance.yahoo.com/v8/finance/chart/';
+          let strSymbol = k;
+          let date = new Date();
+          let CStart = Math.floor((date.getTime() - (5 * 365 * 24 * 60 * 60 * 1000)) / 1000);
+          let CEnd = Math.floor(date.getTime() / 1000);
+          let strInterval = '1d';
+          let strEvents = 'div';
+          let strURL = strBase + strSymbol + '?';
+          let args = {period1: CStart, period2: CEnd, interval: strInterval, events: strEvents};
+          let out = [];
+          for (let key in args)
+          {
+            out.push(key + '=' + encodeURIComponent(args[key]));
+          }
+          strURL += out.join('&');
+          let request = [{Service: 'curl'},{URL: strURL, Display: 'Content'}]; 
           this.j.request(request, true, (response) =>
           {
-            let bPrice = false;
             let error = {};
             if (this.j.response(response, error))
             {
-              if (this.c.isDefined(response.Response) && this.c.isDefined(response.Response[1]) && this.c.isDefined(response.Response[1].Last) && response.Response[1].Last)
+              if (response.Response[1].Status == 'okay')
               {
-                bPrice = true;
-                this.d.Asset.Stock[k].Price = response.Response[1].Last;
-              }
-            }
-            else
-            {
-              console.log(response);
-            }
-            let strBase = 'https://query2.finance.yahoo.com/v8/finance/chart/';
-            let strSymbol = k;
-            let date = new Date();
-            let CStart = Math.floor((date.getTime() - (5 * 365 * 24 * 60 * 60 * 1000)) / 1000);
-            let CEnd = Math.floor(date.getTime() / 1000);
-            let strInterval = '1d';
-            let strEvents = 'div';
-            let strURL = strBase + strSymbol + '?';
-            let args = {period1: CStart, period2: CEnd, interval: strInterval, events: strEvents};
-            let out = [];
-            for (let key in args)
-            {
-              out.push(key + '=' + encodeURIComponent(args[key]));
-            }
-            strURL += out.join('&');
-            let request = [{Service: 'curl'},{URL: strURL, Display: 'Content'}]; 
-            this.j.request(request, true, (response) =>
-            {
-              let error = {};
-              if (this.j.response(response, error))
-              {
-                if (response.Response[1].Status == 'okay')
+                let data = JSON.parse(response.Response[1].Content);
+                if (data && data.chart && data.chart.result && data.chart.result[0])
                 {
-                  let data = JSON.parse(response.Response[1].Content);
-                  if (bPrice)
-                  {
-                    this.d.Asset.Stock[k].timestamp = nTimestamp;
-                  }
-                  if (data && data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].events && data.chart.result[0].events.dividends)
+                  if (data.chart.result[0].events && data.chart.result[0].events.dividends)
                   {
                     let CYear = Math.floor((date.getTime() - (365 * 24 * 60 * 60 * 1000)) / 1000);
                     let dividends = {};
@@ -672,27 +653,58 @@ class App
                     this.d.Asset.Stock[k].DividendLatest = fDividendLatest;
                     this.d.Asset.Stock[k].ChangeDividend = (fDividendLatest - fDividend) * 100 / fDividend;
                   }
-                }
-                else
-                {
-                  console.log(response.Response[1].Error);
+                  if (data.chart.result[0].meta)
+                  {
+                    this.d.Asset.Stock[k].timestamp = nTimestamp;
+                    this.d.Asset.Stock[k].FirstTrade = data.chart.result[0].meta.firstTradeDate;
+                    this.d.Asset.Stock[k].Price = data.chart.result[0].meta.regularMarketPrice;
+                  }
+                  if (data.chart.result[0].timestamp && data.chart.result[0].indicators && data.chart.result[0].indicators.quote && data.chart.result[0].indicators.quote[0] && data.chart.result[0].indicators.quote[0].close)
+                  {
+                    let nCount = 0;
+                    let nLength = data.chart.result[0].timestamp.length;
+                    let nPrice = 0;
+                    let nTimestamp = 0;
+                    let prices = {};
+                    for (let i = 0; i < nLength; i++)
+                    {
+                      nCount++;
+                      nPrice += data.chart.result[0].indicators.quote[0].close[i];
+                      nTimestamp = data.chart.result[0].timestamp[i];
+                      if (nCount >= 30)
+                      {
+                        prices[nTimestamp] = nPrice / nCount;
+                        nCount = 0;
+                        nPrice = 0;
+                      }
+                    }
+                    if (nTimestamp != prices[prices.length-1])
+                    {
+                      prices[nTimestamp] = nPrice / nCount;
+                    }
+                    this.d.Asset.Stock[k].Prices = prices;
+                  }
                 }
               }
               else
               {
-                console.log(response);
+                console.log(response.Response[1].Error);
               }
-              if (!this.c.isNull(postFunction))
-              {
-                postFunction();
-              }
-              if (this.c.isDefined(this.c.component))
-              {
-                this.c.render(this.c.id, this.c.name, this.c.component);
-              }
-              this.progress();
-              this.jsonSave();
-            });
+            }
+            else
+            {
+              console.log(response);
+            }
+            if (!this.c.isNull(postFunction))
+            {
+              postFunction();
+            }
+            if (this.c.isDefined(this.c.component))
+            {
+              this.c.render(this.c.id, this.c.name, this.c.component);
+            }
+            this.progress();
+            this.jsonSave();
           });
         }
       }

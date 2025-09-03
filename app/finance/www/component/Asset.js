@@ -27,6 +27,7 @@ export default
       chartAccounts: null,
       chartCategories: null,
       chartChange: {},
+      chartPrices: {},
       chartScores: null,
       chartSectors: null
     });
@@ -141,6 +142,19 @@ export default
             delete s.chartChange[key];
           }
           s.chartChange[key] = new Chart(ctxChange, {type: 'line', data: dChange, options: {elements: {point: {radius: 0}}, plugins: {legend: {display: false}, title: {display: false} }, scales: {x: {display: false}, y: {display: false}} } });
+          let dPrices = {labels: [], datasets: [{data: []}]};
+          for (let subkey in f.Stock[key]['Prices'])
+          {
+            dPrices.labels.push(subkey);
+            dPrices.datasets[0].data.push(f.Stock[key]['Prices'][subkey]);
+          }
+          const ctxPrices = document.getElementById('chartPrices_'+key);
+          if (c.isDefined(s.chartPrices[key]) && !c.isNull(s.chartPrices[key]))
+          {
+            s.chartPrices[key].destroy();
+            delete s.chartPrices[key];
+          }
+          s.chartPrices[key] = new Chart(ctxPrices, {type: 'line', data: dPrices, options: {elements: {point: {radius: 0}}, plugins: {legend: {display: false}, title: {display: false} }, scales: {x: {display: false}, y: {display: false}} } });
         }
         // }}}
         // {{{ score
@@ -269,20 +283,21 @@ export default
               <th c-click="c.tableSort('stock', 4)" style="background: inherit; cursor: ns-resize; font-size: small;" title="Sector Classification">Sector</th>
               <th c-click="c.tableSort('stock', 5, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="# of Shares of stock">Shares</th>
               <th c-click="c.tableSort('stock', 6, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Price per Share of stock">Price</th>
-              <th c-click="c.tableSort('stock', 7)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="5-Year Dividend Change">δ Div</th>
-              <th c-click="c.tableSort('stock', 8, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend per Share">x̄ Div</th>
-              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend Yield">x̄ Yield</th>
-              <th c-click="c.tableSort('stock', 10, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Latest Dividend per Share">Div</th>
-              <th c-click="c.tableSort('stock', 11, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend Yield">Yield</th>
-              <th c-click="c.tableSort('stock', 12, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Allocation">Alloc</th>
-              <th c-click="c.tableSort('stock', 13, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Value">Value</th>
-              <th c-click="c.tableSort('stock', 14, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Allocation">TgtA</th>
-              <th c-click="c.tableSort('stock', 15, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Value">TgtV</th>
-              <th c-click="c.tableSort('stock', 16, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Gap between Current Value and Target Value">Gap</th>
-              <th c-click="c.tableSort('stock', 17, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Annual Dividend">Div</th>
-              <th c-click="c.tableSort('stock', 18, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
-              <th c-click="c.tableSort('stock', 19, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
-              <th c-click="c.tableSort('stock', 20, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
+              <th c-click="c.tableSort('stock', 7)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="5-Year Price Change">δ Price</th>
+              <th c-click="c.tableSort('stock', 8)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="5-Year Dividend Change">δ Div</th>
+              <th c-click="c.tableSort('stock', 9, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend per Share">x̄ Div</th>
+              <th c-click="c.tableSort('stock', 10, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right; white-space: nowrap;" title="1-Year Average Dividend Yield">x̄ Yield</th>
+              <th c-click="c.tableSort('stock', 11, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Latest Dividend per Share">Div</th>
+              <th c-click="c.tableSort('stock', 12, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend Yield">Yield</th>
+              <th c-click="c.tableSort('stock', 13, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Allocation">Alloc</th>
+              <th c-click="c.tableSort('stock', 14, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Current Value">Value</th>
+              <th c-click="c.tableSort('stock', 15, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Allocation">TgtA</th>
+              <th c-click="c.tableSort('stock', 16, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Target Value">TgtV</th>
+              <th c-click="c.tableSort('stock', 17, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Gap between Current Value and Target Value">Gap</th>
+              <th c-click="c.tableSort('stock', 18, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Annual Dividend">Div</th>
+              <th c-click="c.tableSort('stock', 19, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
+              <th c-click="c.tableSort('stock', 20, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
+              <th c-click="c.tableSort('stock', 21, true)" style="background: inherit; cursor: ns-resize; font-size: small; text-align: right;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
             </tr>
             </thead>
             <tbody>
@@ -295,6 +310,7 @@ export default
               <td style="background: inherit; font-size: small;">{{#indexOf ../../../a.m_assetStockSectors Sector}}{{/indexOf}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Shares}}">{{numberShort Shares}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Price}}">{{numberShort Price}}</td>
+              <td style="background: inherit;"><div style="max-height: 20px;"><canvas id="chartPrices_{{@key}}"></canvas></div></td>
               <td style="background: inherit;"><div style="max-height: 20px;"><canvas id="chartChange_{{@key}}"></canvas></div></td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Dividend}}">{{numberShort Dividend}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number (multiply (divide Dividend Price) 100)}}%">{{numberShort (multiply (divide Dividend Price) 100)}}%</td>
