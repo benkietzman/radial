@@ -306,9 +306,9 @@ export default
             <tr>
               <td style="background: inherit; font-size: small;">{{@key}}</td>
               <td style="background: inherit; font-size: small;">{{Account}}</td>
-              <td style="background: inherit; font-size: small;">{{#indexOf ../../../a.m_assetStockCategories Category}}{{/indexOf}}</td>
-              <td style="background: inherit; font-size: small;">{{#indexOf ../../../a.m_assetStockScores Score}}{{/indexOf}}</td>
-              <td style="background: inherit; font-size: small;">{{#indexOf ../../../a.m_assetStockSectors Sector}}{{/indexOf}}</td>
+              <td style="background: inherit; font-size: small;">{{indexOf ../../../a.m_assetStockCategories Category}}</td>
+              <td style="background: inherit; font-size: small;">{{indexOf ../../../a.m_assetStockScores Score}}</td>
+              <td style="background: inherit; font-size: small;" title="{{indexOf ../../../a.m_assetStockSectors Sector}}">{{truncate (indexOf ../../../a.m_assetStockSectors Sector) 4 true}}</td>
               <td style="background: inherit; font-size: small;"">{{dateyear FirstTrade}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Shares}}">{{numberShort Shares}}</td>
               <td style="background: inherit; font-size: small; text-align: right;" title="{{number Price}}">{{numberShort Price}}</td>

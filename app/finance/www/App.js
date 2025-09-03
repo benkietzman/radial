@@ -52,19 +52,19 @@ class App
       'Income',
       'Entertain',
       'Healthcare',
-      'Healthcare Fac',
+      'HealthFac',
       'Insurance',
-      'Manufac',
-      'Mtg Com',
-      'Mtg Res',
+      'Manufacture',
+      'MtgCom',
+      'MtgRes',
       'Energy',
-      'Safe, Secure, Store',
+      'Store',
       'Transport',
       'Tech',
       'Telecom',
       'Utility',
       'Misc',
-      'Cash, Margin'
+      'Cash/Margin'
     ];
     this.m_noYes =
     [
