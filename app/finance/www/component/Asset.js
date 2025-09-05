@@ -244,10 +244,10 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Quantity</th>
-              <th class="text-end">$/item</th>
-              <th class="text-end">Value</th>
+              <th class="bg-success-subtle">Name</th>
+              <th class="bg-success-subtle text-end">Quantity</th>
+              <th class="bg-success-subtle text-end">$/item</th>
+              <th class="bg-success-subtle text-end">Value</th>
             </tr>
             </thead>
             <tbody>
@@ -276,37 +276,37 @@ export default
           <table id="stock" class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th c-click="c.tableSort('stock', 0)" style="cursor: ns-resize; left: 0; position: sticky;" title="Stock Symbol">Stk</th>
-              <th c-click="c.tableSort('stock', 1)" style="cursor: ns-resize;" title="Account">Acct</th>
-              <th c-click="c.tableSort('stock', 2)" style="cursor: ns-resize;" title="Position Category">Cat</th>
-              <th c-click="c.tableSort('stock', 3, true)" style="cursor: ns-resize;" title="Score">Scr</th>
-              <th c-click="c.tableSort('stock', 4)" style="cursor: ns-resize;" title="Sector Classification">Sector</th>
-              <th c-click="c.tableSort('stock', 5)" style="cursor: ns-resize; white-space: nowrap;" title="Birth Year">Birth</th>
-              <th c-click="c.tableSort('stock', 6, true)" class="text-end" style="cursor: ns-resize;" title="# of Shares of stock">Shares</th>
-              <th c-click="c.tableSort('stock', 7, true)" class="text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Price per Share of stock">x̄ Price</th>
-              <th c-click="c.tableSort('stock', 8, true)" class="text-end" style="cursor: ns-resize;" title="Price per Share of stock">Price</th>
-              <th c-click="c.tableSort('stock', 9)" class="text-end" style="cursor: ns-resize; white-space: nowrap;" title="5-Year Price Change">δ Price</th>
-              <th c-click="c.tableSort('stock', 10)" class="text-end" style="cursor: ns-resize; white-space: nowrap;" title="5-Year Dividend Change">δ Div</th>
-              <th c-click="c.tableSort('stock', 11, true)" class="text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Dividend per Share">x̄ Div</th>
-              <th c-click="c.tableSort('stock', 12, true)" class="text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Dividend Yield">x̄ Yield</th>
-              <th c-click="c.tableSort('stock', 13, true)" class="text-end" style="cursor: ns-resize;" title="Latest Dividend per Share">Div</th>
-              <th c-click="c.tableSort('stock', 14, true)" class="text-end" style="cursor: ns-resize;" title="Dividend Yield">Yield</th>
-              <th c-click="c.tableSort('stock', 15, true)" class="text-end" style="cursor: ns-resize;" title="Adjusted Dividend Yield">AdjYld</th>
-              <th c-click="c.tableSort('stock', 16, true)" class="text-end" style="cursor: ns-resize;" title="Current Allocation">Alloc</th>
-              <th c-click="c.tableSort('stock', 17, true)" class="text-end" style="cursor: ns-resize;" title="Current Value">Value</th>
-              <th c-click="c.tableSort('stock', 18, true)" class="text-end" style="cursor: ns-resize;" title="Target Allocation">TgtA</th>
-              <th c-click="c.tableSort('stock', 19, true)" class="text-end" style="cursor: ns-resize;" title="Target Value">TgtV</th>
-              <th c-click="c.tableSort('stock', 20, true)" class="text-end" style="cursor: ns-resize;" title="Gap between Current Value and Target Value">Gap</th>
-              <th c-click="c.tableSort('stock', 21, true)" class="text-end" style="cursor: ns-resize;" title="Annual Dividend">Div</th>
-              <th c-click="c.tableSort('stock', 22, true)" class="text-end" style="cursor: ns-resize;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
-              <th c-click="c.tableSort('stock', 23, true)" class="text-end" style="cursor: ns-resize;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
-              <th c-click="c.tableSort('stock', 24, true)" class="text-end" style="cursor: ns-resize;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
+              <th c-click="c.tableSort('stock', 0)" class="bg-success-subtle" style="cursor: ns-resize; left: 0; position: sticky;" title="Stock Symbol">Stk</th>
+              <th c-click="c.tableSort('stock', 1)" class="bg-success-subtle" style="cursor: ns-resize;" title="Account">Acct</th>
+              <th c-click="c.tableSort('stock', 2)" class="bg-success-subtle" style="cursor: ns-resize;" title="Position Category">Cat</th>
+              <th c-click="c.tableSort('stock', 3, true)" class="bg-success-subtle" style="cursor: ns-resize;" title="Score">Scr</th>
+              <th c-click="c.tableSort('stock', 4)" class="bg-success-subtle" style="cursor: ns-resize;" title="Sector Classification">Sector</th>
+              <th c-click="c.tableSort('stock', 5)" class="bg-success-subtle" style="cursor: ns-resize; white-space: nowrap;" title="Birth Year">Birth</th>
+              <th c-click="c.tableSort('stock', 6, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="# of Shares of stock">Shares</th>
+              <th c-click="c.tableSort('stock', 7, true)" class="bg-success-subtle text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Price per Share of stock">x̄ Price</th>
+              <th c-click="c.tableSort('stock', 8, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Price per Share of stock">Price</th>
+              <th c-click="c.tableSort('stock', 9)" class="bg-success-subtle text-end" style="cursor: ns-resize; white-space: nowrap;" title="5-Year Price Change">δ Price</th>
+              <th c-click="c.tableSort('stock', 10)" class="bg-success-subtle text-end" style="cursor: ns-resize; white-space: nowrap;" title="5-Year Dividend Change">δ Div</th>
+              <th c-click="c.tableSort('stock', 11, true)" class="bg-success-subtle text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Dividend per Share">x̄ Div</th>
+              <th c-click="c.tableSort('stock', 12, true)" class="bg-success-subtle text-end" style="cursor: ns-resize; white-space: nowrap;" title="1-Year Average Dividend Yield">x̄ Yield</th>
+              <th c-click="c.tableSort('stock', 13, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Latest Dividend per Share">Div</th>
+              <th c-click="c.tableSort('stock', 14, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend Yield">Yield</th>
+              <th c-click="c.tableSort('stock', 15, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Adjusted Dividend Yield">AdjYld</th>
+              <th c-click="c.tableSort('stock', 16, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Current Allocation">Alloc</th>
+              <th c-click="c.tableSort('stock', 17, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Current Value">Value</th>
+              <th c-click="c.tableSort('stock', 18, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Target Allocation">TgtA</th>
+              <th c-click="c.tableSort('stock', 19, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Target Value">TgtV</th>
+              <th c-click="c.tableSort('stock', 20, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Gap between Current Value and Target Value">Gap</th>
+              <th c-click="c.tableSort('stock', 21, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Annual Dividend">Div</th>
+              <th c-click="c.tableSort('stock', 22, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
+              <th c-click="c.tableSort('stock', 23, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
+              <th c-click="c.tableSort('stock', 24, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
             <tr>
-              <td style="left: 0; position: sticky;">{{@key}}</td>
+              <td class="bg-success-subtle" style="left: 0; position: sticky;">{{@key}}</td>
               <td style="background: inherit;">{{Account}}</td>
               <td style="background: inherit;">{{indexOf ../../../a.m_assetStockCategories Category}}</td>
               <td style="background: inherit;">{{indexOf ../../../a.m_assetStockScores Score}}</td>
@@ -336,7 +336,7 @@ export default
             </tbody>
             <tfoot>
             <tr>
-              <th style="left: 0; position: sticky; text-align:left;">Total</th>
+              <th class="bg-success-subtle" style="left: 0; position: sticky; text-align:left;">Total</th>
               <th class="text-end" colspan="12" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
               <th class="text-end" colspan="2" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%</th>
               <th class="text-end" colspan="3" style="background: inherit;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
@@ -358,8 +358,8 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Amount</th>
+              <th class="bg-success-subtle">Name</th>
+              <th class="bg-success-subtle text-end">Amount</th>
             </tr>
             </thead>
             <tbody>

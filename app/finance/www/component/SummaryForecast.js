@@ -269,27 +269,27 @@ export default
       <table class="table table-sm table-striped bg-primary-subtle border border-primary-subtle">
         <thead style="position: sticky; top: 0;">
         <tr>
-          <th class="text-end">Year</th>
-          <th class="text-end">Age</th>
-          <th class="text-end" title="Gross Income including Employer Match">Gross</th>
-          <th class="text-end" title="Invest including Employer Match">Invest</th>
-          <th class="text-end" title="Net Income">Net</th>
-          <th class="text-end" title="Tithe">Tithe</th>
-          <th class="text-end" title="Value of Stocks">Stock</th>
-          <th class="text-end" title="Annual Dividend Yield">Dividend</th>
-          <th class="text-end" title="Dividend Tax">Div Tax</th>
-          <th class="text-end" title="Value of Precious Metals">Metal</th>
-          <th class="text-end" title="Value of Assets">Asset</th>
-          <th class="text-end" title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
-          <th class="text-end" title="Value of Expenses">Expense</th>
-          <th class="text-end" title="Incomes minus Expenses">Flow</th>
-          <th class="text-end" title="Rate of change between current Flow and previous Flow">Rate</th>
+          <th class="bg-primary-subtle text-end">Year</th>
+          <th class="bg-primary-subtle text-end">Age</th>
+          <th class="bg-primary-subtle text-end" title="Gross Income including Employer Match">Gross</th>
+          <th class="bg-primary-subtle text-end" title="Invest including Employer Match">Invest</th>
+          <th class="bg-primary-subtle text-end" title="Net Income">Net</th>
+          <th class="bg-primary-subtle text-end" title="Tithe">Tithe</th>
+          <th class="bg-primary-subtle text-end" title="Value of Stocks">Stock</th>
+          <th class="bg-primary-subtle text-end" title="Annual Dividend Yield">Dividend</th>
+          <th class="bg-primary-subtle text-end" title="Dividend Tax">Div Tax</th>
+          <th class="bg-primary-subtle text-end" title="Value of Precious Metals">Metal</th>
+          <th class="bg-primary-subtle text-end" title="Value of Assets">Asset</th>
+          <th class="bg-primary-subtle text-end" title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
+          <th class="bg-primary-subtle text-end" title="Value of Expenses">Expense</th>
+          <th class="bg-primary-subtle text-end" title="Incomes minus Expenses">Flow</th>
+          <th class="bg-primary-subtle text-end" title="Rate of change between current Flow and previous Flow">Rate</th>
         </tr>
         </thead>
         <tbody>
         {{#each d}}
         <tr>
-          <td class="text-end" style="left: 0; position: sticky;">{{Year}}</td>
+          <td class="bg-primary-subtle text-end" style="left: 0; position: sticky;">{{Year}}</td>
           <td class="text-end" style="background: inherit;">{{Age}}</td>
           <td class="text-end" style="background: inherit;" title="{{number Gross}}">{{numberShort Gross}}</td>
           <td class="text-end" style="background: inherit;" title="{{number Invest}}">{{numberShort Invest}}</td>

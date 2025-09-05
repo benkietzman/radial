@@ -61,8 +61,8 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th style="">Name</th>
-              <th class="text-end">Amount</th>
+              <th class="bg-danger-subtle" style="">Name</th>
+              <th class="bg-danger-subtle text-end">Amount</th>
             </tr>
             </thead>
             <tbody>
@@ -91,8 +91,8 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Amount</th>
+              <th class="bg-danger-subtle">Name</th>
+              <th class="bg-danger-subtle text-end">Amount</th>
             </tr>
             </thead>
             <tbody>
