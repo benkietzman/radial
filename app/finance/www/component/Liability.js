@@ -61,25 +61,25 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th>Name</th>
-              <th style="text-align:right;">Principal</th>
-              <th style="text-align:right;">Rate</th>
-              <th style="text-align:right;">Compoundings (#/yr)</th>
-              <th style="text-align:right;">Payment</th>
+              <th class="text-end">Principal</th>
+              <th class="text-end">Rate</th>
+              <th class="text-end">Compoundings (#/yr)</th>
+              <th class="text-end">Payment</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Principal}}">{{numberShort Principal}}</td>
-              <td style="background: inherit; text-align:right;">{{Rate}}%</td>
-              <td style="background: inherit; text-align:right;">{{Compoundings}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Payment}}">{{numberShort Payment}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Principal}}">{{numberShort Principal}}</td>
+              <td class="text-end" style="background: inherit;">{{Rate}}%</td>
+              <td class="text-end" style="background: inherit;">{{Compoundings}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Payment}}">{{numberShort Payment}}</td>
             </tr>
             {{/each}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th colspan="4" style="background: inherit; text-align:right;" title="{{number (liabilityCompoundSum)}}">{{numberShort (liabilityCompoundSum)}}</th>
+              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (liabilityCompoundSum)}}">{{numberShort (liabilityCompoundSum)}}</th>
             </tr>
             </tbody>
           </table>
@@ -95,25 +95,25 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th>Name</th>
-              <th style="text-align:right;">Principal</th>
-              <th style="text-align:right;">Rate</th>
-              <th style="text-align:right;">Payment</th>
-              <th style="text-align:right;">Duration (yrs)</th>
+              <th class="text-end">Principal</th>
+              <th class="text-end">Rate</th>
+              <th class="text-end">Payment</th>
+              <th class="text-end">Duration (yrs)</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Principal}}">{{numberShort Principal}}</td>
-              <td style="background: inherit; text-align:right;">{{Rate}}%</td>
-              <td style="background: inherit; text-align:right;" title="{{number Payment}}">{{numberShort Payment}}</td>
-              <td style="background: inherit; text-align:right;">{{Duration}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Principal}}">{{numberShort Principal}}</td>
+              <td class="text-end" style="background: inherit;">{{Rate}}%</td>
+              <td class="text-end" style="background: inherit;" title="{{number Payment}}">{{numberShort Payment}}</td>
+              <td class="text-end" style="background: inherit;">{{Duration}}</td>
             </tr>
             {{/each}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th colspan="4" style="background: inherit; text-align:right;" title="{{number (liabilitySimpleSum)}}">{{numberShort (liabilitySimpleSum)}}</th>
+              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (liabilitySimpleSum)}}">{{numberShort (liabilitySimpleSum)}}</th>
             </tr>
             </tbody>
           </table>

@@ -90,21 +90,21 @@ export default
   template: `
     <h3 class="page-header">Expense - Spend</h3>
     <div style="max-height: 400px;"><canvas id="chart"></canvas></div>
-    <div class="table-responsive">
+    <div class="table-responsive" style="max-height: 500px;">
       <table class="table table-sm table-striped bg-danger-subtle border border-danger-subtle">
-        <thead>
+        <thead style="positin: sticky; top: 0;">
           <tr>
-            <th style="background: inherit;"></th>
+            <th></th>
             {{#each months}}
-            <th style="background: inherit; text-align:right;">{{.}}</th>
+            <th class="text-end">{{.}}</th>
             {{/each}}
-            <th style="background: inherit; text-align:right;">Avg</th>
-            <th style="background: inherit; text-align:right;">Total</th>
+            <th class="text-end">Avg</th>
+            <th class="text-end">Total</th>
           </tr>
           <tr>
-            <th style="background: inherit;"></th>
+            <th style="left: 0; position: sticky;"></th>
             {{#for 1 12 1}}
-            <th style="background: inherit; text-align:right;">{{#ifCond . '!=' ../month}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="m('{{../.}}')" title="Edit"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="m(null)" title="Save"></button>{{/ifCond}}</th>
+            <th class="text-end" style="background: inherit;">{{#ifCond . '!=' ../month}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="m('{{../.}}')" title="Edit"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="m(null)" title="Save"></button>{{/ifCond}}</th>
             {{/for}}
             <th colspan="2" style="background: inherit;"></th>
           </tr>
@@ -112,21 +112,21 @@ export default
         <tbody>
           {{#each f}}
           <tr>
-            <td style="background: inherit;">{{@key}}</td>
+            <td style="left: 0; position: sticky;">{{@key}}</td>
             {{#each .}}
-            <td style="background: inherit; text-align:right;">{{#ifCond @key '!=' ../../month}}<span title="{{number ../.}}">{{numberShort ../.}}</span>{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle" c-model="e['{{@../key}}']" style="text-align:right;">{{/ifCond}}</td>
+            <td class="text-end" style="background: inherit;">{{#ifCond @key '!=' ../../month}}<span title="{{number ../.}}">{{numberShort ../.}}</span>{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle text-end" c-model="e['{{@../key}}']">{{/ifCond}}</td>
             {{/each}}
-            <th style="background: inherit; text-align:right;" title="{{number (spendItemAverage .)}}">{{numberShort (spendItemAverage .)}}</th>
-            <th style="background: inherit; text-align:right;" title="{{number (spendItemTotal .)}}">{{numberShort (spendItemTotal .)}}</th>
+            <th class="text-end" style="background: inherit;" title="{{number (spendItemAverage .)}}">{{numberShort (spendItemAverage .)}}</th>
+            <th class="text-end" style="background: inherit;" title="{{number (spendItemTotal .)}}">{{numberShort (spendItemTotal .)}}</th>
           </tr>
           {{/each}}
           <tr>
-            <th style="background: inherit;">Total</th>
+            <th style="left: 0; position: sticky;">Total</th>
             {{#for 1 12 1}}
-            <th style="background: inherit; text-align:right;" title="{{number (spendMonthTotal .)}}">{{numberShort (spendMonthTotal .)}}</th>
+            <th class="text-end" style="background: inherit;" title="{{number (spendMonthTotal .)}}">{{numberShort (spendMonthTotal .)}}</th>
             {{/for}}
-            <th style="background: inherit; text-align:right;" title="{{number (spendAverage)}}">{{numberShort (spendAverage)}}</th>
-            <th style="background: inherit; text-align:right;" title="{{number (spendTotal)}}">{{numberShort (spendTotal)}}</th>
+            <th class="text-end" style="background: inherit;" title="{{number (spendAverage)}}">{{numberShort (spendAverage)}}</th>
+            <th class="text-end" style="background: inherit;" title="{{number (spendTotal)}}">{{numberShort (spendTotal)}}</th>
           </tr>
         </tbody>
       </table>

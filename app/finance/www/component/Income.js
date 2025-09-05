@@ -70,36 +70,36 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th title="Name of Employer">Employer</th>
-              <th style="text-align:right;" title="Salary">Salary</th>
-              <th style="text-align:right;" title="Bonus">Bonus</th>
-              <th style="text-align:right;" title="Investment Percentage">Invest</th>
-              <th style="text-align:right;" title="Employer Match Percentage">Match</th>
-              <th style="text-align:right;" title="Gross Income">Gross</th>
-              <th style="text-align:right;" title="Health Savings Account">HSA</th>
-              <th style="text-align:right;" title="Medical Premium">Medical</th>
-              <th style="text-align:right;" title="Withholding Percentage">Tax</th>
-              <th style="text-align:right;" title="Net Income">Net</th>
+              <th class="text-end" title="Salary">Salary</th>
+              <th class="text-end" title="Bonus">Bonus</th>
+              <th class="text-end" title="Investment Percentage">Invest</th>
+              <th class="text-end" title="Employer Match Percentage">Match</th>
+              <th class="text-end" title="Gross Income">Gross</th>
+              <th class="text-end" title="Health Savings Account">HSA</th>
+              <th class="text-end" title="Medical Premium">Medical</th>
+              <th class="text-end" title="Withholding Percentage">Tax</th>
+              <th class="text-end" title="Net Income">Net</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Salary}}">{{numberShort Salary}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Bonus}}">{{numberShort Bonus}}</td>
-              <td style="background: inherit; text-align:right;">{{Invest}}%</td>
-              <td style="background: inherit; text-align:right;">{{Match}}%</td>
-              <td style="background: inherit; text-align:right;" title="{{number (incomeEmployment @key)}}">{{numberShort (incomeEmployment @key)}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Hsa}}">{{numberShort Hsa}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Medical}}">{{numberShort Medical}}</td>
-              <td style="background: inherit; text-align:right;">{{Tax}}%</td>
-              <td style="background: inherit; text-align:right;" title="{{number (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}">{{numberShort (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Salary}}">{{numberShort Salary}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Bonus}}">{{numberShort Bonus}}</td>
+              <td class="text-end" style="background: inherit;">{{Invest}}%</td>
+              <td class="text-end" style="background: inherit;">{{Match}}%</td>
+              <td class="text-end" style="background: inherit;" title="{{number (incomeEmployment @key)}}">{{numberShort (incomeEmployment @key)}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Hsa}}">{{numberShort Hsa}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Medical}}">{{numberShort Medical}}</td>
+              <td class="text-end" style="background: inherit;">{{Tax}}%</td>
+              <td class="text-end" style="background: inherit;" title="{{number (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}">{{numberShort (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}</td>
             </tr>
             {{/each}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th colspan="5" style="background: inherit; text-align:right;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
-              <th colspan="4" style="background: inherit; text-align:right;" title="{{number (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}">{{numberShort (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}</th>
+              <th class="text-end" colspan="5" style="background: inherit;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
+              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}">{{numberShort (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}</th>
             </tr>
             </tbody>
           </table>
@@ -115,19 +115,19 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th>Name</th>
-              <th style="text-align:right;">Amount</th>
+              <th class="text-end">Amount</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Amount}}">{{numberShort Amount}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Amount}}">{{numberShort Amount}}</td>
             </tr>
             {{/each}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th style="background: inherit; text-align:right;" title="{{number (genericTypeSum ../../f @key)}}">{{numberShort (genericTypeSum ../../f @key)}}</th>
+              <th class="text-end" style="background: inherit;" title="{{number (genericTypeSum ../../f @key)}}">{{numberShort (genericTypeSum ../../f @key)}}</th>
             </tr>
             </tbody>
           </table>

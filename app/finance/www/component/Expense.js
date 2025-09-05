@@ -62,19 +62,19 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th style="">Name</th>
-              <th style="text-align:right;">Amount</th>
+              <th class="text-end">Amount</th>
             </tr>
             </thead>
             <tbody>
             {{#each .}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number Amount}}">{{numberShort Amount}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number Amount}}">{{numberShort Amount}}</td>
             </tr>
             {{/each}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th style="background: inherit; text-align:right;" title="{{number (genericTypeSum ../f @key)}}">{{numberShort (genericTypeSum ../f @key)}}</th>
+              <th class="text-end" style="background: inherit;" title="{{number (genericTypeSum ../f @key)}}">{{numberShort (genericTypeSum ../f @key)}}</th>
             </tr>
             </tbody>
           </table>
@@ -92,25 +92,25 @@ export default
             <thead style="position: sticky; top: 0;">
             <tr>
               <th>Name</th>
-              <th style="text-align:right;">Amount</th>
+              <th class="text-end">Amount</th>
             </tr>
             </thead>
             <tbody>
             {{#each a.d.Income.Employment}}
             <tr>
               <td style="background: inherit;">{{@key}}</td>
-              <td style="background: inherit; text-align:right;" title="{{number (incomeEmploymentWithheld @key)}}">{{numberShort (incomeEmploymentWithheld @key)}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number (incomeEmploymentWithheld @key)}}">{{numberShort (incomeEmploymentWithheld @key)}}</td>
             </tr>
             {{/each}}
             {{#if a.d.Assumption.Tithe}}
             <tr>
               <td style="background: inherit;">Tithe</td>
-              <td style="background: inherit; text-align:right;" title="{{number (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100))}}">{{numberShort (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100))}}</td>
+              <td class="text-end" style="background: inherit;" title="{{number (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100))}}">{{numberShort (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100))}}</td>
             </tr>
             {{/if}}
             <tr>
               <th style="background: inherit; text-align:left;">Total</th>
-              <th style="background: inherit; text-align:right;" title="{{number (add (incomeEmploymentWithheldSum) (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100)))}}">{{numberShort (add (incomeEmploymentWithheldSum) (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100)))}}</th>
+              <th class="text-end" style="background: inherit;" title="{{number (add (incomeEmploymentWithheldSum) (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100)))}}">{{numberShort (add (incomeEmploymentWithheldSum) (multiply (incomeEmploymentSum) (divide a.d.Assumption.Tithe 100)))}}</th>
             </tr>
             </tbody>
           </table>

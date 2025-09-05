@@ -55,21 +55,21 @@ export default
                 <thead>
                 <tr>
                   <th style="background: inherit;"></th>
-                  <th style="background: inherit; text-align:right;">Amount</th>
+                  <th class="text-end" style="background: inherit;">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
                   <td style="background: inherit;">Income</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (incomeSum)}}">{{numberShort (incomeSum)}}</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (incomeSum)}}">{{numberShort (incomeSum)}}</td>
                 </tr>
                 <tr>
                   <td style="background: inherit;">Expense</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (expenseSum)}}">{{numberShort (expenseSum)}}</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (expenseSum)}}">{{numberShort (expenseSum)}}</td>
                 </tr>
                 <tr>
                   <th style="background: inherit; text-align:left;">Cash Flow</th>
-                  <th class="text-{{#ifCond (cashFlow) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit; text-align:right;" title="{{number (cashFlow)}}">{{numberShort (cashFlow)}}</th>
+                  <th class="text-end text-{{#ifCond (cashFlow) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit;" title="{{number (cashFlow)}}">{{numberShort (cashFlow)}}</th>
                 </tr>
                 </tbody>
               </table>
@@ -86,21 +86,21 @@ export default
                 <thead>
                 <tr>
                   <th style="background: inherit;"></th>
-                  <th style="background: inherit; text-align:right;">Amount</th>
+                  <th class="text-end" style="background: inherit;">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
                   <td style="background: inherit;">Asset</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (assetSum)}}">{{numberShort (assetSum)}}</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (assetSum)}}">{{numberShort (assetSum)}}</td>
                 </tr>
                 <tr>
                   <td style="background: inherit;">Liability</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (liabilitySum)}}">{{numberShort (liabilitySum)}}</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (liabilitySum)}}">{{numberShort (liabilitySum)}}</td>
                 </tr>
                 <tr>
                   <th style="background: inherit; text-align:left;">Net Worth</th>
-                  <th class="text-{{#ifCond (netWorth) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit; text-align:right;" title="{{number (netWorth)}}">{{numberShort (netWorth)}}</th>
+                  <th class="text-end text-{{#ifCond (netWorth) '>=' 0}}success{{else}}danger{{/ifCond}}" style="background: inherit;" title="{{number (netWorth)}}">{{numberShort (netWorth)}}</th>
                 </tr>
                 </tbody>
               </table>
@@ -117,15 +117,15 @@ export default
                 <tbody>
                 <tr>
                   <td style="background: inherit;">Expense : Income</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (expenseSum) (incomeSum)) 100)}}%">{{numberShort (multiply (divide (expenseSum) (incomeSum)) 100)}}%</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (multiply (divide (expenseSum) (incomeSum)) 100)}}%">{{numberShort (multiply (divide (expenseSum) (incomeSum)) 100)}}%</td>
                 </tr>
                 <tr>
                   <td style="background: inherit;">Metal : Net Worth</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (assetMetalSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetMetalSum) (netWorth)) 100)}}%</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (multiply (divide (assetMetalSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetMetalSum) (netWorth)) 100)}}%</td>
                 </tr>
                 <tr>
                   <td style="background: inherit;">Stock : Net Worth</td>
-                  <td style="background: inherit; text-align:right;" title="{{number (multiply (divide (assetStockSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetStockSum) (netWorth)) 100)}}%</td>
+                  <td class="text-end" style="background: inherit;" title="{{number (multiply (divide (assetStockSum) (netWorth)) 100)}}%">{{numberShort (multiply (divide (assetStockSum) (netWorth)) 100)}}%</td>
                 </tr>
                 </tbody>
               </table>
