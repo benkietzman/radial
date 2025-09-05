@@ -101,17 +101,17 @@ class App
     {
       return this.assetMetalSum();
     });
-    Handlebars.registerHelper('assetStockDividend', (nShares, nDividend, nDividendLatest, DividendSpan) =>
+    Handlebars.registerHelper('assetStockDividend', (Stock, DividendSpan) =>
     {
-      return this.assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan);
+      return this.assetStockDividend(Stock, DividendSpan);
     });
     Handlebars.registerHelper('assetStockDividendSum', (DividendSpan) =>
     {
       return this.assetStockDividendSum(DividendSpan);
     });
-    Handlebars.registerHelper('assetStockReceive', (nShares, nDividend, nDividendLatest, nReceive, nMonth) =>
+    Handlebars.registerHelper('assetStockReceive', (Stock, nMonth) =>
     {
-      return this.assetStockReceive(nShares, nDividend, nDividendLatest, nReceive, nMonth);
+      return this.assetStockReceive(Stock, nMonth);
     });
     Handlebars.registerHelper('assetStockReceiveSum', (nMonth) =>
     {
@@ -261,17 +261,17 @@ class App
   }
   // }}}
   // {{{ assetStockReceive()
-  assetStockReceive(nShares, nDividend, nDividendLatest, nReceive, nMonth)
+  assetStockReceive(Stock, nMonth)
   {
     let nValue = 0;
 
-    if (Number(nReceive) == 0 || Number(nReceive) == 4)
+    if (Number(this.d.Asset.Stock[Stock].Receive) == 0 || Number(this.d.Asset.Stock[Stock].Receive) == 4)
     {
-      nValue = (Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest))) / 12;
+      nValue = (Number(this.d.Asset.Stock[Stock].Shares) * Number(((this.d.Assumption.DividendSpan == '1-year')?this.d.Asset.Stock[Stock].Dividend:this.d.Asset.Stock[Stock].DividendLatest))) / 12;
     }
-    else if ((nMonth == 1 && Number(nReceive) == 1) || (nMonth == 2 && Number(nReceive) == 2) || (nMonth == 3 && Number(nReceive) == 3))
+    else if ((nMonth == 1 && Number(this.d.Asset.Stock[Stock].Receive) == 1) || (nMonth == 2 && Number(this.d.Asset.Stock[Stock].Receive) == 2) || (nMonth == 3 && Number(this.d.Asset.Stock[Stock].Receive) == 3))
     {
-      nValue = (Number(nShares) * Number(((this.d.Assumption.DividendSpan == '1-year')?nDividend:nDividendLatest))) / 4;
+      nValue = (Number(this.d.Asset.Stock[Stock].Shares) * Number(((this.d.Assumption.DividendSpan == '1-year')?this.d.Asset.Stock[Stock].Dividend:this.d.Asset.Stock[Stock].DividendLatest))) / 4;
     }
 
     return nValue;
@@ -284,7 +284,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockReceive(v.Shares, v.Dividend, v.DividendLatest, v.Receive, nMonth);
+      nSum += this.assetStockReceive(k, nMonth);
     }
 
     return nSum;
@@ -304,9 +304,9 @@ class App
   }
   // }}}
   // {{{ assetStockDividend()
-  assetStockDividend(nShares, nDividend, nDividendLatest, DividendSpan)
+  assetStockDividend(Stock, DividendSpan)
   {
-    return Number(nShares) * Number(((DividendSpan == '1-year')?nDividend:nDividendLatest));
+    return Number(this.d.Asset.Stock[Stock].Shares) * Number(((DividendSpan == '1-year')?this.d.Asset.Stock[Stock].Dividend:this.d.Asset.Stock[Stock].DividendLatest));
   }
   // }}}
   // {{{ assetStockDividendSum()
@@ -316,7 +316,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockDividend(v.Shares, v.Dividend, v.DividendLatest, DividendSpan);
+      nSum += this.assetStockDividend(k, DividendSpan);
     }
 
     return nSum;
