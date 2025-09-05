@@ -65,20 +65,20 @@ export default
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
-        <div class="card-body bg-success-subtle table-responsive" style="padding: 0px;">
+        <div class="card-body bg-success-subtle table-responsive" style="max-height: 200px; padding: 0px;">
           <table class="table table-striped">
-            <thead>
+            <thead style="position: sticky; top: 0;">
             <tr>
-              <th style="background: inherit;" title="Name of Employer">Employer</th>
-              <th style="background: inherit; text-align:right;" title="Salary">Salary</th>
-              <th style="background: inherit; text-align:right;" title="Bonus">Bonus</th>
-              <th style="background: inherit; text-align:right;" title="Investment Percentage">Invest</th>
-              <th style="background: inherit; text-align:right;" title="Employer Match Percentage">Match</th>
-              <th style="background: inherit; text-align:right;" title="Gross Income">Gross</th>
-              <th style="background: inherit; text-align:right;" title="Health Savings Account">HSA</th>
-              <th style="background: inherit; text-align:right;" title="Medical Premium">Medical</th>
-              <th style="background: inherit; text-align:right;" title="Withholding Percentage">Tax</th>
-              <th style="background: inherit; text-align:right;" title="Net Income">Net</th>
+              <th title="Name of Employer">Employer</th>
+              <th style="text-align:right;" title="Salary">Salary</th>
+              <th style="text-align:right;" title="Bonus">Bonus</th>
+              <th style="text-align:right;" title="Investment Percentage">Invest</th>
+              <th style="text-align:right;" title="Employer Match Percentage">Match</th>
+              <th style="text-align:right;" title="Gross Income">Gross</th>
+              <th style="text-align:right;" title="Health Savings Account">HSA</th>
+              <th style="text-align:right;" title="Medical Premium">Medical</th>
+              <th style="text-align:right;" title="Withholding Percentage">Tax</th>
+              <th style="text-align:right;" title="Net Income">Net</th>
             </tr>
             </thead>
             <tbody>
@@ -97,7 +97,8 @@ export default
             </tr>
             {{/each}}
             <tr>
-              <th colspan="6" style="background: inherit; text-align:right;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
+              <th style="background: inherit; text-align:left;">Total</th>
+              <th colspan="5" style="background: inherit; text-align:right;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
               <th colspan="4" style="background: inherit; text-align:right;" title="{{number (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}">{{numberShort (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}</th>
             </tr>
             </tbody>
@@ -109,17 +110,17 @@ export default
         <div class="card-header bg-success fw-bold">
           {{@key}}
         </div>
-        <div class="card-body bg-success-subtle table-responsive" style="padding: 0px;">
+        <div class="card-body bg-success-subtle table-responsive" style="max-height: 200px; padding: 0px;">
           <table class="table table-striped">
-            <thead>
+            <thead style="position: sticky; top: 0;">
             <tr>
-              <th style="background: inherit;">Name</th>
-              <th style="background: inherit; text-align:right;">Amount</th>
+              <th>Name</th>
+              <th style="text-align:right;">Amount</th>
             </tr>
             </thead>
             <tbody>
             {{#each ../.}}
-            <tr">
+            <tr>
               <td style="background: inherit;">{{@key}}</td>
               <td style="background: inherit; text-align:right;" title="{{number Amount}}">{{numberShort Amount}}</td>
             </tr>

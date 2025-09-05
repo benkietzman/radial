@@ -56,15 +56,15 @@ export default
         <div class="card-header bg-danger fw-bold">
           {{@key}}
         </div>
-        <div class="card-body bg-danger-subtle table-responsive" style="padding: 0px;">
+        <div class="card-body bg-danger-subtle table-responsive" style="max-height: 200px; padding: 0px;">
           <table class="table table-striped">
-            <thead>
+            <thead style="position: sticky; top: 0;">
             <tr>
-              <th style="background: inherit;">Name</th>
-              <th style="background: inherit; text-align:right;">Principal</th>
-              <th style="background: inherit; text-align:right;">Rate</th>
-              <th style="background: inherit; text-align:right;">Compoundings (#/yr)</th>
-              <th style="background: inherit; text-align:right;">Payment</th>
+              <th>Name</th>
+              <th style="text-align:right;">Principal</th>
+              <th style="text-align:right;">Rate</th>
+              <th style="text-align:right;">Compoundings (#/yr)</th>
+              <th style="text-align:right;">Payment</th>
             </tr>
             </thead>
             <tbody>
@@ -90,15 +90,15 @@ export default
         <div class="card-header bg-danger fw-bold">
           {{@key}}
         </div>
-        <div class="card-body bg-danger-subtle table-responsive" style="padding: 0px;">
+        <div class="card-body bg-danger-subtle table-responsive" style="max-height: 200px; padding: 0px;">
           <table class="table table-striped">
-            <thead>
+            <thead style="position: sticky; top: 0;">
             <tr>
-              <th style="background: inherit;">Name</th>
-              <th style="background: inherit; text-align:right;">Principal</th>
-              <th style="background: inherit; text-align:right;">Rate</th>
-              <th style="background: inherit; text-align:right;">Payment</th>
-              <th style="background: inherit; text-align:right;">Duration (yrs)</th>
+              <th>Name</th>
+              <th style="text-align:right;">Principal</th>
+              <th style="text-align:right;">Rate</th>
+              <th style="text-align:right;">Payment</th>
+              <th style="text-align:right;">Duration (yrs)</th>
             </tr>
             </thead>
             <tbody>
