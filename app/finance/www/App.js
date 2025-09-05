@@ -121,13 +121,13 @@ class App
     {
       return this.assetStockSum();
     });
-    Handlebars.registerHelper('assetStockYield', (nDividend, nDividendLatest, nPrice) =>
+    Handlebars.registerHelper('assetStockYield', (strStock) =>
     {
-      return this.assetStockYield(nDividend, nDividendLatest, nPrice);
+      return this.assetStockYield(strStock);
     });
-    Handlebars.registerHelper('assetStockYieldAdjust', (strStock, nDividend, nDividendLatest, nAveragePrice, nPrice) =>
+    Handlebars.registerHelper('assetStockYieldAdjust', (strStock) =>
     {
-      return this.assetStockYieldAdjust(strStock, nDividend, nDividendLatest, nAveragePrice, nPrice);
+      return this.assetStockYieldAdjust(strStock);
     });
     Handlebars.registerHelper('assetStockYieldAdjustSum', () =>
     {
@@ -323,20 +323,20 @@ class App
   }
   // }}}
   // {{{ assetStockYield()
-  assetStockYield(Dividend, DividendLatest, Price)
+  assetStockYield(Stock)
   {
-    return Number(((this.d.Assumption.DividendSpan == '1-year')?Dividend:DividendLatest)) / Number(Price) * 100;
+    return Number(((this.d.Assumption.DividendSpan == '1-year')?this.d.Asset.Stock[Stock].Dividend:this.d.Asset.Stock[Stock].DividendLatest)) / Number(this.d.Asset.Stock[Stock].Price) * 100;
   }
   // }}}
   // {{{ assetStockYieldAdjust()
-  assetStockYieldAdjust(Stock, Dividend, DividendLatest, AveragePrice, Price)
+  assetStockYieldAdjust(Stock)
   {
     let fAdjust = 1;
     let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend) / 100;
     let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice) / 100;
     let fChangeScore = (Number(this.d.Asset.Stock[Stock].Score) - 1) / -10;
-    let fDividend = (Number(Dividend) + Number(DividendLatest)) / 2;
-    let fPrice = (Number(AveragePrice) + Number(Price)) / 2;
+    let fDividend = (Number(this.d.Asset.Stock[Stock].Dividend) + Number(this.d.Asset.Stock[Stock].DividendLatest)) / 2;
+    let fPrice = (Number(this.d.Asset.Stock[Stock].AveragePrice) + Number(this.d.Asset.Stock[Stock].Price)) / 2;
     let fYield = fDividend / fPrice * 100;
 
     fAdjust += fChangeScore * fAdjust;
@@ -353,7 +353,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockYieldAdjust(k, v.Dividend, v.DividendLatest, v.AveragePrice, v.Price);
+      nSum += this.assetStockYieldAdjust(k);
     }
 
     return nSum;
@@ -366,7 +366,7 @@ class App
 
     for (let [k, v] of Object.entries(this.d.Asset.Stock))
     {
-      nSum += this.assetStockYield(v.Dividend, v.DividendLatest, v.Price);
+      nSum += this.assetStockYield(k);
     }
 
     return nSum;
