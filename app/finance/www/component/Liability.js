@@ -50,7 +50,7 @@ export default
     <div class="float-end" style="margin: 10px; max-height: 200px;"><canvas id="chart"></canvas></div>
     <h3 class="page-header">Liabilities</h3>
     {{#each f}}
-    <div style="display:inline-block;">
+    <div style="display:inline-grid;">
       {{#ifCond @key '==' 'Compound'}}
       <div class="card border border-danger-subtle" style="margin-top: 10px;">
         <div class="card-header bg-danger fw-bold">

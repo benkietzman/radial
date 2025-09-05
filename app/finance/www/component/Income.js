@@ -59,7 +59,7 @@ export default
     <div class="float-end" style="margin: 10px; max-height: 200px;"><canvas id="chart"></canvas></div>
     <h3 class="page-header">Incomes</h3>
     {{#each f}}
-    <div style="display:inline-block;">
+    <div style="display:inline-grid;">
       {{#ifCond @key '==' 'Employment'}}
       <div class="card border border-success-subtle" style="margin-top: 10px;">
         <div class="card-header bg-success fw-bold">
