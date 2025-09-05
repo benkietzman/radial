@@ -259,37 +259,37 @@ export default
     <h3 class="page-header">Summary - Forecast</h3>
     <div class="row">
       <div class="col-md-6">
-        <div style="max-height: 400px"><canvas id="chart0"></canvas></div>
+        <div style="max-height: 300px"><canvas id="chart0"></canvas></div>
       </div>
       <div class="col-md-6">
-        <div style="max-height: 400px"><canvas id="chart1"></canvas></div>
+        <div style="max-height: 300px"><canvas id="chart1"></canvas></div>
       </div>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" style="max-height: 500px;">
       <table class="table table-sm table-striped bg-primary-subtle border border-primary-subtle">
-        <thead>
+        <thead style="position: sticky; top: 0;">
         <tr>
-          <th class="text-end" style="background: inherit;">Year</th>
-          <th class="text-end" style="background: inherit;">Age</th>
-          <th class="text-end" style="background: inherit;" title="Gross Income including Employer Match">Gross</th>
-          <th class="text-end" style="background: inherit;" title="Invest including Employer Match">Invest</th>
-          <th class="text-end" style="background: inherit;" title="Net Income">Net</th>
-          <th class="text-end" style="background: inherit;" title="Tithe">Tithe</th>
-          <th class="text-end" style="background: inherit;" title="Value of Stocks">Stock</th>
-          <th class="text-end" style="background: inherit;" title="Annual Dividend Yield">Dividend</th>
-          <th class="text-end" style="background: inherit;" title="Dividend Tax">Div Tax</th>
-          <th class="text-end" style="background: inherit;" title="Value of Precious Metals">Metal</th>
-          <th class="text-end" style="background: inherit;" title="Value of Assets">Asset</th>
-          <th class="text-end" style="background: inherit;" title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
-          <th class="text-end" style="background: inherit;" title="Value of Expenses">Expense</th>
-          <th class="text-end" style="background: inherit;" title="Incomes minus Expenses">Flow</th>
-          <th class="text-end" style="background: inherit;" title="Rate of change between current Flow and previous Flow">Rate</th>
+          <th class="text-end">Year</th>
+          <th class="text-end">Age</th>
+          <th class="text-end" title="Gross Income including Employer Match">Gross</th>
+          <th class="text-end" title="Invest including Employer Match">Invest</th>
+          <th class="text-end" title="Net Income">Net</th>
+          <th class="text-end" title="Tithe">Tithe</th>
+          <th class="text-end" title="Value of Stocks">Stock</th>
+          <th class="text-end" title="Annual Dividend Yield">Dividend</th>
+          <th class="text-end" title="Dividend Tax">Div Tax</th>
+          <th class="text-end" title="Value of Precious Metals">Metal</th>
+          <th class="text-end" title="Value of Assets">Asset</th>
+          <th class="text-end" title="Net Income plus Dividend Income plus Social Security minus Dividend Tax minus Tithe">Income</th>
+          <th class="text-end" title="Value of Expenses">Expense</th>
+          <th class="text-end" title="Incomes minus Expenses">Flow</th>
+          <th class="text-end" title="Rate of change between current Flow and previous Flow">Rate</th>
         </tr>
         </thead>
         <tbody>
         {{#each d}}
         <tr>
-          <td class="text-end" style="background: inherit;">{{Year}}</td>
+          <td class="text-end" style="left: 0; position: sticky;">{{Year}}</td>
           <td class="text-end" style="background: inherit;">{{Age}}</td>
           <td class="text-end" style="background: inherit;" title="{{number Gross}}">{{numberShort Gross}}</td>
           <td class="text-end" style="background: inherit;" title="{{number Invest}}">{{numberShort Invest}}</td>
