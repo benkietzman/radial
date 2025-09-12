@@ -30,9 +30,12 @@ class Irc : public Interface
   map<string, list<string> > m_terminalClients;
   mutex m_mutex;
   string m_strNick;
+  string m_strNickDefault;
   string m_strPort;
   string m_strServer;
   string m_strTimeZone;
+  string m_strTrigger;
+  string m_strUser;
   thread *m_pThreadInotify;
   Json *m_ptMonitor;
 

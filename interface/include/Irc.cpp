@@ -24,6 +24,9 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
   m_ptMonitor = NULL;
+  m_strNickDefault = "radial_bot";
+  m_strTrigger = "!r";
+  m_strUser = "radial_bot";
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -41,6 +44,19 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
       m_manip.purgeChar(m_strPort, m_strPort, "'");
       m_manip.purgeChar(m_strPort, m_strPort, "\"");
     }
+    else if (strArg == "-n" || (strArg.size() > 7 && strArg.substr(0, 7) == "--nick="))
+    {
+      if (strArg == "-n" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        m_strNickDefault = argv[++i];
+      }
+      else
+      {
+        m_strNickDefault = strArg.substr(7, strArg.size() - 7);
+      }
+      m_manip.purgeChar(m_strNickDefault, m_strNickDefault, "'");
+      m_manip.purgeChar(m_strNickDefault, m_strNickDefault, "\"");
+    }
     else if (strArg == "-s" || (strArg.size() > 9 && strArg.substr(0, 9) == "--server="))
     {
       if (strArg == "-s" && i + 1 < argc && argv[i+1][0] != '-')
@@ -53,6 +69,32 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
       }
       m_manip.purgeChar(m_strServer, m_strServer, "'");
       m_manip.purgeChar(m_strServer, m_strServer, "\"");
+    }
+    else if (strArg == "-t" || (strArg.size() > 10 && strArg.substr(0, 10) == "--trigger="))
+    {
+      if (strArg == "-t" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        m_strTrigger = argv[++i];
+      }
+      else
+      {
+        m_strTrigger = strArg.substr(10, strArg.size() - 10);
+      }
+      m_manip.purgeChar(m_strTrigger, m_strTrigger, "'");
+      m_manip.purgeChar(m_strTrigger, m_strTrigger, "\"");
+    }
+    else if (strArg == "-u" || (strArg.size() > 7 && strArg.substr(0, 7) == "--user="))
+    {
+      if (strArg == "-u" && i + 1 < argc && argv[i+1][0] != '-')
+      {
+        m_strUser = argv[++i];
+      }
+      else
+      {
+        m_strUser = strArg.substr(7, strArg.size() - 7);
+      }
+      m_manip.purgeChar(m_strUser, m_strUser, "'");
+      m_manip.purgeChar(m_strUser, m_strUser, "\"");
     }
   }
   // }}}
@@ -2967,7 +3009,7 @@ void Irc::bot(string strPrefix)
         list<string> channels;
         pollfd *fds;
         size_t unIndex = 0, unPosition;
-        string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = "radial_bot", strUser = "radial_bot";
+        string strBuffer[2], strName = "Radial", strMessage, strNick, strNickBase = m_strNickDefault, strUser = m_strUser;
         SSL *ssl = NULL;
         // }}}
         while (!bExit)
@@ -3223,12 +3265,12 @@ void Irc::bot(string strPrefix)
                           bChannel = true;
                           analyze(strID, strTarget, strMessage);
                         }
-                        // {{{ !r || !radial
-                        if (!bChannel || strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
+                        // {{{ trigger
+                        if (!bChannel || strMessage == m_strTrigger || (strMessage.size() > m_strTrigger.size() && strMessage.substr(0, (m_strTrigger.size() + 1)) == (m_strTrigger + " ")))
                         {
                           string strChannel, strData;
                           stringstream ssData(strMessage), ssPrefix;
-                          if (strMessage == "!r" || (strMessage.size() > 3 && strMessage.substr(0, 3) == "!r ") || strMessage == "!radial" || (strMessage.size() > 8 && strMessage.substr(0, 8) == "!radial "))
+                          if (strMessage == m_strTrigger || (strMessage.size() > m_strTrigger.size() && strMessage.substr(0, (m_strTrigger.size() + 1)) == (m_strTrigger + " ")))
                           {
                             string strValue;
                             ssData >> strValue;
@@ -3563,7 +3605,7 @@ void Irc::chat(const string strTarget, const string strMessage, const string str
     ptLive->m["Request"]->m["Message"] = new Json;
     ptLive->m["Request"]->m["Message"]->i("Action", "chat");
     ptLive->m["Request"]->m["Message"]->i("Message", strMessage);
-    ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
+    ptLive->m["Request"]->m["Message"]->i("User", m_strNick);
     hub("live", ptLive, false);
     delete ptLive;
   }
