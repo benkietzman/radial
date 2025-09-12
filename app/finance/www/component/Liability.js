@@ -60,11 +60,11 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Principal</th>
-              <th class="text-end">Rate</th>
-              <th class="text-end">Compoundings (#/yr)</th>
-              <th class="text-end">Payment</th>
+              <th class="bg-danger-subtle">Name</th>
+              <th class="bg-danger-subtle text-end">Principal</th>
+              <th class="bg-danger-subtle text-end">Rate</th>
+              <th class="bg-danger-subtle text-end">Compoundings (#/yr)</th>
+              <th class="bg-danger-subtle text-end">Payment</th>
             </tr>
             </thead>
             <tbody>
@@ -94,11 +94,11 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Principal</th>
-              <th class="text-end">Rate</th>
-              <th class="text-end">Payment</th>
-              <th class="text-end">Duration (yrs)</th>
+              <th class="bg-danger-subtle">Name</th>
+              <th class="bg-danger-subtle text-end">Principal</th>
+              <th class="bg-danger-subtle text-end">Rate</th>
+              <th class="bg-danger-subtle text-end">Payment</th>
+              <th class="bg-danger-subtle text-end">Duration (yrs)</th>
             </tr>
             </thead>
             <tbody>

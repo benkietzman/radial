@@ -69,16 +69,16 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th title="Name of Employer">Employer</th>
-              <th class="text-end" title="Salary">Salary</th>
-              <th class="text-end" title="Bonus">Bonus</th>
-              <th class="text-end" title="Investment Percentage">Invest</th>
-              <th class="text-end" title="Employer Match Percentage">Match</th>
-              <th class="text-end" title="Gross Income">Gross</th>
-              <th class="text-end" title="Health Savings Account">HSA</th>
-              <th class="text-end" title="Medical Premium">Medical</th>
-              <th class="text-end" title="Withholding Percentage">Tax</th>
-              <th class="text-end" title="Net Income">Net</th>
+              <th class="bg-success-subtle" title="Name of Employer">Employer</th>
+              <th class="bg-success-subtle text-end" title="Salary">Salary</th>
+              <th class="bg-success-subtle text-end" title="Bonus">Bonus</th>
+              <th class="bg-success-subtle text-end" title="Investment Percentage">Invest</th>
+              <th class="bg-success-subtle text-end" title="Employer Match Percentage">Match</th>
+              <th class="bg-success-subtle text-end" title="Gross Income">Gross</th>
+              <th class="bg-success-subtle text-end" title="Health Savings Account">HSA</th>
+              <th class="bg-success-subtle text-end" title="Medical Premium">Medical</th>
+              <th class="bg-success-subtle text-end" title="Withholding Percentage">Tax</th>
+              <th class="bg-success-subtle text-end" title="Net Income">Net</th>
             </tr>
             </thead>
             <tbody>
@@ -114,8 +114,8 @@ export default
           <table class="table table-striped">
             <thead style="position: sticky; top: 0;">
             <tr>
-              <th>Name</th>
-              <th class="text-end">Amount</th>
+              <th class="bg-success-subtle">Name</th>
+              <th class="bg-success-subtle text-end">Amount</th>
             </tr>
             </thead>
             <tbody>

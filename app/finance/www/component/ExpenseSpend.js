@@ -92,27 +92,27 @@ export default
     <div style="max-height: 400px;"><canvas id="chart"></canvas></div>
     <div class="table-responsive" style="max-height: 500px;">
       <table class="table table-sm table-striped bg-danger-subtle border border-danger-subtle">
-        <thead style="positin: sticky; top: 0;">
+        <thead style="position: sticky; top: 0;">
           <tr>
-            <th></th>
+            <th class="bg-danger-subtle"></th>
             {{#each months}}
-            <th class="text-end">{{.}}</th>
+            <th class="bg-danger-subtle text-end">{{.}}</th>
             {{/each}}
-            <th class="text-end">Avg</th>
-            <th class="text-end">Total</th>
+            <th class="bg-danger-subtle text-end">Avg</th>
+            <th class="bg-danger-subtle text-end">Total</th>
           </tr>
           <tr>
-            <th style="left: 0; position: sticky;"></th>
+            <th class="bg-danger-subtle" style="left: 0; position: sticky;"></th>
             {{#for 1 12 1}}
-            <th class="text-end" style="background: inherit;">{{#ifCond . '!=' ../month}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="m('{{../.}}')" title="Edit"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="m(null)" title="Save"></button>{{/ifCond}}</th>
+            <th class="bg-danger-subtle text-end">{{#ifCond . '!=' ../month}}<button class="btn btn-sm btn-warning bi bi-pencil" c-click="m('{{../.}}')" title="Edit"></button>{{else}}<button class="btn btn-sm btn-success bi bi-save" c-click="m(null)" title="Save"></button>{{/ifCond}}</th>
             {{/for}}
-            <th colspan="2" style="background: inherit;"></th>
+            <th class="bg-danger-subtle" colspan="2"></th>
           </tr>
         </thead>
         <tbody>
           {{#each f}}
           <tr>
-            <td style="left: 0; position: sticky;">{{@key}}</td>
+            <td class="bg-danger-subtle" style="left: 0; position: sticky;">{{@key}}</td>
             {{#each .}}
             <td class="text-end" style="background: inherit;">{{#ifCond @key '!=' ../../month}}<span title="{{number ../.}}">{{numberShort ../.}}</span>{{else}}<input type="text" class="form-control form-control-sm bg-danger-subtle text-end" c-model="e['{{@../key}}']">{{/ifCond}}</td>
             {{/each}}
@@ -121,7 +121,7 @@ export default
           </tr>
           {{/each}}
           <tr>
-            <th style="left: 0; position: sticky;">Total</th>
+            <th class="bg-danger-subtle" style="left: 0; position: sticky;">Total</th>
             {{#for 1 12 1}}
             <th class="text-end" style="background: inherit;" title="{{number (spendMonthTotal .)}}">{{numberShort (spendMonthTotal .)}}</th>
             {{/for}}
