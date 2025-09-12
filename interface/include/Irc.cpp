@@ -2920,7 +2920,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     {
       ssText << ((actionIter != actions.begin())?", ":"") << (*actionIter);
     }
-    ssText << ".  The trigger to used to engage " << m_strNick << " in a channel is " << m_strTrigger << " followed by an Action.";
+    ssText << ".  The trigger used to engage " << m_strNick << " in a channel is " << m_strTrigger << " followed by an Action.";
   }
   // }}}
   // {{{ post work
