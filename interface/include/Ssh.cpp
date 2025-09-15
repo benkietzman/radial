@@ -28,18 +28,6 @@ Ssh::~Ssh()
 }
 // }}}
 // {{{ authenticate
-// {{{ authenticateNone()
-int Ssh::authenticateNone(ssh_session session)
-{
-  return ssh_userauth_none(session, NULL);
-} 
-// }}}
-// {{{ authenticatePassword()
-int Ssh::authenticatePassword(ssh_session session, const string strPassword)
-{
-  return ssh_userauth_password(session, NULL, strPassword.c_str());
-} 
-// }}}
 // {{{ authenticateKbdint()
 int Ssh::authenticateKbdint(ssh_session session, const string strPassword)
 {   
@@ -61,6 +49,37 @@ int Ssh::authenticateKbdint(ssh_session session, const string strPassword)
 
   return nReturn;
 }
+// }}}
+// {{{ authenticateNone()
+int Ssh::authenticateNone(ssh_session session)
+{
+  return ssh_userauth_none(session, NULL);
+} 
+// }}}
+// {{{ authenticatePassword()
+int Ssh::authenticatePassword(ssh_session session, const string strPassword)
+{
+  return ssh_userauth_password(session, NULL, strPassword.c_str());
+} 
+// }}}
+// {{{ authenticatePublicKey()
+int Ssh::authenticatePublicKey(ssh_session session, const string strPrivateKey)
+{
+  int nReturn;
+  ssh_key *pKey = NULL;
+
+  if ((nReturn = ssh_pki_import_privkey_base64(strPrivateKey.c_str(), NULL, NULL, NULL, pKey)) == SSH_OK)
+  {
+    nReturn = ssh_userauth_publickey(session, NULL, *pKey);
+  }
+  if (pKey != NULL)
+  {
+    ssh_key_free(*pKey);
+    delete pKey;
+  }
+
+  return nReturn;
+} 
 // }}}
 // }}}
 // {{{ callback()
@@ -192,7 +211,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
           }
           if (!empty(ptJson->m["Request"], "User"))
           {
-            if (!empty(ptJson->m["Request"], "Password"))
+            if (!empty(ptJson->m["Request"], "Password") || !empty(ptJson->m["Request"], "PrivateKey"))
             {
               radialSsh *ptSsh = new radialSsh;
               if ((ptSsh->session = ssh_new()) != NULL)
@@ -209,7 +228,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
                   ssh_userauth_none(ptSsh->session, NULL);
                   nMethod = ssh_userauth_list(ptSsh->session, NULL);
-                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
+                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PublicKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PublicKey"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
                   {
                     if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                     {

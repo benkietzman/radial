@@ -35,9 +35,10 @@ class Ssh : public Interface
   mutex m_mutex;
   thread *m_pThreadSchedule;
 
+  int authenticateKbdint(ssh_session session, const string strPassword);
   int authenticateNone(ssh_session session);
   int authenticatePassword(ssh_session session, const string strPassword);
-  int authenticateKbdint(ssh_session session, const string strPassword);
+  int authenticatePublicKey(ssh_session session, const string strPrivateKey);
   void schedule(string strPrefix);
   bool transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError);
 
