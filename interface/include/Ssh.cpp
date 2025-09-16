@@ -228,7 +228,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
                   ssh_userauth_none(ptSsh->session, NULL);
                   nMethod = ssh_userauth_list(ptSsh->session, NULL);
-                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PublicKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PublicKey"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
+                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PrivateKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
                   {
                     if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                     {
@@ -314,7 +314,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             }
             else
             {
-              strError = "Please provide the Password within the Request.";
+              strError = "Please provide the Password or PrivateKey within the Request.";
             }
           }
           else
