@@ -66,16 +66,12 @@ int Ssh::authenticatePassword(ssh_session session, const string strPassword)
 int Ssh::authenticatePublicKey(ssh_session session, const string strPrivateKey)
 {
   int nReturn;
-  ssh_key *pKey = NULL;
+  ssh_key key;
 
-  if ((nReturn = ssh_pki_import_privkey_base64(strPrivateKey.c_str(), NULL, NULL, NULL, pKey)) == SSH_OK)
+  if ((nReturn = ssh_pki_import_privkey_base64(strPrivateKey.c_str(), NULL, NULL, NULL, &key)) == SSH_OK)
   {
-    nReturn = ssh_userauth_publickey(session, NULL, *pKey);
-  }
-  if (pKey != NULL)
-  {
-    ssh_key_free(*pKey);
-    delete pKey;
+    nReturn = ssh_userauth_publickey(session, NULL, key);
+    ssh_key_free(key);
   }
 
   return nReturn;
