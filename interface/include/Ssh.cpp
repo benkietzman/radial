@@ -63,12 +63,12 @@ int Ssh::authenticatePassword(ssh_session session, const string strPassword)
 } 
 // }}}
 // {{{ authenticatePublicKey()
-int Ssh::authenticatePublicKey(ssh_session session, const string strPrivateKey)
+int Ssh::authenticatePublicKey(ssh_session session, const string strPrivateKey, const string strPassphrase)
 {
   int nReturn;
   ssh_key key;
 
-  if ((nReturn = ssh_pki_import_privkey_base64(strPrivateKey.c_str(), NULL, NULL, NULL, &key)) == SSH_OK)
+  if ((nReturn = ssh_pki_import_privkey_base64(strPrivateKey.c_str(), ((!strPassphrase.empty())?strPassphrase.c_str():NULL), NULL, NULL, &key)) == SSH_OK)
   {
     nReturn = ssh_userauth_publickey(session, NULL, key);
     ssh_key_free(key);
@@ -224,7 +224,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
                   ssh_userauth_none(ptSsh->session, NULL);
                   nMethod = ssh_userauth_list(ptSsh->session, NULL);
-                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PrivateKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
+                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PrivateKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v, ((!empty(ptJson->m["Request"], "Passphrase"))?ptJson->m["Request"]->m["Passphrase"]->v:"")) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
                   {
                     if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                     {
