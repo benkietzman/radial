@@ -484,6 +484,8 @@ export default
         <input type="text" class="form-control form-control-sm bg-primary-subtle border border-primary-subtle" id="radial_message" c-model="message" c-keyup="enter()" placeholder="Type message and hit enter..." style="font-family: monospace, monospace; margin-top: 10px;">
       </div>
     </div>
+    {{else}}
+    <b class="text-danger">Please login to chat with others.</b>
     {{/isValid}}
   `
   // ]]]
