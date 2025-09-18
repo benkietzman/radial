@@ -2580,7 +2580,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             list<map<string, string> > resultSet;
             size_t unID = 0, unRows = 0;
-            if (sqliteQuery(strFunction, "select name from sqlite_master where type='table'", resultSet, unID, unRows, strError))
+            if (sqliteQuery(strFunction, "select name from sqlite_master where type='table' order by name", resultSet, unID, unRows, strError))
             {
               ssText << ":  okay";
               ssText << endl << "# of Rows Returned:  " << unRows;
