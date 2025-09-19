@@ -7,7 +7,7 @@ Environment="LD_LIBRARY_PATH=/usr/local/lib"
 ExecStartPre=/bin/cp /usr/local/radial/app/central/monitor_preload /usr/local/radial/app/central/monitor
 ExecStart=/usr/local/radial/app/central/monitor
 Restart=always
-User=radial
+User=root
 
 [Install]
 WantedBy=multi-user.target
