@@ -105,6 +105,7 @@ export default
     // [[[ org()
     s.org = (stat) =>
     {
+      let interfaces = [];
       s.interfaces = null;
       s.interfaces = {};
       s.nodes = null;
@@ -113,10 +114,29 @@ export default
       {
         for (let i of Object.keys(stat.Nodes[n]))
         {
-          if (!c.isDefined(s.interfaces[i]))
+          let bFound = false;
+          for (let j = 0; !bFound && j != interfaces.length; j++)
           {
-            s.interfaces[i] = {};
+            if (i == interfaces[j])
+            {
+              bFound = true;
+            }
           }
+          if (!bFound)
+          {
+            interfaces.push(i);
+          }
+        }
+      }
+      interfaces.sort();
+      for (let i = 0; i < interfaces.length; i++)
+      {
+        s.interfaces[interfaces[i]] = {};
+      }
+      for (let n of Object.keys(stat.Nodes))
+      {
+        for (let i of Object.keys(stat.Nodes[n]))
+        {
           s.interfaces[i][n] = stat.Nodes[n][i];
           if (c.isDefined(stat.Nodes[n][i].Throughput))
           {
