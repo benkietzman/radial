@@ -812,9 +812,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssText << ", ";
             }
             ssText << j->first;
-            if (i.second->m.size() > 1)
+            if (j.second->m.size() > 1)
             {
-              ssText << " (" << i.second->m.size() << ")";
+              ssText << " (" << j.second->m.size() << ")";
             }
           }
         }
