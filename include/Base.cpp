@@ -259,6 +259,18 @@ bool Base::exist(Json *ptJson, const string strField)
   return (ptJson->m.find(strField) != ptJson->m.end());
 }
 // }}}
+// {{{ m2j()
+string Base::m2j(const map<string, string> m)
+{
+  string strJson;
+  Json *ptJson = new Json(m);
+
+  ptJson->json(strJson);
+  delete ptJson;
+
+  return strJson;
+}
+// }}}
 // {{{ monitor()
 size_t Base::monitor(const pid_t nPid, string &strMessage)
 {
