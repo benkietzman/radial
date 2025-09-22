@@ -669,8 +669,8 @@ bool Application::connectorAdd(const string strApplication, int fdSocket, string
     m_res[strApplication][fdSocket] = {};
   }
   m_mutex.unlock();
-  ptConnector->i(to_string(fdSocket), "1", '1');
-  if (storageAdd({"application", "connectors", strApplication, m_strNode}, ptConnector, strError))
+  ptConnector->value("1", '1');
+  if (storageAdd({"application", "connectors", strApplication, m_strNode, to_string(fdSocket)}, ptConnector, strError))
   {
     bResult = true;
     ssMessage.str("");
