@@ -710,7 +710,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ssMessage << strMessage << endl << endl << " -- " << strFirstName << " " << strLastName << " (" << strIdent << ")" << endl;
         if (alert(strUser, ssMessage.str(), strError))
         {
-          ssText << ":  Successfully sent the alert to " << strUser << ".";
+          ssText << " Successfully sent the alert to " << strUser << ".";
         }
         else
         {
@@ -719,12 +719,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  Please provide the message immediately following the user.";
+        ssText << " Please provide the message immediately following the user.";
       }
     }
     else
     {
-      ssText << ":  The alert action is used to send an alert message through the Alert framework.  Please provide the user immediately following the action.";
+      ssText << " The alert action is used to send an alert message through the Alert framework.  Please provide the user immediately following the action.";
     }
   }
   // }}}
@@ -773,27 +773,27 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             else
             {
-              ssText << ":  Failed to receive the Message within the Response.";
+              ssText << " Failed to receive the Message within the Response.";
             }
           }
           else
           {
-            ssText << ":  Failed to receive the Response.";
+            ssText << " Failed to receive the Response.";
           }
         }
         else if (strError == "Please provide a valid application within Function.")
         {
-          ssText << ":  Please provide a valid Application.";
+          ssText << " Please provide a valid Application.";
         }
         else
         {
-          ssText << ":  " << strError;
+          ssText << " " << strError;
         }
         delete ptJson;
       }
       else
       {
-        ssText << ":  Please provide a valid Application.";
+        ssText << " Please provide a valid Application.";
       }
     }
     else
@@ -801,7 +801,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       Json *ptJson = new Json;
       if (storageRetrieve({"application", "connectors"}, ptJson, strError))
       {
-        ssText << ":  done";
+        ssText << " done";
         for (auto &i : ptJson->m)
         {
           ssText << endl << i.first << ":  ";
@@ -821,11 +821,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else if (strError == "Failed to find key.")
       {
-        ssText << ":  No applications are connected.";
+        ssText << " No applications are connected.";
       }
       else
       {
-        ssText << ":  " << strError;
+        ssText << " " << strError;
       }
       delete ptJson;
     }
@@ -866,7 +866,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << ":  Please provide the MechID immediately following the account.";
+          ssText << " Please provide the MechID immediately following the account.";
         }
       }
       // }}}
@@ -988,7 +988,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           // {{{ invalid
           else
           {
-            ssText << ":  Please provide the Form immediately following the ApplicationID.";
+            ssText << " Please provide the Form immediately following the ApplicationID.";
           }
           // }}}
         }
@@ -1004,7 +1004,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             if (!getApplication->empty())
             {
               map<string, string> getApplicationRow = getApplication->front();
-              ssText << ":  The ApplicationID is " << getApplicationRow["id"] << ".";
+              ssText << " The ApplicationID is " << getApplicationRow["id"] << ".";
               getApplicationRow.clear();
             }
             else
@@ -1024,7 +1024,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ invalid
       else
       {
-        ssText << ":  Please provide the ApplicationID immediately following the application.";
+        ssText << " Please provide the ApplicationID immediately following the application.";
       }
       // }}}
     }
@@ -1147,7 +1147,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           // {{{ invalid
           else
           {
-            ssText << ":  Please provide the Form immediately following the GroupID.";
+            ssText << " Please provide the Form immediately following the GroupID.";
           }
           // }}}
         }
@@ -1163,7 +1163,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             if (!getGroup->empty())
             {
               map<string, string> getGroupRow = getGroup->front();
-              ssText << ":  The GroupID is " << getGroupRow["id"] << ".";
+              ssText << " The GroupID is " << getGroupRow["id"] << ".";
               getGroupRow.clear();
             }
             else
@@ -1183,7 +1183,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ invalid
       else
       {
-        ssText << ":  Please provide the GroupID immediately following the group.";
+        ssText << " Please provide the GroupID immediately following the group.";
       }
       // }}}
     }
@@ -1302,7 +1302,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  The monitor function of the central action is used to obtain status information about a running system or process.  Please provide the server immediately following the function and follow the server with a process if you would like to obtain process information instead of system information.";
+        ssText << " The monitor function of the central action is used to obtain status information about a running system or process.  Please provide the server immediately following the function and follow the server with a process if you would like to obtain process information instead of system information.";
       }
     }
     // }}}
@@ -1423,7 +1423,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           // {{{ invalid
           else
           {
-            ssText << ":  Please provide the Form immediately following the ServerID.";
+            ssText << " Please provide the Form immediately following the ServerID.";
           }
           // }}}
         }
@@ -1439,7 +1439,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             if (!getServer->empty())
             {
               map<string, string> getServerRow = getServer->front();
-              ssText << ":  The ServerID is " << getServerRow["id"] << ".";
+              ssText << " The ServerID is " << getServerRow["id"] << ".";
               getServerRow.clear();
             }
             else
@@ -1459,7 +1459,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       // {{{ invalid
       else
       {
-        ssText << ":  Please provide the ServerID immediately following the server.";
+        ssText << " Please provide the ServerID immediately following the server.";
       }
       // }}}
     }
@@ -1540,7 +1540,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  Please provide the Contact Type immediately following applications.";
+            ssText << " Please provide the Contact Type immediately following applications.";
           }
           types.clear();
         }
@@ -1704,7 +1704,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  Please provide the Contact Type immediately following servers.";
+            ssText << " Please provide the Contact Type immediately following servers.";
           }
           types.clear();
         }
@@ -1712,20 +1712,20 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         // {{{ invalid
         else
         {
-          ssText << ":  Please provide the Form immediately following the User:  general, applications, reminders, servers.";
+          ssText << " Please provide the Form immediately following the User:  general, applications, reminders, servers.";
         }
         // }}}
       }
       else
       {
-        ssText << ":  Please provide the User immediately following the user.";
+        ssText << " Please provide the User immediately following the user.";
       }
     }
     // }}}
     // {{{ invalid
     else
     {
-      ssText << ":  The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, monitor, server, user." << endl;
+      ssText << " The central action is used to access Central functionalities.  Please provide one of the following functions immediately following the action:  application, group, monitor, server, user." << endl;
     }
     // }}}
   }
@@ -1746,7 +1746,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           string strOutput;
           if (command(strCommand, {}, "", strOutput, unDuration, strError, 300, strNode))
           {
-            ssText << ":  Command ran for " << unDuration << " seconds.";
+            ssText << " Command ran for " << unDuration << " seconds.";
             ssText << endl << strOutput;
           }
           else
@@ -1756,12 +1756,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << ":  Please provide the command immediately following the node.";
+          ssText << " Please provide the command immediately following the node.";
         }
       }
       else
       {
-        ssText << ":  The command action is used to have Radial execute a given command on a given node under its user.  Please provide the node immediately following the action.";
+        ssText << " The command action is used to have Radial execute a given command on a given node under its user.  Please provide the node immediately following the action.";
       }
     }
     else
@@ -1784,7 +1784,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           auto get = dbquery(strDatabase, strQuery, strError);
           if (get != NULL)
           {
-            ssText << ":  Query sent.";
+            ssText << " Query sent.";
             for (auto &row : (*get))
             {
               Json *ptRow = new Json(row);
@@ -1794,17 +1794,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  " << strError;
+            ssText << " " << strError;
           }
         }
         else
         {
-          ssText << ":  Please provide a Query immediately following the Database.";
+          ssText << " Please provide a Query immediately following the Database.";
         }
       }
       else
       {
-        ssText << ":  The database action is used to send a Query to a Database.  Please provide a Database immediately following the action.";
+        ssText << " The database action is used to send a Query to a Database.  Please provide a Database immediately following the action.";
       }
     }
     else
@@ -1927,7 +1927,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         m_mutex.unlock();
       }
     }
-    ssText << ":  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
+    ssText << " " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
     if (bUseTimeZone)
     {
       ssText << " " << strTimeZone;
@@ -1954,7 +1954,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           Json *ptIn = new Json(strRequest), *ptOut = new Json;
           if (db(strFunction, ptIn, ptOut, strID, strQuery, strError))
           {
-            ssText << ":  Request sent.";
+            ssText << " Request sent.";
             if (!strID.empty())
             {
               ssText << endl << "ID:  " << strID;
@@ -1968,17 +1968,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  " << strError;
+            ssText << " " << strError;
           }
         }
         else
         {
-          ssText << ":  Please provide a Request immediately following the Function.";
+          ssText << " Please provide a Request immediately following the Function.";
         }
       }
       else
       {
-        ssText << ":  The db action is used to call a database function.  Please provide a Function immediately following the action.";
+        ssText << " The db action is used to call a database function.  Please provide a Function immediately following the action.";
       }
     }
     else
@@ -2000,7 +2000,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  Please provide an answer to submit an answer or provide exit to abandon the survey.";
+        ssText << " Please provide an answer to submit an answer or provide exit to abandon the survey.";
       }
     }
     else if (!strData.empty())
@@ -2012,7 +2012,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The feedback action is used to take a feedback survey.  Please provide a hash immediately following the action.";
+      ssText << " The feedback action is used to take a feedback survey.  Please provide a hash immediately following the action.";
     }
     unlock();
   }
@@ -2175,14 +2175,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     strError = "Failed to stop.";
                   }
                 }
-                ssSubText << node << ":  " << ((bSubResult)?strResult:strError);
+                ssSubText << node << " " << ((bSubResult)?strResult:strError);
                 chat(strTarget, ssSubText.str(), strSource);
               }
-              ssText << ":  done";
+              ssText << " done";
             }
             else
             {
-              ssText << ":  Interface does not exist.";
+              ssText << " Interface does not exist.";
             }
           }
           else
@@ -2192,13 +2192,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         else
         {
-          ssText << ":  Please provide a valid Function immediately following the Interface:  restart, start, status, stop.";
+          ssText << " Please provide a valid Function immediately following the Interface:  restart, start, status, stop.";
         }
       }
       else
       {
         bool bFirst = true, bFound = false;
-        ssText << ":  ";
+        ssText << " ";
         m_mutexShare.lock();
         for (auto interface = m_i.begin(); !bFound && interface != m_i.end(); interface++)
         {
@@ -2280,7 +2280,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     string strFunction = var("Function", ptData);
     if (strFunction == "channels")
     {
-      ssText << ":  ";
+      ssText << " ";
       for (auto i = m_channels.begin(); i != m_channels.end(); i++)
       {
         if (i != m_channels.begin())
@@ -2316,11 +2316,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             ssMessage << " " << char(3) << " " << strMessage;
             chat(strSubTarget, ssMessage.str());
-            ssText << ":  Message sent.";
+            ssText << " Message sent.";
           }
           else
           {
-            ssText << ":  Please provide a Message immediately following the Target.";
+            ssText << " Please provide a Message immediately following the Target.";
           }
         }
         else
@@ -2329,33 +2329,33 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             if (strFunction == "join")
             {
-              ssText << ":  Already joined channel.";
+              ssText << " Already joined channel.";
             }
             else
             {
               part(strSubTarget);
-              ssText << ":  Parted channel.";
+              ssText << " Parted channel.";
             }
           }
           else if (strFunction == "join")
           {
             join(strSubTarget);
-            ssText << ":  Joined channel.";
+            ssText << " Joined channel.";
           }
           else
           {
-            ssText << ":  Already parted channel.";
+            ssText << " Already parted channel.";
           }
         }
       }
       else
       {
-        ssText << ":  Please provide a Target immediately following the action.";
+        ssText << " Please provide a Target immediately following the action.";
       }
     }
     else
     {
-      ssText << ":  The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, part.";
+      ssText << " The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, part.";
     }
   }
   // }}}
@@ -2393,7 +2393,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (isLocalAdmin(strIdent, "Radial", bAdmin, auth) || (!strApplication.empty() && isLocalAdmin(strIdent, strApplication, bAdmin, auth)))
       {
         live(strApplication, strUser, {{"Action", "message"}, {"Class", ((!strClass.empty())?strClass:"info")}, {"Title", ((!strTitle.empty())?strTitle:strApplication)}, {"Body", strMessage}});
-        ssText << ":  The message has been sent.";
+        ssText << " The message has been sent.";
       }
       else
       {
@@ -2408,7 +2408,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ptFormat->i("Message", "");
       ptFormat->i("Title", "");
       ptFormat->i("User", "");
-      ssText << ":  The live action is used to send a JSON formatted request to Radial Live.  You must provide both an Application and a Message.  Here are the available values for Class:  danger, dark, info, light, primary, secondary, success, and warning.  FORMAT:  " << ptFormat;
+      ssText << " The live action is used to send a JSON formatted request to Radial Live.  You must provide both an Application and a Message.  Here are the available values for Class:  danger, dark, info, light, primary, secondary, success, and warning.  FORMAT:  " << ptFormat;
       delete ptFormat;
     }
   }
@@ -2430,16 +2430,16 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       if (math(equation, ldResult, strError))
       {
-        ssText << ":  " << setprecision(max) << ldResult;
+        ssText << " " << setprecision(max) << ldResult;
       }
       else
       {
-        ssText << ":  " << strError;
+        ssText << " " << strError;
       }
     }
     else
     {
-      ssText << ":  The math action is used to perform basic mathematics.  The following Functions are available:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.  Each item in the provided equation must be space delimited.  All sub-operations must be wrapped in parenthesis.  EX:  ( ( -1 * ( ( ( ( sqrt 64 ) + 4 ) / 2 ) ^ 3 ) ) + ( floor 300.47 ) ) % 10";
+      ssText << " The math action is used to perform basic mathematics.  The following Functions are available:  abs, acos, asin, atan, cbrt, ceil, cos, exp, floor, sin, sqrt, tan.  Each item in the provided equation must be space delimited.  All sub-operations must be wrapped in parenthesis.  EX:  ( ( -1 * ( ( ( ( sqrt 64 ) + 4 ) / 2 ) ^ 3 ) ) + ( floor 300.47 ) ) % 10";
     }
   }
   // }}}
@@ -2454,7 +2454,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         Json *ptJson = new Json(strJson);
         if (hub(strInterface, ptJson, strError))
         {
-          ssText << ":  " << ptJson;
+          ssText << " " << ptJson;
         }
         else
         {
@@ -2464,7 +2464,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
+        ssText << " The radial action is used to send a JSON formatted request to Radial.  Please provide a JSON formatted request immediately following the Interface.";
       }
     }
     else
@@ -2490,11 +2490,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           ssRemainder >> strDatabase >> strNode;
           if (sqliteCreate(strDatabase, strNode, strError))
           {
-            ssText << ":  Database created.";
+            ssText << " Database created.";
           }
           else
           {
-            ssText << ":  " << strError;
+            ssText << " error:  " << strError;
           }
         }
         else if (strFunction == ".databases")
@@ -2503,7 +2503,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (sqliteDatabases(databases, strError))
           {
             list<map<string, string> > resultSet;
-            ssText << ":  okay";
+            ssText << " okay";
             for (auto &database : databases)
             {
               map<string, string> row;
@@ -2528,7 +2528,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           }
           else
           {
-            ssText << ":  " << strError;
+            ssText << " error:  " << strError;
           }
         }
         else if (strFunction == ".drop")
@@ -2538,11 +2538,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           ssRemainder >> strDatabase >> strNode;
           if (sqliteDrop(strDatabase, strNode, strError))
           {
-            ssText << ":  Database dropped.";
+            ssText << " Database dropped.";
           }
           else
           {
-            ssText << ":  " << strError;
+            ssText << " error:  " << strError;
           }
         }
         else
@@ -2562,18 +2562,18 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               ssStatement << "select sql from sqlite_master where name = '" << m_manip.escape(strTable, strValue) << "'";
               if (sqliteQuery(strFunction, ssStatement.str(), resultSet, unID, unRows, strError))
               {
-                ssText << ":  okay";
+                ssText << " okay";
                 ssText << endl << "# of Rows Returned:  " << unRows;
                 ssText << sqliteDisplay(resultSet);
               }
               else
               {
-                ssText << ":  " << strError;
+                ssText << " error:  " << strError;
               }
             }
             else
             {
-              ssText << ":  Please provide the table following the .desc.";
+              ssText << " Please provide the table following the .desc.";
             }
           }
           else if (strSubFunction == ".tables")
@@ -2582,13 +2582,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             size_t unID = 0, unRows = 0;
             if (sqliteQuery(strFunction, "select name from sqlite_master where type='table' order by name", resultSet, unID, unRows, strError))
             {
-              ssText << ":  okay";
+              ssText << " okay";
               ssText << endl << "# of Rows Returned:  " << unRows;
               ssText << sqliteDisplay(resultSet);
             }
             else
             {
-              ssText << ":  " << strError;
+              ssText << " error:  " << strError;
             }
           }
           else if (!strSubFunction.empty())
@@ -2602,7 +2602,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             ssStatement << strSubFunction << " " << strExtra;
             if (sqliteQuery(strFunction, ssStatement.str(), resultSet, unID, unRows, strError))
             {
-              ssText << ":  okay";
+              ssText << " okay";
               if (strLower == "select")
               {
                 ssText << endl << "# of Rows Returned:  " << unRows;
@@ -2619,18 +2619,18 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             else
             {
-              ssText << ":  " << strError;
+              ssText << " error:  " << strError;
             }
           }
           else
           {
-            ssText << ":  Please provide an SQL statement or one of the following sub-Functions following the database:  .desc, .tables.";
+            ssText << " Please provide an SQL statement or one of the following sub-Functions following the database:  .desc, .tables.";
           }
         }
       }
       else
       {
-        ssText << ":  The sqlite action is used to interface with SQLite databases managed by Radial.  The following Functions are available:  .create, .databases, .drop, <database>.";
+        ssText << " The sqlite action is used to interface with SQLite databases managed by Radial.  The following Functions are available:  .create, .databases, .drop, <database>.";
       }
     }
     else
@@ -2732,7 +2732,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The ssh action is used to establish and maintain an SSH session.  Please provide the connection string immediately following the action:  [user]@[server]<:port> <password>.";
+      ssText << " The ssh action is used to establish and maintain an SSH session.  Please provide the connection string immediately following the action:  [user]@[server]<:port> <password>.";
     }
   }
   // }}}
@@ -2762,7 +2762,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             if (((strFunction == "add" || strFunction == "a") && storageAdd(keys, ptSubData, strError)) || ((strFunction == "update" || strFunction == "u") && storageUpdate(keys, ptSubData, strError)))
             {
-              ssText << ":  Completed request.";
+              ssText << " Completed request.";
             }
             else
             {
@@ -2787,7 +2787,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           {
             if (storageRemove(keys, strError))
             {
-              ssText << ":  Completed request.";
+              ssText << " Completed request.";
             }
             else
             {
@@ -2808,7 +2808,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         if (storageRetrieve(keys, ptSubData, strError))
         {
-          ssText << ":  " << ptSubData;
+          ssText << " " << ptSubData;
         }
         else
         {
@@ -2820,7 +2820,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         list<string> keysOut;
         if (storageRetrieveKeys(keys, keysOut, strError))
         {
-          ssText << ":  ";
+          ssText << " ";
           for (auto i = keysOut.begin(); i != keysOut.end(); i++)
           {
             if (i != keysOut.begin())
@@ -2837,13 +2837,13 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       else
       {
-        ssText << ":  Please provide a valid function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).";
+        ssText << " Please provide a valid function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).";
       }
       delete ptSubData;
     }
     else
     {
-      ssText << ":  The storage action is used to send a request to common storage within Radial.  Please provide a function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).  Follow the function with an optional list of comma delimited keys.  For and add (a) or update (u), follow the keys with JSON structured data to be added or updated into storage.";
+      ssText << " The storage action is used to send a request to common storage within Radial.  Please provide a function immediately following the action:  add (a), remove (rm), retrieve (r), retrieveKeys (rk), update (u).  Follow the function with an optional list of comma delimited keys.  For and add (a) or update (u), follow the keys with JSON structured data to be added or updated into storage.";
     }
   }
   // }}}
@@ -2906,7 +2906,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":  The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server]:[port].";
+      ssText << " The terminal action is used to establish and maintain a terminal session.  Please provide the following immediately following the action:  connect (c) [server]:[port].";
     }
   }
   // }}}
@@ -2915,12 +2915,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   {
     actions.sort();
     actions.unique();
-    ssText << ":  Please provide an Action:  ";
+    ssText << " Please provide an Action:  ";
     for (auto actionIter = actions.begin(); actionIter != actions.end(); actionIter++)
     {
       ssText << ((actionIter != actions.begin())?", ":"") << (*actionIter);
     }
-    ssText << ".  The trigger used to engage " << m_strNick << " in a channel is " << m_strTrigger << " followed by an Action.";
+    ssText << endl << "The trigger used to engage " << m_strNick << " in a channel is " << m_strTrigger << " followed by an Action.";
   }
   // }}}
   // {{{ post work
