@@ -2247,7 +2247,6 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     }
     else
     {
-      ssText << ":";
       m_mutexShare.lock();
       ssText << endl << m_strNode << ":  ";
       for (auto interface = m_i.begin(); interface != m_i.end(); interface++)
