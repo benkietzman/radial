@@ -105,9 +105,10 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
               m_mutexPipe.lock();
               if (m_fdPipe[1] != -1)
               {
-                if (write(m_fdPipe[1], &cChar, 1) == 1)
+                if (write(m_fdPipe[1], &cChar, 1) > 0)
                 {
                   bExit = false;
+log("0");
                 }
                 else
                 {
@@ -511,7 +512,6 @@ void Mysql::requests(string strPrefix)
             queue<string> removals;
             queue<radial_mysql_request *> requests;
             cChar = '\n';
-log("0");
             for (auto &handle : handles)
             {
               list<radial_mysql_connection *>::iterator connectionIter;
@@ -542,13 +542,11 @@ log("0");
                 removals.push(handle.first);
               }
             }
-log("1");
             while (!removals.empty())
             {
               handles.erase(removals.front());
               removals.pop();
             }
-log("2");
             m_mutexRequests.lock();
             while (m_requests.empty())
             {
@@ -556,7 +554,6 @@ log("2");
               m_requests.pop();
             }
             m_mutexRequests.unlock();
-log("3");
             while (!requests.empty())
             {
               string strHandle = requests.front()->strHandle;
