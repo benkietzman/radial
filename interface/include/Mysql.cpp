@@ -547,36 +547,29 @@ void Mysql::requests(string strPrefix)
               removals.pop();
             }
             m_mutexRequests.lock();
-            while (m_requests.empty())
+            while (!m_requests.empty())
             {
               requests.push(m_requests.front());
               m_requests.pop();
             }
             m_mutexRequests.unlock();
-log("0");
             while (!requests.empty())
             {
-log("0-0");
               string strHandle = requests.front()->strHandle;
               list<radial_mysql_connection *>::iterator connectionIter = handles[strHandle].end();
               if (handles.find(strHandle) == handles.end())
               {
-log("0-0-0");
                 handles[strHandle] = {};
               }
-log("0-1");
               for (auto i = handles[strHandle].begin(); i != handles[strHandle].end(); i++)
               {
                 if (connectionIter == handles[strHandle].end() || (*i)->requests.size() < (*connectionIter)->requests.size())
                 {
-log("0-1-0");
                   connectionIter = i;
                 }
               }
-log("0-2");
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
-log("0-2-0 - existing");
                 (*connectionIter)->mutexConnection.lock();
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
@@ -584,11 +577,9 @@ log("0-2-0 - existing");
               }
               else
               {
-log("0-2-1 - new");
                 radial_mysql_connection *ptConnection = new radial_mysql_connection;
                 if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
                 {
-log("0-2-1-0 - launched");
                   ptConnection->bClose = false;
                   ptConnection->bIdle = false;
                   ptConnection->requests.push(requests.front());
@@ -610,11 +601,8 @@ log("0-2-1-0 - launched");
                   write(requests.front()->fdPipe, &cChar, 1);
                 }
               }
-log("0-3");
               requests.pop();
-log("0-4");
             }
-log("1");
           }
           else
           {
