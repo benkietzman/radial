@@ -534,9 +534,6 @@ void Mysql::requests(string strPrefix)
                   close((*connectionIter)->fdPipe[1]);
                   delete (*connectionIter);
                   handle.second.erase(connectionIter);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << ":  Joined connection thread.";
-                  log(ssMessage.str());
                 }
               } while (connectionIter != handle.second.end());
               if (handle.second.empty())
@@ -573,6 +570,7 @@ void Mysql::requests(string strPrefix)
               }
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
+chat("BenKietzman", strHandle + (string)" - existing");
                 (*connectionIter)->mutexConnection.lock();
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
@@ -580,6 +578,7 @@ void Mysql::requests(string strPrefix)
               }
               else
               {
+chat("BenKietzman", strHandle + (string)" - new");
                 radial_mysql_connection *ptConnection = new radial_mysql_connection;
                 if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
                 {
@@ -590,9 +589,6 @@ void Mysql::requests(string strPrefix)
                   pthread_setname_np(ptConnection->pThread->native_handle(), "connection");
                   write(ptConnection->fdPipe[1], &cChar, 1);
                   handles[strHandle].push_back(ptConnection);
-                  ssMessage.str("");
-                  ssMessage << strPrefix << ":  Launched connection thread.";
-                  log(ssMessage.str());
                 }
                 else
                 {
