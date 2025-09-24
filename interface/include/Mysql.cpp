@@ -17,17 +17,21 @@ namespace radial
 Mysql::Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "mysql", argc, argv, pCallback)
 {
   mysql_library_init(0, NULL, NULL);
-  m_fdPipe[0] = -1;
-  m_fdPipe[1] = -1;
-  m_pThreadRequests = new thread(&Mysql::requests, this, strPrefix);
-  pthread_setname_np(m_pThreadRequests->native_handle(), "requests");
 }
 // }}}
 // {{{ ~Mysql()
 Mysql::~Mysql()
 {
-  m_pThreadRequests->join();
-  delete m_pThreadRequests;
+  for (auto &i : m_conn)
+  {
+    for (auto &j : i.second)
+    {
+      mysql_close(j->conn);
+      delete j;
+    }
+    i.second.clear();
+  }
+  m_conn.clear();
   mysql_library_end();
 }
 // }}}
@@ -46,146 +50,116 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Server"))
   {
-    string strServer = ptJson->m["Server"]->v;
     if (!empty(ptJson, "User"))
     {
-      string strUser = ptJson->m["User"]->v;
       if (!empty(ptJson, "Password"))
       {
-        string strPassword = ptJson->m["Password"]->v;
         if (!empty(ptJson, "Database"))
         {
-          string strDatabase = ptJson->m["Database"]->v;
           if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
           {
-            int fdPipe[2] = {-1, -1}, nReturn;
-            if ((nReturn = pipe(fdPipe)) == 0)
+            bool bRetry = true;
+            size_t unAttempt = 0;
+            while (bRetry && unAttempt++ < 10)
             {
-              bool bExit = true;
-              char cChar = '\n';
-              int nReturn;
-              string strJson, strPort;
-              stringstream ssHandle, ssServer(strServer);
+              bRetry = false;
+              list<radial_mysql *>::iterator mysqlIter;
+              string strPort, strServer;
+              stringstream ssError, ssServer(ptJson->m["Server"]->v);
               unsigned int unPort = 0;
-              radial_mysql_request *ptRequest = new radial_mysql_request;
-              ptRequest->bQuery = ((!empty(ptJson, "Query"))?true:false);
-              ptRequest->bResult = false;
-              ptRequest->fdPipe = fdPipe[1];
-              ptRequest->strDatabase = strDatabase;
-              ptRequest->strPassword = strPassword;
-              ptRequest->strQuery = ((ptRequest->bQuery)?ptJson->m["Query"]->v:ptJson->m["Update"]->v);
+              unsigned long long ullRows = 0;
               getline(ssServer, strServer, ':');
-              ptRequest->strServer = strServer;
-              ptRequest->strUser = strUser;
-              ptRequest->ullID = 0;
-              ptRequest->ullRows = 0;
               getline(ssServer, strPort, ':');
               if (!empty(ptJson, "Port"))
               {
                 strPort = ptJson->m["Port"]->v;
               }
               if (!strPort.empty())
-              { 
+              {
                 stringstream ssPort(strPort);
                 ssPort >> unPort;
               }
-              ptRequest->unPort = unPort; 
-              ssHandle << strServer << "_" << unPort << "_" << strDatabase << "_" << strUser << "_" << strPassword;
-              ptRequest->strHandle = ssHandle.str();
-              if (exist(ptJson, "Response"))
+              if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
               {
-                delete ptJson->m["Response"];
-              }
-              ptJson->m["Response"] = new Json;
-              ptRequest->ptResults = ptJson->m["Response"];
-              ptRequest->unSize = 16 + ptRequest->ptResults->j(strJson).size();
-              m_mutexRequests.lock();
-              m_requests.push(ptRequest);
-              m_mutexRequests.unlock();
-              m_mutexPipe.lock();
-              if (m_fdPipe[1] != -1)
-              {
-                if (write(m_fdPipe[1], &cChar, 1) == 1)
+                bool bForce = false;
+                (*mysqlIter)->secure.lock();
+                if (!empty(ptJson, "Query"))
                 {
-                  bExit = false;
-                }
-                else
-                {
-                  ssMessage.str("");
-                  ssMessage << "write(" << errno << ") " << strerror(errno);
-                  strError = ssMessage.str();
-                }
-              }
-              else
-              {
-                strError = "Not ready to receive requests.";
-              }
-              m_mutexPipe.unlock();
-              while (!bExit)
-              {
-                pollfd fds[1];
-                fds[0].fd = fdPipe[0];
-                fds[0].events = POLLIN;
-                if ((nReturn = poll(fds, 1, 2000)) > 0)
-                {
-                  if (fds[0].revents & (POLLHUP | POLLIN))
+                  MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
+                  if (result != NULL)
                   {
-                    if (read(fds[0].fd, &cChar, 1) > 0)
+                    vector<string> subFields;
+                    if (fields(result, subFields))
                     {
-                      bExit = true;
-                      if (ptRequest->bResult)
+                      size_t unSize = 16;
+                      map<string, string> *row;
+                      string strJson;
+                      stringstream ssRows;
+                      ssRows << ullRows;
+                      ptJson->i("Rows", ssRows.str(), 'n');
+                      ptJson->m["Response"] = new Json;
+                      unSize += ptJson->j(strJson).size();
+                      while (unSize < m_unMaxPayload && (row = fetch(result, subFields)) != NULL)
                       {
-                        if (!ptRequest->bQuery)
+                        for (auto &i : *row)
                         {
-                          ptJson->i("ID", to_string(ptRequest->ullID), 'n');
+                          unSize += i.first.size() + i.second.size() + 6;
                         }
-                        ptJson->i("Rows", to_string(ptRequest->ullRows), 'n');
+                        if (unSize < m_unMaxPayload)
+                        {
+                          ptJson->m["Response"]->pb(*row);
+                        }
+                        row->clear();
+                        delete row;
                       }
-                      else if (!ptRequest->strError.empty())
+                      if (unSize < m_unMaxPayload)
                       {
-                        strError = ptRequest->strError;
+                        bResult = true;
                       }
                       else
                       {
-                        strError = "Encountered an unknown error.";
+                        delete ptJson->m["Response"];
+                        ptJson->m.erase("Response");
+                        ssMessage.str("");
+                        ssMessage << "Payload of " << m_manip.toShortByte(unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
+                        strError = ssMessage.str();
                       }
                     }
                     else
                     {
-                      bExit = true;
-                      ssMessage.str("");
-                      ssMessage << "read(" << errno << ") " << strerror(errno);
-                      strError = ssMessage.str();
+                      strError = "Failed to fetch field names.";
                     }
+                    subFields.clear();
+                    free(result);
                   }
-                  if (fds[0].revents & POLLERR)
+                  else if (strError.find("Lost connection") != string::npos)
                   {
-                    bExit = true;
-                    strError = "poll() Encountered a POLLERR.";
-                  }
-                  if (fds[0].revents & POLLNVAL)
-                  {
-                    bExit = true;
-                    strError = "poll() Encountered a POLLNVAL.";
+                    bForce = bRetry = true;
                   }
                 }
-                else if (nReturn < 0 && errno != EINTR)
+                else
                 {
-                  bExit = true;
-                  ssMessage.str("");
-                  ssMessage << "poll(" << errno << ") " << strerror(errno);
-                  strError = ssMessage.str();
+                  unsigned long long ullID = 0;
+                  if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
+                  {
+                    stringstream ssID, ssRows;
+                    ssID << ullID;
+                    ptJson->i("ID", ssID.str(), 'n');
+                    ssRows << ullRows;
+                    ptJson->i("Rows", ssRows.str(), 'n');
+                  }
+                  else if (strError.find("Lost connection") != string::npos)
+                  {
+                    bForce = bRetry = true;
+                  }
                 }
+                (*mysqlIter)->secure.unlock();
+                disconnect(mysqlIter, bForce);
               }
-              delete ptRequest;
-              close(fdPipe[0]);
-              close(fdPipe[1]);
-            }
-            else
-            {
-              ssMessage.str("");
-              ssMessage << "pipe(" << errno << ") " << strerror(errno);
-              strError = ssMessage.str();
+              else
+              {
+                bRetry = true;
+              }
             }
           }
           else
@@ -225,175 +199,154 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   delete ptJson;
 }
 // }}}
-// {{{ connection()
-void Mysql::connection(string strPrefix, radial_mysql_connection *ptConnection)
+// {{{ conn()
+map<string, list<radial_mysql *> > *Mysql::conn()
 {
-  // {{{ prep work
-  bool bExit = false;
-  char cChar;
-  int nReturn;
-  MYSQL *conn = NULL;
-  queue<radial_mysql_request *> requests;
-  string strError, strValue;
-  stringstream ssMessage;
-  unsigned int unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
+  return &m_conn;
+}
+// }}}
+// {{{ connect()
+bool Mysql::connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError)
+{
+  bool bResult = false;
+  string strName;
+  stringstream ssError, ssName;
 
-  mysql_thread_init();
-  threadIncrement();
-  strPrefix += "->Mysql::connection()";
-  // }}}
-  while (!bExit)
+  ssName << strServer << "_" << strUser << "_" << strDatabase;
+  strName = ssName.str();
+  lock();
+  if (m_conn.find(strName) == m_conn.end())
   {
-    pollfd fds[1];
-    fds[0].fd = ptConnection->fdPipe[0];
-    fds[0].events = POLLIN;
-    if ((nReturn = poll(fds, 1, 2000)) > 0)
+    list<radial_mysql *> mysqlList;
+    m_conn[strName] = mysqlList;
+  }
+  if (m_conn.find(strName) != m_conn.end())
+  {
+    iter = m_conn[strName].end();
+    for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
     {
-      if (fds[0].revents & (POLLHUP | POLLIN))
+      if (!(*i)->bClose && (*i)->unThreads < 5)
       {
-        if (read(fds[0].fd, &cChar, 1) > 0)
+        iter = i;
+      }
+    }
+    if (iter == m_conn[strName].end() && m_conn[strName].size() >= 20)
+    {
+      iter = m_conn[strName].end();
+      for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
+      {
+        if (!(*i)->bClose)
         {
-          ptConnection->mutexConnection.lock();
-          while (!ptConnection->requests.empty())
+          iter = i;
+        }
+      }
+      if (iter != m_conn[strName].end())
+      {
+        for (auto i = iter; i != m_conn[strName].end(); i++)
+        {
+          if (!(*i)->bClose && (*i)->unThreads < (*iter)->unThreads)
           {
-            requests.push(ptConnection->requests.front());
-            ptConnection->requests.pop();
+            iter = i;
           }
-          ptConnection->bIdle = requests.empty();
-          ptConnection->mutexConnection.unlock();
-        }
-        else
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
-          log(ssMessage.str());
         }
       }
-      if (fds[0].revents & POLLERR)
-      {
-        bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << "->poll() error:  Encountered a POLLERR.";
-        log(ssMessage.str());
-      }
-      if (fds[0].revents & POLLNVAL)
-      {
-        bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << "->poll() error:  Encountered a POLLNVAL.";
-        log(ssMessage.str());
-      }
     }
-    else if (nReturn < 0 && errno != EINTR)
+    if (iter == m_conn[strName].end())
     {
-      bExit = true;
-      ssMessage.str("");
-      ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-      log(ssMessage.str());
-    }
-    if (!requests.empty())
-    {
-      while (!requests.empty())
+      if (!strName.empty())
       {
-        if (conn == NULL)
+        radial_mysql *ptMysql = new radial_mysql;
+        ptMysql->bClose = false;
+        if ((ptMysql->conn = mysql_init(NULL)) != NULL)
         {
-          if ((conn = mysql_init(NULL)) != NULL)
+          unsigned int unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
+          mysql_options(ptMysql->conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeoutConnect);
+          mysql_options(ptMysql->conn, MYSQL_OPT_READ_TIMEOUT, &unTimeoutRead);
+          mysql_options(ptMysql->conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
+          if (mysql_real_connect(ptMysql->conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
           {
-            mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeoutConnect);
-            mysql_options(conn, MYSQL_OPT_READ_TIMEOUT, &unTimeoutRead);
-            mysql_options(conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
-            if (mysql_real_connect(conn, requests.front()->strServer.c_str(), requests.front()->strUser.c_str(), requests.front()->strPassword.c_str(), requests.front()->strDatabase.c_str(), requests.front()->unPort, NULL, 0) == NULL)
-            {
-              ssMessage.str("");
-              ssMessage << "mysql_real_connect(" << mysql_errno(conn) << ") " << mysql_error(conn);
-              strError = ssMessage.str();
-              mysql_close(conn);
-            }
+            ptMysql->unThreads = 0;
+            m_conn[strName].push_back(ptMysql);
+            iter = m_conn[strName].end();
+            iter--;
           }
           else
           {
-            strError = "mysql_init() Failed to initialize MySQL library.";
-          }
-        }
-        if (conn != NULL)
-        {
-          if (requests.front()->bQuery)
-          {
-            MYSQL_RES *result = query(conn, requests.front()->strQuery, requests.front()->ullRows, requests.front()->strError);
-            if (result != NULL)
-            {
-              vector<string> subFields;
-              if (fields(result, subFields))
-              {
-                map<string, string> *row;
-                while (requests.front()->unSize < m_unMaxPayload && (row = fetch(result, subFields)) != NULL)
-                {
-                  for (auto &i : *row)
-                  {
-                    requests.front()->unSize += i.first.size() + i.second.size() + 6;
-                  }
-                  if (requests.front()->unSize < m_unMaxPayload)
-                  {
-                    requests.front()->ptResults->pb(*row);
-                  }
-                  row->clear();
-                  delete row;
-                }
-                if (requests.front()->unSize < m_unMaxPayload)
-                {
-                  requests.front()->bResult = true;
-                }
-                else
-                {
-                  requests.front()->ptResults->clear();
-                  ssMessage.str("");
-                  ssMessage << "Payload of " << m_manip.toShortByte(requests.front()->unSize, strValue) << " exceeded " << m_manip.toShortByte(m_unMaxPayload, strValue) << " maximum.  Response has been removed.";
-                  requests.front()->strError = ssMessage.str();
-                }
-              }
-              else
-              {
-                requests.front()->strError = "Failed to fetch field names.";
-              }
-              subFields.clear();
-              free(result);
-            }
-          }
-          else if (update(conn, requests.front()->strQuery, requests.front()->ullID, requests.front()->ullRows, requests.front()->strError))
-          {
-            requests.front()->bResult = true;
+            ssError.str("");
+            ssError << "mysql_real_connect(" << mysql_errno(ptMysql->conn) << ") [" << strServer << "," << strUser << "," << strDatabase << "]:  " << mysql_error(ptMysql->conn);
+            strError = ssError.str();
+            mysql_close(ptMysql->conn);
+            delete ptMysql;
           }
         }
         else
         {
-          requests.front()->strError = strError;
-          write(requests.front()->fdPipe, &cChar, 1);
+          strError = "mysql_init():  Failed to initialize MySQL library.";
+          delete ptMysql;
         }
-        requests.pop();
       }
-      ptConnection->mutexConnection.lock();
-      ptConnection->bIdle = ptConnection->requests.empty();
-      ptConnection->mutexConnection.unlock();
-    }
-    if (ptConnection->bClose)
-    {
-      ptConnection->mutexConnection.lock();
-      if (ptConnection->requests.empty())
+      else
       {
-        bExit = true;
+        strError = "Please provide the Name.";
       }
-      ptConnection->mutexConnection.unlock();
+    }
+    if (iter != m_conn[strName].end())
+    {
+      bResult = true;
+      (*iter)->unThreads++;
+      time(&((*iter)->CTime));
     }
   }
-  // {{{ post work
-  if (conn != NULL)
+  else
   {
-    mysql_close(conn);
+    strError = "Failed to insert database name into connection pool.";
   }
-  threadDecrement();
-  mysql_thread_end();
-  // }}}
+  unlock();
+
+  return bResult;
+}
+// }}}
+// {{{ disconnect()
+void Mysql::disconnect(list<radial_mysql *>::iterator &iter, const bool bForce)
+{
+  list<map<string, list<radial_mysql *> >::iterator> removeName;
+  time_t CTime;
+
+  time(&CTime);
+  lock();
+  if (bForce)
+  {
+    (*iter)->bClose = true;
+  }
+  (*iter)->unThreads--;
+  for (auto i = m_conn.begin(); i != m_conn.end(); i++)
+  {
+    list<list<radial_mysql *>::iterator> removeConn;
+    for (auto j = i->second.begin(); j != i->second.end(); j++)
+    {
+      if ((*j)->bClose || ((*j)->unThreads == 0 && (CTime - (*j)->CTime) > 60))
+      {
+        removeConn.push_back(j);
+      }
+    }
+    for (auto &j : removeConn)
+    {
+      mysql_close((*j)->conn);
+      delete (*j);
+      i->second.erase(j);
+      if (i->second.empty())
+      {
+        removeName.push_back(i);
+      }
+    }
+    removeConn.clear();
+  }
+  for (auto &i : removeName)
+  {
+    m_conn.erase(i);
+  }
+  removeName.clear();
+  unlock();
 }
 // }}}
 // {{{ fetch()
@@ -439,8 +392,14 @@ void Mysql::free(MYSQL_RES *result)
   mysql_free_result(result);
 }
 // }}}
+// {{{ lock()
+void Mysql::lock()
+{
+  m_mutex.lock();
+}
+// }}}
 // {{{ query()
-MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &ullRows, string &strError)
+MYSQL_RES *Mysql::query(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullRows, string &strError)
 {
   bool bRetry = true;
   size_t unAttempt = 0;
@@ -450,23 +409,23 @@ MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &
   while (bRetry && unAttempt++ < 10)
   {
     bRetry = false;
-    if (mysql_query(conn, strQuery.c_str()) == 0)
+    if (mysql_query((*iter)->conn, strQuery.c_str()) == 0)
     {
-      if ((result = mysql_store_result(conn)) != NULL)
+      if ((result = mysql_store_result((*iter)->conn)) != NULL)
       {
         ullRows = mysql_num_rows(result);
       }
       else
       {
         ssError.str("");
-        ssError << "mysql_store_result(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+        ssError << "mysql_store_result(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
         strError = ssError.str();
       }
     }
     else
     {
       ssError.str("");
-      ssError << "mysql_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+      ssError << "mysql_query(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
       strError = ssError.str();
       if (strError.find("try restarting transaction") != string::npos)
       {
@@ -482,202 +441,14 @@ MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &
   return result;
 }
 // }}}
-// {{{ requests()
-void Mysql::requests(string strPrefix)
+// {{{ unlock()
+void Mysql::unlock()
 {
-  // {{{ prep work
-  bool bExit = false;
-  stringstream ssMessage;
-
-  threadIncrement();
-  strPrefix += "->Mysql::requests()";
-  // }}}
-  if (pipe(m_fdPipe))
-  {
-    char cChar;
-    int nReturn;
-    map<string, list<radial_mysql_connection *> > handles;
-    while (!bExit && !shutdown())
-    {
-      pollfd fds[1];
-      fds[0].fd = m_fdPipe[0];
-      fds[0].events = POLLIN;
-      if ((nReturn = poll(fds, 1, 2000)) > 0)
-      {
-        if (fds[0].revents & (POLLHUP | POLLIN))
-        {
-          if (read(fds[0].fd, &cChar, 1) > 0)
-          {
-            queue<string> removals;
-            queue<radial_mysql_request *> requests;
-            for (auto &handle : handles)
-            {
-              list<radial_mysql_connection *>::iterator connectionIter;
-              do
-              {
-                connectionIter = handle.second.end();
-                for (auto i = handle.second.begin(); connectionIter == handle.second.end() && i != handle.second.end(); i++)
-                {
-                  if ((*i)->bIdle)
-                  {
-                    connectionIter = i;
-                    (*i)->bClose = true;
-                    write((*i)->fdPipe[1], &cChar, 1);
-                    close((*i)->fdPipe[1]);
-                  }
-                }
-                if (connectionIter != handle.second.end())
-                {
-                  (*connectionIter)->pThread->join();
-                  delete (*connectionIter)->pThread;
-                  close((*connectionIter)->fdPipe[0]);
-                  delete (*connectionIter);
-                  handle.second.erase(connectionIter);
-                }
-              } while (connectionIter != handle.second.end());
-              if (handle.second.empty())
-              {
-                removals.push(handle.first);
-              }
-            }
-            while (!removals.empty())
-            {
-              handles.erase(removals.front());
-              removals.pop();
-            }
-            m_mutexRequests.lock();
-            while (m_requests.empty())
-            {
-              requests.push(m_requests.front());
-              m_requests.pop();
-            }
-            m_mutexRequests.unlock();
-            while (!requests.empty())
-            {
-              string strHandle = requests.front()->strHandle;
-              list<radial_mysql_connection *>::iterator connectionIter = handles[strHandle].end();
-              if (handles.find(strHandle) == handles.end())
-              {
-                handles[strHandle] = {};
-              }
-              for (auto i = handles[strHandle].begin(); i != handles[strHandle].end(); i++)
-              {
-                if (connectionIter == handles[strHandle].end() || (*i)->requests.size() < (*connectionIter)->requests.size())
-                {
-                  connectionIter = i;
-                }
-              }
-              if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
-              {
-                (*connectionIter)->mutexConnection.lock();
-                (*connectionIter)->requests.push(requests.front());
-                (*connectionIter)->mutexConnection.unlock();
-                cChar = '\n';
-                write((*connectionIter)->fdPipe[1], &cChar, 1);
-              }
-              else
-              {
-                radial_mysql_connection *ptConnection = new radial_mysql_connection;
-                if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
-                {
-                  ptConnection->bClose = false;
-                  ptConnection->bIdle = false;
-                  ptConnection->requests.push(requests.front());
-                  ptConnection->pThread = new thread(&Mysql::connection, this, strPrefix, ptConnection);
-                  pthread_setname_np(ptConnection->pThread->native_handle(), "connection");
-                  cChar = '\n';
-                  write(ptConnection->fdPipe[1], &cChar, 1);
-                  handles[strHandle].push_back(ptConnection);
-                }
-                else
-                {
-                  delete ptConnection;
-                  bExit = true;
-                  ssMessage.str("");
-                  ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
-                  log(ssMessage.str());
-                }
-              }
-              requests.pop();
-            }
-          }
-          else
-          {
-            bExit = true;
-            ssMessage.str("");
-            ssMessage << strPrefix << "->read(" << errno << ") error:  " << strerror(errno);
-            log(ssMessage.str());
-          }
-        }
-        if (fds[0].revents & POLLERR)
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << "->poll() error:  Encountered a POLLERR.";
-          log(ssMessage.str());
-        }
-        if (fds[0].revents & POLLNVAL)
-        {
-          bExit = true;
-          ssMessage.str("");
-          ssMessage << strPrefix << "->poll() error:  Encountered a POLLNVAL.";
-          log(ssMessage.str());
-        }
-      }
-      else if (nReturn < 0 && errno != EINTR)
-      {
-        bExit = true;
-        ssMessage.str("");
-        ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
-        log(ssMessage.str());
-      }
-    }
-    close(m_fdPipe[0]);
-    m_fdPipe[0] = -1;
-    m_mutexPipe.lock();
-    close(m_fdPipe[1]);
-    m_fdPipe[1] = -1;
-    m_mutexPipe.unlock();
-    cChar = '\n';
-    for (auto &handle : handles)
-    {
-      while (!handle.second.empty())
-      {
-        handle.second.front()->bClose = true;
-        write(handle.second.front()->fdPipe[1], &cChar, 1);
-        close(handle.second.front()->fdPipe[1]);
-        handle.second.front()->pThread->join();
-        delete handle.second.front()->pThread;
-        close(handle.second.front()->fdPipe[0]);
-        delete handle.second.front();
-        handle.second.pop_front();
-      }
-    }
-    m_mutexRequests.lock();
-    while (m_requests.empty())
-    {
-      write(m_requests.front()->fdPipe, &cChar, 1);
-      close(m_requests.front()->fdPipe);
-      m_requests.front()->strError = "Interface is shutting down.";
-      delete m_requests.front();
-      m_requests.pop();
-    }
-    m_mutexRequests.unlock();
-  }
-  else
-  {
-    ssMessage.str("");
-    ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
-    log(ssMessage.str());
-  }
-  // {{{ post work
-  setShutdown();
-  threadDecrement();
-  // }}}
+  m_mutex.unlock();
 }
 // }}}
 // {{{ update()
-bool Mysql::update(MYSQL *conn, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+bool Mysql::update(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false, bRetry = true;
   size_t unAttempt = 0;
@@ -686,16 +457,16 @@ bool Mysql::update(MYSQL *conn, const string strQuery, unsigned long long &ullID
   while (bRetry && unAttempt++ < 10)
   {
     bRetry = false;
-    if (mysql_real_query(conn, strQuery.c_str(), strQuery.size()) == 0)
+    if (mysql_real_query((*iter)->conn, strQuery.c_str(), strQuery.size()) == 0)
     {
       bResult = true;
-      ullID = mysql_insert_id(conn);
-      ullRows = mysql_affected_rows(conn);
+      ullID = mysql_insert_id((*iter)->conn);
+      ullRows = mysql_affected_rows((*iter)->conn);
     }
     else
     {
       ssError.str("");
-      ssError << "mysql_real_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+      ssError << "mysql_real_query(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
       strError = ssError.str();
       if (strError.find("try restarting transaction") != string::npos)
       {
