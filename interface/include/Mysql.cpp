@@ -661,7 +661,7 @@ void Mysql::requests(string strPrefix)
       }
     }
     m_mutexRequests.lock();
-    while (m_requests.empty())
+    while (!m_requests.empty())
     {
       m_requests.front()->strError = "Interface is shutting down.";
       write(m_requests.front()->fdPipe, &cChar, 1);
