@@ -598,7 +598,7 @@ void Mysql::requests(string strPrefix)
                   ssMessage.str("");
                   ssMessage << "pipe(" << errno << ") " << strerror(errno);
                   requests.front()->strError = ssMessage.str();
-                  write(requests.front()->fdPipe, cChar, 1);
+                  write(requests.front()->fdPipe, &cChar, 1);
                 }
               }
               requests.pop();
