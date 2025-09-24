@@ -511,6 +511,7 @@ void Mysql::requests(string strPrefix)
             queue<string> removals;
             queue<radial_mysql_request *> requests;
             cChar = '\n';
+log("0");
             for (auto &handle : handles)
             {
               list<radial_mysql_connection *>::iterator connectionIter;
@@ -541,11 +542,13 @@ void Mysql::requests(string strPrefix)
                 removals.push(handle.first);
               }
             }
+log("1");
             while (!removals.empty())
             {
               handles.erase(removals.front());
               removals.pop();
             }
+log("2");
             m_mutexRequests.lock();
             while (m_requests.empty())
             {
@@ -553,6 +556,7 @@ void Mysql::requests(string strPrefix)
               m_requests.pop();
             }
             m_mutexRequests.unlock();
+log("3");
             while (!requests.empty())
             {
               string strHandle = requests.front()->strHandle;
@@ -570,7 +574,6 @@ void Mysql::requests(string strPrefix)
               }
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
-chat("BenKietzman", strHandle + (string)" - existing");
                 (*connectionIter)->mutexConnection.lock();
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
@@ -578,7 +581,6 @@ chat("BenKietzman", strHandle + (string)" - existing");
               }
               else
               {
-chat("BenKietzman", strHandle + (string)" - new");
                 radial_mysql_connection *ptConnection = new radial_mysql_connection;
                 if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
                 {
@@ -605,6 +607,7 @@ chat("BenKietzman", strHandle + (string)" - new");
               }
               requests.pop();
             }
+log("4");
           }
           else
           {
