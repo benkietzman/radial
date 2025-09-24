@@ -511,7 +511,6 @@ void Mysql::requests(string strPrefix)
             queue<string> removals;
             queue<radial_mysql_request *> requests;
             cChar = '\n';
-log("0");
             for (auto &handle : handles)
             {
               list<radial_mysql_connection *>::iterator connectionIter;
@@ -542,13 +541,11 @@ log("0");
                 removals.push(handle.first);
               }
             }
-log("1");
             while (!removals.empty())
             {
               handles.erase(removals.front());
               removals.pop();
             }
-log("2");
             m_mutexRequests.lock();
             while (m_requests.empty())
             {
@@ -556,24 +553,30 @@ log("2");
               m_requests.pop();
             }
             m_mutexRequests.unlock();
-log("3");
+log("0");
             while (!requests.empty())
             {
+log("0-0");
               string strHandle = requests.front()->strHandle;
               list<radial_mysql_connection *>::iterator connectionIter = handles[strHandle].end();
               if (handles.find(strHandle) == handles.end())
               {
+log("0-0-0");
                 handles[strHandle] = {};
               }
+log("0-1");
               for (auto i = handles[strHandle].begin(); i != handles[strHandle].end(); i++)
               {
                 if (connectionIter == handles[strHandle].end() || (*i)->requests.size() < (*connectionIter)->requests.size())
                 {
+log("0-1-0");
                   connectionIter = i;
                 }
               }
+log("0-2");
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
+log("0-2-0 - existing");
                 (*connectionIter)->mutexConnection.lock();
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
@@ -581,9 +584,11 @@ log("3");
               }
               else
               {
+log("0-2-1 - new");
                 radial_mysql_connection *ptConnection = new radial_mysql_connection;
                 if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
                 {
+log("0-2-1-0 - launched");
                   ptConnection->bClose = false;
                   ptConnection->bIdle = false;
                   ptConnection->requests.push(requests.front());
@@ -605,9 +610,11 @@ log("3");
                   write(requests.front()->fdPipe, &cChar, 1);
                 }
               }
+log("0-3");
               requests.pop();
+log("0-4");
             }
-log("4");
+log("1");
           }
           else
           {
