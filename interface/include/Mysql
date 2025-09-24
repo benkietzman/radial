@@ -17,33 +17,51 @@ extern "C++"
 namespace radial
 {
 // {{{ structs
-struct radial_mysql
+struct radial_mysql_request
+{
+  bool bQuery;
+  bool bResult;
+  int fdPipe;
+  size_t unSize;
+  string strDatabase;
+  string strError;
+  string strHandle;
+  string strPassword;
+  string strQuery;
+  string strServer;
+  string strUser;
+  unsigned int unPort;
+  unsigned long long ullID;
+  unsigned long long ullRows;
+  Json *ptResults;
+};
+struct radial_mysql_connection
 {
   bool bClose;
-  mutex secure;
-  size_t unThreads;
-  time_t CTime;
-  MYSQL *conn;
+  bool bIdle;
+  int fdPipe[2];
+  mutex mutexConnection;
+  queue<radial_mysql_request *> requests;
+  thread *pThread;
 };
-// }}}
+// }}} 
 // {{{ Mysql
 class Mysql : public Interface
 {
   protected:
-  map<string, list<radial_mysql *> > m_conn;
-  mutex m_mutex;
+  int m_fdPipe[2];
+  mutex m_mutexPipe;
+  mutex m_mutexRequests;
+  queue<radial_mysql_request *> m_requests;
+  thread *m_pThreadRequests;
 
-  map<string, list<radial_mysql *> > *conn();
-  bool connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError);
-  void disconnect(list<radial_mysql *>::iterator &iter, const bool bForce = false);
+  void connection(string strPrefix, radial_mysql_connection *ptConnection);
   map<string, string> *fetch(MYSQL_RES *result, vector<string> subFields);
   bool fields(MYSQL_RES *result, vector<string> &subFields);
   void free(MYSQL_RES *result);
-  void lock();
-  void pause();
-  MYSQL_RES *query(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullRows, string &strError);
-  void unlock();
-  bool update(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
+  void requests(string strPrefix);
+  MYSQL_RES *query(MYSQL *conn, const string strQuery, unsigned long long &ullRows, string &strError);
+  bool update(MYSQL *conn, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError);
 
   public:
   Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
