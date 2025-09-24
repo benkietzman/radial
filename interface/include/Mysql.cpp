@@ -22,6 +22,16 @@ Mysql::Mysql(string strPrefix, int argc, char **argv, void (*pCallback)(string, 
 // {{{ ~Mysql()
 Mysql::~Mysql()
 {
+  for (auto &i : m_conn)
+  {
+    for (auto &j : i.second)
+    {
+      mysql_close(j->conn);
+      delete j;
+    }
+    i.second.clear();
+  }
+  m_conn.clear();
   mysql_library_end();
 }
 // }}}
@@ -40,44 +50,38 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   ptJson = new Json(p.p);
   if (!empty(ptJson, "Server"))
   {
-    string strServer = ptJson->m["Server"]->v;
     if (!empty(ptJson, "User"))
     {
-      string strUser = ptJson->m["User"]->v;
       if (!empty(ptJson, "Password"))
       {
-        string strPassword = ptJson->m["Password"]->v;
         if (!empty(ptJson, "Database"))
         {
-          string strDatabase = ptJson->m["Database"]->v;
           if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
           {
-            MYSQL *conn = NULL;
-            if ((conn = mysql_init(NULL)) != NULL)
+            bool bRetry = true;
+            size_t unAttempt = 0;
+            while (bRetry && unAttempt++ < 10)
             {
-              string strPort;
+              bRetry = false;
+              list<radial_mysql *>::iterator mysqlIter;
+              string strPort, strServer;
               stringstream ssError, ssServer(ptJson->m["Server"]->v);
-              unsigned int unPort = 0, unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
-              mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeoutConnect);
-              mysql_options(conn, MYSQL_OPT_READ_TIMEOUT, &unTimeoutRead);
-              mysql_options(conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
+              unsigned int unPort = 0;
+              unsigned long long ullRows = 0;
               getline(ssServer, strServer, ':');
               getline(ssServer, strPort, ':');
               if (!empty(ptJson, "Port"))
               {
-                strPort = ptJson->m["Port"]->v;
-              }
-              if (!strPort.empty())
-              {
-                stringstream ssPort(strPort);
+                stringstream ssPort(ptJson->m["Port"]->v);
                 ssPort >> unPort;
               }
-              if (mysql_real_connect(conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
+              if (connect(strServer, unPort, ptJson->m["User"]->v, ptJson->m["Password"]->v, ptJson->m["Database"]->v, mysqlIter, strError))
               {
-                unsigned long long ullRows = 0;
+                bool bForce = false;
+                (*mysqlIter)->secure.lock();
                 if (!empty(ptJson, "Query"))
                 {
-                  MYSQL_RES *result = query(conn, ptJson->m["Query"]->v, ullRows, strError);
+                  MYSQL_RES *result = query(mysqlIter, ptJson->m["Query"]->v, ullRows, strError);
                   if (result != NULL)
                   {
                     vector<string> subFields;
@@ -124,11 +128,15 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                     subFields.clear();
                     free(result);
                   }
+                  else if (strError.find("Lost connection") != string::npos)
+                  {
+                    bForce = bRetry = true;
+                  }
                 }
                 else
                 {
                   unsigned long long ullID = 0;
-                  if ((bResult = update(conn, ptJson->m["Update"]->v, ullID, ullRows, strError)))
+                  if ((bResult = update(mysqlIter, ptJson->m["Update"]->v, ullID, ullRows, strError)))
                   {
                     stringstream ssID, ssRows;
                     ssID << ullID;
@@ -136,21 +144,19 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                     ssRows << ullRows;
                     ptJson->i("Rows", ssRows.str(), 'n');
                   }
+                  else if (strError.find("Lost connection") != string::npos)
+                  {
+                    bForce = bRetry = true;
+                  }
                 }
+                (*mysqlIter)->secure.unlock();
+                disconnect(mysqlIter, bForce);
               }
               else
               {
-                ssError.str("");
-                ssError << "mysql_real_connect(" << mysql_errno(conn) << ") [" << strServer << "," << strUser << "," << strDatabase << "]:  " << mysql_error(conn);
-                strError = ssError.str();
+                bRetry = true;
               }
-              mysql_close(conn);
             }
-            else
-            {
-              strError = "mysql_init():  Failed to initialize MySQL library.";
-            }
-            mysql_thread_end();
           }
           else
           {
@@ -187,6 +193,156 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
     hub(p, false);
   }
   delete ptJson;
+}
+// }}}
+// {{{ conn()
+map<string, list<radial_mysql *> > *Mysql::conn()
+{
+  return &m_conn;
+}
+// }}}
+// {{{ connect()
+bool Mysql::connect(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, list<radial_mysql *>::iterator &iter, string &strError)
+{
+  bool bResult = false;
+  string strName;
+  stringstream ssError, ssName;
+
+  ssName << strServer << "_" << strUser << "_" << strDatabase;
+  strName = ssName.str();
+  lock();
+  if (m_conn.find(strName) == m_conn.end())
+  {
+    list<radial_mysql *> mysqlList;
+    m_conn[strName] = mysqlList;
+  }
+  if (m_conn.find(strName) != m_conn.end())
+  {
+    iter = m_conn[strName].end();
+    for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
+    {
+      if (!(*i)->bClose && (*i)->unThreads < 5)
+      {
+        iter = i;
+      }
+    }
+    if (iter == m_conn[strName].end() && m_conn[strName].size() >= 20)
+    {
+      iter = m_conn[strName].end();
+      for (auto i = m_conn[strName].begin(); iter == m_conn[strName].end() && i != m_conn[strName].end(); i++)
+      {
+        if (!(*i)->bClose)
+        {
+          iter = i;
+        }
+      }
+      if (iter != m_conn[strName].end())
+      {
+        for (auto i = iter; i != m_conn[strName].end(); i++)
+        {
+          if (!(*i)->bClose && (*i)->unThreads < (*iter)->unThreads)
+          {
+            iter = i;
+          }
+        }
+      }
+    }
+    if (iter == m_conn[strName].end())
+    {
+      if (!strName.empty())
+      {
+        radial_mysql *ptMysql = new radial_mysql;
+        ptMysql->bClose = false;
+        if ((ptMysql->conn = mysql_init(NULL)) != NULL)
+        {
+          unsigned int unTimeoutConnect = 5, unTimeoutRead = 30, unTimeoutWrite = 30;
+          mysql_options(ptMysql->conn, MYSQL_OPT_CONNECT_TIMEOUT, &unTimeoutConnect);
+          mysql_options(ptMysql->conn, MYSQL_OPT_READ_TIMEOUT, &unTimeoutRead);
+          mysql_options(ptMysql->conn, MYSQL_OPT_WRITE_TIMEOUT, &unTimeoutWrite);
+          if (mysql_real_connect(ptMysql->conn, strServer.c_str(), strUser.c_str(), strPassword.c_str(), strDatabase.c_str(), unPort, NULL, 0) != NULL)
+          {
+            ptMysql->unThreads = 0;
+            m_conn[strName].push_back(ptMysql);
+            iter = m_conn[strName].end();
+            iter--;
+          }
+          else
+          {
+            ssError.str("");
+            ssError << "mysql_real_connect(" << mysql_errno(ptMysql->conn) << ") [" << strServer << "," << strUser << "," << strDatabase << "]:  " << mysql_error(ptMysql->conn);
+            strError = ssError.str();
+            mysql_close(ptMysql->conn);
+            delete ptMysql;
+          }
+        }
+        else
+        {
+          strError = "mysql_init():  Failed to initialize MySQL library.";
+          delete ptMysql;
+        }
+      }
+      else
+      {
+        strError = "Please provide the Name.";
+      }
+    }
+    if (iter != m_conn[strName].end())
+    {
+      bResult = true;
+      (*iter)->unThreads++;
+      time(&((*iter)->CTime));
+    }
+  }
+  else
+  {
+    strError = "Failed to insert database name into connection pool.";
+  }
+  unlock();
+
+  return bResult;
+}
+// }}}
+// {{{ disconnect()
+void Mysql::disconnect(list<radial_mysql *>::iterator &iter, const bool bForce)
+{
+  list<map<string, list<radial_mysql *> >::iterator> removeName;
+  time_t CTime;
+
+  time(&CTime);
+  lock();
+  if (bForce)
+  {
+    (*iter)->bClose = true;
+  }
+  (*iter)->unThreads--;
+  for (auto i = m_conn.begin(); i != m_conn.end(); i++)
+  {
+    list<list<radial_mysql *>::iterator> removeConn;
+    for (auto j = i->second.begin(); j != i->second.end(); j++)
+    {
+      if ((*j)->bClose || ((*j)->unThreads == 0 && (CTime - (*j)->CTime) > 60))
+      {
+        removeConn.push_back(j);
+      }
+    }
+    for (auto &j : removeConn)
+    {
+      mysql_close((*j)->conn);
+      delete (*j);
+      i->second.erase(j);
+      if (i->second.empty())
+      {
+        removeName.push_back(i);
+      }
+    }
+    removeConn.clear();
+  }
+  for (auto &i : removeName)
+  {
+    m_conn.erase(i);
+  }
+  removeName.clear();
+  unlock();
 }
 // }}}
 // {{{ fetch()
@@ -232,8 +388,14 @@ void Mysql::free(MYSQL_RES *result)
   mysql_free_result(result);
 }
 // }}}
+// {{{ lock()
+void Mysql::lock()
+{
+  m_mutex.lock();
+}
+// }}}
 // {{{ query()
-MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &ullRows, string &strError)
+MYSQL_RES *Mysql::query(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullRows, string &strError)
 {
   bool bRetry = true;
   size_t unAttempt = 0;
@@ -243,23 +405,23 @@ MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &
   while (bRetry && unAttempt++ < 10)
   {
     bRetry = false;
-    if (mysql_query(conn, strQuery.c_str()) == 0)
+    if (mysql_query((*iter)->conn, strQuery.c_str()) == 0)
     {
-      if ((result = mysql_store_result(conn)) != NULL)
+      if ((result = mysql_store_result((*iter)->conn)) != NULL)
       {
         ullRows = mysql_num_rows(result);
       }
       else
       {
         ssError.str("");
-        ssError << "mysql_store_result(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+        ssError << "mysql_store_result(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
         strError = ssError.str();
       }
     }
     else
     {
       ssError.str("");
-      ssError << "mysql_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+      ssError << "mysql_query(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
       strError = ssError.str();
       if (strError.find("try restarting transaction") != string::npos)
       {
@@ -275,8 +437,14 @@ MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &
   return result;
 }
 // }}}
+// {{{ unlock()
+void Mysql::unlock()
+{
+  m_mutex.unlock();
+}
+// }}}
 // {{{ update()
-bool Mysql::update(MYSQL *conn, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
+bool Mysql::update(list<radial_mysql *>::iterator &iter, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
   bool bResult = false, bRetry = true;
   size_t unAttempt = 0;
@@ -285,16 +453,16 @@ bool Mysql::update(MYSQL *conn, const string strQuery, unsigned long long &ullID
   while (bRetry && unAttempt++ < 10)
   {
     bRetry = false;
-    if (mysql_real_query(conn, strQuery.c_str(), strQuery.size()) == 0)
+    if (mysql_real_query((*iter)->conn, strQuery.c_str(), strQuery.size()) == 0)
     {
       bResult = true;
-      ullID = mysql_insert_id(conn);
-      ullRows = mysql_affected_rows(conn);
+      ullID = mysql_insert_id((*iter)->conn);
+      ullRows = mysql_affected_rows((*iter)->conn);
     }
     else
     {
       ssError.str("");
-      ssError << "mysql_real_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+      ssError << "mysql_real_query(" << mysql_errno((*iter)->conn) << "):  " << mysql_error((*iter)->conn);
       strError = ssError.str();
       if (strError.find("try restarting transaction") != string::npos)
       {
