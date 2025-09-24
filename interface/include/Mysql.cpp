@@ -44,27 +44,21 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-log("0");
   if (!empty(ptJson, "Server"))
   {
     string strServer = ptJson->m["Server"]->v;
-log("0-0");
     if (!empty(ptJson, "User"))
     {
       string strUser = ptJson->m["User"]->v;
-log("0-0-0");
       if (!empty(ptJson, "Password"))
       {
         string strPassword = ptJson->m["Password"]->v;
-log("0-0-0-0");
         if (!empty(ptJson, "Database"))
         {
           string strDatabase = ptJson->m["Database"]->v;
-log("0-0-0-0-0");
           if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
           {
             int fdPipe[2] = {-1, -1}, nReturn;
-log("0-0-0-0-0-0");
             if ((nReturn = pipe(fdPipe)) == 0)
             {
               bool bExit = true;
@@ -74,7 +68,6 @@ log("0-0-0-0-0-0");
               stringstream ssHandle, ssServer(strServer);
               unsigned int unPort = 0;
               radial_mysql_request *ptRequest = new radial_mysql_request;
-log("0-0-0-0-0-0-0");
               ptRequest->bQuery = ((!empty(ptJson, "Query"))?true:false);
               ptRequest->bResult = false;
               ptRequest->fdPipe = fdPipe[1];
@@ -112,10 +105,8 @@ log("0-0-0-0-0-0-0");
               m_mutexPipe.lock();
               if (m_fdPipe[1] != -1)
               {
-log("0-0-0-0-0-0-0-0");
                 if (write(m_fdPipe[1], &cChar, 1) > 0)
                 {
-log("0-0-0-0-0-0-0-0-0");
                   bExit = false;
                 }
                 else
@@ -579,6 +570,7 @@ void Mysql::requests(string strPrefix)
               }
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
+log("existing");
                 (*connectionIter)->mutexConnection.lock();
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
@@ -586,9 +578,11 @@ void Mysql::requests(string strPrefix)
               }
               else
               {
+log("new");
                 radial_mysql_connection *ptConnection = new radial_mysql_connection;
                 if ((nReturn = pipe(ptConnection->fdPipe)) == 0)
                 {
+log("launched");
                   ptConnection->bClose = false;
                   ptConnection->bIdle = false;
                   ptConnection->requests.push(requests.front());
@@ -612,7 +606,6 @@ void Mysql::requests(string strPrefix)
               }
               requests.pop();
             }
-log("4");
           }
           else
           {
