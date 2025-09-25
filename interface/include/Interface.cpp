@@ -5001,6 +5001,14 @@ void Interface::userInit(Json *ptJson, radialUser &d)
           d.auth[auth.first] = (auth.second->v == "1");
         }
       }
+      if (!empty(ptJwt, "sl_first_name"))
+      {
+        d.f = ptJwt->m["sl_first_name"]->v;
+      }
+      if (!empty(ptJwt, "sl_last_name"))
+      {
+        d.l = ptJwt->m["sl_last_name"]->v;
+      }
       if (!empty(ptJwt, "sl_login"))
       {
         d.u = ptJwt->m["sl_login"]->v;
