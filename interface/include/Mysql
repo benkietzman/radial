@@ -43,6 +43,7 @@ struct radial_mysql_connection
   mutex mutexConnection;
   queue<radial_mysql_request *> requests;
   thread *pThread;
+  time_t CTime;
 };
 // }}} 
 // {{{ Mysql

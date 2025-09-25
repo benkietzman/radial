@@ -371,6 +371,7 @@ void Mysql::connection(string strPrefix, radial_mysql_connection *ptConnection)
         cChar = '\n';
         write(requests.front()->fdPipe, &cChar, 1);
         requests.pop();
+        time(&(ptConnection->CTime));
       }
       ptConnection->mutexConnection.lock();
       ptConnection->bIdle = ptConnection->requests.empty();
@@ -498,6 +499,7 @@ void Mysql::requests(string strPrefix)
     char cChar;
     map<string, list<radial_mysql_connection *> > handles;
     queue<string> removals;
+    time_t CTime;
     while (!bExit)
     {
       pollfd fds[1];
@@ -536,6 +538,7 @@ void Mysql::requests(string strPrefix)
               if (connectionIter != handles[strHandle].end() && ((*connectionIter)->requests.size() < 5 || handles[strHandle].size() >= 20))
               {
                 (*connectionIter)->mutexConnection.lock();
+                time(&((*connectionIter)->CTime));
                 (*connectionIter)->requests.push(requests.front());
                 (*connectionIter)->mutexConnection.unlock();
                 write((*connectionIter)->fdPipe[1], &cChar, 1);
@@ -547,6 +550,7 @@ void Mysql::requests(string strPrefix)
                 {
                   ptConnection->bClose = false;
                   ptConnection->bIdle = false;
+                  time(&(ptConnection->CTime));
                   ptConnection->requests.push(requests.front());
                   ptConnection->pThread = new thread(&Mysql::connection, this, strPrefix, ptConnection);
                   pthread_setname_np(ptConnection->pThread->native_handle(), "connection");
@@ -600,6 +604,7 @@ void Mysql::requests(string strPrefix)
         log(ssMessage.str());
       }
       cChar = '\n';
+      time(&CTime);
       for (auto &handle : handles)
       {
         list<radial_mysql_connection *>::iterator connectionIter;
@@ -608,7 +613,7 @@ void Mysql::requests(string strPrefix)
           connectionIter = handle.second.end();
           for (auto i = handle.second.begin(); connectionIter == handle.second.end() && i != handle.second.end(); i++)
           {
-            if ((*i)->bIdle)
+            if ((*i)->bIdle && CTime > (*i)->CTime && (CTime - (*i)->CTime) > 60)
             {
               connectionIter = i;
             }
