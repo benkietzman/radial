@@ -4955,7 +4955,9 @@ void Interface::userInit(radialUser &i, radialUser &o)
 {
   userInit(o);
   o.auth = i.auth;
+  o.f = i.f;
   o.g = i.g;
+  o.l = i.l;
   if (i.r != NULL)
   {
     o.r = new Json(i.r);
