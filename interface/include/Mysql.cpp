@@ -497,6 +497,7 @@ void Mysql::requests(string strPrefix)
     bool bExit = false;
     char cChar;
     map<string, list<radial_mysql_connection *> > handles;
+    queue<string> removals;
     while (!bExit)
     {
       pollfd fds[1];
@@ -508,44 +509,8 @@ void Mysql::requests(string strPrefix)
         {
           if (read(fds[0].fd, &cChar, 1) > 0)
           {
-            queue<string> removals;
             queue<radial_mysql_request *> requests;
             cChar = '\n';
-            for (auto &handle : handles)
-            {
-              list<radial_mysql_connection *>::iterator connectionIter;
-              do
-              {
-                connectionIter = handle.second.end();
-                for (auto i = handle.second.begin(); connectionIter == handle.second.end() && i != handle.second.end(); i++)
-                {
-                  if ((*i)->bIdle)
-                  {
-                    connectionIter = i;
-                  }
-                }
-                if (connectionIter != handle.second.end())
-                {
-                  (*connectionIter)->bClose = true;
-                  write((*connectionIter)->fdPipe[1], &cChar, 1);
-                  (*connectionIter)->pThread->join();
-                  delete (*connectionIter)->pThread;
-                  close((*connectionIter)->fdPipe[0]);
-                  close((*connectionIter)->fdPipe[1]);
-                  delete (*connectionIter);
-                  handle.second.erase(connectionIter);
-                }
-              } while (connectionIter != handle.second.end());
-              if (handle.second.empty())
-              {
-                removals.push(handle.first);
-              }
-            }
-            while (!removals.empty())
-            {
-              handles.erase(removals.front());
-              removals.pop();
-            }
             m_mutexRequests.lock();
             while (!m_requests.empty())
             {
@@ -633,6 +598,42 @@ void Mysql::requests(string strPrefix)
         ssMessage.str("");
         ssMessage << strPrefix << "->poll(" << errno << ") error:  " << strerror(errno);
         log(ssMessage.str());
+      }
+      cChar = '\n';
+      for (auto &handle : handles)
+      {
+        list<radial_mysql_connection *>::iterator connectionIter;
+        do
+        {
+          connectionIter = handle.second.end();
+          for (auto i = handle.second.begin(); connectionIter == handle.second.end() && i != handle.second.end(); i++)
+          {
+            if ((*i)->bIdle)
+            {
+              connectionIter = i;
+            }
+          }
+          if (connectionIter != handle.second.end())
+          {
+            (*connectionIter)->bClose = true;
+            write((*connectionIter)->fdPipe[1], &cChar, 1);
+            (*connectionIter)->pThread->join();
+            delete (*connectionIter)->pThread;
+            close((*connectionIter)->fdPipe[0]);
+            close((*connectionIter)->fdPipe[1]);
+            delete (*connectionIter);
+            handle.second.erase(connectionIter);
+          }
+        } while (connectionIter != handle.second.end());
+        if (handle.second.empty())
+        {
+          removals.push(handle.first);
+        }
+      }
+      while (!removals.empty())
+      {
+        handles.erase(removals.front());
+        removals.pop();
       }
       if (shutdown())
       {
