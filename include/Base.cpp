@@ -157,19 +157,9 @@ Base::Base(int argc, char **argv)
       {
         m_strServer = ptConfig->m["server"]->v;
       }
-      if (exist(ptConfig, "valgrind"))
+      if (!empty(ptConfig, "valgrind"))
       {
-        if (exist(ptConfig->m["valgrind"], "arguments"))
-        {
-          for (auto &i : ptConfig->m["valgrind"]->m["arguments"]->l)
-          {
-            m_valgrind.push_back(i->v);
-          }
-        }
-        if (!empty(ptConfig->m["valgrind"], "path"))
-        {
-          m_strValgrind = ptConfig->m["valgrind"]->v;
-        }
+        m_strValgrind = ptConfig->m["valgrind"]->v;
       }
       if (!empty(ptConfig, "website"))
       {

@@ -62,13 +62,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           stringstream ssCommand;
           if (bValgrind && !m_strValgrind.empty())
           {
-            ssCommand << m_strValgrind;
-            for (auto &i : m_valgrind)
-            {
-              ssCommand << " " << i;
-            }
-            ssCommand << " --log-file=\"" << m_strData << "/valgrind/" << strName << ".log\"";
-            ssCommand << " " << strCommand;
+            ssCommand << m_strValgrind << " --log-file=\"" << m_strData << "/valgrind/" << strName << ".log\" " << strCommand;
           }
           else
           {
@@ -312,7 +306,7 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
                 m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
                 m_i[i.first]->bValgrind = ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false);
                 m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
-                if (m_i[i.first]->strCommand != i.second->m["Command"]->v)
+                if (m_i[i.first]->strCommand != i.second->m["Command"]->v || m_i[i.first]->bValgrind != ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false))
                 {
                   m_i[i.first]->strCommand = i.second->m["Command"]->v;
                   if (!m_i[i.first]->bShutdown && m_i[i.first]->bRespawn)

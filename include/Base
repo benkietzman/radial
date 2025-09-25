@@ -124,7 +124,6 @@ class Base
   bool m_bShutdown;
   char **m_argv, m_cDelimiter;
   int m_argc;
-  list<string> m_valgrind;
   list<radialLink *> m_l;
   map<string, radialInterface *> m_i;
   map<string, size_t> m_throughput;
