@@ -63,7 +63,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           if (bValgrind && !m_strValgrind.empty())
           {
             stringstream ssPreCommand;
-            ssPreCommand << m_strValgrind << " --log-file='" << m_strData << "/valgrind/" << strName << ".log' " << strCommand;
+            ssPreCommand << m_strValgrind << " --log-file=" << m_strData << "/valgrind/" << strName << ".log " << strCommand;
             ssCommand.str(ssPreCommand.str());
           }
           else
