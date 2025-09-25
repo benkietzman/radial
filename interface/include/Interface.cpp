@@ -2950,6 +2950,7 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
       }
       m_i[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
       m_i[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+      m_i[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
     }
   }
   m_mutexShare.unlock();
@@ -3329,6 +3330,7 @@ void Interface::links(string strPrefix, Json *ptJson)
           }
           ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
           ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+          ptLink->interfaces[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
         }
       }
       m_l.push_back(ptLink);

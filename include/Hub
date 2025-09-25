@@ -22,7 +22,7 @@ class Hub : public Base
   char **m_env;
   time_t m_CLoadModify;
 
-  bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted, list<int> sockets);
+  bool add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted, const bool bValgrind, list<int> sockets);
   void chat(const string strTarget, const string strMessage);
   bool load(string strPrefix, string &strError, list<int> sockets);
   void log(const string strFunction, const string strMessage);

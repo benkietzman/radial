@@ -425,6 +425,7 @@ void Link::process(string strPrefix)
                   ptWrite->m["Interfaces"]->m[interface.first]->i("PID", ssPid.str(), 'n');
                   ptWrite->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
                   ptWrite->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
+                  ptWrite->m["Interfaces"]->m[interface.first]->i("Valgrind", ((interface.second->bValgrind)?"1":"0"), ((interface.second->bValgrind)?'1':'0'));
                 }
                 link->responses.push_back(ptWrite->j(strJson));
                 delete ptWrite;
@@ -887,6 +888,7 @@ void Link::process(string strPrefix)
                     ptWrite->m["Interfaces"]->m[interface.first]->i("PID", ssPid.str(), 'n');
                     ptWrite->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
                     ptWrite->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
+                    ptWrite->m["Interfaces"]->m[interface.first]->i("Valgrind", ((interface.second->bValgrind)?"1":"0"), ((interface.second->bValgrind)?'1':'0'));
                   }
                   ptLink->responses.push_back(ptWrite->j(strJson));
                   delete ptWrite;
@@ -1069,6 +1071,7 @@ void Link::process(string strPrefix)
                               }
                               ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
                               ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+                              ptLink->interfaces[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
                             }
                           }
                           ptLinks->i("Function", "links");
@@ -1089,6 +1092,7 @@ void Link::process(string strPrefix)
                               ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("PID", ssPid.str(), 'n');
                               ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
                               ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
+                              ptLinks->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Valgrind", ((interface.second->bValgrind)?"1":"0"), ((interface.second->bValgrind)?'1':'0'));
                             }
                           }
                           hub(ptLinks, false);

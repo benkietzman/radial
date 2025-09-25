@@ -67,6 +67,7 @@ struct radialInterface
   bool bRespawn;
   bool bRestricted;
   bool bShutdown;
+  bool bValgrind;
   int fdRead;
   int fdWrite;
   pid_t nPid;
@@ -123,6 +124,7 @@ class Base
   bool m_bShutdown;
   char **m_argv, m_cDelimiter;
   int m_argc;
+  list<string> m_valgrind;
   list<radialLink *> m_l;
   map<string, radialInterface *> m_i;
   map<string, size_t> m_throughput;
@@ -137,6 +139,7 @@ class Base
   string m_strEmail;
   string m_strNode;
   string m_strServer;
+  string m_strValgrind;
   string m_strWarden;
   string m_strWebsite;
   time_t m_CMonitor[2];

@@ -37,7 +37,7 @@ Hub::~Hub()
 }
 // }}}
 // {{{ add()
-bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted, list<int> sockets)
+bool Hub::add(string strPrefix, const string strName, const string strAccessFunction, const string strCommand, const unsigned long ulMemory, const bool bRespawn, const bool bRestricted, const bool bValgrind, list<int> sockets)
 {
   bool bResult = false;
   string strError;
@@ -59,7 +59,21 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           char *args[100], *pszArgument;
           size_t unIndex = 0;
           string strArgument;
-          stringstream ssCommand(strCommand);
+          stringstream ssCommand;
+          if (bValgrind && !m_strValgrind.empty())
+          {
+            ssCommand << m_strValgrind;
+            for (auto &i : m_valgrind)
+            {
+              ssCommand << " " << i;
+            }
+            ssCommand << " --log-file=\"" << strData << "/" << strName << ".log\"";
+            ssCommand << " " << strCommand;
+          }
+          else
+          {
+            ssCommand.str(strCommand);
+          }
           while (ssCommand >> strArgument)
           {
             pszArgument = new char[strArgument.size() + 1];
@@ -104,6 +118,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
           m_i[strName]->bRespawn = bRespawn;
           m_i[strName]->bRestricted = bRestricted;
           m_i[strName]->bShutdown = false;
+          m_i[strName]->bValgrind = bValgrind;
           m_i[strName]->CKill = 0;
           m_i[strName]->CMonitor[0] = 0;
           m_i[strName]->CMonitor[1] = 0;
@@ -182,6 +197,7 @@ void Hub::interfaces()
     ptJson->m["Interfaces"]->m[i.first]->i("PID", ssPid.str(), 'n');
     ptJson->m["Interfaces"]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
     ptJson->m["Interfaces"]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+    ptJson->m["Interfaces"]->m[i.first]->i("Valgrind", ((i.second->bValgrind)?"1":"0"), ((i.second->bValgrind)?'1':'0'));
   }
   for (auto &i : m_i)
   {
@@ -213,6 +229,7 @@ void Hub::links()
       ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("PID", ssPid.str(), 'n');
       ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Respawn", ((interface.second->bRespawn)?"1":"0"), ((interface.second->bRespawn)?'1':'0'));
       ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Restricted", ((interface.second->bRestricted)?"1":"0"), ((interface.second->bRestricted)?'1':'0'));
+      ptJson->m["Links"]->m[link->strNode]->m["Interfaces"]->m[interface.first]->i("Valgrind", ((interface.second->bValgrind)?"1":"0"), ((interface.second->bValgrind)?'1':'0'));
     }
   }
   for (auto &interface : m_i)
@@ -274,7 +291,7 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
             unsigned long ulMemory;
             ssMemory >> ulMemory;
             ulMemory *= 1024;
-            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false), sockets))
+            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Valgrind") && ptInterfaces->m["log"]->m["Valgrind"]->v == "1")?true:false), sockets))
             {
               bResult = false;
             }
@@ -293,6 +310,7 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
               {
                 m_i[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
                 m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
+                m_i[i.first]->bValgrind = ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false);
                 m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
                 if (m_i[i.first]->strCommand != i.second->m["Command"]->v)
                 {
@@ -307,7 +325,7 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
                 }
                 m_i[i.first]->ulMemory = ulMemory;
               }
-              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false), sockets))
+              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false), ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false), sockets))
               {
                 bResult = false;
               }
@@ -731,6 +749,7 @@ void Hub::process(string strPrefix)
                                         }
                                         ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
                                         ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
+                                        ptLink->interfaces[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
                                       }
                                     }
                                     m_l.push_back(ptLink);
@@ -751,7 +770,7 @@ void Hub::process(string strPrefix)
                                   {
                                     if (!empty(ptJson, "Name"))
                                     {
-                                      bool bRespawn = false, bRestricted = false;
+                                      bool bRespawn = false, bRestricted = false, bValgrind = false;
                                       ifstream inInterfaces;
                                       string strAccessFunction, strCommand;
                                       stringstream ssInterfaces;
@@ -793,6 +812,10 @@ void Hub::process(string strPrefix)
                                           {
                                             bRestricted = true;
                                           }
+                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Valgrind") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Valgrind"]->v == "1")
+                                          {
+                                            bValgrind = true;
+                                          }
                                         }
                                         delete ptInterfaces;
                                       }
@@ -818,7 +841,11 @@ void Hub::process(string strPrefix)
                                       {
                                         bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
                                       }
-                                      if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted, sockets))
+                                      if (!empty(ptJson, "Valgrind"))
+                                      {
+                                        bValgrind = ((ptJson->m["Valgrind"]->v == "1")?true:false);
+                                      }
+                                      if (add(strPrefix, ptJson->m["Name"]->v, strAccessFunction, strCommand, ulMemory, bRespawn, bRestricted, bValgrind, sockets))
                                       {
                                         bResult = true;
                                         interfaces();
@@ -847,6 +874,7 @@ void Hub::process(string strPrefix)
                                       ptJson->m["Response"]->m[j.first]->i("PID", ssPid.str(), 'n');
                                       ptJson->m["Response"]->m[j.first]->i("Respawn", ((j.second->bRespawn)?"1":"0"), ((j.second->bRespawn)?'1':'0'));
                                       ptJson->m["Response"]->m[j.first]->i("Restricted", ((j.second->bRestricted)?"1":"0"), ((j.second->bRestricted)?'1':'0'));
+                                      ptJson->m["Response"]->m[j.first]->i("Valgrind", ((j.second->bValgrind)?"1":"0"), ((j.second->bValgrind)?'1':'0'));
                                     }
                                   }
                                   // }}}
@@ -1099,7 +1127,7 @@ void Hub::process(string strPrefix)
                                         unsigned long ulMemory;
                                         ssMemory >> ulMemory;
                                         ulMemory *= 1024;
-                                        if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false), sockets))
+                                        if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Valgrind") && ptInterfaces->m[strInterface]->m["Valgrind"]->v == "1")?true:false), sockets))
                                         {
                                           bProcessed = true;
                                           interfaces();
@@ -1440,7 +1468,7 @@ void Hub::remove(string strPrefix, const string strName, list<int> sockets)
     log(ssMessage.str());
     if (!shutdown() && m_i[strName]->bRespawn)
     {
-      add(strPrefix, strName, m_i[strName]->strAccessFunction, m_i[strName]->strCommand, m_i[strName]->ulMemory, true, m_i[strName]->bRestricted, sockets);
+      add(strPrefix, strName, m_i[strName]->strAccessFunction, m_i[strName]->strCommand, m_i[strName]->ulMemory, true, m_i[strName]->bRestricted, m_i[strName]->bValgrind, sockets);
     }
     else
     {
