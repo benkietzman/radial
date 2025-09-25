@@ -163,7 +163,7 @@ Base::Base(int argc, char **argv)
         {
           for (auto &i : ptConfig->m["valgrind"]->m["arguments"]->l)
           {
-            m_valgrind.push_back(i);
+            m_valgrind.push_back(i->v);
           }
         }
         if (!empty(ptConfig->m["valgrind"], "path"))

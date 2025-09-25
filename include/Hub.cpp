@@ -67,7 +67,7 @@ bool Hub::add(string strPrefix, const string strName, const string strAccessFunc
             {
               ssCommand << " " << i;
             }
-            ssCommand << " --log-file=\"" << strData << "/" << strName << ".log\"";
+            ssCommand << " --log-file=\"" << m_strData << "/" << strName << ".log\"";
             ssCommand << " " << strCommand;
           }
           else
