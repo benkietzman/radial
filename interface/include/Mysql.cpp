@@ -443,41 +443,27 @@ void Mysql::free(MYSQL_RES *result)
 // {{{ query()
 MYSQL_RES *Mysql::query(MYSQL *conn, const string strQuery, unsigned long long &ullRows, string &strError)
 {
-  bool bRetry = true;
-  size_t unAttempt = 0;
   stringstream ssError;
   MYSQL_RES *result = NULL;
 
-  while (bRetry && unAttempt++ < 10)
+  if (mysql_query(conn, strQuery.c_str()) == 0)
   {
-    bRetry = false;
-    if (mysql_query(conn, strQuery.c_str()) == 0)
+    if ((result = mysql_store_result(conn)) != NULL)
     {
-      if ((result = mysql_store_result(conn)) != NULL)
-      {
-        ullRows = mysql_num_rows(result);
-      }
-      else
-      {
-        ssError.str("");
-        ssError << "mysql_store_result(" << mysql_errno(conn) << "):  " << mysql_error(conn);
-        strError = ssError.str();
-      }
+      ullRows = mysql_num_rows(result);
     }
     else
     {
       ssError.str("");
-      ssError << "mysql_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+      ssError << "mysql_store_result(" << mysql_errno(conn) << "):  " << mysql_error(conn);
       strError = ssError.str();
-      if (strError.find("try restarting transaction") != string::npos)
-      {
-        bRetry = true;
-      }
     }
-    if (bRetry)
-    {
-      msleep(250);
-    }
+  }
+  else
+  {
+    ssError.str("");
+    ssError << "mysql_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+    strError = ssError.str();
   }
 
   return result;
@@ -690,33 +676,20 @@ void Mysql::requests(string strPrefix)
 // {{{ update()
 bool Mysql::update(MYSQL *conn, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, string &strError)
 {
-  bool bResult = false, bRetry = true;
-  size_t unAttempt = 0;
+  bool bResult = false;
   stringstream ssError;
 
-  while (bRetry && unAttempt++ < 10)
+  if (mysql_real_query(conn, strQuery.c_str(), strQuery.size()) == 0)
   {
-    bRetry = false;
-    if (mysql_real_query(conn, strQuery.c_str(), strQuery.size()) == 0)
-    {
-      bResult = true;
-      ullID = mysql_insert_id(conn);
-      ullRows = mysql_affected_rows(conn);
-    }
-    else
-    {
-      ssError.str("");
-      ssError << "mysql_real_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
-      strError = ssError.str();
-      if (strError.find("try restarting transaction") != string::npos)
-      {
-        bRetry = true;
-      }
-    }
-    if (bRetry)
-    {
-      msleep(250);
-    }
+    bResult = true;
+    ullID = mysql_insert_id(conn);
+    ullRows = mysql_affected_rows(conn);
+  }
+  else
+  {
+    ssError.str("");
+    ssError << "mysql_real_query(" << mysql_errno(conn) << "):  " << mysql_error(conn);
+    strError = ssError.str();
   }
 
   return bResult;
