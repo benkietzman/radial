@@ -308,6 +308,7 @@ void Mysql::connection(string strPrefix, radial_mysql_connection *ptConnection)
               ssMessage << "mysql_real_connect(" << mysql_errno(conn) << ") " << mysql_error(conn);
               strError = ssMessage.str();
               mysql_close(conn);
+              conn = NULL;
             }
           }
           else
