@@ -187,17 +187,18 @@ int main(int argc, char *argv[])
                     inCmdLine.open(ssCmdLine.str());
                     if (inCmdLine)
                     {
-                      size_t unPosition;
                       stringstream ssLine;
                       getline(inCmdLine, strLine);
-                      ssCmdLine.clear();
-                      if (strLine[strLine.size()-1] == '\0')
+                      if (!strLine.empty() && strLine[strLine.size()-1] == '\0')
                       {
                         strLine.erase((strLine.size()-1), 1);
                       }
-                      while ((unPosition = strLine.find("\0")) != string::npos)
+                      for (size_t i = 0; i < strLine.size(); i++)
                       {
-                        strLine[unPosition] = ' ';
+                        if (strLine[i] == '\0')
+                        {
+                          strLine[i] = ' ';
+                        }
                       }
                       ptProc->i("cmdline", strLine);
                     }
