@@ -137,7 +137,7 @@ export default
         <input class="btn btn-sm btn-success" id="jsonimport" type="file" accept=".json" c-change="jsonImport()" value="Import">
         <button class="btn btn-sm btn-warning bi bi-save" c-click="jsonExport()" style="margin-left: 10px;" title="Save"></button>
         <div class="card border border-info-subtle" style="margin-top: 10px;">
-          <div class="card-header bg-info fw-bold">
+          <div class="card-header bg-info fw-bold text-dark">
             Track Your Finances
           </div>
           <div class="card-body bg-info-subtle">
