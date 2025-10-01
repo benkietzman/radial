@@ -120,15 +120,17 @@ export default
             <th class="text-end" style="background: inherit;" title="{{number (spendItemTotal .)}}">{{numberShort (spendItemTotal .)}}</th>
           </tr>
           {{/each}}
-          <tr>
+        </tbody>
+        <tfoot>
+          <tr style="position: sticky; bottom: 0;">
             <th class="bg-danger-subtle" style="left: 0; position: sticky;">Total</th>
             {{#for 1 12 1}}
-            <th class="text-end" style="background: inherit;" title="{{number (spendMonthTotal .)}}">{{numberShort (spendMonthTotal .)}}</th>
+            <th class="bg-danger-subtle text-end" style="background: inherit;" title="{{number (spendMonthTotal .)}}">{{numberShort (spendMonthTotal .)}}</th>
             {{/for}}
-            <th class="text-end" style="background: inherit;" title="{{number (spendAverage)}}">{{numberShort (spendAverage)}}</th>
-            <th class="text-end" style="background: inherit;" title="{{number (spendTotal)}}">{{numberShort (spendTotal)}}</th>
+            <th class="bg-danger-subtle text-end" style="background: inherit;" title="{{number (spendAverage)}}">{{numberShort (spendAverage)}}</th>
+            <th class="bg-danger-subtle text-end" style="background: inherit;" title="{{number (spendTotal)}}">{{numberShort (spendTotal)}}</th>
           </tr>
-        </tbody>
+        </tfoot>
       </table>
     </div>
   `

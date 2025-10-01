@@ -77,11 +77,13 @@ export default
               <td class="text-end" style="background: inherit;" title="{{number Payment}}">{{numberShort Payment}}</td>
             </tr>
             {{/each}}
-            <tr>
-              <th style="background: inherit; text-align:left;">Total</th>
-              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (liabilityCompoundSum)}}">{{numberShort (liabilityCompoundSum)}}</th>
-            </tr>
             </tbody>
+            <tfoot>
+            <tr style="position: sticky; bottom: 0;">
+              <th class="bg-danger-subtle" style="background: inherit; text-align:left;">Total</th>
+              <th class="bg-danger-subtle text-end" colspan="4" style="background: inherit;" title="{{number (liabilityCompoundSum)}}">{{numberShort (liabilityCompoundSum)}}</th>
+            </tr>
+            </tfoot>
           </table>
         </div>
       </div>

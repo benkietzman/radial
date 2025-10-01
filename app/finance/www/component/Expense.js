@@ -72,11 +72,13 @@ export default
               <td class="text-end" style="background: inherit;" title="{{number Amount}}">{{numberShort Amount}}</td>
             </tr>
             {{/each}}
-            <tr>
-              <th style="background: inherit; text-align:left;">Total</th>
-              <th class="text-end" style="background: inherit;" title="{{number (genericTypeSum ../f @key)}}">{{numberShort (genericTypeSum ../f @key)}}</th>
-            </tr>
             </tbody>
+            <tfoot>
+            <tr style="position: sticky; bottom: 0;">
+              <th class="bg-danger-subtle" style="background: inherit; text-align:left;">Total</th>
+              <th class="bg-danger-subtle" text-end" style="background: inherit;" title="{{number (genericTypeSum ../f @key)}}">{{numberShort (genericTypeSum ../f @key)}}</th>
+            </tr>
+            </tfoot>
           </table>
         </div>
       </div>

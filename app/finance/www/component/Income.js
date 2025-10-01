@@ -96,12 +96,14 @@ export default
               <td class="text-end" style="background: inherit;" title="{{number (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}">{{numberShort (subtract (incomeEmployment @key) (incomeEmploymentWithheld @key))}}</td>
             </tr>
             {{/each}}
-            <tr>
-              <th style="background: inherit; text-align:left;">Total</th>
-              <th class="text-end" colspan="5" style="background: inherit;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
-              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}">{{numberShort (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}</th>
-            </tr>
             </tbody>
+            <tfoot>
+            <tr style="position: sticky; bottom: 0;">
+              <th class="bg-success-subtle" style="background: inherit; text-align:left;">Total</th>
+              <th class="bg-success-subtle text-end" colspan="5" style="background: inherit;" title="{{number (incomeEmploymentSum)}}">{{numberShort (incomeEmploymentSum)}}</th>
+              <th class="bg-success-subtle text-end" colspan="4" style="background: inherit;" title="{{number (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}">{{numberShort (subtract (incomeEmploymentSum) (incomeEmploymentWithheldSum))}}</th>
+            </tr>
+            </tfoot>
           </table>
         </div>
       </div>

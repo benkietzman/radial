@@ -259,11 +259,13 @@ export default
               <td class="text-end" style="background: inherit;" title="{{number (multiply Quantity Price)}}">{{numberShort (multiply Quantity Price)}}</td>
             </tr>
             {{/each}}
-            <tr>
-              <th class="text-end" style="background: inherit;">Total</th>
-              <th class="text-end" colspan="3" style="background: inherit;" title="{{number (assetMetalSum)}}">{{numberShort (assetMetalSum)}}</th>
-            </tr>
             </tbody>
+            <tfood style="position: sticky; bottom: 0;">
+            <tr>
+              <th class="bg-success-subtle text-end" style="background: inherit;">Total</th>
+              <th class="bg-success-subtle text-end" colspan="3" style="background: inherit;" title="{{number (assetMetalSum)}}">{{numberShort (assetMetalSum)}}</th>
+            </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -334,16 +336,16 @@ export default
             </tr>
             {{/each}}
             </tbody>
-            <tfoot>
+            <tfoot style="position: sticky; bottom: 0;">
             <tr>
               <th class="bg-success-subtle" style="left: 0; position: sticky; text-align:left;">Total</th>
-              <th class="text-end" colspan="12" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
-              <th class="text-end" colspan="2" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%</th>
-              <th class="text-end" colspan="3" style="background: inherit;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
-              <th class="text-end" colspan="4" style="background: inherit;" title="{{number (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}</th>
-              <th class="text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 1)}}">{{numberShort (assetStockReceiveSum 1)}}</th>
-              <th class="text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 2)}}">{{numberShort (assetStockReceiveSum 2)}}</th>
-              <th class="text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 3)}}">{{numberShort (assetStockReceiveSum 3)}}</th>
+              <th class="bg-success-subtle text-end" colspan="12" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum '1-year') 100) (assetStockSum))}}%</th>
+              <th class="bg-success-subtle text-end" colspan="2" style="background: inherit;" title="{{number (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%">{{numberShort (divide (multiply (assetStockDividendSum 'latest') 100) (assetStockSum))}}%</th>
+              <th class="bg-success-subtle text-end" colspan="3" style="background: inherit;" title="{{number (assetStockSum)}}">{{numberShort (assetStockSum)}}</th>
+              <th class="bg-success-subtle text-end" colspan="4" style="background: inherit;" title="{{number (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}">{{numberShort (assetStockDividendSum @root.a.d.Assumption.DividendSpan)}}</th>
+              <th class="bg-success-subtle text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 1)}}">{{numberShort (assetStockReceiveSum 1)}}</th>
+              <th class="bg-success-subtle text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 2)}}">{{numberShort (assetStockReceiveSum 2)}}</th>
+              <th class="bg-success-subtle text-end" style="background: inherit;" title="{{number (assetStockReceiveSum 3)}}">{{numberShort (assetStockReceiveSum 3)}}</th>
             </tr>
             </tfoot>
           </table>
@@ -369,11 +371,13 @@ export default
               <td class="text-end" style="background: inherit;" title="{{number Amount}}">{{numberShort Amount}}</td>
             </tr>
             {{/each}}
-            <tr>
-              <th style="background: inherit;text-align: left;">Total</th>
-              <th class="text-end" style="background: inherit;" title="{{number (genericTypeSum ../../f @key)}}">{{numberShort (genericTypeSum ../../f @key)}}</th>
-            </tr>
             </tbody>
+            <tfoot style="position: sticky; bottom: 0;">
+            <tr>
+              <th class="bg-success-subtle" style="background: inherit;text-align: left;">Total</th>
+              <th class="bg-success-subtle text-end" style="background: inherit;" title="{{number (genericTypeSum ../../f @key)}}">{{numberShort (genericTypeSum ../../f @key)}}</th>
+            </tr>
+            </tfoot>
           </table>
         </div>
       </div>
