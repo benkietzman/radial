@@ -145,7 +145,7 @@ bool Interface::action(radialUser &d, string &e)
               bResult = true;
               setShutdown();
             }
-            else if (strAction == "start" || interfaceRemove(node, strInterface, e) || e == "Encountered an unknown error." || e == "Interface not found.")
+            else if (strAction == "start" || interfaceRemove(node, strInterface, e) || e.find("Encountered an unknown error.") != string::npos || e == "Interface not found.")
             {
               bool bStopped = false;
               time_t CTime[2];

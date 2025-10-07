@@ -147,7 +147,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                       }
                       else
                       {
-                        strError = "mysql Encountered an unknown error.";
+                        strError = "[mysql] Encountered an unknown error.";
                       }
                     }
                     else
