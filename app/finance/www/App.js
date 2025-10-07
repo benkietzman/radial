@@ -335,6 +335,7 @@ class App
     let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend) / 100;
     let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice) / 100;
     let fChangeScore = (Number(this.d.Asset.Stock[Stock].Score) - 1) / -10;
+    let nAge = Number(this.d.Asset.Stock[Stock].Age);
     let fDividend = (Number(this.d.Asset.Stock[Stock].Dividend) + Number(this.d.Asset.Stock[Stock].DividendLatest)) / 2;
     let fPrice = (Number(this.d.Asset.Stock[Stock].AveragePrice) + Number(this.d.Asset.Stock[Stock].Price)) / 2;
     let fYield = fDividend / fPrice * 100;
@@ -342,6 +343,7 @@ class App
     fAdjust += fChangeScore * fAdjust;
     fAdjust += fChangeDividend * fAdjust;
     fAdjust += fChangePrice * fAdjust;
+    fAdjust += ((nAge < 1)?-0.4:((nAge < 2)?-0.3:((nAge < 5)?-0.2:((nAge < 10)?-0.1:((nAge >= 50)?0.4:((nAge >= 40)?0.3:((nAge >= 30)?0.2:((nAge >= 20)?0.1:1)))))))) * fAdjust;
 
     return fYield * fAdjust;
   }
@@ -695,6 +697,8 @@ class App
                   if (data.chart.result[0].meta)
                   {
                     this.d.Asset.Stock[k].timestamp = nTimestamp;
+                    let dateFirstTrade = new Date(data.chart.result[0].meta.firstTradeDate * 1000), dateNow = new Date;
+                    this.d.Asset.Stock[k].Age = dateNow.getFullYear() - dateFirstTrade.getFullYear();
                     this.d.Asset.Stock[k].FirstTrade = data.chart.result[0].meta.firstTradeDate;
                     this.d.Asset.Stock[k].Price = data.chart.result[0].meta.regularMarketPrice;
                   }
