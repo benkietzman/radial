@@ -133,6 +133,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                     bExit = true;
                     if (read(fds[0].fd, &cChar, 1) > 0)
                     {
+log((string)"pre  error " + strError);
                       if (ptRequest->bResult)
                       {
                         if (!ptRequest->bQuery)
@@ -149,6 +150,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                       {
                         strError = "Encountered an unknown error.";
                       }
+log((string)"post error " + strError);
                     }
                     else
                     {
