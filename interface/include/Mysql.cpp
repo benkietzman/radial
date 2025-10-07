@@ -135,6 +135,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                     {
                       if (ptRequest->bResult)
                       {
+                        bResult = true;
                         if (!ptRequest->bQuery)
                         {
                           ptJson->i("ID", to_string(ptRequest->ullID), 'n');
