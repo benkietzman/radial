@@ -67,7 +67,9 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
     if (!empty(ptJson, "Query"))
     {
       unsigned long long ullRows;
+log((string)"pre  central->query:  " + strError);
       auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, strError);
+log((string)"post central->query:  " + strError);
       if (rows != NULL)
       {
         stringstream ssRows;
@@ -213,6 +215,7 @@ bool Database::mysql(const string strType, const string strName, const string st
         {
           ptJson->i("Type", strType);
           ptJson->i(((strType == "query")?"Query":"Update"), strQuery);
+log((string)"pre  hub->mysql:  " + strError);
           if (hub("mysql", ptJson, strError))
           {
             bResult = true;
@@ -236,6 +239,7 @@ bool Database::mysql(const string strType, const string strName, const string st
               ssRows >> ullRows;
             }
           }
+log((string)"post hub->mysql:  " + strError);
         }
         else
         {
