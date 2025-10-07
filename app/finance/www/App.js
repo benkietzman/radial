@@ -335,15 +335,20 @@ class App
     let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend) / 100;
     let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice) / 100;
     let fChangeScore = (Number(this.d.Asset.Stock[Stock].Score) - 1) / -10;
-    let nAge = Number(this.d.Asset.Stock[Stock].Age);
     let fDividend = (Number(this.d.Asset.Stock[Stock].Dividend) + Number(this.d.Asset.Stock[Stock].DividendLatest)) / 2;
     let fPrice = (Number(this.d.Asset.Stock[Stock].AveragePrice) + Number(this.d.Asset.Stock[Stock].Price)) / 2;
     let fYield = fDividend / fPrice * 100;
 
+    let CNow = Math.floor(Date.now() / 1000);
+    let nDiff = CNow - Number(this.d.Asset.Stock[Stock].FirstTrade);
+    let nTenYears = 60 * 60 * 24 * 365 * 10
+    if (nDiff < nTenYears)
+    {
+      fAdjust += (nDiff / nTenYears) - 1;
+    }
     fAdjust += fChangeScore * fAdjust;
     fAdjust += fChangeDividend * fAdjust;
     fAdjust += fChangePrice * fAdjust;
-    fAdjust += ((nAge < 1)?-0.4:((nAge < 2)?-0.3:((nAge < 5)?-0.2:((nAge < 10)?-0.1:((nAge >= 50)?0.4:((nAge >= 40)?0.3:((nAge >= 30)?0.2:((nAge >= 20)?0.1:1)))))))) * fAdjust;
 
     return fYield * fAdjust;
   }
