@@ -126,7 +126,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
                 pollfd fds[1];
                 fds[0].fd = fdPipe[0];
                 fds[0].events = POLLIN;
-                if ((nReturn = poll(fds, 1, 100)) > 0)
+                if ((nReturn = poll(fds, 1, 2000)) > 0)
                 {
                   if (fds[0].revents & (POLLHUP | POLLIN))
                   {
@@ -248,7 +248,7 @@ void Mysql::connection(string strPrefix, radial_mysql_connection *ptConnection)
       pollfd fds[1];
       fds[0].fd = ptConnection->fdPipe[0];
       fds[0].events = POLLIN;
-      if ((nReturn = poll(fds, 1, 100)) > 0)
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
       {
         if (fds[0].revents & (POLLHUP | POLLIN))
         {
@@ -492,7 +492,7 @@ void Mysql::requests(string strPrefix)
       pollfd fds[1];
       fds[0].fd = m_fdPipe[0];
       fds[0].events = POLLIN;
-      if ((nReturn = poll(fds, 1, 100)) > 0)
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
       {
         if (fds[0].revents & (POLLHUP | POLLIN))
         {
