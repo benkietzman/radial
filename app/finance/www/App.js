@@ -344,7 +344,7 @@ class App
     let nTenYears = 60 * 60 * 24 * 365 * 10
     if (nDiff < nTenYears)
     {
-      fAdjust += (nDiff / nTenYears) - 1;
+      fAdjust += ((nDiff / nTenYears) - 1) / 2;
     }
     fAdjust += fChangeScore * fAdjust;
     fAdjust += fChangeDividend * fAdjust;
