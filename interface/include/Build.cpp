@@ -123,7 +123,7 @@ bool Build::chgrp(string &s, const string p, const string g, string &d, string &
   bool b = false;
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << g << " \"" << p << "\"";
+  c << "chown" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -146,7 +146,7 @@ bool Build::chmod(string &s, const string p, const string m, string &d, string &
   bool b = false;
   stringstream c;
 
-  c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"";
+  c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -169,7 +169,7 @@ bool Build::chown(string &s, const string p, const string u, string &d, string &
   bool b = false;
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"";
+  c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -192,7 +192,7 @@ bool Build::chsh(string &s, const string u, const string i, string &d, string &e
   bool b = false;
   stringstream c;
 
-  c << "chsh -s " << i << " " << u;
+  c << "chsh -s " << i << " " << u << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -311,7 +311,7 @@ bool Build::dir(string &s, const string p, string &d, string &e)
   bool b = false;
   stringstream c;
 
-  c << "ls -d \"" << p << "\"";
+  c << "ls -d \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -460,7 +460,7 @@ bool Build::mkdir(string &s, const string p, string &d, string &e, const bool r)
   bool b = false;
   stringstream c;
 
-  c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"";
+  c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -543,7 +543,7 @@ bool Build::rmdir(string &s, const string p, string &d, string &e, const bool r)
   bool b = false;
   stringstream c;
 
-  c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"";
+  c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
@@ -565,7 +565,7 @@ bool Build::sudo(string &s, const string c, string &d, string &e)
 {
   bool b = false;
 
-  if (sshSend(s, c, d, e))
+  if (sshSend(s, c + "\n", d, e))
   {
     queue<string> a;
     string i;
@@ -582,7 +582,7 @@ bool Build::sudo(string &s, const string c, string &d, string &e)
       }
       else
       {
-        e = d;
+        e = "Failed to become root.";
       }
     }
   }
