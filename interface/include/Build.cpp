@@ -31,7 +31,8 @@ Build::Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, 
   // }}}
   m_c = NULL;
   load(strPrefix, true);
-  watches[m_strData] = {".cred", "build.json"};
+  watches[m_strData] = {".cred"};
+  watches[m_strData + "/build"], {"config.json"};
   m_pThreadInotify = new thread(&Build::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
@@ -104,8 +105,12 @@ void Build::callbackInotify(string strPrefix, const string strPath, const string
   {
     if (strFile == ".cred")
     {
+      cred(strPrefix);
     }
-    else if (strFile == "build.json")
+  }
+  else if (strPath == (m_strData + "/build"))
+  {
+    if (strFile == "config.json")
     {
       load(strPrefix);
     }
@@ -380,6 +385,10 @@ bool Build::install(radialUser &u, string &e)
           b = true;
         }
         sshDisconnect(s, e);
+      }
+      else
+      {
+        e = (string)"Interface::sshConnect() " + e;
       }
     }
     else
