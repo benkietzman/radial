@@ -381,15 +381,12 @@ bool Build::install(radialUser &u, string &e)
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-chat("#radial", "package");
         //if (sudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
         if ((this->*m_packages[strPackage])(s, u, d, e, true))
         {
           b = true;
         }
-chat("#radial", "disconnect");
         sshDisconnect(s, e);
-chat("#radial", "disconnected");
       }
     }
     else
@@ -488,10 +485,8 @@ bool Build::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
   {
     if (dir(s, "/src", d, e))
     {
-chat("#radial", d);
       if (a || rmdir(s, "/src", d, e))
       {
-chat("#radial", "--DONE--");
         b = true;
       }
     }
