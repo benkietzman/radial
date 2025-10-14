@@ -582,7 +582,7 @@ bool Build::sudo(string &s, const string c, string &d, string &e)
       }
       else
       {
-        e = "Failed to become root.";
+        e = d;
       }
     }
   }
