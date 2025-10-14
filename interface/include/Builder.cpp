@@ -1,57 +1,57 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Build.cpp
+// file       : Builder.cpp
 // author     : Ben Kietzman
 // begin      : 2025-10-13
 // copyright  : Ben Kietzman
 // email      : ben@kietzman.org
 // {{{ includes
-#include "Build"
+#include "Builder"
 // }}}
 extern "C++"
 {
 namespace radial
 {
-// {{{ Build()
-Build::Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "build", argc, argv, pCallback)
+// {{{ Builder()
+Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "builder", argc, argv, pCallback)
 {
   map<string, list<string> > watches;
 
   // {{{ functions
-  m_functions["action"] = &Build::action;
-  m_functions["construct"] = &Build::construct;
-  m_functions["destruct"] = &Build::destruct;
-  m_functions["install"] = &Build::install;
-  m_functions["remove"] = &Build::remove;
-  m_functions["status"] = &Build::status;
+  m_functions["action"] = &Builder::action;
+  m_functions["construct"] = &Builder::construct;
+  m_functions["destruct"] = &Builder::destruct;
+  m_functions["install"] = &Builder::install;
+  m_functions["remove"] = &Builder::remove;
+  m_functions["status"] = &Builder::status;
   // }}}
   // {{{ packages
-  m_packages["src"] = &Build::pkgSrc;
+  m_packages["src"] = &Builder::pkgSrc;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
   load(strPrefix, true);
   watches[m_strData] = {".cred"};
-  watches[m_strData + "/build"] = {"config.json"};
-  m_pThreadInotify = new thread(&Build::inotify, this, strPrefix, watches, pCallbackInotify);
+  watches[m_strData + "/builder"] = {"config.json"};
+  m_pThreadInotify = new thread(&Builder::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
-// {{{ ~Build()
-Build::~Build()
+// {{{ ~Builder()
+Builder::~Builder()
 {
 }
 // }}}
 // {{{ callback()
-void Build::callback(string strPrefix, const string strPacket, const bool bResponse)
+void Builder::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   bool bResult = false;
   string strError;
   Json *ptJson;
   radialPacket p;
 
-  strPrefix += "->Build::callback()";
+  strPrefix += "->Builder::callback()";
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
@@ -96,12 +96,12 @@ void Build::callback(string strPrefix, const string strPacket, const bool bRespo
 }
 // }}}
 // {{{ callbackInotify()
-void Build::callbackInotify(string strPrefix, const string strPath, const string strFile)
+void Builder::callbackInotify(string strPrefix, const string strPath, const string strFile)
 {
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Build::callbackInotify()";
+  strPrefix += "->Builder::callbackInotify()";
   if (strPath == m_strData)
   {
     if (strFile == ".cred")
@@ -109,7 +109,7 @@ void Build::callbackInotify(string strPrefix, const string strPath, const string
       cred(strPrefix);
     }
   }
-  else if (strPath == (m_strData + "/build"))
+  else if (strPath == (m_strData + "/builder"))
   {
     if (strFile == "config.json")
     {
@@ -119,7 +119,7 @@ void Build::callbackInotify(string strPrefix, const string strPath, const string
 }
 // }}}
 // {{{ chgrp()
-bool Build::chgrp(string &s, const string p, const string g, string &d, string &e, const bool r)
+bool Builder::chgrp(string &s, const string p, const string g, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -142,7 +142,7 @@ bool Build::chgrp(string &s, const string p, const string g, string &d, string &
 }
 // }}}
 // {{{ chmod()
-bool Build::chmod(string &s, const string p, const string m, string &d, string &e, const bool r)
+bool Builder::chmod(string &s, const string p, const string m, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -165,7 +165,7 @@ bool Build::chmod(string &s, const string p, const string m, string &d, string &
 }
 // }}}
 // {{{ chown()
-bool Build::chown(string &s, const string p, const string u, string &d, string &e, const bool r)
+bool Builder::chown(string &s, const string p, const string u, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -188,7 +188,7 @@ bool Build::chown(string &s, const string p, const string u, string &d, string &
 }
 // }}}
 // {{{ chsh()
-bool Build::chsh(string &s, const string u, const string i, string &d, string &e, const bool r)
+bool Builder::chsh(string &s, const string u, const string i, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -211,7 +211,7 @@ bool Build::chsh(string &s, const string u, const string i, string &d, string &e
 }
 // }}}
 // {{{ confPkg()
-bool Build::confPkg(const string p, Json *c, string &e)
+bool Builder::confPkg(const string p, Json *c, string &e)
 {
   bool b = false;
 
@@ -238,7 +238,7 @@ bool Build::confPkg(const string p, Json *c, string &e)
 }
 // }}}
 // {{{ construct()
-bool Build::construct(radialUser &u, string &e)
+bool Builder::construct(radialUser &u, string &e)
 {
   bool b = false;
   Json *i = u.p->m["i"];
@@ -251,14 +251,14 @@ bool Build::construct(radialUser &u, string &e)
 }
 // }}}
 // {{{ cred()
-void Build::cred(string strPrefix, const bool bSilent)
+void Builder::cred(string strPrefix, const bool bSilent)
 {
   string strError;
   stringstream ssMessage;
   Json *ptCred = new Json;
 
-  strPrefix += "->Build::cred()";
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"build"}, ptCred, strError))
+  strPrefix += "->Builder::cred()";
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"builder"}, ptCred, strError))
   {
     if (exist(ptCred, "key"))
     {
@@ -287,14 +287,14 @@ void Build::cred(string strPrefix, const bool bSilent)
   else if (!bSilent)
   {
     ssMessage.str("");
-    ssMessage << strPrefix << "->Warden::vaultRetrieve() error [build]:  " << strError;
+    ssMessage << strPrefix << "->Warden::vaultRetrieve() error [builder]:  " << strError;
     log(ssMessage.str());
   }
   delete ptCred;
 }
 // }}}
 // {{{ destruct()
-bool Build::destruct(radialUser &u, string &e)
+bool Builder::destruct(radialUser &u, string &e)
 {
   bool b = false;
   Json *i = u.p->m["i"];
@@ -307,7 +307,7 @@ bool Build::destruct(radialUser &u, string &e)
 }
 // }}}
 // {{{ dir()
-bool Build::dir(string &s, const string p, string &d, string &e)
+bool Builder::dir(string &s, const string p, string &d, string &e)
 {
   bool b = false;
   stringstream c;
@@ -330,7 +330,7 @@ bool Build::dir(string &s, const string p, string &d, string &e)
 }
 // }}}
 // {{{ init()
-void Build::init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo)
+void Builder::init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo)
 {
   Json *i = u.p->m["i"];
 
@@ -363,7 +363,7 @@ void Build::init(radialUser &u, string &strUser, string &strPassword, string &st
 }
 // }}}
 // {{{ install()
-bool Build::install(radialUser &u, string &e)
+bool Builder::install(radialUser &u, string &e)
 {
   bool b = false;
   Json *i = u.p->m["i"];
@@ -399,7 +399,7 @@ bool Build::install(radialUser &u, string &e)
 }
 // }}}
 // {{{ last()
-string Build::last(const string d)
+string Builder::last(const string d)
 {
   queue<string> a;
   string i, l;
@@ -419,13 +419,13 @@ string Build::last(const string d)
 }
 // }}}
 // {{{ load()
-void Build::load(string strPrefix, const bool bSilent)
+void Builder::load(string strPrefix, const bool bSilent)
 {
   ifstream inConf;
   stringstream ssConf, ssMessage;
 
-  strPrefix += "->Build::load()";
-  ssConf << m_strData << "/build.json";
+  strPrefix += "->Builder::load()";
+  ssConf << m_strData << "/builder.json";
   inConf.open(ssConf.str());
   if (inConf)
   {
@@ -446,14 +446,14 @@ void Build::load(string strPrefix, const bool bSilent)
   else if (!bSilent)
   {
     ssMessage.str("");
-    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/build.json]:  " << strerror(errno);
+    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/builder.json]:  " << strerror(errno);
     log(ssMessage.str());
   }
   inConf.close();
 }
 // }}}
 // {{{ mkdir()
-bool Build::mkdir(string &s, const string p, string &d, string &e, const bool r)
+bool Builder::mkdir(string &s, const string p, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -476,7 +476,7 @@ bool Build::mkdir(string &s, const string p, string &d, string &e, const bool r)
 }
 // }}}
 // {{{ pkgSrc()
-bool Build::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
+bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
 {
   bool b = false;
   Json *c = new Json;
@@ -501,7 +501,7 @@ bool Build::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
 }
 // }}}
 // {{{ remove()
-bool Build::remove(radialUser &u, string &e)
+bool Builder::remove(radialUser &u, string &e)
 {
   bool b = false;
   Json *i = u.p->m["i"];
@@ -536,7 +536,7 @@ bool Build::remove(radialUser &u, string &e)
 }
 // }}}
 // {{{ rmdir()
-bool Build::rmdir(string &s, const string p, string &d, string &e, const bool r)
+bool Builder::rmdir(string &s, const string p, string &d, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
@@ -559,7 +559,7 @@ bool Build::rmdir(string &s, const string p, string &d, string &e, const bool r)
 }
 // }}}
 // {{{ sudo()
-bool Build::sudo(string &s, const string c, string &d, string &e)
+bool Builder::sudo(string &s, const string c, string &d, string &e)
 {
   bool b = false;
 

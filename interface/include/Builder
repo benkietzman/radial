@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : Build
+// file       : Builder
 // author     : Ben Kietzman
 // begin      : 2025-10-13
 // copyright  : Ben Kietzman
@@ -15,12 +15,12 @@ extern "C++"
 {
 namespace radial
 {
-// {{{ Build
-class Build : public Interface
+// {{{ Builder
+class Builder : public Interface
 {
   protected:
-  map<string, bool (Build::*)(radialUser &, string &)> m_functions;
-  map<string, bool (Build::*)(string &, radialUser &, string &, string &, const bool)> m_packages;
+  map<string, bool (Builder::*)(radialUser &, string &)> m_functions;
+  map<string, bool (Builder::*)(string &, radialUser &, string &, string &, const bool)> m_packages;
   mutex m_mutex;
   string m_strPassword;
   string m_strPrivateKey;
@@ -50,8 +50,8 @@ class Build : public Interface
   bool sudo(string &s, const string c, string &d, string &e);
 
   public:
-  Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
-  ~Build();
+  Builder(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
+  ~Builder();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
 };

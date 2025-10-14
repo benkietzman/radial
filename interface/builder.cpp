@@ -1,30 +1,30 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : build.cpp
+// file       : builder.cpp
 // author     : Ben Kietzman
 // begin      : 2025-10-13
 // copyright  : Ben Kietzman
 // email      : ben@kietzman.org
-#include "include/Build"
+#include "include/Builder"
 using namespace radial;
-Build *gpBuild = NULL;
+Builder *gpBuilder = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 void callbackInotify(string strPrefix, const string strPath, const string strFile);
 int main(int argc, char *argv[])
 {
-  string strPrefix = "build->main()";
-  gpBuild = new Build(strPrefix, argc, argv, &callback, &callbackInotify);
-  gpBuild->enableWorkers();
-  gpBuild->process(strPrefix);
-  delete gpBuild;
+  string strPrefix = "builder->main()";
+  gpBuilder = new Builder(strPrefix, argc, argv, &callback, &callbackInotify);
+  gpBuilder->enableWorkers();
+  gpBuilder->process(strPrefix);
+  delete gpBuilder;
   return 0;
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
-  gpBuild->callback(strPrefix, strPacket, bResponse);
+  gpBuilder->callback(strPrefix, strPacket, bResponse);
 }
 void callbackInotify(string strPrefix, const string strPath, const string strFile)
 {
-  gpBuild->callbackInotify(strPrefix, strPath, strFile);
+  gpBuilder->callbackInotify(strPrefix, strPath, strFile);
 }
