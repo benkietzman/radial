@@ -4303,6 +4303,7 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   bool bResult = false;
   Json *ptJson = new Json;
 
+  ptJson->i("Interface", "ssh");
   ptJson->i("Function", "connect");
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("Server", strServer);
