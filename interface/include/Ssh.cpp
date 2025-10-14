@@ -248,7 +248,6 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                                 m_mutex.unlock();
                                 if (!strData.empty())
                                 {
-chat("#radial", strData);
                                   ptJson->i("Response", strData);
                                 }
                               }
