@@ -4298,7 +4298,7 @@ bool Interface::sqliteQuery(const string strDatabase, const string strStatement,
 // }}}
 // {{{ ssh
 // {{{ sshConnect()
-bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, string &strSession, string &strData, string &strError)
+bool Interface::sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &strSession, string &strData, string &strError)
 {
   bool bResult = false;
   Json *ptJson = new Json;
@@ -4309,6 +4309,7 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   ptJson->m["Request"]->i("Port", strPort);
   ptJson->m["Request"]->i("User", strUser);
   ptJson->m["Request"]->i("Password", strPassword);
+  ptJson->m["Request"]->i("PrivateKey", strPrivateKey);
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;

@@ -70,7 +70,7 @@ obj/Auth.o: include/Auth.cpp obj
 	g++ -ggdb -Wall -c include/Auth.cpp -o obj/Auth.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ build
-auth: bin/build $(prefix)/radial/interface
+build: bin/build $(prefix)/radial/interface
 	install --mode=775 bin/build $(prefix)/radial/interface/
 bin/build: ../../common/libcommon.a obj/build.o obj/Base.o obj/Interface.o obj/Build.o bin
 	g++ -o bin/build obj/build.o obj/Base.o obj/Interface.o obj/Build.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz

@@ -20,17 +20,40 @@ class Build : public Interface
 {
   protected:
   map<string, bool (Build::*)(radialUser &, string &)> m_functions;
+  map<string, bool (Build::*)(string &, radialUser &, string &, string &, const bool)> m_packages;
   mutex m_mutex;
+  string m_strPassword;
+  string m_strPrivateKey;
+  string m_strPublicKey;
+  string m_strSudo;
+  string m_strUser;
+  thread *m_pThreadInotify;
+  Json *m_c;
 
-  bool construct(radialUser &d, string &e);
-  bool destruct(radialUser &d, string &e);
-  bool install(radialUser &d, string &e);
-  bool remove(radialUser &d, string &e);
+  bool chgrp(string &s, const string p, const string g, string &d, string &e, const bool r = false);
+  bool chmod(string &s, const string p, const string m, string &d, string &e, const bool r = false);
+  bool chown(string &s, const string p, const string u, string &d, string &e, const bool r = false);
+  bool chsh(string &s, const string u, const string i, string &d, string &e, const bool r = false);
+  bool confPkg(const string p, Json *c, string &e);
+  bool construct(radialUser &u, string &e);
+  void cred(string strPrefix, const bool bSilent = false);
+  bool destruct(radialUser &u, string &e);
+  bool dir(string &s, const string p, string &d, string &e);
+  void init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo);
+  bool install(radialUser &u, string &e);
+  string last(const string d);
+  void load(string strPrefix, const bool bSilent = false);
+  bool mkdir(string &s, const string p, string &d, string &e, const bool r = false);
+  bool pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a);
+  bool remove(radialUser &u, string &e);
+  bool rmdir(string &s, const string p, string &d, string &e, const bool r = false);
+  bool sudo(string &s, const string c, string &d, string &e);
 
   public:
-  Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
+  Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Build();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
 };
 // }}}
 }
