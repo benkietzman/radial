@@ -32,7 +32,7 @@ Build::Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, 
   m_c = NULL;
   load(strPrefix, true);
   watches[m_strData] = {".cred"};
-  watches[m_strData + "/build"], {"config.json"};
+  watches[m_strData + "/build"] = {"config.json"};
   m_pThreadInotify = new thread(&Build::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
