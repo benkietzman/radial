@@ -210,6 +210,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             if (!empty(ptJson->m["Request"], "Password") || !empty(ptJson->m["Request"], "PrivateKey"))
             {
               radialSsh *ptSsh = new radialSsh;
+chat("#radial", "ssh_new()");
               if ((ptSsh->session = ssh_new()) != NULL)
               {
                 int nPort;
@@ -218,25 +219,33 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                 ssPort >> nPort;
                 ssh_options_set(ptSsh->session, SSH_OPTIONS_PORT, &nPort);
                 ssh_options_set(ptSsh->session, SSH_OPTIONS_USER, ptJson->m["Request"]->m["User"]->v.c_str());
+chat("#radial", "ssh_connect()");
                 if (ssh_connect(ptSsh->session) == SSH_OK)
                 {
                   int nMethod;
                   ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
                   ssh_userauth_none(ptSsh->session, NULL);
                   nMethod = ssh_userauth_list(ptSsh->session, NULL);
+chat("#radial", "authenticate()");
                   if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PrivateKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v, ((!empty(ptJson->m["Request"], "Passphrase"))?ptJson->m["Request"]->m["Passphrase"]->v:"")) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
                   {
+chat("#radial", "ssh_channel_new()");
                     if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                     {
+chat("#radial", "ssh_channel_open_session()");
                       if (ssh_channel_open_session(ptSsh->channel) == SSH_OK)
                       {
+chat("#radial", "ssh_channel_request_pty()");
                         if (ssh_channel_request_pty(ptSsh->channel) == SSH_OK)
                         { 
+chat("#radial", "ssh_channel_change_pty_size()");
                           if (ssh_channel_change_pty_size(ptSsh->channel, 80, 24) == SSH_OK)
                           {
+chat("#radial", "ssh_channel_request_shell()");
                             if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                             {
                               string strData;
+chat("#radial", "transact()");
                               if (transact(ptSsh, "", strData, strError))
                               {
                                 stringstream ssSession;

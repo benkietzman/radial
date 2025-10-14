@@ -370,7 +370,7 @@ bool Build::install(radialUser &u, string &e)
 
   if (dep({"Package", "Server"}, i, e))
   {
-    string strPackage = i->m["Package"]->v, strPort = "22", strServer = i->m["Server"]->v;
+    string strPackage = i->m["Package"]->v, strPort, strServer = i->m["Server"]->v;
     if (!empty(i, "Port"))
     {
       strPort = i->m["Port"]->v;
@@ -379,7 +379,6 @@ bool Build::install(radialUser &u, string &e)
     {
       string d, s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
-chat("#radial", "--START--");
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
 chat("#radial", d);
