@@ -4334,6 +4334,7 @@ bool Interface::sshDisconnect(const string strSession, string &strError)
   bool bResult = false;
   Json *ptJson = new Json;
 
+  ptJson->i("Interface", "ssh");
   ptJson->i("Function", "disconnect");
   ptJson->i("Session", strSession);
   if (hub("ssh", ptJson, strError))
@@ -4351,6 +4352,7 @@ bool Interface::sshSend(string &strSession, const string strCommand, string &str
   bool bResult = false;
   Json *ptJson = new Json;
 
+  ptJson->i("Interface", "ssh");
   ptJson->i("Function", "send");
   ptJson->i("Session", strSession);
   ptJson->i("Request", strCommand);
