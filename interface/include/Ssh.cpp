@@ -90,6 +90,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
+chat("#radial", "--START--");
   if (!empty(ptJson, "Session"))
   {
     string strNode;
@@ -194,10 +195,13 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   }
   else if (!empty(ptJson, "Function"))
   {
+chat("#radial", ptJson->m["Function"]->v);
     if (ptJson->m["Function"]->v == "connect")
     {
+chat("#radial", "request");
       if (exist(ptJson, "Request"))
       {
+chat("#radial", "server");
         if (!empty(ptJson->m["Request"], "Server"))
         {
           string strPort = "22";
@@ -205,8 +209,10 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
           {
             strPort = ptJson->m["Request"]->m["Port"]->v;
           }
+chat("#radial", "user");
           if (!empty(ptJson->m["Request"], "User"))
           {
+chat("#radial", "password | privatekey");
             if (!empty(ptJson->m["Request"], "Password") || !empty(ptJson->m["Request"], "PrivateKey"))
             {
               radialSsh *ptSsh = new radialSsh;
