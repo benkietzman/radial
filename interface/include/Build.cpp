@@ -30,6 +30,7 @@ Build::Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, 
   m_packages["src"] = &Build::pkgSrc;
   // }}}
   m_c = NULL;
+  cred(strPrefix, true);
   load(strPrefix, true);
   watches[m_strData] = {".cred"};
   watches[m_strData + "/build"] = {"config.json"};
@@ -388,10 +389,6 @@ chat("#radial", d);
           b = true;
         }
         sshDisconnect(s, e);
-      }
-      else
-      {
-        e = (string)"Interface::sshConnect() " + e;
       }
     }
     else
