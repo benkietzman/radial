@@ -387,7 +387,9 @@ chat("#radial", d);
         {
           b = true;
         }
+chat("#radial", "disconnect");
         sshDisconnect(s, e);
+chat("#radial", "disconnected");
       }
     }
     else
