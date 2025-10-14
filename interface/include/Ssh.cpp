@@ -257,6 +257,7 @@ chat("#radial", "transact()");
                                 stringstream ssSession;
                                 bResult = true;
                                 ssSession << m_strNode << "_" << getpid() << "_" << syscall(SYS_gettid) << "_" << ptSsh->fdSocket;
+chat("#radial", "session");
                                 ptJson->i("Session", ssSession.str());
                                 m_mutex.lock();
                                 m_sessions[ssSession.str()] = ptSsh;
