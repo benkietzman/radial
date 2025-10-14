@@ -1,0 +1,38 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Build
+// author     : Ben Kietzman
+// begin      : 2025-10-13
+// copyright  : Ben Kietzman
+// email      : ben@kietzman.org
+#ifndef _RADIAL_BUILD_
+#define _RADIAL_BUILD_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Build
+class Build : public Interface
+{
+  protected:
+  map<string, bool (Build::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+
+  bool construct(radialUser &d, string &e);
+  bool destruct(radialUser &d, string &e);
+  bool install(radialUser &d, string &e);
+  bool remove(radialUser &d, string &e);
+
+  public:
+  Build(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
+  ~Build();
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+};
+// }}}
+}
+}
+#endif

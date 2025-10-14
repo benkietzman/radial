@@ -7,11 +7,12 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/application bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/application bin/auth bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/application bin/auth bin/build bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/application bin/auth bin/build bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/application $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
+	install --mode=775 bin/build $(prefix)/radial/interface/
 	install --mode=775 bin/central $(prefix)/radial/interface/
 	install --mode=775 bin/command $(prefix)/radial/interface/
 	install --mode=775 bin/data $(prefix)/radial/interface/
@@ -67,6 +68,16 @@ obj/auth.o: auth.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c auth.cpp -o obj/auth.o $(CPPFLAGS) -I../../common
 obj/Auth.o: include/Auth.cpp obj
 	g++ -ggdb -Wall -c include/Auth.cpp -o obj/Auth.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ build
+auth: bin/build $(prefix)/radial/interface
+	install --mode=775 bin/build $(prefix)/radial/interface/
+bin/build: ../../common/libcommon.a obj/build.o obj/Base.o obj/Interface.o obj/Build.o bin
+	g++ -o bin/build obj/build.o obj/Base.o obj/Interface.o obj/Build.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+obj/build.o: build.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c build.cpp -o obj/build.o $(CPPFLAGS) -I../../common
+obj/Build.o: include/Build.cpp obj
+	g++ -ggdb -Wall -c include/Build.cpp -o obj/Build.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ central
 central: bin/central $(prefix)/radial/interface
