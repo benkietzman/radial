@@ -657,13 +657,12 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
     while (bRetry && unAttempt++ < 10)
     {
       bRetry = false;
-      if ((p = d.rfind("\n")) != string::npos && (p+1) < d.size() && d.substr(p+1).find("root") == string::npos)
+      if ((p = d.rfind("\n")) != string::npos && (p+1) < d.size() && d.substr(p+1).find("root") == string::npos) // TODO
       {
         string i;
         bRetry = true;
         if (sshSend(s, "", i, e) && !i.empty())
         {
-chat("#radial", i);
           d.append(i);
         }
       }
