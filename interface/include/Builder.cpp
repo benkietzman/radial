@@ -635,7 +635,7 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
     //}
     else if (e.find("No such file or directory") != string::npos)
     {
-      chat("#radial", e);
+      chat("#radial", "not found");
       if (!a)
       {
         b = true;
@@ -650,6 +650,10 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
       {
         chat("#radial", e);
       }
+    }
+    else
+    {
+      chat("#radial", e);
     }
   }
   delete c;
