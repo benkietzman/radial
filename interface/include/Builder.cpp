@@ -629,9 +629,27 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
+    //else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
+    //{
+    //  b = true;
+    //}
+    else if (e.find("No such file or directory") != string::npos)
     {
-      b = true;
+      chat("#radial", e);
+      if (!a)
+      {
+        b = true;
+        chat("#radial", "remove");
+      }
+      else if (cmdMkdir(s, p, q, e))
+      {
+        b = true;
+        chat("#radial", "mkdir");
+      }
+      else
+      {
+        chat("#radial", e);
+      }
     }
   }
   delete c;
