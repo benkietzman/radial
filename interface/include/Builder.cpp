@@ -705,7 +705,7 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e)
       q.back().append(v.substr(0, p));
       v.erase(0, (p+1));
     }
-    q.push_back(v);  }
+    q.push_back(v);
 
   return b;
 }
