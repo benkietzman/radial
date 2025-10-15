@@ -28,6 +28,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   // {{{ packages
   m_packages["src"] = &Builder::pkgSrc;
+  m_packages["test"] = &Builder::pkgTest;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -597,6 +598,32 @@ bool Builder::pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const
   Json *c = new Json;
 
   if (confPkg("src", c, e))
+  {
+    if (cmdDir(s, p, q, e))
+    {
+      if (a || cmdRmdir(s, p, q, e))
+      {
+        b = true;
+      }
+    }
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
+    {
+      b = true;
+    }
+  }
+  delete c;
+
+  return b;
+}
+// }}}
+// {{{ pkgTest()
+bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string p = "/test";
+  Json *c = new Json;
+
+  if (confPkg("test", c, e))
   {
     if (cmdDir(s, p, q, e))
     {
