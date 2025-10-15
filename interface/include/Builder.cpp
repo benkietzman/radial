@@ -471,6 +471,7 @@ bool Builder::install(radialUser &u, string &e)
           b = true;
         }
         sshDisconnect(s, e);
+        chat("#radial", d);
       }
     }
     else
