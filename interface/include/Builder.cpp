@@ -706,6 +706,7 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e)
       v.erase(0, (p+1));
     }
     q.push_back(v);
+  }
 
   return b;
 }
