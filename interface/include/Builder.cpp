@@ -624,6 +624,7 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
   {
     if (cmdDir(s, p, q, e))
     {
+      chat("#radial", last(q));
       if (a || cmdRmdir(s, p, q, e))
       {
         b = true;
