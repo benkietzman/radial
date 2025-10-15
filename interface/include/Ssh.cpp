@@ -90,6 +90,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
+chat("#radial", "Ssh::callback() 0");
   if (!empty(ptJson, "Session"))
   {
     string strNode;
@@ -337,6 +338,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   {
     strError = "Please provide the Function or Session.";
   }
+chat("#radial", "Ssh::callback() 1");
   ptJson->i("Status", ((bResult)?"okay":"error"));
   if (!strError.empty())
   {
@@ -348,6 +350,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
     hub(p, false);
   }
   delete ptJson;
+chat("#radial", "Ssh::callback() 2");
 }
 // }}}
 // {{{ schedule()

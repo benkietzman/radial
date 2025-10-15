@@ -30,24 +30,24 @@ class Builder : public Interface
   thread *m_pThreadInotify;
   Json *m_c;
 
-  bool chgrp(string &s, const string p, const string g, string &d, string &e, const bool r = false);
-  bool chmod(string &s, const string p, const string m, string &d, string &e, const bool r = false);
-  bool chown(string &s, const string p, const string u, string &d, string &e, const bool r = false);
-  bool chsh(string &s, const string u, const string i, string &d, string &e, const bool r = false);
+  bool cmdChgrp(string &s, const string p, const string g, string &d, string &e, const bool r = false);
+  bool cmdChmod(string &s, const string p, const string m, string &d, string &e, const bool r = false);
+  bool cmdChown(string &s, const string p, const string u, string &d, string &e, const bool r = false);
+  bool cmdChsh(string &s, const string u, const string i, string &d, string &e, const bool r = false);
+  bool cmdDir(string &s, const string p, string &d, string &e);
+  bool cmdMkdir(string &s, const string p, string &d, string &e, const bool r = false);
+  bool cmdRmdir(string &s, const string p, string &d, string &e, const bool r = false);
+  bool cmdSudo(string &s, const string c, string &d, string &e);
   bool confPkg(const string p, Json *c, string &e);
   bool construct(radialUser &u, string &e);
   void cred(string strPrefix, const bool bSilent = false);
   bool destruct(radialUser &u, string &e);
-  bool dir(string &s, const string p, string &d, string &e);
   void init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo);
   bool install(radialUser &u, string &e);
   string last(const string d);
   void load(string strPrefix, const bool bSilent = false);
-  bool mkdir(string &s, const string p, string &d, string &e, const bool r = false);
   bool pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a);
   bool remove(radialUser &u, string &e);
-  bool rmdir(string &s, const string p, string &d, string &e, const bool r = false);
-  bool sudo(string &s, const string c, string &d, string &e);
 
   public:
   Builder(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
