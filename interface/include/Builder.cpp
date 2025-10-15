@@ -230,7 +230,6 @@ bool Builder::cmdDir(string &s, const string p, string &d, string &e)
       e = strLast;
     }
   }
-chat("#radial", d);
 
   return b;
 }
@@ -307,7 +306,6 @@ bool Builder::cmdSudo(string &s, const string c, string &d, string &e)
       }
     }
   }
-chat("#radial", d);
 
   return b;
 }
@@ -468,7 +466,6 @@ bool Builder::install(radialUser &u, string &e)
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-chat("#radial", d);
         if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
         {
           b = true;
