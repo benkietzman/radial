@@ -316,7 +316,9 @@ bool Builder::confPkg(const string p, Json *c, string &e)
 {
   bool b = false;
 
+chat("#radial", "Builder::confPkg() 0");
   m_mutex.lock();
+chat("#radial", "Builder::confPkg() 1");
   if (exist(m_c, "packages"))
   {
     if (exist(m_c->m["packages"], p))
@@ -333,7 +335,9 @@ bool Builder::confPkg(const string p, Json *c, string &e)
   {
     e = "The packages configuration does not exist.";
   }
+chat("#radial", "Builder::confPkg() 2");
   m_mutex.unlock();
+chat("#radial", "Builder::confPkg() 3");
 
   return b;
 }
