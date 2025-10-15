@@ -491,6 +491,10 @@ bool Builder::install(radialUser &u, string &e)
         }
         sshDisconnect(s, e);
         o->i("Terminal", q);
+        for (auto &i : q)
+        {
+          chat("#radial", i);
+        }
       }
     }
     else
