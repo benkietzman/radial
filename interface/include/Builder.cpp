@@ -692,7 +692,7 @@ bool Builder::remove(radialUser &u, string &e)
 // {{{ send()
 bool Builder::send(string &s, const string c, list<string> &q, string &e)
 {
-  bool b = false, f = true;
+  bool b = false;
   size_t p;
   string d, v;
 
