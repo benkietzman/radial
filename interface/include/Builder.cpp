@@ -542,13 +542,13 @@ string Builder::last(const string d)
   string i, l;
   stringstream s(d);
 
-  chat("#radial", d);
   while (getline(s, i))
   {
     a.push(i);
   }
-  if (!a.empty())
+  if (a.size() >= 2)
   {
+    a.pop();
     l = a.top();
   }
 
