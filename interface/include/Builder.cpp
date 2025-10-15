@@ -126,7 +126,7 @@ bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &
   bool b = false;
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
+  c << "chgrp" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
