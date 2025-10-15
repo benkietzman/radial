@@ -238,7 +238,22 @@ bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
 // {{{ cmdExit()
 bool Builder::cmdExit(string &s, list<string> &q, string &e)
 {
-  return send(s, "exit\n", q, e);
+  bool b = false;
+
+  if (send(s, "exit\n", q, e))
+  {
+    string strLast = last(q.back());
+    if (strLast == "logout")
+    {
+      b = true;
+    }
+    else
+    {
+      e = strLast;
+    }
+  }
+
+  return b;
 }
 // }}}
 // {{{ cmdMkdir()
