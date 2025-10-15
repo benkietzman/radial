@@ -129,12 +129,12 @@ bool Builder::cmdApt(string &s, const string p, list<string> &q, string &e, cons
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(s, "apt update", q, e) && send(s, c.str(), q, e))
+    if (send(s, "apt update -y", q, e) && send(s, c.str(), q, e))
     {
       b = true;
     }
   }
-  else if (send(s, c.str(), q, e) && send(s, "apt autoremove", q, e))
+  else if (send(s, c.str(), q, e) && send(s, "apt autoremove -y", q, e))
   {
     b = true;
   }
@@ -574,6 +574,11 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
 
   if (confPkg("test", c, e))
   {
+    if (cmdApt(s, "lynx", q, e, a))
+    {
+      b = true;
+    }
+    /*
     if (cmdDir(s, p, q, e))
     {
       if (a || cmdRmdir(s, p, q, e))
@@ -585,6 +590,7 @@ bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, cons
     {
       b = true;
     }
+    */
   }
   delete c;
 
