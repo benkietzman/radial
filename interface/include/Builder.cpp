@@ -464,9 +464,12 @@ chat("#radial", "Builder::install() 0-0");
         //if (sudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
         if ((this->*m_packages[strPackage])(s, u, d, e, true))
         {
+chat("#radial", "Builder::install() 0-0-0");
           b = true;
         }
+chat("#radial", "Builder::install() 0-1");
         sshDisconnect(s, e);
+chat("#radial", "Builder::install() 0-2");
       }
 chat("#radial", "Builder::install() 1-0");
     }
@@ -540,6 +543,7 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
   bool b = false;
   Json *c = new Json;
 
+chat("#radial", "Builder::pkgSrc() 0");
   if (confPkg("src", c, e))
   {
     if (cmdDir(s, "/src", d, e))
@@ -554,6 +558,7 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
       b = true;
     }
   }
+chat("#radial", "Builder::pkgSrc() 1");
   delete c;
 
   return b;
