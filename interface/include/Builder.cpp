@@ -663,7 +663,6 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
         bRetry = true;
         if (sshSend(s, "", i, e) && !i.empty())
         {
-chat("#radial", i);
           d.append(i);
         }
       }
