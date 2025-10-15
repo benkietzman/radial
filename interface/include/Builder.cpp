@@ -669,10 +669,21 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e)
 // {{{ strip()
 string Builder::strip(const string v)
 {
-  //regex ansi_escape_regex(R"(\x1B\[[0-?9;]*[mK])");
+  size_t p;
+  string r;
   regex ansi_escape_regex(R"(\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]))");
 
-  return regex_replace(v, ansi_escape_regex, "");
+  r = regex_replace(v, ansi_escape_regex, "");
+  while ((p = r.find('\033')) != string::npos)
+  {
+    r.erase(p, 1);
+  }
+  while ((p = r.find("\r")) != string::npos)
+  {
+    r.erase(p, 1);
+  }
+
+  return r;
 }
 // }}}
 }
