@@ -542,6 +542,7 @@ string Builder::last(const string d)
   string i, l;
   stringstream s(d);
 
+  chat("#radial", d);
   while (getline(s, i))
   {
     a.push(i);
