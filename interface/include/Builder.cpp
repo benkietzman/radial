@@ -318,26 +318,28 @@ bool Builder::confPkg(const string p, Json *c, string &e)
 
 chat("#radial", "Builder::confPkg() 0");
   m_mutex.lock();
-chat("#radial", "Builder::confPkg() 1");
   if (exist(m_c, "packages"))
   {
+chat("#radial", "Builder::confPkg() 0-0");
     if (exist(m_c->m["packages"], p))
     {
+chat("#radial", "Builder::confPkg() 0-0-0");
       b = true;
       c->merge(m_c->m["packages"]->m[p], true, false);
+chat("#radial", "Builder::confPkg() 0-0-1");
     }
     else
     {
       e = "The src package configuration does not exist.";
     }
+chat("#radial", "Builder::confPkg() 0-1");
   }
   else
   {
     e = "The packages configuration does not exist.";
   }
-chat("#radial", "Builder::confPkg() 2");
   m_mutex.unlock();
-chat("#radial", "Builder::confPkg() 3");
+chat("#radial", "Builder::confPkg() 1");
 
   return b;
 }
