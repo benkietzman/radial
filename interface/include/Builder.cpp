@@ -151,15 +151,7 @@ bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &
   c << "chgrp" << ((r)?" -R":"") << " " << g << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 7 || strLast.substr(0, 7) != "chgrp: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -174,15 +166,7 @@ bool Builder::cmdChmod(string &s, const string p, const string m, list<string> &
   c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 7 || strLast.substr(0, 7) != "chmod: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -197,15 +181,7 @@ bool Builder::cmdChown(string &s, const string p, const string u, list<string> &
   c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 7 || strLast.substr(0, 7) != "chown: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -220,15 +196,7 @@ bool Builder::cmdChsh(string &s, const string u, const string i, list<string> &q
   c << "chsh -s " << i << " " << u;
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 6 || strLast.substr(0, 6) != "chsh: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -243,15 +211,7 @@ bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
   c << "ls -d \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 4 || strLast.substr(0, 4) != "ls: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -287,15 +247,7 @@ bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, co
   c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 7 || strLast.substr(0, 7) != "mkdir: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -310,15 +262,7 @@ bool Builder::cmdRmdir(string &s, const string p, list<string> &q, string &e, co
   c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
-    string strLast = last(q.back());
-    if (strLast.size() <= 7 || strLast.substr(0, 7) != "rmdir: ")
-    {
-      b = true;
-    }
-    else
-    {
-      e = strLast;
-    }
+    b = true;
   }
 
   return b;
@@ -331,24 +275,7 @@ bool Builder::cmdSudo(string &s, const string c, list<string> &q, string &e)
 
   if (send(s, c, q, e))
   {
-    queue<string> a;
-    string i;
-    stringstream ss(q.back());
-    while (getline(ss, i))
-    {
-      a.push(i);
-    }
-    if (!a.empty())
-    {
-      if (a.back().find("root@") != string::npos || a.back().find("# ") != string::npos)
-      {
-        b = true;
-      }
-      else
-      {
-        e = "Failed to become root.";
-      }
-    }
+    b = true;
   }
 
   return b;
