@@ -744,7 +744,7 @@ string Builder::strip(const string v)
   }
   while (!q.empty())
   {
-    r.append(q.front() + (q.size() > 1)?"\n":""));
+    r.append(q.front() + ((q.size() > 1)?"\n":""));
     q.pop_front();
   }
 
