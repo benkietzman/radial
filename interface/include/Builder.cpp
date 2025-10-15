@@ -316,25 +316,20 @@ bool Builder::confPkg(const string p, Json *c, string &e)
 {
   bool b = false;
 
-chat("#radial", "Builder::confPkg() 0");
   m_mutex.lock();
   if (m_c != NULL)
   {
     if (exist(m_c, "packages"))
     {
-chat("#radial", "Builder::confPkg() 0-0");
       if (exist(m_c->m["packages"], p))
       {
-chat("#radial", "Builder::confPkg() 0-0-0");
         b = true;
         c->merge(m_c->m["packages"]->m[p], true, false);
-chat("#radial", "Builder::confPkg() 0-0-1");
       }
       else
       {
         e = "The src package configuration does not exist.";
       }
-chat("#radial", "Builder::confPkg() 0-1");
     }
     else
     {
@@ -346,7 +341,6 @@ chat("#radial", "Builder::confPkg() 0-1");
     e = "The configuration does not exist.";
   }
   m_mutex.unlock();
-chat("#radial", "Builder::confPkg() 1");
 
   return b;
 }
@@ -470,21 +464,14 @@ bool Builder::install(radialUser &u, string &e)
     {
       string d, s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
-chat("#radial", "Builder::install() 0");
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-chat("#radial", "Builder::install() 0-0");
-        //if (sudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
-        if ((this->*m_packages[strPackage])(s, u, d, e, true))
+        if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
         {
-chat("#radial", "Builder::install() 0-0-0");
           b = true;
         }
-chat("#radial", "Builder::install() 0-1");
         sshDisconnect(s, e);
-chat("#radial", "Builder::install() 0-2");
       }
-chat("#radial", "Builder::install() 1-0");
     }
     else
     {
@@ -556,27 +543,20 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
   bool b = false;
   Json *c = new Json;
 
-chat("#radial", "Builder::pkgSrc() 0");
   if (confPkg("src", c, e))
   {
-chat("#radial", "Builder::pkgSrc() 0-0");
     if (cmdDir(s, "/src", d, e))
     {
-chat("#radial", "Builder::pkgSrc() 0-0-0");
       if (a || cmdRmdir(s, "/src", d, e))
       {
         b = true;
       }
-chat("#radial", "Builder::pkgSrc() 0-0-1");
     }
     else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, "/src", d, e) && (empty(c, "user") || cmdChown(s, "/src", c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, "/src", c->m["group"]->v, d, e)) && cmdChmod(s, "/src", "770", d, e) && cmdChmod(s, "/src", "g+s", d, e))))
     {
-chat("#radial", "Builder::pkgSrc() 0-0-2");
       b = true;
     }
-chat("#radial", "Builder::pkgSrc() 0-1");
   }
-chat("#radial", "Builder::pkgSrc() 1");
   delete c;
 
   return b;
