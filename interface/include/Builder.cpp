@@ -663,6 +663,7 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
         bRetry = true;
         if (sshSend(s, "", i, e) && !i.empty())
         {
+          unAttempts = 0;
           d.append(i);
         }
       }
