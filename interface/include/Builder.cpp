@@ -519,7 +519,10 @@ bool Builder::install(radialUser &u, string &e)
           cmdExit(s, q, e);
         }
         cmdExit(s, q, e);
-        disconnect(s, e);
+        if (!s.empty())
+        {
+          disconnect(s, e);
+        }
         o->i("Terminal", q);
       }
     }
@@ -545,8 +548,7 @@ string Builder::last(const string d)
   }
   if (a.size() >= 3)
   {
-    a.pop();
-    a.pop();
+    a.pop_back();
     l = a.back();
   }
 
@@ -670,7 +672,7 @@ bool Builder::remove(radialUser &u, string &e)
   bool b = false;
   Json *i = u.p->m["i"], *o = u.p->m["o"];
 
-  if (dep({"Package", "Port", "Server"}, i, e))
+  if (dep({"Package", "Server"}, i, e))
   {
     string strPackage = i->m["Package"]->v, strPort = "22", strServer = i->m["Server"]->v;
     if (!empty(i, "Port"))
@@ -693,7 +695,10 @@ bool Builder::remove(radialUser &u, string &e)
           cmdExit(s, q, e);
         }
         cmdExit(s, q, e);
-        disconnect(s, e);
+        if (!s.empty())
+        {
+          disconnect(s, e);
+        }
         o->i("Terminal", q);
       }
     }
