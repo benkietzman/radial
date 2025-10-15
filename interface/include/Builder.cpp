@@ -543,8 +543,9 @@ string Builder::last(const string d)
   {
     a.push(i);
   }
-  if (a.size() >= 2)
+  if (a.size() >= 3)
   {
+    a.pop();
     a.pop();
     l = a.back();
   }
