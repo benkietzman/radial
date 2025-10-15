@@ -120,13 +120,35 @@ void Builder::callbackInotify(string strPrefix, const string strPath, const stri
 }
 // }}}
 // {{{ cmd
+// {{{ cmdApt()
+bool Builder::cmdApt(string &s, const string p, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  stringstream c;
+
+  c << "apt " << ((a)?"install":"remove") << " -y " << p;
+  if (a)
+  {
+    if (send(s, "apt update", q, e) && send(s, c.str(), q, e))
+    {
+      b = true;
+    }
+  }
+  else if (send(s, c.str(), q, e) && send(s, "apt autoremove", q, e))
+  {
+    b = true;
+  }
+
+  return b;
+}
+// }}}
 // {{{ cmdChgrp()
 bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &q, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
 
-  c << "chgrp" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
+  c << "chgrp" << ((r)?" -R":"") << " " << g << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -149,7 +171,7 @@ bool Builder::cmdChmod(string &s, const string p, const string m, list<string> &
   bool b = false;
   stringstream c;
 
-  c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"" << endl;
+  c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -172,7 +194,7 @@ bool Builder::cmdChown(string &s, const string p, const string u, list<string> &
   bool b = false;
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"" << endl;
+  c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -195,7 +217,7 @@ bool Builder::cmdChsh(string &s, const string u, const string i, list<string> &q
   bool b = false;
   stringstream c;
 
-  c << "chsh -s " << i << " " << u << endl;
+  c << "chsh -s " << i << " " << u;
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -218,7 +240,7 @@ bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
   bool b = false;
   stringstream c;
 
-  c << "ls -d \"" << p << "\"" << endl;
+  c << "ls -d \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -240,7 +262,7 @@ bool Builder::cmdExit(string &s, list<string> &q, string &e)
 {
   bool b = false;
 
-  if (send(s, "exit\n", q, e))
+  if (send(s, "exit", q, e))
   {
     string strLast = last(q.back());
     if (strLast == "logout")
@@ -262,7 +284,7 @@ bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, co
   bool b = false;
   stringstream c;
 
-  c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"" << endl;
+  c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -285,7 +307,7 @@ bool Builder::cmdRmdir(string &s, const string p, list<string> &q, string &e, co
   bool b = false;
   stringstream c;
 
-  c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"" << endl;
+  c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"";
   if (send(s, c.str(), q, e))
   {
     string strLast = last(q.back());
@@ -307,7 +329,7 @@ bool Builder::cmdSudo(string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
 
-  if (send(s, c + "\n", q, e))
+  if (send(s, c, q, e))
   {
     queue<string> a;
     string i;
@@ -689,13 +711,13 @@ bool Builder::remove(radialUser &u, string &e)
 }
 // }}}
 // {{{ send()
-bool Builder::send(string &s, const string c, list<string> &q, string &e)
+bool Builder::send(string &s, const string c, list<string> &q, string &e, const size_t r)
 {
   bool b = false;
   size_t p;
   string d, v;
 
-  if (sshSend(s, c, d, e))
+  if (sshSend(s, (c+"\n"), d, e))
   {
     b = true;
     v = strip(d);
@@ -705,6 +727,26 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e)
       q.back().erase(p);
     }
     q.push_back(v);
+    if (!s.empty())
+    {
+      string i;
+      b = false;
+      if (sshSend(s, "echo $?\n", i, e))
+      {
+        size_t n;
+        stringstream j;
+        j.str(last(strip(i)));
+        j >> n;
+        if (n == r)
+        {
+          b = true;
+        }
+        else
+        {
+          e = last(v);
+        }
+      }
+    }
   }
 
   return b;

@@ -30,6 +30,7 @@ class Builder : public Interface
   thread *m_pThreadInotify;
   Json *m_c;
 
+  bool cmdApt(string &s, const string p, list<string> &q, string &e, const bool a = false);
   bool cmdChgrp(string &s, const string p, const string g, list<string> &q, string &e, const bool r = false);
   bool cmdChmod(string &s, const string p, const string m, list<string> &q, string &e, const bool r = false);
   bool cmdChown(string &s, const string p, const string u, list<string> &q, string &e, const bool r = false);
@@ -52,7 +53,7 @@ class Builder : public Interface
   bool pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool remove(radialUser &u, string &e);
-  bool send(string &s, const string c, list<string> &q, string &e);
+  bool send(string &s, const string c, list<string> &q, string &e, const size_t r = 0);
   string strip(const string v);
 
   public:
