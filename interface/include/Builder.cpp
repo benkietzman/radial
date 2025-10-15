@@ -652,6 +652,21 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
 
   if (sshSend(s, (c+"\n"), d, e))
   {
+    bool bRetry = true;
+    size_t unAttempt = 0;
+    while (bRetry && unAttempt++ < 10)
+    {
+      bRetry = false;
+      if (!d.empty() && d[d.size()-1] == '\n')
+      {
+        string i;
+        bRetry = true;
+        if (sshSend(s, "", i, e) && !i.empty())
+        {
+          d.append(i);
+        }
+      }
+    }
     b = true;
     v = strip(d);
     if (!q.empty() && (p = q.back().rfind("\n")) != string::npos && (p+1) < q.back().size())

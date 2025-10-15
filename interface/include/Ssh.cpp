@@ -133,7 +133,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
               {
                 strRequest = ptJson->m["Request"]->v;
               }
-              if (transact(ptSsh, ptJson->m["Request"]->v, strData, strError))
+              if (transact(ptSsh, strRequest, strData, strError))
               {
                 bResult = true;
               }
@@ -396,14 +396,13 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
   strData.clear();
   if (ptSsh->fdSocket != -1)
   {
-    bool bClose = false, bExit = false, bReading = true;
+    bool bClose = false, bExit = false, bReading = false;
     int nReturn;
     char szBuffer[4096];
     string strBuffer;
     time_t CTime[2];
     if (!strCommand.empty())
     {
-      bReading = false;
       strBuffer = strCommand;
     }
     else
