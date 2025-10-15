@@ -466,7 +466,8 @@ bool Builder::install(radialUser &u, string &e)
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-        if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
+        //if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
+        if ((this->*m_packages[strPackage])(s, u, d, e, true))
         {
           b = true;
         }
