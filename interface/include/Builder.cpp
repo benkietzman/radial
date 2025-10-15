@@ -693,13 +693,19 @@ bool Builder::remove(radialUser &u, string &e)
 bool Builder::send(string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
+  size_t p;
   string d;
 
   if (sshSend(s, c, d, e))
   {
     b = true;
-    q.push_back(strip(d));
-  }
+    v = strip(d);
+    if (!q.empty() && (p = v.find("\n")) != string::npos)
+    {
+      q.back().append(v.substr(0, p));
+      v.erase(0, (p+1));
+    }
+    q.push_back(v);  }
 
   return b;
 }
@@ -737,7 +743,7 @@ string Builder::strip(const string v)
   }
   while (!q.empty())
   {
-    r.append(q.front() + "\n");
+    r.append(q.front() + (q.size() > 1)?"\n":""));
     q.pop_front();
   }
 
