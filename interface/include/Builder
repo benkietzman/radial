@@ -39,9 +39,11 @@ class Builder : public Interface
   bool cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdSudo(string &s, const string c, list<string> &q, string &e);
   bool confPkg(const string p, Json *c, string &e);
+  bool connect(const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &s, list<string> &q, string &e);
   bool construct(radialUser &u, string &e);
   void cred(string strPrefix, const bool bSilent = false);
   bool destruct(radialUser &u, string &e);
+  bool disconnect(string &s, string &e);
   void init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo);
   bool install(radialUser &u, string &e);
   string last(const string d);
@@ -49,6 +51,8 @@ class Builder : public Interface
   bool pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool remove(radialUser &u, string &e);
+  bool send(string &s, const string c, list<string> &q, string &e);
+  string strip(const string v);
 
   public:
   Builder(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));

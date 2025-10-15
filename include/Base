@@ -27,6 +27,7 @@
 #include <netdb.h>
 #include <openssl/evp.h>
 #include <poll.h>
+#include <regex>
 #include <queue>
 #include <regex.h>
 #include <semaphore.h>

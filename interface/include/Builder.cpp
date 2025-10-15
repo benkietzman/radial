@@ -124,14 +124,12 @@ void Builder::callbackInotify(string strPrefix, const string strPath, const stri
 bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "chown" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chgrp: ")
     {
       b = true;
@@ -149,14 +147,12 @@ bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &
 bool Builder::cmdChmod(string &s, const string p, const string m, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chmod: ")
     {
       b = true;
@@ -174,14 +170,12 @@ bool Builder::cmdChmod(string &s, const string p, const string m, list<string> &
 bool Builder::cmdChown(string &s, const string p, const string u, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chown: ")
     {
       b = true;
@@ -199,14 +193,12 @@ bool Builder::cmdChown(string &s, const string p, const string u, list<string> &
 bool Builder::cmdChsh(string &s, const string u, const string i, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "chsh -s " << i << " " << u << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 6 || strLast.substr(0, 6) != "chsh: ")
     {
       b = true;
@@ -224,14 +216,12 @@ bool Builder::cmdChsh(string &s, const string u, const string i, list<string> &q
 bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "ls -d \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 4 || strLast.substr(0, 4) != "ls: ")
     {
       b = true;
@@ -249,14 +239,12 @@ bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
 bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "mkdir: ")
     {
       b = true;
@@ -274,14 +262,12 @@ bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, co
 bool Builder::cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r)
 {
   bool b = false;
-  string d;
   stringstream c;
 
   c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"" << endl;
-  if (sshSend(s, c.str(), d, e))
+  if (send(s, c.str(), q, e))
   {
-    string strLast = last(d);
-    q.push_back(d);
+    string strLast = last(q.back());
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "rmdir: ")
     {
       b = true;
@@ -299,14 +285,12 @@ bool Builder::cmdRmdir(string &s, const string p, list<string> &q, string &e, co
 bool Builder::cmdSudo(string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
-  string d;
 
-  if (sshSend(s, c + "\n", d, e))
+  if (send(s, c + "\n", q, e))
   {
     queue<string> a;
     string i;
-    stringstream ss(d);
-    q.push_back(d);
+    stringstream ss(q.back());
     while (getline(ss, i))
     {
       a.push(i);
@@ -358,6 +342,21 @@ bool Builder::confPkg(const string p, Json *c, string &e)
     e = "The configuration does not exist.";
   }
   m_mutex.unlock();
+
+  return b;
+}
+// }}}
+// {{{ connect()
+bool Builder::connect(const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &s, list<string> &q, string &e)
+{
+  bool b = false;
+  string d;
+
+  if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
+  {
+    b = true;
+    q.push_back(strip(d));
+  }
 
   return b;
 }
@@ -431,6 +430,12 @@ bool Builder::destruct(radialUser &u, string &e)
   return b;
 }
 // }}}
+// {{{ disconnect()
+bool Builder::disconnect(string &s, string &e)
+{
+  return sshDisconnect(s, e);
+}
+// }}}
 // {{{ init()
 void Builder::init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo)
 {
@@ -480,16 +485,15 @@ bool Builder::install(radialUser &u, string &e)
     if (m_packages.find(strPackage) != m_packages.end())
     {
       list<string> q;
-      string d, s, strPassword, strPrivateKey, strSudo, strUser;
+      string s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
-      if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
+      if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
       {
-        q.push_back(d);
         if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, true))
         {
           b = true;
         }
-        sshDisconnect(s, e);
+        disconnect(s, e);
         o->i("Terminal", q);
       }
     }
@@ -626,16 +630,15 @@ bool Builder::remove(radialUser &u, string &e)
     if (m_packages.find(strPackage) != m_packages.end())
     {
       list<string> q;
-      string d, s, strPassword, strPrivateKey, strSudo, strUser;
+      string s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
-      if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
+      if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
       {
-        q.push_back(d);
         if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, false))
         {
           b = true;
         }
-        sshDisconnect(s, e);
+        disconnect(s, e);
         o->i("Terminal", q);
       }
     }
@@ -646,6 +649,29 @@ bool Builder::remove(radialUser &u, string &e)
   }
 
   return b;
+}
+// }}}
+// {{{ send()
+bool Builder::send(string &s, const string c, list<string> &q, string &e)
+{
+  bool b = false;
+  string d;
+
+  if (sshSend(s, c, d, e))
+  {
+    b = true;
+    q.push_back(strip(d));
+  }
+
+  return b;
+}
+// }}}
+// {{{ strip()
+string Builder::strip(const string v)
+{
+  regex ansi_escape_regex(R"(\x1B\[[0-?9;]*[mK])");
+
+  return regex_replace(v, ansi_escape_regex, "");
 }
 // }}}
 }
