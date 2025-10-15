@@ -546,17 +546,22 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
 chat("#radial", "Builder::pkgSrc() 0");
   if (confPkg("src", c, e))
   {
+chat("#radial", "Builder::pkgSrc() 0-0");
     if (cmdDir(s, "/src", d, e))
     {
+chat("#radial", "Builder::pkgSrc() 0-0-0");
       if (a || cmdRmdir(s, "/src", d, e))
       {
         b = true;
       }
+chat("#radial", "Builder::pkgSrc() 0-0-1");
     }
     else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, "/src", d, e) && (empty(c, "user") || cmdChown(s, "/src", c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, "/src", c->m["group"]->v, d, e)) && cmdChmod(s, "/src", "770", d, e) && cmdChmod(s, "/src", "g+s", d, e))))
     {
+chat("#radial", "Builder::pkgSrc() 0-0-2");
       b = true;
     }
+chat("#radial", "Builder::pkgSrc() 0-1");
   }
 chat("#radial", "Builder::pkgSrc() 1");
   delete c;
