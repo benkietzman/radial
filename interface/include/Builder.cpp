@@ -546,9 +546,8 @@ string Builder::last(const string d)
   {
     a.push(i);
   }
-  if (a.size() >= 2)
+  if (!a.empty())
   {
-    a.pop();
     l = a.top();
   }
 
