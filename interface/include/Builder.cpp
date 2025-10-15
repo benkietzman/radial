@@ -669,22 +669,38 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e)
 // {{{ strip()
 string Builder::strip(const string v)
 {
+  list<string> q;
   size_t p;
-  string r;
+  string l, r, t;
+  stringstream s;
   regex ansi_escape_regex(R"(\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]))");
 
-  r = regex_replace(v, ansi_escape_regex, "");
-  while ((p = r.find('\007')) != string::npos)
+  t = regex_replace(v, ansi_escape_regex, "");
+  while ((p = t.find('\007')) != string::npos)
   {
-    r.erase(p, 1);
+    t.erase(p, 1);
   }
-  while ((p = r.find('\033')) != string::npos)
+  while ((p = t.find('\033')) != string::npos)
   {
-    r.erase(p, 1);
+    t.erase(p, 1);
   }
-  while ((p = r.find("\r")) != string::npos)
+  while ((p = t.find("\r")) != string::npos)
   {
-    r.erase(p, 1);
+    t.erase(p, 1);
+  }
+  s.str(t);
+  while (getline(s, l))
+  {
+    q.push_back(l);
+  }
+  if (!q.empty() && q.back().size() >= 2 && q.back().substr(0, 2) == "0;")
+  {
+    q.back().erase(0, 2);
+  }
+  while (!q.empty())
+  {
+    r.append(q.front() + "\n");
+    q.pop_front();
   }
 
   return r;
