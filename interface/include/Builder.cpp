@@ -549,7 +549,7 @@ string Builder::last(const string d)
   if (a.size() >= 3)
   {
     a.pop();
-    l = a.back();
+    l = a.top();
   }
 
   return l;
