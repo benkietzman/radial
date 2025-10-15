@@ -318,25 +318,32 @@ bool Builder::confPkg(const string p, Json *c, string &e)
 
 chat("#radial", "Builder::confPkg() 0");
   m_mutex.lock();
-  if (exist(m_c, "packages"))
+  if (m_c != NULL)
   {
-chat("#radial", "Builder::confPkg() 0-0");
-    if (exist(m_c->m["packages"], p))
+    if (exist(m_c, "packages"))
     {
+chat("#radial", "Builder::confPkg() 0-0");
+      if (exist(m_c->m["packages"], p))
+      {
 chat("#radial", "Builder::confPkg() 0-0-0");
-      b = true;
-      c->merge(m_c->m["packages"]->m[p], true, false);
+        b = true;
+        c->merge(m_c->m["packages"]->m[p], true, false);
 chat("#radial", "Builder::confPkg() 0-0-1");
+      }
+      else
+      {
+        e = "The src package configuration does not exist.";
+      }
+chat("#radial", "Builder::confPkg() 0-1");
     }
     else
     {
-      e = "The src package configuration does not exist.";
+      e = "The packages configuration does not exist.";
     }
-chat("#radial", "Builder::confPkg() 0-1");
   }
   else
   {
-    e = "The packages configuration does not exist.";
+    e = "The configuration does not exist.";
   }
   m_mutex.unlock();
 chat("#radial", "Builder::confPkg() 1");
@@ -515,7 +522,7 @@ void Builder::load(string strPrefix, const bool bSilent)
   stringstream ssConf, ssMessage;
 
   strPrefix += "->Builder::load()";
-  ssConf << m_strData << "/builder.json";
+  ssConf << m_strData << "/builder/config.json";
   inConf.open(ssConf.str());
   if (inConf)
   {
@@ -536,7 +543,7 @@ void Builder::load(string strPrefix, const bool bSilent)
   else if (!bSilent)
   {
     ssMessage.str("");
-    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/builder.json]:  " << strerror(errno);
+    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/builder/config.json]:  " << strerror(errno);
     log(ssMessage.str());
   }
   inConf.close();
