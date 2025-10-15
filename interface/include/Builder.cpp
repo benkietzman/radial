@@ -235,6 +235,12 @@ bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
   return b;
 }
 // }}}
+// {{{ cmdExit()
+bool Builder::cmdExit(string &s, list<string> &q, string &e)
+{
+  return send(s, "exit\n", q, e);
+}
+// }}}
 // {{{ cmdMkdir()
 bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r)
 {
@@ -489,10 +495,15 @@ bool Builder::install(radialUser &u, string &e)
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
       {
-        if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, true))
+        if (cmdSudo(s, strSudo, q, e))
         {
-          b = true;
+          if ((this->*m_packages[strPackage])(s, u, q, e, true))
+          {
+            b = true;
+          }
+          cmdExit(s, q, e);
         }
+        cmdExit(s, q, e);
         disconnect(s, e);
         o->i("Terminal", q);
       }
@@ -634,10 +645,15 @@ bool Builder::remove(radialUser &u, string &e)
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
       {
-        if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, false))
+        if (cmdSudo(s, strSudo, q, e))
         {
-          b = true;
+          if ((this->*m_packages[strPackage])(s, u, q, e, false))
+          {
+            b = true;
+          }
+          cmdExit(s, q, e);
         }
+        cmdExit(s, q, e);
         disconnect(s, e);
         o->i("Terminal", q);
       }

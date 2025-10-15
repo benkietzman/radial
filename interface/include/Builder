@@ -35,6 +35,7 @@ class Builder : public Interface
   bool cmdChown(string &s, const string p, const string u, list<string> &q, string &e, const bool r = false);
   bool cmdChsh(string &s, const string u, const string i, list<string> &q, string &e, const bool r = false);
   bool cmdDir(string &s, const string p, list<string> &q, string &e);
+  bool cmdExit(string &s, list<string> &q, string &e);
   bool cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdSudo(string &s, const string c, list<string> &q, string &e);
