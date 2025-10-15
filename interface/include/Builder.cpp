@@ -538,7 +538,7 @@ bool Builder::install(radialUser &u, string &e)
 // {{{ last()
 string Builder::last(const string d)
 {
-  queue<string> a;
+  stack<string> a;
   string i, l;
   stringstream s(d);
 
@@ -548,7 +548,7 @@ string Builder::last(const string d)
   }
   if (a.size() >= 3)
   {
-    a.pop_back();
+    a.pop();
     l = a.back();
   }
 
