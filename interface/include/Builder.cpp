@@ -121,15 +121,17 @@ void Builder::callbackInotify(string strPrefix, const string strPath, const stri
 // }}}
 // {{{ cmd
 // {{{ cmdChgrp()
-bool Builder::cmdChgrp(string &s, const string p, const string g, string &d, string &e, const bool r)
+bool Builder::cmdChgrp(string &s, const string p, const string g, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "chown" << ((r)?" -R":"") << " " << g << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chgrp: ")
     {
       b = true;
@@ -144,15 +146,17 @@ bool Builder::cmdChgrp(string &s, const string p, const string g, string &d, str
 }
 // }}}
 // {{{ cmdChmod()
-bool Builder::cmdChmod(string &s, const string p, const string m, string &d, string &e, const bool r)
+bool Builder::cmdChmod(string &s, const string p, const string m, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chmod: ")
     {
       b = true;
@@ -167,15 +171,17 @@ bool Builder::cmdChmod(string &s, const string p, const string m, string &d, str
 }
 // }}}
 // {{{ cmdChown()
-bool Builder::cmdChown(string &s, const string p, const string u, string &d, string &e, const bool r)
+bool Builder::cmdChown(string &s, const string p, const string u, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "chown: ")
     {
       b = true;
@@ -190,15 +196,17 @@ bool Builder::cmdChown(string &s, const string p, const string u, string &d, str
 }
 // }}}
 // {{{ cmdChsh()
-bool Builder::cmdChsh(string &s, const string u, const string i, string &d, string &e, const bool r)
+bool Builder::cmdChsh(string &s, const string u, const string i, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "chsh -s " << i << " " << u << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 6 || strLast.substr(0, 6) != "chsh: ")
     {
       b = true;
@@ -213,15 +221,17 @@ bool Builder::cmdChsh(string &s, const string u, const string i, string &d, stri
 }
 // }}}
 // {{{ cmdDir()
-bool Builder::cmdDir(string &s, const string p, string &d, string &e)
+bool Builder::cmdDir(string &s, const string p, list<string> &q, string &e)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "ls -d \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 4 || strLast.substr(0, 4) != "ls: ")
     {
       b = true;
@@ -236,15 +246,17 @@ bool Builder::cmdDir(string &s, const string p, string &d, string &e)
 }
 // }}}
 // {{{ cmdMkdir()
-bool Builder::cmdMkdir(string &s, const string p, string &d, string &e, const bool r)
+bool Builder::cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "mkdir: ")
     {
       b = true;
@@ -259,15 +271,17 @@ bool Builder::cmdMkdir(string &s, const string p, string &d, string &e, const bo
 }
 // }}}
 // {{{ cmdRmdir()
-bool Builder::cmdRmdir(string &s, const string p, string &d, string &e, const bool r)
+bool Builder::cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r)
 {
   bool b = false;
+  string d;
   stringstream c;
 
   c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"" << endl;
   if (sshSend(s, c.str(), d, e))
   {
     string strLast = last(d);
+    q.push_back(d);
     if (strLast.size() <= 7 || strLast.substr(0, 7) != "rmdir: ")
     {
       b = true;
@@ -282,15 +296,17 @@ bool Builder::cmdRmdir(string &s, const string p, string &d, string &e, const bo
 }
 // }}}
 // {{{ cmdSudo()
-bool Builder::cmdSudo(string &s, const string c, string &d, string &e)
+bool Builder::cmdSudo(string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
+  string d;
 
   if (sshSend(s, c + "\n", d, e))
   {
     queue<string> a;
     string i;
     stringstream ss(d);
+    q.push_back(d);
     while (getline(ss, i))
     {
       a.push(i);
@@ -452,7 +468,7 @@ void Builder::init(radialUser &u, string &strUser, string &strPassword, string &
 bool Builder::install(radialUser &u, string &e)
 {
   bool b = false;
-  Json *i = u.p->m["i"];
+  Json *i = u.p->m["i"], *o = u.p->m["o"];
 
   if (dep({"Package", "Server"}, i, e))
   {
@@ -463,15 +479,18 @@ bool Builder::install(radialUser &u, string &e)
     }
     if (m_packages.find(strPackage) != m_packages.end())
     {
+      list<string> q;
       string d, s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-        if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, true))
+        q.push_back(d);
+        if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, true))
         {
           b = true;
         }
         sshDisconnect(s, e);
+        o->i("Terminal", q);
       }
     }
     else
@@ -539,7 +558,7 @@ void Builder::load(string strPrefix, const bool bSilent)
 // }}}
 // {{{ pkg
 // {{{ pkgSrc()
-bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
+bool Builder::pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a)
 {
   bool b = false;
   string p = "/src";
@@ -547,14 +566,14 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
 
   if (confPkg("src", c, e))
   {
-    if (cmdDir(s, p, d, e))
+    if (cmdDir(s, p, q, e))
     {
-      if (a || cmdRmdir(s, p, d, e))
+      if (a || cmdRmdir(s, p, q, e))
       {
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, d, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, d, e)) && cmdChmod(s, p, "770", d, e) && cmdChmod(s, p, "g+s", d, e))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
     {
       b = true;
     }
@@ -565,7 +584,7 @@ bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool 
 }
 // }}}
 // {{{ pkgTest()
-bool Builder::pkgTest(string &s, radialUser &u, string &d, string &e, const bool a)
+bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a)
 {
   bool b = false;
   string p = "/test";
@@ -573,14 +592,14 @@ bool Builder::pkgTest(string &s, radialUser &u, string &d, string &e, const bool
 
   if (confPkg("test", c, e))
   {
-    if (cmdDir(s, p, d, e))
+    if (cmdDir(s, p, q, e))
     {
-      if (a || cmdRmdir(s, p, d, e))
+      if (a || cmdRmdir(s, p, q, e))
       {
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, d, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, d, e)) && cmdChmod(s, p, "770", d, e) && cmdChmod(s, p, "g+s", d, e))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
     {
       b = true;
     }
@@ -595,7 +614,7 @@ bool Builder::pkgTest(string &s, radialUser &u, string &d, string &e, const bool
 bool Builder::remove(radialUser &u, string &e)
 {
   bool b = false;
-  Json *i = u.p->m["i"];
+  Json *i = u.p->m["i"], *o = u.p->m["o"];
 
   if (dep({"Package", "Port", "Server"}, i, e))
   {
@@ -606,15 +625,18 @@ bool Builder::remove(radialUser &u, string &e)
     }
     if (m_packages.find(strPackage) != m_packages.end())
     {
+      list<string> q;
       string d, s, strPassword, strPrivateKey, strSudo, strUser;
       init(u, strUser, strPassword, strPrivateKey, strSudo);
       if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
       {
-        if (cmdSudo(s, strSudo, d, e) && (this->*m_packages[strPackage])(s, u, d, e, false))
+        q.push_back(d);
+        if (cmdSudo(s, strSudo, q, e) && (this->*m_packages[strPackage])(s, u, q, e, false))
         {
           b = true;
         }
         sshDisconnect(s, e);
+        o->i("Terminal", q);
       }
     }
     else

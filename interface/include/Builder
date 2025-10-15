@@ -20,7 +20,7 @@ class Builder : public Interface
 {
   protected:
   map<string, bool (Builder::*)(radialUser &, string &)> m_functions;
-  map<string, bool (Builder::*)(string &, radialUser &, string &, string &, const bool)> m_packages;
+  map<string, bool (Builder::*)(string &, radialUser &, list<string> &, string &, const bool)> m_packages;
   mutex m_mutex;
   string m_strPassword;
   string m_strPrivateKey;
@@ -30,14 +30,14 @@ class Builder : public Interface
   thread *m_pThreadInotify;
   Json *m_c;
 
-  bool cmdChgrp(string &s, const string p, const string g, string &d, string &e, const bool r = false);
-  bool cmdChmod(string &s, const string p, const string m, string &d, string &e, const bool r = false);
-  bool cmdChown(string &s, const string p, const string u, string &d, string &e, const bool r = false);
-  bool cmdChsh(string &s, const string u, const string i, string &d, string &e, const bool r = false);
-  bool cmdDir(string &s, const string p, string &d, string &e);
-  bool cmdMkdir(string &s, const string p, string &d, string &e, const bool r = false);
-  bool cmdRmdir(string &s, const string p, string &d, string &e, const bool r = false);
-  bool cmdSudo(string &s, const string c, string &d, string &e);
+  bool cmdChgrp(string &s, const string p, const string g, list<string> &q, string &e, const bool r = false);
+  bool cmdChmod(string &s, const string p, const string m, list<string> &q, string &e, const bool r = false);
+  bool cmdChown(string &s, const string p, const string u, list<string> &q, string &e, const bool r = false);
+  bool cmdChsh(string &s, const string u, const string i, list<string> &q, string &e, const bool r = false);
+  bool cmdDir(string &s, const string p, list<string> &q, string &e);
+  bool cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
+  bool cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
+  bool cmdSudo(string &s, const string c, list<string> &q, string &e);
   bool confPkg(const string p, Json *c, string &e);
   bool construct(radialUser &u, string &e);
   void cred(string strPrefix, const bool bSilent = false);
@@ -46,8 +46,8 @@ class Builder : public Interface
   bool install(radialUser &u, string &e);
   string last(const string d);
   void load(string strPrefix, const bool bSilent = false);
-  bool pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a);
-  bool pkgTest(string &s, radialUser &u, string &d, string &e, const bool a);
+  bool pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a);
+  bool pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool remove(radialUser &u, string &e);
 
   public:
