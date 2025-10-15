@@ -28,6 +28,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   // {{{ packages
   m_packages["src"] = &Builder::pkgSrc;
+  m_packages["test"] = &Builder::pkgTest;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -541,18 +542,45 @@ void Builder::load(string strPrefix, const bool bSilent)
 bool Builder::pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a)
 {
   bool b = false;
+  string p = "/src";
   Json *c = new Json;
 
   if (confPkg("src", c, e))
   {
-    if (cmdDir(s, "/src", d, e))
+    if (cmdDir(s, p, d, e))
     {
-      if (a || cmdRmdir(s, "/src", d, e))
+      if (a || cmdRmdir(s, p, d, e))
       {
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, "/src", d, e) && (empty(c, "user") || cmdChown(s, "/src", c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, "/src", c->m["group"]->v, d, e)) && cmdChmod(s, "/src", "770", d, e) && cmdChmod(s, "/src", "g+s", d, e))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, d, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, d, e)) && cmdChmod(s, p, "770", d, e) && cmdChmod(s, p, "g+s", d, e))))
+    {
+      b = true;
+    }
+  }
+  delete c;
+
+  return b;
+}
+// }}}
+// {{{ pkgTest()
+bool Builder::pkgTest(string &s, radialUser &u, string &d, string &e, const bool a)
+{
+  bool b = false;
+  string p = "/test";
+  Json *c = new Json;
+
+  if (confPkg("test", c, e))
+  {
+    if (cmdDir(s, p, d, e))
+    {
+      if (a || cmdRmdir(s, p, d, e))
+      {
+        b = true;
+      }
+    }
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, d, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, d, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, d, e)) && cmdChmod(s, p, "770", d, e) && cmdChmod(s, p, "g+s", d, e))))
     {
       b = true;
     }

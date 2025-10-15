@@ -47,6 +47,7 @@ class Builder : public Interface
   string last(const string d);
   void load(string strPrefix, const bool bSilent = false);
   bool pkgSrc(string &s, radialUser &u, string &d, string &e, const bool a);
+  bool pkgTest(string &s, radialUser &u, string &d, string &e, const bool a);
   bool remove(radialUser &u, string &e);
 
   public:
