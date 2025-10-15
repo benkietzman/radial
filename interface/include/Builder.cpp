@@ -674,6 +674,10 @@ string Builder::strip(const string v)
   regex ansi_escape_regex(R"(\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]))");
 
   r = regex_replace(v, ansi_escape_regex, "");
+  while ((p = r.find('\007')) != string::npos)
+  {
+    r.erase(p, 1);
+  }
   while ((p = r.find('\033')) != string::npos)
   {
     r.erase(p, 1);
