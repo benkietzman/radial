@@ -488,8 +488,7 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
         time(&(CTime[1]));
         if ((CTime[1] - CTime[0]) > 5)
         {
-          bClose = bExit = true;
-          bResult = false;
+          bExit = true;
           strError = "Command timed out after five seconds waiting for response.";
         }
       }
