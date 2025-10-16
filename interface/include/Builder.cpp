@@ -537,7 +537,7 @@ bool Builder::pkgDir(string &s, radialUser &u, Json *c, list<string> &q, string 
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && (empty(c, "mode") && cmdChmod(s, p, c->m["mode"]->v, q, e)))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && (empty(c, "mode") || cmdChmod(s, p, c->m["mode"]->v, q, e)))))
     {
       b = true;
     }
