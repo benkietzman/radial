@@ -472,6 +472,9 @@ bool Builder::install(radialUser &u, string &e)
         {
           disconnect(s, e);
         }
+      }
+      if (!q.empty())
+      {
         o->i("Terminal", q);
       }
     }
@@ -631,6 +634,9 @@ bool Builder::remove(radialUser &u, string &e)
         {
           disconnect(s, e);
         }
+      }
+      if (!q.empty())
+      {
         o->i("Terminal", q);
       }
     }
