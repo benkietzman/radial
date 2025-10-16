@@ -20,15 +20,12 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   // {{{ functions
   m_functions["action"] = &Builder::action;
-  m_functions["construct"] = &Builder::construct;
-  m_functions["destruct"] = &Builder::destruct;
   m_functions["install"] = &Builder::install;
-  m_functions["remove"] = &Builder::remove;
   m_functions["status"] = &Builder::status;
+	m_functions["uninstall"] = &Builder::uninstall;
   // }}}
   // {{{ packages
-  m_packages["src"] = &Builder::pkgSrc;
-  m_packages["test"] = &Builder::pkgTest;
+  m_packages["dir"] = &Builder::pkgDir;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -331,19 +328,6 @@ bool Builder::connect(const string strServer, const string strPort, const string
   return b;
 }
 // }}}
-// {{{ construct()
-bool Builder::construct(radialUser &u, string &e)
-{
-  bool b = false;
-  Json *i = u.p->m["i"];
-
-  if (dep({"Server"}, i, e))
-  {
-  }
-
-  return b;
-}
-// }}}
 // {{{ cred()
 void Builder::cred(string strPrefix, const bool bSilent)
 {
@@ -385,19 +369,6 @@ void Builder::cred(string strPrefix, const bool bSilent)
     log(ssMessage.str());
   }
   delete ptCred;
-}
-// }}}
-// {{{ destruct()
-bool Builder::destruct(radialUser &u, string &e)
-{
-  bool b = false;
-  Json *i = u.p->m["i"];
-
-  if (dep({"Server"}, i, e))
-  {
-  }
-
-  return b;
 }
 // }}}
 // {{{ disconnect()
@@ -448,40 +419,49 @@ bool Builder::install(radialUser &u, string &e)
   if (dep({"Package", "Server"}, i, e))
   {
     string strPackage = i->m["Package"]->v, strPort, strServer = i->m["Server"]->v;
+    Json *c = new Json;
     if (!empty(i, "Port"))
     {
       strPort = i->m["Port"]->v;
     }
-    if (m_packages.find(strPackage) != m_packages.end())
+    if (confPkg("src", c, e))
     {
-      list<string> q;
-      string s, strPassword, strPrivateKey, strSudo, strUser;
-      init(u, strUser, strPassword, strPrivateKey, strSudo);
-      if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
+      if (!empty(c, "package"))
       {
-        if (cmdSudo(s, strSudo, q, e))
+        strPackage = c->m["package"]->v;
+      }
+      if (m_packages.find(strPackage) != m_packages.end())
+      {
+        list<string> q;
+        string s, strPassword, strPrivateKey, strSudo, strUser;
+        init(u, strUser, strPassword, strPrivateKey, strSudo);
+        if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
         {
-          if ((this->*m_packages[strPackage])(s, u, q, e, true))
+          if (cmdSudo(s, strSudo, q, e))
           {
-            b = true;
+            if ((this->*m_packages[strPackage])(s, u, c, q, e, true))
+            {
+              b = true;
+            }
+            cmdExit(s, q, e);
           }
           cmdExit(s, q, e);
+          if (!s.empty())
+          {
+            disconnect(s, e);
+          }
         }
-        cmdExit(s, q, e);
-        if (!s.empty())
+        if (!q.empty())
         {
-          disconnect(s, e);
+          o->i("Terminal", q);
         }
       }
-      if (!q.empty())
+      else
       {
-        o->i("Terminal", q);
+        e = "Please provide a valid Package.";
       }
     }
-    else
-    {
-      e = "Please provide a valid Package.";
-    }
+    delete c;
   }
 
   return b;
@@ -542,15 +522,14 @@ void Builder::load(string strPrefix, const bool bSilent)
 }
 // }}}
 // {{{ pkg
-// {{{ pkgSrc()
-bool Builder::pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a)
+// {{{ pkgDir()
+bool Builder::pkgDir(string &s, radialUser &u, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string p = "/src";
-  Json *c = new Json;
 
-  if (confPkg("src", c, e))
+  if (dep({"path"}, c, e))
   {
+    string p = c->m["path"]->v;
     if (cmdDir(s, p, q, e))
     {
       if (a || cmdRmdir(s, p, q, e))
@@ -558,96 +537,15 @@ bool Builder::pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && (empty(c, "mode") && cmdChmod(s, p, c->m["mode"]->v, q, e)))))
     {
       b = true;
-    }
-  }
-  delete c;
-
-  return b;
-}
-// }}}
-// {{{ pkgTest()
-bool Builder::pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a)
-{
-  bool b = false;
-  string p = "/test";
-  Json *c = new Json;
-
-  if (confPkg("test", c, e))
-  {
-    if (cmdApt(s, "lynx", q, e, a))
-    {
-      b = true;
-    }
-    /*
-    if (cmdDir(s, p, q, e))
-    {
-      if (a || cmdRmdir(s, p, q, e))
-      {
-        b = true;
-      }
-    }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(s, p, q, e) && (empty(c, "user") || cmdChown(s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(s, p, c->m["group"]->v, q, e)) && cmdChmod(s, p, "770", q, e) && cmdChmod(s, p, "g+s", q, e))))
-    {
-      b = true;
-    }
-    */
-  }
-  delete c;
-
-  return b;
-}
-// }}}
-// }}}
-// {{{ remove()
-bool Builder::remove(radialUser &u, string &e)
-{
-  bool b = false;
-  Json *i = u.p->m["i"], *o = u.p->m["o"];
-
-  if (dep({"Package", "Server"}, i, e))
-  {
-    string strPackage = i->m["Package"]->v, strPort = "22", strServer = i->m["Server"]->v;
-    if (!empty(i, "Port"))
-    {
-      strPort = i->m["Port"]->v;
-    }
-    if (m_packages.find(strPackage) != m_packages.end())
-    {
-      list<string> q;
-      string s, strPassword, strPrivateKey, strSudo, strUser;
-      init(u, strUser, strPassword, strPrivateKey, strSudo);
-      if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
-      {
-        if (cmdSudo(s, strSudo, q, e))
-        {
-          if ((this->*m_packages[strPackage])(s, u, q, e, false))
-          {
-            b = true;
-          }
-          cmdExit(s, q, e);
-        }
-        cmdExit(s, q, e);
-        if (!s.empty())
-        {
-          disconnect(s, e);
-        }
-      }
-      if (!q.empty())
-      {
-        o->i("Terminal", q);
-      }
-    }
-    else
-    {
-      e = "Please provide a valid Package.";
     }
   }
 
   return b;
 }
+// }}}
 // }}}
 // {{{ send()
 bool Builder::send(string &s, const string c, list<string> &q, string &e, const time_t w, const size_t r)
@@ -734,6 +632,63 @@ string Builder::strip(const string v)
   }
 
   return r;
+}
+// }}}
+// {{{ uninstall()
+bool Builder::uninstall(radialUser &u, string &e)
+{
+  bool b = false;
+  Json *i = u.p->m["i"], *o = u.p->m["o"];
+
+  if (dep({"Package", "Server"}, i, e))
+  {
+    string strPackage = i->m["Package"]->v, strPort = "22", strServer = i->m["Server"]->v;
+    Json *c = new Json;
+    if (!empty(i, "Port"))
+    {
+      strPort = i->m["Port"]->v;
+    }
+    if (confPkg("src", c, e))
+    {
+      if (!empty(c, "package"))
+      {
+        strPackage = c->m["package"]->v;
+      }
+      if (m_packages.find(strPackage) != m_packages.end())
+      {
+        list<string> q;
+        string s, strPassword, strPrivateKey, strSudo, strUser;
+        init(u, strUser, strPassword, strPrivateKey, strSudo);
+        if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
+        {
+          if (cmdSudo(s, strSudo, q, e))
+          {
+            if ((this->*m_packages[strPackage])(s, u, c, q, e, false))
+            {
+              b = true;
+            }
+            cmdExit(s, q, e);
+          }
+          cmdExit(s, q, e);
+          if (!s.empty())
+          {
+            disconnect(s, e);
+          }
+        }
+        if (!q.empty())
+        {
+          o->i("Terminal", q);
+        }
+      }
+      else
+      {
+        e = "Please provide a valid Package.";
+      }
+    }
+    delete c;
+  }
+
+  return b;
 }
 // }}}
 }
