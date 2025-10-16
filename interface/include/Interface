@@ -199,7 +199,7 @@ class Interface : public Base
   bool sqliteQuery(const string strDatabase, const string strStatement, size_t &unID, size_t &unRows, string &strError);
   bool sshConnect(const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &strSession, string &strData, string &strError);
   bool sshDisconnect(const string strSession, string &strError);
-  bool sshSend(string &strSession, const string strCommand, string &strData, string &strError);
+  bool sshSend(string &strSession, const string strCommand, string &strData, string &strError, const time_t CWait = 5);
   bool status(Json *o, string &e);
   bool status(radialUser &d, string &e);
   void status(Json *ptStatus);

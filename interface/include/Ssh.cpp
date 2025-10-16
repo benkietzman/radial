@@ -129,11 +129,17 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             else if (ptJson->m["Function"]->v == "send")
             {
               string strData, strRequest;
+              time_t CWait = 5;
               if (!empty(ptJson, "Request"))
               {
                 strRequest = ptJson->m["Request"]->v;
               }
-              if (transact(ptSsh, strRequest, strData, strError))
+              if (!empty(ptJson, "Wait"))
+              {
+                stringstream ssWait(ptJson->m["Wait"]->v);
+                ssWait >> CWait;
+              }
+              if (transact(ptSsh, strRequest, strData, strError, CWait))
               {
                 bResult = true;
               }
@@ -237,7 +243,13 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                             if (ssh_channel_request_shell(ptSsh->channel) == SSH_OK)
                             {
                               string strData;
-                              if (transact(ptSsh, "", strData, strError))
+                              time_t CWait = 5;
+                              if (!empty(ptJson, "Wait"))
+                              {
+                                stringstream ssWait(ptJson->m["Wait"]->v);
+                                ssWait >> CWait;
+                              }
+                              if (transact(ptSsh, "", strData, strError, CWait))
                               {
                                 stringstream ssSession;
                                 bResult = true;
@@ -389,7 +401,7 @@ void Ssh::schedule(string strPrefix)
 }
 // }}}
 // {{{ transact()
-bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError)
+bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError, time_t CWait)
 {
   bool bResult = false;
 
@@ -486,10 +498,11 @@ bool Ssh::transact(radialSsh *ptSsh, const string strCommand, string &strData, s
       else if (bResult)
       {
         time(&(CTime[1]));
-        if ((CTime[1] - CTime[0]) > 5)
+        if ((CTime[1] - CTime[0]) > CWait)
         {
+          stringstream ssError;
           bExit = true;
-          strError = "Command timed out after five seconds waiting for response.";
+          ssError << "Command timed out after " << (CTime[1] - CTime[0]) << " seconds waiting for response.";
         }
       }
     }

@@ -53,7 +53,7 @@ class Builder : public Interface
   bool pkgSrc(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool pkgTest(string &s, radialUser &u, list<string> &q, string &e, const bool a);
   bool remove(radialUser &u, string &e);
-  bool send(string &s, const string c, list<string> &q, string &e, const size_t r = 0);
+  bool send(string &s, const string c, list<string> &q, string &e, const time_t w = 5, const size_t r = 0);
   string strip(const string v);
 
   public:

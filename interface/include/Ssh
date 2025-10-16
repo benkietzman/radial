@@ -40,7 +40,7 @@ class Ssh : public Interface
   int authenticatePassword(ssh_session session, const string strPassword);
   int authenticatePublicKey(ssh_session session, const string strPrivateKey, const string strPassphrase);
   void schedule(string strPrefix);
-  bool transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError);
+  bool transact(radialSsh *ptSsh, const string strCommand, string &strData, string &strError, const time_t CWait = 5);
 
   public:
   Ssh(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));

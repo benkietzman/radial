@@ -4345,14 +4345,19 @@ bool Interface::sshDisconnect(const string strSession, string &strError)
 }
 // }}}
 // {{{ sshSend()
-bool Interface::sshSend(string &strSession, const string strCommand, string &strData, string &strError)
+bool Interface::sshSend(string &strSession, const string strCommand, string &strData, string &strError, const time_t CWait)
 {
   bool bResult = false;
+  string strWait;
+  stringstream ssWait;
   Json *ptJson = new Json;
 
   ptJson->i("Function", "send");
   ptJson->i("Session", strSession);
   ptJson->i("Request", strCommand);
+  ssWait << CWait;
+  strWait = ssWait.str();
+  ptJson->i("Wait", strWait, 'n');
   if (hub("ssh", ptJson, strError))
   {
     bResult = true;

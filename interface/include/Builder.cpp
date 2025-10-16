@@ -650,29 +650,18 @@ bool Builder::remove(radialUser &u, string &e)
 }
 // }}}
 // {{{ send()
-bool Builder::send(string &s, const string c, list<string> &q, string &e, const size_t r)
+bool Builder::send(string &s, const string c, list<string> &q, string &e, const time_t w, const size_t r)
 {
   bool b = false;
   size_t p;
   string d, v;
 
-  if (sshSend(s, (c+"\n"), d, e))
+  if (sshSend(s, (c+"\n"), d, e, w))
   {
-    bool bRetry = true;
-    size_t unAttempt = 0;
-    while (bRetry && unAttempt++ < 10)
+    while (sshSend(s, "", v, e, w) && !v.empty())
     {
-      bRetry = false;
-      if ((p = d.rfind("\n")) != string::npos && (p+1) < d.size() && d.substr(p+1).find("root") == string::npos) // TODO
-      {
-        string i;
-        bRetry = true;
-        if (sshSend(s, "", i, e) && !i.empty())
-        {
-          unAttempt = 0;
-          d.append(i);
-        }
-      }
+      d.append(v);
+      v.clear();
     }
     b = true;
     v = strip(d);
