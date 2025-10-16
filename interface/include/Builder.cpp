@@ -296,7 +296,7 @@ bool Builder::confPkg(const string p, Json *c, string &e)
       }
       else
       {
-        e = "The src package configuration does not exist.";
+        e = (string)"The " + p + " package configuration does not exist.";
       }
     }
     else
@@ -424,7 +424,7 @@ bool Builder::install(radialUser &u, string &e)
     {
       strPort = i->m["Port"]->v;
     }
-    if (confPkg("src", c, e))
+    if (confPkg(strPackage, c, e))
     {
       if (!empty(c, "package"))
       {
@@ -648,7 +648,7 @@ bool Builder::uninstall(radialUser &u, string &e)
     {
       strPort = i->m["Port"]->v;
     }
-    if (confPkg("src", c, e))
+    if (confPkg(strPackage, c, e))
     {
       if (!empty(c, "package"))
       {
