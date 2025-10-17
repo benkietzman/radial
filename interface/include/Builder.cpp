@@ -604,9 +604,9 @@ bool Builder::pkgApt(string &s, Json *c, list<string> &q, string &e, const bool 
 {
   bool b = false;
 
-  if (dep({"aptpackage"}, c, e))
+  if (dep({"aptpkg"}, c, e))
   {
-    string p = c->m["aptpackage"]->v;
+    string p = c->m["aptpkg"]->v;
     if (cmdApt(s, p, q, e, a))
     {
       b = true;
