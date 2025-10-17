@@ -126,12 +126,12 @@ bool Builder::cmdApt(string &s, const string p, list<string> &q, string &e, cons
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(s, "apt update -y", q, e) && send(s, c.str(), q, e))
+    if (send(s, "apt update -y", q, e, true) && send(s, c.str(), q, e, true))
     {
       b = true;
     }
   }
-  else if (send(s, c.str(), q, e) && send(s, "apt autoremove -y", q, e))
+  else if (send(s, c.str(), q, e, true) && send(s, "apt autoremove -y", q, e, true))
   {
     b = true;
   }
@@ -418,50 +418,33 @@ bool Builder::install(radialUser &u, string &e)
 
   if (dep({"Package", "Server"}, i, e))
   {
-    string strPackage = i->m["Package"]->v, strPort, strServer = i->m["Server"]->v;
-    Json *c = new Json;
+    list<string> q;
+    string p = i->m["Package"]->v, s, strPassword, strPort, strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
+    init(u, strUser, strPassword, strPrivateKey, strSudo);
     if (!empty(i, "Port"))
     {
       strPort = i->m["Port"]->v;
     }
-    if (confPkg(strPackage, c, e))
+    if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
-      if (!empty(c, "package"))
+      if (cmdSudo(s, strSudo, q, e))
       {
-        strPackage = c->m["package"]->v;
-      }
-      if (m_packages.find(strPackage) != m_packages.end())
-      {
-        list<string> q;
-        string s, strPassword, strPrivateKey, strSudo, strUser;
-        init(u, strUser, strPassword, strPrivateKey, strSudo);
-        if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
+        if (pkg(p, s, q, e, true))
         {
-          if (cmdSudo(s, strSudo, q, e))
-          {
-            if ((this->*m_packages[strPackage])(s, u, c, q, e, true))
-            {
-              b = true;
-            }
-            cmdExit(s, q, e);
-          }
-          cmdExit(s, q, e);
-          if (!s.empty())
-          {
-            disconnect(s, e);
-          }
+          b = true;
         }
-        if (!q.empty())
-        {
-          o->i("Terminal", q);
-        }
+        cmdExit(s, q, e);
       }
-      else
+      cmdExit(s, q, e);
+      if (!s.empty())
       {
-        e = "Please provide a valid Package.";
+        disconnect(s, e);
       }
     }
-    delete c;
+    if (!q.empty())
+    {
+      o->i("Terminal", q);
+    }
   }
 
   return b;
@@ -522,8 +505,78 @@ void Builder::load(string strPrefix, const bool bSilent)
 }
 // }}}
 // {{{ pkg
+// {{{ pkg()
+bool Builder::pkg(string p, string &s, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  Json *c = new Json;
+
+  if (confPkg(p, c, e))
+  {
+    if (!empty(c, "package"))
+    {
+      p = c->m["package"]->v;
+    }
+    if (m_packages.find(p) != m_packages.end())
+    {
+      if (a)
+      {
+        b = true;
+        if (exist(c, "dependencies"))
+        {
+          queue<string> d;
+          for (auto &i : c->m["dependencies"]->l)
+          {
+            d.push(i->v);
+          }
+          while (b && !d.empty())
+          {
+            if (!pkg(d.front(), s, q, e, a))
+            {
+              b = false;
+            }
+            d.pop();
+          }
+        }
+        if (b && !(this->*m_packages[p])(s, c, q, e, a))
+        {
+          b = false;
+        }
+      }
+      else if ((this->*m_packages[p])(s, c, q, e, a))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide a valid Package.";
+    }
+  }
+  delete c;
+
+  return b;
+}
+// }}}
+// {{{ pkgApt()
+bool Builder::pkgApt(string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (dep({"aptpackage"}, c, e))
+  {
+    string p = c->m["aptpackage"]->v;
+    if (cmdApt(s, p, q, e, a))
+    {
+      b = true;
+    }
+  }
+
+  return b;
+}
+// }}}
 // {{{ pkgDir()
-bool Builder::pkgDir(string &s, radialUser &u, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgDir(string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
 
@@ -548,7 +601,7 @@ bool Builder::pkgDir(string &s, radialUser &u, Json *c, list<string> &q, string 
 // }}}
 // }}}
 // {{{ send()
-bool Builder::send(string &s, const string c, list<string> &q, string &e, const time_t w, const size_t r)
+bool Builder::send(string &s, const string c, list<string> &q, string &e, const bool i, const time_t w, const size_t r)
 {
   bool b = false;
   size_t p;
@@ -556,10 +609,13 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
 
   if (sshSend(s, (c+"\n"), d, e, w))
   {
-    while (sshSend(s, "", v, e, w) && !v.empty())
+    if (i)
     {
-      d.append(v);
-      v.clear();
+      while (sshSend(s, "", v, e, w) && !v.empty())
+      {
+        d.append(v);
+        v.clear();
+      }
     }
     b = true;
     v = strip(d);
@@ -571,14 +627,14 @@ bool Builder::send(string &s, const string c, list<string> &q, string &e, const 
     q.push_back(v);
     if (!s.empty())
     {
-      string i;
+      string j;
       b = false;
-      if (sshSend(s, "echo $?\n", i, e))
+      if (sshSend(s, "echo $?\n", j, e))
       {
         size_t n;
-        stringstream j;
-        j.str(last(strip(i)));
-        j >> n;
+        stringstream k;
+        k.str(last(strip(j)));
+        k >> n;
         if (n == r)
         {
           b = true;
@@ -642,50 +698,33 @@ bool Builder::uninstall(radialUser &u, string &e)
 
   if (dep({"Package", "Server"}, i, e))
   {
-    string strPackage = i->m["Package"]->v, strPort = "22", strServer = i->m["Server"]->v;
-    Json *c = new Json;
+    list<string> q;
+    string p = i->m["Package"]->v, s, strPassword, strPort = "22", strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
     if (!empty(i, "Port"))
     {
       strPort = i->m["Port"]->v;
     }
-    if (confPkg(strPackage, c, e))
+    init(u, strUser, strPassword, strPrivateKey, strSudo);
+    if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
-      if (!empty(c, "package"))
+      if (cmdSudo(s, strSudo, q, e))
       {
-        strPackage = c->m["package"]->v;
-      }
-      if (m_packages.find(strPackage) != m_packages.end())
-      {
-        list<string> q;
-        string s, strPassword, strPrivateKey, strSudo, strUser;
-        init(u, strUser, strPassword, strPrivateKey, strSudo);
-        if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
+        if (pkg(p, s, q, e, false))
         {
-          if (cmdSudo(s, strSudo, q, e))
-          {
-            if ((this->*m_packages[strPackage])(s, u, c, q, e, false))
-            {
-              b = true;
-            }
-            cmdExit(s, q, e);
-          }
-          cmdExit(s, q, e);
-          if (!s.empty())
-          {
-            disconnect(s, e);
-          }
+          b = true;
         }
-        if (!q.empty())
-        {
-          o->i("Terminal", q);
-        }
+        cmdExit(s, q, e);
       }
-      else
+      cmdExit(s, q, e);
+      if (!s.empty())
       {
-        e = "Please provide a valid Package.";
+        disconnect(s, e);
       }
     }
-    delete c;
+    if (!q.empty())
+    {
+      o->i("Terminal", q);
+    }
   }
 
   return b;
