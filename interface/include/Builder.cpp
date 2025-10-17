@@ -384,30 +384,24 @@ void Builder::init(radialUser &u, string &strUser, string &strPassword, string &
   Json *i = u.p->m["i"];
 
   strPassword = m_strPassword;
-  strPrivateKey = m_strPrivateKey;
-  strSudo = m_strSudo;
-  strUser = m_strUser;
-  if (exist(i, "default"))
+  if (!empty(i, "Password"))
   {
-    if (exist(i->m["default"], "key"))
-    {
-      if (!empty(i->m["default"]->m["key"], "private"))
-      {
-        strPrivateKey = i->m["default"]->m["key"]->m["private"]->v;
-      }
-    }
-    if (!empty(i->m["default"], "password"))
-    {
-      strPassword = i->m["default"]->m["password"]->v;
-    }
-    if (!empty(i->m["default"], "sudo"))
-    {
-      strSudo = i->m["default"]->m["sudo"]->v;
-    }
-    if (!empty(i->m["default"], "user"))
-    {
-      strUser = i->m["default"]->m["user"]->v;
-    }
+    strPassword = i->m["Password"]->v;
+  }
+  strPrivateKey = m_strPrivateKey;
+  if (exist(i, "PrivateKey"))
+  {
+    strPrivateKey = i->m["PrivateKey"]->v;
+  }
+  strSudo = m_strSudo;
+  if (!empty(i, "Sudo"))
+  {
+    strSudo = i->m["Sudo"]->v;
+  }
+  strUser = m_strUser;
+  if (!empty(i, "User"))
+  {
+    strUser = i->m["User"]->v;
   }
 }
 // }}}
@@ -511,15 +505,16 @@ void Builder::load(string strPrefix, const bool bSilent)
 bool Builder::pkg(string p, string &s, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string sp;
   Json *c = new Json;
 
   if (confPkg(p, c, e))
   {
     if (!empty(c, "package"))
     {
-      p = c->m["package"]->v;
+      sp = c->m["package"]->v;
     }
-    if (m_packages.find(p) != m_packages.end())
+    if (m_packages.find(sp) != m_packages.end())
     {
       if (a)
       {
@@ -540,14 +535,58 @@ bool Builder::pkg(string p, string &s, list<string> &q, string &e, const bool a)
             d.pop();
           }
         }
-        if (b && !(this->*m_packages[p])(s, c, q, e, a))
+        if (b && !(this->*m_packages[sp])(s, c, q, e, a))
         {
           b = false;
         }
       }
-      else if ((this->*m_packages[p])(s, c, q, e, a))
+      else
       {
-        b = true;
+        Json *r = NULL;
+        m_mutex.lock();
+        if (m_c != NULL)
+        {
+          if (exist(m_c, "packages"))
+          {
+            r = new Json(m_c->m["packages"]);
+          }
+          else
+          {
+            e = "The packages configuration does not exist.";
+          }
+        }
+        else
+        {
+          e = "The configuration does not exist.";
+        }
+        m_mutex.unlock();
+        if (r != NULL)
+        {
+          b = true;
+          for (auto i = r->m.begin(); b && i != r->m.end(); i++)
+          {
+            if (exist(i->second, "dependencies"))
+            {
+              bool f = false;
+              for (auto j = i->second->m["dependencies"]->l.begin(); !f && j != i->second->m["dependencies"]->l.end(); j++)
+              {
+                if ((*j)->v == p)
+                {
+                  f = true;
+                }
+              }
+              if (f && !pkg(i->first, s, q, e, a))
+              {
+                b = false;
+              }
+            }
+          }
+          if (b && !(this->*m_packages[sp])(s, c, q, e, a))
+          {
+            b = false;
+          }
+          delete r;
+        }
       }
     }
     else
