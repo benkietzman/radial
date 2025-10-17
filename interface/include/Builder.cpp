@@ -510,9 +510,9 @@ bool Builder::pkg(string p, string &s, list<string> &q, string &e, const bool a)
 
   if (confPkg(p, c, e))
   {
-    if (!empty(c, "package"))
+    if (!empty(c, "pkg"))
     {
-      sp = c->m["package"]->v;
+      sp = c->m["pkg"]->v;
     }
     if (m_packages.find(sp) != m_packages.end())
     {
