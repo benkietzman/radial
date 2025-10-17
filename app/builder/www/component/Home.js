@@ -93,13 +93,15 @@ export default
     {
       if (c.isValid('Builder'))
       {
+        s.results = null;
+        s.results = [];
+        s.u();
         let request = {Interface: 'builder', 'Function': strFunction, Request: {Server: s.server.v.name, Package: s['package'].v.name}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.results = response.Response.Terminal;
           }
           else
           {
@@ -120,6 +122,15 @@ export default
     c.attachEvent('appReady', (data) =>
     {
       s.init();
+    });
+    c.attachEvent('commonWsMessage_Builder', (data) =>
+    {
+      if (data.detail && data.detail.Action && data.detail.Action == 'terminal' && data.detail.Data)
+      {
+        s.results.push(data.detail.Data);
+        s.u();
+        window.scrollTo(0, document.body.scrollHeight);
+      }
     });
     // ]]]
   },
