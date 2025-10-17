@@ -15,12 +15,6 @@ export default
     let c = common;
     let s = c.scope('Home',
     {
-      // [[[ u()
-      u: () =>
-      {
-        c.update('Home');
-      },
-      // ]]]
       a: a,
       c: c,
       bLoaded: false
@@ -93,6 +87,7 @@ export default
     {
       if (c.isValid('Builder'))
       {
+        s.processing = 'Processing package...';
         s.results = null;
         s.results = [];
         s.u();
@@ -100,6 +95,7 @@ export default
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
+          s.processing = null;
           if (c.wsResponse(response, error))
           {
           }
@@ -110,6 +106,25 @@ export default
           s.u();
         });
       }
+    };
+    // ]]]
+    // [[[ resize()
+    s.resize = () =>
+    {         
+      let results = document.getElementById('radial_results');
+      let maxHeight = document.documentElement.clientHeight - 200;
+      if (results)
+      {
+        results.style.minHeight = maxHeight + 'px';
+        results.style.maxHeight = maxHeight + 'px';
+        results.scrollTop = results.scrollHeight;
+      }
+    };
+    // [[[ u()
+    s.u = () =>
+    {
+      c.update('Home');
+      s.resize();
     };
     // ]]]
     // [[[ main
@@ -129,8 +144,12 @@ export default
       {
         s.results.push(data.detail.Data);
         s.u();
-        window.scrollTo(0, document.body.scrollHeight);
+        document.getElementById('radial_results').scrollTop = document.getElementById('radial_results').scrollHeight;
       }
+    });
+    window.addEventListener('resize', () =>
+    {
+      s.resize();
     });
     // ]]]
   },
@@ -157,10 +176,17 @@ export default
     <div class="card-header bg-secondary fw-bold">
       Console
     </div>
-    <div class="card-body bg-secondary-subtle">
-      {{#each ../results}}
-      <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{.}}</pre>
-      {{/each}}
+    <div class="card-body bg-secondary-subtle table-responsive" id="radial_results" style="padding: 0px;">
+      <table class="table table-condensed table-striped" style="margin: 0px;">
+        {{#each ../results}}
+        <tr>
+          <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{.}}</pre></td>
+        </tr>
+        {{/each}}
+      </table>
+    </div>
+    <div class="card-footer bg-secondary text-warning">
+      {{../processing}}
     </div>
   </div>
   {{/if}}
