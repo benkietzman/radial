@@ -127,12 +127,12 @@ bool Builder::cmdApt(string &s, const string p, list<string> &q, string &e, cons
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(s, "apt update -y", q, e, true, 30) && send(s, c.str(), q, e, true, 30))
+    if (send(s, "apt update -y", q, e, true, 10) && send(s, c.str(), q, e, true, 10))
     {
       b = true;
     }
   }
-  else if (send(s, c.str(), q, e, true, 30) && send(s, "apt autoremove -y", q, e, true, 30))
+  else if (send(s, c.str(), q, e, true, 10) && send(s, "apt autoremove -y", q, e, true, 10))
   {
     b = true;
   }
