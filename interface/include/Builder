@@ -40,6 +40,7 @@ class Builder : public Interface
   bool cmdMkdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdRmdir(string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdSudo(string &s, const string c, list<string> &q, string &e);
+  bool config(radialUser &u, string &e);
   bool confPkg(const string p, Json *c, string &e);
   bool connect(const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &s, list<string> &q, string &e);
   void cred(string strPrefix, const bool bSilent = false);

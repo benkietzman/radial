@@ -20,6 +20,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   // {{{ functions
   m_functions["action"] = &Builder::action;
+  m_functions["config"] = &Builder::config;
   m_functions["install"] = &Builder::install;
   m_functions["status"] = &Builder::status;
 	m_functions["uninstall"] = &Builder::uninstall;
@@ -279,6 +280,22 @@ bool Builder::cmdSudo(string &s, const string c, list<string> &q, string &e)
   return b;
 }
 // }}}
+// }}}
+// {{{ config()
+bool Builder::config(radialUser &u, string &e)
+{
+  Json *o;
+
+  m_mutex.lock();
+  u.p->i("o", m_c);
+  m_mutex.unlock();
+  o = u.p->m["o"];
+  o->i("publickey", m_strPublicKey);
+  o->i("sudo", m_strSudo);
+  o->i("user", m_strUser);
+
+  return true;
+}
 // }}}
 // {{{ confPkg()
 bool Builder::confPkg(const string p, Json *c, string &e)
