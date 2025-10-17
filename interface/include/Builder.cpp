@@ -25,6 +25,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 	m_functions["uninstall"] = &Builder::uninstall;
   // }}}
   // {{{ packages
+  m_packages["apt"] = &Builder::pkgApt;
   m_packages["dir"] = &Builder::pkgDir;
   // }}}
   m_c = NULL;
