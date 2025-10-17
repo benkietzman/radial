@@ -343,7 +343,7 @@ bool Builder::connect(const string ws, const string strServer, const string strP
     v = strip(d);
     if (!ws.empty())
     {
-      live(ws, {{"Terminal", v}});
+      live(ws, {{"Action", "terminal"}, {"Data", v}});
     }
     q.push_back(v);
   }
@@ -684,7 +684,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
         v = strip(sd);
         if (!ws.empty())
         {
-          live(ws, {{"Terminal", v}});
+          live(ws, {{"Action", "terminal"}, {"Data", v}});
         }
         d.append(v);
         sd.clear();
@@ -694,7 +694,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
     v = strip(d);
     if (!ws.empty())
     {
-      live(ws, {{"Terminal", v}});
+      live(ws, {{"Action", "terminal"}, {"Data", v}});
     }
     if (!q.empty() && (p = q.back().rfind("\n")) != string::npos && (p+1) < q.back().size())
     {
