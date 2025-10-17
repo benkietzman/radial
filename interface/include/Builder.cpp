@@ -427,18 +427,19 @@ bool Builder::install(radialUser &u, string &e)
     }
     if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
+      string se;
       if (cmdSudo(s, strSudo, q, e))
       {
         if (pkg(p, s, q, e, true))
         {
           b = true;
         }
-        cmdExit(s, q, e);
+        cmdExit(s, q, se);
       }
-      cmdExit(s, q, e);
+      cmdExit(s, q, se);
       if (!s.empty())
       {
-        disconnect(s, e);
+        disconnect(s, se);
       }
     }
     if (!q.empty())
@@ -707,18 +708,19 @@ bool Builder::uninstall(radialUser &u, string &e)
     init(u, strUser, strPassword, strPrivateKey, strSudo);
     if (connect(strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
+      string se;
       if (cmdSudo(s, strSudo, q, e))
       {
         if (pkg(p, s, q, e, false))
         {
           b = true;
         }
-        cmdExit(s, q, e);
+        cmdExit(s, q, se);
       }
-      cmdExit(s, q, e);
+      cmdExit(s, q, se);
       if (!s.empty())
       {
-        disconnect(s, e);
+        disconnect(s, se);
       }
     }
     if (!q.empty())
