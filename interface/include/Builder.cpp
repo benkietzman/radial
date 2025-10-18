@@ -456,14 +456,14 @@ bool Builder::install(radialUser &u, string &e)
     }
     if (!ws.empty())
     {
-      live(ws, {{"Action", "section"}, {"Section", "Establish SSH Connection"}});
+      live(ws, {{"Action", "section"}, {"Section", "Establish connection"}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Switch to Authorized User"}});
+        live(ws, {{"Action", "section"}, {"Section", "Switch to authorized user"}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
       {
@@ -473,13 +473,13 @@ bool Builder::install(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
-          live(ws, {{"Action", "section"}, {"Section", "Exit from Authorized User"}});
+          live(ws, {{"Action", "section"}, {"Section", "Exit from authorized user"}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Terminate SSH Connection"}});
+        live(ws, {{"Action", "section"}, {"Section", "Terminate connection"}});
       }
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
@@ -558,7 +558,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
   if (!ws.empty())
   {
     stringstream ss;
-    ss << ((a)?"I":"Uni") << "nstall Package:  " << p;
+    ss << ((a)?"I":"Uni") << "nstall package:  " << p;
     live(ws, {{"Action", "section"}, {"Section", ss.str()}});
   }
   if (confPkg(p, c, e))
@@ -815,14 +815,14 @@ bool Builder::uninstall(radialUser &u, string &e)
     init(u, strUser, strPassword, strPrivateKey, strSudo);
     if (!ws.empty())
     {
-      live(ws, {{"Action", "section"}, {"Section", "Establish SSH Connection"}});
+      live(ws, {{"Action", "section"}, {"Section", "Establish connection"}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Switch to Authorized User"}});
+        live(ws, {{"Action", "section"}, {"Section", "Switch to authorized user"}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
       {
@@ -832,13 +832,13 @@ bool Builder::uninstall(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
-          live(ws, {{"Action", "section"}, {"Section", "Exit from Authorized User"}});
+          live(ws, {{"Action", "section"}, {"Section", "Exit from authorized user"}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Terminate SSH Connection"}});
+        live(ws, {{"Action", "section"}, {"Section", "Terminate connection"}});
       }
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
