@@ -44,7 +44,7 @@ class Builder : public Interface
   bool confPkg(const string p, Json *c, string &e);
   bool connect(const string ws, const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &s, list<string> &q, string &e);
   void cred(string strPrefix, const bool bSilent = false);
-  bool disconnect(string &s, string &e);
+  bool disconnect(const string ws, string &s, string &e);
   void init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo);
   bool install(radialUser &u, string &e);
   string last(const string d);

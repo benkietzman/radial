@@ -272,6 +272,10 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
 {
   bool b = false;
 
+  if (!ws.empty())
+  {
+    live(ws, {{"Action", "section"}, {"Section", "Switch to Authorized User"}});
+  }
   if (send(ws, s, c, q, e))
   {
     b = true;
@@ -337,6 +341,10 @@ bool Builder::connect(const string ws, const string strServer, const string strP
   bool b = false;
   string d, v;
 
+  if (!ws.empty())
+  {
+    live(ws, {{"Action", "section"}, {"Section", "Establish SSH Connection"}});
+  }
   if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
   {
     b = true;
@@ -395,9 +403,20 @@ void Builder::cred(string strPrefix, const bool bSilent)
 }
 // }}}
 // {{{ disconnect()
-bool Builder::disconnect(string &s, string &e)
+bool Builder::disconnect(const string ws, string &s, string &e)
 {
-  return sshDisconnect(s, e);
+  bool b = false;
+
+  if (!ws.empty())
+  {
+    live(ws, {{"Action", "section"}, {"Section", "Terminate SSH Connection"}});
+  }
+  if (s.empty() || sshDisconnect(s, e))
+  {
+    b = true;
+  }
+
+  return b;
 }
 // }}}
 // {{{ init()
@@ -459,10 +478,7 @@ bool Builder::install(radialUser &u, string &e)
         cmdExit(ws, s, q, se);
       }
       cmdExit(ws, s, q, se);
-      if (!s.empty())
-      {
-        disconnect(s, se);
-      }
+      disconnect(ws, s, se);
     }
     if (!q.empty())
     {
@@ -535,6 +551,12 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
   string sp;
   Json *c = new Json;
 
+  if (!ws.empty())
+  {
+    stringstream ss;
+    ss << ((a)?"I":"Uni") << "nstall Package:  " << p;
+    live(ws, {{"Action", "section"}, {"Section", ss.str()}});
+  }
   if (confPkg(p, c, e))
   {
     if (!empty(c, "pkg"))
@@ -799,10 +821,7 @@ bool Builder::uninstall(radialUser &u, string &e)
         cmdExit(ws, s, q, se);
       }
       cmdExit(ws, s, q, se);
-      if (!s.empty())
-      {
-        disconnect(s, se);
-      }
+      disconnect(ws, s, se);
     }
     if (!q.empty())
     {
