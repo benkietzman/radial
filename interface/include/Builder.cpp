@@ -27,6 +27,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   // {{{ packages
   m_packages["apt"] = &Builder::pkgApt;
+  m_packages["common"] = &Builder::pkgCommon;
   m_packages["dir"] = &Builder::pkgDir;
   // }}}
   m_c = NULL;
@@ -134,6 +135,21 @@ bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q
     }
   }
   else if (send(ws, s, c.str(), q, e, true, 10) && send(ws, s, "apt autoremove -y", q, e, true, 10))
+  {
+    b = true;
+  }
+
+  return b;
+}
+// }}}
+// {{{ cmdCd()
+bool Builder::cmdCd(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
+{
+  bool b = false;
+  stringstream c;
+
+  c << "cd \"" << p << "\"";
+  if (send(ws, s, c.str(), q, e))
   {
     b = true;
   }
@@ -252,13 +268,13 @@ bool Builder::cmdMkdir(const string ws, string &s, const string p, list<string> 
   return b;
 }
 // }}}
-// {{{ cmdRmdir()
-bool Builder::cmdRmdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
+// {{{ cmdRm()
+bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
 {
   bool b = false;
   stringstream c;
 
-  c << "rmdir" << ((r)?" -r":"") << " \"" << p << "\"";
+  c << "rm" << ((r)?" -r":"") << " \"" << p << "\"";
   if (send(ws, s, c.str(), q, e))
   {
     b = true;
@@ -669,6 +685,42 @@ bool Builder::pkgApt(const string ws, string &s, Json *c, list<string> &q, strin
   return b;
 }
 // }}}
+// {{{ pkgCommon()
+bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (dep({"path"}, c, e))
+  {
+    string p = c->m["path"]->v;
+    if (a)
+    {
+      if (cmdDir(ws, s, p, q, e))
+      {
+        if (cmdCd(ws, s, p, q, e))
+        {
+        }
+      }
+      else if (cmdMkdir(ws, s, p, q, e) && cmdCd(ws, s, p, q, e))
+      {
+      }
+    }
+    else if (cmdDir(ws, s, p, q, e))
+    {
+      if (cmdRm(ws, s, p, q, e, true))
+      {
+        b = true;
+      }
+    }
+    else if (e.find("No such file or directory") != string::npos)
+    {
+      b = true;
+    }
+  }
+
+  return b;
+}
+// }}}
 // {{{ pkgDir()
 bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
@@ -679,7 +731,7 @@ bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, strin
     string p = c->m["path"]->v;
     if (cmdDir(ws, s, p, q, e))
     {
-      if (a || cmdRmdir(ws, s, p, q, e))
+      if (a || cmdRm(ws, s, p, q, e, true))
       {
         b = true;
       }
