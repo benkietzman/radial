@@ -95,12 +95,13 @@ export default
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
-          s.processing = null;
           if (c.wsResponse(response, error))
           {
+            s.processing = 'Processing completed successfully.';
           }
           else
           {
+            s.processing = 'Processing failed.';
             c.pushErrorMessage(error.message);
           }
           s.u();
@@ -120,6 +121,7 @@ export default
         results.scrollTop = results.scrollHeight;
       }
     };
+    // ]]]
     // [[[ u()
     s.u = () =>
     {
@@ -140,9 +142,9 @@ export default
     });
     c.attachEvent('commonWsMessage_Builder', (data) =>
     {
-      if (data.detail && data.detail.Action && data.detail.Action == 'terminal' && data.detail.Data)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'section' || data.detail.Action == 'terminal'))
       {
-        s.results.push(data.detail.Data);
+        s.results.push(data.detail);
         s.u();
         document.getElementById('radial_results').scrollTop = document.getElementById('radial_results').scrollHeight;
       }
@@ -174,13 +176,17 @@ export default
   {{#if ../results}}
   <div class="card border border-secondary-subtle" style="margin-top: 10px;">
     <div class="card-header bg-secondary fw-bold">
-      Console
+      Terminal
     </div>
     <div class="card-body bg-secondary-subtle table-responsive" id="radial_results" style="padding: 0px;">
-      <table class="table table-condensed table-striped" style="margin: 0px;">
+      <table class="table table-condensed" style="margin: 0px;">
         {{#each ../results}}
         <tr>
-          <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{.}}</pre></td>
+          {{#ifCond Action "==" "section"}}
+          <td class="bg-secondary">{{../Section}}</td>
+          {{else}}
+          <td style="background: inherit;"><pre style="background: inherit; color: inherit; margin: 0px; white-space: pre-wrap;">{{../Data}}</pre></td>
+          {{/ifCond}}
         </tr>
         {{/each}}
       </table>
