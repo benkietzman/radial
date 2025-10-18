@@ -129,12 +129,12 @@ bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(ws, s, "apt update -y", q, e, true, 10) && send(ws, s, c.str(), q, e, true, 10))
+    if (send(ws, s, "apt update -y", q, e, true, 10) && send(ws, s, c.str(), q, e))
     {
       b = true;
     }
   }
-  else if (send(ws, s, c.str(), q, e, true, 10) && send(ws, s, "apt autoremove -y", q, e, true, 10))
+  else if (send(ws, s, c.str(), q, e) && send(ws, s, "apt autoremove -y", q, e))
   {
     b = true;
   }
@@ -288,7 +288,7 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
 {
   bool b = false;
 
-  if (send(ws, s, c, q, e))
+  if (send(ws, s, c, q, e) && send(ws, s, "PS1='RADIAL-BUILDER> '", q, e))
   {
     b = true;
   }
@@ -355,13 +355,16 @@ bool Builder::connect(const string ws, const string strServer, const string strP
 
   if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
   {
-    b = true;
     v = strip(d);
     if (!ws.empty())
     {
       live(ws, {{"Action", "terminal"}, {"Data", v}});
     }
     q.push_back(v);
+    if (send(ws, s, "PS1='RADIAL-BUILDER> '", q, e))
+    {
+      b = true;
+    }
   }
 
   return b;
@@ -747,17 +750,21 @@ bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, strin
 // }}}
 // }}}
 // {{{ send()
-bool Builder::send(const string ws, string &s, const string c, list<string> &q, string &e, const bool i, const time_t w, const size_t r)
+bool Builder::send(const string ws, string &s, const string c, list<string> &q, string &e, const size_t r)
 {
-  bool b = false;
+  bool b = false, f = false;
   size_t p;
   string d, sd, v;
 
   if (sshSend(s, (c+"\n"), d, e, w))
   {
-    if (i)
+    if ((p = d.rfind("\n")) != string::npos && d.substr(p, "RADIAL-BUILDER> ") != string::npos)
     {
-      while (sshSend(s, "", sd, e, w) && !sd.empty())
+      f = true;
+    }
+    while (!f && sshSend(s, "", sd, e, w))
+    {
+      if (!sd.empty())
       {
         v = strip(sd);
         if (!ws.empty())
@@ -766,6 +773,10 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
         }
         d.append(v);
         sd.clear();
+        if ((p = d.rfind("\n")) != string::npos && d.substr(p, "RADIAL-BUILDER> ") != string::npos)
+        {
+          f = true;
+        }
       }
     }
     b = true;
