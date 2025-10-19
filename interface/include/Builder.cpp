@@ -287,10 +287,25 @@ bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q,
 bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
+  string d, v;
 
-  if (send(ws, s, c, q, e) && send(ws, s, "PS1='RADIAL-BUILDER>|'", q, e))
+  if (sshSend(s, c, d, e))
   {
-    b = true;
+    v = strip(d);
+    if (!ws.empty())
+    {
+      live(ws, {{"Action", "terminal"}, {"Data", v}});
+    }
+    if (!q.empty() && (p = q.back().rfind("\n")) != string::npos && (p+1) < q.back().size())
+    {
+      v.insert(0, q.back().substr(p+1));
+      q.back().erase(p);
+    }
+    q.push_back(v);
+    if (send(ws, s, "PS1='RADIAL-BUILDER>|'", q, e))
+    {
+      b = true;
+    }
   }
 
   return b;
