@@ -714,7 +714,7 @@ bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, st
     string p = c->m["path"]->v;
     if (a)
     {
-      if (cmdDir(ws, s, p, q, e) || (send(ws, s, "git clone https://github.com/benkietzman/common.git", q, e) && cmdCd(ws, s, p, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e)))
+      if (cmdDir(ws, s, p, q, e) || (send(ws, s, "git clone https://github.com/benkietzman/common.git", q, e) && cmdCd(ws, s, p, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, p, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, p, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
