@@ -778,7 +778,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
     if ((p = d.rfind("RADIAL_BUILDER> ")) != string::npos)
     {
       f = true;
-      d[p+7] = '-';
+      d[p+6] = '-';
     }
     while (!f && sshSend(s, "", sd, e))
     {
@@ -794,7 +794,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
         if ((p = d.rfind("RADIAL_BUILDER> ")) != string::npos)
         {
           f = true;
-          d[p+7] = '-';
+          d[p+6] = '-';
         }
       }
     }
