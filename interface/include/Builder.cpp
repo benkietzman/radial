@@ -129,7 +129,7 @@ bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(ws, s, "apt update -y", q, e, true, 10) && send(ws, s, c.str(), q, e))
+    if (send(ws, s, "apt update -y", q, e) && send(ws, s, c.str(), q, e))
     {
       b = true;
     }
@@ -756,13 +756,13 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
   size_t p;
   string d, sd, v;
 
-  if (sshSend(s, (c+"\n"), d, e, w))
+  if (sshSend(s, (c+"\n"), d, e))
   {
-    if ((p = d.rfind("\n")) != string::npos && d.substr(p, "RADIAL-BUILDER> ") != string::npos)
+    if ((p = d.rfind("\n")) != string::npos && d.substr(p).find("RADIAL-BUILDER> ") != string::npos)
     {
       f = true;
     }
-    while (!f && sshSend(s, "", sd, e, w))
+    while (!f && sshSend(s, "", sd, e))
     {
       if (!sd.empty())
       {
@@ -773,7 +773,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
         }
         d.append(v);
         sd.clear();
-        if ((p = d.rfind("\n")) != string::npos && d.substr(p, "RADIAL-BUILDER> ") != string::npos)
+        if ((p = d.rfind("\n")) != string::npos && d.substr(p).find("RADIAL-BUILDER> ") != string::npos)
         {
           f = true;
         }
