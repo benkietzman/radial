@@ -287,6 +287,7 @@ bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q,
 bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &q, string &e)
 {
   bool b = false;
+  size_t p;
   string d, v;
 
   if (sshSend(s, c, d, e))
