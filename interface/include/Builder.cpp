@@ -288,7 +288,7 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
 {
   bool b = false;
 
-  if (send(ws, s, c, q, e) && send(ws, s, "PS1='RADIAL-BUILDER> '", q, e))
+  if (send(ws, s, c, q, e) && send(ws, s, "PS1='RADIAL-BUILDER>|'", q, e))
   {
     b = true;
   }
@@ -361,7 +361,7 @@ bool Builder::connect(const string ws, const string strServer, const string strP
       live(ws, {{"Action", "terminal"}, {"Data", v}});
     }
     q.push_back(v);
-    if (send(ws, s, "PS1='RADIAL-BUILDER> '", q, e))
+    if (send(ws, s, "PS1='RADIAL-BUILDER>|'", q, e))
     {
       b = true;
     }
@@ -758,9 +758,11 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
 
   if (sshSend(s, (c+"\n"), d, e))
   {
-    if ((p = d.rfind("\n")) != string::npos && d.substr(p).find("RADIAL-BUILDER> ") != string::npos)
+    b = true;
+    if ((p = d.find("RADIAL-BUILDER>|")) != string::npos)
     {
       f = true;
+      d[p+15] = ' ';
     }
     while (!f && sshSend(s, "", sd, e))
     {
@@ -773,13 +775,13 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
         }
         d.append(v);
         sd.clear();
-        if ((p = d.rfind("\n")) != string::npos && d.substr(p).find("RADIAL-BUILDER> ") != string::npos)
+        if ((p = d.find("RADIAL-BUILDER>|")) != string::npos)
         {
           f = true;
+          d[p+15] = ' ';
         }
       }
     }
-    b = true;
     v = strip(d);
     if (!ws.empty())
     {
