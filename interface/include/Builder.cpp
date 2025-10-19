@@ -290,7 +290,7 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
   size_t p;
   string d, v;
 
-  if (sshSend(s, c, d, e))
+  if (sshSend(s, c+"\n", d, e))
   {
     v = strip(d);
     if (!ws.empty())
