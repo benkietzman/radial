@@ -31,6 +31,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_packages["dir"] = &Builder::pkgDir;
   m_packages["logger"] = &Builder::pkgLogger;
   m_packages["mjson"] = &Builder::pkgMjson;
+  m_packages["portconcentrator"] = &Builder::pkgPortConcentrator;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -776,7 +777,7 @@ bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, st
     }
     else if (cmdDir(ws, s, c->m["source"]->v, q, e))
     {
-      if (cmdRm(ws, s, c->m["source"]->v, q, e, true))
+      if (send(ws, s, "systemctl stop logger", q, e) && send(ws, s, "systemctl disable logger", q, e) && cmdRm(ws, s, "/lib/systemd/system/logger.service", q, e), (!cmdDir(ws, s, "/usr/local/logger", q, e) || cmdRm(ws, s, "/usr/local/logger", q, e, true)) && (!cmdDir(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
       {
         b = true;
       }
@@ -812,6 +813,36 @@ bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, str
   else if (e.find("No such file or directory") != string::npos)
   {
     b = true;
+  }
+
+  return b;
+}
+// }}}
+// {{{ pkgPortConcentrator()
+bool Builder::pkgPortConcentrator(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (dep({"data", "email", "source"}, c, e))
+  {
+    if (a)
+    {
+      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/portconcentrator.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
+      {
+        b = true;
+      }
+    }
+    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
+    {
+      if (send(ws, s, "systemctl stop concentrator", q, e) && send(ws, s, "systemctl disable concentrator", q, e) && cmdRm(ws, s, "/lib/systemd/system/concentrator.service", q, e), (!cmdDir(ws, s, "/usr/local/portconcentrator", q, e) || cmdRm(ws, s, "/usr/local/portconcentrator", q, e, true)) && (!cmdDir(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
+      {
+        b = true;
+      }
+    }
+    else if (e.find("No such file or directory") != string::npos)
+    {
+      b = true;
+    }
   }
 
   return b;

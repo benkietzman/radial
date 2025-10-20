@@ -56,6 +56,7 @@ class Builder : public Interface
   bool pkgDir(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
   bool pkgLogger(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
   bool pkgMjson(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgPortConcentrator(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
   bool send(const string ws, string &s, const string c, list<string> &q, string &e, const size_t r = 0);
   string strip(const string v);
   bool uninstall(radialUser &u, string &e);
