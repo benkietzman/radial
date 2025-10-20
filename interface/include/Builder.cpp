@@ -29,6 +29,8 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_packages["apt"] = &Builder::pkgApt;
   m_packages["common"] = &Builder::pkgCommon;
   m_packages["dir"] = &Builder::pkgDir;
+  m_packages["logger"] = &Builder::pkgLogger;
+  m_packages["mjson"] = &Builder::pkgMjson;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -709,19 +711,18 @@ bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, st
 {
   bool b = false;
 
-  if (dep({"path"}, c, e))
+  if (dep({"source"}, c, e))
   {
-    string p = c->m["path"]->v;
     if (a)
     {
-      if (cmdDir(ws, s, p, q, e) || (send(ws, s, "git clone https://github.com/benkietzman/common.git", q, e) && cmdCd(ws, s, p, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, p, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, p, c->m["group"]->v, q, e, true))))
+      if (cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/common.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
     }
-    else if (cmdDir(ws, s, p, q, e))
+    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
     {
-      if (cmdRm(ws, s, p, q, e, true))
+      if (cmdRm(ws, s, c->m["source"]->v, q, e, true))
       {
         b = true;
       }
@@ -754,6 +755,63 @@ bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, strin
     {
       b = true;
     }
+  }
+
+  return b;
+}
+// }}}
+// {{{ pkgLogger()
+bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (dep({"cert", "data", "email", "key", "source"}, c, e))
+  {
+    if (a)
+    {
+      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/logger.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
+      {
+        b = true;
+      }
+    }
+    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
+    {
+      if (cmdRm(ws, s, c->m["source"]->v, q, e, true))
+      {
+        b = true;
+      }
+    }
+    else if (e.find("No such file or directory") != string::npos)
+    {
+      b = true;
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ pkgMjson()
+bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (a)
+  {
+    if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.g", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.g", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
+    {
+      b = true;
+    }
+  }
+  else if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e))
+  {
+    if (cmdRm(ws, s, "/usr/local/include/mjson-1.7", q, e, true) && send(ws, s, "rm /usr/local/lib/libmjson*", q, e))
+    {
+      b = true;
+    }
+  }
+  else if (e.find("No such file or directory") != string::npos)
+  {
+    b = true;
   }
 
   return b;
