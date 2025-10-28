@@ -798,7 +798,7 @@ bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, str
 
   if (a)
   {
-    if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.g", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.g", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
+    if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
     {
       b = true;
     }
