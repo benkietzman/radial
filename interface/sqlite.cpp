@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // Radial
 // -------------------------------------
-// file       : mysql.cpp
+// file       : sqlit.cpp
 // author     : Ben Kietzman
 // begin      : 2024-10-21
 // copyright  : Ben Kietzman
