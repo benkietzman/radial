@@ -1051,7 +1051,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
           log(ssMessage.str());
         }
         // {{{ post work
-        if (bFileClose && !bNeedWrite && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
+        if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
           bSocketClose = true;
         }
