@@ -1689,7 +1689,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
           //if (nReturn < 0 && errno != 104)
           //{
             ssMessage.str("");
-            ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+            ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
             e = ssMessage.str();
           //}
         }
