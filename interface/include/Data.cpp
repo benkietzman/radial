@@ -876,7 +876,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             }
             else
             {
-chat("#system", "Utility::sslRead()");
               bSocketClose = true;
               if (nReturn < 0 && errno != 104)
               {
@@ -926,9 +925,6 @@ chat("#system", "Utility::sslRead()");
                     case SSL_ERROR_SSL:
                     {
                       bSocketClose = true;
-ssMessage.str("");
-ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
-chat("#system", ssMessage.str());
                       if (nReturn < 0)
                       {
                         bExit = true;
