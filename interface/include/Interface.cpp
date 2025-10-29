@@ -1662,6 +1662,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         {
           bExit = true;
           bWantWrite = false;
+ssMessage.str("");
+ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
@@ -1688,6 +1691,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         {
           bExit = true;
           bWantWrite = false;
+ssMessage.str("");
+ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
@@ -1703,6 +1709,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLERR.";
         e = ssMessage.str();
+ssMessage.str("");
+ssMessage << e;
+chat("#system", ssMessage.str());
       }
       if (fds[0].revents & POLLNVAL)
       {
@@ -1711,6 +1720,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLNVAL.";
         e = ssMessage.str();
+ssMessage.str("");
+ssMessage << e;
+chat("#system", ssMessage.str());
       }
     }
     else if (nReturn < 0 && errno != EINTR)
@@ -1720,12 +1732,18 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       ssMessage.str("");
       ssMessage << "poll(" << errno << ") " << strerror(errno);
       e = ssMessage.str();
+ssMessage.str("");
+ssMessage << e;
+chat("#system", ssMessage.str());
     }
     if (shutdown())
     {
       bExit = true;
       bWantWrite = false;
       e = "Interface is shutting down.";
+ssMessage.str("");
+ssMessage << e;
+chat("#system", ssMessage.str());
     }
   }
 
