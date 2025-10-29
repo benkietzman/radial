@@ -876,6 +876,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             }
             else
             {
+chat("#system", "Utility::sslRead()");
               bSocketClose = true;
               if (nReturn < 0 && errno != 104)
               {
@@ -924,6 +925,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                     case SSL_ERROR_SYSCALL:
                     case SSL_ERROR_SSL:
                     {
+chat("#system", "Utility::sslWrite()");
                       bSocketClose = true;
                       if (nReturn < 0)
                       {
@@ -1053,6 +1055,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         // {{{ post work
         if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
+chat("#system", "bFileClose");
           bSocketClose = true;
         }
         if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
