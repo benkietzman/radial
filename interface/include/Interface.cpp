@@ -1661,12 +1661,12 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
-          if (nReturn < 0 && errno != 104)
-          {
+          //if (nReturn < 0 && errno != 104)
+          //{
             ssMessage.str("");
             ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
             e = ssMessage.str();
-          }
+          //}
         }
       }
       if (bWritable)
@@ -1686,12 +1686,12 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
-          if (nReturn < 0 && errno != 104)
-          {
+          //if (nReturn < 0 && errno != 104)
+          //{
             ssMessage.str("");
             ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
             e = ssMessage.str();
-          }
+          //}
         }
       }
       if (fds[0].revents & POLLERR)
