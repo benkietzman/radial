@@ -925,8 +925,10 @@ chat("#system", "Utility::sslRead()");
                     case SSL_ERROR_SYSCALL:
                     case SSL_ERROR_SSL:
                     {
-chat("#system", "Utility::sslWrite()");
                       bSocketClose = true;
+ssMessage.str("");
+ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
                       if (nReturn < 0)
                       {
                         bExit = true;
@@ -1055,7 +1057,6 @@ chat("#system", "Utility::sslWrite()");
         // {{{ post work
         if (bFileClose && strSocketWriteBuffer.empty() && unFileReadLength == 0 && unSocketWriteLength == 0)
         {
-chat("#system", "bFileClose");
           bSocketClose = true;
         }
         if (bSocketClose && strSocketReadBuffer.empty() && unFileWriteLength == 0)
