@@ -1650,9 +1650,6 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         {
           bExit = r = true;
           bWantWrite = false;
-ssMessage.str("");
-ssMessage << "Utility::sslRead() " << nReturn;
-chat("#system", ssMessage.str());
           if (nReturn <= 0)
           {
             switch (SSL_get_error(ssl, nReturn))
