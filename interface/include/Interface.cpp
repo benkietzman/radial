@@ -1632,7 +1632,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
   string strLine;
   stringstream ssMessage;
 
-  while (!bExit || bWantWrite)
+  while (!bExit)
   {
     pollfd fds[1];
     fds[0].fd = fdSocket;
@@ -1650,6 +1650,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         {
           bExit = r = true;
           bWantWrite = false;
+ssMessage.str("");
+ssMessage << "Utility::sslRead() " << nReturn;
+chat("#system", ssMessage.str());
           if (nReturn <= 0)
           {
             switch (SSL_get_error(ssl, nReturn))
@@ -1661,7 +1664,6 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
-          bWantWrite = false;
 ssMessage.str("");
 ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
 chat("#system", ssMessage.str());
@@ -1690,7 +1692,6 @@ chat("#system", ssMessage.str());
         else
         {
           bExit = true;
-          bWantWrite = false;
 ssMessage.str("");
 ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
 chat("#system", ssMessage.str());
@@ -1705,7 +1706,6 @@ chat("#system", ssMessage.str());
       if (fds[0].revents & POLLERR)
       {
         bExit = true;
-        bWantWrite = false;
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLERR.";
         e = ssMessage.str();
@@ -1716,7 +1716,6 @@ chat("#system", ssMessage.str());
       if (fds[0].revents & POLLNVAL)
       {
         bExit = true;
-        bWantWrite = false;
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLNVAL.";
         e = ssMessage.str();
@@ -1728,7 +1727,6 @@ chat("#system", ssMessage.str());
     else if (nReturn < 0 && errno != EINTR)
     {
       bExit = true;
-      bWantWrite = false;
       ssMessage.str("");
       ssMessage << "poll(" << errno << ") " << strerror(errno);
       e = ssMessage.str();
@@ -1739,7 +1737,6 @@ chat("#system", ssMessage.str());
     if (shutdown())
     {
       bExit = true;
-      bWantWrite = false;
       e = "Interface is shutting down.";
 ssMessage.str("");
 ssMessage << e;
