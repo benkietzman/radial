@@ -1632,7 +1632,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
   string strLine;
   stringstream ssMessage;
 
-  while (!bExit)
+  while (!bExit || bWantWrite)
   {
     pollfd fds[1];
     fds[0].fd = fdSocket;
@@ -1661,6 +1661,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
+          bWantWrite = false;
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
@@ -1686,6 +1687,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
+          bWantWrite = false;
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
@@ -1697,6 +1699,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       if (fds[0].revents & POLLERR)
       {
         bExit = true;
+        bWantWrite = false;
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLERR.";
         e = ssMessage.str();
@@ -1704,6 +1707,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
       if (fds[0].revents & POLLNVAL)
       {
         bExit = true;
+        bWantWrite = false;
         ssMessage.str("");
         ssMessage << "poll() Encountered a POLLNVAL.";
         e = ssMessage.str();
@@ -1712,6 +1716,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
     else if (nReturn < 0 && errno != EINTR)
     {
       bExit = true;
+      bWantWrite = false;
       ssMessage.str("");
       ssMessage << "poll(" << errno << ") " << strerror(errno);
       e = ssMessage.str();
@@ -1719,6 +1724,7 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
     if (shutdown())
     {
       bExit = true;
+      bWantWrite = false;
       e = "Interface is shutting down.";
     }
   }
