@@ -590,7 +590,7 @@ void Builder::load(string strPrefix, const bool bSilent)
 bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string sp;
+  string sp = p;
   Json *c = new Json;
 
   if (!ws.empty())
