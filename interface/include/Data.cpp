@@ -396,7 +396,6 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     // }}}
     if (pszBuffer != NULL)
     {
-size_t unFileReadTotal = 0, unSocketWriteTotal = 0;
       // {{{ prep work
       bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false, bWrite = false;
       char *pszFileReadBuffer, *pszFileWriteBuffer, *pszSocketWriteBuffer, *pszTemp;
@@ -878,9 +877,6 @@ size_t unFileReadTotal = 0, unSocketWriteTotal = 0;
             else
             {
               bSocketClose = true;
-ssMessage.str("");
-ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-chat("#sytstem", ssMessage.str());
               if (nReturn < 0 && errno != 104)
               {
                 bExit = true;
@@ -907,7 +903,6 @@ chat("#sytstem", ssMessage.str());
                 bNeedWrite = bWantWrite = false;
                 if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
                 {
-unSocketWriteTotal += nReturn;
                   if ((size_t)nReturn < unSocketWriteLength)
                   {
                     memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
@@ -921,9 +916,6 @@ unSocketWriteTotal += nReturn;
                 }
                 else
                 {
-ssMessage.str("");
-ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
-chat("#system", ssMessage.str());
                   switch (SSL_get_error(ssl, nReturn))
                   {
                     case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
@@ -990,14 +982,10 @@ chat("#system", ssMessage.str());
             if ((nReturn = read(fds[1].fd, (pszFileReadBuffer + unFileReadLength), (unSize - unFileReadLength))) > 0)
             {
               unFileReadLength += nReturn;
-unFileReadTotal += nReturn;
             }
             else
             {
               bFileClose = true;
-ssMessage.str("");
-ssMessage << "read(" << errno << ") error:  " << strerror(errno);
-chat("#system", ssMessage.str());
               if (nReturn < 0)
               {
                 bExit = true;
@@ -1027,9 +1015,6 @@ chat("#system", ssMessage.str());
             else
             {
               bFileClose = true;
-ssMessage.str("");
-ssMessage << "write(" << errno << ") error:  " << strerror(errno);
-chat("#system", ssMessage.str());
               if (nReturn < 0)
               {
                 bExit = true;
@@ -1080,9 +1065,6 @@ chat("#system", ssMessage.str());
         }
         // }}}
       }
-ssMessage.str("");
-ssMessage << "unFileReadTotal=" << unFileReadTotal << ", unSocketWriteTotal=" << unSocketWriteTotal;
-chat("#system", ssMessage.str());
       // {{{ post work
       if (fdFile != -1)
       {
