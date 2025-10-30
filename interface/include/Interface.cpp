@@ -1661,6 +1661,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
+ssMessage.str("");
+ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");
@@ -1686,6 +1689,9 @@ bool Interface::dataRead(SSL *ssl, string &b, string &e)
         else
         {
           bExit = true;
+ssMessage.str("");
+ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
           if (nReturn < 0 && errno != 104)
           {
             ssMessage.str("");

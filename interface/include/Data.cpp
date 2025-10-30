@@ -878,6 +878,9 @@ size_t unFileReadTotal = 0, unSocketWriteTotal = 0;
             else
             {
               bSocketClose = true;
+ssMessage.str("");
+ssMessage << "Utility::sslRead(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#sytstem", ssMessage.str());
               if (nReturn < 0 && errno != 104)
               {
                 bExit = true;
@@ -918,6 +921,9 @@ unSocketWriteTotal += nReturn;
                 else
                 {
                   bNeedWrite = bWantWrite = false;
+ssMessage.str("");
+ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
+chat("#system", ssMessage.str());
                   switch (SSL_get_error(ssl, nReturn))
                   {
                     case SSL_ERROR_WANT_READ: bNeedWrite = true; break;
@@ -989,6 +995,9 @@ unFileReadTotal += nReturn;
             else
             {
               bFileClose = true;
+ssMessage.str("");
+ssMessage << "read(" << errno << ") error:  " << strerror(errno);
+chat("#system", ssMessage.str());
               if (nReturn < 0)
               {
                 bExit = true;
@@ -1018,6 +1027,9 @@ unFileReadTotal += nReturn;
             else
             {
               bFileClose = true;
+ssMessage.str("");
+ssMessage << "write(" << errno << ") error:  " << strerror(errno);
+chat("#system", ssMessage.str());
               if (nReturn < 0)
               {
                 bExit = true;
