@@ -682,7 +682,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
     }
     else
     {
-      e = "Please provide a valid Package.";
+      e = (string)"[" + sp + "] Please provide a valid Package.";
     }
   }
   delete c;
