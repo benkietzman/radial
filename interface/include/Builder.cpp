@@ -494,14 +494,14 @@ bool Builder::install(radialUser &u, string &e)
     }
     if (!ws.empty())
     {
-      live(ws, {{"Action", "section"}, {"Section", "Establish connection."}});
+      live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Switch to authorized user."}});
+        live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
       {
@@ -511,13 +511,13 @@ bool Builder::install(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
-          live(ws, {{"Action", "section"}, {"Section", "Exit from authorized user."}});
+          live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Terminate connection."}});
+        live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       }
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
@@ -593,12 +593,6 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
   string sp = p;
   Json *c = new Json;
 
-  if (!ws.empty())
-  {
-    stringstream ss;
-    ss << ((a)?"I":"Uni") << "nstall package:  " << p << ".";
-    live(ws, {{"Action", "section"}, {"Section", ss.str()}});
-  }
   if (confPkg(p, c, e))
   {
     if (!empty(c, "pkg"))
@@ -626,9 +620,16 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
             d.pop();
           }
         }
-        if (b && !(this->*m_packages[sp])(ws, s, c, q, e, a))
+        if (b)
         {
-          b = false;
+          if (!ws.empty())
+          {
+            live(ws, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
+          }
+          if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
+          {
+            b = false;
+          }
         }
       }
       else
@@ -672,9 +673,16 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
               }
             }
           }
-          if (b && !(this->*m_packages[sp])(ws, s, c, q, e, a))
+          if (b)
           {
-            b = false;
+            if (!ws.empty())
+            {
+              live(ws, {{"Action", "section"}, {"Section", (string)"Uninstalling " + p + " package..."}});
+            }
+            if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
+            {
+              b = false;
+            }
           }
           delete r;
         }
@@ -980,14 +988,14 @@ bool Builder::uninstall(radialUser &u, string &e)
     init(u, strUser, strPassword, strPrivateKey, strSudo);
     if (!ws.empty())
     {
-      live(ws, {{"Action", "section"}, {"Section", "Establish connection."}});
+      live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Switch to authorized user."}});
+        live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
       {
@@ -997,13 +1005,13 @@ bool Builder::uninstall(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
-          live(ws, {{"Action", "section"}, {"Section", "Exit from authorized user."}});
+          live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
-        live(ws, {{"Action", "section"}, {"Section", "Terminate connection."}});
+        live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       }
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
