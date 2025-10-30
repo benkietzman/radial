@@ -396,6 +396,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
     // }}}
     if (pszBuffer != NULL)
     {
+size_t unFileReadTotal = 0, unSocketWriteTotal = 0;
       // {{{ prep work
       bool bFileClose = false, bExit = false, bNeedWrite = false, bSocketClose = false, bToken = false, bWantWrite = false, bWrite = false;
       char *pszFileReadBuffer, *pszFileWriteBuffer, *pszSocketWriteBuffer, *pszTemp;
@@ -902,6 +903,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
               {
                 if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
                 {
+unSocketWriteTotal += nReturn;
                   if ((size_t)nReturn < unSocketWriteLength)
                   {
                     memcpy(pszTemp, (pszSocketWriteBuffer + nReturn), (unSocketWriteLength - nReturn));
@@ -982,6 +984,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
             if ((nReturn = read(fds[1].fd, (pszFileReadBuffer + unFileReadLength), (unSize - unFileReadLength))) > 0)
             {
               unFileReadLength += nReturn;
+unFileReadTotal += nReturn;
             }
             else
             {
@@ -1065,6 +1068,9 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
         }
         // }}}
       }
+ssMessage.str("");
+ssMessage << "unFileReadTotal=" << unFileReadTotal << ", unSocketWriteTotal=" << unSocketWriteTotal;
+chat("#system", ssMessage.str());
       // {{{ post work
       if (fdFile != -1)
       {
