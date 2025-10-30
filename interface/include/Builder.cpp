@@ -494,6 +494,7 @@ bool Builder::install(radialUser &u, string &e)
     }
     if (!ws.empty())
     {
+      chat("#system", "Establishing connection...");
       live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
@@ -501,6 +502,7 @@ bool Builder::install(radialUser &u, string &e)
       string se;
       if (!ws.empty())
       {
+        chat("#system", "Switching to authorized user...");
         live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
@@ -511,12 +513,14 @@ bool Builder::install(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
+          chat("#system", "Exiting from  authorized user...");
           live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
+        chat("#system", "Terminating connection...");
         live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       }
       cmdExit(ws, s, q, se);
@@ -525,6 +529,10 @@ bool Builder::install(radialUser &u, string &e)
     if (!q.empty())
     {
       o->i("Terminal", q);
+    }
+    if (!ws.empty())
+    {
+      chat("#system", (string)"Processing " + ((b)?"completed":"failed") + ".");
     }
   }
 
@@ -624,6 +632,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
         {
           if (!ws.empty())
           {
+            chat("#system", (string)"Installing " + p + " package...");
             live(ws, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
           }
           if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
@@ -677,6 +686,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
           {
             if (!ws.empty())
             {
+              chat("#system", (string)"Uninstalling " + p + " package...");
               live(ws, {{"Action", "section"}, {"Section", (string)"Uninstalling " + p + " package..."}});
             }
             if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
@@ -988,6 +998,7 @@ bool Builder::uninstall(radialUser &u, string &e)
     init(u, strUser, strPassword, strPrivateKey, strSudo);
     if (!ws.empty())
     {
+      chat("#system", "Establishing connection...");
       live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
@@ -995,6 +1006,7 @@ bool Builder::uninstall(radialUser &u, string &e)
       string se;
       if (!ws.empty())
       {
+        chat("#system", "Switching to authorized user...");
         live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       }
       if (cmdSudo(ws, s, strSudo, q, e))
@@ -1005,12 +1017,14 @@ bool Builder::uninstall(radialUser &u, string &e)
         }
         if (!ws.empty())
         {
+          chat("#system", "Exiting from authorized user...");
           live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         }
         cmdExit(ws, s, q, se);
       }
       if (!ws.empty())
       {
+        chat("#system", "Terminating connection...");
         live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       }
       cmdExit(ws, s, q, se);
@@ -1019,6 +1033,10 @@ bool Builder::uninstall(radialUser &u, string &e)
     if (!q.empty())
     {
       o->i("Terminal", q);
+    }
+    if (!ws.empty())
+    {
+      chat("#system", (string)"Processing " + ((b)?"completed":"failed") + ".");
     }
   }
 
