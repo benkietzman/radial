@@ -904,6 +904,7 @@ chat("#sytstem", ssMessage.str());
               }
               if (!bBlocking || fcntl(SSL_get_fd(ssl), F_SETFL, lArg) == 0)
               {
+                bNeedWrite = bWantWrite = false;
                 if ((nReturn = SSL_write(ssl, pszSocketWriteBuffer, unSocketWriteLength)) > 0)
                 {
 unSocketWriteTotal += nReturn;
@@ -920,7 +921,6 @@ unSocketWriteTotal += nReturn;
                 }
                 else
                 {
-                  bNeedWrite = bWantWrite = false;
 ssMessage.str("");
 ssMessage << "Utility::sslWrite(" << SSL_get_error(ssl, nReturn) << ") error:  " << m_pUtility->sslstrerror(ssl, nReturn);
 chat("#system", ssMessage.str());
