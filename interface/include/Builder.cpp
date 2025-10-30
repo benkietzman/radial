@@ -495,7 +495,7 @@ bool Builder::install(radialUser &u, string &e)
     if (!ws.empty())
     {
       chat("#builder", "Establishing connection...");
-      live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
+      live(ws, {{"Action", "section"}, {"Section", (string)"Establishing connection..."}});
     }
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
@@ -734,7 +734,7 @@ bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, st
   {
     if (a)
     {
-      if (cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/common.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true))))
+      if (cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/common.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
@@ -788,7 +788,7 @@ bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, st
   {
     if (a)
     {
-      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/logger.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
+      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/logger.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
       {
         b = true;
       }
@@ -845,7 +845,7 @@ bool Builder::pkgPortConcentrator(const string ws, string &s, Json *c, list<stri
   {
     if (a)
     {
-      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, "git clone https://github.com/benkietzman/portconcentrator.git", q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
+      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/portconcentrator.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
       {
         b = true;
       }
