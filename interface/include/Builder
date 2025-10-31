@@ -20,7 +20,7 @@ class Builder : public Interface
 {
   protected:
   map<string, bool (Builder::*)(radialUser &, string &)> m_functions;
-  map<string, bool (Builder::*)(const string, string &, Json *c, list<string> &, string &, const bool)> m_packages;
+  map<string, bool (Builder::*)(radialUser &, string &, Json *c, list<string> &, string &, const bool)> m_packages;
   mutex m_mutex;
   string m_strPassword;
   string m_strPrivateKey;
@@ -50,14 +50,17 @@ class Builder : public Interface
   void init(radialUser &u, string &strUser, string &strPassword, string &strPrivateKey, string &strSudo);
   bool install(radialUser &u, string &e);
   string last(const string d);
+  void live(const string ws, map<string, string> message);
+  void live(radialUser &u, map<string, string> message);
   void load(string strPrefix, const bool bSilent = false);
-  bool pkg(const string ws, string p, string &s, list<string> &q, string &e, const bool a);
-  bool pkgApt(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
-  bool pkgCommon(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
-  bool pkgDir(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
-  bool pkgLogger(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
-  bool pkgMjson(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
-  bool pkgPortConcentrator(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkg(radialUser &u, string p, string &s, list<string> &q, string &e, const bool a);
+  bool pkgApt(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgCommon(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgDir(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgMjson(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
+  bool pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a);
   bool send(const string ws, string &s, const string c, list<string> &q, string &e, const size_t r = 0);
   string strip(const string v);
   bool uninstall(radialUser &u, string &e);

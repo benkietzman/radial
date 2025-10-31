@@ -27,6 +27,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   // {{{ packages
   m_packages["apt"] = &Builder::pkgApt;
+  m_packages["certificates"] = &Builder::pkgCertificates;
   m_packages["common"] = &Builder::pkgCommon;
   m_packages["dir"] = &Builder::pkgDir;
   m_packages["logger"] = &Builder::pkgLogger;
@@ -256,10 +257,7 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
   if (sshSend(s, c+"\n", d, e))
   {
     v = strip(d);
-    if (!ws.empty())
-    {
-      live(ws, {{"Action", "terminal"}, {"Data", v}});
-    }
+    live(ws, {{"Action", "terminal"}, {"Data", v}});
     if (!q.empty() && (p = q.back().rfind("\n")) != string::npos && (p+1) < q.back().size())
     {
       v.insert(0, q.back().substr(p+1));
@@ -367,10 +365,7 @@ bool Builder::connect(const string ws, const string strServer, const string strP
   if (sshConnect(strServer, strPort, strUser, strPassword, strPrivateKey, s, d, e))
   {
     v = strip(d);
-    if (!ws.empty())
-    {
-      live(ws, {{"Action", "terminal"}, {"Data", v}});
-    }
+    live(ws, {{"Action", "terminal"}, {"Data", v}});
     q.push_back(v);
     if (send(ws, s, "PS1='RADIAL_BUILDER> '", q, e))
     {
@@ -484,37 +479,25 @@ bool Builder::install(radialUser &u, string &e)
     {
       strPort = i->m["Port"]->v;
     }
-    if (!ws.empty())
-    {
-      chat("#builder", "Establishing connection...");
-      live(ws, {{"Action", "section"}, {"Section", (string)"Establishing connection..."}});
-    }
+    chat("#builder", "Establishing connection...");
+    live(u, {{"Action", "section"}, {"Section", (string)"Establishing connection..."}});
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
-      if (!ws.empty())
-      {
-        chat("#builder", "Switching to authorized user...");
-        live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
-      }
+      chat("#builder", "Switching to authorized user...");
+      live(u, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       if (cmdSudo(ws, s, strSudo, q, e))
       {
-        if (pkg(ws, p, s, q, e, true))
+        if (pkg(u, p, s, q, e, true))
         {
           b = true;
         }
-        if (!ws.empty())
-        {
-          chat("#builder", "Exiting from  authorized user...");
-          live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
-        }
+        chat("#builder", "Exiting from  authorized user...");
+        live(u, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         cmdExit(ws, s, q, se);
       }
-      if (!ws.empty())
-      {
-        chat("#builder", "Terminating connection...");
-        live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
-      }
+      chat("#builder", "Terminating connection...");
+      live(u, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
     }
@@ -585,9 +568,22 @@ void Builder::load(string strPrefix, const bool bSilent)
   inConf.close();
 }
 // }}}
+// {{{ live()
+void Builder::live(const string ws, map<string, string> message)
+{
+  Interface::live(ws, message);
+}
+void Builder::live(radialUser &u, map<string, string> message)
+{
+  if (!empty(u.r, "wsRequestID"))
+  {
+    live(u.r->m["wsRequestID"]->v, message);
+  }
+}
+// }}}
 // {{{ pkg
 // {{{ pkg()
-bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string &e, const bool a)
+bool Builder::pkg(radialUser &u, string p, string &s, list<string> &q, string &e, const bool a)
 {
   bool b = false;
   string sp = p;
@@ -613,7 +609,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
           }
           while (b && !d.empty())
           {
-            if (!pkg(ws, d.front(), s, q, e, a))
+            if (!pkg(u, d.front(), s, q, e, a))
             {
               b = false;
             }
@@ -622,12 +618,9 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
         }
         if (b)
         {
-          if (!ws.empty())
-          {
-            chat("#builder", (string)"Installing " + p + " package...");
-            live(ws, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
-          }
-          if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
+          chat("#builder", (string)"Installing " + p + " package...");
+          live(u, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
+          if (!(this->*m_packages[sp])(u, s, c, q, e, a))
           {
             b = false;
           }
@@ -668,7 +661,7 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
                   f = true;
                 }
               }
-              if (f && !pkg(ws, i->first, s, q, e, a))
+              if (f && !pkg(u, i->first, s, q, e, a))
               {
                 b = false;
               }
@@ -676,12 +669,9 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
           }
           if (b)
           {
-            if (!ws.empty())
-            {
-              chat("#builder", (string)"Uninstalling " + p + " package...");
-              live(ws, {{"Action", "section"}, {"Section", (string)"Uninstalling " + p + " package..."}});
-            }
-            if (!(this->*m_packages[sp])(ws, s, c, q, e, a))
+            chat("#builder", (string)"Uninstalling " + p + " package...");
+            live(u, {{"Action", "section"}, {"Section", (string)"Uninstalling " + p + " package..."}});
+            if (!(this->*m_packages[sp])(u, s, c, q, e, a))
             {
               b = false;
             }
@@ -701,10 +691,15 @@ bool Builder::pkg(const string ws, string p, string &s, list<string> &q, string 
 }
 // }}}
 // {{{ pkgApt()
-bool Builder::pkgApt(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgApt(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (dep({"aptpkg"}, c, e))
   {
     string p = c->m["aptpkg"]->v;
@@ -717,11 +712,86 @@ bool Builder::pkgApt(const string ws, string &s, Json *c, list<string> &q, strin
   return b;
 }
 // }}}
-// {{{ pkgCommon()
-bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+// {{{ pkgCertificates()
+bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
+  Json *i = u.p->m["i"];
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
+  if (dep({"Server"}, i, e) && dep({"path"}, c, e))
+  {
+    string strPort = "22", strServer;
+    if (exist(c, "master"))
+    {
+      if (!empty(c, "master"))
+      {
+        strServer = c->m["master"]->v;
+      }
+      else if (!c->m["master"]->m.empty() && !empty(c->m["master"], "server"))
+      {
+        strServer = c->m["master"]->m["server"]->v;
+        if (!empty(c->m["master"], "port"))
+        {
+          strPort = c->m["master"]->m["port"]->v;
+        }
+      }
+    }
+    if (!strServer.empty())
+    {
+      if (i->m["Server"]->v != strServer)
+      {
+        list<string> sq;
+        string strPassword, strPrivateKey, strSession, strSudo, strUser;
+        init(u, strUser, strPassword, strPrivateKey, strSudo);
+        if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, strSession, sq, e))
+        {
+          string se;
+          if (cmdSudo(ws, strSession, strSudo, sq, e))
+          {
+            if (a)
+            {
+              // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
+              // Create /etc/cron.daily/certificates
+            }
+            else
+            {
+              // TODO:  rm c->m["path"]->v from i->m["Server"]->v
+            }
+            cmdExit(ws, strSession, sq, se);
+          }
+          cmdExit(ws, strSession, sq, se);
+          disconnect(ws, strSession, se);
+        }
+      }
+      else
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the master.";
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ pkgCommon()
+bool Builder::pkgCommon(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string ws;
+
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (dep({"git", "source"}, c, e))
   {
     if (a)
@@ -748,10 +818,15 @@ bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, st
 }
 // }}}
 // {{{ pkgDir()
-bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgDir(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (dep({"path"}, c, e))
   {
     string p = c->m["path"]->v;
@@ -772,10 +847,15 @@ bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, strin
 }
 // }}}
 // {{{ pkgLogger()
-bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (dep({"cert", "data", "email", "git", "key", "source", "user"}, c, e))
   {
     if (a)
@@ -802,10 +882,15 @@ bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, st
 }
 // }}}
 // {{{ pkgMjson()
-bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgMjson(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (a)
   {
     if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
@@ -829,10 +914,15 @@ bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, str
 }
 // }}}
 // {{{ pkgPortConcentrator()
-bool Builder::pkgPortConcentrator(const string ws, string &s, Json *c, list<string> &q, string &e, const bool a)
+bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
+  string ws;
 
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
   if (dep({"data", "email", "git", "source", "user"}, c, e))
   {
     if (a)
@@ -879,10 +969,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
       if (!sd.empty())
       {
         v = strip(sd);
-        if (!ws.empty())
-        {
-          live(ws, {{"Action", "terminal"}, {"Data", v}});
-        }
+        live(ws, {{"Action", "terminal"}, {"Data", v}});
         d.append(v);
         sd.clear();
         if ((p = d.rfind("RADIAL_BUILDER> ")) != string::npos)
@@ -893,10 +980,7 @@ bool Builder::send(const string ws, string &s, const string c, list<string> &q, 
       }
     }
     v = strip(d);
-    if (!ws.empty())
-    {
-      live(ws, {{"Action", "terminal"}, {"Data", v}});
-    }
+    live(ws, {{"Action", "terminal"}, {"Data", v}});
     if (!q.empty() && (p = q.back().rfind("\n")) != string::npos && (p+1) < q.back().size())
     {
       v.insert(0, q.back().substr(p+1));
@@ -988,37 +1072,25 @@ bool Builder::uninstall(radialUser &u, string &e)
       strPort = i->m["Port"]->v;
     }
     init(u, strUser, strPassword, strPrivateKey, strSudo);
-    if (!ws.empty())
-    {
-      chat("#builder", "Establishing connection...");
-      live(ws, {{"Action", "section"}, {"Section", "Establishing connection..."}});
-    }
+    chat("#builder", "Establishing connection...");
+    live(u, {{"Action", "section"}, {"Section", "Establishing connection..."}});
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
     {
       string se;
-      if (!ws.empty())
-      {
-        chat("#builder", "Switching to authorized user...");
-        live(ws, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
-      }
+      chat("#builder", "Switching to authorized user...");
+      live(u, {{"Action", "section"}, {"Section", "Switching to authorized user..."}});
       if (cmdSudo(ws, s, strSudo, q, e))
       {
-        if (pkg(ws, p, s, q, e, false))
+        if (pkg(u, p, s, q, e, false))
         {
           b = true;
         }
-        if (!ws.empty())
-        {
-          chat("#builder", "Exiting from authorized user...");
-          live(ws, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
-        }
+        chat("#builder", "Exiting from authorized user...");
+        live(u, {{"Action", "section"}, {"Section", "Exiting from authorized user..."}});
         cmdExit(ws, s, q, se);
       }
-      if (!ws.empty())
-      {
-        chat("#builder", "Terminating connection...");
-        live(ws, {{"Action", "section"}, {"Section", "Terminating connection..."}});
-      }
+      chat("#builder", "Terminating connection...");
+      live(u, {{"Action", "section"}, {"Section", "Terminating connection..."}});
       cmdExit(ws, s, q, se);
       disconnect(ws, s, se);
     }
