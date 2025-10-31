@@ -124,7 +124,7 @@ void Builder::callbackInotify(string strPrefix, const string strPath, const stri
 // }}}
 // {{{ cmd
 // {{{ cmdApt()
-bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q, string &e, const bool a)
+bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q, string &e, const bool a, const string x)
 {
   bool b = false;
   stringstream c;
@@ -132,12 +132,12 @@ bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q
   c << "apt " << ((a)?"install":"remove") << " -y " << p;
   if (a)
   {
-    if (send(ws, s, "apt update -y", q, e) && send(ws, s, c.str(), q, e))
+    if ((!x.empty() && cmdExist(ws, s, x, q, e)) || (send(ws, s, "apt update -y", q, e) && send(ws, s, c.str(), q, e)))
     {
       b = true;
     }
   }
-  else if (send(ws, s, c.str(), q, e) && send(ws, s, "apt autoremove -y", q, e))
+  else if ((!x.empty() && !cmdExist(ws, s, x, q, e)) || (send(ws, s, c.str(), q, e) && send(ws, s, "apt autoremove -y", q, e)))
   {
     b = true;
   }
@@ -148,91 +148,51 @@ bool Builder::cmdApt(const string ws, string &s, const string p, list<string> &q
 // {{{ cmdCd()
 bool Builder::cmdCd(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
   c << "cd \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
-}
-// }}}
-// {{{ cmdChgrp()
-bool Builder::cmdChgrp(const string ws, string &s, const string p, const string g, list<string> &q, string &e, const bool r)
-{
-  bool b = false;
-  stringstream c;
-
-  c << "chgrp" << ((r)?" -R":"") << " " << g << " \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
-
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
 // {{{ cmdChmod()
 bool Builder::cmdChmod(const string ws, string &s, const string p, const string m, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
   c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
 // {{{ cmdChown()
-bool Builder::cmdChown(const string ws, string &s, const string p, const string u, list<string> &q, string &e, const bool r)
+bool Builder::cmdChown(const string ws, string &s, const string p, const string u, const string g, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << u << " \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
+  c << "chown" << ((r)?" -R":"") << " " << u << ":" << g << " \"" << p << "\"";
 
-  return b;
+  return (cmdUser(ws, s, u, g, q, e, true) && send(ws, s, c.str(), q, e));
 }
 // }}}
 // {{{ cmdChsh()
 bool Builder::cmdChsh(const string ws, string &s, const string u, const string i, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
   c << "chsh -s " << i << " " << u;
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
-// {{{ cmdDir()
-bool Builder::cmdDir(const string ws, string &s, const string p, list<string> &q, string &e)
+// {{{ cmdExist()
+bool Builder::cmdExist(const string ws, string &s, const string p, list<string> &q, string &e)
 {
-  bool b = false;
   stringstream c;
 
   c << "ls -d \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
 // {{{ cmdExit()
@@ -256,34 +216,34 @@ bool Builder::cmdExit(const string ws, string &s, list<string> &q, string &e)
   return b;
 }
 // }}}
+// {{{ cmdGit()
+bool Builder::cmdGit(const string ws, string &s, const string strRepository, const string strDirectory, list<string> &q, string &e, const string strProxy)
+{
+  stringstream c;
+
+  c << "git clone " << strRepository << " " << strDirectory;
+
+  return ((strProxy.empty() || send(ws, s, (string)"git config --global http.proxy " + strProxy, q, e)) && send(ws, s, c.str(), q, e));
+}
+// }}}
 // {{{ cmdMkdir()
 bool Builder::cmdMkdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
   c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
 // {{{ cmdRm()
 bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
 {
-  bool b = false;
   stringstream c;
 
   c << "rm" << ((r)?" -r":"") << " \"" << p << "\"";
-  if (send(ws, s, c.str(), q, e))
-  {
-    b = true;
-  }
 
-  return b;
+  return send(ws, s, c.str(), q, e);
 }
 // }}}
 // {{{ cmdSudo()
@@ -310,6 +270,38 @@ bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &
     {
       b = true;
     }
+  }
+
+  return b;
+}
+// }}}
+// {{{ cmdUser()
+bool Builder::cmdUser(const string ws, string &s, const string u, const string g, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+
+  if (a)
+  {
+    string strGroup = u;
+    if (!g.empty())
+    {
+      strGroup = g;
+    }
+    if ((send(ws, s, (string)"getent group " + strGroup, q, e) || send(ws, s, (string)"groupadd " + strGroup, q, e)) && (send(ws, s, (string)"id --user " + u, q, e) || (e.find("no such user") != string::npos && send(ws, s, (string)"useradd --create-home --gid " + strGroup + (string)" " + u, q, e))))
+    {
+      b = true;
+    }
+  }
+  else if (send(ws, s, (string)"id --user " + u, q, e))
+  {
+    if (send(ws, s, (string)"userdel " + u, q, e))
+    {
+      b = true;
+    }
+  }
+  else if (e.find("no such user") != string::npos)
+  {
+    b = true;
   }
 
   return b;
@@ -716,7 +708,7 @@ bool Builder::pkgApt(const string ws, string &s, Json *c, list<string> &q, strin
   if (dep({"aptpkg"}, c, e))
   {
     string p = c->m["aptpkg"]->v;
-    if (cmdApt(ws, s, p, q, e, a))
+    if (cmdApt(ws, s, p, q, e, a, ((!empty(c, "exist"))?c->m["exist"]->v:"")))
     {
       b = true;
     }
@@ -730,16 +722,16 @@ bool Builder::pkgCommon(const string ws, string &s, Json *c, list<string> &q, st
 {
   bool b = false;
 
-  if (dep({"source"}, c, e))
+  if (dep({"git", "source"}, c, e))
   {
     if (a)
     {
-      if (cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/common.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true))))
+      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
     }
-    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
+    else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
       if (cmdRm(ws, s, c->m["source"]->v, q, e, true))
       {
@@ -763,14 +755,14 @@ bool Builder::pkgDir(const string ws, string &s, Json *c, list<string> &q, strin
   if (dep({"path"}, c, e))
   {
     string p = c->m["path"]->v;
-    if (cmdDir(ws, s, p, q, e))
+    if (cmdExist(ws, s, p, q, e))
     {
       if (a || cmdRm(ws, s, p, q, e, true))
       {
         b = true;
       }
     }
-    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(ws, s, p, q, e) && (empty(c, "user") || cmdChown(ws, s, p, c->m["user"]->v, q, e)) && (empty(c, "group") || cmdChgrp(ws, s, p, c->m["group"]->v, q, e)) && (empty(c, "mode") || cmdChmod(ws, s, p, c->m["mode"]->v, q, e)))))
+    else if (e.find("No such file or directory") != string::npos && (!a || (cmdMkdir(ws, s, p, q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, p, c->m["user"]->v, c->m["group"]->v, q, e)) && (empty(c, "mode") || cmdChmod(ws, s, p, c->m["mode"]->v, q, e)))))
     {
       b = true;
     }
@@ -784,18 +776,18 @@ bool Builder::pkgLogger(const string ws, string &s, Json *c, list<string> &q, st
 {
   bool b = false;
 
-  if (dep({"cert", "data", "email", "key", "source"}, c, e))
+  if (dep({"cert", "data", "email", "git", "key", "source"}, c, e))
   {
     if (a)
     {
-      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/logger.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
       {
         b = true;
       }
     }
-    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
+    else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
-      if (send(ws, s, "systemctl stop logger", q, e) && send(ws, s, "systemctl disable logger", q, e) && cmdRm(ws, s, "/lib/systemd/system/logger.service", q, e), (!cmdDir(ws, s, "/usr/local/logger", q, e) || cmdRm(ws, s, "/usr/local/logger", q, e, true)) && (!cmdDir(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
+      if (send(ws, s, "systemctl stop logger", q, e) && send(ws, s, "systemctl disable logger", q, e) && cmdRm(ws, s, "/lib/systemd/system/logger.service", q, e), (!cmdExist(ws, s, "/usr/local/logger", q, e) || cmdRm(ws, s, "/usr/local/logger", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
       {
         b = true;
       }
@@ -816,12 +808,12 @@ bool Builder::pkgMjson(const string ws, string &s, Json *c, list<string> &q, str
 
   if (a)
   {
-    if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
+    if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
     {
       b = true;
     }
   }
-  else if (cmdDir(ws, s, "/usr/local/include/mjson-1.7", q, e))
+  else if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e))
   {
     if (cmdRm(ws, s, "/usr/local/include/mjson-1.7", q, e, true) && send(ws, s, "rm /usr/local/lib/libmjson*", q, e))
     {
@@ -841,18 +833,18 @@ bool Builder::pkgPortConcentrator(const string ws, string &s, Json *c, list<stri
 {
   bool b = false;
 
-  if (dep({"data", "email", "source"}, c, e))
+  if (dep({"data", "email", "git", "source"}, c, e))
   {
     if (a)
     {
-      if ((cmdDir(ws, s, c->m["source"]->v, q, e) || ((empty(c, "proxy") || send(ws, s, (string)"git config --global http.proxy " + c->m["proxy"]->v, q, e)) && send(ws, s, (string)"git clone https://github.com/benkietzman/portconcentrator.git " + c->m["source"]->v, q, e) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["source"]->v, c->m["group"]->v, q, e, true)))) && (cmdDir(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "user") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, q, e, true)) && (empty(c, "group") || cmdChgrp(ws, s, c->m["data"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
       {
         b = true;
       }
     }
-    else if (cmdDir(ws, s, c->m["source"]->v, q, e))
+    else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
-      if (send(ws, s, "systemctl stop concentrator", q, e) && send(ws, s, "systemctl disable concentrator", q, e) && cmdRm(ws, s, "/lib/systemd/system/concentrator.service", q, e), (!cmdDir(ws, s, "/usr/local/portconcentrator", q, e) || cmdRm(ws, s, "/usr/local/portconcentrator", q, e, true)) && (!cmdDir(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
+      if (send(ws, s, "systemctl stop concentrator", q, e) && send(ws, s, "systemctl disable concentrator", q, e) && cmdRm(ws, s, "/lib/systemd/system/concentrator.service", q, e), (!cmdExist(ws, s, "/usr/local/portconcentrator", q, e) || cmdRm(ws, s, "/usr/local/portconcentrator", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true))
       {
         b = true;
       }

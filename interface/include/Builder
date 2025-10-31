@@ -30,17 +30,18 @@ class Builder : public Interface
   thread *m_pThreadInotify;
   Json *m_c;
 
-  bool cmdApt(const string ws, string &s, const string p, list<string> &q, string &e, const bool a = false);
+  bool cmdApt(const string ws, string &s, const string p, list<string> &q, string &e, const bool a = false, const string x = "");
   bool cmdCd(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
-  bool cmdChgrp(const string ws, string &s, const string p, const string g, list<string> &q, string &e, const bool r = false);
   bool cmdChmod(const string ws, string &s, const string p, const string m, list<string> &q, string &e, const bool r = false);
-  bool cmdChown(const string ws, string &s, const string p, const string u, list<string> &q, string &e, const bool r = false);
+  bool cmdChown(const string ws, string &s, const string p, const string u, const string g, list<string> &q, string &e, const bool r = false);
   bool cmdChsh(const string ws, string &s, const string u, const string i, list<string> &q, string &e, const bool r = false);
-  bool cmdDir(const string ws, string &s, const string p, list<string> &q, string &e);
+  bool cmdExist(const string ws, string &s, const string p, list<string> &q, string &e);
   bool cmdExit(const string ws, string &s, list<string> &q, string &e);
+  bool cmdGit(const string ws, string &s, const string strRepository, const string strDirectory, list<string> &q, string &e, const string strProxy = "");
   bool cmdMkdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdRm(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdSudo(const string ws, string &s, const string c, list<string> &q, string &e);
+  bool cmdUser(const string ws, string &s, const string u, const string g, list<string> &q, string &e, const bool a);
   bool config(radialUser &u, string &e);
   bool confPkg(const string p, Json *c, string &e);
   bool connect(const string ws, const string strServer, const string strPort, const string strUser, const string strPassword, const string strPrivateKey, string &s, list<string> &q, string &e);
