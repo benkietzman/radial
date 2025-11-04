@@ -40,6 +40,7 @@ class Builder : public Interface
   bool cmdGit(const string ws, string &s, const string strRepository, const string strDirectory, list<string> &q, string &e, const string strProxy = "");
   bool cmdMkdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdRm(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
+  bool cmdScp(const string ws, string &s, const string strSource, const string strTarget, list<string> &q, string &e);
   bool cmdSudo(const string ws, string &s, const string c, list<string> &q, string &e);
   bool cmdUser(const string ws, string &s, const string u, const string g, list<string> &q, string &e, const bool a);
   bool config(radialUser &u, string &e);

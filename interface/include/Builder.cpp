@@ -247,6 +247,16 @@ bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q,
   return send(ws, s, c.str(), q, e);
 }
 // }}}
+// {{{ cmdScp()
+bool Builder::cmdScp(const string ws, string &s, const string strSource, const string strTarget, list<string> &q, string &e)
+{
+  stringstream c;
+
+  c << "scp -o StrictHostKeyChecking=no -r " << strSource << " " << strTarget;
+
+  return send(ws, s, c.str(), q, e);
+}
+// }}}
 // {{{ cmdSudo()
 bool Builder::cmdSudo(const string ws, string &s, const string c, list<string> &q, string &e)
 {
@@ -755,7 +765,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && send(ws, strSession, (string)"scp -r \"" + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)"\" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && scp(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
               {
                 // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
                 // Create /etc/cron.daily/certificates
