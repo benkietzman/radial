@@ -767,12 +767,12 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo '#!/bin/sh\nset -e\nrsync -amvze \"ssh -o StrictHostKeyChecking=no\" --delete " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)" >/root/certificates_" + i->m["Server"]->v + (string)"_.log 2>&1' > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && (cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e)))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (e.find("No such file or directory") != string::npos && send(ws, strSession, (string)"echo '#!/bin/sh\nset -e\nrsync -amvze \"ssh -o StrictHostKeyChecking=no\" --delete " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)" >/root/certificates_" + i->m["Server"]->v + (string)".log 2>&1' > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && (cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || (e.find("No such file or directory") != string::npos && send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e))))
               {
                 b = true;
               }
             }
-            else if (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdRm(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdRm(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e, true))
+            else if ((!cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || cmdRm(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e)) && (!cmdExists(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || cmdRm(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e, true)))
             {
               b = true;
             }
@@ -810,7 +810,7 @@ bool Builder::pkgCommon(radialUser &u, string &s, Json *c, list<string> &q, stri
   {
     if (a)
     {
-      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
+      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
@@ -874,7 +874,7 @@ bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, stri
   {
     if (a)
     {
-      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
       {
         b = true;
       }
@@ -907,7 +907,7 @@ bool Builder::pkgMjson(radialUser &u, string &s, Json *c, list<string> &q, strin
   } 
   if (a)
   {
-    if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e) || ((empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
+    if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e) || (e.find("No such file or directory") != string::npos && (empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
     {
       b = true;
     }
@@ -941,7 +941,7 @@ bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string
   {
     if (a)
     {
-      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, (string)"sed -i 's/^User=concentrator/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, (string)"sed -i 's/^User=concentrator/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
       {
         b = true;
       }
