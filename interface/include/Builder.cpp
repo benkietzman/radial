@@ -772,7 +772,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
                 b = true;
               }
             }
-            else if ((!cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || cmdRm(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e)) && (!cmdExists(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || cmdRm(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e, true)))
+            else if ((!cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || cmdRm(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e)) && (!cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || cmdRm(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e, true)))
             {
               b = true;
             }
