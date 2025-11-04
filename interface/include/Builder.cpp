@@ -765,15 +765,14 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && cmdScp(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo \"#!/bin/sh\nset -e\nscp -qro StrictHostKeyChecking=no -r " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/\" > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e))
               {
-                // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
-                // Create /etc/cron.daily/certificates
+                b = true;
               }
             }
-            else
+            else if (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdRm(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdRm(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e, true))
             {
-              // TODO:  rm c->m["path"]->v from i->m["Server"]->v
+              b = true;
             }
             cmdExit(ws, strSession, sq, se);
           }
