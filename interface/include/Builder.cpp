@@ -589,24 +589,24 @@ bool Builder::pkg(radialUser &u, string p, string &s, list<string> &q, string &e
   string sp = p;
   Json *c = new Json;
 
-chat("#builder", "Builder::pkg() 0");
+chat("#builder", sp + (string)" - Builder::pkg() 0");
   if (confPkg(p, c, e))
   {
-chat("#builder", "Builder::pkg() 0-0");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0");
     if (!empty(c, "pkg"))
     {
       sp = c->m["pkg"]->v;
     }
     if (m_packages.find(sp) != m_packages.end())
     {
-chat("#builder", "Builder::pkg() 0-0-0");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0");
       if (a)
       {
-chat("#builder", "Builder::pkg() 0-0-0-0");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0");
         b = true;
         if (exist(c, "dependencies"))
         {
-chat("#builder", "Builder::pkg() 0-0-0-0-0");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0-0");
           queue<string> d;
           for (auto &i : c->m["dependencies"]->l)
           {
@@ -620,21 +620,21 @@ chat("#builder", "Builder::pkg() 0-0-0-0-0");
             }
             d.pop();
           }
-chat("#builder", "Builder::pkg() 0-0-0-0-1");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0-1");
         }
-chat("#builder", "Builder::pkg() 0-0-0-1");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1");
         if (b)
         {
-chat("#builder", "Builder::pkg() 0-0-0-1-0");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1-0");
           chat("#builder", (string)"Installing " + p + " package...");
           live(u, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
           if (!(this->*m_packages[sp])(u, s, c, q, e, a))
           {
             b = false;
           }
-chat("#builder", "Builder::pkg() 0-0-0-1-1");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1-1");
         }
-chat("#builder", "Builder::pkg() 0-0-0-2");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-2");
       }
       else
       {
@@ -689,16 +689,16 @@ chat("#builder", "Builder::pkg() 0-0-0-2");
           delete r;
         }
       }
-chat("#builder", "Builder::pkg() 0-0-1");
+chat("#builder", sp + (string)" - Builder::pkg() 0-0-1");
     }
     else
     {
       e = (string)"[" + sp + "] Please provide a valid Package.";
     }
-chat("#builder", "Builder::pkg() 0-1");
+chat("#builder", sp + (string)" - Builder::pkg() 0-1");
   }
   delete c;
-chat("#builder", "Builder::pkg() 1");
+chat("#builder", sp + (string)" - Builder::pkg() 1");
 
   return b;
 }
