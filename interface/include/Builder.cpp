@@ -589,24 +589,19 @@ bool Builder::pkg(radialUser &u, string p, string &s, list<string> &q, string &e
   string sp = p;
   Json *c = new Json;
 
-chat("#builder", sp + (string)" - Builder::pkg() 0");
   if (confPkg(p, c, e))
   {
-chat("#builder", sp + (string)" - Builder::pkg() 0-0");
     if (!empty(c, "pkg"))
     {
       sp = c->m["pkg"]->v;
     }
     if (m_packages.find(sp) != m_packages.end())
     {
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0");
       if (a)
       {
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0");
         b = true;
         if (exist(c, "dependencies"))
         {
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0-0");
           queue<string> d;
           for (auto &i : c->m["dependencies"]->l)
           {
@@ -620,21 +615,16 @@ chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0-0");
             }
             d.pop();
           }
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-0-1");
         }
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1");
         if (b)
         {
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1-0");
           chat("#builder", (string)"Installing " + p + " package...");
           live(u, {{"Action", "section"}, {"Section", (string)"Installing " + p + " package..."}});
           if (!(this->*m_packages[sp])(u, s, c, q, e, a))
           {
             b = false;
           }
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-1-1");
         }
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-2");
       }
       else
       {
@@ -689,16 +679,13 @@ chat("#builder", sp + (string)" - Builder::pkg() 0-0-0-2");
           delete r;
         }
       }
-chat("#builder", sp + (string)" - Builder::pkg() 0-0-1");
     }
     else
     {
       e = (string)"[" + sp + "] Please provide a valid Package.";
     }
-chat("#builder", sp + (string)" - Builder::pkg() 0-1");
   }
   delete c;
-chat("#builder", sp + (string)" - Builder::pkg() 1");
 
   return b;
 }
@@ -736,7 +723,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
   {
     ws = u.r->m["wsRequestID"]->v;
   } 
-  if (dep({"Server"}, i, e) && dep({"path"}, c, e))
+  if (dep({"Server"}, i, e) && dep({"directory", "path"}, c, e))
   {
     string strPort = "22", strServer;
     if (exist(c, "master"))
@@ -768,8 +755,11 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
-              // Create /etc/cron.daily/certificates
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && send(ws, strSession, (string)"scp -r \"" + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)"\" " + i->m["Server"]->v + (string)":" c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
+              {
+                // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
+                // Create /etc/cron.daily/certificates
+              }
             }
             else
             {
