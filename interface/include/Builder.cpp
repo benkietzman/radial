@@ -33,6 +33,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_packages["logger"] = &Builder::pkgLogger;
   m_packages["mjson"] = &Builder::pkgMjson;
   m_packages["portconcentrator"] = &Builder::pkgPortConcentrator;
+  m_packages["radial"] = &Builder::pkgRadial;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -599,17 +600,14 @@ bool Builder::pkg(radialUser &u, string p, string &s, list<string> &q, string &e
   string sp = p;
   Json *c = new Json;
 
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0");
   if (confPkg(p, c, e))
   {
     if (!empty(c, "pkg"))
     {
       sp = c->m["pkg"]->v;
     }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0");
     if (m_packages.find(sp) != m_packages.end())
     {
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0");
       if (a)
       {
         b = true;
@@ -641,7 +639,6 @@ chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0");
       }
       else
       {
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-0");
         Json *r = NULL;
         m_mutex.lock();
         if (m_c != NULL)
@@ -660,10 +657,8 @@ chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-0");
           e = "The configuration does not exist.";
         }
         m_mutex.unlock();
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1");
         if (r != NULL)
         {
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-0");
           b = true;
           for (auto i = r->m.begin(); b && i != r->m.end(); i++)
           {
@@ -683,33 +678,25 @@ chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-0");
               }
             }
           }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-1");
           if (b)
           {
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-1-0");
             chat("#builder", (string)"Uninstalling " + p + " package...");
             live(u, {{"Action", "section"}, {"Section", (string)"Uninstalling " + p + " package..."}});
             if (!(this->*m_packages[sp])(u, s, c, q, e, a))
             {
               b = false;
             }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-1-1");
           }
           delete r;
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-1-2");
         }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-0-2");
       }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-0-1");
     }
     else
     {
       e = (string)"[" + sp + "] Please provide a valid Package.";
     }
-chat("#builder", (string)"Builder::pkg() [" + p + "] 0-1");
   }
   delete c;
-chat("#builder", (string)"Builder::pkg() [" + p + "] 1");
 
   return b;
 }
@@ -970,6 +957,21 @@ bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string
       b = true;
     }
   }
+
+  return b;
+}
+// }}}
+// {{{ pkgRadial()
+bool Builder::pkgRadial(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string ws;
+
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
+  b = true;
 
   return b;
 }
