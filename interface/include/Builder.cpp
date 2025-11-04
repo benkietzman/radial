@@ -34,6 +34,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_packages["mjson"] = &Builder::pkgMjson;
   m_packages["portconcentrator"] = &Builder::pkgPortConcentrator;
   m_packages["radial"] = &Builder::pkgRadial;
+  m_packages["servicejunction"] = &Builder::pkgServiceJunction;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
@@ -963,6 +964,21 @@ bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string
 // }}}
 // {{{ pkgRadial()
 bool Builder::pkgRadial(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string ws;
+
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
+  b = true;
+
+  return b;
+}
+// }}}
+// {{{ pkgServiceJunction()
+bool Builder::pkgServiceJunction(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
   string ws;
