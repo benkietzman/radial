@@ -765,7 +765,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo '#!/bin/sh\nset -e\nscp -qro StrictHostKeyChecking=no " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/' > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo '#!/bin/sh\nset -e\nscp -qro StrictHostKeyChecking=no " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/' > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && (cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e) || send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e)))
               {
                 b = true;
               }
