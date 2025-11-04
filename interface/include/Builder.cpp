@@ -151,7 +151,7 @@ bool Builder::cmdCd(const string ws, string &s, const string p, list<string> &q,
 {
   stringstream c;
 
-  c << "cd \"" << p << "\"";
+  c << "cd '" << p << "'";
 
   return send(ws, s, c.str(), q, e);
 }
@@ -161,7 +161,7 @@ bool Builder::cmdChmod(const string ws, string &s, const string p, const string 
 {
   stringstream c;
 
-  c << "chmod" << ((r)?" -R":"") << " " << m << " \"" << p << "\"";
+  c << "chmod" << ((r)?" -R":"") << " " << m << " '" << p << "'";
 
   return send(ws, s, c.str(), q, e);
 }
@@ -171,7 +171,7 @@ bool Builder::cmdChown(const string ws, string &s, const string p, const string 
 {
   stringstream c;
 
-  c << "chown" << ((r)?" -R":"") << " " << u << ":" << g << " \"" << p << "\"";
+  c << "chown" << ((r)?" -R":"") << " " << u << ":" << g << " '" << p << "'";
 
   return (cmdUser(ws, s, u, g, q, e, true) && send(ws, s, c.str(), q, e));
 }
@@ -191,7 +191,7 @@ bool Builder::cmdExist(const string ws, string &s, const string p, list<string> 
 {
   stringstream c;
 
-  c << "ls -d \"" << p << "\"";
+  c << "ls -d '" << p << "'";
 
   return send(ws, s, c.str(), q, e);
 }
@@ -232,7 +232,7 @@ bool Builder::cmdMkdir(const string ws, string &s, const string p, list<string> 
 {
   stringstream c;
 
-  c << "mkdir" << ((r)?" -p":"") << " \"" << p << "\"";
+  c << "mkdir" << ((r)?" -p":"") << " '" << p << "'";
 
   return send(ws, s, c.str(), q, e);
 }
@@ -242,7 +242,7 @@ bool Builder::cmdRm(const string ws, string &s, const string p, list<string> &q,
 {
   stringstream c;
 
-  c << "rm" << ((r)?" -r":"") << " \"" << p << "\"";
+  c << "rm" << ((r)?" -r":"") << " '" << p << "'";
 
   return send(ws, s, c.str(), q, e);
 }
@@ -765,7 +765,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo \"#!/bin/sh\" > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && send(ws, strSession, (string)"echo \"set -e\" >> /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && send(ws, strSession, (string)"echo \"scp -qro StrictHostKeyChecking=no " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/\" >> /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && (cmdExist(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) || (send(ws, strSession, (string)"echo '#!/bin/sh\nset -e\nscp -qro StrictHostKeyChecking=no " + c->m["path"]->v + (string)"/" + c->m["directory"]->v + (string)" " + i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/' > /etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e) && cmdChmod(ws, strSession, (string)"/etc/cron.daily/certificates_" + i->m["Server"]->v, "755", sq, e))) && send(ws, strSession, "/etc/cron.daily/certificates_" + i->m["Server"]->v, sq, e))
               {
                 b = true;
               }
