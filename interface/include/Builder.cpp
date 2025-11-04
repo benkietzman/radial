@@ -765,7 +765,7 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
           {
             if (a)
             {
-              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && scp(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
+              if (cmdExist(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, sq, e) && cmdScp(ws, strSession, c->m["path"]->v + (string)"/" + c->m["directory"]->v, i->m["Server"]->v + (string)":" + c->m["path"]->v + (string)"/", sq, e) && cmdExist(ws, s, c->m["path"]->v + (string)"/" + c->m["directory"]->v, q, e))
               {
                 // TODO:  scp c->m["path"]->v from master to i->m["Server"]->v
                 // Create /etc/cron.daily/certificates
