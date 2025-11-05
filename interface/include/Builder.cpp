@@ -22,6 +22,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["action"] = &Builder::action;
   m_functions["config"] = &Builder::config;
   m_functions["install"] = &Builder::install;
+  m_functions["publickKey"] = &Builder::publickKey;
   m_functions["status"] = &Builder::status;
 	m_functions["uninstall"] = &Builder::uninstall;
   // }}}
@@ -992,6 +993,14 @@ bool Builder::pkgServiceJunction(radialUser &u, string &s, Json *c, list<string>
   return b;
 }
 // }}}
+// }}}
+// {{{ publickKey()
+bool Builder::publickKey(radialUser &u, string &e)
+{
+  u.p->m["o"]->i("PublickKey", m_strPublicKey);
+
+  return true;
+}
 // }}}
 // {{{ send()
 bool Builder::send(const string ws, string &s, const string c, list<string> &q, string &e, const size_t r)
