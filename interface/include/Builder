@@ -38,6 +38,7 @@ class Builder : public Interface
   bool cmdExist(const string ws, string &s, const string p, list<string> &q, string &e);
   bool cmdExit(const string ws, string &s, list<string> &q, string &e);
   bool cmdGit(const string ws, string &s, const string strRepository, const string strDirectory, list<string> &q, string &e, const string strProxy = "");
+  bool cmdGroups(const string ws, string &s, const string u, Json *ptGroups, list<string> &q, string &e, const bool a);
   bool cmdMkdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdRm(const string ws, string &s, const string p, list<string> &q, string &e, const bool r = false);
   bool cmdScp(const string ws, string &s, const string strSource, const string strTarget, list<string> &q, string &e);

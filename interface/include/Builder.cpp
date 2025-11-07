@@ -230,6 +230,33 @@ bool Builder::cmdGit(const string ws, string &s, const string strRepository, con
   return ((strProxy.empty() || send(ws, s, (string)"git config --global http.proxy " + strProxy, q, e)) && send(ws, s, c.str(), q, e));
 }
 // }}}
+// {{{ cmdGroups()
+bool Builder::cmdGroups(const string ws, string &s, const string u, Json *ptGroups, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string g;
+  stringstream c;
+
+  for (auto &i : ptGroups->l)
+  {
+    if (send(ws, s, (string)"getent group " + i->v, q, e))
+    {
+      if (!g.empty() && send(ws, s, (string)"getent group " + i->v, q, e))
+      {
+        g += ",";
+      }
+      g += i->v;
+    }
+  }
+  c << "usermod -" << ((a)?"a":"r") << "G " << g << " " << u;
+  if (send(ws, s, c.str(), q, e))
+  {
+    b = true;
+  }
+
+  return b;
+}
+// }}}
 // {{{ cmdMkdir()
 bool Builder::cmdMkdir(const string ws, string &s, const string p, list<string> &q, string &e, const bool r)
 {
@@ -875,14 +902,14 @@ bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, stri
   {
     if (a)
     {
-      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e)))
       {
         b = true;
       }
     }
     else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
-      if (send(ws, s, "systemctl stop logger", q, e) && send(ws, s, "systemctl disable logger", q, e) && cmdRm(ws, s, "/lib/systemd/system/logger.service", q, e), (!cmdExist(ws, s, "/usr/local/logger", q, e) || cmdRm(ws, s, "/usr/local/logger", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
+      if (send(ws, s, "systemctl stop logger", q, e) && send(ws, s, "systemctl disable logger", q, e) && cmdRm(ws, s, "/lib/systemd/system/logger.service", q, e), (!cmdExist(ws, s, "/usr/local/logger", q, e) || cmdRm(ws, s, "/usr/local/logger", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true)) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
       {
         b = true;
       }
@@ -942,14 +969,14 @@ bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string
   {
     if (a)
     {
-      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, (string)"sed -i 's/^User=concentrator/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/portconcentrator\\/concentrator/portconcentrator\\/concentrator --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, (string)"sed -i 's/^User=concentrator/User=" + c->m["user"]->v + "/g' /lib/systemd/system/concentrator.service", q, e) && send(ws, s, "systemctl enable concentrator", q, e) && send(ws, s, "systemctl start concentrator", q, e)))
       {
         b = true;
       }
     }
     else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
-      if (send(ws, s, "systemctl stop concentrator", q, e) && send(ws, s, "systemctl disable concentrator", q, e) && cmdRm(ws, s, "/lib/systemd/system/concentrator.service", q, e), (!cmdExist(ws, s, "/usr/local/portconcentrator", q, e) || cmdRm(ws, s, "/usr/local/portconcentrator", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
+      if (send(ws, s, "systemctl stop concentrator", q, e) && send(ws, s, "systemctl disable concentrator", q, e) && cmdRm(ws, s, "/lib/systemd/system/concentrator.service", q, e), (!cmdExist(ws, s, "/usr/local/portconcentrator", q, e) || cmdRm(ws, s, "/usr/local/portconcentrator", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true)) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
       {
         b = true;
       }
@@ -1007,14 +1034,14 @@ bool Builder::pkgWarden(radialUser &u, string &s, Json *c, list<string> &q, stri
   {
     if (a)
     {
-      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && (empty(c, "secret") || (cmdMkdir(ws, s, "vault", q, e) && send(ws, s, (string)"echo '" + c->m["secret"]->v + (string)"' > vault/.secret", q, e) && cmdChmod(ws, s, "vault/.secret", "600", q, e) && send(ws, s, "touch vault/storage", q, e) && cmdChmod(ws, s, "vault/storage", "600", q, e))) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/warden\\/warden/warden\\/warden --data=" + c->m["data"]->v + (string)" --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/warden.service", q, e) && send(ws, s, (string)"sed -i 's/^User=warden/User=" + c->m["user"]->v + "/g' /lib/systemd/system/warden.service", q, e) && send(ws, s, "systemctl enable warden", q, e) && send(ws, s, "systemctl start warden", q, e)))
+      if ((cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true)))) && (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && (empty(c, "secret") || (cmdMkdir(ws, s, "vault", q, e) && send(ws, s, (string)"echo '" + c->m["secret"]->v + (string)"' > vault/.secret", q, e) && cmdChmod(ws, s, "vault/.secret", "600", q, e) && send(ws, s, "touch vault/storage", q, e) && cmdChmod(ws, s, "vault/storage", "600", q, e))) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)))) && (send(ws, s, (string)"sed -i 's/warden\\/warden/warden\\/warden --data=" + c->m["data"]->v + (string)" --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/warden.service", q, e) && send(ws, s, (string)"sed -i 's/^User=warden/User=" + c->m["user"]->v + "/g' /lib/systemd/system/warden.service", q, e) && send(ws, s, "systemctl enable warden", q, e) && send(ws, s, "systemctl start warden", q, e)))
       {
         b = true;
       }
     }
     else if (cmdExist(ws, s, c->m["source"]->v, q, e))
     {
-      if (send(ws, s, "systemctl stop warden", q, e) && send(ws, s, "systemctl disable warden", q, e) && cmdRm(ws, s, "/lib/systemd/system/warden.service", q, e), (!cmdExist(ws, s, "/usr/local/warden", q, e) || cmdRm(ws, s, "/usr/local/warden", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
+      if (send(ws, s, "systemctl stop warden", q, e) && send(ws, s, "systemctl disable warden", q, e) && cmdRm(ws, s, "/lib/systemd/system/warden.service", q, e), (!cmdExist(ws, s, "/usr/local/warden", q, e) || cmdRm(ws, s, "/usr/local/warden", q, e, true)) && (!cmdExist(ws, s, c->m["data"]->v, q, e) || cmdRm(ws, s, c->m["data"]->v, q, e, true)) && cmdRm(ws, s, c->m["source"]->v, q, e, true) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, false)) && (empty(c, "group") || cmdUser(ws, s, c->m["user"]->v, c->m["group"]->v, q, e, false)))
       {
         b = true;
       }
