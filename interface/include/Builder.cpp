@@ -893,7 +893,7 @@ bool Builder::pkgDir(radialUser &u, string &s, Json *c, list<string> &q, string 
 bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws, v;
 
   if (!empty(u.r, "wsRequestID"))
   {
