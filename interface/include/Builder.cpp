@@ -895,7 +895,7 @@ bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, stri
             {
               if (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e))
               {
-                 b = true;
+                b = true;
               }
             }
           }
