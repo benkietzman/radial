@@ -36,6 +36,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_packages["portconcentrator"] = &Builder::pkgPortConcentrator;
   m_packages["radial"] = &Builder::pkgRadial;
   m_packages["servicejunction"] = &Builder::pkgServiceJunction;
+  m_packages["warden"] = &Builder::pkgWarden;
   // }}}
   m_c = NULL;
   cred(strPrefix, true);
