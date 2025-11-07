@@ -993,6 +993,21 @@ bool Builder::pkgServiceJunction(radialUser &u, string &s, Json *c, list<string>
   return b;
 }
 // }}}
+// {{{ pkgWarden()
+bool Builder::pkgWarden(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
+{
+  bool b = false;
+  string ws;
+
+  if (!empty(u.r, "wsRequestID"))
+  {
+    ws = u.r->m["wsRequestID"]->v;
+  } 
+  b = true;
+
+  return b;
+}
+// }}}
 // }}}
 // {{{ publickKey()
 bool Builder::publickKey(radialUser &u, string &e)
