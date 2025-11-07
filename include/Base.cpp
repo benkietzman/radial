@@ -263,6 +263,12 @@ bool Base::exist(Json *ptJson, const string strField)
   return (ptJson->m.find(strField) != ptJson->m.end());
 }
 // }}}
+// {{{ get()
+string Base::get(Json *ptJson, const string strField, const string strDefault)
+{
+  return ((!empty(ptJson, strField))?ptJson->m[strField]->v:strDefault);
+} 
+// }}}
 // {{{ m2j()
 string Base::m2j(const map<string, string> m)
 {

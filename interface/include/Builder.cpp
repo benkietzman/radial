@@ -514,12 +514,8 @@ bool Builder::install(radialUser &u, string &e)
   if (dep({"Package", "Server"}, i, e))
   {
     list<string> q;
-    string p = i->m["Package"]->v, s, strPassword, strPort, strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
+    string p = i->m["Package"]->v, s, strPassword, strPort = get(i, "Port", "22"), strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
     init(u, strUser, strPassword, strPrivateKey, strSudo);
-    if (!empty(i, "Port"))
-    {
-      strPort = i->m["Port"]->v;
-    }
     chat("#builder", "Establishing connection...");
     live(u, {{"Action", "section"}, {"Section", (string)"Establishing connection..."}});
     if (connect(ws, strServer, strPort, strUser, strPassword, strPrivateKey, s, q, e))
@@ -735,16 +731,12 @@ bool Builder::pkg(radialUser &u, string p, string &s, list<string> &q, string &e
 bool Builder::pkgApt(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"aptpkg"}, c, e))
   {
     string p = c->m["aptpkg"]->v;
-    if (cmdApt(ws, s, p, q, e, a, ((!empty(c, "exist"))?c->m["exist"]->v:"")))
+    if (cmdApt(ws, s, p, q, e, a, get(c, "exist")))
     {
       b = true;
     }
@@ -757,13 +749,9 @@ bool Builder::pkgApt(radialUser &u, string &s, Json *c, list<string> &q, string 
 bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
   Json *i = u.p->m["i"];
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"Server"}, i, e) && dep({"directory", "path"}, c, e))
   {
     string strPort = "22", strServer;
@@ -775,11 +763,8 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
       }
       else if (!c->m["master"]->m.empty() && !empty(c->m["master"], "server"))
       {
+        strPort = get(c->m["master"], "port", strPort);
         strServer = c->m["master"]->m["server"]->v;
-        if (!empty(c->m["master"], "port"))
-        {
-          strPort = c->m["master"]->m["port"]->v;
-        }
       }
     }
     if (!strServer.empty())
@@ -838,17 +823,13 @@ bool Builder::pkgCertificates(radialUser &u, string &s, Json *c, list<string> &q
 bool Builder::pkgCommon(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"git", "source"}, c, e))
   {
     if (a)
     {
-      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
+      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, get(c, "proxy")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make", q, e) && (empty(c, "user") || empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
       {
         b = true;
       }
@@ -873,12 +854,8 @@ bool Builder::pkgCommon(radialUser &u, string &s, Json *c, list<string> &q, stri
 bool Builder::pkgDir(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"path"}, c, e))
   {
     string p = c->m["path"]->v;
@@ -902,19 +879,15 @@ bool Builder::pkgDir(radialUser &u, string &s, Json *c, list<string> &q, string 
 bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws, v;
+  string ws = get(u.r, "wsRequestID"), v;
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"cert", "data", "email", "git", "key", "source", "user"}, c, e))
   {
     if (a)
     {
       if (exist(c, "warden") && !empty(c->m["warden"], "socket") && exist(c->m["warden"], "vault"))
       {
-        if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
+        if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, get(c, "proxy")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
         {
           if (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
           {
@@ -968,12 +941,8 @@ bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, stri
 bool Builder::pkgMjson(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (a)
   {
     if (cmdExist(ws, s, "/usr/local/include/mjson-1.7", q, e) || (e.find("No such file or directory") != string::npos && (empty(c, "proxy") || send(ws, s, (string)"export http_proxy=" + c->m["proxy"]->v + (string)" https_proxy=" + c->m["proxy"]->v, q, e)) && send(ws, s, "wget https://downloads.sourceforge.net/project/mjson/mjson/mjson-1.7.0.tar.gz", q, e) && send(ws, s, "tar -xvf mjson-1.7.0.tar.gz", q, e) && cmdRm(ws, s, "mjson-1.7.0.tar.gz", q, e) && cmdCd(ws, s, "json-1.7.0", q, e) && send(ws, s, "./configure", q, e) && send(ws, s, "make install", q, e) && send(ws, s, (string)"cd ..", q, e) && cmdRm(ws, s, "json-1.7.0", q, e, true)))
@@ -1000,17 +969,13 @@ bool Builder::pkgMjson(radialUser &u, string &s, Json *c, list<string> &q, strin
 bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"data", "email", "git", "source", "user"}, c, e))
   {
     if (a)
     {
-      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
+      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, get(c, "proxy")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
       {
         if (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
         {
@@ -1056,12 +1021,8 @@ bool Builder::pkgPortConcentrator(radialUser &u, string &s, Json *c, list<string
 bool Builder::pkgRadial(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   b = true;
 
   return b;
@@ -1071,12 +1032,8 @@ bool Builder::pkgRadial(radialUser &u, string &s, Json *c, list<string> &q, stri
 bool Builder::pkgServiceJunction(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   b = true;
 
   return b;
@@ -1086,17 +1043,13 @@ bool Builder::pkgServiceJunction(radialUser &u, string &s, Json *c, list<string>
 bool Builder::pkgWarden(radialUser &u, string &s, Json *c, list<string> &q, string &e, const bool a)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  } 
   if (dep({"data", "email", "git", "secret", "source", "user"}, c, e))
   {
     if (a)
     {
-      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
+      if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, get(c, "proxy")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
       {
         if (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && (empty(c, "secret") || (cmdMkdir(ws, s, "vault", q, e) && send(ws, s, (string)"echo '" + c->m["secret"]->v + (string)"' > vault/.secret", q, e) && cmdChmod(ws, s, "vault/.secret", "600", q, e) && send(ws, s, "touch vault/storage", q, e) && cmdChmod(ws, s, "vault/storage", "600", q, e))) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
         {
@@ -1254,21 +1207,13 @@ string Builder::strip(const string v)
 bool Builder::uninstall(radialUser &u, string &e)
 {
   bool b = false;
-  string ws;
+  string ws = get(u.r, "wsRequestID");
   Json *i = u.p->m["i"], *o = u.p->m["o"];
 
-  if (!empty(u.r, "wsRequestID"))
-  {
-    ws = u.r->m["wsRequestID"]->v;
-  }
   if (dep({"Package", "Server"}, i, e))
   {
     list<string> q;
-    string p = i->m["Package"]->v, s, strPassword, strPort = "22", strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
-    if (!empty(i, "Port"))
-    {
-      strPort = i->m["Port"]->v;
-    }
+    string p = i->m["Package"]->v, s, strPassword, strPort = get(i, "Port", "22"), strPrivateKey, strServer = i->m["Server"]->v, strSudo, strUser;
     init(u, strUser, strPassword, strPrivateKey, strSudo);
     chat("#builder", "Establishing connection...");
     live(u, {{"Action", "section"}, {"Section", "Establishing connection..."}});

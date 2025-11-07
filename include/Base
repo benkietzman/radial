@@ -170,6 +170,7 @@ class Base
   bool empty(Json *ptJson, const string strField);
   string esc(const string strValue);
   bool exist(Json *ptJson, const string strField);
+  string get(Json *ptJson, const string strField, const string strDefault = "");
   string m2j(const map<string, string> m);
   void msleep(const unsigned long ulMilliSec);
   void setShutdown();
