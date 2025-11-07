@@ -912,13 +912,13 @@ bool Builder::pkgLogger(radialUser &u, string &s, Json *c, list<string> &q, stri
   {
     if (a)
     {
-      if (exist(c, "warden") && !empty(c->m["warden"], "socket") && exist(c->m["warden"], "vault") && !empty(c->m["warden"]->m["vault"], "executable") && exist(c->m["warden"]->m["vault"], "data"))
+      if (exist(c, "warden") && !empty(c->m["warden"], "socket") && exist(c->m["warden"], "vault"))
       {
         if (cmdExist(ws, s, c->m["source"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdGit(ws, s, c->m["git"]->v, c->m["source"]->v, q, e, ((!empty(c, "proxy"))?c->m["proxy"]->v:"")) && cmdCd(ws, s, c->m["source"]->v, q, e) && send(ws, s, "make install", q, e) && send(ws, s, "make clean", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["source"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true)) && (!exist(c, "groups") || cmdGroups(ws, s, c->m["user"]->v, c->m["groups"], q, e, true))))
         {
           if (cmdExist(ws, s, c->m["data"]->v, q, e) || (e.find("No such file or directory") != string::npos && cmdMkdir(ws, s, c->m["data"]->v, q, e) && cmdCd(ws, s, c->m["data"]->v, q, e) && cmdMkdir(ws, s, "storage", q, e) && send(ws, s, (string)"ln -s '" + c->m["cert"]->v + "' server.crt", q, e) && send(ws, s, (string)"ln -s '" + c->m["key"]->v + "' server.key", q, e) && (empty(c, "group") || cmdChown(ws, s, c->m["data"]->v, c->m["user"]->v, c->m["group"]->v, q, e, true))))
           {
-            if (send(ws, s, c->m["warden"]->m["vault"]->m["executable"]->v + (string)" export " + c->m["warden"]->m["socket"]->v + " Logger", q, e) || (send(ws, s, (string)"echo '" + c->m["warden"]->m["vault"]->m["data"]->j(v) + "' > warden.json", q, e) && send(ws, s, c->m["warden"]->m["vault"]->m["executable"]->v + (string)" import " + c->m["warden"]->m["socket"]->v + " Logger warden.json", q, e) && cmdRm(ws, s, "warden.json", q, e)))
+            if (send(ws, s, (string)"/usr/local/warden/vault export " + c->m["warden"]->m["socket"]->v + " Logger", q, e) || (send(ws, s, (string)"echo '" + c->m["warden"]->m["vault"]->j(v) + "' > warden.json", q, e) && send(ws, s, "/usr/local/warden/vault import " + c->m["warden"]->m["socket"]->v + " Logger warden.json", q, e) && cmdRm(ws, s, "warden.json", q, e)))
             {
               if (send(ws, s, (string)"sed -i 's/logger\\/logger/logger\\/logger --email=" + c->m["email"]->v + (string)"/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, (string)"sed -i 's/^User=logger/User=" + c->m["user"]->v + "/g' /lib/systemd/system/logger.service", q, e) && send(ws, s, "systemctl enable logger", q, e) && send(ws, s, "systemctl start logger", q, e))
               {
