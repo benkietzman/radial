@@ -332,6 +332,7 @@ class App
   assetStockYieldAdjust(Stock)
   {
     let fAdjust = 1;
+    let fAdjustYield = 0;
     let fChangeDividend = Number(this.d.Asset.Stock[Stock].ChangeDividend) / 100;
     let fChangePrice = Number(this.d.Asset.Stock[Stock].ChangePrice) / 100;
     let fChangeScore = (Number(this.d.Asset.Stock[Stock].Score) - 1) / -10;
@@ -348,9 +349,14 @@ class App
     }
     fAdjust += fChangeScore * fAdjust;
     fAdjust += fChangeDividend * fAdjust;
-    fAdjust += fChangePrice * fAdjust;
+    fAdjust -= Math.abs(fChangePrice) / 2;
+    fAdjustYield = fYield * fAdjust;
+    if (fAdjustYield < 0)
+    {
+      fAdjustYield = 0;
+    }
 
-    return fYield * fAdjust;
+    return fAdjustYield;
   }
   // }}}
   // {{{ assetStockYieldAdjustSum()
