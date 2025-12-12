@@ -3169,6 +3169,10 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
         {
           strError = ptStatus->m["Error"]->v;
         }
+        else if (exist(ptStatus, "Error") && !empty(ptStatus->m["Error"], "Message"))
+        {
+          strError = ptStatus->m["Error"]->m["Message"]->v;
+        }
         else
         {
           strError = "[junction] Encountered an unknown error.";
