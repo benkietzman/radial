@@ -3154,8 +3154,6 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
     delete i;
   }
   out.clear();
-string strValue;
-chat("#health", ptJson->j(strValue));
   if (hub("junction", ptJson, strError))
   {
     if (exist(ptJson, "Response"))
