@@ -147,313 +147,313 @@ int main(int argc, char *argv[])
     }
     if (strError.empty())
     {
-        Radial radial(strError);
-        if (!strConf.empty())
+      Radial radial(strError);
+      if (!strConf.empty())
+      {
+        strError.clear();
+        radial.utility()->setConfPath(strConf, strError);
+      }
+      if (strError.empty())
+      {
+        string strPassword;
+        time_t CConfig = 0, CCred = 0, CNow;
+        Json *ptConfig = new Json;
+        radial.setTimeout("10");
+        radial.utility()->sslInit();
+        radial.useSingleSocket();
+        while (!gbShutdown)
         {
-          strError.clear();
-          radial.utility()->setConfPath(strConf, strError);
-        }
-        if (strError.empty())
-        {
-          string strPassword;
-          time_t CConfig = 0, CCred = 0, CNow;
-          Json *ptConfig = new Json;
-          radial.setTimeout("10");
-          radial.utility()->sslInit();
-          radial.useSingleSocket();
-          while (!gbShutdown)
+          time(&CNow);
+          if ((CNow - CCred) > 600)
           {
-            time(&CNow);
-            if ((CNow - CCred) > 600)
+            Json *ptData = new Json;
+            if (warden.vaultRetrieve({"radial", strUser, "Password"}, ptData, strError))
             {
-              Json *ptData = new Json;
-              if (warden.vaultRetrieve({"radial", strUser, "Password"}, ptData, strError))
+              if (!ptData->l.empty())
               {
-                if (!ptData->l.empty())
+                for (auto i = ptData->l.begin(); strPassword.empty() && i != ptData->l.end(); i++)
                 {
-                  for (auto i = ptData->l.begin(); strPassword.empty() && i != ptData->l.end(); i++)
+                  if (!(*i)->v.empty())
                   {
-                    if (!(*i)->v.empty())
-                    {
-                      strPassword = (*i)->v;
-                    }
+                    strPassword = (*i)->v;
                   }
                 }
-                else if (!ptData->v.empty())
-                {
-                  strPassword = ptData->v;
-                }
-                radial.setCredentials(strUser, strPassword);
               }
-              else
+              else if (!ptData->v.empty())
               {
-                cerr << strPrefix << "->Warden::vaultRetrieve() error [radial," << strUser << ",Password]:  " << strError << endl;
+                strPassword = ptData->v;
               }
-              delete ptData;
+              radial.setCredentials(strUser, strPassword);
             }
-            // {{{ config
-            if ((CNow - CConfig) > 60)
+            else
             {
-              Json *ptReq = new Json, *ptRes = new Json;
-              CConfig = CNow;
-              ptReq->i("Interface", "central");
-              ptReq->i("Function", "monitorConfig");
-              ptReq->m["Request"] = new Json;
-              ptReq->m["Request"]->i("server", strServer);
-              if (radial.request(ptReq, ptRes, strError))
+              cerr << strPrefix << "->Warden::vaultRetrieve() error [radial," << strUser << ",Password]:  " << strError << endl;
+            }
+            delete ptData;
+          }
+          // {{{ config
+          if ((CNow - CConfig) > 60)
+          {
+            Json *ptReq = new Json, *ptRes = new Json;
+            CConfig = CNow;
+            ptReq->i("Interface", "central");
+            ptReq->i("Function", "monitorConfig");
+            ptReq->m["Request"] = new Json;
+            ptReq->m["Request"]->i("server", strServer);
+            if (radial.request(ptReq, ptRes, strError))
+            {
+              if (ptRes->m.find("Response") != ptRes->m.end())
               {
-                if (ptRes->m.find("Response") != ptRes->m.end())
-                {
-                  delete ptConfig;
-                  ptConfig = new Json(ptRes->m["Response"]);
-                }
-                else
-                {
-                  cerr << strPrefix << "->Radial::request(central,monitorConfig) error [" << strServer << "]:  Failed to retrieve config." << endl;
-                }
+                delete ptConfig;
+                ptConfig = new Json(ptRes->m["Response"]);
               }
               else
               {
-                cerr << strPrefix << "->Radial::request(central,monitorConfig) error [" << strServer << "]:  " << strError << endl;
+                cerr << strPrefix << "->Radial::request(central,monitorConfig) error [" << strServer << "]:  Failed to retrieve config." << endl;
               }
-              delete ptReq;
-              delete ptRes;
+            }
+            else
+            {
+              cerr << strPrefix << "->Radial::request(central,monitorConfig) error [" << strServer << "]:  " << strError << endl;
+            }
+            delete ptReq;
+            delete ptRes;
+          }
+          // }}}
+          // {{{ data
+          if (ptConfig->m.find("system") != ptConfig->m.end())
+          {
+            FILE *pfinPipe;
+            map<string, bool> exclude;
+            struct utsname server;
+            Json *ptReq = new Json, *ptRes = new Json, *ptSystem;
+            ptReq->i("Interface", "central");
+            ptReq->i("Function", "monitorData");
+            ptReq->m["Request"] = new Json;
+            ptReq->m["Request"]->i("server", strServer);
+            // {{{ system
+            ptReq->m["Request"]->m["system"] = new Json;
+            ptSystem = ptReq->m["Request"]->m["system"];
+            if (uname(&server) != -1)
+            {
+              struct sysinfo sys;
+              if (sysinfo(&sys) != -1)
+              {
+                ifstream inCpuSpeed("/proc/cpuinfo");
+                if (inCpuSpeed.good())
+                {
+                  if ((pfinPipe = popen("top -b -n 1 | sed -n '8,$p'| awk '{print $9, $12}'", "r")) != NULL)
+                  {
+                    char szProcess[32] = "\0";
+                    float fCpu = 0, fCpuSpeed = 0, fCpuUsage = 0;
+                    map<float, list<string> > load;
+                    string strTemp;
+                    while (fCpuSpeed == 0 && file.findLine(inCpuSpeed, false, false, "cpu MHz"))
+                    {
+                      inCpuSpeed >> strTemp >> strTemp >> strTemp >> fCpuSpeed;
+                    }
+                    ptSystem->i("operatingSystem", server.sysname);
+                    ptSystem->i("systemRelease", server.release);
+                    ptSystem->i("processors", to_string(get_nprocs()), 'n');
+                    ptSystem->i("cpuSpeed", to_string((get_nprocs() > 0)?(size_t)fCpuSpeed:0), 'n');
+                    ptSystem->i("processes", to_string(sys.procs), 'n');
+                    while (fscanf(pfinPipe, "%f %s%*[^\n]", &fCpu, &szProcess[0]) != EOF)
+                    {
+                      fCpuUsage += fCpu;
+                      if (load.find(fCpu) == load.end())
+                      {
+                        load[fCpu] = {};
+                      }
+                      if (load.find(fCpu) != load.end())
+                      {
+                        load[fCpu].push_back(szProcess);
+                      }
+                    }
+                    ptSystem->i("cpuUsage", to_string((size_t)(fCpuUsage / ((get_nprocs() > 0)?get_nprocs():1))), 'n');
+                    while (load.size() > 5)
+                    {
+                      load.begin()->second.clear();
+                      load.erase(load.begin()->first);
+                    }
+                    for (auto i = load.begin(); i != load.end(); i++)
+                    {
+                      for (auto j = i->second.begin(); j != i->second.end(); j++)
+                      {
+                        stringstream ssCpuProcessUsage;
+                        ssCpuProcessUsage << (*j) << '=' << i->first;
+                        if (ptSystem->m.find("cpuProcessUsage") == ptSystem->m.end())
+                        {
+                          ptSystem->i("cpuProcessUsage", "");
+                        }
+                        else if (!ptSystem->m["cpuProcessUsage"]->v.empty())
+                        {
+                          ssCpuProcessUsage << ',';
+                        }
+                        ptSystem->i("cpuProcessUsage", ssCpuProcessUsage.str() + ptSystem->m["cpuProcessUsage"]->v);
+                      }
+                      i->second.clear();
+                    }
+                    load.clear();
+                    ptSystem->i("upTime", to_string(sys.uptime), 'n');
+                    ptSystem->i("mainTotal", to_string(sys.totalram * sys.mem_unit), 'n');
+                    ptSystem->i("mainUsed", to_string((sys.totalram - sys.freeram) * sys.mem_unit), 'n');
+                    ptSystem->i("swapTotal", to_string(sys.totalswap * sys.mem_unit), 'n');
+                    ptSystem->i("swapUsed", to_string((sys.totalswap - sys.freeswap) * sys.mem_unit), 'n');
+                  }
+                  pclose(pfinPipe);
+                }
+                inCpuSpeed.close();
+              }
+            }
+            ptSystem->m["partitions"] = new Json;
+            if ((pfinPipe = popen("df -kl", "r")) != NULL)
+            {
+              char szField[3][128] = {"\0", "\0", "\0"};
+              fscanf(pfinPipe, "%*s %s %*s %*s %s %s %*s", szField[0], szField[1], szField[2]);
+              while (fscanf(pfinPipe, "%*s %s %*s %*s %s %s", szField[0], szField[1], szField[2]) != EOF)
+              {
+                if (atoi(szField[0]) > 0 && exclude.find(szField[2]) == exclude.end())
+                {
+                  string strUsage = szField[1];
+                  strUsage.erase(strUsage.size() - 1, 1);
+                  ptSystem->m["partitions"]->i(szField[2], strUsage);
+                }
+              }
+              pclose(pfinPipe);
             }
             // }}}
-            // {{{ data
-            if (ptConfig->m.find("system") != ptConfig->m.end())
+            // {{{ processes
+            if (ptConfig->m.find("processes") != ptConfig->m.end())
             {
-              FILE *pfinPipe;
-              map<string, bool> exclude;
-              struct utsname server;
-              Json *ptReq = new Json, *ptRes = new Json, *ptSystem;
-              ptReq->i("Interface", "central");
-              ptReq->i("Function", "monitorData");
-              ptReq->m["Request"] = new Json;
-              ptReq->m["Request"]->i("server", strServer);
-              // {{{ system
-              ptReq->m["Request"]->m["system"] = new Json;
-              ptSystem = ptReq->m["Request"]->m["system"];
-              if (uname(&server) != -1)
+              ptReq->m["Request"]->m["processes"] = new Json;
+              for (auto &process : ptConfig->m["processes"]->m)
               {
-                struct sysinfo sys;
-                if (sysinfo(&sys) != -1)
+                list<string> procList;
+                Json *ptProcess = new Json;
+                file.directoryList("/proc", procList);
+                for (auto &i : procList)
                 {
-                  ifstream inCpuSpeed("/proc/cpuinfo");
-                  if (inCpuSpeed.good())
+                  if (i[0] != '.' && manip.isNumeric(i) && file.directoryExist((string)"/proc/" + i))
                   {
-                    if ((pfinPipe = popen("top -b -n 1 | sed -n '8,$p'| awk '{print $9, $12}'", "r")) != NULL)
+                    struct stat tStat;
+                    struct passwd *ptPasswd = NULL;
+                    if (stat(((string)"/proc/" + i).c_str(), &tStat) == 0 && file.fileExist((string)"/proc/" + i + (string)"/stat") && (ptPasswd = getpwuid(tStat.st_uid)) != NULL)
                     {
-                      char szProcess[32] = "\0";
-                      float fCpu = 0, fCpuSpeed = 0, fCpuUsage = 0;
-                      map<float, list<string> > load;
-                      string strTemp;
-                      while (fCpuSpeed == 0 && file.findLine(inCpuSpeed, false, false, "cpu MHz"))
+                      string strOwner = ptPasswd->pw_name;
+                      ifstream inStat(((string)"/proc/" + i + (string)"/stat").c_str());
+                      if (inStat.good())
                       {
-                        inCpuSpeed >> strTemp >> strTemp >> strTemp >> fCpuSpeed;
-                      }
-                      ptSystem->i("operatingSystem", server.sysname);
-                      ptSystem->i("systemRelease", server.release);
-                      ptSystem->i("processors", to_string(get_nprocs()), 'n');
-                      ptSystem->i("cpuSpeed", to_string((get_nprocs() > 0)?(size_t)fCpuSpeed:0), 'n');
-                      ptSystem->i("processes", to_string(sys.procs), 'n');
-                      while (fscanf(pfinPipe, "%f %s%*[^\n]", &fCpu, &szProcess[0]) != EOF)
-                      {
-                        fCpuUsage += fCpu;
-                        if (load.find(fCpu) == load.end())
+                        string strTemp, strDaemon;
+                        long lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
+                        unsigned long ulImage = 0, ulResident = 0;
+                        inStat >> strTemp >> strDaemon;
+                        for (auto j = 0; j < 20; j++)
                         {
-                          load[fCpu] = {};
+                          inStat >> strTemp;
                         }
-                        if (load.find(fCpu) != load.end())
+                        inStat >> ulImage >> ulResident;
+                        ulImage /= 1024;
+                        ulResident *= lPageSize;
+                        if (!strDaemon.empty() && strDaemon[0] == '(')
                         {
-                          load[fCpu].push_back(szProcess);
+                          strDaemon.erase(0, 1);
                         }
-                      }
-                      ptSystem->i("cpuUsage", to_string((size_t)(fCpuUsage / ((get_nprocs() > 0)?get_nprocs():1))), 'n');
-                      while (load.size() > 5)
-                      {
-                        load.begin()->second.clear();
-                        load.erase(load.begin()->first);
-                      }
-                      for (auto i = load.begin(); i != load.end(); i++)
-                      {
-                        for (auto j = i->second.begin(); j != i->second.end(); j++)
+                        if (!strDaemon.empty() && strDaemon[strDaemon.size() - 1] == ')')
                         {
-                          stringstream ssCpuProcessUsage;
-                          ssCpuProcessUsage << (*j) << '=' << i->first;
-                          if (ptSystem->m.find("cpuProcessUsage") == ptSystem->m.end())
-                          {
-                            ptSystem->i("cpuProcessUsage", "");
-                          }
-                          else if (!ptSystem->m["cpuProcessUsage"]->v.empty())
-                          {
-                            ssCpuProcessUsage << ',';
-                          }
-                          ptSystem->i("cpuProcessUsage", ssCpuProcessUsage.str() + ptSystem->m["cpuProcessUsage"]->v);
+                          strDaemon.erase(strDaemon.size() - 1, 1);
                         }
-                        i->second.clear();
-                      }
-                      load.clear();
-                      ptSystem->i("upTime", to_string(sys.uptime), 'n');
-                      ptSystem->i("mainTotal", to_string(sys.totalram * sys.mem_unit), 'n');
-                      ptSystem->i("mainUsed", to_string((sys.totalram - sys.freeram) * sys.mem_unit), 'n');
-                      ptSystem->i("swapTotal", to_string(sys.totalswap * sys.mem_unit), 'n');
-                      ptSystem->i("swapUsed", to_string((sys.totalswap - sys.freeswap) * sys.mem_unit), 'n');
-                    }
-                    pclose(pfinPipe);
-                  }
-                  inCpuSpeed.close();
-                }
-              }
-              ptSystem->m["partitions"] = new Json;
-              if ((pfinPipe = popen("df -kl", "r")) != NULL)
-              {
-                char szField[3][128] = {"\0", "\0", "\0"};
-                fscanf(pfinPipe, "%*s %s %*s %*s %s %s %*s", szField[0], szField[1], szField[2]);
-                while (fscanf(pfinPipe, "%*s %s %*s %*s %s %s", szField[0], szField[1], szField[2]) != EOF)
-                {
-                  if (atoi(szField[0]) > 0 && exclude.find(szField[2]) == exclude.end())
-                  {
-                    string strUsage = szField[1];
-                    strUsage.erase(strUsage.size() - 1, 1);
-                    ptSystem->m["partitions"]->i(szField[2], strUsage);
-                  }
-                }
-                pclose(pfinPipe);
-              }
-              // }}}
-              // {{{ processes
-              if (ptConfig->m.find("processes") != ptConfig->m.end())
-              {
-                ptReq->m["Request"]->m["processes"] = new Json;
-                for (auto &process : ptConfig->m["processes"]->m)
-                {
-                  list<string> procList;
-                  Json *ptProcess = new Json;
-                  file.directoryList("/proc", procList);
-                  for (auto &i : procList)
-                  {
-                    if (i[0] != '.' && manip.isNumeric(i) && file.directoryExist((string)"/proc/" + i))
-                    {
-                      struct stat tStat;
-                      struct passwd *ptPasswd = NULL;
-                      if (stat(((string)"/proc/" + i).c_str(), &tStat) == 0 && file.fileExist((string)"/proc/" + i + (string)"/stat") && (ptPasswd = getpwuid(tStat.st_uid)) != NULL)
-                      {
-                        string strOwner = ptPasswd->pw_name;
-                        ifstream inStat(((string)"/proc/" + i + (string)"/stat").c_str());
-                        if (inStat.good())
+                        if (process.first == strDaemon)
                         {
-                          string strTemp, strDaemon;
-                          long lPageSize = sysconf(_SC_PAGE_SIZE) / 1024;
-                          unsigned long ulImage = 0, ulResident = 0;
-                          inStat >> strTemp >> strDaemon;
-                          for (auto j = 0; j < 20; j++)
+                          if (ptProcess->m.find("owners") == ptProcess->m.end())
                           {
-                            inStat >> strTemp;
+                            ptProcess->m["owners"] = new Json;
                           }
-                          inStat >> ulImage >> ulResident;
-                          ulImage /= 1024;
-                          ulResident *= lPageSize;
-                          if (!strDaemon.empty() && strDaemon[0] == '(')
+                          if (ptProcess->m["owners"]->m.find(strOwner) == ptProcess->m["owners"]->m.end())
                           {
-                            strDaemon.erase(0, 1);
+                            ptProcess->m["owners"]->i(strOwner, "0", 'n');
                           }
-                          if (!strDaemon.empty() && strDaemon[strDaemon.size() - 1] == ')')
+                          ptProcess->m["owners"]->i(strOwner, to_string(atoi(ptProcess->m["owners"]->m[strOwner]->v.c_str()) + 1), 'n');
+                          if (ptProcess->m.find("processes") == ptProcess->m.end())
                           {
-                            strDaemon.erase(strDaemon.size() - 1, 1);
+                            ptProcess->i("processes", "0", 'n');
                           }
-                          if (process.first == strDaemon)
+                          ptProcess->i("processes", to_string(atoi(ptProcess->m["processes"]->v.c_str()) + 1), 'n');
+                          if (ptProcess->m.find("image") == ptProcess->m.end())
                           {
-                            if (ptProcess->m.find("owners") == ptProcess->m.end())
+                            ptProcess->i("image", "0", 'n');
+                          }
+                          ptProcess->i("image", to_string(atoi(ptProcess->m["image"]->v.c_str()) + ulImage), 'n');
+                          if (ptProcess->m.find("resident") == ptProcess->m.end())
+                          {
+                            ptProcess->i("resident", "0", 'n');
+                          }
+                          ptProcess->i("resident", to_string(atoi(ptProcess->m["resident"]->v.c_str()) + ulResident), 'n');
+                          if ((pfinPipe = popen(((string)"ps --pid=" + i + (string)" --format=lstart --no-headers").c_str(), "r")) != NULL)
+                          {
+                            char szTemp[4][10] = {"\0", "\0", "\0", "\0"};
+                            if (fscanf(pfinPipe, "%*s %s %s %s %s", szTemp[0], szTemp[1], szTemp[2], szTemp[3]) != EOF)
                             {
-                              ptProcess->m["owners"] = new Json;
-                            }
-                            if (ptProcess->m["owners"]->m.find(strOwner) == ptProcess->m["owners"]->m.end())
-                            {
-                              ptProcess->m["owners"]->i(strOwner, "0", 'n');
-                            }
-                            ptProcess->m["owners"]->i(strOwner, to_string(atoi(ptProcess->m["owners"]->m[strOwner]->v.c_str()) + 1), 'n');
-                            if (ptProcess->m.find("processes") == ptProcess->m.end())
-                            {
-                              ptProcess->i("processes", "0", 'n');
-                            }
-                            ptProcess->i("processes", to_string(atoi(ptProcess->m["processes"]->v.c_str()) + 1), 'n');
-                            if (ptProcess->m.find("image") == ptProcess->m.end())
-                            {
-                              ptProcess->i("image", "0", 'n');
-                            }
-                            ptProcess->i("image", to_string(atoi(ptProcess->m["image"]->v.c_str()) + ulImage), 'n');
-                            if (ptProcess->m.find("resident") == ptProcess->m.end())
-                            {
-                              ptProcess->i("resident", "0", 'n');
-                            }
-                            ptProcess->i("resident", to_string(atoi(ptProcess->m["resident"]->v.c_str()) + ulResident), 'n');
-                            if ((pfinPipe = popen(((string)"ps --pid=" + i + (string)" --format=lstart --no-headers").c_str(), "r")) != NULL)
-                            {
-                              char szTemp[4][10] = {"\0", "\0", "\0", "\0"};
-                              if (fscanf(pfinPipe, "%*s %s %s %s %s", szTemp[0], szTemp[1], szTemp[2], szTemp[3]) != EOF)
+                              time_t CTime;
+                              struct tm tTime;
+                              tTime.tm_mon = (((string)szTemp[0] == "Jan")?0:((string)szTemp[0] == "Feb")?1:((string)szTemp[0] == "Mar")?2:((string)szTemp[0] == "Apr")?3:((string)szTemp[0] == "May")?4:((string)szTemp[0] == "Jun")?5:((string)szTemp[0] == "Jul")?6:((string)szTemp[0] == "Aug")?7:((string)szTemp[0] == "Sep")?8:((string)szTemp[0] == "Oct")?9:((string)szTemp[0] == "Nov")?10:((string)szTemp[0] == "Dec")?11:0);
+                              tTime.tm_mday = atoi(szTemp[1]);
+                              tTime.tm_year = atoi(szTemp[3]) - 1900;
+                              tTime.tm_hour = atoi((((string)szTemp[2]).substr(0, 2)).c_str());
+                              tTime.tm_min = atoi((((string)szTemp[2]).substr(3, 2)).c_str());
+                              tTime.tm_sec = atoi((((string)szTemp[2]).substr(6, 2)).c_str());
+                              tTime.tm_isdst = -1;
+                              CTime = mktime(&tTime);
+                              if (CTime > 0 && (ptProcess->m.find("startTime") == ptProcess->m.end() || CTime < atoi(ptProcess->m["startTime"]->v.c_str())))
                               {
-                                time_t CTime;
-                                struct tm tTime;
-                                tTime.tm_mon = (((string)szTemp[0] == "Jan")?0:((string)szTemp[0] == "Feb")?1:((string)szTemp[0] == "Mar")?2:((string)szTemp[0] == "Apr")?3:((string)szTemp[0] == "May")?4:((string)szTemp[0] == "Jun")?5:((string)szTemp[0] == "Jul")?6:((string)szTemp[0] == "Aug")?7:((string)szTemp[0] == "Sep")?8:((string)szTemp[0] == "Oct")?9:((string)szTemp[0] == "Nov")?10:((string)szTemp[0] == "Dec")?11:0);
-                                tTime.tm_mday = atoi(szTemp[1]);
-                                tTime.tm_year = atoi(szTemp[3]) - 1900;
-                                tTime.tm_hour = atoi((((string)szTemp[2]).substr(0, 2)).c_str());
-                                tTime.tm_min = atoi((((string)szTemp[2]).substr(3, 2)).c_str());
-                                tTime.tm_sec = atoi((((string)szTemp[2]).substr(6, 2)).c_str());
-                                tTime.tm_isdst = -1;
-                                CTime = mktime(&tTime);
-                                if (CTime > 0 && (ptProcess->m.find("startTime") == ptProcess->m.end() || CTime < atoi(ptProcess->m["startTime"]->v.c_str())))
-                                {
-                                  ptProcess->i("startTime", to_string(CTime));
-                                }
+                                ptProcess->i("startTime", to_string(CTime));
                               }
                             }
-                            pclose(pfinPipe);
                           }
+                          pclose(pfinPipe);
                         }
-                        inStat.close();
                       }
-                    }
-                  }
-                  ptReq->m["Request"]->m["processes"]->i(process.first, ptProcess);
-                  delete ptProcess;
-                }
-              }
-              // }}}
-              radial.request(ptReq, ptRes, strError);
-              delete ptReq;
-              if (ptRes->m.find("Response") != ptRes->m.end() && ptRes->m["Response"]->m.find("scripts") != ptRes->m["Response"]->m.end())
-              {
-                for (auto &s : ptRes->m["Response"]->m["scripts"]->l)
-                {
-                  if (s->m.find("script") != s->m.end() && !s->m["script"]->v.empty())
-                  {
-                    FILE *pfScript = NULL;
-                    string strData;
-                    stringstream ssData;
-                    ssData << s << endl;
-                    strData = ssData.str();
-                    if ((pfScript = popen(s->m["script"]->v.c_str(), "w")) != NULL)
-                    {
-                      fwrite(strData.c_str(), sizeof(char), strData.size(), pfScript);
-                      pclose(pfScript);
+                      inStat.close();
                     }
                   }
                 }
+                ptReq->m["Request"]->m["processes"]->i(process.first, ptProcess);
+                delete ptProcess;
               }
-              delete ptRes;
             }
             // }}}
-            sleep(10);
+            radial.request(ptReq, ptRes, strError);
+            delete ptReq;
+            if (ptRes->m.find("Response") != ptRes->m.end() && ptRes->m["Response"]->m.find("scripts") != ptRes->m["Response"]->m.end())
+            {
+              for (auto &s : ptRes->m["Response"]->m["scripts"]->l)
+              {
+                if (s->m.find("script") != s->m.end() && !s->m["script"]->v.empty())
+                {
+                  FILE *pfScript = NULL;
+                  string strData;
+                  stringstream ssData;
+                  ssData << s << endl;
+                  strData = ssData.str();
+                  if ((pfScript = popen(s->m["script"]->v.c_str(), "w")) != NULL)
+                  {
+                    fwrite(strData.c_str(), sizeof(char), strData.size(), pfScript);
+                    pclose(pfScript);
+                  }
+                }
+              }
+            }
+            delete ptRes;
           }
-          radial.utility()->sslDeinit();
-          delete ptConfig;
+          // }}}
+          sleep(10);
         }
-        else
-        {
-          cerr << strPrefix << "->Radial::Radial() error:  " << strError << endl;
-        }
+        radial.utility()->sslDeinit();
+        delete ptConfig;
+      }
+      else
+      {
+        cerr << strPrefix << "->Radial::Radial() error:  " << strError << endl;
+      }
     }
     else
     {
