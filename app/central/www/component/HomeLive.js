@@ -65,7 +65,7 @@ export default
       if (c.isValid())
       {
         s.info.v = 'Retrieving applications...';
-        let request = {Interface: 'database', Database: 'central_r', Query: 'select id, name from application where website is not null order by name'};
+        let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_account b, account_type c where a.id = b.application_id and b.type_id = c.id and a.website is not null and c.type = \'Radial - WebSocket\' order by a.name'};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
