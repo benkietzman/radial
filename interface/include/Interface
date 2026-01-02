@@ -87,6 +87,7 @@ class Interface : public Base
   bool action(radialUser &d, string &e);
   void alert(const string strMessage);
   bool alert(const string strUser, const string strMessage, string &strError);
+  bool application(const string strApplication, Json *ptMessage, string &strError)
   bool application(radialUser &d, string &e);
   bool auth(Json *ptJson, string &strError);
   void boolean(Json *ptJson, const string strField);

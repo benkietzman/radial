@@ -262,6 +262,26 @@ bool Interface::alert(const string strUser, const string strMessage, string &str
 }
 // }}}
 // {{{ application()
+bool Interface::application(const string strApplication, Json *ptMessage, string &strError)
+{
+  bool bResult = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Interface", "application");
+  ptJson->i("Function", strApplication);
+  ptJson->m["Request"] = new Json(ptMessage);
+  if (hub("application", ptJson, strError))
+  {
+    bResult = true;
+    if (ptJson->m.find("Response") != ptJson->m.end())
+    {
+      ptMessage->merge(ptJson->m["Response"], true, false);
+    }
+  }
+  delete ptJson;
+
+  return bResult;
+}
 bool Interface::application(radialUser &d, string &e)
 {
   bool b = false;
