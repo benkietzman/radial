@@ -1228,7 +1228,7 @@ bool Interface::cronParseValue(const size_t unType, string strValue, int &nValue
 // }}}
 // }}}
 // {{{ curl()
-bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Json *ptGet, Json *ptPost, Json *ptPut, const string strProxy, string &strCookies, string &strHeader, string &strContent, string &strError, const string strUserAgent, const bool bMobile, const bool bFailOnError, const string strCustomRequest)
+bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Json *ptGet, Json *ptPatch, Json *ptPost, Json *ptPut, const string strProxy, string &strCookies, string &strHeader, string &strContent, string &strError, const string strUserAgent, const bool bMobile, const bool bFailOnError, const string strCustomRequest)
 {
   bool bResult = false;
   list<Json *> in, out;
@@ -1270,6 +1270,10 @@ bool Interface::curl(const string strURL, const string strType, Json *ptAuth, Js
     ptJson->i("UserAgent", strUserAgent);
   }
   ptJson->i("Mobile", ((bMobile)?"yes":"no"));
+  if (ptPatch != NULL)
+  {
+    ptJson->m["Patch"] = new Json(ptPatch);
+  }
   if (ptPost != NULL)
   {
     ptJson->m["Post"] = new Json(ptPost);

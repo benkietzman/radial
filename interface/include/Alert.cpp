@@ -133,7 +133,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 ptPost->m["Request"]->i("User", user["alert_remote_user"]);
               }
               ptPost->m["Request"]->i("Message", strMessage);
-              if (curl(user["alert_remote_url"], "json", NULL, NULL, ptPost, NULL, ssProxy.str(), strCookies, strHeader, strContent, strError))
+              if (curl(user["alert_remote_url"], "json", NULL, NULL, NULL, ptPost, NULL, ssProxy.str(), strCookies, strHeader, strContent, strError))
               {
                 Json *ptContent = new Json(strContent);
                 if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
