@@ -1452,11 +1452,6 @@ export default
                       if (nIndex != -1)
                       {
                         let info = response.Response;
-                        if (c.isObject(info) && c.isObject(info.data))
-                        {
-                          let d = new Date(info.data.startTime * 1000);
-                          info.data.startDate = d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
-                        }
                         info.ServerID = response.Request.server_id;
                         info.Server = response.Request.server;
                         info.Daemon = response.Request.process;
@@ -1753,7 +1748,7 @@ export default
     <tr>
       <td><a href="#/Servers/{{ServerID}}">{{Server}}</a></td>
       <td>{{Daemon}}</td>
-      <td>{{data.startDate}}</td>
+      <td>{{datetime data.startTime}}</td>
       <td>{{json data.owners}}</td>
       <td title="{{number data.processes 0}}">{{numberShort data.processes 0}}</td>
       <td title="{{number data.image 0}}">{{byteShort data.image 0}}</td>
