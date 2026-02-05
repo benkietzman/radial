@@ -1,0 +1,36 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Emulator
+// author     : Ben Kietzman
+// begin      : 2026-02-05
+// copyright  : Ben Kietzman
+// email      : ben@kietzman.org
+#ifndef _RADIAL_EMULATOR_
+#define _RADIAL_EMULATOR_
+// {{{ includes
+#include "../../radial/interface/include/Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Emulator
+class Emulator : public Interface
+{
+  protected:
+  map<string, bool (Emulator::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+
+  bool data(radialUser &d, string &e);
+  bool launch(radialUser &d, string &e);
+
+  public:
+  Emulator(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool));
+  ~Emulator();
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+};
+// }}}
+}
+}
+#endif

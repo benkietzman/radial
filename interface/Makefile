@@ -7,7 +7,7 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
 install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/application $(prefix)/radial/interface/
@@ -18,6 +18,7 @@ install: bin/alert bin/application bin/auth bin/builder bin/central bin/command 
 	install --mode=775 bin/data $(prefix)/radial/interface/
 	install --mode=775 bin/database $(prefix)/radial/interface/
 	install --mode=775 bin/db $(prefix)/radial/interface/
+	install --mode=775 bin/emulator $(prefix)/radial/interface/
 	install --mode=775 bin/feedback $(prefix)/radial/interface/
 	install --mode=775 bin/irc $(prefix)/radial/interface/
 	install --mode=775 bin/junction $(prefix)/radial/interface/
@@ -128,6 +129,16 @@ obj/db.o: db.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c db.cpp -o obj/db.o $(CPPFLAGS) -I../../common
 obj/Db.o: include/Db.cpp obj
 	g++ -ggdb -Wall -c include/Db.cpp -o obj/Db.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ emulator
+emulator: bin/emulator $(prefix)/radial/interface
+	install --mode=775 bin/emulator $(prefix)/radial/interface/
+bin/emulator: ../../common/libcommon.a obj/emulator.o obj/Base.o obj/Interface.o obj/Emulator.o bin
+	g++ -o bin/emulator obj/emulator.o obj/Base.o obj/Interface.o obj/Emulator.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+obj/emulator.o: emulator.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c emulator.cpp -o obj/emulator.o $(CPPFLAGS) -I../../common
+obj/Emulator.o: include/Emulator.cpp obj
+	g++ -ggdb -Wall -c include/Emulator.cpp -o obj/Emulator.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ feedback
 feedback: bin/feedback $(prefix)/radial/interface
