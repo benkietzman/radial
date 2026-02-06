@@ -222,6 +222,7 @@ int main(int argc, char *argv[])
                 {
                   if ((nReturn = read(fds[i].fd, szBuffer, 1024)) > 0)
                   {
+cout.write(szBuffer, nReturn);
                     j.second->b[0].append(szBuffer, nReturn);
                   }
                   else
