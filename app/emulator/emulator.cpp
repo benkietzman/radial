@@ -28,6 +28,14 @@ using namespace common;
 #define CHILD_READ   writepipe[0]
 #define PARENT_WRITE writepipe[1]
 // }}}
+// {{{ structs
+struct command
+{
+  int r;
+  int w;
+  string b[2];
+};
+// }}}
 // {{{ global variables
 bool gbShutdown = false;
 // }}}
@@ -60,7 +68,7 @@ int main(int argc, char *argv[])
     int nIndex, nReturn;
     list<string> removals;
     list<Json *> messages;
-    map<string, vector<map<int, string> > > commands;
+    map<string, command *> commands;
     pollfd *fds;
     cout << p << ":  Connected to Radial." << endl;
     while (!gbShutdown)
@@ -83,7 +91,7 @@ int main(int argc, char *argv[])
                 {
                   if (m->m.find("Data") != m->m.end() && !m->m["Data"]->v.empty())
                   {
-                    commands[w][1].begin()->second.append(m->m["Data"]->v);
+                    commands[w]->b[1].append(m->m["Data"]->v);
                   }
                   else
                   {
@@ -115,19 +123,23 @@ int main(int argc, char *argv[])
                         {
                           close(PARENT_WRITE);
                           close(PARENT_READ);
+                          cout << p << " [" << m->m["Command"]->v << "]:  Launched command." << endl;
                           dup2(CHILD_READ, 0);
                           close(CHILD_READ);
                           dup2(CHILD_WRITE, 1);
                           close(CHILD_WRITE);
-                          cout << p << " [" << m->m["Command"]->v << "]:  Launched command." << endl;
-                          execve(args[0], args, environ);
+                          execvpe(args[0], args, environ);
                           _exit(1);
                         }
                         else if (childPid > 0)
                         {
+                          command *ptCommand = new command;
                           close(CHILD_READ);
                           close(CHILD_WRITE);
-                          commands[m->m["wsRequestID"]->v] = {{{PARENT_READ, ""}}, {{PARENT_WRITE, ""}}};
+                          bProcessed = true;
+                          ptCommand->r = PARENT_READ;
+                          ptCommand->w = PARENT_WRITE;
+                          commands[m->m["wsRequestID"]->v] = ptCommand;
                         }
                         else
                         {
@@ -189,10 +201,10 @@ int main(int argc, char *argv[])
       nIndex = 0;
       for (auto &i : commands)
       {
-        fds[nIndex].fd = i.second[0].begin()->first;
+        fds[nIndex].fd = i.second->r;
         fds[nIndex].events = POLLIN;
         nIndex++;
-        fds[nIndex].fd = i.second[1].begin()->first;
+        fds[nIndex].fd = ((!i.second->b[1].empty())?i.second->w:-1);
         fds[nIndex].events = POLLOUT;
         nIndex++;
       }
@@ -204,13 +216,13 @@ int main(int argc, char *argv[])
           {
             for (auto &j : commands)
             {
-              if (fds[i].fd == j.second[0].begin()->first)
+              if (fds[i].fd == j.second->r)
               {
                 if (fds[i].revents & (POLLHUP | POLLIN))
                 {
                   if ((nReturn = read(fds[i].fd, szBuffer, 1024)) > 0)
                   {
-                    j.second[0].begin()->second.append(szBuffer, nReturn);
+                    j.second->b[0].append(szBuffer, nReturn);
                   }
                   else
                   {
@@ -218,13 +230,13 @@ int main(int argc, char *argv[])
                   }
                 }
               }
-              else if (fds[i].fd == j.second[1].begin()->first)
+              else if (fds[i].fd == j.second->w)
               {
                 if (fds[i].revents & POLLOUT)
                 {
-                  if ((nReturn = write(fds[i].fd, j.second[1].begin()->second.c_str(), j.second[1].begin()->second.size())) > 0)
+                  if ((nReturn = write(fds[i].fd, j.second->b[1].c_str(), j.second->b[1].size())) > 0)
                   {
-                    j.second[1].begin()->second.erase(0, nReturn);
+                    j.second->b[1].erase(0, nReturn);
                   }
                   else
                   {
@@ -244,7 +256,7 @@ int main(int argc, char *argv[])
       delete[] fds;
       for (auto &i : commands)
       {
-        if (!i.second[0].begin()->second.empty())
+        if (!i.second->b[0].empty())
         {
           string strEncoded;
           Json *ptReq = new Json, *ptRes = new Json;
@@ -254,7 +266,8 @@ int main(int argc, char *argv[])
           ptReq->m["Request"]->i("wsReqeustID", i.first);
           ptReq->m["Request"]->m["Message"] = new Json;
           ptReq->m["Request"]->m["Message"]->i("Action", "data");
-          manip.encodeBase64(i.second[0].begin()->second, strEncoded);
+          manip.encodeBase64(i.second->b[0], strEncoded);
+          i.second->b[0].clear();
           ptReq->m["Request"]->m["Message"]->i("Data", strEncoded);
           ptReq->m["Request"]->i("Wait", "0", '0');
           if (!radial.request(ptReq, ptRes, e))
@@ -270,8 +283,9 @@ int main(int argc, char *argv[])
       removals.unique();
       while (!removals.empty())
       {
-        close(commands[removals.front()][0].begin()->first);
-        close(commands[removals.front()][1].begin()->first);
+        close(commands[removals.front()]->r);
+        close(commands[removals.front()]->w);
+        delete commands[removals.front()];
         commands.erase(removals.front());
         removals.pop_front();
       }
