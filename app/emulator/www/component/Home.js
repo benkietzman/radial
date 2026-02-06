@@ -30,7 +30,7 @@ export default
     // [[[ launch()
     s.launch = (strServer) =>
     {
-      let request = {Interface: 'application', 'Function': 'Emulator', Request: {'Function': 'launch', Command: s.command.v}};
+      let request = {Interface: 'emulator', 'Function': 'launch', Request: {Command: s.command.v}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -71,7 +71,8 @@ export default
     {
       if (data.detail && data.detail.Action && data.detail.Action == 'data' && data.detail.Data)
       {
-        s.u();
+        console.log(data.detail.Data);
+        //s.u();
       }
     });
     // ]]]
