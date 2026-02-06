@@ -93,9 +93,9 @@ bool Emulator::data(radialUser &d, string &e)
 
   if (isValid(d, "Emulator"))
   {
-    if (!empty(d.p.r, "wsRequestID"))
+    if (!empty(d.r, "wsRequestID"))
     {
-      string w = d.p.r->m["wsRequestID"]->v;
+      string w = d.r->m["wsRequestID"]->v;
       if (dep({"Data"}, i, e))
       {
         string v = i->m["Data"]->v;
@@ -131,9 +131,9 @@ bool Emulator::launch(radialUser &d, string &e)
 
   if (isValid(d, "Emulator"))
   {
-    if (!empty(d.p.r, "wsRequestID"))
+    if (!empty(d.r, "wsRequestID"))
     {
-      string w = d.p.r->m["wsRequestID"]->v;
+      string w = d.r->m["wsRequestID"]->v;
       if (dep({"Command"}, i, e))
       {
         string c = i->m["Command"]->v;

@@ -9,7 +9,7 @@
 #ifndef _RADIAL_EMULATOR_
 #define _RADIAL_EMULATOR_
 // {{{ includes
-#include "../../radial/interface/include/Interface"
+#include "Interface"
 // }}}
 extern "C++"
 {
