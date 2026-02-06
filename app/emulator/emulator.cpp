@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
                           close(CHILD_READ);
                           dup2(CHILD_WRITE, 1);
                           close(CHILD_WRITE);
+                          cout << p << " [" << m->m["Command"]->v << "]:  Launched command." << endl;
                           execve(args[0], args, environ);
                           _exit(1);
                         }
@@ -154,7 +155,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                  strError = "Radial::getMessages() Please provide a valid Function:  nsnake.";
+                  strError = "Radial::getMessages() Please provide a valid Function:  data, launch.";
                 }
               }
               else
