@@ -76,6 +76,9 @@ export default
       {
         s.nState++;
       }
+      else if (d == '?')
+      {
+      }
       else if (d >= '0' && d <= '9')
       {
         if (s.nState == 2)
@@ -323,7 +326,7 @@ export default
             break;
           }
           // ]]]
-          // [[[ f - HVP - Horizonatl Vertical Position
+          // [[[ f - HVP - Horizontal Vertical Position
           case 'f':
           {
             if ((n-1) > 0 && (n-1) < s.h)
@@ -472,11 +475,12 @@ export default
     s.identify = (d) =>
     {
       let n = d.charCodeAt(d);
+console.log(d+'('+n+')');
       if (s.nState > 1)
       {
         s.esc(d);
       }
-      else if ((n == 27 && s.nState == 0) || (d == '[' && s.nState == 1))
+      else if ((n == 27 && s.nState == 0) || ((d == '[' || d == '(') && s.nState == 1))
       {
         s.nState++;
       }
