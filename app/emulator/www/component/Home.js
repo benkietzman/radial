@@ -25,17 +25,26 @@ export default
       a: a,
       c: c,
       b: '',
+      bAlign: false,
+      bEscape: false,
       bg: 'black',
+      bG0csi: false,
+      bG1csi: false,
+      bG2csi: false,
+      bG3csi: false,
       bLoaded: false,
+      bOsc: false,
+      bSequence: false,
       fg: 'white',
       fw: 'normal',
       g: '',
       nState: 0,
-      h: 30,
+      h: 24,
       m: '',
       n: '',
       r: '',
       s: [],
+      t: '',
       w: 80,
       x: 0,
       y: 0
@@ -69,9 +78,10 @@ export default
       }
     };
     // ]]]
-    // [[[ esc()
-    s.esc = (d) =>
+    // [[[ csi()
+    s.csi = (d) =>
     {
+      s.t += d;
       if (d == ';')
       {
         s.nState++;
@@ -81,23 +91,23 @@ export default
       }
       else if (d >= '0' && d <= '9')
       {
-        if (s.nState == 2)
+        if (s.nState == 0)
         {
           s.n += d;
         }
-        else if (s.nState == 3)
+        else if (s.nState == 1)
         {
           s.m += d;
         }
-        else if (s.nState == 4)
+        else if (s.nState == 2)
         {
           s.r += d;
         }
-        else if (s.nState == 5)
+        else if (s.nState == 3)
         {
           s.g += d;
         }
-        else if (s.nState == 6)
+        else if (s.nState == 4)
         {
           s.b += d;
         }
@@ -463,11 +473,162 @@ export default
           // ]]]
         }
         s.b = '';
+        s.bCsi = false;
+        s.bEscape = false;
         s.g = '';
         s.m = '';
         s.n = '';
         s.nState = 0;
         s.r = '';
+        console.log(s.t);
+        s.t = '';
+      }
+    };
+    // ]]]
+    // [[[ esc()
+    s.esc = (d) =>
+    {
+      if (s.bCsi)
+      {
+        s.csi(d);
+      }
+      else if (s.bAlign)
+      {
+        s.bEscape = false;
+        s.bAlign = false;
+      }
+      else if (s.bG0cs)
+      {
+        s.bEscape = false;
+        s.bG0cs = false;
+      }
+      else if (s.bG1cs)
+      {
+        s.bEscape = false;
+        s.bG1cs = false;
+      }
+      else if (s.bG2cs)
+      {
+        s.bEscape = false;
+        s.bG2cs = false;
+      }
+      else if (s.bG3cs)
+      {
+        s.bEscape = false;
+        s.bG3cs = false;
+      }
+      else if (s.bOsc)
+      {
+        s.bEscape = false;
+        s.bOsc = false;
+      }
+      else if (s.bSequence)
+      {
+        s.bEscape = false;
+        s.bSequence = false;
+      }
+      else if (d == '[') // CSI - Control Sequence Introducer prefix
+      {
+        s.bCsi = true;
+      }
+      else if (d == 'c') // RIS - Reset
+      {
+        s.clear();
+        s.bEscape = false;
+      }
+      else if (d == 'D') // IND - Linefeed
+      {
+        s.y++;
+        s.bEscape = false;
+      }
+      else if (d == 'E') // NEL - Newline
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'H') // HTS - Set tab stop at current column
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'M') // RI - Reverse linefeed
+      {
+        s.y--;
+        s.bEscape = false;
+      }
+      else if (d == 'N') // SS2 - Single Shift Two
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'O') // SS3 - Single Shift Three
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'P') // DSC - Device Control String
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'X') // SOS - Start of String
+      {
+        s.bEscape = false;
+      }
+      else if (d == 'Z') // DECID - DEC private identification
+      {
+        s.bEscape = false;
+      }
+      else if (d == '7') // DECSC - Save current state
+      {
+        s.bEscape = false;
+      }
+      else if (d == '8') // DECRC - Restore state most currently saved
+      {
+        s.bEscape = false;
+      }
+      else if (d == '\\') // ST - String Terminator
+      {
+        s.bEscape = false;
+      }
+      else if (d == '^') // PM - Private Message
+      {
+        s.bEscape = false;
+      }
+      else if (d == '_') // APC - Application Program Command
+      {
+        s.bEscape = false;
+      }
+      else if (d == '%') // Start sequence selecting
+      {
+        s.bSequence = true;
+      }
+      else if (d == '#') // DECALN - DEC screen alignment test
+      {
+        s.bAlign = true;
+      }
+      else if (d == '(') // Start sequence defining G0 character set
+      {
+        s.bG0cs = true;
+      }
+      else if (d == ')') // Start sequence defining G1 character set
+      {
+        s.bG1cs = true;
+      }
+      else if (d == '*') // Start sequence defining G2 character set
+      {
+        s.bG2cs = true;
+      }
+      else if (d == '+') // Start sequence defining G3 character set
+      {
+        s.bG3cs = true;
+      }
+      else if (d == '>') // DECPNM - Set numeric keypad mode
+      {
+        s.bEscape = false;
+      }
+      else if (d == '=') // DECPAM - Set application keypad mode
+      {
+        s.bEscape = false;
+      }
+      else if (d == ']') // OSC - Operating System Command prefix
+      {
+        s.bOsc = true;
       }
     };
     // ]]]
@@ -475,27 +636,17 @@ export default
     s.identify = (d) =>
     {
       let n = d.charCodeAt(d);
-console.log(d+'('+n+')');
-      if (s.nState > 1)
+//console.log(d+'('+n+')');
+      if (s.bEscape)
       {
         s.esc(d);
       }
-      else if ((n == 27 && s.nState == 0) || ((d == '[' || d == '(') && s.nState == 1))
+      else if (n == 27)
       {
-        s.nState++;
+        s.bEscape = true;
       }
       else
       {
-        if (s.nState > 0)
-        {
-          s.process(String.fromCharCode(27));
-          console.log('UNCAUGHT:  '+d);
-          if (s.nState > 1)
-          {
-            s.process('[');
-          }
-        }
-        s.nState = 0;
         s.process(d);
       }
     };
