@@ -3517,7 +3517,7 @@ bool Interface::menuAccess(radialUser &d, string &e)
 // {{{ mysql()
 bool Interface::mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError)
 {
-  bool bResult;
+  bool bResult = false;
   stringstream ssPort;
   Json *ptJson = new Json;
 
