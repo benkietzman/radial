@@ -8,7 +8,7 @@
 # {{{ prep work
 prefix=/usr/local
 all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/application $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
