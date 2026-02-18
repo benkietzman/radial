@@ -1959,7 +1959,7 @@ export default
   <!-- ]]] -->
   <!-- [[[ issues -->
   {{#if application.forms.Issues.active}}
-  <div class="table-responsive">
+  <div>
     <!-- [[[ issues -->
     {{#if issueList}}
     <table class="table table-condensed table-striped">
