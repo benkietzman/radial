@@ -1959,7 +1959,7 @@ export default
   <!-- ]]] -->
   <!-- [[[ issues -->
   {{#if application.forms.Issues.active}}
-  <div>
+  <div class="table-responsive">
     <!-- [[[ issues -->
     {{#if issueList}}
     <table class="table table-condensed table-striped">
@@ -2097,10 +2097,10 @@ export default
               <button class="btn btn-primary bi bi-save float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;" title="Save"></button>
               <button  class="btn btn-primary bi bi-x-circle float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;" title="Cancel"></button>
               {{else}}
-              <pre  style="background: inherit; color: inherit; overflow-x: auto; white-space: pre-wrap;">{{comments}}</pre>
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
               {{/ifCond}}
               {{else}}
-              <pre  style="background: inherit; color: inherit; overflow-x: auto; white-space: pre-wrap;">{{comments}}</pre>
+              <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments}}</pre>
               {{/if}}
             </td>
           </tr>
