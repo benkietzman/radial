@@ -165,7 +165,7 @@ export default
           {{#if summary}}
           <p style="font-weight: bold;">{{summary}}</p>
           {{/if}}
-          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{comments.[0].comments}}</pre>
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
         </td>
       </tr>
       {{/each}}
