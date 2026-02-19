@@ -162,7 +162,7 @@ export default
       </div>
       <div class="col-md-8">
         <div class="card border border-success-subtle" style="margin: 10px 0px;">
-          <div class="card-header bg-success fw-bold">
+          <div class="card-header bg-success fw-bold text-light">
             {{#if summary}}
             {{summary}}
             {{/if}}
