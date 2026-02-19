@@ -137,26 +137,26 @@ export default
       {{#each issues}}
       <tr>
         <td valign="top">
-          <div class="row"><div class="col fw-bold text-nowrap"><a href="#/Applications/{{application.id}}">{{application.name}}</a></div></div>
-          <div class="row"><div class="col">Issue #</div><div class="col text-nowrap">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</div></div>
-          <div class="row"><div class="col">Open</div><div class="col text-nowrap">{{open_date}}</div></div>
+          <div class="row"><div class="col-md-12 fw-bold text-nowrap"><a href="#/Applications/{{application.id}}">{{application.name}}</a></div></div>
+          <div class="row"><div class="col-md-4">Issue #</div><div class="col-md-8 text-nowrap">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</div></div>
+          <div class="row"><div class="col-md-4">Open</div><div class="col-md-8 text-nowrap">{{open_date}}</div></div>
           {{#if due_date}}
-          <div class="row"><div class="col">Due</div><div class="col text-nowrap">{{due_date}}</div></div>
+          <div class="row"><div class="col-md-4">Due</div><div class="col-md-8 text-nowrap">{{due_date}}</div></div>
           {{/if}}
           {{#if release_date}}
-          <div class="row"><div class="col">Release</div><div class="col text-nowrap">{{release_date}}</div></div>
+          <div class="row"><div class="col-md-4">Release</div><div class="col-md-8 text-nowrap">{{release_date}}</div></div>
           {{/if}}
           {{#if close_date}}
-          <div class="row"><div class="col">Close</div><div class="col text-nowrap">{{close_date}}</div></div>
+          <div class="row"><div class="col-md-4">Close</div><div class="col-md-8 text-nowrap">{{close_date}}</div></div>
           {{/if}}
           {{#ifCond priority ">=" 1}}
-          <div class="row"><div class="col">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col">Low</div>{{else ifCond ../priority "==" 2}}<div class="col" style="color: orange;">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col" style="color: red;">High</div>{{else}}<div class="col" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></div>{{/ifCond}}</div>
+          <div class="row"><div class="col-md-4">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col-md-8">Low</div>{{else ifCond ../priority "==" 2}}<div class="col-md-8" style="color: orange;">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col-md-8" style="color: red;">High</div>{{else}}<div class="col-md-8" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></div>{{/ifCond}}</div>
           {{/ifCond}}
           {{#if comments}}
-          <div class="row"><div class="col">Requester</div><div class="col text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></div></div>
+          <div class="row"><div class="col-md-4">Requester</div><div class="col-md-8 text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></div></div>
           {{/if}}
           {{#if assigned}}
-          <div class="row"><div class="col">Assigned</div><div class="col text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></div></div>
+          <div class="row"><div class="col-md-4">Assigned</div><div class="col-md-8 text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></div></div>
           {{/if}}
         </td>
         <td valign="top">
