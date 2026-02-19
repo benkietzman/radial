@@ -159,7 +159,7 @@ export default
         {{/if}}
       </div>
       <div class="col-md-8">
-        <div class="card border border-primary-subtle" style="margin-top: 10px;">
+        <div class="card border border-primary-subtle" style="margin: 10px 0px;">
           <div class="card-header bg-primary fw-bold">
             {{#if summary}}
             {{summary}}
