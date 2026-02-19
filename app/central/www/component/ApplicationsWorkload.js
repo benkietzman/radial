@@ -154,10 +154,10 @@ export default
             <tr><td>Priority</td>{{#ifCond ../priority "==" 1}}<td>Low</td>{{else ifCond ../priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond ../priority "==" 3}}<td style="color: red;">High</td>{{else}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
             {{/ifCond}}
             {{#if comments}}
-            <tr><td>Requester</td><td><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
+            <tr><td>Requester</td><td style="white-space: nowrap;"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
             {{/if}}
             {{#if assigned}}
-            <tr><td>Assigned</td><td><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
+            <tr><td>Assigned</td><td style="white-space: nowrap;"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
             {{/if}}
           </table>
         </td>
