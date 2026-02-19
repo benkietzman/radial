@@ -135,7 +135,7 @@ export default
     {{#if issues}}
     {{#each issues}}
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-4 card-footer border border-secondary-subtle bg-secondary-subtle">
         <div class="row"><div class="col-md-12 fw-bold text-nowrap"><a href="#/Applications/{{application.id}}">{{application.name}}</a></div></div>
         <div class="row"><div class="col-md-4">Issue #</div><div class="col-md-8 text-nowrap">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</div></div>
         <div class="row"><div class="col-md-4">Open</div><div class="col-md-8 text-nowrap">{{open_date}}</div></div>
