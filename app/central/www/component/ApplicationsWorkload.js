@@ -161,13 +161,13 @@ export default
         </div>
       </div>
       <div class="col-md-8">
-        <div class="card border border-primary-subtle" style="margin: 10px 0px;">
-          <div class="card-header bg-primary fw-bold">
+        <div class="card border border-success-subtle" style="margin: 10px 0px;">
+          <div class="card-header bg-success fw-bold">
             {{#if summary}}
             {{summary}}
             {{/if}}
           </div>
-          <div class="card-body bg-primary-subtle">
+          <div class="card-body bg-success-subtle">
             <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
           </div>
         </div>
