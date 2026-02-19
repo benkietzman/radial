@@ -129,7 +129,7 @@ export default
   // [[[ template
   template: `
   <div class="row table-responsive">
-    <h5 class="page-header">Open Application Issues</h5>
+    <h5 class="page-header">Open Application Issues ({{issues.length}})</h5>
     <p>This page provides your personalized workload of open application issues.  The open issues listed below are being pulled from applications for which you are registered as either a primary or backup developer.  The issues are sorted according to priority, due date, and open date.</p>
     <div c-model="info" class="text-warning"></div>
     {{#if issues}}
