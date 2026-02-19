@@ -2110,8 +2110,8 @@ export default
             <td></td>
             <td>
               <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-primary bi bi-plus-circle float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;" title="Add Comments"></button>
-              <button class="btn btn-danger float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-primary bi bi-plus-circle float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;" title="Add Comments"></button>
+              <button class="btn btn-danger float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;">Close Issue</button>
             </td>
           </tr>
           {{/if}}
