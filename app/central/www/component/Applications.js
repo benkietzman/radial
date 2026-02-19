@@ -2095,7 +2095,7 @@ export default
               {{#ifCond userid "==" (getUserID)}}
               <textarea c-model="application.issue.comments.[{{@key}}].comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
               <button class="btn btn-primary bi bi-save float-end" c-click="editIssueComment({{@key}})" style="margin: 10px 0px 0px 10px;" title="Save"></button>
-              <button  class="btn btn-primary bi bi-x-circle float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;" title="Cancel"></button>
+              <button  class="btn btn-warning bi bi-x-circle float-end" c-click="preEditIssueComment({{@key}}, false)" style="margin: 10px 0px 0px 0px;" title="Cancel"></button>
               {{else}}
               <pre  style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments}}}</pre>
               {{/ifCond}}
@@ -2110,7 +2110,7 @@ export default
             <td></td>
             <td>
               <textarea c-model="issue.comments" class="form-control" rows="5" style="width: 100%;" placeholder="enter comments"></textarea>
-              <button class="btn btn-primary float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
+              <button class="btn btn-danger float-end" c-click="addIssueComment('close', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 10px;">Close Issue</button>
               <button class="btn btn-primary bi bi-plus-circle float-end" c-click="addIssueComment('update', {{@root.application.issue.id}}, {{@root.application.id}})" style="margin: 10px 0px 0px 0px;" title="Add Comments"></button>
             </td>
           </tr>
