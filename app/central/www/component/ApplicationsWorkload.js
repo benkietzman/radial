@@ -153,10 +153,10 @@ export default
           <div class="row"><div class="col">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col">Low</div>{{else ifCond ../priority "==" 2}}<div class="col" style="color: orange;">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col" style="color: red;">High</div>{{else}}<div class="col" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></div>{{/ifCond}}</div>
           {{/ifCond}}
           {{#if comments}}
-          <div class="row"><div class="col">Requester</div><div class="col text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></td></tr>
+          <div class="row"><div class="col">Requester</div><div class="col text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></div></div>
           {{/if}}
           {{#if assigned}}
-          <div class="row"><div class="col">Assigned</div><div class="col text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></td></tr>
+          <div class="row"><div class="col">Assigned</div><div class="col text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></div></div>
           {{/if}}
         </td>
         <td valign="top">
