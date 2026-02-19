@@ -137,29 +137,27 @@ export default
       {{#each issues}}
       <tr>
         <td valign="top">
-          <table class="table table-condensed" style="background: inherit;">
-            <tr><td colspan="2" style="font-weight: bold; white-space: nowrap;"><a href="#/Applications/{{application.id}}">{{application.name}}</a></td></tr>
-            <tr><td>Issue #</td><td style="white-space: nowrap;">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
-            <tr><td>Open</td><td style="white-space: nowrap;">{{open_date}}</td></tr>
-            {{#if due_date}}
-            <tr><td>Due</td><td style="white-space: nowrap;">{{due_date}}</td></tr>
-            {{/if}}
-            {{#if release_date}}
-            <tr><td>Release</td><td style="white-space: nowrap;">{{release_date}}</td></tr>
-            {{/if}}
-            {{#if close_date}}
-            <tr><td>Close</td><td style="white-space: nowrap;">{{close_date}}</td></tr>
-            {{/if}}
-            {{#ifCond priority ">=" 1}}
-            <tr><td>Priority</td>{{#ifCond ../priority "==" 1}}<td>Low</td>{{else ifCond ../priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond ../priority "==" 3}}<td style="color: red;">High</td>{{else}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
-            {{/ifCond}}
-            {{#if comments}}
-            <tr><td>Requester</td><td style="white-space: nowrap;"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></td></tr>
-            {{/if}}
-            {{#if assigned}}
-            <tr><td>Assigned</td><td style="white-space: nowrap;"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></td></tr>
-            {{/if}}
-          </table>
+          <div class="row"><div class="col fw-bold text-nowrap"><a href="#/Applications/{{application.id}}">{{application.name}}</a></div></div>
+          <div class="row"><div class="col">Issue #</div><div class="col text-nowrap">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</div></div>
+          <div class="row"><div class="col">Open</div><div class="col text-nowrap">{{open_date}}</div></div>
+          {{#if due_date}}
+          <div class="row"><div class="col">Due</div><div class="col text-nowrap">{{due_date}}</div></div>
+          {{/if}}
+          {{#if release_date}}
+          <div class="row"><div class="col">Release</div><div class="col text-nowrap">{{release_date}}</div></div>
+          {{/if}}
+          {{#if close_date}}
+          <div class="row"><div class="col">Close</div><div class="col text-nowrap">{{close_date}}</div></div>
+          {{/if}}
+          {{#ifCond priority ">=" 1}}
+          <div class="row"><div class="col">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col">Low</div>{{else ifCond ../priority "==" 2}}<div class="col" style="color: orange;">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col" style="color: red;">High</div>{{else}}<div class="col" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></div>{{/ifCond}}</div>
+          {{/ifCond}}
+          {{#if comments}}
+          <div class="row"><div class="col">Requester</div><div class="col text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></td></tr>
+          {{/if}}
+          {{#if assigned}}
+          <div class="row"><div class="col">Assigned</div><div class="col text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></td></tr>
+          {{/if}}
         </td>
         <td valign="top">
           {{#if summary}}
