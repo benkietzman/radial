@@ -26,6 +26,8 @@ export default
       c: c,
       b: '',
       bAlign: false,
+      bCsi: false,
+      bCsiQuestion: false,
       bEscape: false,
       bg: 'black',
       bG0csi: false,
@@ -34,6 +36,7 @@ export default
       bG3csi: false,
       bLoaded: false,
       bOsc: false,
+      bParenthesis: false,
       bSequence: false,
       fg: 'white',
       fw: 'normal',
@@ -82,12 +85,23 @@ export default
     s.csi = (d) =>
     {
       s.t += d;
-      if (d == ';')
+      if (s.bCsiQuestion)
+      {
+        if (d == 'h' || d == 'l')
+        {
+          s.bEscape = false;
+          s.bCsi = false;
+          s.bCsiQuestion = false;
+          s.t = '';
+        }
+      }
+      else if (d == ';')
       {
         s.nState++;
       }
       else if (d == '?')
       {
+        s.bCsiQuestion = true;
       }
       else if (d >= '0' && d <= '9')
       {
@@ -118,6 +132,26 @@ export default
         let n = ((s.n != null)?Number(s.n):1);
         switch (d)
         {
+          // [[[ @ - ICH
+          case '@':
+          {
+            for (let i = 0; i < n; i++)
+            {
+              if (s.x < (s.w-1))
+              {
+                for (let j = (s.w-1); j > s.x; j--)
+                {
+                  s.s[s.y][j].background = s.s[s.y][j-1].color;
+                  s.s[s.y][j].color = s.s[s.y][j-1].color;
+                  s.s[s.y][j].value = s.s[s.y][j-1].value;
+                  s.s[s.y][j].weight = s.s[s.y][j-1].weight;
+                }
+                s.s[s.y][s.x].value = ' ';
+              }
+            }
+            break;
+          }
+          // ]]]
           // [[[ A - CUU - Cursor Up
           case 'A':
           {
@@ -522,14 +556,30 @@ export default
         s.bEscape = false;
         s.bOsc = false;
       }
+      else if (s.bParenthesis)
+      {
+        s.bEscape = false;
+        s.bParenthesis = false;
+      }
       else if (s.bSequence)
       {
         s.bEscape = false;
         s.bSequence = false;
       }
+      else if (d == '(')
+      {
+        s.bParenthesis = true;
+      }
       else if (d == '[') // CSI - Control Sequence Introducer prefix
       {
         s.bCsi = true;
+        s.b = '';
+        s.g = '';
+        s.m = '';
+        s.n = '';
+        s.nState = 0;
+        s.r = '';
+        s.t = '';
       }
       else if (d == 'c') // RIS - Reset
       {
@@ -636,7 +686,7 @@ export default
     s.identify = (d) =>
     {
       let n = d.charCodeAt(d);
-//console.log(d+'('+n+')');
+console.log(d+'('+n+')');
       if (s.bEscape)
       {
         s.esc(d);
