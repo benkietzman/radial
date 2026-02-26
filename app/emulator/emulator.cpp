@@ -270,7 +270,7 @@ cout.write(szBuffer, nReturn);
           manip.encodeBase64(i.second->b[0], strEncoded);
           i.second->b[0].clear();
           ptReq->m["Request"]->m["Message"]->i("Data", strEncoded);
-          ptReq->m["Request"]->i("Wait", "0", '0');
+          ptReq->m["Request"]->i("Wait", "1", '1');
           if (!radial.request(ptReq, ptRes, e))
           {
             shutdown();
