@@ -26,6 +26,7 @@ export default
       c: c,
       b: '',
       bAlign: false,
+      bAutoWrap: false,
       bCsi: false,
       bCsiQuestion: false,
       bEscape: false,
@@ -34,6 +35,7 @@ export default
       bG1csi: false,
       bG2csi: false,
       bG3csi: false,
+      bInsert: false,
       bLoaded: false,
       bOsc: false,
       bParenthesis: false,
@@ -47,6 +49,8 @@ export default
       n: '',
       r: '',
       s: [],
+      sh: 24,
+      sy: 0,
       t: '',
       w: 80,
       x: 0,
@@ -57,7 +61,7 @@ export default
     s.clear = () =>
     {
       s.x = s.y = 0;
-      for (let i = 0; i < s.h; i++)
+      for (let i = s.sy; i < (s.sy + s.sh); i++)
       {
         for (let j = 0; j < s.w; j++)
         {
@@ -66,36 +70,11 @@ export default
       }
     };
     // ]]]
-    // [[[ defaults()
-    s.defaults = () =>
-    {
-      return {background: s.bg, color: s.fg, value: ' ', weight: s.fw};
-    };
-    // ]]]
-    // [[[ enter()
-    s.enter = () =>
-    {
-      if (window.event.keyCode == 13)
-      {
-        s.launch();
-      }
-    };
-    // ]]]
     // [[[ csi()
     s.csi = (d) =>
     {
       s.t += d;
-      if (s.bCsiQuestion)
-      {
-        if (d == 'h' || d == 'l')
-        {
-          s.bEscape = false;
-          s.bCsi = false;
-          s.bCsiQuestion = false;
-          s.t = '';
-        }
-      }
-      else if (d == ';')
+      if (d == ';')
       {
         s.nState++;
       }
@@ -135,18 +114,19 @@ export default
           // [[[ @ - ICH
           case '@':
           {
+            console.log('CSI - ICH');
             for (let i = 0; i < n; i++)
             {
               if (s.x < (s.w-1))
               {
                 for (let j = (s.w-1); j > s.x; j--)
                 {
-                  s.s[s.y][j].background = s.s[s.y][j-1].color;
-                  s.s[s.y][j].color = s.s[s.y][j-1].color;
-                  s.s[s.y][j].value = s.s[s.y][j-1].value;
-                  s.s[s.y][j].weight = s.s[s.y][j-1].weight;
+                  s.s[s.sy+s.y][j].background = s.s[s.sy+s.y][j-1].color;
+                  s.s[s.sy+s.y][j].color = s.s[s.sy+s.y][j-1].color;
+                  s.s[s.sy+s.y][j].value = s.s[s.sy+s.y][j-1].value;
+                  s.s[s.sy+s.y][j].weight = s.s[s.sy+s.y][j-1].weight;
                 }
-                s.s[s.y][s.x].value = ' ';
+                s.s[s.sy+s.y][s.x].value = ' ';
               }
             }
             break;
@@ -155,6 +135,7 @@ export default
           // [[[ A - CUU - Cursor Up
           case 'A':
           {
+            console.log('CSI - CUU - Cursor Up');
             for (let i = 0; i < n; i++)
             {
               if (s.y > 0)
@@ -168,9 +149,10 @@ export default
           // [[[ B - CUD - Cursor Down
           case 'B':
           {
+            console.log('CSI - CUD - Cursor Down');
             for (let i = 0; i < n; i++)
             {
-              if (s.y < (s.h-1))
+              if (s.y < (s.sh-1))
               {
                 s.y++;
               }
@@ -181,6 +163,7 @@ export default
           // [[[ C - CUF - Cursor Forward
           case 'C':
           {
+            console.log('CSI - CUF - Cursor Forward');
             for (let i = 0; i < n; i++)
             {
               if (s.x < (s.w-1))
@@ -194,6 +177,7 @@ export default
           // [[[ D - CUB - Cursor Back
           case 'D':
           {
+            console.log('CSI - CUB - Cursor Back');
             for (let i = 0; i < n; i++)
             {
               if (s.x > 0)
@@ -207,9 +191,10 @@ export default
           // [[[ E - CNL - Cursor Next Line
           case 'E':
           {
+            console.log('CSI - CNL - Cursor Next Line');
             for (let i = 0; i < n; i++)
             {
-              if (s.y < (s.h-1))
+              if (s.y < (s.sh-1))
               {
                 s.y++;
                 s.x = 0;
@@ -221,6 +206,7 @@ export default
           // [[[ F - CPL - Cursor Previous Line
           case 'F':
           {
+            console.log('CSI - CPL - Cursor Previous Line');
             for (let i = 0; i < n; i++)
             {
               if (s.y > 0)
@@ -235,6 +221,7 @@ export default
           // [[[ G - CHA - Cursor Horizontal Absolute
           case 'G':
           {
+            console.log('CSI - CHA - Cursor Horizontal Absolute');
             s.x = n - 1;
             break;
           }
@@ -242,11 +229,12 @@ export default
           // [[[ H - CUP - Cursor Position
           case 'H':
           {
-            if ((n-1) > 0 && (n-1) < s.h)
+            console.log('CSI - CUP - Cursor Position');
+            if ((n-1) > 0 && (n-1) < s.sh)
             {
               s.y = n - 1;
             }
-            if ((m-1) > 0 && (m-1) < s.h)
+            if ((m-1) > 0 && (m-1) < s.sh)
             {
               s.x = m - 1;
             }
@@ -256,6 +244,7 @@ export default
           // [[[ J - ED - Erase in Display
           case 'J':
           {
+            console.log('CSI - ED - Erase in Display');
             if (s.n == '')
             {
               n = 0;
@@ -264,13 +253,13 @@ export default
             {
               for (let i = s.x; i < s.w; i++)
               {
-                s.s[s.y][i] = s.defaults();
+                s.s[s.sy+s.y][i] = s.defaults();
               }
-              for (let i = (s.y+1); i < s.h; i++)
+              for (let i = (s.y+1); i < s.sh; i++)
               {
                 for (let j = 0; j < s.w; j++)
                 {
-                  s.s[i][j] = s.defaults();
+                  s.s[s.sy+i][j] = s.defaults();
                 }
               }
             }
@@ -278,23 +267,23 @@ export default
             {
               for (let i = 0; i <= s.x; i++)
               {
-                s.s[s.y][i] = s.defaults();
+                s.s[s.sy+s.y][i] = s.defaults();
               }
               for (let i = 0; i < s.y; i++)
               {
                 for (let j = 0; j < s.w; j++)
                 {
-                  s.s[i][j] = s.defaults();
+                  s.s[s.sy+i][j] = s.defaults();
                 }
               }
             }
             else
             {
-              for (let i = 0; i < s.h; i++)
+              for (let i = 0; i < s.sh; i++)
               {
                 for (let j = 0; j < s.w; j++)
                 {
-                  s.s[i][j] = s.defaults();
+                  s.s[s.sy+i][j] = s.defaults();
                 }
               }
             }
@@ -304,6 +293,7 @@ export default
           // [[[ K - EL - Erase in Line
           case 'K':
           {
+            console.log('CSI - EL - Erase in Line');
             let x1 = 0, x2 = s.w;
             if (s.n == '')
             {
@@ -319,7 +309,64 @@ export default
             }
             for (let i = x1; i < x2; i++)
             {
-              s.s[s.y][i] = s.defaults();
+              s.s[s.sy+s.y][i] = s.defaults();
+            }
+            break;
+          }
+          // ]]]
+          // [[[ L - IL - Insert Blank Line
+          case 'L':
+          {
+            console.log('CSI - IL - Insert Blank Line');
+            for (let i = 0; i < n; i++)
+            {
+              for (let j = (s.sh-1); j > s.y; j--)
+              {
+                for (let k = 0; k < s.w; k++)
+                {
+                  s.s[s.sy+j][k] = s.s[s.sy+j-1][k];
+                }
+              }
+              for (let j = 0; j < s.w; j++)
+              {
+                s.s[s.sy+s.y][j] = s.defaults();
+              }
+            }
+            break;
+          }
+          // ]]]
+          // [[[ M - DL - Delete Line
+          case 'M':
+          {
+            console.log('CSI - DL - Delete Line');
+            for (let i = 0; i < n; i++)
+            {
+              for (let j = s.y; j < (s.sh-1); j++)
+              {
+                for (let k = 0; k < s.w; k++)
+                {
+                  s.s[s.sy+j][k] = s.s[s.sy+j+1][k];
+                }
+              }
+              for (let j = 0; j < s.w; j++)
+              {
+                s.s[s.sy+s.sh-1][j] = s.defaults();
+              }
+            }
+            break;
+          }
+          // ]]]
+          // [[[ P - DCH - Delete Character
+          case 'P':
+          {
+            console.log('CSI - DCH - Delete Character');
+            for (let i = 0; i < n; i++)
+            {
+              for (let j = s.x; j < (s.w-1); j++)
+              {
+                s.s[s.sy+s.y][j] = s.s[s.sy+s.y][j+1];
+              }
+              s.s[s.sy+s.y][s.x] = s.defaults();
             }
             break;
           }
@@ -327,21 +374,22 @@ export default
           // [[[ S - SU - Scroll Up
           case 'S':
           {
+            console.log('CSI - SU - Scroll Up');
             for (let i = 0; i < n; i++)
             {
               for (let j = 0; j < (s.y-1); j++)
               {
                 for (let k = 0; k < s.w; k++)
                 {
-                  s.s[j][k].background = s.s[j+1][k].color;
-                  s.s[j][k].color = s.s[j+1][k].color;
-                  s.s[j][k].value = s.s[j+1][k].value;
-                  s.s[j][k].weight = s.s[j+1][k].weight;
+                  s.s[s.sy+j][k].background = s.s[s.sy+j+1][k].color;
+                  s.s[s.sy+j][k].color = s.s[s.sy+j+1][k].color;
+                  s.s[s.sy+j][k].value = s.s[s.sy+j+1][k].value;
+                  s.s[s.sy+j][k].weight = s.s[s.sy+j+1][k].weight;
                 }
               }
               for (let j = 0; j < s.w; j++)
               {
-                s.s[s.y-1][j] = s.defaults();
+                s.s[s.sy+s.y-1][j] = s.defaults();
               }
             }
             break;
@@ -350,21 +398,72 @@ export default
           // [[[ T - SD - Scroll Down
           case 'T':
           {
+            console.log('CSI - SD - Scroll Down');
             for (let i = 0; i < n; i++)
             {
               for (let j = 0; j < (s.y-1); j++)
               {
                 for (let k = 0; k < s.w; k++)
                 {
-                  s.s[j+1][k].background = s.s[j][k].color;
-                  s.s[j+1][k].color = s.s[j][k].color;
-                  s.s[j+1][k].value = s.s[j][k].value;
-                  s.s[j+1][k].weight = s.s[j][k].weight;
+                  s.s[s.sy+j+1][k].background = s.s[s.sy+j][k].color;
+                  s.s[s.sy+j+1][k].color = s.s[s.sy+j][k].color;
+                  s.s[s.sy+j+1][k].value = s.s[s.sy+j][k].value;
+                  s.s[s.sy+j+1][k].weight = s.s[s.sy+j][k].weight;
                 }
               }
               for (let j = 0; j < s.w; j++)
               {
-                s.s[0][j] = s.defaults();
+                s.s[s.sy+0][j] = s.defaults();
+              }
+            }
+            break;
+          }
+          // ]]]
+          // [[[ X - ECH - Erase Character
+          case 'X':
+          {
+            console.log('CSI - ECH - Erase Character');
+            for (let i = s.x; i < (s.x + n) && i < s.w; i++)
+            {
+              s.s[s.sy+s.y][i] = s.defaults();
+            }
+            break;
+          }
+          // ]]]
+          // [[[ a - HPR - Cursor Right
+          case 'a':
+          {
+            console.log('CSI - HPR - Cursor Right');
+            for (let i = 0; i < n; i++)
+            {
+              if (s.x < (s.w-1))
+              {
+                s.x++;
+              }
+            }
+            break;
+          }
+          // ]]]
+          // [[[ d - VPR - Cursor Row
+          case 'd':
+          {
+            console.log('CSI - VPR - Cursor Row');
+            if ((n-1) > 0 && (n-1) < s.sh)
+            {
+              s.y = n - 1;
+            }
+            break;
+          }
+          // ]]]
+          // [[[ e - VPR - Cursor Down
+          case 'e':
+          {
+            console.log('CSI - VPR - Cursor Down');
+            for (let i = 0; i < n; i++)
+            {
+              if (s.y < (s.sh-1))
+              {
+                s.y++;
               }
             }
             break;
@@ -373,13 +472,52 @@ export default
           // [[[ f - HVP - Horizontal Vertical Position
           case 'f':
           {
-            if ((n-1) > 0 && (n-1) < s.h)
+            console.log('CSI - HVP - Horizontal Vertical Position');
+            if ((n-1) > 0 && (n-1) < s.sh)
             {
               s.y = n - 1;
             }
-            if ((m-1) > 0 && (m-1) < s.h)
+            if ((m-1) > 0 && (m-1) < s.sh)
             {
               s.x = m - 1;
+            }
+            break;
+          }
+          // ]]]
+          // [[[ h - SM - Set Mode
+          case 'h':
+          {
+            if (s.bCsiQuestion)
+            {
+              if (n == 7)
+              {
+                console.log('CSI - SM - Set Mode (AutoWrap)');
+                s.bAutoWrap = true;
+              }
+            }
+            else if (n == 4)
+            {
+              console.log('CSI - SM - Set Mode (Insert)');
+              s.bInsert = true;
+            }
+            break;
+          }
+          // ]]]
+          // [[[ l - RM - Reset Mode
+          case 'l':
+          {
+            if (s.bCsiQuestion)
+            {
+              if (n == 7)
+              {
+                console.log('CSI - RM - Reset Mode (AutoWrap)');
+                s.bAutoWrap = false;
+              }
+            }
+            else if (n == 4)
+            {
+              console.log('CSI - RM - Reset Mode (Insert)');
+              s.bInsert = false;
             }
             break;
           }
@@ -387,6 +525,7 @@ export default
           // [[[ m - SGR - Select Graphic Rendition
           case 'm':
           {
+            console.log('CSI - SGR - Select Graphic Rendition');
             if (s.n == '')
             {
               n = 0;
@@ -505,17 +644,67 @@ export default
             break;
           }
           // ]]]
+          // [[[ r - DECSTBM - Set Scrolling Region
+          case 'r':
+          {
+            console.log('CSI - DECSTBM - Set Scrolling Region - '+s.t);
+            m = ((s.m != null)?Number(s.m):s.h);
+            n = ((s.n != null)?Number(s.n):0);
+            if (m > n)
+            {
+              s.sh = m;
+              s.sy = 0;
+              s.x = 0;
+              s.y = 0;
+            }
+            break;
+          }
+          // ]]]
+          // [[[ ` - HPA - Cursor Column
+          case '`':
+          {
+            console.log('CSI - HPA - Cursor Column');
+            if ((m-1) > 0 && (m-1) < s.sh)
+            {
+              s.x = m - 1;
+            }
+            break;
+          }
+          // ]]]
+          // [[[ default
+          default:
+          {
+            console.log('CSI - ' + d + ' - UNKNOWN - ' + s.t);
+            break;
+          }
+          // ]]]
         }
         s.b = '';
         s.bCsi = false;
+        s.bCsiQuestion = false;
         s.bEscape = false;
         s.g = '';
         s.m = '';
         s.n = '';
         s.nState = 0;
         s.r = '';
-        console.log(s.t);
+        //console.log(s.t);
         s.t = '';
+      }
+    };
+    // ]]]
+    // [[[ defaults()
+    s.defaults = () =>
+    {
+      return {background: s.bg, color: s.fg, value: ' ', weight: s.fw};
+    };
+    // ]]]
+    // [[[ enter()
+    s.enter = () =>
+    {
+      if (window.event.keyCode == 13)
+      {
+        s.launch();
       }
     };
     // ]]]
@@ -528,41 +717,49 @@ export default
       }
       else if (s.bAlign)
       {
+        console.log('IGNORE: align');
         s.bEscape = false;
         s.bAlign = false;
       }
       else if (s.bG0cs)
       {
+        console.log('IGNORE: g0cs');
         s.bEscape = false;
         s.bG0cs = false;
       }
       else if (s.bG1cs)
       {
+        console.log('IGNORE: g1cs');
         s.bEscape = false;
         s.bG1cs = false;
       }
       else if (s.bG2cs)
       {
+        console.log('IGNORE: g2cs');
         s.bEscape = false;
         s.bG2cs = false;
       }
       else if (s.bG3cs)
       {
+        console.log('IGNORE: g3cs');
         s.bEscape = false;
         s.bG3cs = false;
       }
       else if (s.bOsc)
       {
+        console.log('IGNORE: osc');
         s.bEscape = false;
         s.bOsc = false;
       }
       else if (s.bParenthesis)
       {
+        console.log('IGNORE: parenthesis - '+d);
         s.bEscape = false;
         s.bParenthesis = false;
       }
       else if (s.bSequence)
       {
+        console.log('IGNORE: sequence');
         s.bEscape = false;
         s.bSequence = false;
       }
@@ -583,65 +780,80 @@ export default
       }
       else if (d == 'c') // RIS - Reset
       {
+        console.log('RIS - Reset');
         s.clear();
         s.bEscape = false;
       }
       else if (d == 'D') // IND - Linefeed
       {
+        console.log('IND - Linefeed');
         s.y++;
         s.bEscape = false;
       }
       else if (d == 'E') // NEL - Newline
       {
+        console.log('IGNORE:  NEL - Newline');
         s.bEscape = false;
       }
       else if (d == 'H') // HTS - Set tab stop at current column
       {
+        console.log('IGNORE:  HTS - Set tab stop at current column');
         s.bEscape = false;
       }
       else if (d == 'M') // RI - Reverse linefeed
       {
+        console.log('RI - Reverse linefeed');
         s.y--;
         s.bEscape = false;
       }
       else if (d == 'N') // SS2 - Single Shift Two
       {
+        console.log('IGNORE:  SS2 - Single Shitft Two');
         s.bEscape = false;
       }
       else if (d == 'O') // SS3 - Single Shift Three
       {
+        console.log('IGNORE:  SS3 - Single Shitft Three');
         s.bEscape = false;
       }
       else if (d == 'P') // DSC - Device Control String
       {
+        console.log('IGNORE:  DSC - Device Control String');
         s.bEscape = false;
       }
       else if (d == 'X') // SOS - Start of String
       {
+        console.log('IGNORE:  SOS - Start of String');
         s.bEscape = false;
       }
       else if (d == 'Z') // DECID - DEC private identification
       {
+        console.log('IGNORE:  DECID - DEC private identification');
         s.bEscape = false;
       }
       else if (d == '7') // DECSC - Save current state
       {
+        console.log('IGNORE:  DECSC - Save current state');
         s.bEscape = false;
       }
       else if (d == '8') // DECRC - Restore state most currently saved
       {
+        console.log('IGNORE:  DECRC - Restore state most currently saved');
         s.bEscape = false;
       }
       else if (d == '\\') // ST - String Terminator
       {
+        console.log('IGNORE:  ST - String Terminator');
         s.bEscape = false;
       }
       else if (d == '^') // PM - Private Message
       {
+        console.log('IGNORE:  PM - Private Message');
         s.bEscape = false;
       }
       else if (d == '_') // APC - Application Program Command
       {
+        console.log('IGNORE:  APC - Application Program Command');
         s.bEscape = false;
       }
       else if (d == '%') // Start sequence selecting
@@ -670,10 +882,12 @@ export default
       }
       else if (d == '>') // DECPNM - Set numeric keypad mode
       {
+        console.log('IGNORE:  DECPNM - Set numeric keypad mode');
         s.bEscape = false;
       }
       else if (d == '=') // DECPAM - Set application keypad mode
       {
+        console.log('IGNORE:  DECPAM - Set application keypad mode');
         s.bEscape = false;
       }
       else if (d == ']') // OSC - Operating System Command prefix
@@ -686,7 +900,7 @@ export default
     s.identify = (d) =>
     {
       let n = d.charCodeAt(d);
-console.log(d+'('+n+')');
+      //console.log(d+'('+n+')');
       if (s.bEscape)
       {
         s.esc(d);
@@ -704,7 +918,7 @@ console.log(d+'('+n+')');
     // [[[ init()
     s.init = () =>
     {
-      for (let i = 0; i < s.h; i++)
+      for (let i = 0; i < s.sh; i++)
       {
         let d = [];
         for (let j = 0; j < s.w; j++)
@@ -714,6 +928,41 @@ console.log(d+'('+n+')');
         s.s.push(d);
       }
       s.u();
+    };
+    // ]]]
+    // [[[ insert()
+    s.insert(d)
+    {
+      if (s.y < s.sh && s.x < s.w)
+      {
+        if (s.bInsert)
+        {
+          /* TODO: AutoWrap
+          for (let i = (s.y+s.sh-1); i > s.y; i--)
+          {
+            for (let j = (s.w-1); j > 0; j--)
+            {
+            }
+          }
+          */
+          s.s[s.sy+s.y][s.x] = s.defaults();
+          s.s[s.sy+s.y][s.x].value = d;
+        }
+        else
+        {
+          s.s[s.sy+s.y][s.x] = s.defaults();
+          s.s[s.sy+s.y][s.x].value = d;
+          if ((s.x+1) < s.w)
+          {
+            s.x++;
+          }
+          else if (s.bAutoWrap && (s.y+1) < s.sh)
+          {
+            s.y++;
+            s.x = 0;
+          }
+        }
+      }
     };
     // ]]]
     // [[[ launch()
@@ -736,44 +985,61 @@ console.log(d+'('+n+')');
     s.process = (d) =>
     {
       let b = false;
-      if (d == '\n' || d == '\r' || s.x >= s.w)
+      if (d == '\n' || s.x >= s.w)
       {
-        if (s.x >= s.w)
+        if (s.bInsert)
         {
-          b = true;
+          if (s.x >= s.w)
+          {
+            b = true;
+          }
+          for (let i = 0; 
         }
-        if (d == '\n' || s.x >= s.w)
-        {
-          s.y++;
-        }
+        s.y++;
+        s.x = 0;
+      }
+      else if (d == '\r')
+      {
         s.x = 0;
       }
       else if (d != '\a' && d != '\b' && d != '\t' && d != '\f')
       {
         b = true;
       }
-      if (s.y >= s.h)
+      if (s.y >= s.sh)
       {
-        for (let j = 0; j < (s.y-1); j++)
+        for (let i = 0; i < (s.y-1); i++)
         {
-          for (let k = 0; k < s.w; k++)
+          for (let j = 0; j < s.w; j++)
           {
-            s.s[j][k].background = s.s[j+1][k].color;
-            s.s[j][k].color = s.s[j+1][k].color;
-            s.s[j][k].value = s.s[j+1][k].value;
-            s.s[j][k].weight = s.s[j+1][k].weight;
+            s.s[s.sy+j][j] = s.defaults();
+            if (s.s[s.sy+i+1] && s.s[s.sy+i+1][j] && s.s[s.sy+i+1][j].background && s.s[s.sy+i+1][j].color && s.s[s.sy+i+1][j].value && s.s[s.sy+i+1][j].weight)
+            {
+              s.s[s.sy+i][j].background = s.s[s.sy+i+1][j].background;
+              s.s[s.sy+i][j].color = s.s[s.sy+i+1][j].color;
+              s.s[s.sy+i][j].value = s.s[s.sy+i+1][j].value;
+              s.s[s.sy+i][j].weight = s.s[s.sy+i+1][j].weight;
+            }
           }
         }
-        for (let k = 0; k < s.w; k++)
+        for (let i = 0; i < s.w; i++)
         {
-          s.s[s.y-1][k] = s.defaults();
+          s.s[s.sy+s.y-1][i] = s.defaults();
         }
         s.y--;
       }
       if (b)
       {
-        s.s[s.y][s.x] = s.defaults();
-        s.s[s.y][s.x].value = d;
+        //console.log('Y|'+s.y+' X|'+s.x+' '+d+'('+d.charCodeAt(d)+')');
+        if (s.bInsert)
+        {
+          for (let i = (s.w-1); i > s.x; i--)
+          {
+            s.s[s.sy+s.y][i] = s.s[s.sy+s.y][i-1];
+          }
+        }
+        s.s[s.sy+s.y][s.x] = s.defaults();
+        s.s[s.sy+s.y][s.x].value = d;
         s.x++;
       }
     };
