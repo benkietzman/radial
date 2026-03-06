@@ -19,6 +19,7 @@ namespace radial
 class Application : public Interface
 {
   protected:
+  bool m_bLoaded;
   char *m_pszBuffer;
   map<string, string> m_applications;
   map<size_t, int> m_clients;

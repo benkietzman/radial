@@ -19,6 +19,7 @@ namespace radial
 class Database : public Interface
 {
   protected:
+  bool m_bLoaded;
   mutex m_mutex;
   thread *m_pThreadInotify;
   Json *m_ptDatabases;

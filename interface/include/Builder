@@ -19,6 +19,7 @@ namespace radial
 class Builder : public Interface
 {
   protected:
+  bool m_bLoaded;
   map<string, bool (Builder::*)(radialUser &, string &)> m_functions;
   map<string, bool (Builder::*)(radialUser &, string &, Json *c, list<string> &, string &, const bool)> m_packages;
   mutex m_mutex;

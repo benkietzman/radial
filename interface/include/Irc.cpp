@@ -19,8 +19,9 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   ifstream inTimeZone;
   map<string, list<string> > watches;
   string strError;
-  Json *ptAes = new Json, *ptJwt = new Json;
 
+  m_bEnabled = false;
+  m_bLoaded = false;
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
   m_ptMonitor = NULL;
@@ -98,27 +99,6 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
     }
   }
   // }}}
-  m_bEnabled = false;
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
-  { 
-    if (!empty(ptAes, "Secret"))
-    {
-      m_strAesSecret = ptAes->m["Secret"]->v;
-    }
-  }
-  delete ptAes; 
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
-  {
-    if (!empty(ptJwt, "Secret"))
-    {
-      m_strJwtSecret = ptJwt->m["Secret"]->v;
-    }
-    if (!empty(ptJwt, "Signer"))
-    {
-      m_strJwtSigner = ptJwt->m["Signer"]->v;
-    }
-  }
-  delete ptJwt;
   inTimeZone.open("/etc/timezone");
   if (inTimeZone)
   {
@@ -739,6 +719,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       if (strApplication != "connect" && strApplication != "status")
       {
         Json *ptJson = new Json;
+        if (!m_bLoaded)
+        {
+          load(strPrefix);
+        }
         m_mutex.lock();
         if (m_aliases.find(strApplication) != m_aliases.end())
         {
@@ -955,6 +939,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               { 
                 ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
               }
+              if (!m_bLoaded)
+              {
+                load(strPrefix);
+              }
               if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
                 Json *ptJson = new Json;
@@ -1092,6 +1080,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               for (auto &i : auth)
               { 
                 ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+              }
+              if (!m_bLoaded)
+              {
+                load(strPrefix);
               }
               if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
@@ -1390,6 +1382,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               { 
                 ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
               }
+              if (!m_bLoaded)
+              {
+                load(strPrefix);
+              }
               if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
               {
                 Json *ptJson = new Json;
@@ -1568,6 +1564,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             { 
               ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
             }
+            if (!m_bLoaded)
+            {
+              load(strPrefix);
+            }
             if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
             {
               Json *ptJson = new Json;
@@ -1622,6 +1622,10 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             for (auto &i : auth)
             { 
               ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+            }
+            if (!m_bLoaded)
+            {
+              load(strPrefix);
             }
             if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
             {
@@ -3979,11 +3983,24 @@ void Irc::load(string strPrefix, const bool bSilent)
   map<string, string> aliases;
   string strError;
   stringstream ssMessage;
-  Json *ptCred = new Json;
+  Json *ptAes = new Json, *ptCred = new Json, *ptJwt = new Json;
 
   strPrefix += "->Irc::load()";
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
   {
+    m_bLoaded = true;
+    if (!empty(ptAes, "Secret"))
+    {
+      m_strAesSecret = ptAes->m["Secret"]->v;
+    }
+    if (!empty(ptJwt, "Secret"))
+    {
+      m_strJwtSecret = ptJwt->m["Secret"]->v;
+    }
+    if (!empty(ptJwt, "Signer"))
+    {
+      m_strJwtSigner = ptJwt->m["Signer"]->v;
+    }
     for (auto &cred : ptCred->m)
     {
       if (!empty(cred.second, "Application") && exist(cred.second, "Alias"))
@@ -4014,7 +4031,9 @@ void Irc::load(string strPrefix, const bool bSilent)
     ssMessage << strPrefix << "->Warden::vaultRetrieve() error [radial]:  " << strError;
     log(ssMessage.str());
   }
+  delete ptAes; 
   delete ptCred;
+  delete ptJwt;
 }
 // }}}
 // {{{ lock()

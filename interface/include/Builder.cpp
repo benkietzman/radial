@@ -18,6 +18,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   map<string, list<string> > watches;
 
+  m_bLoaded = false;
   // {{{ functions
   m_functions["action"] = &Builder::action;
   m_functions["config"] = &Builder::config;
@@ -427,6 +428,7 @@ void Builder::cred(string strPrefix, const bool bSilent)
   strPrefix += "->Builder::cred()";
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"builder"}, ptCred, strError))
   {
+    m_bLoaded = true;
     if (exist(ptCred, "key"))
     {
       if (!empty(ptCred->m["key"], "private"))
@@ -478,6 +480,10 @@ void Builder::init(radialUser &u, string &strUser, string &strPassword, string &
 {
   Json *i = u.p->m["i"];
 
+  if (!m_bLoaded)
+  {
+    cred("Builder::init()");
+  }
   strPassword = m_strPassword;
   if (!empty(i, "Password"))
   {

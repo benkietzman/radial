@@ -18,6 +18,8 @@ Database::Database(string strPrefix, int argc, char **argv, void (*pCallback)(st
 {
   map<string, list<string> > watches;
   string strError;
+
+  m_bLoaded = false;
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -146,6 +148,7 @@ void Database::load(string strPrefix, const bool bSilent)
   {
     map<string, map<string, string> > creds;
     Json *ptOld = NULL;
+    m_bLoaded = true;
     for (auto &database : ptDatabases->m)
     {
       map<string, string> cred;
@@ -196,6 +199,10 @@ bool Database::mysql(const string strType, const string strName, const string st
   if (rows != NULL)
   {
     rows->clear();
+  }
+  if (!m_bLoaded)
+  {
+    load("Database::mysql()");
   }
   m_mutex.lock();
   if (m_ptDatabases != NULL && exist(m_ptDatabases, strName))
@@ -271,6 +278,10 @@ bool Database::sqlite(const string strType, const string strName, const string s
   if (rows != NULL)
   {
     rows->clear();
+  }
+  if (!m_bLoaded)
+  {
+    load("Database::sqlite()");
   }
   m_mutex.lock();
   if (m_ptDatabases != NULL && exist(m_ptDatabases, strName) && !empty(m_ptDatabases->m[strName], "Database"))

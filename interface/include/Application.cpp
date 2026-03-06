@@ -19,6 +19,7 @@ Application::Application(string strPrefix, int argc, char **argv, void (*pCallba
   map<string, list<string> > watches;
   string strError;
 
+  m_bLoaded = false;
   m_unUniqueID = 0;
   m_pUtility->setReadSize(4096);
   m_pUtility->setSslWriteSize(67108864);
@@ -598,6 +599,10 @@ bool Application::connect(radialUser &d, string &e)
   if (dep({"User"}, d.r, e))
   {
     string strApplication, strUser = d.r->m["User"]->v;
+    if (!m_bLoaded)
+    {
+      load("Application::connect()");
+    }
     m_mutex.lock();
     if (m_applications.find(strUser) != m_applications.end())
     {
@@ -769,6 +774,7 @@ void Application::load(string strPrefix, const bool bSilent)
       }
     }
     m_mutex.lock();
+    m_bLoaded = true;
     m_applications = applications;
     m_mutex.unlock();
   }

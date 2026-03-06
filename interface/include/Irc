@@ -20,6 +20,7 @@ class Irc : public Interface
 {
   protected:
   bool m_bEnabled;
+  bool m_bLoaded;
   bool (*m_pAnalyzeCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string);
   bool (*m_pAnalyzeCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string);
   map<string, bool> m_channels;
