@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
           if ((CNow - CCred) > 600)
           {
             Json *ptData = new Json;
+            CCred = CNow;
             if (warden.vaultRetrieve({"radial", strUser, "Password"}, ptData, strError))
             {
               if (!ptData->l.empty())
