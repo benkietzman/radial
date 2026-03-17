@@ -228,7 +228,7 @@ void Live::callback(string strPrefix, const string strPacket, const bool bRespon
           {
             strUser[1] = ptJson->m["Request"]->m["User"]->v;
           }
-          if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && strUser[1] == "!radial")
+          if (!empty(ptJson->m["Request"]->m["Message"], "Action") && ptJson->m["Request"]->m["Message"]->m["Action"]->v == "chat" && strUser[1] == "radial_bot")
           {
             Json *ptIrc = new Json;
             ptIrc->i("Function", "analyze");
