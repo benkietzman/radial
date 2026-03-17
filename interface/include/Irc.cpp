@@ -25,9 +25,9 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
   m_ptMonitor = NULL;
-  m_strNickDefault = "radial_bot";
+  m_strNickDefault = "!radial";
   m_strTrigger = "!r";
-  m_strUser = "radial_bot";
+  m_strUser = "!radial";
   // {{{ command line arguments
   for (int i = 1; i < argc; i++)
   {
@@ -3608,7 +3608,7 @@ void Irc::chat(const string strTarget, const string strMessage, const string str
     ptLive->m["Request"]->m["Message"] = new Json;
     ptLive->m["Request"]->m["Message"]->i("Action", "chat");
     ptLive->m["Request"]->m["Message"]->i("Message", strMessage);
-    ptLive->m["Request"]->m["Message"]->i("User", "radial_bot");
+    ptLive->m["Request"]->m["Message"]->i("User", "!radial");
     hub("live", ptLive, false);
     delete ptLive;
   }
