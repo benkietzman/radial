@@ -828,7 +828,7 @@ void Link::process(string strPrefix)
             {
               // {{{ prep work
               int fdLink;
-              sockaddr_in cli_addr;
+              sockaddr_in6 cli_addr;
               socklen_t clilen = sizeof(cli_addr);
               // }}}
               if ((fdLink = accept(fdSocket, (sockaddr *)&cli_addr, &clilen)) >= 0)
