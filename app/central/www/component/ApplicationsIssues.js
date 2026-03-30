@@ -193,7 +193,7 @@ export default
       {{/if}}
       <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
-    <div class="col-md-9 table-responsive">
+    <div class="col-md-9">
       <h3 class="page-header">Issues</h3>
       <div c-model="info" class="text-warning"></div>
       {{#if issues}}
