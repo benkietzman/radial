@@ -176,25 +176,40 @@ export default
   // [[[ template
   template: `
   <div class="row">
-    <div class="col-md-3">
-      <h5 class="page-header">Search Options</h5>
+    <div class="col-auto fw-bold">
+      <b>Search Options</b>
+    </div>
+    <div class="col">
       <div class="input-group"><span class="input-group-text">Display</span><select c-model="display" c-change="disp()" class="form-control"><option value="all">All Issues</option><option value="open">Open Issues Only</option><option value="closed">Closed Issues Only</option></select></div>
-      <div>
-        <b>Open Date</b>
-        <div class="input-group"><span class="input-group-text">Start</span><input type="text" c-model="open_date_start" class="form-control" placeholder="YYYY-MM-DD"></div>
-        <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="open_date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
-      </div>
-      {{#if close}}
-      <div>
-        <b>Close Date</b>
-        <div class="input-group"><span class="input-group-text">Start</span><input type="text" c-model="close_date_start" class="form-control" placeholder="YYYY-MM-DD"></div>
-        <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="close_date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
-      </div>
-      {{/if}}
+    </div>
+  </div>
+  <div class="row" style="margin-top: 10px;">
+    <div class="col-auto fw-bold text-end">
+      Opened
+    </div>
+    <div class="col">
+      <div class="input-group"><span class="input-group-text">Start</span><input type="text" c-model="open_date_start" class="form-control" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div class="col">
+      <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="open_date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
+    </div>
+    {{#if close}}
+    <div class="col-auto fw-bold text-end">
+      Closed
+    </div>
+    <div class="col">
+      <div class="input-group"><span class="input-group-text">Start</span><input type="text" c-model="close_date_start" class="form-control" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div class="col">
+      <div class="input-group"><span class="input-group-text">End</span><input type="text" c-model="close_date_end" class="form-control" placeholder="YYYY-MM-DD"></div>
+    </div>
+    {{/if}}
+    <div class="col-auto">
       <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
-    <div class="col-md-9">
-      <h3 class="page-header">Issues</h3>
+  </div>
+  <div class="row" style="margin-top: 10px;">
+    <div class="col">
       <div c-model="info" class="text-warning"></div>
       {{#if issues}}
       {{#each issues}}
