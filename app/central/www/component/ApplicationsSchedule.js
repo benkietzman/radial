@@ -105,7 +105,7 @@ export default
   // [[[ template
   template: `
   <div class="row table-responsive">
-    <h5 class="page-header">Release Schedule</h5>
+    <h5 class="page-header">Release Schedule ({{issues.length}})</h5>
     <p>This page provides the upcoming release schedule for application issues.  The issues are sorted according to release date. </p>
     <div c-model="info" class="text-warning"></div>
     {{#if issues}}
