@@ -197,43 +197,49 @@ export default
       <h3 class="page-header">Issues</h3>
       <div c-model="info" class="text-warning"></div>
       {{#if issues}}
-      <table class="table table-condensed table-striped">
-        {{#each issues}}
-        <tr>
-          <td valign="top">
-            <table class="table table-condensed" style="background: inherit;">
-              <tr><td colspan="2" style="font-weight: bold; white-space: nowrap;"><a href="#/Applications/{{application.id}}">{{application.name}}</a></td></tr>
-              <tr><td>Issue #</td><td style="white-space: nowrap;">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
-              <tr><td>Open</td><td style="white-space: nowrap;">{{open_date}}</td></tr>
-              {{#if due_date}}
-              <tr><td>Due</td><td style="white-space: nowrap;">{{due_date}}</td></tr>
-              {{/if}}
-              {{#if release_date}}
-              <tr><td>Release</td><td style="white-space: nowrap;">{{release_date}}</td></tr>
-              {{/if}}
-              {{#if close_date}}
-              <tr><td>Close</td><td style="white-space: nowrap;">{{close_date}}</td></tr>
-              {{/if}}
-              {{#ifCond priority ">=" 1}}
-              <tr><td>Priority</td>{{#ifCond ../priority "==" 1}}<td>Low</td>{{else ifCond ../priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond ../priority "==" 3}}<td style="color: red;">High</td>{{else}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
-              {{/ifCond}}
-              {{#if comments}}
-              <tr><td>Requester</td><td><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
-              {{/if}}
-              {{#if assigned}}
-              <tr><td>Assigned</td><td><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a> <small>({{assigned.userid}})</small></td></tr>
-              {{/if}}
-            </table>
-          </td>
-          <td valign="top">
-            {{#if summary}}
-            <p style="font-weight: bold;">{{summary}}</p>
+      {{#each issues}}
+      <div class="row">
+        <div class="col-md-4" style="margin: 10px 0px;">
+          <div class="card-footer border border-secondary-subtle bg-secondary-subtle" style="padding: 10px;">
+            <div class="row"><div class="col-md-12 fw-bold text-nowrap"><a href="#/Applications/{{application.id}}">{{application.name}}</a></div></div>
+            <div class="row"><div class="col-md-4">Issue #</div><div class="col-md-8 text-nowrap">{{^if application.id}}<a href="#/Applications/Issues/{{id}}">{{id}}</a>{{else}}<a href="#/Applications/{{application.id}}/Issues/{{id}}">{{id}}</a>{{/if}}{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</div></div>
+            <div class="row"><div class="col-md-4">Open</div><div class="col-md-8 text-nowrap">{{open_date}}</div></div>
+            {{#if due_date}}
+            <div class="row"><div class="col-md-4">Due</div><div class="col-md-8 text-nowrap">{{due_date}}</div></div>
             {{/if}}
-            <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
-          </td>
-        </tr>
-        {{/each}}
-      </table>
+            {{#if release_date}}
+            <div class="row"><div class="col-md-4">Release</div><div class="col-md-8 text-nowrap">{{release_date}}</div></div>
+            {{/if}}
+            {{#if close_date}}
+            <div class="row"><div class="col-md-4">Close</div><div class="col-md-8 text-nowrap">{{close_date}}</div></div>
+            {{/if}}
+            {{#ifCond priority ">=" 1}}
+            <div class="row"><div class="col-md-4">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col-md-8">Low</div>{{else ifCond ../priority "==" 2}}<div class="col-md-8" style="color: orange;">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col-md-8" style="color: red;">High</div>{{else}}<div class="col-md-8" style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></div>{{/ifCond}}</div>
+            {{/ifCond}}
+            {{#if comments}}
+            <div class="row"><div class="col-md-4">Requester</div><div class="col-md-8 text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></div></div>
+            {{/if}}
+            {{#if assigned}}
+            <div class="row"><div class="col-md-4">Assigned</div><div class="col-md-8 text-nowrap"><a href="#/Users/{{assigned.id}}">{{assigned.last_name}}, {{assigned.first_name}}</a></div></div>
+            {{/if}}
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card border border-success-subtle" style="margin: 10px 0px;">
+            <div class="card-header bg-success fw-bold text-light">
+              {{#if summary}}
+              {{summary}}
+              {{/if}}
+            </div>
+            <div class="card-body bg-success-subtle">
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      {{/each}}
       {{/if}}
     </div>
   </div>
