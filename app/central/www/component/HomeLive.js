@@ -23,8 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
-      classes: ['danger', 'info', 'success', 'warning'],
-      messages: false
+      classes: ['danger', 'info', 'success', 'warning']
     });
     // ]]]
     // [[[ load()
@@ -35,7 +34,6 @@ export default
         s.application = null;
         s.applications = null;
         s.display = false;
-        s.messaged = null;
         s.u();
         s.loadApplications();
       }
@@ -99,7 +97,6 @@ export default
             if (s.body.v)
             {
               s.info.v = 'Sending notification...';
-              s.messaged.v = null;
               let request = {Interface: 'live', 'Function': 'message', Request: {Application: s.application.v.name, Message: {Action: 'message', Class: s['class'].v, Title: s.title.v, Body: s.body.v + '\n\n-- ' + c.getUserFirstName() + ' ' + c.getUserLastName() + ' (' + c.getUserID() + ')'}}};
               c.wsRequest('radial', request).then((response) =>
               {
@@ -107,7 +104,6 @@ export default
                 if (c.wsResponse(response, error))
                 {
                   s.info.v = null;
-                  s.messaged.v = 'Message has been sent.';
                   s.u();
                 }
                 else
@@ -204,11 +200,6 @@ export default
                 </div>
               </div>
             </div>
-            {{#if messages}}
-            <div class="card-footer">
-              <div c-model="messaged" class="text-success"></div>
-            </div>
-            {{/if}}
           </div>
           {{/if}}
         </div>
