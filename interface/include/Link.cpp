@@ -1040,7 +1040,7 @@ void Link::process(string strPrefix)
                             else
                             {
                               ssMessage.str("");
-                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_f"]->v << "," << ptLink->strNode << << "," << m_strPassword.size() << "," << ptJson->m["Password"]->v.size() << "]:  Authentication of link denied.";
+                              ssMessage << strPrefix << "->Utility::sslRead() [" << ptJson->m["_f"]->v << "," << ptLink->strNode << "," << m_strPassword.size() << "," << ptJson->m["Password"]->v.size() << "]:  Authentication of link denied.";
                               log(ssMessage.str());
                             }
                           }
