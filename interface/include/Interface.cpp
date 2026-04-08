@@ -46,11 +46,19 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
     {
       m_strAesSecret = ptAes->m["Secret"]->v;
     }
+    else if (strError.find("connect(") != string::npos)
+    {
+      setShutdown();
+    }
     delete ptAes;
     if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && !empty(ptJwt, "Secret") && !empty(ptJwt, "Signer"))
     {
       m_strJwtSecret = ptJwt->m["Secret"]->v;
       m_strJwtSigner = ptJwt->m["Signer"]->v;
+    }
+    else if (strError.find("connect(") != string::npos)
+    {
+      setShutdown();
     }
     delete ptJwt;
     if (m_pWarden->vaultRetrieve({"radial"}, ptRadial, strError))
@@ -62,6 +70,10 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
           m_applications[user.first] = user.second->m["Application"]->v;
         }
       }
+    }
+    else if (strError.find("connect(") != string::npos)
+    {
+      setShutdown();
     }
     delete ptRadial;
   }
