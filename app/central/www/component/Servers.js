@@ -1002,7 +1002,7 @@ export default
         {{#if server.bEdit}}
         <textarea class="form-control" c-model="server.description"></textarea>
         {{else}}
-        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{server.description}}</pre>
+        <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{server.description}}}</pre>
         {{/if}}
       </td>
     </tr>
