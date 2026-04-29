@@ -22,7 +22,6 @@ class Feedback : public Interface
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Feedback::*)(radialUser &, string &)> m_functions;
   string m_strEmail;
-  string m_strServer;
   thread *m_pThreadSchedule;
 
   bool answers(radialUser &d, string &e);
