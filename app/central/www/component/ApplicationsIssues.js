@@ -247,7 +247,7 @@ export default
               {{/if}}
             </div>
             <div class="card-body bg-success-subtle">
-              <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
+              <pre style="background: inherit; color: inherit; white-space: pre-wrap; word-break: break-word;">{{{comments.[0].comments}}}</pre>
             </div>
           </div>
         </div>

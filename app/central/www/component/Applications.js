@@ -2016,7 +2016,7 @@ export default
           <p style="font-weight: bold;">{{summary}}</p>
           {{/if}}
           {{#if comments}}
-          <pre style="background: inherit; color: inherit; white-space: pre-wrap;">{{{comments.[0].comments}}}</pre>
+          <pre style="background: inherit; color: inherit; white-space: pre-wrap; word-break: break-word;">{{{comments.[0].comments}}}</pre>
           {{/if}}
         </td>
       </tr>
