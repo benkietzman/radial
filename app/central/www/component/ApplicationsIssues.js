@@ -241,12 +241,12 @@ export default
         </div>
         <div class="col-md-8">
           <div class="card border border-{{#ifCond priority "==" 4}}danger{{else ifCond ../priority "==" 3}}danger{{else ifCond ../priority "==" 2}}warning{{else}}secondary{{/ifCond}}-subtle" style="margin: 10px 0px;">
-            <div class="card-header bg-{{#ifCond priority "==" 4}}danger{{else}}secondary{{/ifCond}} fw-bold text-{{#ifCond priority "==" 3}}danger{{else ifCond ../priority "==" 2}}warning{{else}}light{{/ifCond}}">
+            <div class="card-header bg-{{#ifCond priority "==" 4}}danger{{else}}secondary{{/ifCond}} fw-bold text-light">
               {{#if summary}}
               {{summary}}
               {{/if}}
             </div>
-            <div class="card-body bg-{{#ifCond priority "==" 4}}danger{{else}}secondary{{/ifCond}}-subtle">
+            <div class="card-body bg-{{#ifCond priority "==" 4}}danger{{else ifCond ../priority "==" 3}}danger{{else ifCond ../priority "==" 2}}warning{{else}}secondary{{/ifCond}}-subtle">
               <pre style="background: inherit; color: inherit; white-space: pre-wrap; word-break: break-word;">{{{comments.[0].comments}}}</pre>
             </div>
           </div>
