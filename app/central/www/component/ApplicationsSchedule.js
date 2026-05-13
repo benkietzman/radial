@@ -137,13 +137,13 @@ export default
         </div>
       </div>
       <div class="col-md-8">
-        <div class="card border border-danger-subtle" style="margin: 10px 0px;">
-          <div class="card-header bg-danger fw-bold text-light">
+        <div class="card border border-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}}-subtle" style="margin: 10px 0px;">
+          <div class="card-header bg-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}} fw-bold text-light">
             {{#if summary}}
             {{summary}}
             {{/if}}
           </div>
-          <div class="card-body bg-danger-subtle">
+          <div class="card-body bg-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}}-subtle">
             <pre style="background: inherit; color: inherit; white-space: pre-wrap; word-break: break-word;">{{{comments.[0].comments}}}</pre>
           </div>
         </div>
