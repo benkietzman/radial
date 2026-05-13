@@ -292,21 +292,16 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
           {
             ptData->i("Password", "");
           }
-string j;
-chat("#temp", (string)"[0] " + ptData->j(j));
           if (m_pProcessPreAuthzCallback != NULL)
           {
             m_pProcessPreAuthzCallback(strPrefix, ptJson, ptData);
           }
-chat("#temp", (string)"[1] " + ptData->j(j));
           if (m_pWarden->authz(ptData, strError))
           {
-chat("#temp", (string)"[2] " + ptData->j(j));
             if (m_pProcessPostAuthzCallback != NULL)
             {
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
             }
-chat("#temp", (string)"[3] " + ptData->j(j));
             if (exist(ptData, "central"))
             {
               map<string, string> getPersonRow;
