@@ -221,7 +221,7 @@ export default
                   <div class="input-group"><span class="input-group-text bg-danger">Due</span><input type="text" class="form-control bg-danger-subtle" c-model="issue.due_date" placeholder="YYYY-MM-DD"></div>
                 </div>
                 <div class="col-md-4">
-                  <div class="input-group"><span class="input-group-text bg-danger">Priority</span><select c-model="issue.priority" class="form-control bg-danger-subtle"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></div>
+                  <div class="input-group"><span class="input-group-text bg-danger">Priority</span><select c-model="issue.priority" class="form-control bg-danger-subtle"><option value="1">Low</option><option class="text-warning" value="2">Medium</option><option class="text-danger" value="3">High</option><option class="bg-danger" value="4">Critical</option></select></div>
                 </div>
                 <div class="col-md-4">
                   <div class="input-group"><span class="input-group-text bg-danger">Assigned</span><input type="text" class="form-control bg-danger-subtle" c-model="issue.assigned_userid" placeholder="User ID"></div>

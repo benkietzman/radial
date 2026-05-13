@@ -1968,7 +1968,7 @@ export default
         <td style="width:25%;">
           <table class="table table-condensed" style="background: inherit;">
             <tr><th>Due</th><td><input class="form-control" type="text" c-model="issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
-            <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+            <tr><th>Priority</th><td><select c-model="issue.priority" class="form-control"><option value="1">Low</option><option class="text-warning" value="2">Medium</option><option class="text-danger" value="3">High</option><option class="bg-danger" value="4">Critical</option></select></td></tr>
             <tr><th>Assigned</th><td><input class="form-control" type="text" c-model="issue.assigned_userid" placeholder="User ID"></td></tr>
           </table>
         </td>
@@ -1987,7 +1987,7 @@ export default
       <tr>
         <td>
           <table class="table table-condensed" style="background: inherit;">
-            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{@root.application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span style="margin-left: 20px; padding: 0px 2px; background: green; color: white;">HOLD</span>{{/ifCond}}</td></tr>
+            <tr><th style="white-space: nowrap;">Issue #</th><td><a href="#/Applications/{{@root.application.id}}/Issues/{{id}}">{{id}}</a>{{#ifCond hold "==" 1}}<span class="bg-success" style="margin-left: 20px;">HOLD</span>{{/ifCond}}</td></tr>
             {{#if open_date}}
             <tr><th>Open</th><td style="white-space: nowrap;">{{open_date}}</td></tr>
             {{/if}}
@@ -2001,7 +2001,7 @@ export default
             <tr><th>Close</th><td style="white-space: nowrap;">{{close_date}}</td></tr>
             {{/if}}
             {{#ifCond priority ">=" 1}}
-            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td style="color: orange;">Medium</td>{{else ifCond priority "==" 3}}<td style="color: red;">High</td>{{else ifCond priority ">" 3}}<td style="color: white;"><span style="padding: 0px 2px; background: red;">Critical</span></td>{{/ifCond}}</tr>
+            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td class="text-warning">Medium</td>{{else ifCond priority "==" 3}}<td class="test-danger">High</td>{{else ifCond priority ">" 3}}<td class="bg-danger">Critical</td>{{/ifCond}}</tr>
             {{/ifCond}}
             {{#if comments}}
             <tr><td colspan="2"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
@@ -2042,18 +2042,18 @@ export default
           <tr><th>Close</th><td style="white-space: nowrap;">{{application.issue.close_date}}</td></tr>
           {{/if}}
           {{#if application.issue.bDeveloperOpen}}
-          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option style="background: green; color: white;" value="1">Yes</option></select></td></tr>
-          <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option style="color: orange;" value="2">Medium</option><option style="color: red;" value="3">High</option><option style="background: red; color: white;" value="4">Critical</option></select></td></tr>
+          <tr><th style="white-space: nowrap;">On Hold</th><td><select c-model="application.issue.hold" class="form-control"><option value="0">No</option><option class="bg-success" value="1">Yes</option></select></td></tr>
+          <tr><th>Priority</th><td><select c-model="application.issue.priority" class="form-control"><option value="1">Low</option><option class="text-warning" value="2">Medium</option><option class="text-danger" value="3">High</option><option class="bg-danger" value="4">Critical</option></select></td></tr>
           <tr><th>Due</th><td><input type="text" class="form-control" c-model="application.issue.due_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Release</th><td><input type="text" class="form-control" c-model="application.issue.release_date" placeholder="YYYY-MM-DD"></td></tr>
           <tr><th>Assigned</th><td><input type="text" class="form-control" c-model="application.issue.assigned_userid" placeholder="User ID"></td></tr>
           <tr><th>Transfer</th><td><select class="form-control" c-model="application.issue.transfer" c-json>{{#each applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select></td></tr>
           {{else}}
           {{#ifCond application.issue.hold "==" 1}}
-          <tr><th></th><td style="margin-left: 10px; background: green; color: white; white-space: nowrap;">HOLD</td></tr>
+          <tr><th></th><td class="bg-success" style="margin-left: 20px;">HOLD</td></tr>
           {{/ifCond}}
           {{#if application.issue.priority}}
-          <tr><th>Priority</th><td>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<span style="color: orange;">Medium</span>{{else ifCond @root.application.issue.priority "==" 3}}<span style="color: red;">High</span>{{else}}<span style="padding: 0px 2px; background: red; color: white;">Critical</span>{{/ifCond}}</td></tr>
+          <tr><th>Priority</th><td>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<span class="text-warning">Medium</span>{{else ifCond @root.application.issue.priority "==" 3}}<span class="text-danger">High</span>{{else}}<span class="bg-danger">Critical</span>{{/ifCond}}</td></tr>
           {{/if}}
           {{#if application.issue.due_date}}
           <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
