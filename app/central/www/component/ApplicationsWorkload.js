@@ -162,7 +162,7 @@ export default
       </div>
       <div class="col-md-8">
         <div class="card border border-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}}-subtle" style="margin: 10px 0px;">
-          <div class="card-header bg-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}} fw-bold text-{{#ifConf ../priority "==" 2}}dark{{else}}light{{/ifCond}}">
+          <div class="card-header bg-{{#ifCond ../priority "==" 1}}secondary{{else ifCond ../priority "==" 2}}warning{{else}}danger{{/ifCond}} fw-bold text-{{#ifCond ../priority "==" 2}}dark{{else}}light{{/ifCond}}">
             {{#if summary}}
             {{summary}}
             {{/if}}
