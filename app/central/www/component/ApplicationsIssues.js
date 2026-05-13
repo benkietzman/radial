@@ -229,7 +229,7 @@ export default
             <div class="row"><div class="col-md-4">Close</div><div class="col-md-8 text-nowrap">{{close_date}}</div></div>
             {{/if}}
             {{#ifCond priority ">=" 1}}
-            <div class="row"><div class="col-md-4">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col-md-8">Low</div>{{else ifCond ../priority "==" 2}}<div class="col-md-8 text-warning">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col-md-8 text-danger">High</div>{{else}}<div class="bg-danger col-md-8">Critical</div>{{/ifCond}}</div>
+            <div class="row"><div class="col-md-4">Priority</div>{{#ifCond ../priority "==" 1}}<div class="col-md-8">Low</div>{{else ifCond ../priority "==" 2}}<div class="col-md-8 text-warning">Medium</div>{{else ifCond ../priority "==" 3}}<div class="col-md-8 text-danger">High</div>{{else}}<div class="col-md-8"><span class="bg-danger">Critical</span></div>{{/ifCond}}</div>
             {{/ifCond}}
             {{#if comments}}
             <div class="row"><div class="col-md-4">Requester</div><div class="col-md-8 text-nowrap"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a></div></div>

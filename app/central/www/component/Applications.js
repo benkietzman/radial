@@ -2001,7 +2001,7 @@ export default
             <tr><th>Close</th><td style="white-space: nowrap;">{{close_date}}</td></tr>
             {{/if}}
             {{#ifCond priority ">=" 1}}
-            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td class="text-warning">Medium</td>{{else ifCond priority "==" 3}}<td class="test-danger">High</td>{{else ifCond priority ">" 3}}<td class="bg-danger">Critical</td>{{/ifCond}}</tr>
+            <tr><th>Priority</th>{{#ifCond priority "==" 1}}<td>Low</td>{{else ifCond priority "==" 2}}<td class="text-warning">Medium</td>{{else ifCond priority "==" 3}}<td class="test-danger">High</td>{{else ifCond priority ">" 3}}<td><span class="bg-danger">Critical</span></td>{{/ifCond}}</tr>
             {{/ifCond}}
             {{#if comments}}
             <tr><td colspan="2"><a href="#/Users/{{comments.[0].user_id}}">{{comments.[0].last_name}}, {{comments.[0].first_name}}</a> <small>({{comments.[0].userid}})</small></td></tr>
@@ -2053,7 +2053,7 @@ export default
           <tr><th></th><td class="bg-success" style="margin-left: 20px;">HOLD</td></tr>
           {{/ifCond}}
           {{#if application.issue.priority}}
-          <tr><th>Priority</th><td>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<span class="text-warning">Medium</span>{{else ifCond @root.application.issue.priority "==" 3}}<span class="text-danger">High</span>{{else}}<span class="bg-danger">Critical</span>{{/ifCond}}</td></tr>
+          <tr><th>Priority</th>{{#ifCond @root.application.issue.priority "==" 1}}Low{{else ifCond @root.application.issue.priority "==" 2}}<td class="text-warning">Medium</td>{{else ifCond @root.application.issue.priority "==" 3}}<td class="text-danger">High</td>{{else}}<td><span class="bg-danger">Critical</span></td>{{/ifCond}}</tr>
           {{/if}}
           {{#if application.issue.due_date}}
           <tr><th>Due</th><td style="white-space: nowrap;">{{application.issue.due_date}}</td></tr>
