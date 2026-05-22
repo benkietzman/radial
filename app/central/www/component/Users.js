@@ -585,8 +585,12 @@ export default
         User ID:
       </th>
       <td>
+        {{#if user.bAdmin}}
         {{#if user.bEdit}}
         <input type="text" class="form-control" c-model="user.userid">
+        {{else}}
+        {{user.userid}}
+        {{/if}}
         {{else}}
         {{user.userid}}
         {{/if}}
@@ -605,8 +609,12 @@ export default
         Active:
       </th>
       <td>
+        {{#if user.bAdmin}}
         {{#if user.bEdit}}
         <select class="form-control" c-model="user.active" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.active.name}}
+        {{/if}}
         {{else}}
         {{user.active.name}}
         {{/if}}
@@ -637,8 +645,12 @@ export default
         Admin:
       </th>
       <td>
+        {{#if user.bAdmin}}
         {{#if user.bEdit}}
         <select class="form-control" c-model="user.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.admin.name}}
+        {{/if}}
         {{else}}
         {{user.admin.name}}
         {{/if}}
@@ -661,7 +673,7 @@ export default
       <td>
         {{#if user.bEdit}}
         <input type="password" class="form-control" c-model="user.password">
-        {{else if user.bAdmin}}
+        {{else}}
         {{#ifCond user.password "!=" ""}}
         ******
         {{/ifCond}}
@@ -671,8 +683,12 @@ export default
         Locked:
       </th>
       <td>
+        {{#if user.bAdmin}}
         {{#if user.bEdit}}
         <select class="form-control" c-model="user.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{else}}
+        {{user.locked.name}}
+        {{/if}}
         {{else}}
         {{user.locked.name}}
         {{/if}}
