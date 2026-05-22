@@ -5808,13 +5808,33 @@ bool Central::userEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || (user(a, e) && !empty(a.p->m["o"], "userid") && d.u == a.p->m["o"]->m["userid"]->v))
     {
-      if (exist(i, "active") && !empty(i->m["active"], "value"))
+      if (exist(i, "active"))
       {
-        i->i("active", i->m["active"]->m["value"]->v);
+        if (d.g)
+        {
+          if (!empty(i->m["active"], "value"))
+          {
+            i->i("active", i->m["active"]->m["value"]->v);
+          }
+        }
+        else
+        {
+          rm(i, "active");
+        }
       }
-      if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+      if (exist(i, "admin"))
       {
-        i->i("admin", i->m["admin"]->m["value"]->v);
+        if (d.g)
+        {
+          if (!empty(i->m["admin"], "value"))
+          {
+            i->i("admin", i->m["admin"]->m["value"]->v);
+          }
+        }
+        else
+        {
+          rm(i, "admin");
+        }
       }
       if (exist(i, "alert_chat") && !empty(i->m["alert_chat"], "value"))
       {
@@ -5836,9 +5856,19 @@ bool Central::userEdit(radialUser &d, string &e)
       {
         i->i("alert_pager", i->m["alert_pager"]->m["value"]->v);
       }
-      if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+      if (exist(i, "locked"))
       {
-        i->i("locked", i->m["locked"]->m["value"]->v);
+        if (d.g)
+        {
+          if (!empty(i->m["locked"], "value"))
+          {
+            i->i("locked", i->m["locked"]->m["value"]->v);
+          }
+        }
+        else
+        {
+          rm(i, "locked");
+        }
       }
       if (exist(i, "mfa") && !empty(i->m["mfa"], "value"))
       {
