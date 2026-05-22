@@ -3538,7 +3538,11 @@ bool Central::loginTypes(radialUser &d, string &e)
     b = true;
     for (auto &r : rs)
     {
-      o->pb(r);
+      Json *j = new Json(r);
+      ny(j, "mfa");
+      ny(j, "remote");
+      o->pb(j);
+      delete j;
     }
   }
 
@@ -5773,6 +5777,7 @@ bool Central::userAdd(radialUser &d, string &e)
         i->i("alert_live_message", "0", 'n');
         i->i("alert_live_pager", "0", 'n');
         i->i("locked", "0", 'n');
+        i->i("mfa", "0", 'n');
         if (db("dbCentralUserAdd", i, id, q, e))
         {
           b = true;
@@ -5834,6 +5839,10 @@ bool Central::userEdit(radialUser &d, string &e)
       if (exist(i, "locked") && !empty(i->m["locked"], "value"))
       {
         i->i("locked", i->m["locked"]->m["value"]->v);
+      }
+      if (exist(i, "mfa") && !empty(i->m["mfa"], "value"))
+      {
+        i->i("mfa", i->m["mfa"]->m["value"]->v);
       }
       b = db("dbCentralUserUpdate", i, e);
     }
@@ -6205,7 +6214,6 @@ bool Central::users(radialUser &d, string &e)
     for (auto &r : rs)
     {
       Json *j = new Json(r);
-      b = true; 
       ny(j, "active");
       ny(j, "admin");
       ny(j, "alert_chat");
@@ -6218,6 +6226,7 @@ bool Central::users(radialUser &d, string &e)
       rm(j, "alert_remote_proxy_decrypted_password");
       rm(j, "alert_remote_proxy_password");
       ny(j, "locked");
+      ny(j, "mfa");
       o->pb(j);
       delete j;
     }
