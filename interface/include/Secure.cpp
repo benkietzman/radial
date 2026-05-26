@@ -215,7 +215,6 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       bResult = true;
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
-      ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
       if (exist(ptJson, "Request"))
       {
         if (ptJson->m["Request"]->m.size() > 1)
