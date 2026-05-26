@@ -578,127 +578,166 @@ export default
     </div>
     {{/if}}
   </div>
+  <br><br>
   {{/if}}
-  <table class="table table-condensed">
-    <tr>
-      <th style="white-space: nowrap;">
-        User ID:
-      </th>
-      <td>
-        {{#if user.bAdmin}}
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.userid">
-        {{else}}
-        {{user.userid}}
-        {{/if}}
-        {{else}}
-        {{user.userid}}
-        {{/if}}
-      </td>
-      <th>
-        Email:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.email">
-        {{else}}
-        {{user.email}}
-        {{/if}}
-      </td>
-      <th>
-        Active:
-      </th>
-      <td>
-        {{#if user.bAdmin}}
-        {{#if user.bEdit}}
-        <select class="form-control" c-model="user.active" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{user.active.name}}
-        {{/if}}
-        {{else}}
-        {{user.active.name}}
-        {{/if}}
-      </td>
-    </tr>
-    <tr>
-      <th style="white-space: nowrap;">
-        First Name:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.first_name">
-        {{else}}
-        {{user.first_name}}
-        {{/if}}
-      </td>
-      <th>
-        Text:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.pager">
-        {{else}}
-        {{user.pager}}
-        {{/if}}
-      </td>
-      <th>
-        Admin:
-      </th>
-      <td>
-        {{#if user.bAdmin}}
-        {{#if user.bEdit}}
-        <select class="form-control" c-model="user.admin" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{user.admin.name}}
-        {{/if}}
-        {{else}}
-        {{user.admin.name}}
-        {{/if}}
-      </td>
-    </tr>
-    <tr>
-      <th style="white-space: nowrap;">
-        Last Name:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="text" class="form-control" c-model="user.last_name">
-        {{else}}
-        {{user.last_name}}
-        {{/if}}
-      </td>
-      <th>
-        Password:
-      </th>
-      <td>
-        {{#if user.bEdit}}
-        <input type="password" class="form-control" c-model="user.password">
-        {{else}}
-        {{#ifCond user.password "!=" ""}}
-        ******
-        {{/ifCond}}
-        {{/if}}
-      </td>
-      <th>
-        Locked:
-      </th>
-      <td>
-        {{#if user.bAdmin}}
-        {{#if user.bEdit}}
-        <select class="form-control" c-model="user.locked" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-        {{else}}
-        {{user.locked.name}}
-        {{/if}}
-        {{else}}
-        {{user.locked.name}}
-        {{/if}}
-      </td>
-    </tr>
-  </table>
   <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-secondary fw-bold">
+          <span title="Personal profile configuration settings."><i class="bi bi-person"></i> Personal Profile</span>
+        </div>
+        <div class="card-body bg-secondary-subtle">
+          <table class="table table-condensed">
+            <tr>
+              <th style="background: inherit; white-space: nowrap;">
+                User ID:
+              </th>
+              <td colspan="3" style="background: inherit;">
+                {{#isGlobalAdmin}}
+                {{#if ../user.bEdit}}
+                <input type="text" class="form-control" c-model="user.userid">
+                {{else}}
+                {{../user.userid}}
+                {{/if}}
+                {{else}}
+                {{../user.userid}}
+                {{/isGlobalAdmin}}
+              </td>
+            </tr>
+            <tr>
+              <th style="background: inherit; white-space: nowrap;">
+                First Name:
+              </th>
+              <td style="background: inherit;">
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.first_name">
+                {{else}}
+                {{user.first_name}}
+                {{/if}}
+              </td>
+              <th style="background: inherit;">
+                Email:
+              </th>
+              <td style="background: inherit;">
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.email">
+                {{else}}
+                {{user.email}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th style="background: inherit; white-space: nowrap;">
+                Last Name:
+              </th>
+              <td style="background: inherit;">
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.last_name">
+                {{else}}
+                {{user.last_name}}
+                {{/if}}
+              </td>
+              <th style="background: inherit;">
+                Text:
+              </th>
+              <td style="background: inherit;">
+                {{#if user.bEdit}}
+                <input type="text" class="form-control" c-model="user.pager">
+                {{else}}
+                {{user.pager}}
+                {{/if}}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-warning fw-bold text-dark">
+          <span title="Security profile configuration settings."><i class="bi bi-lock"></i> Security Profile</span>
+        </div>
+        <div class="card-body bg-warning-subtle">
+          <table class="table table-condensed">
+            <tr>
+              <th style="background: inherit;">
+                Password:
+              </th>
+              <td colspan="3" style="background: inherit;">
+                {{#if user.bEdit}}
+                <input type="password" class="form-control" c-model="user.password">
+                {{else}}
+                {{#ifCond user.password "!=" ""}}
+                ******
+                {{/ifCond}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr>
+              <th style="background: inherit;">
+                Active:
+              </th>
+              <td style="background: inherit;">
+                {{#isGlobalAdmin}}
+                {{#if ../user.bEdit}}
+                <select class="form-control" c-model="user.active" c-json>{{#each ../a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{../user.active.name}}
+                {{/if}}
+                {{else}}
+                {{../user.active.name}}
+                {{/isGlobalAdmin}}
+              </td>
+              <th style="background: inherit;">
+                Locked:
+              </th>
+              <td style="background: inherit;">
+                {{#isGlobalAdmin}}
+                {{#if ../user.bEdit}}
+                <select class="form-control" c-model="user.locked" c-json>{{#each ../a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{../user.locked.name}}
+                {{/if}}
+                {{else}}
+                {{../user.locked.name}}
+                {{/isGlobalAdmin}}
+              </td>
+            </tr>
+            <tr>
+              <th style="background: inherit;">
+                Admin:
+              </th>
+              <td style="background: inherit;">
+                {{#isGlobalAdmin}}
+                {{#if ../user.bEdit}}
+                <select class="form-control" c-model="user.admin" c-json>{{#each ../a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{../user.admin.name}}
+                {{/if}}
+                {{else}}
+                {{../user.admin.name}}
+                {{/isGlobalAdmin}}
+              </td>
+              <th style="background: inherit;" title="Multi-Factor Authentication">
+                MFA:
+              </th>
+              <td style="background: inherit;">
+                {{#if user.bEdit}}
+                <select class="form-control" c-model="user.mfa" c-json>{{#each a.m_noyes}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+                {{else}}
+                {{user.mfa.name}}
+                {{/if}}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top: 10px;">
     <div class="col-md-4">
       <div class="card">
-        <div class="card-header bg-info fw-bold">
+        <div class="card-header bg-info fw-bold text-dark">
           <span title="Configuration settings for receiving alert messages."><i class="bi bi-send"></i> Notify Settings</span>
         </div>
         <div class="card-body bg-info-subtle">
