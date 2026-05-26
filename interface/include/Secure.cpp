@@ -267,9 +267,13 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       {
         if (exist(ptJson->m["Request"], "Type"))
         {
-          if (ptJson->m["Request"]->m["Type"]->v == "password")
+          if (ptJson->m["Request"]->m["Type"]->v == "auto")
           {
-            ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
+            ptJson->m["Response"]->m["auth"]->i("login_title", "Choose Login");
+          }
+          else if (ptJson->m["Request"]->m["Type"]->v == "password")
+          {
+            ptJson->m["Response"]->m["auth"]->i("login_title", "Password Login");
           }
           else if (ptJson->m["Request"]->m["Type"]->v == "windows")
           {
