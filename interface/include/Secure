@@ -23,7 +23,6 @@ class Secure : public Interface
   string m_strJwtSecret;
   string m_strJwtSigner;
   bool (*m_pLoginCallback)(string, Json *, string &);
-  string (*m_pLoginTitleCallback)(const string);
   bool (*m_pLogoutCallback)(string, Json *, string &);
   void (*m_pProcessJwtCallback)(string, Json *, Json *, Json *);
   bool (*m_pProcessNonCentralCallback)(string, Json *, Json *, Json *, string &);
@@ -35,7 +34,6 @@ class Secure : public Interface
   ~Secure();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void setLogin(bool (*pCallback)(string, Json *, string &));
-  void setLoginTitle(string (*pCallback)(const string));
   void setLogout(bool (*pCallback)(string, Json *, string &));
   void setProcessJwt(void (*pCallback)(string, Json *, Json *, Json *));
   void setProcessNonCentral(bool (*pCallback)(string, Json *, Json *, Json *, string &));

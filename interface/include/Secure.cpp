@@ -265,25 +265,6 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       ptJson->m["Response"]->m["auth"]->i("login_title", "Login");
       if (exist(ptJson, "Request"))
       {
-        if (exist(ptJson->m["Request"], "Type"))
-        {
-          if (ptJson->m["Request"]->m["Type"]->v == "auto")
-          {
-            ptJson->m["Response"]->m["auth"]->i("login_title", "Choose Login");
-          }
-          else if (ptJson->m["Request"]->m["Type"]->v == "password")
-          {
-            ptJson->m["Response"]->m["auth"]->i("login_title", "Password Login");
-          }
-          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
-          {
-            ptJson->m["Response"]->m["auth"]->i("login_title", "Windows Login");
-          }
-          else if (m_pLoginTitleCallback != NULL)
-          {
-            ptJson->m["Response"]->m["auth"]->i("login_title", m_pLoginTitleCallback(ptJson->m["Request"]->m["Type"]->v));
-          }
-        }
         if (ptJson->m["Request"]->m.size() > 1)
         {
           Json *ptData = new Json(ptJson->m["Request"]);
@@ -468,12 +449,6 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
 void Secure::setLogin(bool (*pCallback)(string, Json *, string &))
 {
   m_pLoginCallback = pCallback;
-}
-// }}}
-// {{{ setLoginTitle()
-void Secure::setLoginTitle(string (*pCallback)(const string))
-{
-  m_pLoginTitleCallback = pCallback;
 }
 // }}}
 // {{{ setLogout()
