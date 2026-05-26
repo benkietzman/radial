@@ -4961,6 +4961,7 @@ bool Interface::user(radialUser &d, string &e)
           }
         }
         ny(j, "locked");
+        ny(j, "mfa");
         d.p->i("o", j);
         delete j;
       }
