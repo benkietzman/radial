@@ -122,7 +122,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       if (!empty(ptJson, "reqApp"))
       {
         stringstream ssQuery;
-        ssQuery << "select b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << esc(ptJson->m["reqApp"]->v) << "'";
+        ssQuery << "select b.remote, b.title, b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << esc(ptJson->m["reqApp"]->v) << "'";
         auto getLoginType = dbquery("central_r", ssQuery.str(), strError);
         if (getLoginType != NULL)
         {
@@ -136,6 +136,8 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
             }
             ptJson->m["Response"] = new Json;
             ptJson->m["Response"]->i("Module", strModule);
+            ptJson->m["Response"]->i("Remote", getLoginType->front()["remote"]);
+            ptJson->m["Response"]->i("Title", getLoginType->front()["title"]);
             ptJson->m["Response"]->i("Type", getLoginType->front()["type"]);
           }
           else
