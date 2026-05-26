@@ -1396,7 +1396,7 @@ bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
   list<string> k = {"db", "central", "login_type"};
   stringstream qs;
 
-  qs << "select id, mfa, remote, type from login_type order by type";
+  qs << "select id, mfa, remote, title, type from login_type order by type";
   auto g = dbq("central_r", qs, q, k, e);
   if (g != NULL)
   {
