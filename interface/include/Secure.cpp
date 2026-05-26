@@ -158,30 +158,11 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       {
         if (!empty(ptJson->m["Request"], "Type"))
         {
-          // {{{ password
-          if (ptJson->m["Request"]->m["Type"]->v == "password")
-          {
-            bResult = true;
-          } 
-          // }}}
-          // {{{ windows
-          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
-          {
-            bResult = true;
-          } 
-          // }}}
-          // {{{ callback
-          else if (m_pLoginCallback != NULL)
+          bResult = true;
+          if (m_pLoginCallback != NULL)
           {
             bResult = m_pLoginCallback(strPrefix, ptJson, strError);
           }
-          // }}}
-          // {{{ invalid
-          else
-          {
-            strError = "Please provide a valid Type within the Request:  password, windows.";
-          }
-          // }}}
         }
         else
         {
@@ -201,48 +182,21 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       {
         if (!empty(ptJson->m["Request"], "Type"))
         {
-          // {{{ password
-          if (ptJson->m["Request"]->m["Type"]->v == "password")
+          bResult = false;
+          if (!empty(ptJson->m["Request"], "Return"))
           {
-            if (!empty(ptJson->m["Request"], "Return"))
+            bResult = true;
+            ptJson->m["Response"] = new Json;
+            ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
+            if (m_pLogoutCallback != NULL)
             {
-              bResult = true;
-              ptJson->m["Response"] = new Json;
-              ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
-            }
-            else
-            {
-              strError = "Please provide the Return.";
+              bResult = m_pLogoutCallback(strPrefix, ptJson, strError);
             }
           }
-          // }}}
-          // {{{ windows
-          else if (ptJson->m["Request"]->m["Type"]->v == "windows")
-          {
-            if (!empty(ptJson->m["Request"], "Return"))
-            {
-              bResult = true;
-              ptJson->m["Response"] = new Json;
-              ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
-            }
-            else
-            {
-              strError = "Please provide the Return.";
-            }
-          }
-          // }}}
-          // {{{ callback
-          else if (m_pLogoutCallback != NULL)
-          {
-            bResult = m_pLogoutCallback(strPrefix, ptJson, strError);
-          }
-          // }}}
-          // {{{ invalid
           else
           {
-            strError = "Please provide a valid Type within the Request:  password, windows.";
+            strError = "Please provide the Return.";
           }
-          // }}}
         }
         else
         {
