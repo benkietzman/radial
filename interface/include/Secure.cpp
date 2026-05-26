@@ -20,7 +20,6 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   Json *ptAes = new Json, *ptJwt = new Json;
 
   m_pLoginCallback = NULL;
-  m_pLoginTitleCallback = NULL;
   m_pLogoutCallback = NULL;
   m_pProcessJwtCallback = NULL;
   m_pProcessNonCentralCallback = NULL;
