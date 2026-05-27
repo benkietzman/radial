@@ -94,6 +94,10 @@ class Db : public Interface
   bool dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralServerUserUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserPasskeyAdd(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserPasskeyRemove(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserPasskeys(Json *i, Json *o, string &id, string &q, string &e);
+  bool dbCentralUserPasskeyUpdate(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserReminderRemove(Json *i, Json *o, string &id, string &q, string &e);
   bool dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string &e);

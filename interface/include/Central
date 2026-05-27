@@ -135,6 +135,12 @@ class Central : public Interface
   bool userAdd(radialUser &d, string &e);
   bool userEdit(radialUser &d, string &e);
   bool userNotify(radialUser &d, string &e);
+  bool userPasskey(radialUser &d, string &e);
+  bool userPasskeyAdd(radialUser &d, string &e);
+  bool userPasskeyAttestation(radialUser &d, string &e);
+  bool userPasskeyEdit(radialUser &d, string &e);
+  bool userPasskeyRemove(radialUser &d, string &e);
+  bool userPasskeys(radialUser &d, string &e);
   bool userReminder(radialUser &d, string &e);
   bool userReminderAdd(radialUser &d, string &e);
   bool userReminderEdit(radialUser &d, string &e);

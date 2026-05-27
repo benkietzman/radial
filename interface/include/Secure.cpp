@@ -82,6 +82,10 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
         if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
           bResult = true;
+          if (exist(ptJson, "Response"))
+          {
+            delete ptJson->m["Response"];
+          }
           ptJson->m["Response"] = new Json;
           if (exist(ptJwt, "sl_admin"))
           {
@@ -133,6 +137,10 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
             if (!strModule.empty() && strModule[0] >= 'A' && strModule[0] <= 'Z')
             {
               strModule[0] = tolower(strModule[0]);
+            }
+            if (exist(ptJson, "Response"))
+            {
+              delete ptJson->m["Response"];
             }
             ptJson->m["Response"] = new Json;
             ptJson->m["Response"]->i("Module", strModule);
@@ -188,6 +196,10 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
           if (!empty(ptJson->m["Request"], "Return"))
           {
             bResult = true;
+            if (exist(ptJson, "Response"))
+            {
+              delete ptJson->m["Response"];
+            }
             ptJson->m["Response"] = new Json;
             ptJson->m["Response"]->i("Redirect", ptJson->m["Request"]->m["Return"]->v);
             if (m_pLogoutCallback != NULL)
@@ -215,6 +227,10 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     else if (ptJson->m["Function"]->v == "process")
     {
       bResult = true;
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
       if (exist(ptJson, "Request"))
@@ -378,7 +394,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  auth, getSecurityModule, login, logout, process.";
+      strError = "Please provide a valid Function:  auth, getSecurityModule, login, logout, passkeyAttestation, passkeyRegistration, process.";
     }
     // }}}
   }

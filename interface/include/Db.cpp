@@ -1901,6 +1901,76 @@ bool Db::dbCentralUserAdd(Json *i, Json *o, string &id, string &q, string &e)
   return b;
 }
 // }}}
+// {{{ dbCentralUserPasskeyAdd()
+bool Db::dbCentralUserPasskeyAdd(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"name", "passkey_id", "person_id", "public_key"}, i, e))
+  {
+    bool fa = true, fb = true;
+    list<string> ks = {"name", "passkey_id", "person_id", "public_key"};
+    stringstream qs;
+    qs << "insert into person_passkey (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
+    b = dbu("central", qs, q, id, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralUserPasskeyRemove()
+bool Db::dbCentralUserPasskeyRemove(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id"}, i, e))
+  {
+    stringstream qs;
+    qs << "delete from person_passkey where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
+// {{{ dbCentralUserPasskeys()
+bool Db::dbCentralUserPasskeys(Json *i, Json *o, string &id, string &q, string &e)
+{
+  stringstream qs;
+
+  qs << "select id, name, passkey_id, person_id, public_key from person_passkey where 1";
+  if (!empty(i, "id"))
+  {
+    qs << " and id = " << v(i->m["id"]->v);
+  }
+  if (!empty(i, "passkey_id"))
+  {
+    qs << " and passkey_id = " << v(i->m["passkey_id"]->v);
+  }
+  if (!empty(i, "person_id"))
+  {
+    qs << " and person_id = " << v(i->m["person_id"]->v);
+  }
+
+  return dbq("central_r", qs, q, o, e);
+}
+// }}}
+// {{{ dbCentralUserPasskeyUpdate()
+bool Db::dbCentralUserPasskeyUpdate(Json *i, Json *o, string &id, string &q, string &e)
+{
+  bool b = false;
+
+  if (dep({"id",}, i, e))
+  {
+    bool f = true;
+    stringstream qs;
+    qs << "update person_passkey set" << u({"name", "passkey_id", "person_id", "public_key"}, i, f) << " where id = " << v(i->m["id"]->v);
+    b = dbu("central", qs, q, e);
+  }
+
+  return b;
+}
+// }}}
 // {{{ dbCentralUserReminderAdd()
 bool Db::dbCentralUserReminderAdd(Json *i, Json *o, string &id, string &q, string &e)
 {

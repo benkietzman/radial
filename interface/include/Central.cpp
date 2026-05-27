@@ -5953,6 +5953,233 @@ bool Central::userNotify(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ userPasskey()
+bool Central::userPasskey(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (!empty(i, "id"))
+  {
+    map<string, string> r;
+    if (db("dbCentralUserPasskeys", i, r, e))
+    {
+      if (!r.empty())
+      {
+        radialUser a;
+        userInit(d, a);
+        a.p->m["i"]->i("userid", d.u);
+        if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == r["person_id"]))
+        {
+          b = true;
+          d.p->i("o", r);
+        }
+        else
+        {
+          e = "You are not authorized to perform this action.";
+        }
+        userDeinit(a);
+      }
+      else
+      {
+        e = "No results returned.";
+      }
+    }
+  }
+  else
+  {
+    e = "Please provide the id.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeyAdd()
+bool Central::userPasskeyAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"name", "passkey_id", "public_key"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("userid", d.u);
+    if (user(a, e) && !empty(a.p->m["o"], "id"))
+    {
+      if (empty(i, "person_id"))
+      {
+        i->i("person_id", a.p->m["o"]->m["id"]->v);
+      }
+      if (d.g || a.p->m["o"]->m["id"]->v == i->m["person_id"]->v)
+      {
+        string id, q;
+        if (db("dbCentralUserPasskeyAdd", i, id, q, e))
+        {
+          b = true;
+          o->i("id", id);
+        }
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+    }
+    else if (e.empty())
+    {
+      e = "Failed to fetch user.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeyAttestation()
+bool Central::userPasskeyAttestation(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *o = d.p->m["o"];
+
+  if (!d.u.empty())
+  {
+    random_device rdmdev;
+    mt19937 generator(rdmdev());
+    string strChallenge, strCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", strID;
+    uniform_int_distribution<> distribution(0, (strCharacters.size() - 1));
+    Json *ptParam;
+    b = true;
+    o->m["publicKey"] = new Json;
+    o->m["publicKey"]->m["rp"] = new Json;
+    o->m["publicKey"]->m["rp"]->i("name", m_strCompany);
+    o->m["publicKey"]->m["rp"]->i("id", m_strServer);
+    o->m["publicKey"]->m["user"] = new Json;
+    for (size_t i = 0; i < 32; i++)
+    {
+      strID += strCharacters[distribution(generator)];
+    }
+    o->m["publicKey"]->m["user"]->i("id", strID);
+    o->m["publicKey"]->m["user"]->i("name", d.u);
+    for (size_t i = 0; i < 32; i++)
+    {
+      strChallenge += strCharacters[distribution(generator)];
+    }
+    o->m["publicKey"]->i("challenge", strChallenge);
+    o->m["publicKey"]->m["pubKeyCredParams"] = new Json;
+    ptParam = new Json;
+    ptParam->i("type", "public-key");
+    ptParam->i("alg", "-7", 'n');
+    o->m["publicKey"]->m["pubKeyCredParams"]->l.push_back(ptParam);
+    ptParam = new Json;
+    ptParam->i("type", "public-key");
+    ptParam->i("alg", "-257", 'n');
+    o->m["publicKey"]->m["pubKeyCredParams"]->l.push_back(ptParam);
+    o->m["publicKey"]->i("timeout", "30000", 'n');
+    o->m["publicKey"]->i("attestation", "none");
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeyEdit()
+bool Central::userPasskeyEdit(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id", "name", "passkey_id", "person_id", "public_key"}, i, e))
+  {
+    radialUser a, c;
+    userInit(d, a);
+    userInit(d, c);
+    a.p->m["i"]->i("userid", d.u);
+    c.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userPasskey(c, e) && !empty(c.p->m["o"], "person_id") && a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v && c.p->m["o"]->m["person_id"]->v == i->m["person_id"]->v))
+    {
+      if (db("dbCentralUserPasskeyUpdate", i, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(c);
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeyRemove()
+bool Central::userPasskeyRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id"}, i, e))
+  {
+    radialUser a, c;
+    userInit(d, a);
+    userInit(d, c);
+    a.p->m["i"]->i("userid", d.u);
+    c.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && userPasskey(c, e) && !empty(c.p->m["o"], "person_id") &&  a.p->m["o"]->m["id"]->v == c.p->m["o"]->m["person_id"]->v))
+    {
+      if (db("dbCentralUserPasskeyRemove", i, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(c);
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeys()
+bool Central::userPasskeys(radialUser &d, string &e)
+{
+  bool b = false;
+  list<map<string, string> > rs;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"person_id"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("userid", d.u);
+    if (d.g || (user(a, e) && !empty(a.p->m["o"], "id") && a.p->m["o"]->m["id"]->v == i->m["person_id"]->v))
+    {
+      if (db("dbCentralUserPasskeys", i, rs, e))
+      {
+        b = true;
+        for (auto &r : rs)
+        {
+          o->pb(r);
+        }
+      }
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
 // {{{ userReminder()
 bool Central::userReminder(radialUser &d, string &e)
 {
@@ -6158,6 +6385,7 @@ bool Central::userReminderRemove(radialUser &d, string &e)
     {
       e = "You are not authorized to perform this action.";
     }
+    userDeinit(c);
     userDeinit(a);
   }
 
@@ -6184,7 +6412,6 @@ bool Central::userReminders(radialUser &d, string &e)
         for (auto &r : rs)
         {
           Json *j = new Json(r);
-          b = true; 
           ny(j, "alert");
           ny(j, "chat");
           ny(j, "cron");
