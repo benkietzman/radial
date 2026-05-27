@@ -6091,7 +6091,7 @@ bool Central::userPasskeyEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (dep({"id", "name", "passkey_id", "person_id", "public_key"}, i, e))
+  if (dep({"id", "name"}, i, e))
   {
     radialUser a, c;
     userInit(d, a);
