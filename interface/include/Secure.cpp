@@ -223,6 +223,27 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       }
     }
     // }}}
+    // {{{ passkeyAssertion
+    else if (ptJson->m["Function"]->v == "passkeyAssertion")
+    {
+      char szBuffer[32];
+      string strChallenge, strData;
+
+      bResult = true;
+      if (exist(ptJson, "Response"))
+      {
+        delete ptJson->m["Response"];
+      }
+      ptJson->m["Response"] = new Json;
+      ptJson->m["Response"]->m["publicKey"] = new Json;
+      getrandom(szBuffer, 32, 0);
+      strData.assign(szBuffer, 32);
+      m_manip.encodeBase64(strData, strChallenge);
+      ptJson->m["Response"]->m["publicKey"]->i("challenge", strChallenge);
+      ptJson->m["Response"]->m["publicKey"]->i("timeout", "30000", 'n');
+      ptJson->m["Response"]->m["publicKey"]->i("rpId", m_strServer);
+    }
+    // }}}
     // {{{ process
     else if (ptJson->m["Function"]->v == "process")
     {
