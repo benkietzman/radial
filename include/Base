@@ -27,7 +27,6 @@
 #include <netdb.h>
 #include <openssl/evp.h>
 #include <poll.h>
-#include <random>
 #include <regex>
 #include <queue>
 #include <regex.h>
@@ -37,6 +36,7 @@
 #include <stack>
 #include <string>
 #include <sys/inotify.h>
+#include <sys/random.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
 #include <sys/types.h>

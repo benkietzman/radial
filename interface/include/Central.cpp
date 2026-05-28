@@ -6043,10 +6043,8 @@ bool Central::userPasskeyAttestation(radialUser &d, string &e)
 
   if (!d.u.empty())
   {
-    random_device rdmdev;
-    mt19937 generator(rdmdev());
-    string strChallenge, strCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", strID;
-    uniform_int_distribution<> distribution(0, (strCharacters.size() - 1));
+    string strChallenge, strData, strID;
+    char szBuffer[32];
     Json *ptParam;
     b = true;
     o->m["publicKey"] = new Json;
@@ -6054,16 +6052,14 @@ bool Central::userPasskeyAttestation(radialUser &d, string &e)
     o->m["publicKey"]->m["rp"]->i("name", m_strCompany);
     o->m["publicKey"]->m["rp"]->i("id", m_strServer);
     o->m["publicKey"]->m["user"] = new Json;
-    for (size_t i = 0; i < 32; i++)
-    {
-      strID += strCharacters[distribution(generator)];
-    }
+    getrandom(szBuffer, 32, 0);
+    strData.assign(szBuffer, 32);
+    m_manip.encodeBase64(strData, strID);
     o->m["publicKey"]->m["user"]->i("id", strID);
     o->m["publicKey"]->m["user"]->i("name", d.u);
-    for (size_t i = 0; i < 32; i++)
-    {
-      strChallenge += strCharacters[distribution(generator)];
-    }
+    getrandom(szBuffer, 32, 0);
+    strData.assign(szBuffer, 32);
+    m_manip.encodeBase64(strData, strChallenge);
     o->m["publicKey"]->i("challenge", strChallenge);
     o->m["publicKey"]->m["pubKeyCredParams"] = new Json;
     ptParam = new Json;
