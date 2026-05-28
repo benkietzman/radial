@@ -133,6 +133,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["userNotify"] = &Central::userNotify;
   m_functions["userPasskey"] = &Central::userPasskey;
   m_functions["userPasskeyAdd"] = &Central::userPasskeyAdd;
+  m_functions["userPasskeyAssertion"] = &Central::userPasskeyAssertion;
   m_functions["userPasskeyAttestation"] = &Central::userPasskeyAttestation;
   m_functions["userPasskeyEdit"] = &Central::userPasskeyEdit;
   m_functions["userPasskeyRemove"] = &Central::userPasskeyRemove;
@@ -6037,6 +6038,24 @@ bool Central::userPasskeyAdd(radialUser &d, string &e)
     }
     userDeinit(a);
   }
+
+  return b;
+}
+// }}}
+// {{{ userPasskeyAssertion()
+bool Central::userPasskeyAssertion(radialUser &d, string &e)
+{
+  bool b = true;
+  char szBuffer[32];
+  string strChallenge, strData, strID;
+  Json *o = d.p->m["o"];
+
+  getrandom(szBuffer, 32, 0);
+  strData.assign(szBuffer, 32);
+  m_manip.encodeBase64(strData, strChallenge);
+  o->i("challenge", strChallenge);
+  o->i("timeout", "30000", 'n');
+  o->i("rpId", m_strServer);
 
   return b;
 }
