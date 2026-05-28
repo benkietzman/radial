@@ -25,7 +25,55 @@ export default
       c: c,
       d: {},
       bNotified: false,
+      passkey: {name: ''}
     });
+    // ]]]
+    // [[[ addPasskey()
+    s.addPasskey = () =>
+    {
+      s.modalPasskeysInfo.v = 'Retrieving passkey attestation...';
+      let request = {Interface: 'central', 'Function': 'userPasskeyAttestation', Request: {}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        s.modalPasskeysInfo.v = null;
+        if (c.wsResponse(response, error))
+        {
+          s.modalPasskeysInfo.v = 'Creating passkey credentials...';
+          response.Response.publicKey.challenge = c.base64ToBuffer(response.Response.publicKey.challenge);
+          response.Response.publicKey.user.id = c.base64ToBuffer(response.Response.publicKey.user.id);
+          navigator.credentials.create(response.Response)
+          .then(cred =>
+          {
+            s.modalPasskeysInfo.v = 'Adding passkey...';
+            let attestationObject = CBOR.decode(new Uint8Array(cred.response.attestationObject));
+            let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: c.bufferToBase64(attestationObject.authData)}};
+            c.wsRequest('radial', request).then((response) =>
+            {
+              let error = {};
+              s.modalPasskeysInfo.v = null;
+              if (c.wsResponse(response, error))
+              {
+                s.passkeys();
+              }
+              else
+              {
+                s.modalPasskeysMessage.v = error.message;
+              }
+            });
+          })
+          .catch(error =>
+          {
+            s.modalPasskeysInfo.v = null;
+            s.modalPasskeysMessage.v = error;
+          });
+        }
+        else
+        {
+          s.modalPasskeysMessage.v = error.message;
+        }
+      });
+    };
     // ]]]
     // [[[ addReminder()
     s.addReminder = () =>
@@ -77,6 +125,26 @@ export default
         }
       }
       s.u();
+    };
+    // ]]]
+    // [[[ editPasskey()
+    s.editPasskey = (nIndex) =>
+    {
+      s.modalPasskeysInfo.v = 'Updating server detail...';
+      let request = {Interface: 'central', 'Function': 'userPasskeyEdit', Request: c.simplify(s.modalPasskeys[nIndex])};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        s.modalPasskeysInfo.v = null;
+        if (c.wsResponse(response, error))
+        {
+          s.passkeys();
+        }
+        else
+        {
+          s.modalPasskeysMessage.v = error.message;
+        }
+      });
     };
     // ]]]
     // [[[ editReminder()
@@ -243,6 +311,39 @@ export default
       }
     };
     // ]]]
+    // [[[ passkeys()
+    s.passkeys = () =>
+    {   
+      s.modalPasskeys = null;
+      s.modalPasskeysInfo = 'Retrieving passkeys...';
+      let request = {Interface: 'central', 'Function': 'userPasskeys', Request: {person_id: s.user.id}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        s.modalPasskeysInfo = null;
+        if (c.wsResponse(response, error))
+        {
+          s.modalPasskeys = response.Response;
+          c.loadModal('Users', 'passkeysModal', true);
+        }
+        else
+        {
+          s.modalPasskeysMessage = error.message;
+        }
+      });
+    };
+    // ]]]
+    // [[[ preEditPasskey()
+    s.preEditPasskey = (nIndex, bEdit) =>
+    {
+      s.modalPasskeys[nIndex].bEdit = bEdit;
+      if (!bEdit)
+      {
+        s.modalPasskeys[nIndex] = c.simplify(s.modalPasskeys[nIndex]);
+      }
+      c.loadModal('Users', 'passkeysModal', true);
+    };
+    // ]]]
     // [[[ preEditReminder()
     s.preEditReminder = (nIndex) =>
     {
@@ -267,6 +368,29 @@ export default
         s.user = c.simplify(s.user);
       }
       s.u();
+    };
+    // ]]]
+    // [[[ removePasskey()
+    s.removePasskey = (nID) =>
+    {
+      if (confirm('Are you sure you want to remove this user passkey?'))
+      {
+        s.modalPasskeysInfo.v = 'Removing passkey...';
+        let request = {Interface: 'central', 'Function': 'userPasskeyRemove', Request: {id: nID}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          s.modalPasskeysInfo.v = null;
+          if (c.wsResponse(response, error))
+          {
+            s.passkeys();
+          }
+          else
+          {
+            s.modalPasskeysMessage.v = error.message;
+          }
+        });
+      }
     };
     // ]]]
     // [[[ removeReminder()
@@ -582,6 +706,7 @@ export default
   {{/if}}
   <div class="row">
     <div class="col-md-6">
+      <!-- [[[ personal profile -->
       <div class="card">
         <div class="card-header bg-secondary fw-bold">
           <span title="Personal profile configuration settings."><i class="bi bi-person"></i> Personal Profile</span>
@@ -651,8 +776,10 @@ export default
           </table>
         </div>
       </div>
+      <!-- ]]] -->
     </div>
     <div class="col-md-6">
+      <!-- [[[ security profile -->
       <div class="card">
         <div class="card-header bg-warning fw-bold text-dark">
           <span title="Security profile configuration settings."><i class="bi bi-lock"></i> Security Profile</span>
@@ -663,7 +790,7 @@ export default
               <th style="background: inherit;">
                 Password:
               </th>
-              <td colspan="3" style="background: inherit;">
+              <td colspan="2" style="background: inherit;">
                 {{#if user.bEdit}}
                 <input type="password" class="form-control" c-model="user.password">
                 {{else}}
@@ -671,6 +798,9 @@ export default
                 ******
                 {{/ifCond}}
                 {{/if}}
+              </td>
+              <td style="background: inherit;">
+                <button class="btn btn-warning" type="button" data-bs-toggle="modal" data-bs-target="#passkeysModal" c-click="passkeys()">Passkeys</button>
               </td>
             </tr>
             <tr>
@@ -732,10 +862,12 @@ export default
           </table>
         </div>
       </div>
+      <!-- ]]] -->
     </div>
   </div>
   <div class="row" style="margin-top: 10px;">
     <div class="col-md-4">
+      <!-- [[[ notify settings -->
       <div class="card">
         <div class="card-header bg-info fw-bold text-dark">
           <span title="Configuration settings for receiving alert messages."><i class="bi bi-send"></i> Notify Settings</span>
@@ -802,8 +934,10 @@ export default
           </table>
         </div>
       </div>
+      <!-- ]]] -->
     </div>
     <div class="col-md-8">
+      <!-- [[[ notify - remote connection -->
       <div class="card">
         <div class="card-header bg-success fw-bold">
           <span title="Configuration settings for forwarding alert messages to a remote Radial instance."><i class="bi bi-hdd-network"></i> Notify - Remote Connection</span>
@@ -895,8 +1029,59 @@ export default
           </table>
         </div>
       </div>
+      <!-- ]]] -->
     </div>
   </div>
+  <!-- [[[ passkeys modal -->
+  <div id="passkeysModal" class="modal modal-xl">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Passkeys</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body table-responsive">
+          <div c-model="modalPasskeysInfo" class="text-warning"></div>
+          <div c-model="modalPasskeysMessage" class="text-danger" style="font-weight:bold;"></div>
+          <table class="table table-condensed table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                {{#if user.bAdmin}}
+                <th colspan="2"></th>
+                {{/if}}
+              </tr>
+            </thead>
+            <tbody>
+              {{#if user.bAdmin}}
+              <tr>
+                <td><input type="text" class="form-control" c-model="passkey.name"></td>
+                <td colspan="2">{{^if bEdit}}<button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addPasskey()" title="Add"></button>{{/if}}</td>
+              </tr>
+              {{/if}}
+              {{#each modalPasskeys}}
+              <tr>
+                {{#if bEdit}}
+                <td><input type="text" class="form-control" c-model="modalPasskeys.[{{@key}}].name"></td>
+                <td><button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditPasskey({{@key}}, false)" title="Cancel"></button></td>
+                <td><button class="btn btn-sm btn-success bi bi-save" c-click="editPasskey({{@key}})" title="Save"></button></td>
+                {{else}}
+                <td>{{name}}</td>
+                <td><button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditPasskey({{@key}}, true)" title="Edit"></button></td>
+                <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="removePasskey({{id}})" title="Remove"></button></td>
+                {{/if}}
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ]]] -->
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ applications -->
