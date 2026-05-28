@@ -6050,12 +6050,13 @@ bool Central::userPasskeyAssertion(radialUser &d, string &e)
   string strChallenge, strData, strID;
   Json *o = d.p->m["o"];
 
+  o->m["publicKey"] = new Json;
   getrandom(szBuffer, 32, 0);
   strData.assign(szBuffer, 32);
   m_manip.encodeBase64(strData, strChallenge);
-  o->i("challenge", strChallenge);
-  o->i("timeout", "30000", 'n');
-  o->i("rpId", m_strServer);
+  o->m["publicKey"]->i("challenge", strChallenge);
+  o->m["publicKey"]->i("timeout", "30000", 'n');
+  o->m["publicKey"]->i("rpId", m_strServer);
 
   return b;
 }
