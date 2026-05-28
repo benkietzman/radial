@@ -84,6 +84,10 @@ Db::Db(string strPrefix, int argc, char **argv, void (*pCallback)(string, const 
   m_functions["dbCentralServerUsers"] = &Db::dbCentralServerUsers;
   m_functions["dbCentralServerUserUpdate"] = &Db::dbCentralServerUserUpdate;
   m_functions["dbCentralUserAdd"] = &Db::dbCentralUserAdd;
+  m_functions["dbCentralUserPasskeyAdd"] = &Db::dbCentralUserPasskeyAdd;
+  m_functions["dbCentralUserPasskeyRemove"] = &Db::dbCentralUserPasskeyRemove;
+  m_functions["dbCentralUserPasskeys"] = &Db::dbCentralUserPasskeys;
+  m_functions["dbCentralUserPasskeyUpdate"] = &Db::dbCentralUserPasskeyUpdate;
   m_functions["dbCentralUserReminderAdd"] = &Db::dbCentralUserReminderAdd;
   m_functions["dbCentralUserReminderRemove"] = &Db::dbCentralUserReminderRemove;
   m_functions["dbCentralUserReminders"] = &Db::dbCentralUserReminders;

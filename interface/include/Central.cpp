@@ -131,6 +131,12 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["userAdd"] = &Central::userAdd;
   m_functions["userEdit"] = &Central::userEdit;
   m_functions["userNotify"] = &Central::userNotify;
+  m_functions["userPasskey"] = &Central::userPasskey;
+  m_functions["userPasskeyAdd"] = &Central::userPasskeyAdd;
+  m_functions["userPasskeyAttestation"] = &Central::userPasskeyAttestation;
+  m_functions["userPasskeyEdit"] = &Central::userPasskeyEdit;
+  m_functions["userPasskeyRemove"] = &Central::userPasskeyRemove;
+  m_functions["userPasskeys"] = &Central::userPasskeys;
   m_functions["userReminder"] = &Central::userReminder;
   m_functions["userReminderAdd"] = &Central::userReminderAdd;
   m_functions["userReminderEdit"] = &Central::userReminderEdit;
