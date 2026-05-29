@@ -46,12 +46,7 @@ export default
           .then(cred =>
           {
             s.modalPasskeysInfo.v = 'Adding passkey...';
-            let attestationObject = CBOR.decode(new Uint8Array(cred.response.attestationObject));
-            // attestationObject.authData may not be the public key
-            // attestationObject.authData (this might be another CBOR containing attestedCredentialData.[credentialId,credentialPublicKey]
-            //let authData = CBOR.decode(new Uint8Array(attestationObject.authData));
-            //let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: c.bufferToBase64(authData.attestedCredentialData.credentialPublicKey)}};
-            let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: c.bufferToBase64(attestationObject.authData)}};
+            let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: cred.response.getPublicKey()}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
