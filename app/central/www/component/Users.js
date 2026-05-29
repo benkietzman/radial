@@ -46,9 +46,7 @@ export default
           .then(cred =>
           {
             s.modalPasskeysInfo.v = 'Adding passkey...';
-console.log('getPublicKey():  ', cred.response.getPublicKey());
-console.log('getPublicKeyAlgorithm():  ', cred.response.getPublicKeyAlgorithm());
-            let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: cred.response.getPublicKey()}};
+            let request = {Interface: 'central', 'Function': 'userPasskeyAdd', Request: {algorithm: cred.response.getPublicKeyAlgorithm(), name: s.passkey.name.v, passkey_id: cred.id, person_id: s.user.id, public_key: cred.response.getPublicKey()}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
