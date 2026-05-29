@@ -6006,7 +6006,7 @@ bool Central::userPasskeyAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"name", "passkey_id", "public_key"}, i, e))
+  if (dep({"algorithm", "name", "passkey_id", "public_key"}, i, e))
   {
     radialUser a;
     userInit(d, a);

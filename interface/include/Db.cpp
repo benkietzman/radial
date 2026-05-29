@@ -1910,10 +1910,10 @@ bool Db::dbCentralUserPasskeyAdd(Json *i, Json *o, string &id, string &q, string
 {
   bool b = false;
 
-  if (dep({"name", "passkey_id", "person_id", "public_key"}, i, e))
+  if (dep({"algorithm", "name", "passkey_id", "person_id", "public_key"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"name", "passkey_id", "person_id", "public_key"};
+    list<string> ks = {"algorithm", "name", "passkey_id", "person_id", "public_key"};
     stringstream qs;
     qs << "insert into person_passkey (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -1942,7 +1942,7 @@ bool Db::dbCentralUserPasskeys(Json *i, Json *o, string &id, string &q, string &
 {
   stringstream qs;
 
-  qs << "select id, name, passkey_id, person_id, public_key from person_passkey where 1";
+  qs << "select id, algorithm, name, passkey_id, person_id, public_key from person_passkey where 1";
   if (!empty(i, "id"))
   {
     qs << " and id = " << v(i->m["id"]->v);
@@ -1968,7 +1968,7 @@ bool Db::dbCentralUserPasskeyUpdate(Json *i, Json *o, string &id, string &q, str
   {
     bool f = true;
     stringstream qs;
-    qs << "update person_passkey set" << u({"name", "passkey_id", "person_id", "public_key"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update person_passkey set" << u({"algoritym", "name", "passkey_id", "person_id", "public_key"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
