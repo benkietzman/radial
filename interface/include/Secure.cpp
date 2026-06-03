@@ -415,7 +415,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ invalid
     else
     {
-      strError = "Please provide a valid Function:  auth, getSecurityModule, login, logout, process.";
+      strError = "Please provide a valid Function:  auth, getSecurityModule, login, logout, passkeyAssertion, process.";
     }
     // }}}
   }
