@@ -1910,7 +1910,7 @@ bool Db::dbCentralUserPasskeyAdd(Json *i, Json *o, string &id, string &q, string
 {
   bool b = false;
 
-  if (dep({"algorithm", "name", "passkey_id", "person_id", "public_key"}, i, e))
+  if (dep({"name", "passkey_id", "person_id", "public_key"}, i, e))
   {
     bool fa = true, fb = true;
     list<string> ks = {"algorithm", "name", "passkey_id", "person_id", "public_key"};
