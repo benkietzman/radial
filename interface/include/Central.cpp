@@ -6348,6 +6348,7 @@ bool Central::userPasskeyAttestation(radialUser &d, string &e)
     m_manip.encodeBase64(strData, strID);
     o->m["publicKey"]->m["user"]->i("id", strID);
     o->m["publicKey"]->m["user"]->i("name", d.u);
+    o->m["publicKey"]->m["user"]->i("displayName", d.u);
     getrandom(szBuffer, 32, 0);
     strData.assign(szBuffer, 32);
     m_manip.encodeBase64(strData, strChallenge);
