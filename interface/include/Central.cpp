@@ -6349,8 +6349,8 @@ bool Central::userPasskeyAttestation(radialUser &d, string &e)
     o->m["publicKey"]->m["user"]->i("id", strID);
     o->m["publicKey"]->m["user"]->i("name", d.u);
     o->m["publicKey"]->m["user"]->i("displayName", d.u);
-    o->m["publicKey"]->m["authenticatorSelect"] = new Json;
-    o->m["publicKey"]->m["authenticatorSelect"]->i("residentKey", "preferred");
+    o->m["publicKey"]->m["authenticatorSelection"] = new Json;
+    o->m["publicKey"]->m["authenticatorSelection"]->i("residentKey", "preferred");
     getrandom(szBuffer, 32, 0);
     strData.assign(szBuffer, 32);
     m_manip.encodeBase64(strData, strChallenge);
