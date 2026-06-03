@@ -98,6 +98,7 @@ class Central : public Interface
   bool groupUserEdit(radialUser &d, string &e);
   bool groupUserRemove(radialUser &d, string &e);
   bool groupUsersByGroupID(radialUser &d, string &e);
+  bool loginPasskeyRegister(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
   bool menuAccesses(radialUser &d, string &e);
