@@ -3532,6 +3532,18 @@ bool Central::groupUsersByGroupID(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ loginPasskeyRegister()
+bool Central::loginPasskeyRegister(radialUser &d, string &e)
+{
+  bool b = true;
+  stringstream ssHtml;
+
+  ssHtml << "<div class=\"card card-body card-inverse\" style=\"margin-top: 20px;\">It is recommended to register a passkey.  You can do that once authenticated by clicking the Profile menu in <a href=\"https://" << m_strServer << "/central\" target=\"_blank\">Central</a> and clicking the Passkeys button in the Security Profile section.  Registering a passkey enhances your online security and simplifies the login process by eliminating the need to remember complex passwords.  It allows you to authenticate using biometric methods or a PIN, making it faster and more intuitive.</div>";
+  d.p->i("o", ssHtml.str());
+
+  return b;
+}
+// }}}
 // {{{ loginTypes()
 bool Central::loginTypes(radialUser &d, string &e)
 {
