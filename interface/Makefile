@@ -84,11 +84,11 @@ obj/Builder.o: include/Builder.cpp obj
 central: bin/central $(prefix)/radial/interface
 	install --mode=775 bin/central $(prefix)/radial/interface/
 bin/central: ../../common/libcommon.a obj/central.o obj/Base.o obj/Interface.o obj/Central.o bin
-	g++ -o bin/central obj/central.o obj/Base.o obj/Interface.o obj/Central.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/central obj/central.o obj/Base.o obj/Interface.o obj/Central.o $(LDFLAGS) -L/usr/local/lib -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -ltinycbor -lz
 obj/central.o: central.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c central.cpp -o obj/central.o $(CPPFLAGS) -I../../common
 obj/Central.o: include/Central.cpp obj
-	g++ -ggdb -Wall -c include/Central.cpp -o obj/Central.o $(CPPFLAGS) -I../../common
+	g++ -ggdb -Wall -c include/Central.cpp -o obj/Central.o $(CPPFLAGS) -I/usr/local/include -I../../common
 # }}}
 # {{{ command
 command: bin/command $(prefix)/radial/interface

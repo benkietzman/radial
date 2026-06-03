@@ -6006,7 +6006,7 @@ bool Central::userPasskeyAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"algorithm", "name", "passkey_id", "public_key"}, i, e))
+  if (dep({"attestationObject", "name", "passkey_id"}, i, e))
   {
     radialUser a;
     userInit(d, a);
@@ -6019,11 +6019,296 @@ bool Central::userPasskeyAdd(radialUser &d, string &e)
       }
       if (d.g || a.p->m["o"]->m["id"]->v == i->m["person_id"]->v)
       {
+        CborError err;
+        CborParser parser;
+        CborValue value;
+        size_t len;
         string id, q;
-        if (db("dbCentralUserPasskeyAdd", i, id, q, e))
+        uint8_t *out;
+        if ((out = m_manip.decodeBase64(i->m["attestationObject"]->v, len, e)) != NULL)
         {
-          b = true;
-          o->i("id", id);
+          if ((err = cbor_parser_init(out, len, 0, &parser, &value)) == CborNoError)
+          {
+            if (cbor_value_is_map(&value))
+            {
+              CborValue mapIt;
+              if ((err = cbor_value_enter_container(&value, &mapIt)) == CborNoError)
+              {
+                bool bExit = false;
+                uint8_t *authData = NULL;
+                size_t authLen = 0;
+                while (!bExit && !cbor_value_at_end(&mapIt))
+                {
+                  if (cbor_value_is_text_string(&mapIt))
+                  {
+                    char key[64];
+                    size_t klen = sizeof(key);
+                    cbor_value_copy_text_string(&mapIt, key, &klen, &mapIt);
+                    if (strcmp(key, "authData") == 0)
+                    {
+                      if (cbor_value_is_byte_string(&mapIt))
+                      {
+                        bExit = true;
+                        cbor_value_dup_byte_string(&mapIt, &authData, &authLen, &mapIt);
+                      }
+                    }
+                    else
+                    {
+                      cbor_value_advance(&mapIt);
+                    }
+                  }
+                  else
+                  {
+                    cbor_value_advance(&mapIt);
+                  }
+                }
+                cbor_value_leave_container(&value, &mapIt);
+                if (authData != NULL)
+                {
+                  if (authLen >= 37)
+                  {
+                    size_t offset = 32;
+                    uint8_t flags = authData[offset];
+                    offset += 5;
+                    const uint8_t AT_FLAG = 0x40;
+                    if (flags & AT_FLAG)
+                    {
+                      if (authLen >= offset + 18)
+                      {
+                        offset += 16;
+                        uint16_t credIdLen = ((authData + offset)[0] << 8) | (authData + offset)[1];;
+                        offset += 2;
+                        if (authLen >= offset + credIdLen)
+                        {
+                          offset += credIdLen;
+                          const uint8_t *cosePtr = authData + offset;
+                          size_t coseLen = authLen - offset;
+                          CborParser kp;
+                          CborValue kv;
+                          if (cbor_parser_init(cosePtr, coseLen, 0, &kp, &kv) == CborNoError)
+                          {
+                            if (cbor_value_is_map(&kv))
+                            {
+                              bool bSubExit = false;
+                              CborValue it;
+                              cbor_value_enter_container(&kv, &it);
+                              int64_t key_alg = 0, key_crv = 0, key_kty = 0;
+                              size_t xlen = 0, ylen = 0;
+                              uint8_t *x = NULL, *y = NULL;
+                              while (!bSubExit && !cbor_value_at_end(&it))
+                              {
+                                int64_t mapKey;
+                                if (!cbor_value_is_integer(&it))
+                                {
+                                  bSubExit = true;
+                                  err = CborErrorIllegalType;
+                                }
+                                if ((err = cbor_value_get_int64(&it, &mapKey)) == CborNoError)
+                                {
+                                  err = cbor_value_advance(&it);
+                                  if (err != CborNoError)
+                                  {
+                                    break;
+                                  }
+                                  if (mapKey == 1)
+                                  {
+                                    err = cbor_value_get_int64(&it, &key_kty);
+                                  }
+                                  else if (mapKey == 3)
+                                  {
+                                    err = cbor_value_get_int64(&it, &key_alg);
+                                  }
+                                  else if (mapKey == -1)
+                                  {
+                                    err = cbor_value_get_int64(&it, &key_crv);
+                                  }
+                                  else if (mapKey == -2)
+                                  {
+                                    err = cbor_value_dup_byte_string(&it, &x, &xlen, NULL);
+                                  }
+                                  else if (mapKey == -3)
+                                  {
+                                    err = cbor_value_dup_byte_string(&it, &y, &ylen, NULL);
+                                  }
+                                  else
+                                  {
+                                    err = cbor_value_advance(&it);
+                                  }
+                                  if (err == CborNoError)
+                                  {
+                                    if (!cbor_value_is_container(&it) && cbor_value_is_byte_string(&it) == false)
+                                    {
+                                      if ((err = cbor_value_advance(&it)) != CborNoError)
+                                      {
+                                        bSubExit = true;
+                                      }
+                                    }
+                                    else if ((err = cbor_value_advance(&it)) != CborNoError)
+                                    {
+                                      bSubExit = true;
+                                    }
+                                  }
+                                  else
+                                  {
+                                    bSubExit = true;
+                                  }
+                                }
+                                else
+                                {
+                                  bSubExit = true;
+                                }
+                              }
+                              if (!bSubExit)
+                              {
+                                cbor_value_leave_container(&kv, &it);
+                                if (key_kty == 2 && x != NULL && y != NULL)
+                                {
+                                  EVP_PKEY_CTX *ctx;
+                                  size_t pub_len = 1 + xlen + ylen;
+                                  string curve = "P-256";
+                                  vector<uint8_t> pub(pub_len);
+                                  pub[0] = 0x04;
+                                  memcpy(pub.data() + 1, x, xlen);
+                                  memcpy(pub.data() + 1 + xlen, y, ylen);
+                                  EVP_PKEY *pkey = NULL;
+                                  OSSL_PARAM params[3];
+                                  params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve.data(), 0);
+                                  params[1] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pub.data(), pub.size());
+                                  params[2] = OSSL_PARAM_construct_end();
+                                  if ((ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL)) != NULL)
+                                  {
+                                    if (EVP_PKEY_fromdata_init(ctx) == 1)
+                                    {
+                                      if (EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_PUBLIC_KEY, params) == 1)
+                                      {
+                                        BIO *bio;
+                                        if ((bio = BIO_new(BIO_s_mem())) != NULL)
+                                        {
+                                          if (PEM_write_bio_PUBKEY(bio, pkey) == 1)
+                                          {
+                                            long bio_len = BIO_ctrl(bio, BIO_CTRL_PENDING, 0, NULL);
+                                            char *bio_string = (char *)malloc(bio_len);
+                                            if (BIO_read(bio, bio_string, bio_len) == bio_len)
+                                            {
+                                              string strPublicKey;
+                                              strPublicKey.assign(bio_string, bio_len);
+                                              i->i("public_key", strPublicKey);
+                                              if (db("dbCentralUserPasskeyAdd", i, id, q, e))
+                                              {
+                                                b = true;
+                                                o->i("id", id);
+                                              }
+                                            }
+                                            else
+                                            {
+                                              e = "BIO_read() error";
+                                            }
+                                            free(bio_string);
+                                          }
+                                          else
+                                          {
+                                            e = "PEM_write_bio_PUBKEY() error";
+                                          }
+                                          BIO_free(bio);
+                                        }
+                                        else
+                                        {
+                                          e = "BIO_new() error";
+                                        }
+                                      }
+                                      else
+                                      {
+                                        e = "EVP_PKEY_fromdata() error";
+                                      }
+                                    }
+                                    else
+                                    {
+                                      e = "EVP_PKEY_fromdata_init() error";
+                                    }
+                                    EVP_PKEY_CTX_free(ctx);
+                                  }
+                                  else
+                                  {
+                                    e = "EVP_PKEY_CTX+new_from_name() error";
+                                  }
+                                }
+                                else
+                                {
+                                  e = "key_kty is not 2 or x is null or y is null";
+                                }
+                              }
+                              else
+                              {
+                                stringstream ssError;
+                                ssError << "cbor_value_at_end() error " << err;
+                                e = ssError.str();
+                              }
+                              if (x != NULL)
+                              {
+                                free(x);
+                              }
+                              if (y != NULL)
+                              {
+                                free(y);
+                              }
+                            }
+                            else
+                            {
+                              e = "cbor_value_is_map() is not empty";
+                            }
+                          }
+                          else
+                          {
+                            stringstream ssError;
+                            ssError << "cbor_parser_init() error " << err;
+                            e = ssError.str();
+                          }
+                        }
+                        else
+                        {
+                          e = "authLen is less than offset + credIdLen";
+                        }
+                      }
+                      else
+                      {
+                        e = "authLen is less than offset + 18";
+                      }
+                    }
+                    else
+                    {
+                      e = "AT_FLAG is not set";
+                    }
+                  }
+                  else
+                  {
+                    e = "authLen is less than 37";
+                  }
+                  free(authData);
+                }
+                else
+                {
+                  e = "authData is null";
+                }
+              }
+              else
+              {
+                stringstream ssError;
+                ssError << "cbor_value_enter_container() error " << err;
+                e = ssError.str();
+              }
+            }
+            else
+            {
+              e = "cbor_value_is_map error";
+            }
+          }
+          else
+          {
+            stringstream ssError;
+            ssError << "cbor_parser_init() error " << err;
+            e = ssError.str();
+          }
+          free(out);
         }
       }
       else

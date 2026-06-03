@@ -25,7 +25,10 @@
 #include <map>
 #include <mutex>
 #include <netdb.h>
+#include <openssl/bio.h>
+#include <openssl/core_names.h>
 #include <openssl/evp.h>
+#include <openssl/pem.h>
 #include <poll.h>
 #include <regex>
 #include <queue>

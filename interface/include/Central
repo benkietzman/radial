@@ -9,6 +9,7 @@
 #ifndef _RADIAL_CENTRAL_
 #define _RADIAL_CENTRAL_
 // {{{ includes
+#include <tinycbor/cbor.h>
 #include "Interface"
 // }}}
 extern "C++"
