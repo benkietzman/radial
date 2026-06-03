@@ -92,6 +92,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["isApplicationDeveloper"] = &Central::isApplicationDeveloper;
   m_functions["isGroupOwner"] = &Central::isGroupOwner;
   m_functions["isServerAdmin"] = &Central::isServerAdmin;
+  m_functions["loginPasskeyRegister"] = &Central::loginPasskeyRegister;
   m_functions["loginType"] = &Central::loginType;
   m_functions["loginTypes"] = &Central::loginTypes;
   m_functions["menuAccess"] = &Central::menuAccess;
