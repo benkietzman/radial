@@ -1955,6 +1955,7 @@ bool Db::dbCentralUserPasskeys(Json *i, Json *o, string &id, string &q, string &
   {
     qs << " and person_id = " << v(i->m["person_id"]->v);
   }
+  qs << " order by name";
 
   return dbq("central_r", qs, q, o, e);
 }
