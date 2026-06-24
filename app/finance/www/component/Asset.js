@@ -302,7 +302,7 @@ export default
               <th c-click="c.tableSort('stock', 21, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Annual Dividend">Div</th>
               <th c-click="c.tableSort('stock', 22, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Jan, Apr, Jul, and Oct">JAJO</th>
               <th c-click="c.tableSort('stock', 23, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Feb, May, Aug, and Nov">FMAN</th>
-              <th c-click="c.tableSort('stock', 24, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Mar, Jun, Sep, and Dev">MJSD</th>
+              <th c-click="c.tableSort('stock', 24, true)" class="bg-success-subtle text-end" style="cursor: ns-resize;" title="Dividend received in Mar, Jun, Sep, and Dec">MJSD</th>
             </tr>
             </thead>
             <tbody>
