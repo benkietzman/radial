@@ -2356,9 +2356,39 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         ssText << " Please provide a Target immediately following the action.";
       }
     }
+    else if (strFunction == "op")
+    {
+      if (isLocalAdmin(strIdent, "Radial", bAdmin, auth))
+      {
+        string strSubTarget = var("Target", ptData);
+        if (!strSubTarget.empty())
+        {
+          string strNick = var("Message", ptData);
+          if (!strNick.empty())
+          {
+            stringstream ssMessage;
+            ssMessage << ":" << m_strNick << " MODE " << strSubTarget << " +o " << strNick << "\r\n";
+            push(ssMessage.str());
+            ssText << " Requested channel operator status for " << strNick << ".";
+          }
+          else
+          {
+            ssText << " Please provide a Message immediately following the Target.";
+          }
+        }
+        else
+        {
+          ssText << " Please provide a Target immediately following the action.";
+        }
+      }
+      else
+      {
+        ssText << " error:  You are not authorized to access database.  You must be registered as a local administrator for Radial.";
+      }
+    }
     else
     {
-      ssText << " The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, part.";
+      ssText << " The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, op, part.";
     }
   }
   // }}}
