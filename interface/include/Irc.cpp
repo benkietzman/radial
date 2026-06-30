@@ -2369,7 +2369,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             stringstream ssMessage;
             ssMessage << ":" << m_strNick << " MODE " << strSubTarget << " +o " << strNick << "\r\n";
             push(ssMessage.str());
-            ssText << " Requested channel operator status for " << strNick << ".";
+            ssText << " Requested channel operator status for " << strNick << " in " << strSubTarget << " channel.";
           }
           else
           {
