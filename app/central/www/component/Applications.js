@@ -2154,19 +2154,22 @@ export default
   <!-- ]]] -->
   <!-- [[[ repositories -->
   {{#if application.forms.Repositories.active}}
-  {{#if application.bDeveloper}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
       <tr>
         <th>Repository</th>
         <th>Identifier</th>
+        {{#if application.bDeveloper}}
         <th></th>
+        {{/if}}
       </tr>
+      {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="repo.repo" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></td>
         <td><input type="text" class="form-control" c-model="repo.identifier"></td>
         <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addRepo()" title="Add"></button></td>
       </tr>
+      {{/if}}
       {{#each application.repos}}
       <tr>
         <td>
@@ -2183,6 +2186,7 @@ export default
           {{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}
           {{/if}}
         </td>
+        {{#if @root.application.bDeveloper}}
         <td style="white-space: nowrap;">
           {{#if bEdit}}
           <button class="btn btn-sm btn-warning bi bi-x-circle" c-click="preEditRepo({{@key}}, false)" title="Cancel"></button><button class="btn btn-sm btn-success bi bi-save" c-click="editRepo({{@key}})" style="margin-left: 10px;" title="Save"></button>
@@ -2190,11 +2194,11 @@ export default
           <button class="btn btn-sm btn-warning bi bi-pencil" c-click="preEditRepo({{@key}}, true)" title="Edit"></button><button class="btn btn-sm btn-danger bi bi-trash" c-click="removeRepo({{id}})" style="margin-left: 10px;" title="Remove"></button>
           {{/if}}
         </td>
+        {{/if}}
       </tr>
       {{/each}}
     </table>
   </div>
-  {{/if}}
   {{/if}}
   <!-- ]]] -->
   <!-- [[[ servers -->
