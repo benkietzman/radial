@@ -2366,10 +2366,26 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           string strNick = var("Message", ptData);
           if (!strNick.empty())
           {
-            stringstream ssMessage;
-            ssMessage << ":" << m_strNick << " MODE " << strSubTarget << " +o " << strNick << "\r\n";
-            push(ssMessage.str());
-            ssText << " Requested channel operator status for " << strNick << " in " << strSubTarget << " channel.";
+            if (strSubTarget == "*")
+            {
+              for (auto &channel : m_channels)
+              {
+                if (channel.second)
+                {
+                  stringstream ssMessage;
+                  ssMessage << ":" << m_strNick << " MODE " << channel.first << " +o " << strNick << "\r\n";
+                  push(ssMessage.str());
+                }
+              }
+              ssText << " Requested channel operator status for " << strNick << " in all channels.";
+            }
+            else
+            {
+              stringstream ssMessage;
+              ssMessage << ":" << m_strNick << " MODE " << strSubTarget << " +o " << strNick << "\r\n";
+              push(ssMessage.str());
+              ssText << " Requested channel operator status for " << strNick << " in " << strSubTarget << " channel.";
+            }
           }
           else
           {
