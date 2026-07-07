@@ -660,7 +660,7 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
   }
   if (!strOpenDateEnd.empty())
   {
-    qs << " and date_format(open_date, '%Y-%m-%d') < '" << esc(strOpenDateEnd) << "'";
+    qs << " and date_format(open_date, '%Y-%m-%d') <= '" << esc(strOpenDateEnd) << "'";
   }
   if (!strCloseDateStart.empty())
   {
@@ -668,7 +668,7 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
   }
   if (!strCloseDateEnd.empty())
   {
-    qs << " and date_format(close_date, '%Y-%m-%d') < '" << esc(strCloseDateEnd) << "'";
+    qs << " and date_format(close_date, '%Y-%m-%d') <= '" << esc(strCloseDateEnd) << "'";
   }
   if (bRelease)
   {
