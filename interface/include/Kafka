@@ -1,0 +1,57 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Kafka
+// author     : Ben Kietzman
+// begin      : 2026-07-16
+// copyright  : Ben Kietzman
+// email      : ben@kietzman.org
+#ifndef _RADIAL_KAFKA_
+#define _RADIAL_KAFKA_
+// {{{ includes
+#include <librdkafka/rdkafka.h>
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ structs
+// {{{ radialKafkaTopic
+struct radialKafkaTopic
+{
+  bool bExit;
+  map<string, string> config;
+  string strKey;
+  thread *pThread;
+};
+// }}}
+// }}}
+// {{{ Kafka
+class Kafka : public Interface
+{
+  protected:
+  bool m_bLoad;
+  map<string, bool (Kafka::*)(radialUser &, string &)> m_functions;
+  map<string, radialKafkaTopic *> m_topics;
+  mutex m_mutex;
+  thread *m_pThreadInotify;
+  thread *m_pThreadSchedule;
+
+  void consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bExit);
+  void load(string strPrefix, const bool bSilent = false);
+  bool reset(radialUser &d, string &e);
+  void schedule(string strPrefix);
+  bool topics(radialUser &d, string &e);
+
+  public:
+  Kafka(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string));
+  ~Kafka();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
+};
+// }}}
+}
+}
+#endif

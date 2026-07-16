@@ -3297,6 +3297,17 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   return bResult;
 }
 // }}}
+// {{{ kafkaMessage()
+void Interface::kafkaMessage(const string strInterface, Json *ptData)
+{
+  Json *ptJson = new Json;
+
+  ptJson->i("Function", "kafkaMessage");
+  ptJson->m["Request"] = new Json(ptData);
+  hub(strInterface, ptJson, false);
+  delete ptJson;
+}
+// }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
 {

@@ -165,6 +165,7 @@ class Interface : public Base
   bool isValid(radialUser &d, const string strApplication = "");
   bool junction(list<Json *> in, list<Json *> &out, string &strError);
   bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
+  void kafkaMessage(const string strInterface, Json *ptData);
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
   void live(const string strApplication, const string strUser, map<string, string> message, const bool bWait = false);

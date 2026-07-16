@@ -152,7 +152,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
 }
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, stringstream &ssData, const string strSource)
 {
-  list<string> actions = {"alert", "application (app)", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
+  list<string> actions = {"alert", "application (app)", "central", "command (cmd)", "database", "date", "db", "feedback (fb)", "interface", "irc", "kafka", "live", "math", "radial", "sqlite (sql)", "ssh (s)", "storage (sto)", "terminal (t)"};
   string strAction;
   Json *ptRequest = new Json;
 
@@ -527,6 +527,27 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             if (!strMessage.empty())
             {
               ptRequest->i("Message", strMessage);
+            }
+          }
+        }
+      }
+      // }}}
+      // {{{ kafka
+      else if (strAction == "kafca")
+      {
+        string strFunction;
+        ssData >> strFunction;
+        if (!strFunction.empty())
+        {
+          ptRequest->i("Function", strFunction);
+          if (strFunction == "reset")
+          {
+            string strTopic;
+            getline(ssData, strTopic);
+            m_manip.trim(strTopic, strTopic);
+            if (!strTopic.empty())
+            {
+              ptRequest->i("Topic", strTopic);
             }
           }
         }
@@ -2405,6 +2426,94 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     else
     {
       ssText << " The irc action is used to interface with IRC via the chatbot.  Please provide one of the following functions immediately following the action:  channels, chat, join, op, part.";
+    }
+  }
+  // }}}
+  // {{{ kafka
+  else if (strAction == "kafka")
+  {
+    string strFunction = var("Function", ptData);
+    if (strFunction == "reset")
+    {
+      string strTopic = var("Topic", ptData);
+      if (!strTopic.empty())
+      {
+        string strPayload;
+        stringstream ssTime;
+        time_t CTime;
+        Json *ptJwt = new Json;
+        ssText << " " << char(3) << "00,14 " << strTopic << " " << char(3);
+        ptJwt->i("sl_first_name", strFirstName);
+        ptJwt->i("sl_last_name", strLastName);
+        ptJwt->i("sl_login", strIdent);
+        time(&CTime);
+        ssTime << CTime;
+        ptJwt->i("exp", ssTime.str(), 'n');
+        ptJwt->i("sl_admin", ((bAdmin)?"1":"0"), ((bAdmin)?'1':'0'));
+        ptJwt->m["sl_auth"] = new Json;
+        for (auto &i : auth)
+        { 
+          ptJwt->m["sl_auth"]->i(i.first, ((i.second)?"1":"0"), ((i.second)?'1':'0'));
+        }
+        if (!m_bLoaded)
+        {
+          load(strPrefix);
+        }
+        if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
+        {
+          string strValue;
+          Json *ptJson = new Json;
+          ptJson->i("Interface", "kafka");
+          ptJson->i("Function", "reset");
+          ptJson->m["Request"] = new Json;
+          ptJson->m["Request"]->i("Topic", strTopic);
+          ptJson->i("Jwt", m_manip.encodeBase64(m_manip.encryptAes(strPayload, m_strJwtSecret, strValue, strError), strValue));
+          if (hub("kafka", ptJson, strError))
+          {
+            ssText << ": done";
+          }
+          else
+          {
+            ssText << " error:  " << strError;
+          }
+          delete ptJson;
+        }
+        else
+        {
+          ssText << " error:  " << strError;
+        }
+        delete ptJwt;
+      }
+      else
+      {
+        ssText << " Please provide a Topic immediately following the action.";
+      }
+    }
+    else if (strFunction == "topics")
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "kafka");
+      ptJson->i("Function", "topics");
+      if (hub("kafka", ptJson, strError))
+      {
+        if (exist(ptJson, "Response"))
+        {
+          for (auto &topic : ptJson->m["Response"]->l)
+          {
+            ssText << endl << topic->v;
+          }
+        }
+        ssText << endl << "done";
+      }
+      else
+      {
+        ssText << " error:  " << strError;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      ssText << " The kafka action is used to interface with the Kafka consumers.  Please provide one of the following functions immediately following the action:  reset, topics.";
     }
   }
   // }}}

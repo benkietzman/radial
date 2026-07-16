@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/application $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
@@ -24,6 +24,7 @@ install: bin/alert bin/application bin/auth bin/builder bin/central bin/command 
 	install --mode=775 bin/junction $(prefix)/radial/interface/
 	install --mode=775 bin/jwt $(prefix)/radial/interface/
 	install --mode=775 bin/link $(prefix)/radial/interface/
+	install --mode=775 bin/kafka $(prefix)/radial/interface/
 	install --mode=775 bin/live $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
 	install --mode=775 bin/logger $(prefix)/radial/interface/
@@ -179,6 +180,16 @@ obj/jwt.o: jwt.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c jwt.cpp -o obj/jwt.o $(CPPFLAGS) -I../../common
 obj/Jwt.o: include/Jwt.cpp obj
 	g++ -ggdb -Wall -c include/Jwt.cpp -o obj/Jwt.o $(CPPFLAGS) -I/usr/local/include -I../../common
+# }}}
+# {{{ kafka
+kafka: bin/kafka $(prefix)/radial/interface
+	install --mode=775 bin/kafka $(prefix)/radial/interface/
+bin/kafka: ../../common/libcommon.a obj/kafka.o obj/Base.o obj/Interface.o obj/Kafka.o bin
+	g++ -o bin/kafka obj/kafka.o obj/Base.o obj/Interface.o obj/Kafka.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrdkafka -lrt -lssl -ltar -lz
+obj/kafka.o: kafka.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c kafka.cpp -o obj/kafka.o $(CPPFLAGS) -I../../common
+obj/Kafka.o: include/Kafka.cpp obj
+	g++ -ggdb -Wall -c include/Kafka.cpp -o obj/Kafka.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ link
 link: bin/link $(prefix)/radial/interface
