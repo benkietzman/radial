@@ -337,7 +337,7 @@ void Kafka::load(string strPrefix, const bool bSilent)
           ptTopic->bExit = false;
           topic.second->flatten(ptTopic->config, true, false);
           ptTopic->strKey = strKey;
-          if (m_topics[topic.first]->bExit || m_topics[topic.first]->strKey != strKey)
+          if (m_topics.find(topic.first) != m_topics.end() && (m_topics[topic.first]->bExit || m_topics[topic.first]->strKey != strKey))
           {
             m_topics[topic.first]->bExit = true;
             m_topics[topic.first]->pThread->join();
