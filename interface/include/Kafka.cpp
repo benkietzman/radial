@@ -211,7 +211,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
       if (bSubscribed)
       {
         ssMessage.str("");
-        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " rd_kafka_subscribe() Subscription established.";
+        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " Subscription established.";
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
         ssMessage << strPrefix << "->rd_kafka_subscribe() [" << strTopic << "]:  Subscription established.";
@@ -261,10 +261,10 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
         }
         rd_kafka_consumer_close(ptConsumer);
         ssMessage.str("");
-        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " rd_kafka_subscribe() Subscription closed.";
+        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " Subscription closed.";
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
-        ssMessage << strPrefix << "->rd_kafka_subscribe() [" << strTopic << "]:  Subscription closed.";
+        ssMessage << strPrefix << "->rd_kafka_consumer_close() [" << strTopic << "]:  Subscription closed.";
         log(ssMessage.str());
       }
       rd_kafka_destroy(ptConsumer);
