@@ -227,26 +227,18 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               Json *ptMessage = new Json(strPayload);
               if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
               {
-                string strSubPrefix;
+                string strSubPrefix, strTarget, strType;
                 stringstream ssID(ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v);
-                if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial")
+                if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|') && (strType == "interface" || strType == "logger") && getline(ssID, strTarget, '|') && !strTarget.empty())
                 {
-                  string strType;
-                  if (getline(ssID, strType, '|') && (strType == "interface" || strType == "logger"))
+                  if (strType == "interface")
                   {
-                    string strTarget;
-                    if (getline(ssID, strTarget, '|') && !strTarget.empty())
-                    {
-                      if (strType == "interface")
-                      {
-                        kafkaMessage(strTarget, ptMessage);
-                      }
-                      else
-                      {
-                        map<string, string> label = {{"ID", ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}};
-                        logger(strTarget, "message", label, strPayload);
-                      }
-                    }
+                    kafkaMessage(strTarget, ptMessage);
+                  }
+                  else
+                  {
+                    map<string, string> label = {{"ID", ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}};
+                    logger(strTarget, "message", label, strPayload);
                   }
                 }
               }
