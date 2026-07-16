@@ -3302,7 +3302,6 @@ void Interface::kafkaMessage(const string strInterface, Json *ptData)
 {
   Json *ptJson = new Json;
 
-  ptJson->i("Interface", strInterface);
   ptJson->i("Function", "kafkaMessage");
   ptJson->m["Request"] = new Json(ptData);
   hub(strInterface, ptJson, false);
