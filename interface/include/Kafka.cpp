@@ -225,9 +225,9 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
             {
               size_t unPosition[2];
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
-              if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos) && strPayload.size() > (unPosition[0] + 22) && ((unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
+              if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 22) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
               {
-                string strID = strPayload.substr(unPosition[0], (unPosition[1] - (unPosition[0] + 22)), strSubPrefix, strTarget, strType;
+                string strID = strPayload.substr(unPosition[0], (unPosition[1] - (unPosition[0] + 22))), strSubPrefix, strTarget, strType;
                 stringstream ssID(strID);
                 if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|') && (strType == "interface" || strType == "logger") && getline(ssID, strTarget, '|') && !strTarget.empty())
                 {
