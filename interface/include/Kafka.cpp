@@ -237,7 +237,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                   }
                   else
                   {
-                    map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}};
+                    map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
                     logger(strTarget, "message", label, strPayload);
                   }
                 }
