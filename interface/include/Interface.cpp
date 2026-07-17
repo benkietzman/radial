@@ -3409,7 +3409,7 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
           else
           {
             map<string, string> label = {{"ID", strID}, {"Interface", m_strName}, {"Source", "Radial"}};
-            logger(strApplication, "message", label, strPayload);
+            logger("Radial", "message", label, strPayload);
             delete ptMessage;
           }
           m_mutexKafka.unlock();
