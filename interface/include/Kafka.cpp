@@ -223,26 +223,25 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
           {
             if (ptMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR)
             {
+              size_t unPosition[2];
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
-              Json *ptMessage = new Json(strPayload);
-              if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
+              if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos) && strPayload.size() > (unPosition[0] + 22) && ((unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
               {
-                string strSubPrefix, strTarget, strType;
-                stringstream ssID(ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v);
+                string strID = strPayload.substr(unPosition[0], (unPosition[1] - (unPosition[0] + 22)), strSubPrefix, strTarget, strType;
+                stringstream ssID(strID);
                 if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|') && (strType == "interface" || strType == "logger") && getline(ssID, strTarget, '|') && !strTarget.empty())
                 {
                   if (strType == "interface")
                   {
-                    kafkaMessage(strTarget, ptMessage);
+                    kafkaMessage(strTarget, strPayload);
                   }
                   else
                   {
-                    map<string, string> label = {{"ID", ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}};
+                    map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}};
                     logger(strTarget, "message", label, strPayload);
                   }
                 }
               }
-              delete ptMessage;
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
             {
