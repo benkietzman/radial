@@ -34,6 +34,13 @@ struct radialCallbackWorker
   time_t CTime;
 };
 // }}}
+// {{{ radialKafkaPending
+struct radialKafkaPending
+{
+  int fdPending[2];
+  Json *ptMessage;
+};
+// }}}
 // {{{ radialTerminalInfo
 struct radialTerminalInfo
 {
@@ -70,8 +77,9 @@ class Interface : public Base
   int m_fdKafkaMessage[2];
   int m_fdResponse[2];
   list<string> m_responses;
-  map<string, string> m_applications;
   map<string, int> m_waiting;
+  map<string, string> m_applications;
+  map<string, radialKafkaPending *> m_kafkaPending;
   mutex m_mutexKafka;
   mutex m_mutexShare;
   queue<radialCallback *> m_callbacks;
@@ -169,7 +177,7 @@ class Interface : public Base
   bool junction(list<Json *> in, list<Json *> &out, string &strError);
   bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
   bool kafkaMessage(radialUser &d, string &e);
-  void kafkaMessage(const string strInterface, const string strMessage);
+  void kafkaMessage(const string strNode, const string strInterface, const string strMessage);
   void kafkaMessagePush(string &strJson);
   void kafkaMessages(string strPrefix, bool *pbShutdown);
   void keyRemovals(Json *ptJson);

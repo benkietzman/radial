@@ -3307,13 +3307,20 @@ bool Interface::kafkaMessage(radialUser &d, string &e)
 
   return true;
 }
-void Interface::kafkaMessage(const string strInterface, const string strMessage)
+void Interface::kafkaMessage(const string strNode, const string strInterface, const string strMessage)
 {
+  string strTarget = strInterface;
   Json *ptJson = new Json;
 
+  ptJson->i("Interface", strInterface);
   ptJson->i("Function", "kafkaMessage");
+  if (strNode != m_strNode)
+  {
+    strTarget = "link";
+    ptJson->i("Node", strNode);
+  }
   ptJson->i("Request", strMessage);
-  hub(strInterface, ptJson, false);
+  hub(strTarget, ptJson, false);
   delete ptJson;
 }
 // }}}
@@ -3389,7 +3396,26 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
         uncompress(m_kafkaMessages.front(), strUncompress);
         m_kafkaMessages.pop();
         ptMessage = new Json(strUncompress);
-        delete ptMessage;
+        if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
+        {
+          string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v;
+          m_mutexKafka.lock();
+          if (m_kafkaPending.find(strID) != m_kafkaPending.end() && m_kafkaPending[strID]->fdPending[1] != -1)
+          {
+            char cChar = '\n';
+            m_kafkaPending[strID]->ptMessage = ptMessage;
+            write(m_kafkaPending[strID]->fdPending[1], &cChar, 1);
+          }
+          else
+          {
+            delete ptMessage;
+          }
+          m_mutexKafka.unlock();
+        }
+        else
+        {
+          delete ptMessage;
+        }
       }
     }
     close(m_fdKafkaMessage[0]);

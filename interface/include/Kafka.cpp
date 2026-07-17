@@ -227,18 +227,26 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
               if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 22) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
               {
-                string strID = strPayload.substr((unPosition[0] + 22), (unPosition[1] - (unPosition[0] + 22))), strSubPrefix, strTarget, strType;
+                string strID = strPayload.substr((unPosition[0] + 22), (unPosition[1] - (unPosition[0] + 22))), strSubPrefix, strType;
                 stringstream ssID(strID);
-                if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|') && (strType == "interface" || strType == "logger") && getline(ssID, strTarget, '|') && !strTarget.empty())
+                if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
                 {
                   if (strType == "interface")
                   {
-                    kafkaMessage(strTarget, strPayload);
+                    string strInterface, strNode;
+                    if (getline(ssID, strNode, '|') && !strNode.empty() && getline(ssID, strInterface, '|') && !strInterface.empty())
+                    {
+                      kafkaMessage(strNode, strInterface, strPayload);
+                    }
                   }
-                  else
+                  else if (strType == "logger")
                   {
-                    map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
-                    logger(strTarget, "message", label, strPayload);
+                    string strApplication;
+                    if (getline(ssID, strApplication, '|') && !strApplication.empty())
+                    {
+                      map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
+                      logger(strApplication, "message", label, strPayload);
+                    }
                   }
                 }
               }
