@@ -3299,7 +3299,7 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   return bResult;
 }
 // }}}
-// {{{ kafkaMessage
+// {{{ kafka
 // {{{ kafkaMessage()
 bool Interface::kafkaMessage(radialUser &d, string &e)
 {
@@ -3400,11 +3400,11 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
         {
           string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v;
           m_mutexKafka.lock();
-          if (m_kafkaPending.find(strID) != m_kafkaPending.end() && m_kafkaPending[strID]->fdPending[1] != -1)
+          if (m_kafkaPending.find(strID) != m_kafkaPending.end() && m_kafkaPending[strID]->fdPipe[1] != -1)
           {
             char cChar = '\n';
             m_kafkaPending[strID]->ptMessage = ptMessage;
-            write(m_kafkaPending[strID]->fdPending[1], &cChar, 1);
+            write(m_kafkaPending[strID]->fdPipe[1], &cChar, 1);
           }
           else
           {
@@ -3430,6 +3430,106 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
     notify(ssMessage.str());
   }
   (*pbShutdown) = true;
+}
+// }}}
+// {{{ kafkaPending()
+bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strError)
+{
+  bool bResult = false;
+  int nReturn;
+  stringstream ssMessage;
+  radialKafkaPending *ptPending = new radialKafkaPending;
+
+  ptPending->fdPipe[0] = ptPending->fdPipe[1] = -1;
+  ptPending->ptMessage = NULL;
+  if ((nReturn = pipe(ptPending->fdPipe)) == 0)
+  {
+    bool bAdded = false;
+    char cChar;
+    m_pUtility->fdNonBlocking(ptPending->fdPipe[0], strError);
+    m_pUtility->fdNonBlocking(ptPending->fdPipe[1], strError);
+    m_mutexKafka.lock();
+    if (m_kafkaPending.find(strID) == m_kafkaPending.end())
+    {
+      bAdded = true;
+      m_kafkaPending[strID] = ptPending;
+    }
+    m_mutexKafka.unlock();
+    if (bAdded)
+    {
+      bool bExit = false;
+      while (!bExit && !shutdown())
+      {
+        pollfd fds[1];
+        fds[0].fd = ptPending->fdPipe[0];
+        fds[0].events = POLLIN;
+        if ((nReturn = poll(fds, 1, 2000)) > 0)
+        {
+          if ((fds[0].revents & (POLLHUP | POLLIN)) && read(fds[0].fd, &cChar, 1) <= 0)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << "read(" << errno << ") " << strerror(errno);
+            strError = ssMessage.str();
+          }
+          if (fds[0].revents & POLLERR)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << "poll() Encountered a POLLERR";
+            strError = ssMessage.str();
+          }
+          if (fds[0].revents & POLLNVAL)
+          {
+            bExit = true;
+            ssMessage.str("");
+            ssMessage << "poll() Encountered a POLLNVAL";
+            strError = ssMessage.str();
+          }
+        }
+        else if (nReturn < 0 && errno != EINTR)
+        {
+          bExit = true;
+          ssMessage.str("");
+          ssMessage << "poll(" << errno << ") " << strerror(errno);
+          strError = ssMessage.str();
+        }
+        if (ptPending->ptMessage != NULL)
+        {
+          bResult = true;
+          ptMessage = ptPending->ptMessage;
+        }
+        else
+        {
+          strError = "Failed to receive a response.";
+        }
+      }
+      m_mutexKafka.lock();
+      m_kafkaPending.erase(strID);
+      m_mutexKafka.unlock();
+    }
+    else
+    {
+      strError = "Please provide a unique ID.";
+    }
+    close(ptPending->fdPipe[0]);
+    ptPending->fdPipe[0] = -1;
+    close(ptPending->fdPipe[1]);
+    ptPending->fdPipe[1] = -1;
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << "pipe(" << errno << ") " << strerror(errno);
+    strError = ssMessage.str();
+  }
+  if (ptPending->ptMessage != NULL)
+  {
+    delete ptPending->ptMessage;
+  }
+  delete ptPending;
+
+  return bResult;
 }
 // }}}
 // }}}

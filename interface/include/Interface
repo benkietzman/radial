@@ -37,7 +37,7 @@ struct radialCallbackWorker
 // {{{ radialKafkaPending
 struct radialKafkaPending
 {
-  int fdPending[2];
+  int fdPipe[2];
   Json *ptMessage;
 };
 // }}}
@@ -180,6 +180,7 @@ class Interface : public Base
   void kafkaMessage(const string strNode, const string strInterface, const string strMessage);
   void kafkaMessagePush(string &strJson);
   void kafkaMessages(string strPrefix, bool *pbShutdown);
+  bool kafkaPending(const string strID, Json *ptMessage, string &strError);
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
   void live(const string strApplication, const string strUser, map<string, string> message, const bool bWait = false);
