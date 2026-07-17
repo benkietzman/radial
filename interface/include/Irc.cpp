@@ -533,7 +533,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       }
       // }}}
       // {{{ kafka
-      else if (strAction == "kafca")
+      else if (strAction == "kafka")
       {
         string strFunction;
         ssData >> strFunction;
