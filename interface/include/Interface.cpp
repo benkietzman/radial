@@ -3391,11 +3391,11 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
       }
       while (!m_kafkaMessages.empty())
       {
-        string strUncompress;
+        string strPayload;
         Json *ptMessage;
-        uncompress(m_kafkaMessages.front(), strUncompress);
+        uncompress(m_kafkaMessages.front(), strPayload);
         m_kafkaMessages.pop();
-        ptMessage = new Json(strUncompress);
+        ptMessage = new Json(strPayload);
         if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
         {
           string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v;
@@ -3408,6 +3408,8 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
           }
           else
           {
+            map<string, string> label = {{"ID", strID}, {"Interface", m_strName}, {"Source", "Radial"}};
+            logger(strApplication, "message", label, strPayload);
             delete ptMessage;
           }
           m_mutexKafka.unlock();

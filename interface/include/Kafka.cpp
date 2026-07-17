@@ -244,7 +244,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                     string strApplication;
                     if (getline(ssID, strApplication, '|') && !strApplication.empty())
                     {
-                      map<string, string> label = {{"ID", strID}, {"Interface", "kafka"}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
+                      map<string, string> label = {{"ID", strID}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
                       logger(strApplication, "message", label, strPayload);
                     }
                   }
