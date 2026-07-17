@@ -67,12 +67,15 @@ class Interface : public Base
   bool m_bMasterSettled;
   bool m_bResponse;
   int m_fdCallbackPool[2];
+  int m_fdKafkaMessage[2];
   int m_fdResponse[2];
   list<string> m_responses;
   map<string, string> m_applications;
   map<string, int> m_waiting;
-  queue<radialCallback *> m_callbacks;
+  mutex m_mutexKafka;
   mutex m_mutexShare;
+  queue<radialCallback *> m_callbacks;
+  queue<string> m_kafkaMessages;
   string m_strAesSecret;
   string m_strApplication;
   string m_strBuffers[2];
@@ -165,7 +168,10 @@ class Interface : public Base
   bool isValid(radialUser &d, const string strApplication = "");
   bool junction(list<Json *> in, list<Json *> &out, string &strError);
   bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
+  bool kafkaMessage(radialUser &d, string &e);
   void kafkaMessage(const string strInterface, const string strMessage);
+  void kafkaMessagePush(string &strJson);
+  void kafkaMessages(string strPrefix, bool *pbShutdown);
   void keyRemovals(Json *ptJson);
   void links(string strPrefix, Json *ptJson);
   void live(const string strApplication, const string strUser, map<string, string> message, const bool bWait = false);

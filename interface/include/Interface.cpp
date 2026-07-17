@@ -32,6 +32,8 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   m_bResponse = false;
   m_fdCallbackPool[0] = -1;
   m_fdCallbackPool[1] = -1;
+  m_fdKafkaMessage[0] = -1;
+  m_fdKafkaMessage[1] = -1;
   m_fdResponse[0] = -1;
   m_fdResponse[1] = -1;
   m_pAutoModeCallback = NULL;
@@ -3297,7 +3299,14 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   return bResult;
 }
 // }}}
+// {{{ kafkaMessage
 // {{{ kafkaMessage()
+bool Interface::kafkaMessage(radialUser &d, string &e)
+{
+  kafkaMessagePush(d.p->m["i"]->v);
+
+  return true;
+}
 void Interface::kafkaMessage(const string strInterface, const string strMessage)
 {
   Json *ptJson = new Json;
@@ -3307,6 +3316,96 @@ void Interface::kafkaMessage(const string strInterface, const string strMessage)
   hub(strInterface, ptJson, false);
   delete ptJson;
 }
+// }}}
+// {{{ kafkaMessagePush()
+void Interface::kafkaMessagePush(string &strJson)
+{
+  string strCompress;
+
+  compress(strJson, strCompress);
+  m_mutexKafka.lock();
+  m_kafkaMessages.push(strCompress);
+  if (m_fdKafkaMessage[1] != -1)
+  {             
+    char cChar = '\n';
+    write(m_fdKafkaMessage[1], &cChar, 1);
+  } 
+  m_mutexKafka.unlock();
+}
+// }}}
+// {{{ kafkaMessages()
+void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
+{
+  int nReturn;
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Interface::kafkaMessages()";
+  if ((nReturn = pipe(m_fdKafkaMessage)) == 0)
+  {
+    char cChar;
+    m_pUtility->fdNonBlocking(m_fdKafkaMessage[0], strError);
+    m_pUtility->fdNonBlocking(m_fdKafkaMessage[1], strError);
+    while (!(*pbShutdown))
+    {
+      pollfd fds[1];
+      fds[0].fd = m_fdKafkaMessage[0];
+      fds[0].events = POLLIN;
+      if ((nReturn = poll(fds, 1, 2000)) > 0)
+      {
+        if ((fds[0].revents & (POLLHUP | POLLIN)) && read(fds[0].fd, &cChar, 1) <= 0)
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
+          notify(ssMessage.str());
+          (*pbShutdown) = true;
+        }
+        if (fds[0].revents & POLLERR)
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll():  Encountered a POLLERR";
+          notify(ssMessage.str());
+          (*pbShutdown) = true;
+        }
+        if (fds[0].revents & POLLNVAL)
+        {
+          ssMessage.str("");
+          ssMessage << strPrefix << "->poll():  Encountered a POLLNVAL";
+          notify(ssMessage.str());
+          (*pbShutdown) = true;
+        }
+      }
+      else if (nReturn < 0 && errno != EINTR)
+      {
+        ssMessage.str("");
+        ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
+        notify(ssMessage.str());
+        (*pbShutdown) = true;
+      }
+      while (!m_kafkaMessages.empty())
+      {
+        string strUncompress;
+        Json *ptMessage;
+        uncompress(m_kafkaMessages.front(), strUncompress);
+        m_kafkaMessages.pop();
+        ptMessage = new Json(strUncompress);
+        delete ptMessage;
+      }
+    }
+    close(m_fdKafkaMessage[0]);
+    m_fdKafkaMessage[0] = -1;
+    close(m_fdKafkaMessage[1]);
+    m_fdKafkaMessage[1] = -1;
+  }
+  else
+  {
+    ssMessage.str("");
+    ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
+    notify(ssMessage.str());
+  }
+  (*pbShutdown) = true;
+}
+// }}}
 // }}}
 // {{{ keyRemovals()
 void Interface::keyRemovals(Json *ptJson)
