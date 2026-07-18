@@ -3435,7 +3435,7 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
 }
 // }}}
 // {{{ kafkaPending()
-bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strError)
+bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strError, const time_t CTimeout)
 {
   bool bResult = false;
   int nReturn;
@@ -3460,6 +3460,8 @@ bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strErr
     if (bAdded)
     {
       bool bExit = false;
+      time_t CTime[2] = {0, 0};
+      time(&(CTime[0]));
       while (!bExit && !shutdown())
       {
         pollfd fds[1];
@@ -3498,12 +3500,18 @@ bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strErr
         }
         if (ptPending->ptMessage != NULL)
         {
-          bResult = true;
+          bExit = bResult = true;
           ptMessage = ptPending->ptMessage;
         }
         else
         {
           strError = "Failed to receive a response.";
+        }
+        time(&(CTime[1]));
+        if (!bExit && (CTime[1] - CTime[0]) > CTimeout)
+        {
+          bExit = true;
+          strError = "Timeout expired.";
         }
       }
       m_mutexKafka.lock();
