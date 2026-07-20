@@ -3329,7 +3329,7 @@ void Interface::kafkaMessage(const string strNode, const string strInterface, co
 }
 // }}}
 // {{{ kafkaMessagePush()
-void Interface::kafkaMessagePush(string &strMessage)
+void Interface::kafkaMessagePush(const string strMessage)
 {
   string strCompress;
 

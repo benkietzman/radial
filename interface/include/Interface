@@ -179,7 +179,7 @@ class Interface : public Base
   void kafkaMessage(const string strMessage);
   bool kafkaMessage(radialUser &d, string &e);
   void kafkaMessage(const string strNode, const string strInterface, const string strMessage);
-  void kafkaMessagePush(string &strMessage);
+  void kafkaMessagePush(const string strMessage);
   void kafkaMessages(string strPrefix);
   bool kafkaPending(const string strID, Json *ptMessage, string &strError, const time_t CTimeout = 300);
   void keyRemovals(Json *ptJson);
