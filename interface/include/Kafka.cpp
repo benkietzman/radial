@@ -225,12 +225,13 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
             {
               size_t unPosition[2];
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
-              if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 22) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
+                                                      requestId
+              if ((unPosition[0] = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 13) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 13))) != string::npos)
               {
                 Json *ptMessage = new Json(strPayload);
-                if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
+                if (exist(ptMessage, "eventDetails") && exist(ptMessage->m["eventDetails"], "businessImpact") && !empty(ptMessage->m["eventDetails"]->m["businessImpact"], "requestId"))
                 {
-                  string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v, strSubPrefix, strType;
+                  string strID = ptMessage->m["eventDetails"]->m["businessImpact"]->m["requestId"]->v, strSubPrefix, strType;
                   stringstream ssID(strID);
                   if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
                   {
