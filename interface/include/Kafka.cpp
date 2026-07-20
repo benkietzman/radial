@@ -225,7 +225,6 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
             {
               size_t unPosition[2];
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
-                                                      requestId
               if ((unPosition[0] = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 13) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 13))) != string::npos)
               {
                 Json *ptMessage = new Json(strPayload);
