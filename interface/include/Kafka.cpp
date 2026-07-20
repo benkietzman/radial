@@ -241,7 +241,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                       {
                         map<string, string> label = {{"ID", strID}, {"Function", "Kafka::consumer()"}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
                         kafkaMessage(strNode, strInterface, strPayload);
-                        logger(strApplication, "message", label, strPayload);
+                        logger("Radial", "message", label, strPayload);
                       }
                     }
                     else if (strType == "logger")
