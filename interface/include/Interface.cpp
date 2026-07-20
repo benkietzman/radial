@@ -3329,6 +3329,8 @@ void Interface::kafkaMessagePush(string &strJson)
 {
   string strCompress;
 
+  map<string, string> label = {{"Interface", m_strName}, {"Source", "Radial (Interface::kafkaMessagePush)"}};
+  logger("Radial", "message", label, strPayload);
   compress(strJson, strCompress);
   m_mutexKafka.lock();
   m_kafkaMessages.push(strCompress);
