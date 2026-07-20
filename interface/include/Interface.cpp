@@ -3408,6 +3408,8 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
           }
           else
           {
+            map<string, string> label = {{"Function", "Interface::kafkaMessages()"}, {"Interface", m_strName}, {"Source", "Radial"}};
+            logger("Radial", "message", label, strMessage);
             delete ptMessage;
           }
           m_mutexKafka.unlock();
