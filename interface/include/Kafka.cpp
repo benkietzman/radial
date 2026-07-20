@@ -223,14 +223,14 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
           {
             if (ptMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR)
             {
-              size_t unPosition[2];
+              size_t unPosition;
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
-              if ((unPosition[0] = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 13) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 13))) != string::npos)
+              if ((unPosition = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition + 13) && strPayload.find("\"", (unPosition + 13)) != string::npos)
               {
-                Json *ptMessage = new Json(strPayload);
-                if (exist(ptMessage, "eventDetails") && exist(ptMessage->m["eventDetails"], "businessImpact") && !empty(ptMessage->m["eventDetails"]->m["businessImpact"], "requestId"))
+                Json *ptPayload = new Json(strPayload);
+                if (exist(ptPayload, "eventDetails") && exist(ptPayload->m["eventDetails"], "recordDetails") && exist(ptPayload->m["eventDetails"]->m["recordDetails"], "businessImpact") && !empty(ptPayload->m["eventDetails"]->m["recordDetails"]->m["businessImpact"], "requestId"))
                 {
-                  string strID = ptMessage->m["eventDetails"]->m["businessImpact"]->m["requestId"]->v, strSubPrefix, strType;
+                  string strID = ptPayload->m["eventDetails"]->m["recordDetails"]->m["businessImpact"]->m["requestId"]->v, strSubPrefix, strType;
                   stringstream ssID(strID);
                   if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
                   {
@@ -255,7 +255,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                     }
                   }
                 }
-                delete ptMessage;
+                delete ptPayload;
               }
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
