@@ -3301,9 +3301,13 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
 // }}}
 // {{{ kafka
 // {{{ kafkaMessage()
+void Interface::kafkaMessage(const string strMessage)
+{
+  kafkaMessagePush(strMessage);
+}
 bool Interface::kafkaMessage(radialUser &d, string &e)
 {
-  kafkaMessagePush(d.p->m["i"]->v);
+  kafkaMessage(d.p->m["i"]->v);
 
   return true;
 }
@@ -3341,19 +3345,21 @@ void Interface::kafkaMessagePush(string &strMessage)
 }
 // }}}
 // {{{ kafkaMessages()
-void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
+void Interface::kafkaMessages(string strPrefix)
 {
   int nReturn;
   string strError;
   stringstream ssMessage;
 
+  threadIncrement();
   strPrefix += "->Interface::kafkaMessages()";
   if ((nReturn = pipe(m_fdKafkaMessage)) == 0)
   {
+    bool bExit = false;
     char cChar;
     m_pUtility->fdNonBlocking(m_fdKafkaMessage[0], strError);
     m_pUtility->fdNonBlocking(m_fdKafkaMessage[1], strError);
-    while (!(*pbShutdown))
+    while (!bExit)
     {
       pollfd fds[1];
       fds[0].fd = m_fdKafkaMessage[0];
@@ -3365,21 +3371,21 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
           ssMessage.str("");
           ssMessage << strPrefix << "->read(" << errno << "):  " << strerror(errno);
           notify(ssMessage.str());
-          (*pbShutdown) = true;
+          bExit = true;
         }
         if (fds[0].revents & POLLERR)
         {
           ssMessage.str("");
           ssMessage << strPrefix << "->poll():  Encountered a POLLERR";
           notify(ssMessage.str());
-          (*pbShutdown) = true;
+          bExit = true;
         }
         if (fds[0].revents & POLLNVAL)
         {
           ssMessage.str("");
           ssMessage << strPrefix << "->poll():  Encountered a POLLNVAL";
           notify(ssMessage.str());
-          (*pbShutdown) = true;
+          bExit = true;
         }
       }
       else if (nReturn < 0 && errno != EINTR)
@@ -3387,7 +3393,7 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
         ssMessage.str("");
         ssMessage << strPrefix << "->poll(" << errno << "):  " << strerror(errno);
         notify(ssMessage.str());
-        (*pbShutdown) = true;
+        bExit = true;
       }
       while (!m_kafkaMessages.empty())
       {
@@ -3429,7 +3435,8 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
     ssMessage << strPrefix << "->pipe(" << errno << ") error:  " << strerror(errno);
     notify(ssMessage.str());
   }
-  (*pbShutdown) = true;
+  setShutdown();
+  threadDecrement();
 }
 // }}}
 // {{{ kafkaPending()
