@@ -236,7 +236,9 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                     string strInterface, strNode;
                     if (getline(ssID, strNode, '|') && !strNode.empty() && getline(ssID, strInterface, '|') && !strInterface.empty())
                     {
+                      map<string, string> label = {{"ID", strID}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
                       kafkaMessage(strNode, strInterface, strPayload);
+                      logger("Radial", "message", label, strPayload);
                     }
                   }
                   else if (strType == "logger")
