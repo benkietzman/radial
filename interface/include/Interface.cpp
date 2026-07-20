@@ -3396,9 +3396,9 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
         uncompress(m_kafkaMessages.front(), strMessage);
         m_kafkaMessages.pop();
         ptMessage = new Json(strMessage);
-        if (exist(ptMessage, "eventDetails") && exist(ptMessage->m["eventDetails"], "businessImpact") && !empty(ptMessage->m["eventDetails"]->m["businessImpact"], "requestId"))
+        if (exist(ptMessage, "eventDetails") && exist(ptMessage->m["eventDetails"], "recordDetails") && exist(ptMessage->m["eventDetails"]->m["recordDetails"], "businessImpact") && !empty(ptMessage->m["eventDetails"]->m["recordDetails"]->m["businessImpact"], "requestId"))
         {
-          string strID = ptMessage->m["eventDetails"]->m["businessImpact"]->m["requestId"]->v;
+          string strID = ptMessage->m["eventDetails"]->m["recordDetails"]->m["businessImpact"]->m["requestId"]->v;
           m_mutexKafka.lock();
           if (m_kafkaPending.find(strID) != m_kafkaPending.end() && m_kafkaPending[strID]->fdPipe[1] != -1)
           {
