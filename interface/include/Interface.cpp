@@ -3327,9 +3327,9 @@ void Interface::kafkaMessage(const string strNode, const string strInterface, co
 // {{{ kafkaMessagePush()
 void Interface::kafkaMessagePush(string &strMessage)
 {
+  map<string, string> label = {{"Function", "Interface::kafkaMessagePush()"}, {"Interface", m_strName}, {"Source", "Radial"}};
   string strCompress;
 
-  map<string, string> label = {{"Interface", m_strName}, {"Source", "Radial (Interface::kafkaMessagePush)"}};
   logger("Radial", "message", label, strMessage);
   compress(strMessage, strCompress);
   m_mutexKafka.lock();
@@ -3393,11 +3393,13 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
       }
       while (!m_kafkaMessages.empty())
       {
-        string strPayload;
+        map<string, string> label = {{"Function", "Interface::kafkaMessages()"}, {"Interface", m_strName}, {"Source", "Radial"}};
+        string strMessage;
         Json *ptMessage;
-        uncompress(m_kafkaMessages.front(), strPayload);
+        uncompress(m_kafkaMessages.front(), strMessage);
         m_kafkaMessages.pop();
-        ptMessage = new Json(strPayload);
+        logger("Radial", "message", label, strMessage);
+        ptMessage = new Json(strMessage);
         if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
         {
           string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v;
