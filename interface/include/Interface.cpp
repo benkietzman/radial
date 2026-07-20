@@ -3325,13 +3325,13 @@ void Interface::kafkaMessage(const string strNode, const string strInterface, co
 }
 // }}}
 // {{{ kafkaMessagePush()
-void Interface::kafkaMessagePush(string &strJson)
+void Interface::kafkaMessagePush(string &strMessage)
 {
   string strCompress;
 
   map<string, string> label = {{"Interface", m_strName}, {"Source", "Radial (Interface::kafkaMessagePush)"}};
-  logger("Radial", "message", label, strPayload);
-  compress(strJson, strCompress);
+  logger("Radial", "message", label, strMessage);
+  compress(strMessage, strCompress);
   m_mutexKafka.lock();
   m_kafkaMessages.push(strCompress);
   if (m_fdKafkaMessage[1] != -1)

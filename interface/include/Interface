@@ -178,7 +178,7 @@ class Interface : public Base
   bool jwt(const string strSigner, const string strSecret, string &strPayload, Json *ptPayload, string &strError);
   bool kafkaMessage(radialUser &d, string &e);
   void kafkaMessage(const string strNode, const string strInterface, const string strMessage);
-  void kafkaMessagePush(string &strJson);
+  void kafkaMessagePush(string &strMessage);
   void kafkaMessages(string strPrefix, bool *pbShutdown);
   bool kafkaPending(const string strID, Json *ptMessage, string &strError, const time_t CTimeout = 300);
   void keyRemovals(Json *ptJson);
