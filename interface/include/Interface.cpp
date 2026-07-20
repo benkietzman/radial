@@ -3327,10 +3327,8 @@ void Interface::kafkaMessage(const string strNode, const string strInterface, co
 // {{{ kafkaMessagePush()
 void Interface::kafkaMessagePush(string &strMessage)
 {
-  map<string, string> label = {{"Function", "Interface::kafkaMessagePush()"}, {"Interface", m_strName}, {"Source", "Radial"}};
   string strCompress;
 
-  logger("Radial", "message", label, strMessage);
   compress(strMessage, strCompress);
   m_mutexKafka.lock();
   m_kafkaMessages.push(strCompress);
@@ -3393,12 +3391,10 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
       }
       while (!m_kafkaMessages.empty())
       {
-        map<string, string> label = {{"Function", "Interface::kafkaMessages()"}, {"Interface", m_strName}, {"Source", "Radial"}};
         string strMessage;
         Json *ptMessage;
         uncompress(m_kafkaMessages.front(), strMessage);
         m_kafkaMessages.pop();
-        logger("Radial", "message", label, strMessage);
         ptMessage = new Json(strMessage);
         if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
         {
@@ -3412,8 +3408,6 @@ void Interface::kafkaMessages(string strPrefix, bool *pbShutdown)
           }
           else
           {
-            map<string, string> label = {{"ID", strID}, {"Interface", m_strName}, {"Source", "Radial"}};
-            logger("Radial", "message", label, strMessage);
             delete ptMessage;
           }
           m_mutexKafka.unlock();

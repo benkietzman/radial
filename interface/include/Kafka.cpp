@@ -227,30 +227,33 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
               if ((unPosition[0] = strPayload.find("\"eventCorrelationId\":\"")) != string::npos && strPayload.size() > (unPosition[0] + 22) && (unPosition[1] = strPayload.find("\"", (unPosition[0] + 22))) != string::npos)
               {
-                string strID = strPayload.substr((unPosition[0] + 22), (unPosition[1] - (unPosition[0] + 22))), strSubPrefix, strType;
-                stringstream ssID(strID);
-                if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
+                Json *ptMessage = new Json(strPayload);
+                if (exist(ptMessage, "eventDetails") && !empty(ptMessage->m["eventDetails"], "eventCorrelationId"))
                 {
-                  if (strType == "interface")
+                  string strID = ptMessage->m["eventDetails"]->m["eventCorrelationId"]->v, strSubPrefix, strType;
+                  stringstream ssID(strID);
+                  if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
                   {
-                    string strInterface, strNode;
-                    if (getline(ssID, strNode, '|') && !strNode.empty() && getline(ssID, strInterface, '|') && !strInterface.empty())
+                    if (strType == "interface")
                     {
-                      map<string, string> label = {{"ID", strID}, {"Function", "Kafka::consumer()"}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
-                      kafkaMessage(strNode, strInterface, strPayload);
-                      logger("Radial", "message", label, strPayload);
+                      string strInterface, strNode;
+                      if (getline(ssID, strNode, '|') && !strNode.empty() && getline(ssID, strInterface, '|') && !strInterface.empty())
+                      {
+                        kafkaMessage(strNode, strInterface, strPayload);
+                      }
                     }
-                  }
-                  else if (strType == "logger")
-                  {
-                    string strApplication;
-                    if (getline(ssID, strApplication, '|') && !strApplication.empty())
+                    else if (strType == "logger")
                     {
-                      map<string, string> label = {{"ID", strID}, {"Function", "Kafka::consumer()"}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
-                      logger(strApplication, "message", label, strPayload);
+                      string strApplication;
+                      if (getline(ssID, strApplication, '|') && !strApplication.empty())
+                      {
+                        map<string, string> label = {{"ID", strID}, {"Function", "Kafka::consumer()"}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
+                        logger(strApplication, "message", label, strPayload);
+                      }
                     }
                   }
                 }
+                delete ptMessage;
               }
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
