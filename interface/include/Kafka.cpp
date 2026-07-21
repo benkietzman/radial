@@ -227,7 +227,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
               if (m_pCallbackAddon != NULL)
               {
-                m_pCallbackAddon(strPrefix, strKey, strPayload);
+                m_pCallbackAddon(strPrefix, strTopic, strKey, strPayload);
               }
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
@@ -433,7 +433,7 @@ void Kafka::schedule(string strPrefix)
 }
 // }}}
 // {{{ setCallbackAddon()
-void Kafka::setCallbackAddon(void (*pCallback)(string, const string, const string))
+void Kafka::setCallbackAddon(void (*pCallback)(string, const string, const string, const string))
 {
   m_pCallbackAddon = pCallback;
 }
