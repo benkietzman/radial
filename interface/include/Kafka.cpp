@@ -19,6 +19,7 @@ Kafka::Kafka(string strPrefix, int argc, char **argv, void (*pCallback)(string, 
   map<string, list<string> > watches;
 
   m_bLoad = false;
+  m_pCallbackAddon = NULL;
   // {{{ functions
   m_functions["reset"] = &Kafka::reset;
   m_functions["status"] = &Kafka::status;
@@ -223,8 +224,13 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
           {
             if (ptMessage->err == RD_KAFKA_RESP_ERR_NO_ERROR)
             {
-              size_t unPosition;
               string strKey((char *)ptMessage->key, (size_t)ptMessage->key_len), strPayload((char *)ptMessage->payload, (size_t)ptMessage->len);
+              if (m_pCallbackAddon != NULL)
+              {
+                m_pCallbackAddon(strPrefix, strKey, strPayload);
+              }
+              /*
+              size_t unPosition;
               if ((unPosition = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition + 13) && strPayload.find("\"", (unPosition + 13)) != string::npos)
               {
                 Json *ptPayload = new Json(strPayload);
@@ -255,6 +261,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
                 }
                 delete ptPayload;
               }
+              */
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
             {
@@ -456,6 +463,12 @@ void Kafka::schedule(string strPrefix)
   setShutdown();
   threadDecrement();
   // }}}
+}
+// }}}
+// {{{ setCallbackAddon()
+void Kafka::setCallbackAddon(bool (*pCallback)(string, const string, const string))
+{
+  m_pCallbackAddon = pCallback;
 }
 // }}}
 // {{{ topics()
