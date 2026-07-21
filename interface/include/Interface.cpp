@@ -3423,6 +3423,10 @@ void Interface::kafkaMessages(string strPrefix)
           delete ptMessage;
         }
       }
+      if (shutdown())
+      {
+        bExit = true;
+      }
     }
     close(m_fdKafkaMessage[0]);
     m_fdKafkaMessage[0] = -1;
