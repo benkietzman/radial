@@ -3467,7 +3467,7 @@ bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strErr
       bool bExit = false;
       time_t CTime[2] = {0, 0};
       time(&(CTime[0]));
-      while (!bExit && !shutdown())
+      while (!bExit)
       {
         pollfd fds[1];
         fds[0].fd = ptPending->fdPipe[0];
@@ -3517,6 +3517,10 @@ bool Interface::kafkaPending(const string strID, Json *ptMessage, string &strErr
         {
           bExit = true;
           strError = "Timeout expired.";
+        }
+        if (shutdown())
+        {
+          bExit = true;
         }
       }
       m_mutexKafka.lock();

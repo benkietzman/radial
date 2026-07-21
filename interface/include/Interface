@@ -38,6 +38,7 @@ struct radialCallbackWorker
 struct radialKafkaPending
 {
   int fdPipe[2];
+  string strID;
   Json *ptMessage;
 };
 // }}}
