@@ -229,39 +229,6 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               {
                 m_pCallbackAddon(strPrefix, strKey, strPayload);
               }
-              /*
-              size_t unPosition;
-              if ((unPosition = strPayload.find("\"requestId\":\"")) != string::npos && strPayload.size() > (unPosition + 13) && strPayload.find("\"", (unPosition + 13)) != string::npos)
-              {
-                Json *ptPayload = new Json(strPayload);
-                if (exist(ptPayload, "eventDetails") && exist(ptPayload->m["eventDetails"], "recordDetails") && exist(ptPayload->m["eventDetails"]->m["recordDetails"], "businessImpact") && !empty(ptPayload->m["eventDetails"]->m["recordDetails"]->m["businessImpact"], "requestId"))
-                {
-                  string strID = ptPayload->m["eventDetails"]->m["recordDetails"]->m["businessImpact"]->m["requestId"]->v, strSubPrefix, strType;
-                  stringstream ssID(strID);
-                  if (getline(ssID, strSubPrefix, '|') && strSubPrefix == "radial" && getline(ssID, strType, '|'))
-                  {
-                    if (strType == "interface")
-                    {
-                      string strInterface, strNode;
-                      if (getline(ssID, strNode, '|') && !strNode.empty() && getline(ssID, strInterface, '|') && !strInterface.empty())
-                      {
-                        kafkaMessage(strNode, strInterface, strPayload);
-                      }
-                    }
-                    else if (strType == "logger")
-                    {
-                      string strApplication;
-                      if (getline(ssID, strApplication, '|') && !strApplication.empty())
-                      {
-                        map<string, string> label = {{"ID", strID}, {"Function", "Kafka::consumer()"}, {"Interface", m_strName}, {"Key", strKey}, {"Source", "Radial"}, {"Topic", strTopic}};
-                        logger(strApplication, "message", label, strPayload);
-                      }
-                    }
-                  }
-                }
-                delete ptPayload;
-              }
-              */
             }
             else if (ptMessage->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
             {
@@ -466,7 +433,7 @@ void Kafka::schedule(string strPrefix)
 }
 // }}}
 // {{{ setCallbackAddon()
-void Kafka::setCallbackAddon(bool (*pCallback)(string, const string, const string))
+void Kafka::setCallbackAddon(void (*pCallback)(string, const string, const string))
 {
   m_pCallbackAddon = pCallback;
 }

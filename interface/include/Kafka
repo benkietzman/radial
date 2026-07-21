@@ -32,7 +32,7 @@ class Kafka : public Interface
 {
   protected:
   bool m_bLoad;
-  bool (*m_pCallbackAddon)(string, const string, const string);
+  void (*m_pCallbackAddon)(string, const string, const string);
   map<string, bool (Kafka::*)(radialUser &, string &)> m_functions;
   map<string, radialKafkaTopic *> m_topics;
   mutex m_mutex;
@@ -51,7 +51,7 @@ class Kafka : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
-  void setCallbackAddon(bool (*pCallback)(string, const string, const string));
+  void setCallbackAddon(void (*pCallback)(string, const string, const string));
 };
 // }}}
 }
