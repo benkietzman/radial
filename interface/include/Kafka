@@ -21,6 +21,7 @@ namespace radial
 struct radialKafkaTopic
 {
   bool bExit;
+  bool bSubscribed;
   map<string, string> config;
   string strKey;
   thread *pThread;
@@ -39,7 +40,7 @@ class Kafka : public Interface
   thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
 
-  void consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bExit);
+  void consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bSubscribed, bool &bExit);
   void load(string strPrefix, const bool bSilent = false);
   bool reset(radialUser &d, string &e);
   void schedule(string strPrefix);

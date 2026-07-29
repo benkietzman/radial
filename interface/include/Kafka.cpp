@@ -159,7 +159,7 @@ void Kafka::callbackInotify(string strPrefix, const string strPath, const string
 }
 // }}}
 // {{{ consumer()
-void Kafka::consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bExit)
+void Kafka::consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bSubscribed, bool &bExit)
 {
   bool bLoad = false, bValidated = true;
   char szError[512] = "\0";
@@ -187,7 +187,6 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
   {
     if ((ptConsumer = rd_kafka_new(RD_KAFKA_CONSUMER, ptConf, szError, 512)) != NULL)
     {
-      bool bSubscribed = false;
       rd_kafka_resp_err_t tError;
       rd_kafka_topic_partition_list_t *ptSubscription = rd_kafka_topic_partition_list_new(1);
       rd_kafka_poll_set_consumer(ptConsumer);
@@ -245,6 +244,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
             rd_kafka_message_destroy(ptMessage);
           }
         }
+        bSubscribed = false;
         rd_kafka_consumer_close(ptConsumer);
         ssMessage.str("");
         ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " Subscription closed.";
@@ -313,6 +313,7 @@ void Kafka::load(string strPrefix, const bool bSilent)
         {
           radialKafkaTopic *ptTopic = new radialKafkaTopic;
           ptTopic->bExit = false;
+          ptTopic->bSubscribed = false;
           topic.second->flatten(ptTopic->config, true, false);
           ptTopic->strKey = strKey;
           if (m_topics.find(topic.first) != m_topics.end() && (m_topics[topic.first]->bExit || m_topics[topic.first]->strKey != strKey))
@@ -321,7 +322,7 @@ void Kafka::load(string strPrefix, const bool bSilent)
             m_topics[topic.first]->pThread->join();
             delete m_topics[topic.first];
           }
-          ptTopic->pThread = new thread(&Kafka::consumer, this, strPrefix, topic.first, ref(ptTopic->config), ref(ptTopic->bExit));
+          ptTopic->pThread = new thread(&Kafka::consumer, this, strPrefix, topic.first, ref(ptTopic->config), ref(ptTopic->bSubscribed), ref(ptTopic->bExit));
           pthread_setname_np(ptTopic->pThread->native_handle(), "consumer");
           m_topics[topic.first] = ptTopic;
         }
@@ -447,7 +448,8 @@ bool Kafka::topics(radialUser &d, string &e)
   m_mutex.lock();
   for (auto &topic : m_topics)
   {
-    o->pb(topic.first);
+    o->m[topic.first] = new Json;
+    o->m[topic.first]->i("subscribed", ((topic.second->bSubscribed)?"1":"0"), ((topic.second->bSubscribed)?1:0));
   }
   m_mutex.unlock();
 
