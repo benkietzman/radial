@@ -2498,9 +2498,17 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       {
         if (exist(ptJson, "Response"))
         {
-          for (auto &topic : ptJson->m["Response"]->l)
+          for (auto &topic : ptJson->m["Response"]->m)
           {
-            ssText << endl << topic->v;
+            ssText << endl << topic->v << ":  ";
+            if (!empty(topic.second, "subscribed") && topic.second->m["subscribed"]->v == "1")
+            {
+              ssText << char(3) << "03subscribed" << char(3);
+            }
+            else
+            {
+              ssText << char(3) << "04unsubscribed" << char(3);
+            }
           }
         }
         ssText << endl << "done";
