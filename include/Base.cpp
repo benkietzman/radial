@@ -562,5 +562,24 @@ void Base::unpack(const string d, radialPacket &p)
   delete r;
 }
 // }}}
+// {{{ value()
+string Base::value(list<string> keys, Json *ptJson)
+{
+  string strValue;
+  Json *ptCurrent = ptJson;
+
+  while (!keys.empty() && exist(ptCurrent, keys.front()))
+  {
+    ptCurrent = ptCurrent->m[keys.front()];
+    keys.pop_front();
+  }
+  if (keys.empty())
+  {
+    strValue = ptCurrent->v;
+  }
+
+  return strValue;
+}
+// }}}
 }
 }

@@ -179,6 +179,7 @@ class Base
   void msleep(const unsigned long ulMilliSec);
   void setShutdown();
   bool shutdown();
+  string value(list<string> keys, Json *ptJson);
 };
 // }}}
 }
