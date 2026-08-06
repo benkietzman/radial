@@ -145,26 +145,11 @@ Base::Base(int argc, char **argv)
         ssJson << strLine;
       }
       ptConfig = new Json(ssJson.str());
-      if (!empty(ptConfig, "company"))
-      {
-        m_strCompany = ptConfig->m["company"]->v;
-      }
-      if (!empty(ptConfig, "email"))
-      {
-        m_strEmail = ptConfig->m["email"]->v;
-      }
-      if (!empty(ptConfig, "server"))
-      {
-        m_strServer = ptConfig->m["server"]->v;
-      }
-      if (!empty(ptConfig, "valgrind"))
-      {
-        m_strValgrind = ptConfig->m["valgrind"]->v;
-      }
-      if (!empty(ptConfig, "website"))
-      {
-        m_strWebsite = ptConfig->m["website"]->v;
-      }
+      m_strCompany = ptConfig->val({"company"});
+      m_strEmail = ptConfig->val({"email"});
+      m_strServer = ptConfig->val({"server"});
+      m_strValgrind = ptConfig->val({"valgrind"});
+      m_strWebsite = ptConfig->val({"website"});
       delete ptConfig;
     }
     inConfig.close();
@@ -232,7 +217,7 @@ bool Base::dep(const list<string> fs, Json *i, string &e)
 
   for (auto fi = fs.begin(); bResult && fi != fs.end(); fi++)
   {
-    if (!exist(i, *fi) || empty(i, *fi))
+    if (i->empty({*fi}))
     {
       bResult = false;
       es << "Please provide the " << *fi << ".";
@@ -246,7 +231,7 @@ bool Base::dep(const list<string> fs, Json *i, string &e)
 // {{{ empty()
 bool Base::empty(Json *ptJson, const string strField)
 {
-  return (!exist(ptJson, strField) || ptJson->m[strField]->v.empty());
+  return ptJson->empty({strField});
 } 
 // }}}
 // {{{ esc()
@@ -260,13 +245,13 @@ string Base::esc(const string strValue)
 // {{{ exist()
 bool Base::exist(Json *ptJson, const string strField)
 {
-  return (ptJson->m.find(strField) != ptJson->m.end());
+  return ptJson->exist({strField});
 }
 // }}}
 // {{{ get()
 string Base::get(Json *ptJson, const string strField, const string strDefault)
 {
-  return ((!empty(ptJson, strField))?ptJson->m[strField]->v:strDefault);
+  return ((!ptJson->empty({strField}))?ptJson->m[strField]->v:strDefault);
 } 
 // }}}
 // {{{ m2j()
@@ -364,7 +349,7 @@ string Base::pack(radialPacket &p, string &d)
   {
     bool b = false;
     Json *d = new Json(p.p);
-    if (exist(d, "Response"))
+    if (d->exist({"Response"}))
     {
       string a;
       delete d->m["Response"];
@@ -373,11 +358,11 @@ string Base::pack(radialPacket &p, string &d)
       if (a.size() < m_unMaxPayload)
       {
         b = true;
-        if (!empty(d, "Status"))
+        if (!d->empty({"Status"}))
         {
           d->i("StatusOrig", d->m["Status"]->v);
         }
-        if (!empty(d, "Error"))
+        if (!d->empty({"Error"}))
         {
           d->i("ErrorOrig", d->m["Error"]->v);
         }
@@ -498,7 +483,7 @@ void Base::unpack(const string d, radialPacket &p)
   {
     bool b = false;
     Json *d = new Json(p.p);
-    if (exist(d, "Response"))
+    if (d->exist({"Response"}))
     {
       string a;
       delete d->m["Response"];
@@ -508,11 +493,11 @@ void Base::unpack(const string d, radialPacket &p)
       {
         stringstream ssMessage;
         b = true;
-        if (!empty(d, "Status"))
+        if (!d->empty({"Status"}))
         {
           d->i("StatusOrig", d->m["Status"]->v);
         }
-        if (!empty(d, "Error"))
+        if (!d->empty({"Error"}))
         {
           d->i("ErrorOrig", d->m["Error"]->v);
         }
@@ -535,27 +520,27 @@ void Base::unpack(const string d, radialPacket &p)
       delete e;
     }
   }
-  if (!empty(r, "_d"))
+  if (!r->empty({"_d"}))
   {
     p.d = r->m["_d"]->v;
   }
-  if (!empty(r, "_l"))
+  if (!r->empty({"_l"}))
   {
     p.l = r->m["_l"]->v;
   }
-  if (!empty(r, "_o"))
+  if (!r->empty({"_o"}))
   {
     p.o = r->m["_o"]->v;
   }
-  if (!empty(r, "_s"))
+  if (!r->empty({"_s"}))
   {
     p.s = r->m["_s"]->v;
   }
-  if (!empty(r, "_t"))
+  if (!r->empty({"_t"}))
   {
     p.t = r->m["_t"]->v;
   }
-  if (!empty(r, "_u"))
+  if (!r->empty({"_u"}))
   {
     p.u = r->m["_u"]->v;
   }
