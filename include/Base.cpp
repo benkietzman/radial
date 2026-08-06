@@ -563,7 +563,7 @@ void Base::unpack(const string d, radialPacket &p)
 }
 // }}}
 // {{{ value()
-string Base::value(list<string> keys, Json *ptJson)
+string Base::value(Json *ptJson, list<string> keys)
 {
   string strValue;
   Json *ptCurrent = ptJson;
