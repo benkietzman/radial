@@ -248,6 +248,23 @@ bool Base::empty(Json *ptJson, const string strField)
 {
   return (!exist(ptJson, strField) || ptJson->m[strField]->v.empty());
 } 
+bool Base::empty(Json *ptJson, list<string> keys)
+{
+  bool bResult = false;
+  Json *ptCurrent = ptJson;
+
+  while (!keys.empty() && exist(ptCurrent, keys.front()))
+  {
+    ptCurrent = ptCurrent->m[keys.front()];
+    keys.pop_front();
+  }
+  if (!keys.empty() || ptCurrent->v.empty())
+  {
+    bResult = true;
+  }
+
+  return bResult;
+} 
 // }}}
 // {{{ esc()
 string Base::esc(const string strValue)
@@ -261,6 +278,23 @@ string Base::esc(const string strValue)
 bool Base::exist(Json *ptJson, const string strField)
 {
   return (ptJson->m.find(strField) != ptJson->m.end());
+}
+bool Base::exist(Json *ptJson, list<string> keys)
+{
+  bool bResult = false;
+  Json *ptCurrent = ptJson;
+
+  while (!keys.empty() && exist(ptCurrent, keys.front()))
+  {
+    ptCurrent = ptCurrent->m[keys.front()];
+    keys.pop_front();
+  }
+  if (keys.empty())
+  {
+    bResult = true;
+  }
+
+  return bResult;
 }
 // }}}
 // {{{ get()

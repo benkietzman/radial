@@ -172,8 +172,10 @@ class Base
   ~Base();
   bool dep(const list<string> fs, Json *i, string &e);
   bool empty(Json *ptJson, const string strField);
+  bool empty(Json *ptJson, list<string> keys);
   string esc(const string strValue);
   bool exist(Json *ptJson, const string strField);
+  bool exist(Json *ptJson, list<string> keys);
   string get(Json *ptJson, const string strField, const string strDefault = "");
   string m2j(const map<string, string> m);
   void msleep(const unsigned long ulMilliSec);
