@@ -4274,9 +4274,9 @@ void Central::schedule(string strPrefix)
             }
             else
             {
-              ssMessage.str("");
-              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could be a new server that was registered in Central but has not yet had its configuration pulled and stored.";
-              chat("#central", ssMessage.str(), strError);
+              //ssMessage.str("");
+              //ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could be a new server that was registered in Central but has not yet had its configuration pulled and stored.";
+              //chat("#central", ssMessage.str(), strError);
               storageRemove({"central", "monitor", "servers", server.first}, strError);
             }
             if (ptAlarms->m["system"]->v != ssAlarmsSystem.str())
