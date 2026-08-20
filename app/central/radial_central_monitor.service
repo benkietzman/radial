@@ -1,5 +1,6 @@
 [Unit]
 Description=Radial - Central Monitor
+After=warden.service
 
 [Service]
 Type=simple
