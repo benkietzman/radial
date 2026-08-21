@@ -865,7 +865,7 @@ void Hub::process(string strPrefix)
                                   // {{{ remove
                                   else if (ptJson->m["Function"]->v == "remove")
                                   {
-                                    if (!empty(ptJson, "Name"))
+                                    if (!ptJson->empty({"Name"}))
                                     {
                                       if (m_i.find(ptJson->m["Name"]->v) != m_i.end())
                                       {
@@ -891,7 +891,7 @@ void Hub::process(string strPrefix)
                                   else if (ptJson->m["Function"]->v == "shutdown")
                                   {
                                     bResult = true;
-                                    setShutdown(strPrefix, ((!empty(ptJson, "Target"))?ptJson->m["Target"]->v:""));
+                                    setShutdown(strPrefix, ptJson->val({"Target"}));
                                   }
                                   // }}}
                                   // {{{ throughput
@@ -1013,16 +1013,12 @@ void Hub::process(string strPrefix)
                             ptJson = new Json(m[fds[i].fd][0].substr(0, unPosition));
                             m[fds[i].fd][0].erase(0, (unPosition + 1));
                             strError.clear();
-                            if (!empty(ptJson, "Function"))
+                            if (!ptJson->empty({"Function"}))
                             {
                               ifstream inInterfaces;
-                              string strInterface;
+                              string strInterface = ptJson->val({"Interface"});
                               stringstream ssInterfaces;
                               Json *ptInterfaces = NULL;
-                              if (!empty(ptJson, "Interface"))
-                              {
-                                strInterface = ptJson->m["Interface"]->v;
-                              }
                               ssInterfaces << m_strData << "/interfaces.json";
                               inInterfaces.open(ssInterfaces.str());
                               if (inInterfaces)
