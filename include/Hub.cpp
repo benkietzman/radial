@@ -747,12 +747,12 @@ void Hub::process(string strPrefix)
                                 bool bRespond = true, bResult = false;
                                 strError.clear();
                                 // }}}
-                                if (!empty(ptJson, "Function"))
+                                if (!ptJson->empty({"Function"}))
                                 {
                                   // {{{ add
                                   if (ptJson->m["Function"]->v == "add")
                                   {
-                                    if (!empty(ptJson, "Name"))
+                                    if (!ptJson->empty({"Name"}))
                                     {
                                       bool bRespawn = false, bRestricted = false, bValgrind = false;
                                       ifstream inInterfaces;
@@ -777,55 +777,49 @@ void Hub::process(string strPrefix)
                                       {
                                         if (ptInterfaces->exist({ptJson->m["Name"]->v}))
                                         {
-                                          stringstream ssMemory((!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Memory"))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
+                                          stringstream ssMemory((!ptInterfaces->m[ptJson->m["Name"]->v]->empty({"Memory"}))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
                                           ssMemory >> ulMemory;
                                           ulMemory *= 1024;
-                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "AccessFunction"))
-                                          {
-                                            strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->m["AccessFunction"]->v;
-                                          }
-                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Command"))
-                                          {
-                                            strCommand = ptInterfaces->m[ptJson->m["Name"]->v]->m["Command"]->v;
-                                          }
-                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Respawn") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Respawn"]->v == "1")
+                                          strAccessFunction = ptInterfaces->m[ptJson->m["Name"]->v]->val({"AccessFunction"});
+                                          strCommand = ptInterfaces->m[ptJson->m["Name"]->v]->val({"Command"});
+                                          if (ptInterfaces->m[ptJson->m["Name"]->v]->val({"Respawn"}) == "1")
                                           {
                                             bRespawn = true;
                                           }
-                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Restricted") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Restricted"]->v == "1")
+                                          if (ptInterfaces->m[ptJson->m["Name"]->v]->val({"Restricted"}) == "1")
                                           {
                                             bRestricted = true;
                                           }
-                                          if (!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Valgrind") && ptInterfaces->m[ptJson->m["Name"]->v]->m["Valgrind"]->v == "1")
+                                          if (ptInterfaces->m[ptJson->m["Name"]->v]->val({"Valgrind"}) == "1")
                                           {
                                             bValgrind = true;
                                           }
                                         }
                                         delete ptInterfaces;
                                       }
-                                      if (!empty(ptJson, "AccessFunction"))
+                                      if (!ptJson->empty({"AccessFunction"}))
                                       {
                                         strAccessFunction = ptJson->m["AccessFunction"]->v;
                                       }
-                                      if (!empty(ptJson, "Command"))
+                                      if (!ptJson->empty({"Command"}))
                                       {
                                         strCommand = ptJson->m["Command"]->v;
                                       }
-                                      if (!empty(ptJson, "Memory"))
+                                      if (!ptJson->empty({"Memory"}))
                                       {
                                         stringstream ssMemory(ptJson->m["Memory"]->v);
                                         ssMemory >> ulMemory;
                                         ulMemory *= 1024;
                                       }
-                                      if (!empty(ptJson, "Respawn"))
+                                      if (!ptJson->empty({"Respawn"}))
                                       {
                                         bRespawn = ((ptJson->m["Respawn"]->v == "1")?true:false);
                                       }
-                                      if (!empty(ptJson, "Restricted"))
+                                      if (!ptJson->empty({"Restricted"}))
                                       {
                                         bRestricted = ((ptJson->m["Restricted"]->v == "1")?true:false);
                                       }
-                                      if (!empty(ptJson, "Valgrind"))
+                                      if (!ptJson->empty({"Valgrind"}))
                                       {
                                         bValgrind = ((ptJson->m["Valgrind"]->v == "1")?true:false);
                                       }
