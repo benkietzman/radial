@@ -281,13 +281,13 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
         if (!ptInterfaces->m.empty())
         {
           bResult = true;
-          if (exist(ptInterfaces, "log") && !empty(ptInterfaces->m["log"], "Command") && m_i.find("log") == m_i.end())
+          if (!ptInterfaces->empty({"log", "Command"}) && m_i.find("log") == m_i.end())
           {
-            stringstream ssMemory((!empty(ptInterfaces->m["log"], "Memory"))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
+            stringstream ssMemory((!ptInterfaces->m["log"]->empty({"Memory"}))?ptInterfaces->m["log"]->m["Memory"]->v:"40");
             unsigned long ulMemory;
             ssMemory >> ulMemory;
             ulMemory *= 1024;
-            if (!add(strPrefix, "log", ((!empty(ptInterfaces->m["log"], "AccessFunction"))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m["log"], "Respawn") && ptInterfaces->m["log"]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Restricted") && ptInterfaces->m["log"]->m["Restricted"]->v == "1")?true:false), ((!empty(ptInterfaces->m["log"], "Valgrind") && ptInterfaces->m["log"]->m["Valgrind"]->v == "1")?true:false), sockets))
+            if (!add(strPrefix, "log", ((!ptInterfaces->m["log"]->empty({"AccessFunction"}))?ptInterfaces->m["log"]->m["AccessFunction"]->v:"Function"), ptInterfaces->m["log"]->m["Command"]->v, ulMemory, ((ptInterfaces->m["log"]->val({"Respawn"}) == "1")?true:false), ((ptInterfaces->m["log"]->val({"Restricted"}) == "1")?true:false), ((ptInterfaces->m["log"]->val({"Valgrind"}) == "1")?true:false), sockets))
             {
               bResult = false;
             }
@@ -296,20 +296,20 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
           }
           for (auto &i : ptInterfaces->m)
           {
-            if (!empty(i.second, "Command"))
+            if (!i.second->empty({"Command"}))
             {
-              stringstream ssMemory((!empty(i.second, "Memory"))?i.second->m["Memory"]->v:"40");
+              stringstream ssMemory((!i.second->empty({"Memory"}))?i.second->m["Memory"]->v:"40");
               unsigned long ulMemory;
               ssMemory >> ulMemory;
               ulMemory *= 1024;
               if (m_i.find(i.first) != m_i.end())
               {
-                m_i[i.first]->bRespawn = ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false);
-                m_i[i.first]->bRestricted = ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false);
-                m_i[i.first]->strAccessFunction = ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function");
-                if (m_i[i.first]->strCommand != i.second->m["Command"]->v || m_i[i.first]->bValgrind != ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false))
+                m_i[i.first]->bRespawn = ((i.second->val({"Respawn"}) == "1")?true:false);
+                m_i[i.first]->bRestricted = ((i.second->val({"Restricted"})  == "1")?true:false);
+                m_i[i.first]->strAccessFunction = ((!i.second->empty({"AccessFunction"}))?i.second->m["AccessFunction"]->v:"Function");
+                if (m_i[i.first]->strCommand != i.second->m["Command"]->v || m_i[i.first]->bValgrind != ((i.second->val({"Valgrind"}) == "1")?true:false))
                 {
-                  m_i[i.first]->bValgrind = ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false);
+                  m_i[i.first]->bValgrind = ((i.second->val({"Valgrind"}) == "1")?true:false);
                   m_i[i.first]->strCommand = i.second->m["Command"]->v;
                   if (!m_i[i.first]->bShutdown && m_i[i.first]->bRespawn)
                   {
@@ -321,7 +321,7 @@ bool Hub::load(string strPrefix, string &strError, list<int> sockets)
                 }
                 m_i[i.first]->ulMemory = ulMemory;
               }
-              else if (!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1" && !add(strPrefix, i.first, ((!empty(i.second, "AccessFunction"))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((!empty(i.second, "Respawn") && i.second->m["Respawn"]->v == "1")?true:false), ((!empty(i.second, "Restricted") && i.second->m["Restricted"]->v == "1")?true:false), ((!empty(i.second, "Valgrind") && i.second->m["Valgrind"]->v == "1")?true:false), sockets))
+              else if (i.second->val({"Respawn"}) == "1" && !add(strPrefix, i.first, ((!i.second->empty({"AccessFunction"}))?i.second->m["AccessFunction"]->v:"Function"), i.second->m["Command"]->v, ulMemory, ((i.second->val({"Respawn"}) == "1")?true:false), ((i.second->val({"Restricted"}) == "1")?true:false), ((i.second->val({"Valgrind"}) == "1")?true:false), sockets))
               {
                 bResult = false;
               }
@@ -698,7 +698,7 @@ void Hub::process(string strPrefix)
                             else
                             {
                               Json *ptJson = new Json(p.p);
-                              if (s[fds[i].fd] == "link" && !empty(ptJson, "Function") && ptJson->m["Function"]->v == "links")
+                              if (s[fds[i].fd] == "link" && ptJson->val({"Function"}) == "links")
                               {
                                 for (auto &link : m_l)
                                 {
@@ -710,42 +710,30 @@ void Hub::process(string strPrefix)
                                   delete link;
                                 }
                                 m_l.clear();
-                                if (exist(ptJson, "Links"))
+                                if (ptJson->exist({"Links"}))
                                 {
                                   for (auto &link : ptJson->m["Links"]->m)
                                   {
                                     radialLink *ptLink = new radialLink;
                                     ptLink->strNode = link.first;
-                                    if (!empty(link.second, "Server"))
-                                    {
-                                      ptLink->strServer = link.second->m["Server"]->v;
-                                    }
-                                    if (!empty(link.second, "Port"))
-                                    {
-                                      ptLink->strPort = link.second->m["Port"]->v;
-                                    }
-                                    if (exist(link.second, "Interfaces"))
+                                    ptLink->strServer = link.second->val({"Server"});
+                                    ptLink->strPort = link.second->val({"Port"});
+                                    if (link.second->exist({"Interfaces"}))
                                     {
                                       for (auto &interface : link.second->m["Interfaces"]->m)
                                       {
                                         ptLink->interfaces[interface.first] = new radialInterface;
-                                        if (!empty(interface.second, "AccessFunction"))
-                                        {
-                                          ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
-                                        }
-                                        if (!empty(interface.second, "Command"))
-                                        {
-                                          ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
-                                        }
+                                        ptLink->interfaces[interface.first]->strAccessFunction = interface.second->val({"AccessFunction"});
+                                        ptLink->interfaces[interface.first]->strCommand = interface.second->val({"Command"});
                                         ptLink->interfaces[interface.first]->nPid = -1;
-                                        if (!empty(interface.second, "PID"))
+                                        if (!interface.second->empty({"PID"}))
                                         {
                                           stringstream ssPid(interface.second->m["PID"]->v);
                                           ssPid >> ptLink->interfaces[interface.first]->nPid;
                                         }
-                                        ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
-                                        ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
-                                        ptLink->interfaces[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
+                                        ptLink->interfaces[interface.first]->bRespawn = ((interface.second->val({"Respawn"}) == "1")?true:false);
+                                        ptLink->interfaces[interface.first]->bRestricted = ((interface.second->val({"Restricted"}) == "1")?true:false);
+                                        ptLink->interfaces[interface.first]->bValgrind = ((interface.second->val({"Valgrind"}) == "1")?true:false);
                                       }
                                     }
                                     m_l.push_back(ptLink);
@@ -787,7 +775,7 @@ void Hub::process(string strPrefix)
                                       inInterfaces.close();
                                       if (ptInterfaces != NULL)
                                       {
-                                        if (exist(ptInterfaces, ptJson->m["Name"]->v))
+                                        if (ptInterfaces->exist({ptJson->m["Name"]->v}))
                                         {
                                           stringstream ssMemory((!empty(ptInterfaces->m[ptJson->m["Name"]->v], "Memory"))?ptInterfaces->m[ptJson->m["Name"]->v]->m["Memory"]->v:"40");
                                           ssMemory >> ulMemory;
@@ -922,7 +910,7 @@ void Hub::process(string strPrefix)
                                       {
                                         t[p.s] = {};
                                       }
-                                      if (exist(ptJson, "Response"))
+                                      if (ptJson->exist({"Response"}))
                                       {
                                         for (auto &throughput : ptJson->m["Response"]->m)
                                         {
@@ -1080,7 +1068,7 @@ void Hub::process(string strPrefix)
                                 {
                                   if (!strInterface.empty())
                                   {
-                                    if (exist(ptInterfaces, strInterface))
+                                    if (ptInterfaces->exist({strInterface}))
                                     {
                                       if (m_i.find(strInterface) != m_i.end())
                                       {
@@ -1115,7 +1103,7 @@ void Hub::process(string strPrefix)
                                 {
                                   if (!strInterface.empty())
                                   {
-                                    if (exist(ptInterfaces, strInterface))
+                                    if (ptInterfaces->exist({strInterface}))
                                     {
                                       if (m_i.find(strInterface) == m_i.end())
                                       {
@@ -1155,7 +1143,7 @@ void Hub::process(string strPrefix)
                                 {
                                   if (!strInterface.empty())
                                   {
-                                    if (exist(ptInterfaces, strInterface))
+                                    if (ptInterfaces->exist({strInterface}))
                                     {
                                       bProcessed = true;
                                       ptJson->i("Response", ((m_i.find(strInterface) != m_i.end())?"online":"offline"));
@@ -1176,7 +1164,7 @@ void Hub::process(string strPrefix)
                                 {
                                   if (!strInterface.empty())
                                   {
-                                    if (exist(ptInterfaces, strInterface))
+                                    if (ptInterfaces->exist({strInterface}))
                                     {
                                       bProcessed = true;
                                       if (m_i.find(strInterface) != m_i.end())
