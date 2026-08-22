@@ -36,18 +36,18 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "User"))
+  if (!ptJson->empty({"User"}))
   {
-    if (!empty(ptJson, "Password"))
+    if (!ptJson->empty({"Password"}))
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
-        if (!empty(ptJson->m["Request"], "Interface"))
+        if (!ptJson->m["Request"]->empty({"Interface"}))
         {
           Json *ptData = new Json(ptJson);
           if (m_pWarden != NULL && m_pWarden->authz(ptData, strError))
           {
-            if (exist(ptData, "radial") && exist(ptData->m["radial"], "Access") && exist(ptData->m["radial"]->m["Access"], ptJson->m["Request"]->m["Interface"]->v))
+            if (ptData->exist({"radial", "Access", ptJson->m["Request"]->m["Interface"]->v}))
             {
               string strAccessFunction = "Function";
               if (m_accessFunctions.find(ptJson->m["Request"]->m["Interface"]->v) != m_accessFunctions.end() && m_accessFunctions[ptJson->m["Request"]->m["Interface"]->v] != "Function")
@@ -58,7 +58,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
               {
                 bResult = true;
               }
-              else if (!empty(ptJson, strAccessFunction))
+              else if (!ptJson->empty({strAccessFunction}))
               {
                 if (ptData->m["radial"]->m["Access"]->m[ptJson->m["Request"]->m["Interface"]->v]->v == ptJson->m[strAccessFunction]->v)
                 {
@@ -94,12 +94,12 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
           }
           delete ptData;
         }
-        else if (!empty(ptJson, "Function"))
+        else if (!ptJson->empty({"Function"}))
         {
           string strFunction = ptJson->m["Function"]->v;
           if (strFunction == "password")
           {
-            if (!empty(ptJson->m["Request"], "Action"))
+            if (!ptJson->m["Request"]->empty({"Action"}))
             {
               if (m_pWarden != NULL && m_pWarden->radial(ptJson->m["User"]->v, ptJson->m["Password"]->v, strError))
               {
@@ -117,10 +117,10 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                       }
                       if (strAction == "push" || strAction == "put")
                       {
-                        if (exist(ptJson->m["Request"], "Password"))
+                        if (ptJson->m["Request"]->exist({"Password"}))
                         {
                           list<string> passwords;
-                          if (!empty(ptJson->m["Request"], "Password"))
+                          if (!ptJson->m["Request"]->empty({"Password"}))
                           {
                             passwords.push_back(ptJson->m["Request"]->m["Password"]->v);
                           }
@@ -168,7 +168,7 @@ void Auth::callback(string strPrefix, const string strPacket, const bool bRespon
                         ofstream outCred(m_strData + "/.cred");
                         outCred.close();
                         bResult = true;
-                        if (!exist(ptJson->m["Request"], "_broadcast"))
+                        if (!ptJson->m["Request"]->exist({"_broadcast"}))
                         {
                           list<string> nodes;
                           m_mutexShare.lock();
@@ -264,12 +264,12 @@ bool Auth::init()
   ptJson->i("Function", "list");
   if (hub(ptJson, strError))
   {
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       bResult = true;
       for (auto &interface : ptJson->m["Response"]->m)
       {
-        m_accessFunctions[interface.first] = ((!empty(interface.second, "AccessFunction"))?interface.second->m["AccessFunction"]->v:"Function");
+        m_accessFunctions[interface.first] = ((!interface.second->empty({"AccessFunction"}))?interface.second->m["AccessFunction"]->v:"Function");
       }
     }
   }
