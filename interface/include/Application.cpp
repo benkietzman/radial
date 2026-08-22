@@ -71,7 +71,7 @@ void Application::applicationAccept(string strPrefix)
   {
     for (auto &i : ptData->m)
     {
-      if (exist(i.second, m_strNode))
+      if (i.second->exist({m_strNode}))
       {
         if (storageRemove({"application", "connectors", i.first, m_strNode}, strError))
         {
@@ -290,7 +290,7 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
                 ptJson = new Json(strBuffers[0].substr(0, unPosition));
                 strBuffers[0].erase(0, (unPosition + 1));
                 m_mutex.lock();
-                if (!empty(ptJson, "_key"))
+                if (!ptJson->empty({"_key"}))
                 {
                   size_t unKey = atoi(ptJson->m["_key"]->v.c_str());
                   if (m_clients.find(unKey) != m_clients.end() && m_clientTimeouts.find(unKey) != m_clientTimeouts.end())
@@ -334,7 +334,7 @@ void Application::applicationSocket(string strPrefix, int fdSocket, SSL_CTX *ctx
               if (storageRetrieve({"application", "tokens", strToken}, ptToken, strError))
               {
                 Json *ptData = new Json;
-                if (!empty(ptToken, "application"))
+                if (!ptToken->empty({"application"}))
                 {
                   if (connectorAdd(ptToken->m["application"]->v, fdSocket, strError))
                   {
@@ -523,7 +523,7 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
@@ -533,7 +533,7 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
       if ((this->*m_functions[strFunction])(d, strError))
       {
         bResult = true;
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
@@ -541,12 +541,12 @@ void Application::callback(string strPrefix, const string strPacket, const bool 
         d.p->m.erase("o");
       }
     }
-    else if (!exist(d.p->m["i"], "Function") || d.p->m["i"]->m["Function"]->v != "irc" || p.o == "irc")
+    else if (!d.p->m["i"]->exist({"Function"}) || d.p->m["i"]->m["Function"]->v != "irc" || p.o == "irc")
     {
       if (request(d, strError))
       {
         bResult = true;
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
@@ -768,7 +768,7 @@ void Application::load(string strPrefix, const bool bSilent)
   {
     for (auto &cred : ptCred->m)
     {
-      if (!empty(cred.second, "Application"))
+      if (!cred.second->empty({"Application"}))
       {
         applications[cred.first] = cred.second->m["Application"]->v;
       }
@@ -794,7 +794,7 @@ bool Application::request(radialUser &d, string &e)
   stringstream ssMessage;
   Json *i = d.p->m["i"];
 
-  if (!empty(d.r, "Function"))
+  if (!d.r->empty({"Function"}))
   {
     bool bFound = false, bPipe = false;
     int fdPipe[2] = {-1, -1}, fdSocket = -1, nReturn;
@@ -905,7 +905,7 @@ bool Application::request(radialUser &d, string &e)
       if (ptJson != NULL)
       {
         b = true;
-        if (exist(ptJson, "_key"))
+        if (ptJson->exist({"_key"}))
         {
           delete ptJson->m["_key"];
           ptJson->m.erase("_key");
@@ -940,7 +940,7 @@ bool Application::request(radialUser &d, string &e)
           if (hub("link", ptLink, e))
           {
             b = true;
-            if (exist(ptLink, "Response"))
+            if (ptLink->exist({"Response"}))
             {
               if (d.p->m.find("o") != d.p->m.end())
               {
@@ -1022,7 +1022,7 @@ void Application::schedule(string strPrefix)
           list<string> removals;
           for (auto &token : ptData->m)
           {
-            if (!empty(token.second, "_time"))
+            if (!token.second->empty({"_time"}))
             {
               if (CTime[0] > atoi(token.second->m["_time"]->v.c_str()) && (CTime[0] - atoi(token.second->m["_time"]->v.c_str())) > 60)
               {
