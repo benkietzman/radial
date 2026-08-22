@@ -1097,11 +1097,11 @@ void Hub::process(string strPrefix)
                                     {
                                       if (m_i.find(strInterface) == m_i.end())
                                       {
-                                        stringstream ssMemory((!empty(ptInterfaces->m[strInterface], "Memory"))?ptInterfaces->m[strInterface]->m["Memory"]->v:"40");
+                                        stringstream ssMemory((!ptInterfaces->m[strInterface]->empty({"Memory"}))?ptInterfaces->m[strInterface]->m["Memory"]->v:"40");
                                         unsigned long ulMemory;
                                         ssMemory >> ulMemory;
                                         ulMemory *= 1024;
-                                        if (add(strPrefix, strInterface, ((!empty(ptInterfaces->m[strInterface], "AccessFunction"))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((!empty(ptInterfaces->m[strInterface], "Respawn") && ptInterfaces->m[strInterface]->m["Respawn"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Restricted") && ptInterfaces->m[strInterface]->m["Restricted"]->v == "1")?true:false), ((!empty(ptInterfaces->m[strInterface], "Valgrind") && ptInterfaces->m[strInterface]->m["Valgrind"]->v == "1")?true:false), sockets))
+                                        if (add(strPrefix, strInterface, ((!ptInterfaces->m[strInterface]->empty({"AccessFunction"}))?ptInterfaces->m[strInterface]->m["AccessFunction"]->v:"Function"), ptInterfaces->m[strInterface]->m["Command"]->v, ulMemory, ((ptInterfaces->m[strInterface]->val({"Respawn"}) == "1")?true:false), ((ptInterfaces->m[strInterface]->val({"Restricted"}) == "1")?true:false), ((ptInterfaces->m[strInterface]->val({"Valgrind"}) == "1")?true:false), sockets))
                                         {
                                           bProcessed = true;
                                           interfaces();
