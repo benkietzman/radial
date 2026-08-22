@@ -35,12 +35,12 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (exist(ptJson, "Request"))
+  if (ptJson->exist({"Request"}))
   {
-    if (!empty(ptJson->m["Request"], "Message"))
+    if (!ptJson->m["Request"]->empty({"Message"}))
     {
       string strMessage = ptJson->m["Request"]->m["Message"]->v;
-      if (!empty(ptJson->m["Request"], "User"))
+      if (!ptJson->m["Request"]->empty({"User"}))
       {
         map<string, string> user;
         string strUser = ptJson->m["Request"]->m["User"]->v;
@@ -136,17 +136,17 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
               if (curl(user["alert_remote_url"], "json", NULL, NULL, NULL, ptPost, NULL, ssProxy.str(), strCookies, strHeader, strContent, strError))
               {
                 Json *ptContent = new Json(strContent);
-                if (ptContent->m.find("Status") != ptContent->m.end() && ptContent->m["Status"]->v == "okay")
+                if (ptContent->val({"Status"}) == "okay")
                 {
                   bAlerted = true;
                 }
-                else if (ptContent->m.find("Error") != ptContent->m.end())
+                else if (ptContent->exist({"Error"}))
                 {
-                  if (ptContent->m["Error"]->m.find("Message") != ptContent->m["Error"]->m.end() && !ptContent->m["Error"]->m["Message"]->v.empty())
+                  if (!ptContent->m["Error"]->empty({"Message"}))
                   {
                     errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->m["Message"]->v + (string)"]");
                   }
-                  else if (!ptContent->m["Error"]->v.empty())
+                  else if (!ptContent->empty({"Error"}))
                   {
                     errors.push_back((string)"Interface::curl() [" + ptContent->m["Error"]->v + (string)"]");
                   }
