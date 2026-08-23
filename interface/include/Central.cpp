@@ -240,7 +240,7 @@ bool Central::applicationAccount(radialUser &d, string &e)
               rm(j, "password");
             }
           }
-          if (exist(j, "decrypted_password"))
+          if (j->exist({"decrypted_password"}))
           {
             rm(j, "decrypted_password");
           }
@@ -281,11 +281,11 @@ bool Central::applicationAccountAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
+  if (!i->empty({"encrypt", "value"}))
   {
     i->i("encrypt", i->m["encrypt"]->m["value"]->v);
   }
-  if (exist(i, "type") && !empty(i->m["type"], "id"))
+  if (!i->empty({"type", "id"}))
   {
     i->i("type_id", i->m["type"]->m["id"]->v);
   }
@@ -319,11 +319,11 @@ bool Central::applicationAccountEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (exist(i, "encrypt") && !empty(i->m["encrypt"], "value"))
+  if (!i->empty({"encrypt", "value"}))
   {
     i->i("encrypt", i->m["encrypt"]->m["value"]->v);
   }
-  if (exist(i, "type") && !empty(i->m["type"], "id"))
+  if (!i->empty({"type", "id"}))
   {
     i->i("type_id", i->m["type"]->m["id"]->v);
   }
@@ -408,7 +408,7 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
         for (auto &r : rs)
         {
           Json *j = new Json(r);
-          if (!empty(j, "encrypt") && j->m["encrypt"]->v == "1" && exist(j, "password"))
+          if (!empty(j, "encrypt") && j->m["encrypt"]->v == "1" && j->exist({"password"}))
           {
             rm(j, "password");
           }
@@ -423,7 +423,7 @@ bool Central::applicationAccountsByApplicationID(radialUser &d, string &e)
               rm(j, "password");
             }
           }
-          if (exist(j, "decrypted_password"))
+          if (j->exist({"decrypted_password"}))
           {
             rm(j, "decrypted_password");
           }
@@ -599,31 +599,31 @@ bool Central::applicationEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (exist(i, "account_check") && !empty(i->m["account_check"], "value"))
+  if (!i->empty({"account_check", "value"}))
   {
     i->i("account_check", i->m["account_check"]->m["value"]->v);
   }
-  if (exist(i, "auto_register") && !empty(i->m["auto_register"], "value"))
+  if (!i->empty({"auto_register", "value"}))
   {
     i->i("auto_register", i->m["auto_register"]->m["value"]->v);
   }
-  if (exist(i, "dependable") && !empty(i->m["dependable"], "value"))
+  if (!i->empty({"dependable", "value"}))
   {
     i->i("dependable", i->m["dependable"]->m["value"]->v);
   }
-  if (exist(i, "login_type") && !empty(i->m["login_type"], "id"))
+  if (!i->empty({"login_type", "id"}))
   {
     i->i("login_type_id", i->m["login_type"]->m["id"]->v);
   }
-  if (exist(i, "menu_access") && !empty(i->m["menu_access"], "id"))
+  if (!i->empty({"menu_access", "id"}))
   {
     i->i("menu_id", i->m["menu_access"]->m["id"]->v);
   }
-  if (exist(i, "notify_priority") && !empty(i->m["notify_priority"], "id"))
+  if (!i->empty({"notify_priority", "id"}))
   {
     i->i("notify_priority_id", i->m["notify_priority"]->m["id"]->v);
   }
-  if (exist(i, "secure_port") && !empty(i->m["secure_port"], "value"))
+  if (!i->empty({"secure_port", "value"}))
   {
     i->i("secure_port", i->m["secure_port"]->m["value"]->v);
   }
@@ -764,7 +764,7 @@ bool Central::applicationIssue(radialUser &d, string &e)
           }
           userDeinit(a);
         }
-        if (exist(i, "comments") && i->m["comments"]->v == "1" && !empty(j, "id"))
+        if (i->val({"comments"}) == "1" && !j->empty({"id"}))
         {
           radialUser a;
           userInit(d, a);
@@ -1042,7 +1042,7 @@ bool Central::applicationIssueEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (exist(i, "transfer") && !empty(i->m["transfer"], "id"))
+  if (!i->empty({"transfer", "id"}))
   {
     i->i("transfer_id", i->m["transfer"]->m["id"]->v);
   }
@@ -1115,7 +1115,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
               {
                 s << " - " << a.p->m["o"]->m["summary"]->v;
               }
-              if (exist(a.p->m["o"], "assigned") && !empty(a.p->m["o"]->m["assigned"], "email"))
+              if (!a.p->m["o"]->empty({"assigned", "email"}))
               {
                 to.push_back(a.p->m["o"]->m["assigned"]->m["email"]->v);
               }
@@ -1137,7 +1137,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                 if (application(h, e) && !empty(h.p->m["o"], "name"))
                 {
                   strApplication = h.p->m["o"]->m["name"]->v;
-                  if (!exist(a.p->m["o"], "assigned") || empty(a.p->m["o"]->m["assigned"], "email"))
+                  if (a.p->m["o"]->empty({"assigned", "email"}))
                   {
                     radialUser k;
                     userInit(d, k);
@@ -1159,7 +1159,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                 }
                 userDeinit(h);
               }
-              if (exist(a.p->m["o"], "comments"))
+              if (a.p->m["o"]->exist({"comments"}))
               {
                 for (auto &contact : a.p->m["o"]->m["comments"]->l)
                 {
@@ -1195,7 +1195,7 @@ bool Central::applicationIssueEmail(radialUser &d, string &e)
                 m[0] << "<a href=\"https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v << "\" style=\"text-decoration:none;\">Issue #" << i->m["id"]->v << "</a> has been <b>updated</b> by " << strName << ".";
                 m[1] << "Issue #" << i->m["id"]->v << " has been <b>updated</b> by " << strName << "." << endl << endl << "You can view this issue at:" << endl << "https://" << m_strServer << "/central/#/Applications/Issues/" << i->m["id"]->v;
               }
-              if (exist(a.p->m["o"], "comments") && !a.p->m["o"]->m["comments"]->l.empty())
+              if (a.p->m["o"]->exist({"comments"}) && !a.p->m["o"]->m["comments"]->l.empty())
               {
                 m[0] << "<div style=\"margin:10px 5px;border-style:solid;border-width:1px;border-color:#cccccc;border-radius:10px;background:white;box-shadow: 3px 3px 4px #888888;padding:10px;\">";
                 m[0] << "<small style=\"float:right;color:#999999;\"><i>";
@@ -1467,29 +1467,29 @@ bool Central::applicationNotify(radialUser &d, string &e)
               b = true;
               for (auto &contact : f.p->m["o"]->l)
               {
-                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                if (!empty(contact, "user_id") && !empty(contact, "userid") && contact->val({"notify", "value"}) == "1")
                 {
-                  if (!exist(o, contact->m["userid"]->v))
+                  if (!o->exist({contact->m["userid"]->v}))
                   {
                     o->m[contact->m["userid"]->v] = new Json;
                   }
                   o->m[contact->m["userid"]->v]->i("sent", "0", '0');
                   o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Developer")
+                  if (contact->val({"type", "type"}) == "Primary Developer")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("primary", "1", 1);
                     }
                   }
-                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Developer")
+                  else if (contact->val({"type", "type"}) == "Backup Developer")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("backup", "1", 1);
                     }
                   }
-                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  else if (contact->val({"notify", "value"}) == "1")
                   {
                     o->m[contact->m["userid"]->v]->i("contact", "1", 1);
                   }
@@ -1508,9 +1508,9 @@ bool Central::applicationNotify(radialUser &d, string &e)
                   {
                     for (auto &contact : h.p->m["o"]->l)
                     {
-                      if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                      if (!empty(contact, "userid") && contact->val({"notify", "value"}) == "1")
                       {
-                        if (!exist(o, contact->m["userid"]->v))
+                        if (!o->exist({contact->m["userid"]->v}))
                         {
                           o->m[contact->m["userid"]->v] = new Json;
                         }
@@ -1518,7 +1518,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                         o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
                         if (!empty(group, "name"))
                         {
-                          if (!exist(o->m[contact->m["userid"]->v], "group"))
+                          if (!o->m[contact->m["userid"]->v]->exist({"group"}))
                           {
                             o->m[contact->m["userid"]->v]->m["group"] = new Json;
                           }
@@ -1531,23 +1531,23 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 }
               }
               userDeinit(g);
-              if (bDeveloper && exist(i, "notifyDependents") && exist(i->m["notifyDependents"], "value") && i->m["notifyDependents"]->m["value"]->v == "1")
+              if (bDeveloper && i->val({"notifyDependents", "value"}) == "1")
               {
                 radialUser h;
                 userInit(d, h);
                 h.p->m["i"]->i("application_id", c.p->m["o"]->m["id"]->v);
                 h.p->m["i"]->i("contacts", "1", 'n');
-                if (dependentsByApplicationID(h, e) && exist(h.p->m["o"], "dependents"))
+                if (dependentsByApplicationID(h, e) && h.p->m["o"]->exist({"dependents"}))
                 {
                   for (auto &dependent : h.p->m["o"]->m["dependents"]->l)
                   {
-                    if (empty(dependent, "retirement_date") && exist(dependent, "contacts"))
+                    if (empty(dependent, "retirement_date") && dependent->exist({"contacts"}))
                     {
                       for (auto &contact : dependent->m["contacts"]->l)
                       {
-                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                        if (!empty(contact, "userid") && !empty(contact, "type") && (contact->m["type"]->v == "Primary Developer" || contact->m["type"]->v == "Backup Developer") && contact->val({"notify", "value"}) == "1")
                         {
-                          if (!exist(o, contact->m["userid"]->v))
+                          if (!o->exist({contact->m["userid"]->v}))
                           {
                             o->m[contact->m["userid"]->v] = new Json;
                           }
@@ -1555,7 +1555,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                           o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
                           if (!empty(dependent, "name"))
                           {
-                            if (!exist(o->m[contact->m["userid"]->v], "depend"))
+                            if (!o->m[contact->m["userid"]->v]->exist({"depend"}))
                             {
                               o->m[contact->m["userid"]->v]->m["depend"] = new Json;
                             }
@@ -1577,19 +1577,19 @@ bool Central::applicationNotify(radialUser &d, string &e)
                 m << endl << endl;
                 m << "You are receiving this application notification for the following reason:";
                 m << endl << endl;
-                if (exist(k.second, "primary"))
+                if (k.second->exist({"primary"}))
                 {
                   m << "* You are a Primary Developer for this application." << endl << endl;
                 }
-                else if (exist(k.second, "backup"))
+                else if (k.second->exist({"backup"}))
                 {
                   m << "* You are a Backup Developer for this application." << endl << endl;
                 }
-                else if (exist(k.second, "contact"))
+                else if (k.second->exist({"contact"}))
                 {
                   m << "* You are a Contact for this application." << endl << endl;
                 }
-                if (exist(k.second, "depend"))
+                if (k.second->exist({"depend"}))
                 {
                   m << "You are a developer for the following dependent application(s):";
                   m << endl << endl;
@@ -1599,7 +1599,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
                   }
                   m << endl;
                 }
-                if (exist(k.second, "group"))
+                if (k.second->exist({"group"}))
                 {
                   m << "You are a contact for the following associated group(s):";
                   m << endl << endl;
@@ -1713,7 +1713,7 @@ bool Central::applicationRepoAdd(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (exist(i, "repo") && !empty(i->m["repo"], "id"))
+  if (!i->empty({"repo", "id"}))
   {
     i->i("repo_id", i->m["repo"]->m["id"]->v);
   }
@@ -1747,7 +1747,7 @@ bool Central::applicationRepoEdit(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (exist(i, "repo") && !empty(i->m["repo"], "id"))
+  if (!i->empty({"repo", "id"}))
   {
     i->i("repo_id", i->m["repo"]->m["id"]->v);
   }
@@ -2382,18 +2382,18 @@ bool Central::applicationUserAdd(radialUser &d, string &e)
         }
         if (bReady)
         {
-          if (exist(i, "type") && !empty(i->m["type"], "type"))
+          if (!i->empty({"type", "type"}))
           {
             radialUser h;
             userInit(d, h);
             h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
             if (contactType(h, e) && !empty(h.p->m["o"], "id"))
             {
-              if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+              if (!i->empty({"admin", "value"}))
               {
-                if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+                if (!i->empty({"locked", "value"}))
                 {
-                  if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                  if (!i->empty({"notify", "value"}))
                   {
                     string id, q;
                     i->i("admin", i->m["admin"]->m["value"]->v);
@@ -2499,18 +2499,18 @@ bool Central::applicationUserEdit(radialUser &d, string &e)
           }
           if (bReady)
           {
-            if (exist(i, "type") && !empty(i->m["type"], "type"))
+            if (!i->empty({"type", "type"}))
             {
               radialUser k;
               userInit(d, k);
               k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
               if (contactType(k, e) && !empty(k.p->m["o"], "id"))
               {
-                if (exist(i, "admin") && !empty(i->m["admin"], "value"))
+                if (!i->empty({"admin", "value"}))
                 {
-                  if (exist(i, "locked") && !empty(i->m["locked"], "value"))
+                  if (!i->empty({"locked", "value"}))
                   {
-                    if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                    if (!i->empty({"notify", "value"}))
                     {
                       i->i("admin", i->m["admin"]->m["value"]->v);
                       i->i("contact_id", h.p->m["o"]->m["id"]->v);
@@ -2693,7 +2693,7 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -3025,29 +3025,29 @@ bool Central::groupNotify(radialUser &d, string &e)
               b = true;
               for (auto &contact : f.p->m["o"]->l)
               {
-                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                if (!empty(contact, "user_id") && !empty(contact, "userid") && contact->val({"notify", "value"}) == "1")
                 {
-                  if (!exist(o, contact->m["userid"]->v))
+                  if (!o->exist({contact->m["userid"]->v}))
                   {
                     o->m[contact->m["userid"]->v] = new Json;
                   }
                   o->m[contact->m["userid"]->v]->i("sent", "0", '0');
                   o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Owner")
+                  if (contact->val({"type", "type"}) == "Primary Owner")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("primary", "1", 1);
                     }
                   }
-                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Owner")
+                  else if (contact->val({"type", "type"}) == "Backup Owner")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("backup", "1", 1);
                     }
                   }
-                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  else if (contact->val({"notify", "value"}) == "1")
                   {
                     o->m[contact->m["userid"]->v]->i("contact", "1", 1);
                   }
@@ -3062,15 +3062,15 @@ bool Central::groupNotify(radialUser &d, string &e)
                 m << endl << endl;
                 m << "You are receiving this group notification for the following reason:";
                 m << endl << endl;
-                if (exist(k.second, "primary"))
+                if (k.second->exist({"primary"}))
                 {
                   m << "* You are a Primary Owner for this group." << endl << endl;
                 }
-                else if (exist(k.second, "backup"))
+                else if (k.second->exist({"backup"}))
                 {
                   m << "* You are a Backup Owner for this group." << endl << endl;
                 }
-                else if (exist(k.second, "contact"))
+                else if (k.second->exist({"contact"}))
                 {
                   m << "* You are a Contact for this group." << endl << endl;
                 }
@@ -3312,14 +3312,14 @@ bool Central::groupUserAdd(radialUser &d, string &e)
         }
         if (bReady)
         {
-          if (exist(i, "type") && !empty(i->m["type"], "type"))
+          if (!i->empty({"type", "type"}))
           {
             radialUser h;
             userInit(d, h);
             h.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
             if (contactType(h, e) && !empty(h.p->m["o"], "id"))
             {
-              if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+              if (!i->empty({"notify", "value"}))
               {
                 string id, q;
                 i->i("contact_id", f.p->m["o"]->m["id"]->v);
@@ -3413,14 +3413,14 @@ bool Central::groupUserEdit(radialUser &d, string &e)
           }
           if (bReady)
           {
-            if (exist(i, "type") && !empty(i->m["type"], "type"))
+            if (!i->empty({"type", "type"}))
             {
               radialUser k;
               userInit(d, k);
               k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
               if (contactType(k, e) && !empty(k.p->m["o"], "id"))
               {
-                if (exist(i, "notify") && !empty(i->m["notify"], "value"))
+                if (!i->empty({"notify", "value"}))
                 {
                   i->i("contact_id", h.p->m["o"]->m["id"]->v);
                   i->i("notify", i->m["notify"]->m["value"]->v);
@@ -3626,7 +3626,7 @@ bool Central::monitorData(radialUser &d, string &e)
 
   if (dep({"server"}, i, e))
   {
-    if (exist(i, "system"))
+    if (i->exist({"system"}))
     {
       if (auth(d.r, e))
       {
@@ -3637,7 +3637,7 @@ bool Central::monitorData(radialUser &d, string &e)
         ssTime << CTime;
         ptData->i("_time", ssTime.str());
         ptData->m["system"] = new Json(i->m["system"]);
-        if (exist(i, "processes"))
+        if (i->exist({"processes"}))
         {
           ptData->m["processes"] = new Json(i->m["processes"]);
         }
@@ -3651,12 +3651,12 @@ bool Central::monitorData(radialUser &d, string &e)
         {
           for (auto &p : ptAlarms->m)
           {
-            if (!empty(p.second, "alarms") && !exist(p.second, "sent") && exist(ptConfig, p.first) && !empty(ptConfig->m[p.first], "script"))
+            if (!empty(p.second, "alarms") && !p.second->exist({"sent"}) && ptConfig->exist({p.first}) && !empty(ptConfig->m[p.first], "script"))
             {
               Json *ptScript;
               p.second->i("sent", "1", '1');
               storageAdd({"central", "monitor", "servers", i->m["server"]->v, "alarms", "processes", p.first, "sent"}, p.second->m["sent"], e);
-              if (!exist(o, "scripts"))
+              if (!o->exist({"scripts"}))
               {
                 o->m["scripts"] = new Json;
               }
@@ -3860,7 +3860,7 @@ bool Central::repos(radialUser &d, string &e)
 // {{{ rm()
 void Central::rm(Json *ptJson, const string strField)
 {
-  if (exist(ptJson, strField))
+  if (ptJson->exist({strField}))
   {
     delete ptJson->m[strField];
     ptJson->m.erase(strField);
@@ -4018,26 +4018,26 @@ void Central::schedule(string strPrefix)
           {
             stringstream ssAlarmsSystem;
             Json *ptAlarms;
-            if (!exist(server.second, "alarms"))
+            if (!server.second->exist({"alarms"}))
             {
               server.second->m["alarms"] = new Json;
             }
             ptAlarms = server.second->m["alarms"];
-            if (!exist(ptAlarms, "system"))
+            if (!ptAlarms->exist({"system"}))
             {
               ptAlarms->m["system"] = new Json;
             }
-            if (!exist(ptAlarms, "processes"))
+            if (!ptAlarms->exist({"processes"}))
             {
               ptAlarms->m["processes"] = new Json;
             }
-            if (exist(server.second, "config"))
+            if (server.second->exist({"config"}))
             {
               Json *ptConfig = server.second->m["config"];
-              if (exist(ptConfig, "system"))
+              if (ptConfig->exist({"system"}))
               {
                 Json *ptConfigSystem = ptConfig->m["system"];
-                if (exist(server.second, "data"))
+                if (server.second->exist({"data"}))
                 {
                   Json *ptData = server.second->m["data"];
                   if (!empty(ptData, "_time"))
@@ -4045,7 +4045,7 @@ void Central::schedule(string strPrefix)
                     time_t CData = atoi(ptData->m["_time"]->v.c_str());
                     if (CNow < CData || (CNow - CData) <= 300)
                     {
-                      if (exist(ptData, "system"))
+                      if (ptData->exist({"system"}))
                       {
                         Json *ptDataSystem = ptData->m["system"];
                         if (!empty(ptConfigSystem, "maxProcesses") && atoi(ptConfigSystem->m["maxProcesses"]->v.c_str()) > 0 && !empty(ptDataSystem, "processes") && atoi(ptDataSystem->m["processes"]->v.c_str()) > atoi(ptConfigSystem->m["maxProcesses"]->v.c_str()))
@@ -4065,7 +4065,7 @@ void Central::schedule(string strPrefix)
                         {
                           ssAlarmsSystem << ((!ssAlarmsSystem.str().empty())?"  ":"") << "Using more than " << ptConfigSystem->m["maxMainUsage"]->v << "% main memory.";
                         }
-                        if (!empty(ptConfigSystem, "diskSize") && atoi(ptConfigSystem->m["diskSize"]->v.c_str()) > 0 && exist(ptDataSystem, "partitions") && !ptDataSystem->m["partitions"]->m.empty())
+                        if (!empty(ptConfigSystem, "diskSize") && atoi(ptConfigSystem->m["diskSize"]->v.c_str()) > 0 && ptDataSystem->exist({"partitions"}) && !ptDataSystem->m["partitions"]->m.empty())
                         {
                           for (auto &partition : ptDataSystem->m["partitions"]->m)
                           {
@@ -4075,22 +4075,22 @@ void Central::schedule(string strPrefix)
                             }
                           }
                         }
-                        if (exist(ptData, "processes"))
+                        if (ptData->exist({"processes"}))
                         {
                           for (auto &process : ptData->m["processes"]->m)
                           {
                             Json *ptDataProcess = process.second;
-                            if (exist(ptConfig, "processes"))
+                            if (ptConfig->exist({"processes"}))
                             {
-                              if (exist(ptConfig->m["processes"], process.first))
+                              if (ptConfig->m["processes"]->exist({process.first}))
                               {
                                 stringstream ssAlarmsProcess;
                                 Json *ptConfigProcess = ptConfig->m["processes"]->m[process.first];
-                                if (!exist(ptAlarms->m["processes"], process.first))
+                                if (!ptAlarms->m["processes"]->exist({process.first}))
                                 {
                                   ptAlarms->m["processes"]->m[process.first] = new Json;
                                 }
-                                if (!exist(ptAlarms->m["processes"]->m[process.first], "alarms"))
+                                if (!ptAlarms->m["processes"]->m[process.first]->exist({"alarms"}))
                                 {
                                   ptAlarms->m["processes"]->m[process.first]->i("alarms", "");
                                 }
@@ -4103,7 +4103,7 @@ void Central::schedule(string strPrefix)
                                 }
                                 else
                                 {
-                                  if (exist(ptDataProcess, "owners") && !empty(ptConfigProcess, "owner"))
+                                  if (ptDataProcess->exist({"owners"}) && !ptConfigProcess->empty({"owner"}))
                                   {
                                     bool bFound = false;
                                     for (auto ownerIter = ptDataProcess->m["owners"]->m.begin(); !bFound && ownerIter != ptDataProcess->m["owners"]->m.end(); ownerIter++)
@@ -4155,7 +4155,7 @@ void Central::schedule(string strPrefix)
                                 if (ptAlarms->m["processes"]->m[process.first]->m["alarms"]->v != ssAlarmsProcess.str())
                                 {
                                   ptAlarms->m["processes"]->m[process.first]->i("alarms", ssAlarmsProcess.str());
-                                  if (exist(ptAlarms->m["processes"]->m[process.first], "sent"))
+                                  if (ptAlarms->m["processes"]->m[process.first]->exist({"sent"}))
                                   {
                                     delete ptAlarms->m["processes"]->m[process.first]->m["sent"];
                                     ptAlarms->m["processes"]->m[process.first]->m.erase("sent");
@@ -4884,7 +4884,7 @@ bool Central::serverEdit(radialUser &d, string &e)
     a.p->m["i"]->i("id", i->m["id"]->v);
     if (d.g || isServerAdmin(a, e))
     {
-      if (exist(i, "parent") && exist(i->m["parent"], "id"))
+      if (i->exist({"parent", "id"}))
       {
         i->i("parent_id", i->m["parent"]->m["id"]->v);
       }
@@ -5048,29 +5048,29 @@ bool Central::serverNotify(radialUser &d, string &e)
               b = true;
               for (auto &contact : f.p->m["o"]->l)
               {
-                if (!empty(contact, "user_id") && !empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1" && !empty(contact, "email"))
+                if (!empty(contact, "user_id") && !empty(contact, "userid") && contact->val({"notify", "value"}) == "1" && !empty(contact, "email"))
                 {
-                  if (!exist(o, contact->m["userid"]->v))
+                  if (!o->exist({contact->m["userid"]->v}))
                   {
                     o->m[contact->m["userid"]->v] = new Json;
                   }
                   o->m[contact->m["userid"]->v]->i("sent", "0", '0');
                   o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
-                  if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Primary Admin")
+                  if (contact->val({"type", "type"}) == "Primary Admin")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("primary", "1", 1);
                     }
                   }
-                  else if (exist(contact, "type") && !empty(contact->m["type"], "type") && contact->m["type"]->m["type"]->v == "Backup Admin")
+                  else if (contact->val({"type", "type"}) == "Backup Admin")
                   {
-                    if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                    if (contact->val({"notify", "value"}) == "1")
                     {
                       o->m[contact->m["userid"]->v]->i("backup", "1", 1);
                     }
                   }
-                  else if (exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                  else if (contact->val({"notify", "value"}) == "1")
                   {
                     o->m[contact->m["userid"]->v]->i("contact", "1", 1);
                   }
@@ -5089,9 +5089,9 @@ bool Central::serverNotify(radialUser &d, string &e)
                   {
                     for (auto &contact : h.p->m["o"]->l)
                     {
-                      if (!empty(contact, "userid") && exist(contact, "notify") && !empty(contact->m["notify"], "value") && contact->m["notify"]->m["value"]->v == "1")
+                      if (!empty(contact, "userid") && contact->val({"notify", "value"}) == "1")
                       {
-                        if (!exist(o, contact->m["userid"]->v))
+                        if (!o->exist({contact->m["userid"]->v}))
                         {
                           o->m[contact->m["userid"]->v] = new Json;
                         }
@@ -5099,7 +5099,7 @@ bool Central::serverNotify(radialUser &d, string &e)
                         o->m[contact->m["userid"]->v]->i("name", (string)((!empty(contact, "last_name"))?contact->m["last_name"]->v:"") + (string)", " + (string)((!empty(contact, "first_name"))?contact->m["first_name"]->v:""));
                         if (!empty(group, "name"))
                         {
-                          if (!exist(o->m[contact->m["userid"]->v], "group"))
+                          if (!o->m[contact->m["userid"]->v]->exist({"group"}))
                           {
                             o->m[contact->m["userid"]->v]->m["group"] = new Json;
                           }
