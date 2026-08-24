@@ -90,7 +90,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Session"))
+  if (!ptJson->empty({"Session"}))
   {
     string strNode;
     stringstream ssSession(ptJson->m["Session"]->v);
@@ -110,7 +110,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
         m_mutex.unlock();
         if (ptSsh != NULL)
         {
-          if (!empty(ptJson, "Function"))
+          if (!ptJson->empty({"Function"}))
           {
             if (ptJson->m["Function"]->v == "disconnect")
             {
@@ -128,13 +128,9 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
             }
             else if (ptJson->m["Function"]->v == "send")
             {
-              string strData, strRequest;
+              string strData, strRequest = ptJson->val({"Request"});
               time_t CWait = 5;
-              if (!empty(ptJson, "Request"))
-              {
-                strRequest = ptJson->m["Request"]->v;
-              }
-              if (!empty(ptJson, "Wait"))
+              if (!ptJson->empty({"Wait"}))
               {
                 stringstream ssWait(ptJson->m["Wait"]->v);
                 ssWait >> CWait;
@@ -185,7 +181,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
         if (hub("link", ptLink, strError))
         {
           bResult = true;
-          if (exist(ptLink, "Response"))
+          if (ptLink->exist({"Response"}))
           {
             ptJson->i("Response", ptLink->m["Response"]);
           }
@@ -198,22 +194,18 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
       strError = "Please provide a valid Session.";
     }
   }
-  else if (!empty(ptJson, "Function"))
+  else if (!ptJson->empty({"Function"}))
   {
     if (ptJson->m["Function"]->v == "connect")
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
-        if (!empty(ptJson->m["Request"], "Server"))
+        if (!ptJson->m["Request"]->empty({"Server"}))
         {
-          string strPort = "22";
-          if (!empty(ptJson->m["Request"], "Port"))
+          string strPort = ((!ptJson->m["Request"]->empty({"Port"}))?ptJson->m["Request"]->m["Port"]->v:"22");
+          if (!ptJson->m["Request"]->empty({"User"}))
           {
-            strPort = ptJson->m["Request"]->m["Port"]->v;
-          }
-          if (!empty(ptJson->m["Request"], "User"))
-          {
-            if (!empty(ptJson->m["Request"], "Password") || !empty(ptJson->m["Request"], "PrivateKey"))
+            if (!ptJson->m["Request"]->empty({"Password"}) || !ptJson->m["Request"]->empty({"PrivateKey"}))
             {
               radialSsh *ptSsh = new radialSsh;
               if ((ptSsh->session = ssh_new()) != NULL)
@@ -230,7 +222,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                   ptSsh->fdSocket = ssh_get_fd(ptSsh->session);
                   ssh_userauth_none(ptSsh->session, NULL);
                   nMethod = ssh_userauth_list(ptSsh->session, NULL);
-                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !empty(ptJson->m["Request"], "PrivateKey") && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v, ((!empty(ptJson->m["Request"], "Passphrase"))?ptJson->m["Request"]->m["Passphrase"]->v:"")) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !empty(ptJson->m["Request"], "Password") && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !empty(ptJson->m["Request"], "Password") && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
+                  if ((nMethod & SSH_AUTH_METHOD_NONE && authenticateNone(ptSsh->session) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PUBLICKEY && !ptJson->m["Request"]->empty({"PrivateKey"}) && authenticatePublicKey(ptSsh->session, ptJson->m["Request"]->m["PrivateKey"]->v, ptJson->m["Request"]->val({"Passphrase"})) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_INTERACTIVE && !ptJson->m["Request"]->empty({"Password"}) && authenticateKbdint(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS) || (nMethod & SSH_AUTH_METHOD_PASSWORD && !ptJson->m["Request"]->empty({"Password"}) && authenticatePassword(ptSsh->session, ptJson->m["Request"]->m["Password"]->v) == SSH_AUTH_SUCCESS))
                   {
                     if ((ptSsh->channel = ssh_channel_new(ptSsh->session)) != NULL)
                     {
@@ -244,7 +236,7 @@ void Ssh::callback(string strPrefix, const string strPacket, const bool bRespons
                             {
                               string strData;
                               time_t CWait = 5;
-                              if (!empty(ptJson, "Wait"))
+                              if (!ptJson->empty({"Wait"}))
                               {
                                 stringstream ssWait(ptJson->m["Wait"]->v);
                                 ssWait >> CWait;
