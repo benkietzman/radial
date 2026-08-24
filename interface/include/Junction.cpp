@@ -37,7 +37,7 @@ void Junction::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (exist(ptJson, "Request"))
+  if (ptJson->exist({"Request"}))
   {
     list<string> in, out;
     string strJson;
