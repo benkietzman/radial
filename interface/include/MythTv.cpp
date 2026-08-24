@@ -65,7 +65,7 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
@@ -83,7 +83,7 @@ void MythTv::callback(string strPrefix, const string strPacket, const bool bResp
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -117,7 +117,7 @@ bool MythTv::backend(radialUser &d, string &e)
   stringstream m;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "Transfer") && i->m["Transfer"]->v == "live" && !empty(d.r, "wsRequestID") && !empty(i, "LiveID"))
+  if (i->val({"Transfer"}) == "live" && !d.r->empty({"wsRequestID"}) && !i->empty({"LiveID"}))
   {
     strLiveID = i->m["LiveID"]->v;
     strRequestID = d.r->m["wsRequestID"]->v;
@@ -134,7 +134,7 @@ bool MythTv::backend(radialUser &d, string &e)
       string strBase64, strBuffers[2];
       stringstream ssReq;
       ssReq << "GET /" << i->m["Service"]->v << "/" << i->m["Command"]->v;
-      if (exist(i, "Get"))
+      if (i->exist({"Get"}))
       {
         string strEncoded;
         for (auto f = i->m["Get"]->m.begin(); f != i->m["Get"]->m.end(); f++)
@@ -324,7 +324,7 @@ bool MythTv::backend(radialUser &d, string &e)
         {
           Json *j = new Json(strBuffers[0].substr((unPosition + 15), (strBuffers[0].size() - (unPosition + 15))));
           b = false;
-          if (exist(j, "HTML") && exist(j->m["HTML"], "HEAD") && !empty(j->m["HTML"]->m["HEAD"], "TITLE"))
+          if (!j->empty({"HTML", "HEAD", "TITLE"}))
           {
             e = j->m["HTML"]->m["HEAD"]->m["TITLE"]->v;
           }
