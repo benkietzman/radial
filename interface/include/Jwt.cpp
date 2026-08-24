@@ -35,12 +35,12 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Signer"))
+  if (!ptJson->empty({"Signer"}))
   {
     MessageSigner *pSigner = nullptr;
     if (ptJson->m["Signer"]->v == "HS256" || ptJson->m["Signer"]->v == "HS384" || ptJson->m["Signer"]->v == "HS512")
     {
-      if (!empty(ptJson, "Secret"))
+      if (!ptJson->empty({"Secret"}))
       {
         if (ptJson->m["Signer"]->v == "HS256")
         {
@@ -58,9 +58,9 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
     }
     else if (ptJson->m["Signer"]->v == "RS256" || ptJson->m["Signer"]->v == "RS384" || ptJson->m["Signer"]->v == "RS512")
     {
-      if (!empty(ptJson, "Public Key"))
+      if (!ptJson->empty({"Public Key"}))
       {
-        if (!empty(ptJson, "Private Key"))
+        if (!ptJson->empty({"Private Key"}))
         {
           if (ptJson->m["Signer"]->v == "RS256")
           {
@@ -96,9 +96,9 @@ void Jwt::callback(string strPrefix, const string strPacket, const bool bRespons
         strError = "Please provide the Public Key.";
       }
     }
-    if (exist(ptJson, "Payload"))
+    if (ptJson->exist({"Payload"}))
     {
-      if (!empty(ptJson, "Function"))
+      if (!ptJson->empty({"Function"}))
       {
         if (ptJson->m["Function"]->v == "decode")
         {
