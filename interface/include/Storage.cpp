@@ -53,7 +53,7 @@ void Storage::autoMode(string strPrefix, const string strOldMaster, const string
         ssMessage.str("");
         ssMessage << strPrefix << "->hub(link,storage,retrieve) [" << strNewMaster << "]:  Retrieved initial storage.";
         log(ssMessage.str());
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           ptData = new Json(ptJson->m["Response"]);
         }
@@ -102,11 +102,11 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     list<string> keys;
     Json *ptData = NULL;
-    if (exist(ptJson, "Keys"))
+    if (ptJson->exist({"Keys"}))
     {
       for (auto &ptKey : ptJson->m["Keys"]->l)
       {
@@ -115,7 +115,7 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
     }
     if (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "update")
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
         ptData = new Json(ptJson->m["Request"]);
       }
@@ -140,21 +140,21 @@ void Storage::callback(string strPrefix, const string strPacket, const bool bRes
       }
       else
       {
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
         ptJson->m["Response"] = ptData;
       }
     }
-    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (!exist(ptJson, "Broadcast") || ptJson->m["Broadcast"]->v == "1"))
+    if (bResult && (ptJson->m["Function"]->v == "add" || ptJson->m["Function"]->v == "remove" || ptJson->m["Function"]->v == "update") && (!ptJson->exist({"Broadcast"}) || ptJson->m["Broadcast"]->v == "1"))
     {
       Json *ptLink = new Json;
       ptLink->i("Interface", "storage");
       ptLink->i("Function", ptJson->m["Function"]->v);
       ptLink->i("Broadcast", "0", '0');
       ptLink->i("Keys", keys);
-      if (ptJson->m["Function"]->v != "remove" && exist(ptJson, "Request"))
+      if (ptJson->m["Function"]->v != "remove" && ptJson->exist({"Request"}))
       {
         ptLink->m["Request"] = new Json(ptJson->m["Request"]);
       }
