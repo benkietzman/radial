@@ -33,12 +33,12 @@ class Kafka : public Interface
 {
   protected:
   bool m_bLoad;
-  void (*m_pCallbackAddon)(string, const string, const string, const string);
   map<string, bool (Kafka::*)(radialUser &, string &)> m_functions;
   map<string, radialKafkaTopic *> m_topics;
   mutex m_mutex;
   thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
+  void (*m_pCallbackAddon)(string, const string, const string, const string);
 
   void consumer(string strPrefix, const string strTopic, map<string, string> &config, bool &bSubscribed, bool &bExit);
   void load(string strPrefix, const bool bSilent = false);

@@ -44,7 +44,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
   if (m_pWarden != NULL)
   {
     Json *ptAes = new Json, *ptJwt = new Json, *ptRadial = new Json;
-    if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && !empty(ptAes, "Secret"))
+    if (m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && !ptAes->empty({"Secret"}))
     {
       m_strAesSecret = ptAes->m["Secret"]->v;
     }
@@ -53,7 +53,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
       setShutdown();
     }
     delete ptAes;
-    if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && !empty(ptJwt, "Secret") && !empty(ptJwt, "Signer"))
+    if (m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && !ptJwt->empty({"Secret"}) && !ptJwt->empty({"Signer"}))
     {
       m_strJwtSecret = ptJwt->m["Secret"]->v;
       m_strJwtSigner = ptJwt->m["Signer"]->v;
@@ -67,7 +67,7 @@ Interface::Interface(string strPrefix, const string strName, int argc, char **ar
     {
       for (auto &user : ptRadial->m)
       {
-        if (!empty(user.second, "Application"))
+        if (!user.second->empty({"Application"}))
         {
           m_applications[user.first] = user.second->m["Application"]->v;
         }
@@ -100,16 +100,16 @@ bool Interface::action(radialUser &d, string &e)
   stringstream ssMessage;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "Action"))
+  if (!i->empty({"Action"}))
   {
     map<string, string> r;
     string strAction = i->m["Action"]->v, strInterface = m_strName, strNode;
     Json *p = new Json;
-    if (!empty(i, "Interface"))
+    if (!i->empty({"Interface"}))
     {
       strInterface = i->m["Interface"]->v;
     }
-    if (!empty(i, "Node"))
+    if (!i->empty({"Node"}))
     {
       strNode = i->m["Node"]->v;
     }
@@ -301,7 +301,7 @@ bool Interface::application(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "name"))
+  if (!i->empty({"id"}) || !i->empty({"name"}))
   {
     map<string, string> r;
     if (db("dbCentralApplications", i, r, e))
@@ -313,7 +313,7 @@ bool Interface::application(radialUser &d, string &e)
         ny(j, "account_check");
         ny(j, "auto_register");
         ny(j, "dependable");
-        if (!empty(j, "login_type_id"))
+        if (!j->empty({"login_type_id"}))
         {
           size_t unValue;
           stringstream ssValue(j->m["login_type_id"]->v);
@@ -330,7 +330,7 @@ bool Interface::application(radialUser &d, string &e)
             userDeinit(l);
           }
         }
-        if (!empty(j, "menu_id"))
+        if (!j->empty({"menu_id"}))
         {
           size_t unValue;
           stringstream ssValue(j->m["menu_id"]->v);
@@ -347,7 +347,7 @@ bool Interface::application(radialUser &d, string &e)
             userDeinit(m);
           }
         }
-        if (!empty(j, "notify_priority_id"))
+        if (!j->empty({"notify_priority_id"}))
         {
           size_t unValue;
           stringstream ssValue(j->m["notify_priority_id"]->v);
@@ -364,7 +364,7 @@ bool Interface::application(radialUser &d, string &e)
             userDeinit(n);
           }
         }
-        if (!empty(j, "package_type_id"))
+        if (!j->empty({"package_type_id"}))
         {
           size_t unValue;
           stringstream ssValue(j->m["package_type_id"]->v);
@@ -407,9 +407,9 @@ bool Interface::auth(Json *ptJson, string &strError)
   Json *ptAuth = new Json(ptJson);
 
   keyRemovals(ptAuth);
-  if (!empty(ptAuth, "Interface"))
+  if (!ptAuth->empty({"Interface"}))
   {
-    if (exist(ptAuth, "Request"))
+    if (ptAuth->exist({"Request"}))
     {
       delete ptAuth->m["Request"];
     }
@@ -417,7 +417,7 @@ bool Interface::auth(Json *ptJson, string &strError)
     ptAuth->m["Request"]->i("Interface", ptAuth->m["Interface"]->v);
     ptAuth->i("Interface", "auth");
   }
-  if (!empty(ptJson, "Node"))
+  if (!ptJson->empty({"Node"}))
   {
     strTarget = "link";
   }
@@ -437,7 +437,7 @@ void Interface::boolean(Json *ptJson, const string strField)
   {
     char cType = '0';
     string strValue = "0";
-    if (exist(ptJson, strField) && ptJson->m[strField]->v == "1")
+    if (ptJson->val({strField}) == "1")
     {
       cType = '1';
       strValue = "1";
@@ -726,7 +726,7 @@ bool Interface::centralmon(const string strServer, const string strProcess, Json
   if (hub("central", ptJson, strError))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       ptData->merge(ptJson->m["Response"], true, false);
     }
@@ -786,14 +786,14 @@ bool Interface::command(const string strCommand, list<string> arguments, const s
   if ((!bRemote && hub("command", ptJson, strError)) || (bRemote && hub("link", ptJson, strError)))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
-      if (!empty(ptJson->m["Response"], "Duration"))
+      if (!ptJson->m["Response"]->empty({"Duration"}))
       {
         stringstream ssDuration(ptJson->m["Response"]->m["Duration"]->v);
         ssDuration >> unDuration;
       }
-      if (!empty(ptJson->m["Response"], "Output"))
+      if (!ptJson->m["Response"]->empty({"Output"}))
       {
         strOutput = ptJson->m["Response"]->m["Output"]->v;
       }
@@ -834,12 +834,12 @@ bool Interface::command(const string strCommand, list<string> arguments, Json *p
   if ((!bRemote && hub("command", ptJson, strError)) || (bRemote && hub("link", ptJson, strError)))
   {
     bResult = true;
-    if (!empty(ptJson, "Duration"))
+    if (!ptJson->empty({"Duration"}))
     {
       stringstream ssDuration(ptJson->m["Duration"]->v);
       ssDuration >> unDuration;
     }
-    if (ptOutput != NULL && exist(ptJson, "Output"))
+    if (ptOutput != NULL && ptJson->exist({"Output"}))
     {
       ptOutput->merge(ptJson->m["Output"], true, false);
     }
@@ -1453,15 +1453,15 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
   }
   if (hub("data", ptJson, e))
   {
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
-      if (!empty(ptJson->m["Response"], "node"))
+      if (!ptJson->m["Response"]->empty({"node"}))
       {
         if (ptJson->m["Response"]->m["node"]->v != m_strNode)
         {
           n = ptJson->m["Response"]->m["node"]->v;
         }
-        if (!empty(ptJson->m["Response"], "token"))
+        if (!ptJson->m["Response"]->empty({"token"}))
         {
           t = ptJson->m["Response"]->m["token"]->v;
         }
@@ -1555,13 +1555,13 @@ bool Interface::dataOpen(const string h, const list<string> p, SSL_CTX **ctx, SS
                       Json *ptJson = new Json(b.substr(0, unPosition));
                       b.erase(0, (unPosition + 1));
                       bExit = true;
-                      if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
+                      if (ptJson->val({"Status"}) == "okay")
                       {
                         r = true;
                       }
                       else
                       {
-                        e = ((!empty(ptJson, "Error"))?ptJson->m["Error"]->v:"[dataOpen] Encountered an unknown error.");
+                        e = ((!ptJson->empty({"Error"}))?ptJson->m["Error"]->v:"[dataOpen] Encountered an unknown error.");
                       }
                       delete ptJson;
                     }
@@ -1957,11 +1957,11 @@ bool Interface::db(const string f, Json *d, string &id, string &q, string &e)
   bool b = false, s = false;
   Json *i, *o;
 
-  if (exist(d, "Request"))
+  if (d->exist({"Request"}))
   {
     s = true;
     i = d->m["Request"];
-    if (exist(d, "Response"))
+    if (d->exist({"Response"}))
     {
       delete d->m["Response"];
       d->m.erase("Response");
@@ -2062,20 +2062,14 @@ bool Interface::db(const string f, Json *i, Json *o, string &id, string &q, stri
     if (hub("db", j, e))
     {
       b = true;
-      if (!empty(j, "ID"))
-      {
-        id = j->m["ID"]->v;
-      }
-      if (!empty(j, "Query"))
-      {
-        q = j->m["Query"]->v;
-      }
+      id = j->val({"ID"});
+      q = j->val({"Query"});
     }
-    if (exist(j, "Request"))
+    if (j->exist({"Request"}))
     {
       i->parse(j->m["Request"]->j(strJson));
     }
-    if (exist(j, "Response"))
+    if (j->exist({"Response"}))
     {
       o->parse(j->m["Response"]->j(strJson));
     }
@@ -2117,7 +2111,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
   ptJson->i("Query", strQuery);
   if (hub("database", ptJson, strError))
   {
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       rows = new list<map<string, string> >;
       for (auto &ptRow : ptJson->m["Response"]->l)
@@ -2127,7 +2121,7 @@ list<map<string, string> > *Interface::dbquery(const string strDatabase, const s
         rows->push_back(row);
       }
     }
-    if (!empty(ptJson, "Rows"))
+    if (!ptJson->empty({"Rows"}))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -2171,12 +2165,12 @@ bool Interface::dbupdate(const string strDatabase, const string strUpdate, unsig
   if (hub("database", ptJson, strError))
   {
     bResult = true;
-    if (!empty(ptJson, "ID"))
+    if (!ptJson->empty({"ID"}))
     {
       stringstream ssID(ptJson->m["ID"]->v);
       ssID >> ullID;
     }
-    if (!empty(ptJson, "Rows"))
+    if (!ptJson->empty({"Rows"}))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -2348,7 +2342,7 @@ bool Interface::feedback(const string strFunction, Json *ptData, string &strErro
     if (hub("feedback", ptJson, strError))
     {
       bResult = true;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         ptData->parse(ptJson->m["Response"]->j(strJson));
       }
@@ -2416,34 +2410,34 @@ bool Interface::footer(radialUser &d, string &e)
 
   d.p->i("o", i);
   o = d.p->m["o"];
-  if (!m_strCompany.empty() && empty(i, "company"))
+  if (!m_strCompany.empty() && i->empty({"company"}))
   {
     o->i("company", m_strCompany);
   }
-  if (!m_strEmail.empty() && empty(i, "email"))
+  if (!m_strEmail.empty() && i->empty({"email"}))
   {
     o->i("email", m_strEmail);
   }
-  if (!m_strServer.empty() && empty(i, "server"))
+  if (!m_strServer.empty() && i->empty({"server"}))
   {
     o->i("server", m_strServer);
   }
-  if (!m_strWebsite.empty() && empty(i, "website"))
+  if (!m_strWebsite.empty() && i->empty({"website"}))
   {
     o->i("website", m_strWebsite);
   }
-  if (!exist(i, "year"))
+  if (!i->exist({"year"}))
   {
     int nYear;
     stringstream ssYear;
     ssYear << m_date.getYear(nYear);
     o->i("year", ssYear.str(), 'n');
   }
-  if (!empty(i, "userid"))
+  if (!i->empty({"userid"}))
   {
     userInit(d, a);
     a.p->m["i"]->i("userid", i->m["userid"]->v);
-    if (user(a, e) && !empty(a.p->m["o"], "id"))
+    if (user(a, e) && !a.p->m["o"]->empty({"id"}))
     {
       stringstream ssLink;
       ssLink << "https://" << m_strServer << "/central/#/Users/" << a.p->m["o"]->m["id"]->v;
@@ -2458,7 +2452,7 @@ bool Interface::footer(radialUser &d, string &e)
   if (application(a, e))
   {
     a.p->m["o"]->i("application", "Radial");
-    if (!empty(a.p->m["o"], "website"))
+    if (!a.p->m["o"]->empty({"website"}))
     {
       a.p->m["o"]->i("link", a.p->m["o"]->m["website"]->v);
     }
@@ -2481,7 +2475,7 @@ string Interface::getApplication(radialUser &d)
 {
   string e, v;
 
-  if (d.r != NULL && !empty(d.r, "User"))
+  if (d.r != NULL && !d.r->empty({"User"}))
   {
     if (m_applications.find(d.r->m["User"]->v) != m_applications.end())
     {
@@ -2495,7 +2489,7 @@ string Interface::getApplication(radialUser &d)
         map<string, string> applications;
         for (auto &user : ptRadial->m)
         {
-          if (!empty(user.second, "Application"))
+          if (!user.second->empty({"Application"}))
           {
             applications[user.first] = user.second->m["Application"]->v;
           }
@@ -2522,7 +2516,7 @@ string Interface::getUserEmail(radialUser &d)
 
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "email"))
+  if (user(a, e) && !a.p->m["o"]->empty({"email"}))
   {
     v = a.p->m["o"]->m["email"]->v;
   }
@@ -2539,7 +2533,7 @@ string Interface::getUserFirstName(radialUser &d)
 
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "first_name"))
+  if (user(a, e) && !a.p->m["o"]->empty({"first_name"}))
   {
     v = a.p->m["o"]->m["first_name"]->v;
   }
@@ -2556,7 +2550,7 @@ string Interface::getUserLastName(radialUser &d)
 
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "last_name"))
+  if (user(a, e) && !a.p->m["o"]->empty({"last_name"}))
   {
     v = a.p->m["o"]->m["last_name"]->v;
   }
@@ -2574,7 +2568,7 @@ string Interface::getUserName(radialUser &d)
 
   userInit(d, a);
   a.p->m["i"]->i("userid", d.u);
-  if (user(a, e) && !empty(a.p->m["o"], "first_name") && !empty(a.p->m["o"], "last_name"))
+  if (user(a, e) && !a.p->m["o"]->empty({"first_name"}) && !a.p->m["o"]->empty({"last_name"}))
   {
     v << a.p->m["o"]->m["first_name"]->v << " " << a.p->m["o"]->m["last_name"]->v;
   }
@@ -2749,11 +2743,11 @@ bool Interface::hub(const string strTarget, Json *ptJson, string &strError)
   bool bResult = false;
 
   hub(strTarget, ptJson, true);
-  if (exist(ptJson, "Status") && ptJson->m["Status"]->v == "okay")
+  if (ptJson->val({"Status"}) == "okay")
   {
     bResult = true;
   }
-  else if (!empty(ptJson, "Error"))
+  else if (!ptJson->empty({"Error"}))
   {
     strError = ptJson->m["Error"]->v;
   }
@@ -2967,28 +2961,28 @@ void Interface::interfaces(string strPrefix, Json *ptJson)
     delete i.second;
   }
   m_i.clear();
-  if (exist(ptJson, "Interfaces"))
+  if (ptJson->exist({"Interfaces"}))
   {
     for (auto &interface : ptJson->m["Interfaces"]->m)
     {
       m_i[interface.first] = new radialInterface;
-      if (!empty(interface.second, "AccessFunction"))
+      if (!interface.second->empty({"AccessFunction"}))
       {
         m_i[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
       }
-      if (!empty(interface.second, "Command"))
+      if (!interface.second->empty({"Command"}))
       {
         m_i[interface.first]->strCommand = interface.second->m["Command"]->v;
       }
       m_i[interface.first]->nPid = -1;
-      if (!empty(interface.second, "PID"))
+      if (!interface.second->empty({"PID"}))
       {
         stringstream ssPid(interface.second->m["PID"]->v);
         ssPid >> m_i[interface.first]->nPid;
       }
-      m_i[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
-      m_i[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
-      m_i[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
+      m_i[interface.first]->bRespawn = ((interface.second->val({"Respawn"}) == "1")?true:false);
+      m_i[interface.first]->bRestricted = ((interface.second->val({"Restricted"}) == "1")?true:false);
+      m_i[interface.first]->bValgrind = ((interface.second->val({"Valgrind"}) == "1")?true:false);
     }
   }
   m_mutexShare.unlock();
@@ -3001,7 +2995,7 @@ bool Interface::isApplicationDeveloper(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     if (!d.u.empty())
     {
@@ -3040,7 +3034,7 @@ bool Interface::isGroupOwner(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     if (!d.u.empty())
     {
@@ -3114,7 +3108,7 @@ bool Interface::isServerAdmin(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     if (!d.u.empty())
     {
@@ -3194,20 +3188,20 @@ bool Interface::junction(list<Json *> in, list<Json *> &out, string &strError)
   out.clear();
   if (hub("junction", ptJson, strError))
   {
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       if (!ptJson->m["Response"]->l.empty())
       {
         Json *ptStatus = ptJson->m["Response"]->l.front();
-        if (exist(ptStatus, "Status") && ptStatus->m["Status"]->v == "okay")
+        if (ptStatus->val({"Status"}) == "okay")
         {
           bResult = true;
         }
-        else if (!empty(ptStatus, "Error"))
+        else if (!ptStatus->empty({"Error"}))
         {
           strError = ptStatus->m["Error"]->v;
         }
-        else if (exist(ptStatus, "Error") && !empty(ptStatus->m["Error"], "Message"))
+        else if (!ptStatus->empty({"Error", "Message"}))
         {
           strError = ptStatus->m["Error"]->m["Message"]->v;
         }
@@ -3265,33 +3259,22 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   }
   if (hub("jwt", ptJson, strError))
   {
-    if (exist(ptJson, "Response"))
+    if (!ptJson->empty({"Response", "Payload"}))
     {
-      if (exist(ptJson->m["Response"], "Payload"))
+      if (bDecode)
       {
-        if (bDecode)
-        {
-          bResult = true;
-          ptPayload->merge(ptJson->m["Response"]->m["Payload"], true, false);
-        }
-        else if (!ptJson->m["Response"]->m["Payload"]->v.empty())
-        {
-          bResult = true;
-          strPayload = ptJson->m["Response"]->m["Payload"]->v;
-        }
-        else
-        {
-          strError = "The Payload was empty within the Response.";
-        }
+        bResult = true;
+        ptPayload->merge(ptJson->m["Response"]->m["Payload"], true, false);
       }
-      else
+      else if (!ptJson->m["Response"]->m["Payload"]->v.empty())
       {
-        strError = "Failed to find the Payload within the Response.";
+        bResult = true;
+        strPayload = ptJson->m["Response"]->m["Payload"]->v;
       }
     }
     else
     {
-      strError = "Failed to receive the Response.";
+      strError = "Failed to find the Payload within the Response.";
     }
   }
   delete ptJson;
@@ -3397,31 +3380,13 @@ void Interface::kafkaMessages(string strPrefix)
       }
       while (!m_kafkaMessages.empty())
       {
-        string strMessage;
-        Json *ptMessage;
-        uncompress(m_kafkaMessages.front(), strMessage);
+        if (m_pKafkaMessagesCallback != NULL)
+        {
+          string strMessage;
+          uncompress(m_kafkaMessages.front(), strMessage);
+          (*m_pKafkaMessagesCallback)(strPrefix, strMessage);
+        }
         m_kafkaMessages.pop();
-        ptMessage = new Json(strMessage);
-        if (exist(ptMessage, "eventDetails") && exist(ptMessage->m["eventDetails"], "recordDetails") && exist(ptMessage->m["eventDetails"]->m["recordDetails"], "businessImpact") && !empty(ptMessage->m["eventDetails"]->m["recordDetails"]->m["businessImpact"], "requestId"))
-        {
-          string strID = ptMessage->m["eventDetails"]->m["recordDetails"]->m["businessImpact"]->m["requestId"]->v;
-          m_mutexKafka.lock();
-          if (m_kafkaPending.find(strID) != m_kafkaPending.end() && m_kafkaPending[strID]->fdPipe[1] != -1)
-          {
-            char cChar = '\n';
-            m_kafkaPending[strID]->ptMessage = ptMessage;
-            write(m_kafkaPending[strID]->fdPipe[1], &cChar, 1);
-          }
-          else
-          {
-            delete ptMessage;
-          }
-          m_mutexKafka.unlock();
-        }
-        else
-        {
-          delete ptMessage;
-        }
       }
       if (shutdown())
       {
@@ -3570,7 +3535,7 @@ void Interface::keyRemovals(Json *ptJson)
   }
   while (!removals.empty())
   {
-    if (exist(ptJson, removals.front()))
+    if (ptJson->exist({removals.front()}))
     {
       delete ptJson->m[removals.front()];
       ptJson->m.erase(removals.front());
@@ -3594,42 +3559,42 @@ void Interface::links(string strPrefix, Json *ptJson)
     delete link;
   }
   m_l.clear();
-  if (exist(ptJson, "Links"))
+  if (ptJson->exist({"Links"}))
   {
     for (auto &link : ptJson->m["Links"]->m)
     {
       radialLink *ptLink = new radialLink;
       ptLink->strNode = link.first;
-      if (!empty(link.second, "Server"))
+      if (!link.second->empty({"Server"}))
       {
         ptLink->strServer = link.second->m["Server"]->v;
       }
-      if (!empty(link.second, "Port"))
+      if (!link.second->empty({"Port"}))
       {
         ptLink->strPort = link.second->m["Port"]->v;
       }
-      if (exist(link.second, "Interfaces"))
+      if (link.second->exist({"Interfaces"}))
       {
         for (auto &interface : link.second->m["Interfaces"]->m)
         {
           ptLink->interfaces[interface.first] = new radialInterface;
-          if (!empty(interface.second, "AccessFunction"))
+          if (!interface.second->empty({"AccessFunction"}))
           {
             ptLink->interfaces[interface.first]->strAccessFunction = interface.second->m["AccessFunction"]->v;
           }
-          if (!empty(interface.second, "Command"))
+          if (!interface.second->empty({"Command"}))
           {
             ptLink->interfaces[interface.first]->strCommand = interface.second->m["Command"]->v;
           }
           ptLink->interfaces[interface.first]->nPid = -1;
-          if (!empty(interface.second, "PID"))
+          if (!interface.second->empty({"PID"}))
           {
             stringstream ssPid(interface.second->m["PID"]->v);
             ssPid >> ptLink->interfaces[interface.first]->nPid;
           }
-          ptLink->interfaces[interface.first]->bRespawn = ((exist(interface.second, "Respawn") && interface.second->m["Respawn"]->v == "1")?true:false);
-          ptLink->interfaces[interface.first]->bRestricted = ((exist(interface.second, "Restricted") && interface.second->m["Restricted"]->v == "1")?true:false);
-          ptLink->interfaces[interface.first]->bValgrind = ((exist(interface.second, "Valgrind") && interface.second->m["Valgrind"]->v == "1")?true:false);
+          ptLink->interfaces[interface.first]->bRespawn = ((interface.second->val({"Respawn"}) == "1")?true:false);
+          ptLink->interfaces[interface.first]->bRestricted = ((interface.second->val({"Restricted"}) == "1")?true:false);
+          ptLink->interfaces[interface.first]->bValgrind = ((interface.second->val({"Valgrind"}) == "1")?true:false);
         }
       }
       m_l.push_back(ptLink);
@@ -3724,7 +3689,7 @@ bool Interface::loginType(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "type"))
+  if (!i->empty({"id"}) || !i->empty({"type"}))
   {
     map<string, string> r;
     if (db("dbCentralLoginTypes", i, r, e))
@@ -3760,7 +3725,7 @@ bool Interface::menuAccess(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "type"))
+  if (!i->empty({"id"}) || !i->empty({"type"}))
   {
     map<string, string> r;
     if (db("dbCentralMenuAccesses", i, r, e))
@@ -3802,7 +3767,7 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
   if (hub("mysql", ptJson, strError))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       for (auto &ptRow : ptJson->m["Response"]->l)
       {
@@ -3811,12 +3776,12 @@ bool Interface::mysql(const string strServer, const unsigned int unPort, const s
         rows.push_back(row);
       }
     }
-    if (!empty(ptJson, "ID"))
+    if (!ptJson->empty({"ID"}))
     {
       stringstream ssID(ptJson->m["ID"]->v);
       ssID >> ullID;
     }
-    if (!empty(ptJson, "Rows"))
+    if (!ptJson->empty({"Rows"}))
     {
       stringstream ssRows(ptJson->m["Rows"]->v);
       ssRows >> ullRows;
@@ -3856,7 +3821,7 @@ bool Interface::mythtv(const string strFunction, Json *ptRequest, Json *ptRespon
   if (hub("mythtv", ptJson, strError))
   {
     bResult = true;
-    if (exist(ptJson, "Response"))
+    if (ptJson->exist({"Response"}))
     {
       ptResponse->merge(ptJson->m["Response"], true, false);
     }
@@ -3878,7 +3843,7 @@ bool Interface::notifyPriority(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "priority"))
+  if (!i->empty({"id"}) || !i->empty({"priority"}))
   {
     map<string, string> r;
     if (db("dbCentralNotifyPriorities", i, r, e))
@@ -3907,7 +3872,7 @@ void Interface::ny(Json *ptJson, const string strField)
 {
   if (ptJson != NULL)
   {
-    if (exist(ptJson, strField))
+    if (ptJson->exist({strField}))
     {
       if (ptJson->m[strField]->v == "1")
       {
@@ -3935,7 +3900,7 @@ bool Interface::packageType(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "type"))
+  if (!i->empty({"id"}) || !i->empty({"type"}))
   {
     map<string, string> r;
     if (db("dbCentralPackageTypes", i, r, e))
@@ -4092,7 +4057,7 @@ void Interface::process(string strPrefix)
               else if (p.s == "hub")
               {
                 Json *ptJson = new Json(p.p);
-                if (!empty(ptJson, "Function"))
+                if (!ptJson->empty({"Function"}))
                 {
                   // {{{ interfaces
                   if (ptJson->m["Function"]->v == "interfaces")
@@ -4121,9 +4086,9 @@ void Interface::process(string strPrefix)
               else
               {
                 Json *ptJson = new Json(p.p);
-                if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "master")
+                if (ptJson->val({"|function"}) == "master")
                 {
-                  if (!empty(ptJson, "Master"))
+                  if (!ptJson->empty({"Master"}))
                   {
                     time(&CMaster[0]);
                     if (m_strMaster != ptJson->m["Master"]->v)
@@ -4140,7 +4105,7 @@ void Interface::process(string strPrefix)
                     }
                   }
                 }
-                else if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "status")
+                else if (ptJson->val({"|function"}) == "status")
                 {
                   float fCpu = 0, fMem = 0;
                   pid_t nPid = getpid();
@@ -4148,7 +4113,7 @@ void Interface::process(string strPrefix)
                   time_t CTime = 0;
                   unsigned long ulImage = 0, ulResident = 0;
                   ptJson->i("Status", "okay");
-                  if (exist(ptJson, "Response"))
+                  if (ptJson->exist({"Response"}))
                   {
                     delete ptJson->m["Response"];
                   }
@@ -4180,7 +4145,7 @@ void Interface::process(string strPrefix)
                 }
                 else if (m_pCallback != NULL)
                 {
-                  if (!empty(ptJson, "wsRequestID"))
+                  if (!ptJson->empty({"wsRequestID"}))
                   {
                     string strIdentity, strName, strNode;
                     stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
@@ -4192,11 +4157,11 @@ void Interface::process(string strPrefix)
                       ptLive->i("radialProcess", m_strName);
                       ptLive->i("radialPrefix", strPrefix);
                       ptLive->i("radialPurpose", "status");
-                      if (!empty(ptJson, "Interface"))
+                      if (!ptJson->empty({"Interface"}))
                       {
                         ptLive->i("radialInterface", ptJson->m["Interface"]->v);
                       }
-                      if (!empty(ptJson, "Function"))
+                      if (!ptJson->empty({"Function"}))
                       {
                         ptLive->i("radialFunction", ptJson->m["Function"]->v);
                       }
@@ -4438,6 +4403,12 @@ void Interface::setAutoMode(void (*pCallback)(string, const string, const string
   m_pAutoModeCallback = pCallback;
 }
 // }}}
+// {{{ setCallbackAddon()
+void Interface::setKafkaMessagesCallback(void (*pCallback)(string, const string))
+{
+  m_pKafkaMessagesCallback = pCallback;
+}
+// }}}
 // {{{ sqlite
 // {{{ sqliteCreate()
 bool Interface::sqliteCreate(const string strDatabase, const string strNode, string &strError)
@@ -4613,11 +4584,11 @@ bool Interface::sshConnect(const string strServer, const string strPort, const s
   {
     bResult = true;
   }
-  if (!empty(ptJson, "Session"))
+  if (!ptJson->empty({"Session"}))
   {
     strSession = ptJson->m["Session"]->v;
   }
-  if (!empty(ptJson, "Response"))
+  if (!ptJson->empty({"Response"}))
   {
     strData = ptJson->m["Response"]->v;
   }
@@ -4661,11 +4632,11 @@ bool Interface::sshSend(string &strSession, const string strCommand, string &str
   {
     bResult = true;
   }
-  if (!exist(ptJson, "Session"))
+  if (!ptJson->exist({"Session"}))
   {
     strSession.clear();
   }
-  if (!empty(ptJson, "Response"))
+  if (!ptJson->empty({"Response"}))
   {
     strData = ptJson->m["Response"]->v;
   }
@@ -4681,13 +4652,13 @@ bool Interface::status(radialUser &d, string &e)
   bool b = true;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "Node") && i->m["Node"]->v != m_strNode)
+  if (i->val({"Node"}) != m_strNode)
   {
     Json *j = new Json;
     j->i("Interface", m_strName);
     j->i("Function", "status");
     j->i("Node", i->m["Node"]->v);
-    if (hub("link", j, e) && exist(j, "Response"))
+    if (hub("link", j, e) && j->exist({"Response"}))
     {
       o->merge(j->m["Response"], true, false);
     }
@@ -4742,7 +4713,7 @@ bool Interface::storage(const string strFunction, const list<string> keys, Json 
   if (hub("storage", ptSubJson, strError))
   {
     bResult = true;
-    if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && exist(ptSubJson, "Response"))
+    if ((strFunction == "retrieve" || strFunction == "retrieveKeys") && ptSubJson->exist({"Response"}))
     {
       ptSubJson->m["Response"]->j(strJson);
       ptJson->parse(strJson);
@@ -4940,12 +4911,12 @@ bool Interface::terminalGetSocketTimeout(radialTerminalInfo &tInfo, int &nShort,
   if (terminalRequest(tInfo, "getSocketTimeout", {}, ptJson, strError))
   {
     bResult = true;
-    if (!empty(ptJson, "Long"))
+    if (!ptJson->empty({"Long"}))
     {
       stringstream ssLong(ptJson->m["Long"]->v);
       ssLong >> nLong;
     }
-    if (!empty(ptJson, "Short"))
+    if (!ptJson->empty({"Short"}))
     {
       stringstream ssShort(ptJson->m["Short"]->v);
       ssShort >> nShort;
@@ -5178,7 +5149,7 @@ bool Interface::user(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id") || !empty(i, "userid"))
+  if (!i->empty({"id"}) || !i->empty({"userid"}))
   {
     map<string, string> r;
     if (db("dbCentralUsers", i, r, e))
@@ -5194,13 +5165,13 @@ bool Interface::user(radialUser &d, string &e)
         ny(j, "alert_live_audio");
         ny(j, "alert_live_message");
         ny(j, "alert_pager");
-        if (exist(j, "alert_remote_auth_decrypted_password"))
+        if (j->exist({"alert_remote_auth_decrypted_password"}))
         {
           j->i("alert_remote_auth_password", j->m["alert_remote_auth_decrypted_password"]->v);
           delete j->m["alert_remote_auth_decrypted_password"];
           j->m.erase("alert_remote_auth_decrypted_password");
         }
-        if (exist(j, "alert_remote_proxy_decrypted_password"))
+        if (j->exist({"alert_remote_proxy_decrypted_password"}))
         {
           j->i("alert_remote_proxy_password", j->m["alert_remote_proxy_decrypted_password"]->v);
           delete j->m["alert_remote_proxy_decrypted_password"];
@@ -5208,12 +5179,12 @@ bool Interface::user(radialUser &d, string &e)
         }
         if (!d.g && (r["userid"].empty() || d.u != r["userid"]))
         {
-          if (exist(j, "alert_remote_auth_password"))
+          if (j->exist({"alert_remote_auth_password"}))
           {
             delete j->m["alert_remote_auth_password"];
             j->m.erase("alert_remote_auth_password");
           }
-          if (exist(j, "alert_remote_proxy_password"))
+          if (j->exist({"alert_remote_proxy_password"}))
           {
             delete j->m["alert_remote_proxy_password"];
             j->m.erase("alert_remote_proxy_password");
@@ -5275,15 +5246,15 @@ void Interface::userInit(Json *ptJson, radialUser &d)
   string strError, strJwt;
 
   userInit(d);
-  if (exist(ptJson, "Request"))
+  if (ptJson->exist({"Request"}))
   {
     d.p->i("i", ptJson->m["Request"]);
   }
-  if (!empty(ptJson, "Jwt"))
+  if (!ptJson->empty({"Jwt"}))
   {
     strJwt = ptJson->m["Jwt"]->v;
   }
-  else if (!empty(ptJson, "wsJwt"))
+  else if (!ptJson->empty({"wsJwt"}))
   {
     strJwt = ptJson->m["wsJwt"]->v;
   }
@@ -5298,26 +5269,26 @@ void Interface::userInit(Json *ptJson, radialUser &d)
     }
     if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
     {
-      if (!empty(ptJwt, "sl_admin") && ptJwt->m["sl_admin"]->v == "1")
+      if (ptJwt->val({"sl_admin"}) == "1")
       {
         d.g = true;
       }
-      if (exist(ptJwt, "sl_auth"))
+      if (ptJwt->exist({"sl_auth"}))
       {
         for (auto &auth : ptJwt->m["sl_auth"]->m)
         {
           d.auth[auth.first] = (auth.second->v == "1");
         }
       }
-      if (!empty(ptJwt, "sl_first_name"))
+      if (!ptJwt->empty({"sl_first_name"}))
       {
         d.f = ptJwt->m["sl_first_name"]->v;
       }
-      if (!empty(ptJwt, "sl_last_name"))
+      if (!ptJwt->empty({"sl_last_name"}))
       {
         d.l = ptJwt->m["sl_last_name"]->v;
       }
-      if (!empty(ptJwt, "sl_login"))
+      if (!ptJwt->empty({"sl_login"}))
       {
         d.u = ptJwt->m["sl_login"]->v;
       }
