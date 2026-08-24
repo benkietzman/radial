@@ -57,7 +57,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     // {{{ action
@@ -68,7 +68,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       if (Sqlite::action(d, strError))
       {
         bResult = true;
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
@@ -82,7 +82,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     else if (strFunction == "databases")
     {
       bResult = true;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
         ptJson->m.erase("Response");
@@ -108,7 +108,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
       if (Sqlite::status(d, strError))
       {
         bResult = true;
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
@@ -119,12 +119,12 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
     }
     // }}}
     // {{{ request
-    else if (exist(ptJson, "Request"))
+    else if (ptJson->exist({"Request"}))
     {
-      if (!empty(ptJson->m["Request"], "Database"))
+      if (!ptJson->m["Request"]->empty({"Database"}))
       {
         string strDatabase = ptJson->m["Request"]->m["Database"]->v, strNode;
-        if (!empty(ptJson->m["Request"], "Node"))
+        if (!ptJson->m["Request"]->empty({"Node"}))
         {
           strNode = ptJson->m["Request"]->m["Node"]->v;
         }
@@ -258,7 +258,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
         // {{{ query
         else if (strFunction == "query")
         {
-          if (!empty(ptJson->m["Request"], "Statement"))
+          if (!ptJson->m["Request"]->empty({"Statement"}))
           {
             string strAction, strStatement = ptJson->m["Request"]->m["Statement"]->v, strValue;
             stringstream ssStatement(strStatement);
@@ -268,11 +268,11 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
             {
               bool bLocal = false, bReadOnly = false;
               m_mutex.lock();
-              if ((!empty(ptJson->m["Request"], "_local") && ptJson->m["Request"]->m["_local"]->v == "1") || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
+              if (ptJson->m["Request"]->val({"_local"}) == "1" || (m_databases.find(strDatabase) != m_databases.end() && m_databases[strDatabase].find(m_strNode) != m_databases[strDatabase].end() && (strAction == "select" || m_databases[strDatabase][m_strNode])))
               {
                 bLocal = true;
               }
-              if (!empty(ptJson->m["Request"], "Access") && ptJson->m["Request"]->m["Access"]->v == "r")
+              if (ptJson->m["Request"]->val({"Access"}) == "r")
               {
                 bReadOnly = true;
               }
@@ -296,7 +296,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                       size_t unSize = 16;
                       string strJson;
                       stringstream ssRows;
-                      if (exist(ptJson, "Response"))
+                      if (ptJson->exist({"Response"}))
                       {
                         delete ptJson->m["Response"];
                         ptJson->m.erase("Response");
@@ -320,7 +320,7 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                           Json *ptSubRows = new Json;
                           if ((nReturn = sqlite3_exec(db, "select last_insert_rowid()", m_pCallbackFetch, ptSubRows, &pszSubError)) == SQLITE_OK)
                           {
-                            if (!ptSubRows->l.empty() && !empty(ptSubRows->l.front(), "last_insert_rowid()"))
+                            if (!ptSubRows->l.empty() && !ptSubRows->l.front()->empty({"last_insert_rowid()"}))
                             {
                               ptJson->m["Response"]->i("ID", ptSubRows->l.front()->m["last_insert_rowid()"]->v, 'n');
                             }
@@ -421,15 +421,15 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                   if (hub("link", ptLink, strError))
                   {
                     bResult = true;
-                    if (!empty(ptLink, "ID"))
+                    if (!ptLink->empty({"ID"}))
                     {
                       ptJson->i("ID", ptLink->m["ID"]->v);
                     }
-                    if (exist(ptLink, "Response"))
+                    if (ptLink->exist({"Response"}))
                     {
                       ptJson->i("Response", ptLink->m["Response"]);
                     }
-                    if (!empty(ptLink, "Rows"))
+                    if (!ptLink->empty({"Rows"}))
                     {
                       ptJson->i("Rows", ptLink->m["Rows"]->v);
                     }
@@ -466,15 +466,15 @@ void Sqlite::callback(string strPrefix, const string strPacket, const bool bResp
                   if (hub("link", ptLink, strError))
                   {
                     bResult = true;
-                    if (!empty(ptLink, "ID"))
+                    if (!ptLink->empty({"ID"}))
                     {
                       ptJson->i("ID", ptLink->m["ID"]->v);
                     }
-                    if (exist(ptLink, "Response"))
+                    if (ptLink->exist({"Response"}))
                     {
                       ptJson->i("Response", ptLink->m["Response"]);
                     }
-                    if (!empty(ptLink, "Rows"))
+                    if (!ptLink->empty({"Rows"}))
                     {
                       ptJson->i("Rows", ptLink->m["Rows"]->v);
                     }
@@ -1027,7 +1027,7 @@ void Sqlite::sync(string strPrefix)
       ptJson->i("Interface", "sqlite");
       ptJson->i("Node", nodes.front());
       ptJson->i("Function", "databases");
-      if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
+      if (hub("link", ptJson, strError) && ptJson->exist({"Response"}))
       {
         for (auto &i : ptJson->m["Response"]->m)
         {
@@ -1052,7 +1052,7 @@ void Sqlite::sync(string strPrefix)
     ptJson->i("Interface", "sqlite");
     ptJson->i("Node", master());
     ptJson->i("Function", "databases");
-    if (hub("link", ptJson, strError) && exist(ptJson, "Response"))
+    if (hub("link", ptJson, strError) && ptJson->exist({"Response"}))
     {
       for (auto &i : ptJson->m["Response"]->m)
       {
