@@ -63,7 +63,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
@@ -81,7 +81,7 @@ void Status::callback(string strPrefix, const string strPacket, const bool bResp
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -134,12 +134,12 @@ bool Status::status(Json *o, string &e)
       o->m["Nodes"] = new Json;
       for (auto &n : ptNodes->m)
       {
-        if (exist(n.second, "interfaces") && !n.second->m["interfaces"]->m.empty())
+        if (n.second->exist({"interfaces"}) && !n.second->m["interfaces"]->m.empty())
         {
           o->m["Nodes"]->m[n.first] = new Json;
           for (auto &i : n.second->m["interfaces"]->m)
           {
-            if (exist(i.second, "configuration"))
+            if (i.second->exist({"configuration"}))
             {
               o->m["Nodes"]->m[n.first]->m[i.first] = new Json(i.second->m["configuration"]);
               if (n.first == m_strNode && i.first == "status")
@@ -208,14 +208,14 @@ bool Status::status(Json *o, string &e)
                     ptStat->i("Interface", i.first);
                     ptStat->i("Node", n.first);
                   }
-                  if (((n.first == m_strNode && hub(i.first, ptStat, e)) || (n.first != m_strNode && hub("link", ptStat, e))) && exist(ptStat, "Response"))
+                  if (((n.first == m_strNode && hub(i.first, ptStat, e)) || (n.first != m_strNode && hub("link", ptStat, e))) && ptStat->exist({"Response"}))
                   {
                     o->m["Nodes"]->m[n.first]->m[i.first]->merge(ptStat->m["Response"], true, false);
                   }
                   delete ptStat;
                 }
               }
-              if (exist(i.second, "throughput"))
+              if (i.second->exist({"throughput"}))
               {
                 o->m["Nodes"]->m[n.first]->m[i.first]->i("Throughput", i.second->m["throughput"]);
               }
