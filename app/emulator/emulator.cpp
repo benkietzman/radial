@@ -79,17 +79,17 @@ int main(int argc, char *argv[])
         {
           bool bProcessed = false;
           string strError;
-          if (m->m.find("wsRequestID") != m->m.end() && !m->m["wsRequestID"]->v.empty())
+          if (!m->empty({"wsRequestID"}))
           {
             string w = m->m["wsRequestID"]->v;
-            if (m->m.find("Function") != m->m.end() && !m->m["Function"]->v.empty())
+            if (!m->empty({"Function"}))
             {
               string f = m->m["Function"]->v;
               if (f == "launch" || commands.find(w) != commands.end())
               {
                 if (f == "data")
                 {
-                  if (m->m.find("Data") != m->m.end() && !m->m["Data"]->v.empty())
+                  if (!m->empty({"Data"}))
                   {
                     commands[w]->b[1].append(m->m["Data"]->v);
                   }
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
                 }
                 else if (f == "launch")
                 {
-                  if (m->m.find("Command") != m->m.end() && !m->m["Command"]->v.empty())
+                  if (!m->empty({"Command"}))
                   {
                     char *args[100], *pszArgument;
                     int readpipe[2] = {-1, -1}, writepipe[2] = {-1, -1};
