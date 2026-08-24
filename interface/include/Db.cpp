@@ -182,17 +182,17 @@ void Db::callback(string strPrefix, const string strPacket, const bool bResponse
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     if (ptJson->m["Function"]->v.size() > 2 && ptJson->m["Function"]->v.substr(0, 2) == "db")
     {
       bool bInvalid = true;
       string strID;
-      if (!exist(ptJson, "Request"))
+      if (!ptJson->exist({"Request"}))
       {
         ptJson->m["Request"] = new Json;
       }
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -266,9 +266,9 @@ bool Db::dbCentralAccountTypes(Json *i, Json *o, string &id, string &q, string &
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "type"))
+      if (!i->empty({"id"}) || !i->empty({"type"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"type"}) && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -295,17 +295,17 @@ bool Db::dbCentralApplicationAccountAdd(Json *i, Json *o, string &id, string &q,
     list<string> ks = {"application_id", "description", "type_id", "user_id"};
     stringstream qs;
     qs << "insert into application_account (" << ia(ks, i, fa);
-    if (!empty(i, "password"))
+    if (!i->empty({"password"}))
     {
       qs << ((fa)?"":",") << " encrypt, aes, `password`";
       fa = false;
     }
     qs << ") values (" << ib(ks, i, fb);
-    if (!empty(i, "password"))
+    if (!i->empty({"password"}))
     {
       qs << ((fb)?" ":", ");
       fb = false;
-      if (!empty(i, "encrypt") && i->m["encrypt"]->v == "1")
+      if (i->val({"encrypt"}) == "1")
       {
         qs << "1, 0, concat('!',upper(sha2(unhex(sha2(" << v(i->m["password"]->v) << ", 512)), 512)))";
       }
@@ -351,19 +351,19 @@ bool Db::dbCentralApplicationAccounts(Json *i, Json *o, string &id, string &q, s
     qs << "aes_decrypt(from_base64(password), sha2(" << v(m_strAesSecret) << ", 512)) decrypted_password, ";
   }
   qs << "type_id, description from application_account where 1";
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << " and application_id = " << v(i->m["application_id"]->v);
   }
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
   qs << " order by user_id";
-  if (exist(i, "page"))
+  if (i->exist({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -383,7 +383,7 @@ bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string 
     bool f = true;
     stringstream qs;
     qs << "update application_account set" << u("user_id", i, f);
-    if (exist(i, "password"))
+    if (i->exist({"password"}))
     {
       if (f)
       {
@@ -394,9 +394,9 @@ bool Db::dbCentralApplicationAccountUpdate(Json *i, Json *o, string &id, string 
         qs << ",";
       }
       qs << " encrypt = ";
-      if (!empty(i, "password"))
+      if (!i->empty({"password"}))
       {
-        if (!empty(i, "encrypt") && i->m["encrypt"]->v == "1")
+        if (i->val({"encrypt"}) == "1")
         {
           qs << "1, aes = 0, `password` = concat('!',upper(sha2(unhex(sha2(" << v(i->m["password"]->v) << ", 512)), 512)))";
         }
@@ -484,7 +484,7 @@ bool Db::dbCentralApplicationDepends(Json *i, Json *o, string &id, string &q, st
   stringstream qs;
   
   qs << "select id, application_id, dependant_id from application_dependant";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " where id = " << v(i->m["id"]->v);
   }
@@ -528,7 +528,7 @@ bool Db::dbCentralApplicationGroups(Json *i, Json *o, string &id, string &q, str
   stringstream qs;
 
   qs << "select id, application_id, group_id from application_group";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " where id = " << v(i->m["id"]->v);
   }
@@ -578,12 +578,12 @@ bool Db::dbCentralApplicationIssueComments(Json *i, Json *o, string &id, string 
   stringstream qs;
 
   qs << "select a.id, a.comments, date_format(a.entry_date, '%Y-%m-%d %H:%i:%s') entry_date, b.email, b.first_name, b.last_name, a.user_id, b.userid from issue_comment a, person b where a.user_id = b.id";
-  if (!empty(i, "issue_id"))
+  if (!i->empty({"issue_id"}))
   {
     qs << " and a.issue_id = " << v(i->m["issue_id"]->v);
   }
   qs << " order by entry_date, id";
-  if (!empty(i, "limit"))
+  if (!i->empty({"limit"}))
   {
     qs << " limit " << i->m["limit"]->v;
   }
@@ -614,15 +614,15 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
   string strCloseDateEnd, strCloseDateStart, strDisplay, strOpenDateEnd, strOpenDateStart;
   stringstream qs;
 
-  bOpen = (!empty(i, "open") && i->m["open"]->v == "1");
-  bRelease = (!empty(i, "release") && i->m["release"]->v == "1");
-  strCloseDateEnd = ((!empty(i, "close_date_end"))?i->m["close_date_end"]->v:"");
-  strCloseDateStart = ((!empty(i, "close_date_start"))?i->m["close_date_start"]->v:"");
-  strDisplay = ((!empty(i, "display"))?i->m["display"]->v:"");
-  strOpenDateEnd = ((!empty(i, "open_date_end"))?i->m["open_date_end"]->v:"");
-  strOpenDateStart = ((!empty(i, "open_date_start"))?i->m["open_date_start"]->v:"");
+  bOpen = (i->val({"open"}) == "1");
+  bRelease = (i->val({"release"}) == "1");
+  strCloseDateEnd = i->val({"close_date_end"});
+  strCloseDateStart = i->val({"close_date_start"});
+  strDisplay = i->val({"display"});
+  strOpenDateEnd = i->val({"open_date_end"});
+  strOpenDateStart = i->val({"open_date_start"});
   qs << "select id, application_id, assigned_id, date_format(close_date, '%Y-%m-%d') close_date, date_format(due_date, '%Y-%m-%d') due_date, hold, date_format(open_date, '%Y-%m-%d') open_date, priority, date_format(release_date, '%Y-%m-%d') release_date, summary from application_issue where 1";
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     bool bFirst = true;
     stringstream ssApplicationIDs(i->m["application_id"]->v);
@@ -650,7 +650,7 @@ bool Db::dbCentralApplicationIssues(Json *i, Json *o, string &id, string &q, str
       qs << " and release_date is not null and date_format(release_date, '%Y-%m-%d') >= date_format(now(), '%Y-%m-%d')";
     }
   }
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
@@ -692,12 +692,12 @@ bool Db::dbCentralApplicationIssueUpdate(Json *i, Json *o, string &id, string &q
     bool f = true;
     stringstream qs;
     qs << "update application_issue set";
-    if (!empty(i, "transfer_id") && i->m["transfer_id"]->v != i->m["application_id"]->v)
+    if (!i->empty({"transfer_id"}) && i->m["transfer_id"]->v != i->m["application_id"]->v)
     {
       f = false;
       qs << " application_id = " << v(i->m["transfer_id"]->v);
     }
-    else if (!empty(i, "application_id"))
+    else if (!i->empty({"application_id"}))
     {
       f = false;
       qs << " application_id = " << v(i->m["application_id"]->v);
@@ -762,19 +762,19 @@ bool Db::dbCentralApplicationRepos(Json *i, Json *o, string &id, string &q, stri
   stringstream qs;
 
   qs << "select a.id, a.application_id, a.identifier, a.repo_id, b.pattern, b.repo from application_repo a, repo b where a.repo_id = b.id";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << " and a.application_id = " << v(i->m["application_id"]->v);
   }
   qs << " order by b.repo";
-  if (exist(i, "page"))
+  if (i->exist({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -805,28 +805,28 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
 {
   stringstream qs;
 
-  if (!empty(i, "group_id"))
+  if (!i->empty({"group_id"}))
   {
     qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date from application_group a, application b where a.application_id = b.id and a.group_id = " << v(i->m["group_id"]->v);
-    if (!empty(i, "retired"))
+    if (!i->empty({"retired"}))
     {
       qs << " and b.retirement_date is" << ((i->m["retired"]->v == "1")?" not":"") << " null";
     }
     qs << " order by b.name";
   }
-  else if (!empty(i, "server_id"))
+  else if (!i->empty({"server_id"}))
   {
     qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date from application_server a, application b where a.application_id = b.id and a.server_id = " << v(i->m["server_id"]->v);
-    if (!empty(i, "retired"))
+    if (!i->empty({"retired"}))
     {
       qs << " and b.retirement_date is" << ((i->m["retired"]->v == "1")?" not":"") << " null";
     }
     qs << " order by b.name";
   }
-  else if (!empty(i, "contact_id"))
+  else if (!i->empty({"contact_id"}))
   {
     qs << "select a.id, b.id application_id, b.name, date_format(b.retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, c.type from application_contact a, application b, contact_type c where a.application_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v);
-    if (!empty(i, "retired"))
+    if (!i->empty({"retired"}))
     {
       qs << " and b.retirement_date is" << ((i->m["retired"]->v == "1")?" not":"") << " null";
     }
@@ -835,7 +835,7 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
   else
   {
     qs << "select";
-    if (!empty(i, "count") && i->m["count"]->v == "1")
+    if (i->val({"count"}) == "1")
     {
       qs << " count(id) num";
     }
@@ -844,15 +844,15 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
       qs << " id, account_check, auto_register, date_format(creation_date, '%Y-%m-%d') creation_date, dependable, description, login_type_id, menu_id, name, notify_priority_id, package_type_id, date_format(retirement_date, '%Y-%m-%d %H:%i:%s') retirement_date, secure_port, website";
     }
     qs << " from application where 1";
-    if (!empty(i, "dependable") && i->m["dependable"]->v == "1")
+    if (i->val({"dependable"}) == "1")
     {
       qs << " and dependable = 1";
     }
-    if (!empty(i, "id"))
+    if (!i->empty({"id"}))
     {
       qs << " and id = " << v(i->m["id"]->v);
     }
-    if (!empty(i, "letter"))
+    if (!i->empty({"letter"}))
     {
       qs << " and";
       if (i->m["letter"]->v == "#")
@@ -864,23 +864,23 @@ bool Db::dbCentralApplications(Json *i, Json *o, string &id, string &q, string &
         qs << " upper(name) like '" << i->m["letter"]->v << "%'";
       }
     }
-    if (!empty(i, "menu") && i->m["menu"]->v == "1")
+    if (i->val({"menu"}) == "1")
     {
       qs << " and menu_id > 0";
     }
-    if (!empty(i, "name"))
+    if (!i->empty({"name"}))
     {
       qs << " and name = " << v(i->m["name"]->v);
     }
-    if (!empty(i, "retired"))
+    if (!i->empty({"retired"}))
     {
       qs << " and retirement_date is" << ((i->m["retired"]->v == "1")?" not":"") << " null";
     }
     qs << " order by name";
-    if (!empty(i, "page"))
+    if (!i->empty({"page"}))
     {
       size_t unNumPerPage, unOffset, unPage;
-      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
       ssNumPerPage >> unNumPerPage;
       ssPage >> unPage;
       unOffset = unPage * unNumPerPage;
@@ -944,11 +944,11 @@ bool Db::dbCentralApplicationServerDetails(Json *i, Json *o, string &id, string 
   stringstream qs;
 
   qs << "select id, application_server_id, daemon, delay, max_image, max_processes, max_resident, min_image, min_processes, min_resident, owner, script, version from application_server_detail where 1";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "application_server_id"))
+  if (!i->empty({"application_server_id"}))
   {
     qs << " and application_server_id = " << v(i->m["application_server_id"]->v);
   }
@@ -993,15 +993,15 @@ bool Db::dbCentralApplicationServers(Json *i, Json *o, string &id, string &q, st
   stringstream qs;
 
   qs << "select id, application_id, server_id from application_server where 1=1";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << " and application_id = " << v(i->m["application_id"]->v);
   }
-  if (!empty(i, "server_id"))
+  if (!i->empty({"server_id"}))
   {
     qs << " and server_id = " << v(i->m["server_id"]->v);
   }
@@ -1063,34 +1063,34 @@ bool Db::dbCentralApplicationUsers(Json *i, Json *o, string &id, string &q, stri
   stringstream qs;
 
   qs << "select a.id, a.application_id, a.admin, a.description, c.email, c.first_name, c.last_name, a.locked, a.notify, b.type, a.type_id, c.id user_id, c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << " and a.application_id = " << v(i->m["application_id"]->v);
   }
-  if ((!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1") || (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  if ((i->val({"Primary Developer"}) == "1") || (i->val({"Backup Developer"}) == "1") || (i->val({"Primary Contact"}) == "1") || (i->val({"Contact"}) == "1"))
   {
     bool f = true;
     qs << " and b.type in (";
-    if (!empty(i, "Primary Developer") && i->m["Primary Developer"]->v == "1")
+    if (i->val({"Primary Developer"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Developer'";
       f = false;
     }
-    if (!empty(i, "Backup Developer") && i->m["Backup Developer"]->v == "1")
+    if (i->val({"Backup Developer"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Backup Developer'";
       f = false;
     }
-    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    if (i->val({"Primary Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Contact'";
       f = false;
     }
-    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    if (i->val({"Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Contact'";
       f = false;
@@ -1098,10 +1098,10 @@ bool Db::dbCentralApplicationUsers(Json *i, Json *o, string &id, string &q, stri
     qs << ")";
   }
   qs << " order by c.last_name, c.first_name, c.userid";
-  if (exist(i, "page"))
+  if (i->exist({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -1141,9 +1141,9 @@ bool Db::dbCentralContactTypes(Json *i, Json *o, string &id, string &q, string &
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "type"))
+      if (!i->empty({"id"}) || !i->empty({"type"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"type"}) && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -1165,11 +1165,11 @@ bool Db::dbCentralDependents(Json *i, Json *o, string &id, string &q, string &e)
   stringstream qs;
 
   qs << "select a.id, b.id application_id, b.name from application_dependant a, application b where";
-  if (!empty(i, "dependant_id"))
+  if (!i->empty({"dependant_id"}))
   {
     qs << " a.application_id = b.id and a.dependant_id = " << v(i->m["dependant_id"]->v);
   }
-  else if (!empty(i, "application_id"))
+  else if (!i->empty({"application_id"}))
   {
     qs << " a.dependant_id = b.id and a.application_id = " << v(i->m["application_id"]->v);
   }
@@ -1216,22 +1216,22 @@ bool Db::dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << "select a.id, b.id group_id, b.name from application_group a, `group` b where a.group_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
   }
-  else if (!empty(i, "contact_id"))
+  else if (!i->empty({"contact_id"}))
   {
     qs << "select a.id, b.id group_id, b.name, c.type from group_contact a, `group` b, contact_type c where a.group_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
   }
-  else if (!empty(i, "server_id"))
+  else if (!i->empty({"server_id"}))
   {
     qs << "select a.id, b.id group_id, b.name from server_group a, `group` b where a.group_id = b.id and a.server_id = " << v(i->m["server_id"]->v) << " order by b.name";
   }
   else
   {
     qs << "select";
-    if (!empty(i, "count") && i->m["count"]->v == "1")
+    if (i->val({"count"}) == "1")
     {
       qs << " count(id) num";
     }
@@ -1240,11 +1240,11 @@ bool Db::dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e)
       qs << " id, date_format(creation_date, '%Y-%m-%d') creation_date, description, name";
     }
     qs << " from `group` where 1";
-    if (!empty(i, "id"))
+    if (!i->empty({"id"}))
     {
       qs << " and id = " << v(i->m["id"]->v);
     }
-    if (!empty(i, "letter"))
+    if (!i->empty({"letter"}))
     {
       qs << " and";
       if (i->m["letter"]->v == "#")
@@ -1256,15 +1256,15 @@ bool Db::dbCentralGroups(Json *i, Json *o, string &id, string &q, string &e)
         qs << " upper(name) like '" << i->m["letter"]->v << "%'";
       }
     }
-    if (!empty(i, "name"))
+    if (!i->empty({"name"}))
     {
       qs << " and name = " << v(i->m["name"]->v);
     }
     qs << " order by name";
-    if (!empty(i, "page"))
+    if (!i->empty({"page"}))
     {
       size_t unNumPerPage, unOffset, unPage;
-      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
       ssNumPerPage >> unNumPerPage;
       ssPage >> unPage;
       unOffset = unPage * unNumPerPage;
@@ -1329,34 +1329,34 @@ bool Db::dbCentralGroupUsers(Json *i, Json *o, string &id, string &q, string &e)
   stringstream qs;
 
   qs << "select a.id, a.group_id, a.description, c.email, c.first_name, c.last_name, a.notify, b.type, a.type_id, c.id user_id, c.userid from group_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "group_id"))
+  if (!i->empty({"group_id"}))
   {
     qs << " and a.group_id = " << v(i->m["group_id"]->v);
   }
-  if ((!empty(i, "Primary Owner") && i->m["Primary Owner"]->v == "1") || (!empty(i, "Backup Owner") && i->m["Backup Owner"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  if ((i->val({"Primary Owner"}) == "1") || (i->val({"Backup Owner"}) == "1") || (i->val({"Primary Contact"}) == "1") || (i->val({"Contact"}) == "1"))
   {
     bool f = true;
     qs << " and b.type in (";
-    if (!empty(i, "Primary Owner") && i->m["Primary Owner"]->v == "1")
+    if (i->val({"Primary Owner"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Owner'";
       f = false;
     }
-    if (!empty(i, "Backup Owner") && i->m["Backup Owner"]->v == "1")
+    if (i->val({"Backup Owner"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Backup Owner'";
       f = false;
     }
-    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    if (i->val({"Primary Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Contact'";
       f = false;
     }
-    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    if (i->val({"Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Contact'";
       f = false;
@@ -1364,10 +1364,10 @@ bool Db::dbCentralGroupUsers(Json *i, Json *o, string &id, string &q, string &e)
     qs << ")";
   }
   qs << " order by c.last_name, c.first_name, c.userid";
-  if (exist(i, "page"))
+  if (i->exist({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -1407,9 +1407,9 @@ bool Db::dbCentralLoginTypes(Json *i, Json *o, string &id, string &q, string &e)
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "type"))
+      if (!i->empty({"id"}) || !i->empty({"type"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"type"}) && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -1439,9 +1439,9 @@ bool Db::dbCentralMenuAccesses(Json *i, Json *o, string &id, string &q, string &
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "type"))
+      if (!i->empty({"id"}) || !i->empty({"type"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"type"}) && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -1471,9 +1471,9 @@ bool Db::dbCentralNotifyPriorities(Json *i, Json *o, string &id, string &q, stri
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "priority"))
+      if (!i->empty({"id"}) || !i->empty({"priority"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "priority") && r["priority"] == i->m["priority"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"priority"}) && r["priority"] == i->m["priority"]->v))
         {
           o->pb(r);
         }
@@ -1503,9 +1503,9 @@ bool Db::dbCentralPackageTypes(Json *i, Json *o, string &id, string &q, string &
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "type"))
+      if (!i->empty({"id"}) || !i->empty({"type"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "type") && r["type"] == i->m["type"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"type"}) && r["type"] == i->m["type"]->v))
         {
           o->pb(r);
         }
@@ -1527,7 +1527,7 @@ bool Db::dbCentralPhpSession(Json *i, Json *o, string &id, string &q, string &e)
   stringstream qs;
 
   qs << "select session_data Data, session_json Json from php_session where 1";
-  if (!empty(i, "ID"))
+  if (!i->empty({"ID"}))
   {
     qs << " and session_id = " << v(i->m["ID"]->v);
   }
@@ -1543,9 +1543,9 @@ bool Db::dbCentralPhpSessionAdd(Json *i, Json *o, string &id, string &q, string 
 
   if (dep({"ID"}, i, e))
   {
-    if (exist(i, "Data"))
+    if (i->exist({"Data"}))
     {
-      if (exist(i, "Json"))
+      if (i->exist({"Json"}))
       {
         stringstream qs;
         qs << "insert into php_session (session_id, last_updated, session_data, session_json) values (" << v(i->m["ID"]->v) << ", now(), " << v(i->m["Data"]->v) << ", " << v(i->m["Json"]->v) << ") on duplicate key update last_updated = now(), session_data = " << v(i->m["Data"]->v) << ", session_json = " << v(i->m["Json"]->v);
@@ -1594,9 +1594,9 @@ bool Db::dbCentralRepos(Json *i, Json *o, string &id, string &q, string &e)
     b = true;
     for (auto &r : *g)
     {
-      if (!empty(i, "id") || !empty(i, "repo"))
+      if (!i->empty({"id"}) || !i->empty({"repo"}))
       {
-        if ((!empty(i, "id") && r["id"] == i->m["id"]->v) || (!empty(i, "repo") && r["repo"] == i->m["repo"]->v))
+        if ((!i->empty({"id"}) && r["id"] == i->m["id"]->v) || (!i->empty({"repo"}) && r["repo"] == i->m["repo"]->v))
         {
           o->pb(r);
         }
@@ -1635,7 +1635,7 @@ bool Db::dbCentralServerDetails(Json *i, Json *o, string &id, string &q, string 
   stringstream qs;
 
   qs << "select a.id application_server_id, b.id server_id, b.name, c.id application_server_detail_id, c.daemon from application_server a, server b, application_server_detail c where a.server_id = b.id and a.id = c.application_server_id";
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << " and a.application_id = " << v(i->m["application_id"]->v);
   }
@@ -1680,7 +1680,7 @@ bool Db::dbCentralServerGroups(Json *i, Json *o, string &id, string &q, string &
   stringstream qs;
 
   qs << "select id, server_id, group_id from server_group";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " where id = " << v(i->m["id"]->v);
   }
@@ -1708,22 +1708,22 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
 {
   stringstream qs;
 
-  if (!empty(i, "application_id"))
+  if (!i->empty({"application_id"}))
   {
     qs << "select a.id, b.id server_id, b.name from application_server a, server b where a.server_id = b.id and a.application_id = " << v(i->m["application_id"]->v) << " order by b.name";
   }
-  else if (!empty(i, "contact_id"))
+  else if (!i->empty({"contact_id"}))
   {
     qs << "select distinct a.id, b.id server_id, b.name, c.type from server_contact a, server b, contact_type c where a.server_id = b.id and a.type_id = c.id and a.contact_id = " << v(i->m["contact_id"]->v) << " order by b.name";
   }
-  else if (!empty(i, "group_id"))
+  else if (!i->empty({"group_id"}))
   {
     qs << "select a.id, b.id server_id, b.name from server_group a, server b where a.server_id = b.id and a.group_id = " << v(i->m["group_id"]->v) << " order by b.name";
   }
   else
   {
     qs << "select";
-    if (!empty(i, "count") && i->m["count"]->v == "1")
+    if (i->val({"count"}) == "1")
     {
       qs << " count(id) num";
     }
@@ -1732,11 +1732,11 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
       qs << " id, address, city, cpu_usage, description, disk_size, location, main_memory, name, parent_id, processes, state, swap_memory, zipcode";
     }
     qs << " from server where 1";
-    if (!empty(i, "id"))
+    if (!i->empty({"id"}))
     {
       qs << " and id = " << v(i->m["id"]->v);
     } 
-    if (!empty(i, "letter"))
+    if (!i->empty({"letter"}))
     {
       if (i->m["letter"]->v == "#")
       {
@@ -1747,19 +1747,19 @@ bool Db::dbCentralServers(Json *i, Json *o, string &id, string &q, string &e)
         qs << " and upper(name) like '" << i->m["letter"]->v << "%'";
       }
     }
-    if (!empty(i, "name"))
+    if (!i->empty({"name"}))
     {
       qs << " and name = " << v(i->m["name"]->v);
     } 
-    if (!empty(i, "parent_id"))
+    if (!i->empty({"parent_id"}))
     {
       qs << " and parent_id = " << v(i->m["parent_id"]->v);
     }
     qs << " order by name";
-    if (!empty(i, "page"))
+    if (!i->empty({"page"}))
     {
       size_t unNumPerPage, unOffset, unPage;
-      stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+      stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
       ssNumPerPage >> unNumPerPage;
       ssPage >> unPage;
       unOffset = unPage * unNumPerPage;
@@ -1824,34 +1824,34 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
   stringstream qs;
 
   qs << "select a.id, c.email, c.first_name, c.last_name, a.notify, a.physical_access, a.server_id, a.type_id, c.id user_id, c.userid from server_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "server_id"))
+  if (!i->empty({"server_id"}))
   {
     qs << " and a.server_id = " << v(i->m["server_id"]->v);
   }
-  if ((!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1") || (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1") || (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1") || (!empty(i, "Contact") && i->m["Contact"]->v == "1"))
+  if (i->val({"Primary Admin"}) == "1" || i->val({"Backup Admin"}) == "1" || i->val({"Primary Contact"}) == "1" || i->val({"Contact"}) == "1")
   {
     bool f = true;
     qs << " and b.type in (";
-    if (!empty(i, "Primary Admin") && i->m["Primary Admin"]->v == "1")
+    if (i->val({"Primary Admin"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Admin'";
       f = false;
     }
-    if (!empty(i, "Backup Admin") && i->m["Backup Admin"]->v == "1")
+    if (i->val({"Backup Admin"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Backup Admin'";
       f = false;
     }
-    if (!empty(i, "Primary Contact") && i->m["Primary Contact"]->v == "1")
+    if (i->val({"Primary Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Primary Contact'";
       f = false;
     }
-    if (!empty(i, "Contact") && i->m["Contact"]->v == "1")
+    if (i->val({"Contact"}) == "1")
     {
       qs << ((!f)?", ":"") << "'Contact'";
       f = false;
@@ -1859,10 +1859,10 @@ bool Db::dbCentralServerUsers(Json *i, Json *o, string &id, string &q, string &e
     qs << ")";
   }
   qs << " order by c.last_name, c.first_name, c.userid";
-  if (exist(i, "page"))
+  if (i->exist({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -1943,15 +1943,15 @@ bool Db::dbCentralUserPasskeys(Json *i, Json *o, string &id, string &q, string &
   stringstream qs;
 
   qs << "select id, name, passkey_id, person_id, public_key from person_passkey where 1";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "passkey_id"))
+  if (!i->empty({"passkey_id"}))
   {
     qs << " and passkey_id = " << v(i->m["passkey_id"]->v);
   }
-  if (!empty(i, "person_id"))
+  if (!i->empty({"person_id"}))
   {
     qs << " and person_id = " << v(i->m["person_id"]->v);
   }
@@ -2014,11 +2014,11 @@ bool Db::dbCentralUserReminders(Json *i, Json *o, string &id, string &q, string 
   stringstream qs;
 
   qs << "select id, alert, chat, cron, description, email, live, person_id, sched, text, title from person_reminder where 1";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "person_id"))
+  if (!i->empty({"person_id"}))
   {
     qs << " and person_id = " << v(i->m["person_id"]->v);
   }
@@ -2063,7 +2063,7 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
   stringstream qs;
 
   qs << "select";
-  if (!empty(i, "count") && i->m["count"]->v == "1")
+  if (i->val({"count"}) == "1")
   {
     qs << " count(id) num";
   }
@@ -2082,11 +2082,11 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
     qs << "alert_remote_proxy_user, alert_remote_user, email, first_name, last_name, locked, mfa, pager, userid";
   }
   qs << " from person where 1";
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     qs << " and id = " << v(i->m["id"]->v);
   }
-  if (!empty(i, "letter"))
+  if (!i->empty({"letter"}))
   {
     if (i->m["letter"]->v == "#")
     {
@@ -2097,15 +2097,15 @@ bool Db::dbCentralUsers(Json *i, Json *o, string &id, string &q, string &e)
       qs << " and upper(last_name) like '" << i->m["letter"]->v << "%'";
     }
   }
-  if (!empty(i, "userid"))
+  if (!i->empty({"userid"}))
   {
     qs << " and userid = " << v(i->m["userid"]->v);
   }
   qs << " order by last_name, first_name, userid";
-  if (!empty(i, "page"))
+  if (!i->empty({"page"}))
   {
     size_t unNumPerPage, unOffset, unPage;
-    stringstream ssNumPerPage((!empty(i, "numPerPage"))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
+    stringstream ssNumPerPage((!i->empty({"numPerPage"}))?i->m["numPerPage"]->v:"10"), ssPage(i->m["page"]->v);
     ssNumPerPage >> unNumPerPage;
     ssPage >> unPage;
     unOffset = unPage * unNumPerPage;
@@ -2125,11 +2125,11 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
     bool f = true;
     stringstream qs;
     qs << "update person set" << u({"active", "admin", "alert_chat", "alert_email", "alert_live_audio", "alert_live_message", "alert_pager", "alert_remote_url", "alert_remote_auth_user", "alert_remote_proxy", "alert_remote_proxy_user", "alert_remote_user", "email", "first_name", "last_name", "locked", "mfa", "pager", "userid"}, i, f);
-    if (exist(i, "alert_remote_auth_password"))
+    if (i->exist({"alert_remote_auth_password"}))
     {
       qs << ((f)?"":",") << " `alert_remote_auth_password` = ";
       f = false;
-      if (!m_strAesSecret.empty() && !empty(i, "alert_remote_auth_password"))
+      if (!m_strAesSecret.empty() && !i->empty({"alert_remote_auth_password"}))
       {
         qs << "to_base64(aes_encrypt(" << v(i->m["alert_remote_auth_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
       }
@@ -2138,11 +2138,11 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
         qs << "null";
       }
     }
-    if (exist(i, "alert_remote_proxy_password"))
+    if (i->exist({"alert_remote_proxy_password"}))
     {
       qs << ((f)?"":",") << " `alert_remote_proxy_password` = ";
       f = false;
-      if (!m_strAesSecret.empty() && !empty(i, "alert_remote_proxy_password"))
+      if (!m_strAesSecret.empty() && !i->empty({"alert_remote_proxy_password"}))
       {
         qs << "to_base64(aes_encrypt(" << v(i->m["alert_remote_proxy_password"]->v) << ", sha2('" << esc(m_strAesSecret) << "', 512)))";
       }
@@ -2151,11 +2151,11 @@ bool Db::dbCentralUserUpdate(Json *i, Json *o, string &id, string &q, string &e)
         qs << "null";
       }
     }
-    if (exist(i, "password"))
+    if (i->exist({"password"}))
     {
       qs << ((f)?"":",") << " `password` = ";
       f = false;
-      if (!empty(i, "password"))
+      if (!i->empty({"password"}))
       {
         qs << "concat('!',upper(sha2(unhex(sha2('" << esc(i->m["password"]->v) << "', 512)), 512)))";
       }
@@ -2293,7 +2293,7 @@ string Db::ia(const string k, Json *i, bool &f)
 {
   string s;
 
-  if (exist(i, k))
+  if (i->exist({k}))
   {
     s = ia(k, f);
   }
@@ -2355,7 +2355,7 @@ string Db::ib(const string k, Json *i, bool &f)
 {
   string s;
 
-  if (exist(i, k))
+  if (i->exist({k}))
   {
     s = ib(k, i->m[k]->v, f);
   }
@@ -2470,7 +2470,7 @@ string Db::u(const string k, Json *i, bool &f)
 {
   string s;
 
-  if (exist(i, k))
+  if (i->exist({k}))
   {
     s = u(k, i->m[k]->v, f);
   }
