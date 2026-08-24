@@ -185,10 +185,10 @@ bool request(const string strFunction, const string strInterface, string &strRes
                       bExit = true;
                     }
                     bFirst = false;
-                    if (ptJson->m.find("Status") != ptJson->m.end() && ptJson->m["Status"]->v == "okay")
+                    if (ptJson->val({"Status"}) == "okay")
                     {
                       bResult = true;
-                      if (ptJson->m.find("Response") != ptJson->m.end() && !ptJson->m["Response"]->v.empty())
+                      if (!ptJson->empty({"Response"}))
                       {
                         strResponse = ptJson->m["Response"]->v;
                       }
@@ -206,7 +206,7 @@ bool request(const string strFunction, const string strInterface, string &strRes
                         cout << " --" << endl;
                       }
                     }
-                    else if (ptJson->m.find("Error") != ptJson->m.end() && !ptJson->m["Error"]->v.empty())
+                    else if (!ptJson->empty({"Error"}))
                     {
                       bExit = true;
                       strError = ptJson->m["Error"]->v;
