@@ -41,7 +41,7 @@ void Emulator::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
@@ -59,7 +59,7 @@ void Emulator::callback(string strPrefix, const string strPacket, const bool bRe
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -93,7 +93,7 @@ bool Emulator::data(radialUser &d, string &e)
 
   if (isValid(d, "Emulator"))
   {
-    if (!empty(d.r, "wsRequestID"))
+    if (!d.r->empty({"wsRequestID"}))
     {
       string w = d.r->m["wsRequestID"]->v;
       if (dep({"Data"}, i, e))
@@ -131,7 +131,7 @@ bool Emulator::launch(radialUser &d, string &e)
 
   if (isValid(d, "Emulator"))
   {
-    if (!empty(d.r, "wsRequestID"))
+    if (!d.r->empty({"wsRequestID"}))
     {
       string w = d.r->m["wsRequestID"]->v;
       if (dep({"Command"}, i, e))
