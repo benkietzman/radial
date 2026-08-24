@@ -104,7 +104,7 @@ void Command::process(string strPrefix)
             ptJson = new Json(p.p);
             if (p.s == "hub")
             {
-              if (!empty(ptJson, "Function"))
+              if (!ptJson->empty({"Function"}))
               {
                 // {{{ interfaces
                 if (ptJson->m["Function"]->v == "interfaces")
@@ -143,7 +143,7 @@ void Command::process(string strPrefix)
                 log(ssMessage.str());
               }
             }
-            else if (exist(ptJson, "|function") && ptJson->m["|function"]->v == "status")
+            else if (ptJson->val({"|function"}) == "status")
             {
               float fCpu = 0, fMem = 0;
               pid_t nPid = getpid();
@@ -151,7 +151,7 @@ void Command::process(string strPrefix)
               time_t CTime = 0;
               unsigned long ulImage = 0, ulResident = 0;
               ptJson->i("Status", "okay");
-              if (exist(ptJson, "Response"))
+              if (ptJson->exist({"Response"}))
               {
                 delete ptJson->m["Response"];
               }   
@@ -167,7 +167,7 @@ void Command::process(string strPrefix)
               ptJson->j(p.p);
               hub(p, false);
             }
-            else if (!empty(ptJson, "Command"))
+            else if (!ptJson->empty({"Command"}))
             {
               int readpipe[2] = {-1, -1};
               unThroughput++;
@@ -190,7 +190,7 @@ void Command::process(string strPrefix)
                       strcpy(pszArgument, strArgument.c_str());
                       args[unIndex++] = pszArgument;
                     }
-                    if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Arguments"))
+                    if (ptJson->exist({"Request", "Arguments"}))
                     {
                       for (auto &i : ptJson->m["Request"]->m["Arguments"]->l)
                       {
@@ -214,7 +214,7 @@ void Command::process(string strPrefix)
                     {
                       delete[] args[i];
                     }
-                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Format") && ptJson->m["Request"]->m["Format"]->v == "json")
+                    if (ptJson->val({"Request", "Format"}) == "json")
                     {
                       string strOut;
                       Json *ptOut = new Json;
@@ -245,7 +245,7 @@ void Command::process(string strPrefix)
                     ptCommand->bJson = false;
                     ptCommand->bProcessed = false;
                     ptCommand->CTimeout = 1800;
-                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Timeout"))
+                    if (!ptJson->empty({"Request", "Timeout"}))
                     {
                       stringstream ssTimeout(ptJson->m["Request"]->m["Timeout"]->v);
                       ssTimeout >> ptCommand->CTimeout;
@@ -266,11 +266,11 @@ void Command::process(string strPrefix)
                       lArg |= O_NONBLOCK;
                       fcntl(ptCommand->fdWrite, F_SETFL, lArg);
                     }
-                    if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Format") && ptJson->m["Request"]->m["Format"]->v == "json")
+                    if (ptJson->val({"Request", "Format"}) == "json")
                     {
                       ptCommand->bJson = true;
                     }
-                    if (exist(ptJson, "Request") && exist(ptJson->m["Request"], "Input"))
+                    if (ptJson->exist({"Request", "Input"}))
                     {
                       if (ptCommand->bJson)
                       {
@@ -518,7 +518,7 @@ void Command::process(string strPrefix)
       unpack((*i)->strPacket, p);
       ptJson = new Json(p.p);
       ssDuration << unDuration;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }

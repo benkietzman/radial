@@ -64,9 +64,9 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Database"))
+  if (!ptJson->empty({"Database"}))
   {
-    if (!empty(ptJson, "Query"))
+    if (!ptJson->empty({"Query"}))
     {
       unsigned long long ullRows;
       auto rows = m_pCentral->query(ptJson->m["Database"]->v, ptJson->m["Query"]->v, ullRows, strError);
@@ -76,7 +76,7 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
         bResult = true;
         ssRows << ullRows;
         ptJson->i("Rows", ssRows.str(), 'n');
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           delete ptJson->m["Response"];
         }
@@ -88,7 +88,7 @@ void Database::callback(string strPrefix, const string strPacket, const bool bRe
       }
       m_pCentral->free(rows);
     }
-    else if (!empty(ptJson, "Update"))
+    else if (!ptJson->empty({"Update"}))
     {
       unsigned long long ullID, ullRows;
       if (m_pCentral->update(ptJson->m["Database"]->v, ptJson->m["Update"]->v, ullID, ullRows, strError))
@@ -205,7 +205,7 @@ bool Database::mysql(const string strType, const string strName, const string st
     load("Database::mysql()");
   }
   m_mutex.lock();
-  if (m_ptDatabases != NULL && exist(m_ptDatabases, strName))
+  if (m_ptDatabases != NULL && m_ptDatabases->exist({strName}))
   {
     ptJson = new Json(m_ptDatabases->m[strName]);
   }
@@ -223,12 +223,12 @@ bool Database::mysql(const string strType, const string strName, const string st
           if (hub("mysql", ptJson, strError))
           {
             bResult = true;
-            if (!empty(ptJson, "ID"))
+            if (!ptJson->empty({"ID"}))
             {
               stringstream ssID(ptJson->m["ID"]->v);
               ssID >> ullID;
             }
-            if (strType == "query" && exist(ptJson, "Response"))
+            if (strType == "query" && ptJson->exist({"Response"}))
             {
               for (auto &i : ptJson->m["Response"]->l)
               {
@@ -237,7 +237,7 @@ bool Database::mysql(const string strType, const string strName, const string st
                 rows->push_back(row);
               }
             }
-            if (!empty(ptJson, "Rows"))
+            if (!ptJson->empty({"Rows"}))
             {
               stringstream ssRows(ptJson->m["Rows"]->v);
               ssRows >> ullRows;
@@ -284,10 +284,10 @@ bool Database::sqlite(const string strType, const string strName, const string s
     load("Database::sqlite()");
   }
   m_mutex.lock();
-  if (m_ptDatabases != NULL && exist(m_ptDatabases, strName) && !empty(m_ptDatabases->m[strName], "Database"))
+  if (m_ptDatabases != NULL && !m_ptDatabases->empty({strName, "Database"}))
   {
     strDatabase = m_ptDatabases->m[strName]->m["Database"]->v;
-    if (!empty(m_ptDatabases->m[strName], "Access") && m_ptDatabases->m[strName]->m["Access"]->v == "rw")
+    if (m_ptDatabases->m[strName]->val({"Access"}) == "rw")
     {
       bReadOnly = false;
     }
@@ -314,14 +314,14 @@ bool Database::sqlite(const string strType, const string strName, const string s
           if (hub("sqlite", ptJson, strError))
           {
             bResult = true;
-            if (exist(ptJson, "Response"))
+            if (ptJson->exist({"Response"}))
             {
-              if (!empty(ptJson->m["Response"], "ID"))
+              if (!ptJson->m["Response"]->empty({"ID"}))
               {
                 stringstream ssID(ptJson->m["Response"]->m["ID"]->v);
                 ssID >> unID;
               }
-              if (strType == "query" && rows != NULL && exist(ptJson, "Response"))
+              if (strType == "query" && rows != NULL && ptJson->exist({"Response"}))
               {
                 for (auto &i : ptJson->m["Response"]->m["ResultSet"]->l)
                 {
@@ -330,7 +330,7 @@ bool Database::sqlite(const string strType, const string strName, const string s
                   rows->push_back(row);
                 }
               }
-              if (!empty(ptJson->m["Response"], "Rows"))
+              if (!ptJson->m["Response"]->empty({"Rows"}))
               {
                 stringstream ssRows(ptJson->m["Response"]->m["Rows"]->v);
                 ssRows >> unRows;

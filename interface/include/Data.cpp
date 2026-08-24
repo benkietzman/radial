@@ -110,7 +110,7 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     string strFunction = ptJson->m["Function"]->v;
     radialUser d;
@@ -129,7 +129,7 @@ void Data::callback(string strPrefix, const string strPacket, const bool bRespon
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -516,14 +516,14 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                   m_mutex.unlock();
                   if (i != NULL)
                   {
-                    if (!empty(i, "_function"))
+                    if (!i->empty({"_function"}))
                     {
                       strFunction = i->m["_function"]->v; 
-                      if (!empty(i, "_path"))
+                      if (!i->empty({"_path"}))
                       {
                         stringstream ssPath;
                         ssPath << i->m["_path"]->v;
-                        if (exist(i, "path"))
+                        if (i->exist({"path"}))
                         {
                           for (auto &item : i->m["path"]->l)
                           {
@@ -1200,10 +1200,10 @@ bool Data::token(radialUser &d, string &e)
   m_mutex.unlock();
   if (c != NULL)
   {
-    if (!empty(i, "handle"))
+    if (!i->empty({"handle"}))
     {
       bool bValidPath = true;
-      if (exist(i, "path"))
+      if (i->exist({"path"}))
       {
         for (auto p = i->m["path"]->l.begin(); bValidPath && p != i->m["path"]->l.end(); p++)
         {
@@ -1215,7 +1215,7 @@ bool Data::token(radialUser &d, string &e)
       }
       if (bValidPath)
       {
-        if (exist(c, i->m["handle"]->v))
+        if (c->exist({i->m["handle"]->v}))
         {
           auto nodeIter = c->m[i->m["handle"]->v]->m.end();
           for (auto n = c->m[i->m["handle"]->v]->m.begin(); nodeIter == c->m[i->m["handle"]->v]->m.end() && n != c->m[i->m["handle"]->v]->m.end(); n++)
@@ -1281,7 +1281,7 @@ bool Data::token(radialUser &d, string &e)
               ptLink->i("Node", nodes[rand_r(&unSeed) % nodes.size()]);
               if (hub("link", ptLink, e))
               {
-                if (exist(ptLink, "Response"))
+                if (ptLink->exist({"Response"}))
                 {
                   b = true;
                   o->merge(ptLink->m["Response"], true, false);
