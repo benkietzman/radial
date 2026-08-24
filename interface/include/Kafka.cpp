@@ -79,7 +79,7 @@ void Kafka::callback(string strPrefix, const string strPacket, const bool bRespo
   {
     if (isMaster())
     {
-      if (!empty(ptJson, "Function"))
+      if (!ptJson->empty({"Function"}))
       {
         string strFunction = ptJson->m["Function"]->v;
         radialUser d;
@@ -98,7 +98,7 @@ void Kafka::callback(string strPrefix, const string strPacket, const bool bRespo
         }
         if (bResult)
         {
-          if (exist(ptJson, "Response"))
+          if (ptJson->exist({"Response"}))
           {
             delete ptJson->m["Response"];
           }
@@ -120,7 +120,7 @@ void Kafka::callback(string strPrefix, const string strPacket, const bool bRespo
       if (hub("link", ptLink, strError))
       {
         bResult = true;
-        if (exist(ptLink, "Response"))
+        if (ptLink->exist({"Response"}))
         {
           ptJson->i("Response", ptLink->m["Response"]);
         }
