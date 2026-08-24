@@ -27,22 +27,13 @@ Secure::Secure(string strPrefix, int argc, char **argv, void (*pCallback)(string
   m_pProcessPreAuthzCallback = NULL;
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError))
   { 
-    if (!empty(ptAes, "Secret"))
-    {
-      m_strAesSecret = ptAes->m["Secret"]->v;
-    }
+    m_strAesSecret = ptAes->val({"Secret"});
   }
   delete ptAes; 
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError))
   {
-    if (!empty(ptJwt, "Secret"))
-    {
-      m_strJwtSecret = ptJwt->m["Secret"]->v;
-    }
-    if (!empty(ptJwt, "Signer"))
-    {
-      m_strJwtSigner = ptJwt->m["Signer"]->v;
-    }
+    m_strJwtSecret = ptJwt->val({"Secret"});
+    m_strJwtSigner = ptJwt->val({"Signer"});
   }
   delete ptJwt;
 }
@@ -65,12 +56,12 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     // {{{ auth
     if (ptJson->m["Function"]->v == "auth")
     {
-      if (!empty(ptJson, "wsJwt"))
+      if (!ptJson->empty({"wsJwt"}))
       {
         string strBase64 = ptJson->m["wsJwt"]->v, strPayload;
         Json *ptJwt = new Json;
@@ -82,32 +73,32 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
         if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
           bResult = true;
-          if (exist(ptJson, "Response"))
+          if (ptJson->exist({"Response"}))
           {
             delete ptJson->m["Response"];
           }
           ptJson->m["Response"] = new Json;
-          if (exist(ptJwt, "sl_admin"))
+          if (ptJwt->exist({"sl_admin"}))
           {
             ptJson->m["Response"]->m["admin"] = new Json(ptJwt->m["sl_admin"]);
           }
-          if (exist(ptJwt, "sl_auth"))
+          if (ptJwt->exist({"sl_auth"}))
           {
             ptJson->m["Response"]->m["apps"] = new Json(ptJwt->m["sl_auth"]);
           }
-          if (exist(ptJwt, "sl_email"))
+          if (ptJwt->exist({"sl_email"}))
           {
             ptJson->m["Response"]->m["email"] = new Json(ptJwt->m["sl_email"]);
           }
-          if (exist(ptJwt, "sl_first_name"))
+          if (ptJwt->exist({"sl_first_name"}))
           {
             ptJson->m["Response"]->m["first_name"] = new Json(ptJwt->m["sl_first_name"]);
           }
-          if (exist(ptJwt, "sl_last_name"))
+          if (ptJwt->exist({"sl_last_name"}))
           {
             ptJson->m["Response"]->m["last_name"] = new Json(ptJwt->m["sl_last_name"]);
           }
-          if (exist(ptJwt, "sl_login"))
+          if (ptJwt->exist({"sl_login"}))
           {
             ptJson->m["Response"]->m["userid"] = new Json(ptJwt->m["sl_login"]);
           }
@@ -123,7 +114,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ getSecurityModule
     else if (ptJson->m["Function"]->v == "getSecurityModule")
     {
-      if (!empty(ptJson, "reqApp"))
+      if (!ptJson->empty({"reqApp"}))
       {
         stringstream ssQuery;
         ssQuery << "select b.remote, b.title, b.type from application a, login_type b where a.login_type_id = b.id and a.name = '" << esc(ptJson->m["reqApp"]->v) << "'";
@@ -138,7 +129,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
             {
               strModule[0] = tolower(strModule[0]);
             }
-            if (exist(ptJson, "Response"))
+            if (ptJson->exist({"Response"}))
             {
               delete ptJson->m["Response"];
             }
@@ -164,9 +155,9 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ login
     else if (ptJson->m["Function"]->v == "login")
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
-        if (!empty(ptJson->m["Request"], "Type"))
+        if (!ptJson->m["Request"]->empty({"Type"}))
         {
           bResult = true;
           if (m_pLoginCallback != NULL)
@@ -188,15 +179,15 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     // {{{ logout
     else if (ptJson->m["Function"]->v == "logout")
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
-        if (!empty(ptJson->m["Request"], "Type"))
+        if (!ptJson->m["Request"]->empty({"Type"}))
         {
           bResult = false;
-          if (!empty(ptJson->m["Request"], "Return"))
+          if (!ptJson->m["Request"]->empty({"Return"}))
           {
             bResult = true;
-            if (exist(ptJson, "Response"))
+            if (ptJson->exist({"Response"}))
             {
               delete ptJson->m["Response"];
             }
@@ -230,7 +221,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
       string strChallenge, strData;
 
       bResult = true;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -248,23 +239,23 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
     else if (ptJson->m["Function"]->v == "process")
     {
       bResult = true;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
       ptJson->m["Response"] = new Json;
       ptJson->m["Response"]->m["auth"] = new Json;
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
         if (ptJson->m["Request"]->m.size() > 1)
         {
           Json *ptData = new Json(ptJson->m["Request"]);
-          if (!empty(ptJson->m["Request"], "password"))
+          if (!ptJson->m["Request"]->empty({"password"}))
           {
             delete ptJson->m["Request"]->m["password"];
             ptJson->m["Request"]->m.erase("password");
           }
-          if (!exist(ptData, "password") && !exist(ptData, "Password"))
+          if (!ptData->exist({"password"}) && !ptData->exist({"Password"}))
           {
             ptData->i("Password", "");
           }
@@ -278,7 +269,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
             {
               m_pProcessPostAuthzCallback(strPrefix, ptJson, ptData);
             }
-            if (exist(ptData, "central"))
+            if (ptData->exist({"central"}))
             {
               map<string, string> getPersonRow;
               string strPayload, strValue;
@@ -312,7 +303,7 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
                 ptJwt->m["RadialCredentials"] = new Json;
                 for (auto &getApplicationAccountRow : *getApplicationAccount)
                 {
-                  if (!exist(ptJwt->m["RadialCredentials"], getApplicationAccountRow["name"]))
+                  if (!ptJwt->m["RadialCredentials"]->exist({getApplicationAccountRow["name"]}))
                   {
                     ptJwt->m["RadialCredentials"]->m[getApplicationAccountRow["name"]] = new Json;
                   }
@@ -331,12 +322,12 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
                 }
               }
               dbfree(getApplicationAccount);
-              if (exist(ptData->m["central"], "apps"))
+              if (ptData->m["central"]->exist({"apps"}))
               {
                 ptJwt->m["sl_auth"] = new Json(ptData->m["central"]->m["apps"]);
                 ptJson->m["Response"]->m["auth"]->m["apps"] = new Json(ptData->m["central"]->m["apps"]);
               }
-              if (!empty(ptJson, "reqApp"))
+              if (!ptJson->empty({"reqApp"}))
               {
                 ssQuery.str("");
                 ssQuery << "select id from application where name = '" << esc(ptJson->m["reqApp"]->v) << "' and auto_register = 1";
@@ -357,12 +348,12 @@ void Secure::callback(string strPrefix, const string strPacket, const bool bResp
                       ssQuery << "insert into application_contact (application_id, type_id, contact_id) values (" << getApplication->front()["id"] << ", " << getContactType->front()["id"] << ", " << getPersonRow["id"] << ")";
                       if (dbupdate("central", ssQuery.str(), strError))
                       {
-                        if (!exist(ptJwt, "sl_auth"))
+                        if (!ptJwt->exist({"sl_auth"}))
                         {
                           ptJwt->m["sl_auth"] = new Json;
                         }
                         ptJwt->m["sl_auth"]->i(ptJson->m["reqApp"]->v, "0", '0');
-                        if (!exist(ptJson->m["Response"]->m["auth"], "apps"))
+                        if (!ptJson->m["Response"]->m["auth"]->exist({"apps"}))
                         {
                           ptJson->m["Response"]->m["auth"]->m["apps"] = new Json;
                         }
