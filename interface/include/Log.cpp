@@ -57,9 +57,9 @@ void Log::callback(string strPrefix, const string strPacket, const bool bRespons
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
-    if (!empty(ptJson, "Message"))
+    if (!ptJson->empty({"Message"}))
     {
       if (ptJson->m["Function"]->v == "alert")
       {
