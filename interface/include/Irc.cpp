@@ -135,7 +135,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
     ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
     for (auto &i : m_ptMonitor->m)
     {
-      if (i.first != strTarget && exist(i.second, "Alerts"))
+      if (i.first != strTarget && i.second->exist({"Alerts"}))
       {
         for (auto &j : i.second->m["Alerts"]->l)
         {
@@ -770,9 +770,9 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         if (hub("application", ptJson, strError))
         {
-          if (exist(ptJson, "Response"))
+          if (ptJson->exist({"Response"}))
           {
-            if (!empty(ptJson->m["Response"], "Message"))
+            if (!ptJson->m["Response"]->empty({"Message"}))
             {
               ssText << ptJson->m["Response"]->m["Message"]->v;
             }
@@ -1216,30 +1216,30 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
         }
         if (centralmon(strServer, strProcess, ptResponse, strError))
         {
-          if (exist(ptResponse, "data"))
+          if (ptResponse->exist({"data"}))
           {
             if (!strProcess.empty())
             {
-              if (!empty(ptResponse->m["data"], "startTime"))
+              if (!ptResponse->m["data"]->empty({"startTime"}))
               {
                 struct tm tTime;
                 time_t CTime = atoi(ptResponse->m["data"]->m["startTime"]->v.c_str());
                 localtime_r(&CTime, &tTime);
                 ssText << endl << "Start Time:  " << put_time(&tTime, "%Y-%m-%d %H:%M:%S");
               }
-              if (!empty(ptResponse->m["data"], "processes"))
+              if (!ptResponse->m["data"]->empty({"processes"}))
               {
                 ssText << endl << "# Processes:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processes"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "image"))
+              if (!ptResponse->m["data"]->empty({"image"}))
               {
                 ssText << endl << "Image:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["image"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "resident"))
+              if (!ptResponse->m["data"]->empty({"resident"}))
               {
                 ssText << endl << "Resident:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["resident"]->v.c_str()), strValue);
               }
-              if (exist(ptResponse->m["data"], "owners") && !ptResponse->m["data"]->m["owners"]->m.empty())
+              if (ptResponse->m["data"]->exist({"owners"}) && !ptResponse->m["data"]->m["owners"]->m.empty())
               {
                 bool bFirst = true;
                 ssText << endl << "Process Owners:  (";
@@ -1253,43 +1253,43 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
             }
             else
             {
-              if (!empty(ptResponse->m["data"], "operatingSystem"))
+              if (!ptResponse->m["data"]->empty({"operatingSystem"}))
               {
                 ssText << endl << "Operating System:  " << ptResponse->m["data"]->m["operatingSystem"]->v;
               }
-              if (!empty(ptResponse->m["data"], "systemRelease"))
+              if (!ptResponse->m["data"]->empty({"systemRelease"}))
               {
                 ssText << endl << "System Release:  " << ptResponse->m["data"]->m["systemRelease"]->v;
               }
-              if (!empty(ptResponse->m["data"], "upTime"))
+              if (!ptResponse->m["data"]->empty({"upTime"}))
               {
                 ssText << endl << "Uptime:  " << m_manip.toShort((atof(ptResponse->m["data"]->m["upTime"]->v.c_str()) / 60 / 60 / 24), strValue) << " days";
               }
-              if (!empty(ptResponse->m["data"], "mainUsed") && !empty(ptResponse->m["data"], "mainTotal"))
+              if (!ptResponse->m["data"]->empty({"mainUsed"}) && !ptResponse->m["data"]->empty({"mainTotal"}))
               {
                 ssText << endl << "Memory Used:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["mainUsed"]->v.c_str()), strValue) << " of " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["mainTotal"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "swapUsed") && !empty(ptResponse->m["data"], "swapTotal"))
+              if (!ptResponse->m["data"]->empty({"swapUsed"}) && !ptResponse->m["data"]->empty({"swapTotal"}))
               {
                 ssText << endl << "Swap Used:  " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["swapUsed"]->v.c_str()), strValue) << " of " << m_manip.toShortByte(atof(ptResponse->m["data"]->m["swapTotal"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "processors"))
+              if (!ptResponse->m["data"]->empty({"processors"}))
               {
                 ssText << endl << "# Processors:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processors"]->v.c_str()), strValue);
               }
-              if (!empty(ptResponse->m["data"], "cpuSpeed"))
+              if (!ptResponse->m["data"]->empty({"cpuSpeed"}))
               {
                 ssText << endl << "CPU Speed:  " << ptResponse->m["data"]->m["cpuSpeed"]->v << " MHz";
               }
-              if (!empty(ptResponse->m["data"], "cpuUsage"))
+              if (!ptResponse->m["data"]->empty({"cpuUsage"}))
               {
                 ssText << endl << "CPU Usage:  " << ptResponse->m["data"]->m["cpuUsage"]->v << "%";
               }
-              if (!empty(ptResponse->m["data"], "processes"))
+              if (!ptResponse->m["data"]->empty({"processes"}))
               {
                 ssText << endl << "# Processes:  " << m_manip.toShort(atof(ptResponse->m["data"]->m["processes"]->v.c_str()), strValue);
               }
-              if (exist(ptResponse->m["data"], "partitions") && !ptResponse->m["data"]->m["partitions"]->m.empty())
+              if (ptResponse->m["data"]->exist({"partitions"}) && !ptResponse->m["data"]->m["partitions"]->m.empty())
               {
                 bool bFirst = true;
                 ssText << endl << "partitions:  (";
@@ -1302,7 +1302,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               }
             }
           }
-          if (!empty(ptResponse, "alarms"))
+          if (!ptResponse->empty({"alarms"}))
           {
             ssText << endl << "Alarms:  " << char(3) << "04" << ptResponse->m["alarms"]->v << char(3);
           }
@@ -1658,14 +1658,14 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
               if (hub("central", ptJson, strError))
               {
                 ssText << ": done";
-                if (exist(ptJson, "Response"))
+                if (ptJson->exist({"Response"}))
                 {
                   for (auto &reminder : ptJson->m["Response"]->l)
                   {
-                    if (!empty(reminder, "title"))
+                    if (!reminder->empty({"title"}))
                     {
                       ssText << endl;
-                      if (exist(reminder, "cron") && !empty(reminder->m["cron"], "value") && !empty(reminder, "sched"))
+                      if (!reminder->empty({"cron", "value"}) && !reminder->empty({"sched"}))
                       {
                         ssText << char(3) << ((reminder->m["cron"]->m["value"]->v == "0")?"00,14":"07,05") << " " << reminder->m["sched"]->v << " " << char(3) << " ";
                       }
@@ -2122,7 +2122,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                     if (hub(strT, ptJson, strError))
                     {
                       bSubResult = true;
-                      if (exist(ptJson, "Response"))
+                      if (ptJson->exist({"Response"}))
                       {
                         ptJson->m["Response"]->j(strResult);
                       }
@@ -2496,12 +2496,12 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
       ptJson->i("Function", "topics");
       if (hub("kafka", ptJson, strError))
       {
-        if (exist(ptJson, "Response"))
+        if (ptJson->exist({"Response"}))
         {
           for (auto &topic : ptJson->m["Response"]->m)
           {
             ssText << endl << topic.first << ":  ";
-            if (!empty(topic.second, "subscribed") && topic.second->m["subscribed"]->v == "1")
+            if (topic.second->val({"subscribed"}) == "1")
             {
               ssText << char(3) << "03subscribed" << char(3);
             }
@@ -2532,26 +2532,11 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
     if (!strJson.empty())
     {
       Json *ptJson = new Json(strJson);
-      if (!empty(ptJson, "Application"))
-      {
-        strApplication = ptJson->m["Application"]->v;
-      }
-      if (!empty(ptJson, "Class"))
-      {
-        strClass = ptJson->m["Class"]->v;
-      }
-      if (!empty(ptJson, "Message"))
-      {
-        strMessage = ptJson->m["Message"]->v;
-      }
-      if (!empty(ptJson, "Title"))
-      {
-        strTitle = ptJson->m["Title"]->v;
-      }
-      if (!empty(ptJson, "User"))
-      {
-        strUser = ptJson->m["User"]->v;
-      }
+      strApplication = ptJson->val({"Application"});
+      strClass = ptJson->val({"Class"});
+      strMessage = ptJson->val({"Message"});
+      strTitle = ptJson->val({"Title"});
+      strUser = ptJson->val({"User"});
       delete ptJson;
     }
     if (!strMessage.empty())
@@ -3582,22 +3567,22 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
   }
   if (isMasterSettled() && isMaster())
   {
-    if (!empty(ptJson, "Function"))
+    if (!ptJson->empty({"Function"}))
     {
       // {{{ analyze
       if (ptJson->m["Function"]->v == "analyze")
       {
-        if (exist(ptJson, "Request"))
+        if (ptJson->exist({"Request"}))
         {
-          if (!empty(ptJson->m["Request"], "Source"))
+          if (!ptJson->m["Request"]->empty({"Source"}))
           {
-            if (!empty(ptJson->m["Request"], "Target"))
+            if (!ptJson->m["Request"]->empty({"Target"}))
             {
-              if (!empty(ptJson->m["Request"], "UserID"))
+              if (!ptJson->m["Request"]->empty({"UserID"}))
               {
-                if (!empty(ptJson->m["Request"], "Ident"))
+                if (!ptJson->m["Request"]->empty({"Ident"}))
                 {
-                  if (!empty(ptJson->m["Request"], "Message"))
+                  if (!ptJson->m["Request"]->empty({"Message"}))
                   {
                     bResult = true;
                     thread threadAnalyzer(&Irc::analyzer, this, strPrefix, ptJson->m["Request"]->m["Target"]->v, ptJson->m["Request"]->m["UserID"]->v, ptJson->m["Request"]->m["Ident"]->v, ptJson->m["Request"]->m["Message"]->v, ptJson->m["Request"]->m["Source"]->v);
@@ -3660,9 +3645,9 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
       // {{{ chat
       else if (ptJson->m["Function"]->v == "chat")
       {
-        if (!empty(ptJson, "Message"))
+        if (!ptJson->empty({"Message"}))
         {
-          if (!empty(ptJson, "Target"))
+          if (!ptJson->empty({"Target"}))
           {
             size_t unPosition;
             string strMessage = ptJson->m["Message"]->v;
@@ -3680,7 +3665,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
             if (enabled())
             {
               bResult = true;
-              chat(ptJson->m["Target"]->v, strMessage, ((!empty(ptJson, "Source"))?ptJson->m["Source"]->v:""));
+              chat(ptJson->m["Target"]->v, strMessage, ptJson->val({"Source"}));
             }
             else
             {
@@ -3718,7 +3703,7 @@ void Irc::callback(string strPrefix, const string strPacket, const bool bRespons
     if (hub("link", ptLink, strError))
     {
       bResult = true;
-      if (exist(ptLink, "Response"))
+      if (ptLink->exist({"Response"}))
       {
         ptJson->i("Response", ptLink->m["Response"]);
       }
@@ -3866,12 +3851,12 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
   {
     bool bExit = false, bProcess;
     stringstream ssText;
-    if (!empty(ptSurvey, "title"))
+    if (!ptSurvey->empty({"title"}))
     {
       ssText << "SURVEY:  " << ptSurvey->m["title"]->v << endl;
     }
     ssText << "This survey was created by ";
-    if (exist(ptSurvey, "owner") && !empty(ptSurvey->m["owner"], "first_name") && !empty(ptSurvey->m["owner"], "last_name"))
+    if (!ptSurvey->empty({"owner", "first_name"}) && !ptSurvey->m["owner"]->empty({"last_name"}))
     {
       ssText << ptSurvey->m["owner"]->m["first_name"]->v << " " << ptSurvey->m["owner"]->m["last_name"]->v;
     }
@@ -3879,14 +3864,14 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
     {
       ssText << "an unknown person";
     }
-    if (!empty(ptSurvey, "now_date") && !empty(ptSurvey, "start_date") && ptSurvey->m["now_date"]->v < ptSurvey->m["start_date"]->v)
+    if (!ptSurvey->empty({"now_date"}) && !ptSurvey->empty({"start_date"}) && ptSurvey->m["now_date"]->v < ptSurvey->m["start_date"]->v)
     {
       bExit = true;
       ssText << " and opens " << ptSurvey->m["start_date"]->v;
     }
-    if (!empty(ptSurvey, "end_date"))
+    if (!ptSurvey->empty({"end_date"}))
     {
-      if (!empty(ptSurvey, "now_date") && ptSurvey->m["now_date"]->v <= ptSurvey->m["end_date"]->v)
+      if (!ptSurvey->empty({"now_date"}) && ptSurvey->m["now_date"]->v <= ptSurvey->m["end_date"]->v)
       {
         ssText << " and expires " << ptSurvey->m["end_date"]->v;
       }
@@ -3902,9 +3887,9 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
     }
     ssText << ".";
     chat(strTarget, ssText.str(), strSource);
-    if (!empty(ptSurvey, "id"))
+    if (!ptSurvey->empty({"id"}))
     {
-      if (exist(ptSurvey, "questions"))
+      if (ptSurvey->exist({"questions"}))
       {
         delete ptSurvey->m["questions"];
       }
@@ -3919,7 +3904,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
           bProcess = false;
           if (q != ptSurvey->m["questions"]->l.end())
           {
-            if (!exist((*q), "type"))
+            if (!(*q)->exist({"type"}))
             {
               ssText.str("");
               ssText << "QUESTION:  " << (*q)->m["question"]->v;
@@ -3927,11 +3912,11 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
               (*q)->m["type"] = new Json;
               if (feedbackType((*q)->m["type_id"]->v, (*q)->m["type"], strError))
               {
-                if (!empty((*q)->m["type"], "name"))
+                if (!(*q)->m["type"]->empty({"name"}))
                 {
                   if ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select")
                   {
-                    if (exist((*q), "answers"))
+                    if ((*q)->exist({"answers"}))
                     {
                       delete ((*q)->m["answers"]);
                     }
@@ -3942,7 +3927,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
                       ssText << "ANSWERS:" << endl;
                       for (auto &ptAnswer : (*q)->m["answers"]->l)
                       {
-                        if (!empty(ptAnswer, "id") && !empty(ptAnswer, "answer") && !empty(ptAnswer, "sequence"))
+                        if (!ptAnswer->empty({"id"}) && !ptAnswer->empty({"answer"}) && !ptAnswer->empty({"sequence"}))
                         {
                           ssText << ptAnswer->m["sequence"]->v << ") " << ptAnswer->m["answer"]->v << endl;
                         }
@@ -4011,7 +3996,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
             {
               bExit = true;
             }
-            else if (exist((*q), "type") && !empty((*q)->m["type"], "name") && ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select") && exist((*q), "answers"))
+            else if (!(*q)->empty({"type", "name"}) && ((*q)->m["type"]->m["name"]->v == "checkbox" || (*q)->m["type"]->m["name"]->v == "radio" || (*q)->m["type"]->m["name"]->v == "select") && (*q)->exist({"answers"}))
             {
               if ((*q)->m["type"]->m["name"]->v == "checkbox")
               {
@@ -4033,7 +4018,7 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
                 string strAnswerID;
                 for (auto a = (*q)->m["answers"]->l.begin(); strAnswerID.empty() && a != (*q)->m["answers"]->l.end(); a++)
                 {
-                  if (!empty((*a), "sequence") && (*a)->m["sequence"]->v == strData && !empty((*a), "id"))
+                  if (!(*a)->empty({"sequence"}) && (*a)->m["sequence"]->v == strData && !(*a)->empty({"id"}))
                   {
                     strAnswerID = (*a)->m["id"]->v;
                   }
@@ -4048,9 +4033,9 @@ void Irc::feedback(string strPrefix, const string strTarget, const string strUse
             {
               (*q)->i("answer", strData);
             }
-            if (exist((*q), "answer"))
+            if ((*q)->exist({"answer"}))
             {
-              if (!empty((*q), "answer"))
+              if (!(*q)->empty({"answer"}))
               {
                 q++;
               }
@@ -4152,23 +4137,14 @@ void Irc::load(string strPrefix, const bool bSilent)
   if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
   {
     m_bLoaded = true;
-    if (!empty(ptAes, "Secret"))
-    {
-      m_strAesSecret = ptAes->m["Secret"]->v;
-    }
-    if (!empty(ptJwt, "Secret"))
-    {
-      m_strJwtSecret = ptJwt->m["Secret"]->v;
-    }
-    if (!empty(ptJwt, "Signer"))
-    {
-      m_strJwtSigner = ptJwt->m["Signer"]->v;
-    }
+    m_strAesSecret = ptAes->val({"Secret"});
+    m_strJwtSecret = ptJwt->val({"Secret"});
+    m_strJwtSigner = ptJwt->val({"Signer"});
     for (auto &cred : ptCred->m)
     {
-      if (!empty(cred.second, "Application") && exist(cred.second, "Alias"))
+      if (!cred.second->empty({"Application"}) && cred.second->exist({"Alias"}))
       {
-        if (!empty(cred.second, "Alias"))
+        if (!cred.second->empty({"Alias"}))
         {
           aliases[cred.second->m["Alias"]->v] = cred.second->m["Application"]->v;
         }
