@@ -36,11 +36,11 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
-    if (exist(ptJson, "Request"))
+    if (ptJson->exist({"Request"}))
     {
-      if (!empty(ptJson->m["Request"], "ID"))
+      if (!ptJson->m["Request"]->empty({"ID"}))
       {
         // {{{ destroy
         if (ptJson->m["Function"]->v == "destroy")
@@ -65,9 +65,9 @@ void Session::callback(string strPrefix, const string strPacket, const bool bRes
         // {{{ write
         else if (ptJson->m["Function"]->v == "write")
         {
-          if (exist(ptJson->m["Request"], "Data"))
+          if (ptJson->m["Request"]->exist({"Data"}))
           {
-            if (exist(ptJson->m["Request"], "Json"))
+            if (ptJson->m["Request"]->exist({"Json"}))
             {
               bResult = db("dbCentralPhpSessionAdd", ptJson->m["Request"], strError);
             }
