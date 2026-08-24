@@ -47,7 +47,7 @@ bool Feedback::answers(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "question_id"))
+  if (!i->empty({"question_id"}))
   {
     q << "select id, sequence, answer from answer where question_id = " << i->m["question_id"]->v << " order by sequence, id";
     auto g = dbquery("feedback_r", q.str(), e);
@@ -81,7 +81,7 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     bool bInvalid = true;
     string strFunction = ptJson->m["Function"]->v;
@@ -107,7 +107,7 @@ void Feedback::callback(string strPrefix, const string strPacket, const bool bRe
     }
     if (bResult)
     {
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -140,7 +140,7 @@ bool Feedback::questions(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "survey_id"))
+  if (!i->empty({"survey_id"}))
   {
     q << "select id, sequence, question, type_id, required from question where survey_id = " << i->m["survey_id"]->v << " order by sequence, id";
     auto g = dbquery("feedback_r", q.str(), e);
@@ -169,9 +169,9 @@ bool Feedback::results(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "survey_id"))
+  if (!i->empty({"survey_id"}))
   {
-    if (!empty(i, "question_id"))
+    if (!i->empty({"question_id"}))
     {
       radialUser s;
       userInit(d, s);
@@ -179,7 +179,7 @@ bool Feedback::results(radialUser &d, string &e)
       if (survey(s, e))
       {
         bool bValid = (s.p->m["o"]->m["restrict"]->v == "0");
-        if (!bValid && isValid(d, "Feedback") && exist(s.p->m["o"], "owner") && d.u == s.p->m["o"]->m["owner"]->m["userid"]->v)
+        if (!bValid && isValid(d, "Feedback") && s.p->m["o"]->exist({"owner"}) && d.u == s.p->m["o"]->m["owner"]->m["userid"]->v)
         {
           bValid = true;
         }
@@ -237,15 +237,15 @@ bool Feedback::resultAdd(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (exist(i, "survey"))
+  if (i->exist({"survey"}))
   {
-    if (!empty(i->m["survey"], "id"))
+    if (!i->m["survey"]->empty({"id"}))
     {
-      if (!empty(i->m["survey"], "hash"))
+      if (!i->m["survey"]->empty({"hash"}))
       {
-        if (exist(i->m["survey"], "questions") && !i->m["survey"]->m["questions"]->l.empty())
+        if (i->m["survey"]->exist({"questions"}) && !i->m["survey"]->m["questions"]->l.empty())
         {
-          bool bAnonymous = (!empty(i->m["survey"], "anonymous") && i->m["survey"]->m["anonymous"]->v == "1");
+          bool bAnonymous = (i->m["survey"]->val({"anonymous"}) == "1");
           if (bAnonymous || isValid(d))
           {
             bool bGood = true;
@@ -268,7 +268,7 @@ bool Feedback::resultAdd(radialUser &d, string &e)
             {
               for (auto j = i->m["survey"]->m["questions"]->l.begin(); bGood && j != i->m["survey"]->m["questions"]->l.end(); j++)
               {
-                if (!empty((*j), "required") && (*j)->m["required"]->v == "1" && (!exist((*j), "answer") || (empty((*j), "answer") && (*j)->m["answer"]->l.empty() && (*j)->m["answer"]->m.empty())))
+                if ((*j)->val({"required"}) == "1" && (!(*j)->exist({"answer"}) || ((*j)->empty({"answer"}) && (*j)->m["answer"]->l.empty() && (*j)->m["answer"]->m.empty())))
                 {
                   bGood = false;
                 }
@@ -282,23 +282,23 @@ bool Feedback::resultAdd(radialUser &d, string &e)
                 {
                   size_t unQuestion = 1;
                   b = true;
-                  if (exist(i->m["survey"], "owner") && !empty(i->m["survey"]->m["owner"], "email"))
+                  if (!i->m["survey"]->empty({"owner", "email"}))
                   {
                     stringstream ssSubject, ssText;
-                    ssSubject << "Feedback Received:  " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"");
-                    ssText << "Feedback has been received for the " << ((!empty(i->m["survey"], "title"))?i->m["survey"]->m["title"]->v:"") << " survey." << endl << endl << "https://" << m_strServer << "/feedback/#/results/" << i->m["survey"]->m["hash"]->v;
+                    ssSubject << "Feedback Received:  " << i->m["survey"]->val({"title"});
+                    ssText << "Feedback has been received for the " << i->m["survey"]->val({"title"}) << " survey." << endl << endl << "https://" << m_strServer << "/feedback/#/results/" << i->m["survey"]->m["hash"]->v;
                     email("", i->m["survey"]->m["owner"]->m["email"]->v, ssSubject.str(), ssText.str(), "");
                   }
                   for (auto &j : i->m["survey"]->m["questions"]->l)
                   {
-                    if (exist(j, "answer") && exist(j, "id"))
+                    if (j->exist({"answer"}) && j->exist({"id"}))
                     {
                       string strAnswer;
-                      if (!empty(j, "answer"))
+                      if (!j->empty({"answer"}))
                       {
                         m_manip.trim(strAnswer, j->m["answer"]->v);
                       }
-                      else if (!empty(j->m["answer"], "id"))
+                      else if (!j->m["answer"]->empty({"id"}))
                       {
                         strAnswer = j->m["answer"]->m["id"]->v;
                       }
@@ -411,10 +411,10 @@ bool Feedback::survey(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "hash") || !empty(i, "id"))
+  if (!i->empty({"hash"}) || !i->empty({"id"}))
   {
     q << "select id, hash, application_contact_id, title, date_format(entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(start_date, '%Y-%m-%d %H:%i') start_date, date_format(end_date, '%Y-%m-%d %H:%i') end_date, public, anonymous, `unique`, `restrict` from survey where ";
-    if (!empty(i, "hash"))
+    if (!i->empty({"hash"}))
     {
       q << "hash = '" << i->m["hash"]->v << "'";
     }
@@ -471,7 +471,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (exist(i, "survey"))
+  if (i->exist({"survey"}))
   {
     if (isValid(d, "Feedback"))
     {
@@ -480,7 +480,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
       if (g != NULL && !g->empty())
       {
         auto r = g->front();
-        if (!exist(i->m["survey"], "id") || i->m["survey"]->m["id"]->v.empty())
+        if (i->m["survey"]->empty({"id"}))
         {
           const EVP_MD* md = EVP_md5();
           string strHash, strID, strTime;
@@ -508,7 +508,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
             i->m["survey"]->i("hash", strHash);
           }
         }
-        if (!empty(i->m["survey"], "id") && !empty(i->m["survey"], "hash"))
+        if (!i->m["survey"]->empty({"id"}) && !i->m["survey"]->empty({"hash"}))
         {
           o->i("id", i->m["survey"]->m["id"]->v);
           o->i("hash", i->m["survey"]->m["hash"]->v);
@@ -523,7 +523,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               q.str("");
               q << "update survey set ";
               q << "title = ";
-              if (!empty(i->m["survey"], "title"))
+              if (!i->m["survey"]->empty({"title"}))
               {
                 q << "'" << esc(i->m["survey"]->m["title"]->v) << "'";
               }
@@ -533,12 +533,12 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               }
               q << ", ";
               q << "modified_date = now(),";
-              q << "public = " << ((!empty(i->m["survey"], "public"))?i->m["survey"]->m["public"]->v:"null") << ", ";
-              q << "anonymous = " << ((!empty(i->m["survey"], "anonymous"))?i->m["survey"]->m["anonymous"]->v:"null") << ", ";
-              q << "`unique` = " << ((!empty(i->m["survey"], "unique"))?i->m["survey"]->m["unique"]->v:"null") << ", ";
-              q << "`restrict` = " << ((!empty(i->m["survey"], "restrict"))?i->m["survey"]->m["restrict"]->v:"null") << ", ";
+              q << "public = " << ((!i->m["survey"]->empty({"public"}))?i->m["survey"]->m["public"]->v:"null") << ", ";
+              q << "anonymous = " << ((!i->m["survey"]->empty({"anonymous"}))?i->m["survey"]->m["anonymous"]->v:"null") << ", ";
+              q << "`unique` = " << ((!i->m["survey"]->empty({"unique"}))?i->m["survey"]->m["unique"]->v:"null") << ", ";
+              q << "`restrict` = " << ((!i->m["survey"]->empty({"restrict"}))?i->m["survey"]->m["restrict"]->v:"null") << ", ";
               q << "start_date = ";
-              if (!empty(i->m["survey"], "start_date"))
+              if (!i->m["survey"]->empty({"start_date"}))
               {
                 q << "'" << esc(i->m["survey"]->m["start_date"]->v) << "'";
               }
@@ -548,7 +548,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               }
               q << ", ";
               q << "end_date = ";
-              if (!empty(i->m["survey"], "end_date"))
+              if (!i->m["survey"]->empty({"end_date"}))
               {
                 q << "'" << esc(i->m["survey"]->m["end_date"]->v) << "'";
               }
@@ -560,11 +560,11 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
               if (dbupdate("feedback", q.str(), e))
               {
                 b = true;
-                if (exist(i->m["survey"], "questions"))
+                if (i->m["survey"]->exist({"questions"}))
                 {
                   for (auto &j : i->m["survey"]->m["questions"]->l)
                   {
-                    if (empty(j, "id"))
+                    if (j->empty({"id"}))
                     {
                       string strID;
                       q.str("");
@@ -574,10 +574,10 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                         j->i("id", strID);
                       }
                     }
-                    if (!empty(j, "id"))
+                    if (!j->empty({"id"}))
                     {
                       string strTypeID;
-                      if (exist(j, "type") && !empty(j->m["type"], "id"))
+                      if (!j->empty({"type", "id"}))
                       {
                         q.str("");
                         q << "select id from type where id = " << j->m["type"]->m["id"]->v;
@@ -591,10 +591,10 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                       q.str("");
                       q << "update question set ";
                       q << "type_id = " << ((!strTypeID.empty())?strTypeID:"null") << ", ";
-                      q << "sequence = " << ((!empty(j, "sequence"))?j->m["sequence"]->v:"null") << ", ";
-                      q << "required = " << ((!empty(j, "required"))?j->m["required"]->v:"null") << ", ";
+                      q << "sequence = " << ((!j->empty({"sequence"}))?j->m["sequence"]->v:"null") << ", ";
+                      q << "required = " << ((!j->empty({"required"}))?j->m["required"]->v:"null") << ", ";
                       q << "question = ";
-                      if (!empty(j, "question"))
+                      if (!j->empty({"question"}))
                       {
                         q << "'" << esc(j->m["question"]->v) << "'";
                       }
@@ -605,11 +605,11 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                       q << " where id = " << j->m["id"]->v;
                       if (dbupdate("feedback", q.str(), e))
                       {
-                        if (exist(j, "answers"))
+                        if (j->exist({"answers"}))
                         {
                           for (auto &k : j->m["answers"]->l)
                           {
-                            if (empty(k, "id"))
+                            if (k->empty({"id"}))
                             {
                               string strID;
                               q.str("");
@@ -619,13 +619,13 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                                 k->i("id", strID);
                               }
                             }
-                            if (!empty(k, "id"))
+                            if (!k->empty({"id"}))
                             {
                               q.str("");
                               q << "update answer set ";
-                              q << "sequence = " << ((!empty(k, "sequence"))?k->m["sequence"]->v:"null") << ", ";
+                              q << "sequence = " << ((!k->empty({"sequence"}))?k->m["sequence"]->v:"null") << ", ";
                               q << "answer = ";
-                              if (!empty(k, "answer"))
+                              if (!k->empty({"answer"}))
                               {
                                 q << "'" << esc(k->m["answer"]->v) << "'";
                               }
@@ -647,7 +647,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                               bool bFound = false;
                               for (auto k = j->m["answers"]->l.begin(); !bFound && k != j->m["answers"]->l.end(); k++)
                               {
-                                if (!empty((*k), "id") && ra["id"] == (*k)->m["id"]->v)
+                                if (!(*k)->empty({"id"}) && ra["id"] == (*k)->m["id"]->v)
                                 {
                                   bFound = true;
                                 }
@@ -675,7 +675,7 @@ bool Feedback::surveyEdit(radialUser &d, string &e)
                       bool bFound = false;
                       for (auto j = i->m["survey"]->m["questions"]->l.begin(); !bFound && j != i->m["survey"]->m["questions"]->l.end(); j++)
                       {
-                        if (!empty((*j), "id") && rq["id"] == (*j)->m["id"]->v)
+                        if (!(*j)->empty({"id"}) && rq["id"] == (*j)->m["id"]->v)
                         {
                           bFound = true;
                         }
@@ -738,7 +738,7 @@ bool Feedback::surveyRemove(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "id"))
+  if (!i->empty({"id"}))
   {
     q << "select application_contact_id from survey where id = " << i->m["id"]->v;
     auto g = dbquery("feedback_r", q.str(), e);
@@ -800,12 +800,12 @@ bool Feedback::surveys(radialUser &d, string &e)
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   q << "select a.id, a.application_contact_id, a.title, a.public, a.anonymous, a.unique, a.restrict, date_format(a.entry_date, '%Y-%m-%d %H:%i') entry_date, date_format(a.modified_date, '%Y-%m-%d %H:%i') modified_date, date_format(a.start_date, '%Y-%m-%d %H:%i') start_date, date_format(a.end_date, '%Y-%m-%d %H:%i') end_date, a.hash from survey a";
-  if (!empty(i, "type") && i->m["type"]->v == "Your Surveys")
+  if (i->val({"type"}) == "Your Surveys")
   {
     q << ", central.application_contact b, central.person c";
   }
   q << " where ";
-  if (!empty(i, "type") && i->m["type"]->v == "Public Surveys")
+  if (i->val({"type"}) == "Public Surveys")
   {
     q << "a.public = 1 and (a.start_date is null or a.start_date <= now()) and (a.start_date is null  or a.end_date >= now())";
   }
@@ -864,7 +864,7 @@ bool Feedback::type(radialUser &d, string &e)
   stringstream q;
   Json *i = d.p->m["i"];
 
-  if (!empty(i, "type_id"))
+  if (!i->empty({"type_id"}))
   {
     q << "select id, name from type where id = " << i->m["type_id"]->v;
     auto g = dbquery("feedback_r", q.str(), e);
