@@ -37,12 +37,12 @@ int main(int argc, char *argv[])
     {
       bool bRestart = false;
       Json *ptJson = new Json(strJson);
-      if (ptJson->m.find("image") != ptJson->m.end() && !ptJson->m["image"]->v.empty())
+      if (!ptJson->empty({"image"}))
       {
         size_t unImage;
         stringstream ssImage(ptJson->m["image"]->v);
         ssImage >> unImage;
-        if (ptJson->m.find("minImage") != ptJson->m.end() && !ptJson->m["minImage"]->v.empty())
+        if (!ptJson->empty({"minImage"}))
         {
           size_t unMinImage;
           stringstream ssMinImage(ptJson->m["minImage"]->v);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
             bRestart = true;
           }
         }
-        if (ptJson->m.find("maxImage") != ptJson->m.end() && !ptJson->m["maxImage"]->v.empty())
+        if (!ptJson->empty({"maxImage"}))
         {
           size_t unMaxImage;
           stringstream ssMaxImage(ptJson->m["maxImage"]->v);
@@ -63,12 +63,12 @@ int main(int argc, char *argv[])
           }
         }
       }
-      if (ptJson->m.find("processes") != ptJson->m.end() && !ptJson->m["processes"]->v.empty())
+      if (!ptJson->empty({"processes"}))
       {
         size_t unProcesses;
         stringstream ssProcesses(ptJson->m["processes"]->v);
         ssProcesses >> unProcesses;
-        if (ptJson->m.find("minProcesses") != ptJson->m.end() && !ptJson->m["minProcesses"]->v.empty())
+        if (!ptJson->empty({"minProcesses"}))
         {
           size_t unMinProcesses;
           stringstream ssMinProcesses(ptJson->m["minProcesses"]->v);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
             bRestart = true;
           }
         }
-        if (ptJson->m.find("maxProcesses") != ptJson->m.end() && !ptJson->m["maxProcesses"]->v.empty())
+        if (!ptJson->empty({"maxProcesses"}))
         {
           size_t unMaxProcesses;
           stringstream ssMaxProcesses(ptJson->m["maxProcesses"]->v);
@@ -89,12 +89,12 @@ int main(int argc, char *argv[])
           }
         }
       }
-      if (ptJson->m.find("resident") != ptJson->m.end() && !ptJson->m["resident"]->v.empty())
+      if (!ptJson->empty({"resident"}))
       {
         size_t unResident;
         stringstream ssResident(ptJson->m["resident"]->v);
         ssResident >> unResident;
-        if (ptJson->m.find("minResident") != ptJson->m.end() && !ptJson->m["minResident"]->v.empty())
+        if (!ptJson->empty({"minResident"}))
         {
           size_t unMinResident;
           stringstream ssMinResident(ptJson->m["minResident"]->v);
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
             bRestart = true;
           }
         }
-        if (ptJson->m.find("maxResident") != ptJson->m.end() && !ptJson->m["maxResident"]->v.empty())
+        if (!ptJson->empty({"maxResident"}))
         {
           size_t unMaxResident;
           stringstream ssMaxResident(ptJson->m["maxResident"]->v);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
       }
       if (bRestart)
       {
-        if (argc >= 3 && ptJson->m.find("daemon") != ptJson->m.end() && !ptJson->m["daemon"]->v.empty())
+        if (argc >= 3 && !ptJson->empty({"daemon"}))
         {
           ifstream inProc("/proc/stat");
           list<string> items;

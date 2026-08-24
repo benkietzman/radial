@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
             ptReq->m["Request"]->i("server", strServer);
             if (radial.request(ptReq, ptRes, strError))
             {
-              if (ptRes->m.find("Response") != ptRes->m.end())
+              if (ptRes->exist({"Response"}))
               {
                 delete ptConfig;
                 ptConfig = new Json(ptRes->m["Response"]);
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
           }
           // }}}
           // {{{ data
-          if (ptConfig->m.find("system") != ptConfig->m.end())
+          if (ptConfig->exist({"system"}))
           {
             FILE *pfinPipe;
             map<string, bool> exclude;
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
                       {
                         stringstream ssCpuProcessUsage;
                         ssCpuProcessUsage << (*j) << '=' << i->first;
-                        if (ptSystem->m.find("cpuProcessUsage") == ptSystem->m.end())
+                        if (!ptSystem->exist({"cpuProcessUsage"}))
                         {
                           ptSystem->i("cpuProcessUsage", "");
                         }
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
             }
             // }}}
             // {{{ processes
-            if (ptConfig->m.find("processes") != ptConfig->m.end())
+            if (ptConfig->exist({"processes"}))
             {
               ptReq->m["Request"]->m["processes"] = new Json;
               for (auto &process : ptConfig->m["processes"]->m)
@@ -365,26 +365,26 @@ int main(int argc, char *argv[])
                         }
                         if (process.first == strDaemon)
                         {
-                          if (ptProcess->m.find("owners") == ptProcess->m.end())
+                          if (!ptProcess->exist({"owners"}))
                           {
                             ptProcess->m["owners"] = new Json;
                           }
-                          if (ptProcess->m["owners"]->m.find(strOwner) == ptProcess->m["owners"]->m.end())
+                          if (!ptProcess->m["owners"]->exist({strOwner}))
                           {
                             ptProcess->m["owners"]->i(strOwner, "0", 'n');
                           }
                           ptProcess->m["owners"]->i(strOwner, to_string(atoi(ptProcess->m["owners"]->m[strOwner]->v.c_str()) + 1), 'n');
-                          if (ptProcess->m.find("processes") == ptProcess->m.end())
+                          if (!ptProcess->exist({"processes"}))
                           {
                             ptProcess->i("processes", "0", 'n');
                           }
                           ptProcess->i("processes", to_string(atoi(ptProcess->m["processes"]->v.c_str()) + 1), 'n');
-                          if (ptProcess->m.find("image") == ptProcess->m.end())
+                          if (!ptProcess->exist({"image"}))
                           {
                             ptProcess->i("image", "0", 'n');
                           }
                           ptProcess->i("image", to_string(atoi(ptProcess->m["image"]->v.c_str()) + ulImage), 'n');
-                          if (ptProcess->m.find("resident") == ptProcess->m.end())
+                          if (!ptProcess->exist({"resident"}))
                           {
                             ptProcess->i("resident", "0", 'n');
                           }
@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
                               tTime.tm_sec = atoi((((string)szTemp[2]).substr(6, 2)).c_str());
                               tTime.tm_isdst = -1;
                               CTime = mktime(&tTime);
-                              if (CTime > 0 && (ptProcess->m.find("startTime") == ptProcess->m.end() || CTime < atoi(ptProcess->m["startTime"]->v.c_str())))
+                              if (CTime > 0 && (!ptProcess->exist({"startTime"}) || CTime < atoi(ptProcess->m["startTime"]->v.c_str())))
                               {
                                 ptProcess->i("startTime", to_string(CTime));
                               }
@@ -424,11 +424,11 @@ int main(int argc, char *argv[])
             // }}}
             radial.request(ptReq, ptRes, strError);
             delete ptReq;
-            if (ptRes->m.find("Response") != ptRes->m.end() && ptRes->m["Response"]->m.find("scripts") != ptRes->m["Response"]->m.end())
+            if (ptRes->exist({"Response", "scripts"}))
             {
               for (auto &s : ptRes->m["Response"]->m["scripts"]->l)
               {
-                if (s->m.find("script") != s->m.end() && !s->m["script"]->v.empty())
+                if (!s->empty({"script"}))
                 {
                   FILE *pfScript = NULL;
                   string strData;

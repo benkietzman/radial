@@ -94,7 +94,7 @@ void display(Json *ptData, map<string, size_t> width, string strIndent)
   time_t CTime;
   Json *ptChildren = NULL;
   StringManip manip;
-  if (ptData->m.find("children") != ptData->m.end())
+  if (ptData->exist({"children"}))
   {
     ptChildren = ptData->m["children"];
     ptData->m.erase("children");
@@ -144,12 +144,12 @@ void setWidths(Json *ptData, map<string, size_t> &width)
 {
   for (auto &i : width)
   {
-    if (ptData->m.find(i.first) != ptData->m.end() && ptData->m[i.first]->v.size() > i.second)
+    if (ptData->exist({i.first}) && ptData->m[i.first]->v.size() > i.second)
     {
       i.second = ptData->m[i.first]->v.size();
     }
   }
-  if (ptData->m.find("children") != ptData->m.end())
+  if (ptData->exist({"children"}))
   {
     for (auto &i : ptData->m["children"]->l)
     {
