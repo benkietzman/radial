@@ -185,7 +185,7 @@ void Request::callback(string strPrefix, const string strPacket, const bool bRes
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     if (ptJson->m["Function"]->v == "ping")
     {
@@ -225,11 +225,11 @@ void Request::request(string strPrefix, size_t &unActive, const string strBuffer
   throughput("request");
   keyRemovals(ptJson);
   // }}}
-  if (!empty(ptJson, "Interface"))
+  if (!ptJson->empty({"Interface"}))
   {
     if (ptJson->m["Interface"]->v == "hub")
     {
-      if (!empty(ptJson, "Function"))
+      if (!ptJson->empty({"Function"}))
       {
         if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
         {
