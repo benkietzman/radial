@@ -25,7 +25,7 @@ Logger::Logger(string strPrefix, int argc, char **argv, void (*pCallback)(string
     {
       for (auto &app : ptLogger->m)
       {
-        if (!empty(app.second, "Password") && !empty(app.second, "User"))
+        if (!app.second->empty({"Password"}) && !app.second->empty({"User"}))
         {
           m_logger[app.first] = new common::Logger(strError);
           m_logger[app.first]->setCredentials(app.first, app.second->m["User"]->v, app.second->m["Password"]->v);
@@ -61,12 +61,12 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Function"))
+  if (!ptJson->empty({"Function"}))
   {
     if (ptJson->m["Function"]->v == "applications")
     {
       bResult = true;
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -78,17 +78,17 @@ void Logger::callback(string strPrefix, const string strPacket, const bool bResp
     }
     else if (ptJson->m["Function"]->v == "log" || ptJson->m["Function"]->v == "message")
     {
-      if (exist(ptJson, "Request"))
+      if (ptJson->exist({"Request"}))
       {
-        if (!empty(ptJson->m["Request"], "Application"))
+        if (!ptJson->m["Request"]->empty({"Application"}))
         {
           strApplication = ptJson->m["Request"]->m["Application"]->v;
         }
         if (m_logger.find(strApplication) != m_logger.end())
         {
-          if (exist(ptJson->m["Request"], "Label"))
+          if (ptJson->m["Request"]->exist({"Label"}))
           {
-            if (!empty(ptJson->m["Request"], "Message"))
+            if (!ptJson->m["Request"]->empty({"Message"}))
             {
               map<string, string> label;
               ptJson->m["Request"]->m["Label"]->flatten(label, true, false);
