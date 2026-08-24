@@ -68,7 +68,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (exist(ptJson, "Request") && !empty(ptJson->m["Request"], "Session"))
+  if (!ptJson->empty({"Request", "Session"}))
   {
     string strNode;
     stringstream ssSession(ptJson->m["Request"]->m["Session"]->v);
@@ -82,7 +82,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
       if (hub("link", ptLink, strError))
       {
         bResult = true;
-        if (exist(ptLink, "Response"))
+        if (ptLink->exist({"Response"}))
         {
           ptJson->i("Response", ptLink->m["Response"]);
         }
@@ -92,7 +92,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
   }
   if (bLocal)
   {
-    if (!empty(ptJson, "Function"))
+    if (!ptJson->empty({"Function"}))
     {
       bool bInvalid = true;
       string strFunction = ptJson->m["Function"]->v;
@@ -116,7 +116,7 @@ void Terminal::callback(string strPrefix, const string strPacket, const bool bRe
           strError = "Please provide a valid Function.";
         }
       }
-      if (exist(ptJson, "Response"))
+      if (ptJson->exist({"Response"}))
       {
         delete ptJson->m["Response"];
       }
@@ -148,29 +148,29 @@ bool Terminal::connect(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!empty(i, "Server"))
+  if (!i->empty({"Server"}))
   {
-    if (!empty(i, "Port"))
+    if (!i->empty({"Port"}))
     {
-      bool bWait = (!empty(i, "Wait") && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
+      bool bWait = (!i->empty({"Wait"}) && (i->m["Wait"]->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
       radialTerminal *t = new radialTerminal;
       t->bDisconnecting = false;
       t->unActive = 0;
-      if (!empty(i, "Cols"))
+      if (!i->empty({"Cols"}))
       {
         size_t unCols;
         stringstream ssCols(i->m["Cols"]->v);
         ssCols >> unCols;
         t->t.cols(unCols);
       }
-      if (!empty(i, "Rows"))
+      if (!i->empty({"Rows"}))
       {
         size_t unRows;
         stringstream ssRows(i->m["Rows"]->v);
         ssRows >> unRows;
         t->t.rows(unRows);
       }
-      if (!empty(i, "Type"))
+      if (!i->empty({"Type"}))
       {
         t->t.type(i->m["Type"]->v);
       }
@@ -613,7 +613,7 @@ radialTerminal *Terminal::pre(radialUser &d, bool &w, size_t &c, string &k, stri
   Json *i = d.p->m["i"], *o = d.p->m["o"];
   radialTerminal *t = NULL;
 
-  if (!empty(i, "Session"))
+  if (!i->empty({"Session"}))
   {
     m_mutex.lock();
     if (m_sessions.find(i->m["Session"]->v) != m_sessions.end())
@@ -633,11 +633,11 @@ radialTerminal *Terminal::pre(radialUser &d, bool &w, size_t &c, string &k, stri
   {
     e = "Please provide the Session.";
   }
-  if (!empty(i, "Data"))
+  if (!i->empty({"Data"}))
   {
     k = i->m["Data"]->v;
   }
-  if (!empty(i, "Count"))
+  if (!i->empty({"Count"}))
   {
     stringstream ssC(i->m["Count"]->v);
     ssC >> c;
@@ -646,7 +646,7 @@ radialTerminal *Terminal::pre(radialUser &d, bool &w, size_t &c, string &k, stri
   {
     c = 1;
   }
-  w = (!empty(i, "Wait") && (i->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
+  w = (!i->empty({"Wait"}) && (i->t == '1' || i->m["Wait"]->v == "1" || i->m["Wait"]->v == "yes"));
 
   return t;
 }
@@ -770,12 +770,12 @@ bool Terminal::setSocketTimeout(radialUser &d, string &e)
 
   if ((t = pre(d, w, c, k, e)) != NULL)
   {
-    if (!empty(i, "Long"))
+    if (!i->empty({"Long"}))
     {
       int nLong;
       stringstream ssLong(i->m["Long"]->v);
       ssLong >> nLong;
-      if (!empty(i, "Short"))
+      if (!i->empty({"Short"}))
       {
         int nShort;
         stringstream ssShort(i->m["Short"]->v);
