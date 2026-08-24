@@ -39,7 +39,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "wsRequestID"))
+  if (!ptJson->empty({"wsRequestID"}))
   {
     string strIdentity, strName, strNode;
     stringstream ssRequestID(ptJson->m["wsRequestID"]->v);
@@ -63,7 +63,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
           Json *ptSubJson = new Json(ptJson);
           bResult = true;
           keyRemovals(ptSubJson);
-          if (exist(ptSubJson, "Interface"))
+          if (ptSubJson->exist({"Interface"}))
           {
             delete ptSubJson->m["Interface"];
             ptSubJson->m.erase("Interface");
@@ -94,7 +94,7 @@ void Websocket::callback(string strPrefix, const string strPacket, const bool bR
       strError = "Please provide a valid wsRequestID.";
     }
   }
-  else if (!empty(ptJson, "Function"))
+  else if (!ptJson->empty({"Function"}))
   {
     if (ptJson->m["Function"]->v == "list")
     {
@@ -154,7 +154,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   {
     strApplication = ptConn->strApplication;
   }
-  else if (!empty(ptJson, "reqApp"))
+  else if (!ptJson->empty({"reqApp"}))
   {
     strApplication = ptConn->strApplication = ptJson->m["reqApp"]->v;
   }
@@ -167,7 +167,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   }
   // }}}
   // {{{ jwt
-  if ((strUser.empty() || strPassword.empty()) && !empty(ptJson, "wsJwt"))
+  if ((strUser.empty() || strPassword.empty()) && !ptJson->empty({"wsJwt"}))
   {
     string strBase64 = ptJson->m["wsJwt"]->v;
     if (!m_strJwtSecret.empty())
@@ -183,14 +183,14 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
         }
         if (jwt(m_strJwtSigner, m_strJwtSecret, strPayload, ptJwt, strError))
         {
-          if (exist(ptJwt, "RadialCredentials"))
+          if (ptJwt->exist({"RadialCredentials"}))
           {
-            if (exist(ptJwt->m["RadialCredentials"], strApplication))
+            if (ptJwt->m["RadialCredentials"]->exist({strApplication}))
             {
-              if (!empty(ptJwt->m["RadialCredentials"]->m[strApplication], "User"))
+              if (!ptJwt->m["RadialCredentials"]->m[strApplication]->empty({"User"}))
               {
                 strUser = ptConn->strUser = ptJwt->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
-                if (!empty(ptJwt->m["RadialCredentials"]->m[strApplication], "Password"))
+                if (!ptJwt->m["RadialCredentials"]->m[strApplication]->empty({"Password"}))
                 {
                   strPassword = ptConn->strPassword = ptJwt->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
                 }
@@ -221,7 +221,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             ssMessage << strPrefix << " error [" << strApplication << "," << ptConn->strUser << "," << ptConn->strUserID << "]:  Failed to find RadialCredentials in jwt.";
             log(ssMessage.str());
           }
-          if (!empty(ptJwt, "sl_login"))
+          if (!ptJwt->empty({"sl_login"}))
           {
             strUserID = ptConn->strUserID = ptJwt->m["sl_login"]->v;
           }
@@ -250,7 +250,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   }
   // }}}
   // {{{ wsSessionID
-  else if ((strUser.empty() || strPassword.empty()) && !empty(ptJson, "wsSessionID"))
+  else if ((strUser.empty() || strPassword.empty()) && !ptJson->empty({"wsSessionID"}))
   {
     map<string, string> getSessionRow;
     Json *ptSession = new Json;
@@ -259,16 +259,16 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     ptSession->m["Request"]->i("ID", ptJson->m["wsSessionID"]->v);
     if (hub("session", ptSession, strError))
     {
-      if (exist(ptSession, "Response"))
+      if (ptSession->exist({"Response"}))
       {
-        if (exist(ptSession->m["Response"], "RadialCredentials"))
+        if (ptSession->m["Response"]->exist({"RadialCredentials"}))
         {
-          if (exist(ptSession->m["Response"]->m["RadialCredentials"], strApplication))
+          if (ptSession->m["Response"]->m["RadialCredentials"]->exist({strApplication}))
           {
-            if (!empty(ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication], "User"))
+            if (!ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->empty({"User"}))
             {
               strUser = ptConn->strUser = ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->m["User"]->v;
-              if (!empty(ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication], "Password"))
+              if (!ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->empty({"Password"}))
               {
                 strPassword = ptConn->strPassword = ptSession->m["Response"]->m["RadialCredentials"]->m[strApplication]->m["Password"]->v;
               }
@@ -293,7 +293,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
             log(ssMessage.str());
           }
         }
-        if (!empty(ptSession->m["Response"], "sl_login"))
+        if (!ptSession->m["Response"]->empty({"sl_login"}))
         {
           strUserID = ptConn->strUserID = ptSession->m["Response"]->m["sl_login"]->v;
         }
@@ -323,16 +323,16 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
   {
     ptJson->i("UserID", strUserID);
   }
-  else if (exist(ptJson, "UserID"))
+  else if (ptJson->exist({"UserID"}))
   {
     delete ptJson->m["UserID"];
     ptJson->m.erase("UserID");
   }
-  if (!empty(ptJson, "Interface"))
+  if (!ptJson->empty({"Interface"}))
   {
     if (ptJson->m["Interface"]->v == "hub")
     {
-      if (!empty(ptJson, "Function"))
+      if (!ptJson->empty({"Function"}))
       {
         if (ptJson->m["Function"]->v == "list" || ptJson->m["Function"]->v == "ping")
         {
@@ -390,7 +390,7 @@ void Websocket::request(string strPrefix, data *ptConn, Json *ptJson)
     ptJson->i("Status", "error");
     ptJson->i("Error", "Please provide the Interface.");
   }
-  if (exist(ptJson, "Password"))
+  if (ptJson->exist({"Password"}))
   {
     delete ptJson->m["Password"];
     ptJson->m.erase("Password");
