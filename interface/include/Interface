@@ -208,7 +208,6 @@ class Interface : public Base
   bool page(const string strType, const string strTarget, const string strMessage, string &strError);
   bool pageGroup(const string strGroup, const string strMessage, string &strError);
   bool pageUser(const string strUser, const string strMessage, string &strError);
-  void setKafkaMessagesCallback(void (*pCallback)(string, const string));
   bool sqliteCreate(const string strDatabase, const string strNode, string &strError);
   bool sqliteDatabases(map<string, map<string, string> > &databases, string &strError);
   bool sqliteDrop(const string strDatabase, const string strNode, string &strError);
@@ -278,6 +277,7 @@ class Interface : public Base
   void process(string strPrefix);
   void setApplication(const string strApplication);
   void setAutoMode(void (*pCallback)(string, const string, const string));
+  void setKafkaMessagesCallback(void (*pCallback)(string, const string));
 };
 // }}}
 }
