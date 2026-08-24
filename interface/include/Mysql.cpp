@@ -44,19 +44,19 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
   throughput("callback");
   unpack(strPacket, p);
   ptJson = new Json(p.p);
-  if (!empty(ptJson, "Server"))
+  if (!ptJson->empty({"Server"}))
   {
     string strServer = ptJson->m["Server"]->v;
-    if (!empty(ptJson, "User"))
+    if (!ptJson->empty({"User"}))
     {
       string strUser = ptJson->m["User"]->v;
-      if (!empty(ptJson, "Password"))
+      if (!ptJson->empty({"Password"}))
       {
         string strPassword = ptJson->m["Password"]->v;
-        if (!empty(ptJson, "Database"))
+        if (!ptJson->empty({"Database"}))
         {
           string strDatabase = ptJson->m["Database"]->v;
-          if (!empty(ptJson, "Query") || !empty(ptJson, "Update"))
+          if (!ptJson->empty({"Query"}) || !ptJson->empty({"Update"}))
           {
             int fdPipe[2] = {-1, -1}, nReturn;
             if ((nReturn = pipe(fdPipe)) == 0)
@@ -68,7 +68,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
               stringstream ssHandle, ssServer(strServer);
               unsigned int unPort = 0;
               radial_mysql_request *ptRequest = new radial_mysql_request;
-              ptRequest->bQuery = ((!empty(ptJson, "Query"))?true:false);
+              ptRequest->bQuery = ((!ptJson->empty({"Query"}))?true:false);
               ptRequest->bResult = false;
               ptRequest->fdPipe = fdPipe[1];
               ptRequest->strDatabase = strDatabase;
@@ -80,7 +80,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
               ptRequest->ullID = 0;
               ptRequest->ullRows = 0;
               getline(ssServer, strPort, ':');
-              if (!empty(ptJson, "Port"))
+              if (!ptJson->empty({"Port"}))
               {
                 strPort = ptJson->m["Port"]->v;
               }
@@ -92,7 +92,7 @@ void Mysql::callback(string strPrefix, const string strPacket, const bool bRespo
               ptRequest->unPort = unPort; 
               ssHandle << strServer << "_" << unPort << "_" << strDatabase << "_" << strUser << "_" << strPassword;
               ptRequest->strHandle = ssHandle.str();
-              if (exist(ptJson, "Response"))
+              if (ptJson->exist({"Response"}))
               {
                 delete ptJson->m["Response"];
               }
