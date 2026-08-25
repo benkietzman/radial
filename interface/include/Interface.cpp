@@ -4652,7 +4652,7 @@ bool Interface::status(radialUser &d, string &e)
   bool b = true;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!i->empty({Node}) && i->val({"Node"}) != m_strNode)
+  if (!i->empty({"Node"}) && i->val({"Node"}) != m_strNode)
   {
     Json *j = new Json;
     j->i("Interface", m_strName);
