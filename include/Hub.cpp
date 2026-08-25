@@ -650,7 +650,7 @@ void Hub::process(string strPrefix)
                                     unPick = rand_r(&unSeed) % linkIters.size();
                                     linkIter = linkIters[unPick];
                                     p.d = "t";
-                                    if (empty(ptJson, "Interface"))
+                                    if (ptJson->empty({"Interface"}))
                                     {
                                       ptJson->i("Interface", p.t);
                                     }

@@ -228,24 +228,12 @@ bool Base::dep(const list<string> fs, Json *i, string &e)
   return bResult;
 }
 // }}}
-// {{{ empty()
-bool Base::empty(Json *ptJson, const string strField)
-{
-  return ptJson->empty({strField});
-} 
-// }}}
 // {{{ esc()
 string Base::esc(const string strValue)
 {
   string strEscaped;
 
   return m_manip.escape(strValue, strEscaped);
-}
-// }}}
-// {{{ exist()
-bool Base::exist(Json *ptJson, const string strField)
-{
-  return ptJson->exist({strField});
 }
 // }}}
 // {{{ get()

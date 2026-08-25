@@ -4987,7 +4987,7 @@ string Irc::var(const string strName, Json *ptData)
 {
   string strValue;
 
-  if (!empty(ptData, strName))
+  if (!ptData->empty({strName}))
   {
     strValue = ptData->m[strName]->v;
   }
