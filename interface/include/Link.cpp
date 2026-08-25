@@ -616,7 +616,7 @@ void Link::process(string strPrefix)
                   }
                   // }}}
                   // {{{ source --> target
-                  else if (ptJson->val({"Interface"}) != "link")
+                  else if (ptJson->exist({"Interface"}) && ptJson->m["Interface"]->v != "link")
                   {
                     if (!ptJson->empty({"Node"}))
                     {
