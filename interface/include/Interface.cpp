@@ -3259,7 +3259,7 @@ bool Interface::jwt(const string strSigner, const string strSecret, string &strP
   }
   if (hub("jwt", ptJson, strError))
   {
-    if (!ptJson->empty({"Response", "Payload"}))
+    if (ptJson->exist({"Response", "Payload"}))
     {
       if (bDecode)
       {
