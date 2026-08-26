@@ -220,7 +220,7 @@ export default
       </div>
       <div class="row" style="margin-bottom: 10px;">
         <div class="col">
-        <div class="input-group"><span class="input-group-text">Private Key</span><input type="privatekey" class="form-control" c-model="privatekey"></div>
+        <div class="input-group"><span class="input-group-text">Private Key</span><input type="password" class="form-control" c-model="privatekey"></div>
         </div>
       </div>
       <div class="row">
