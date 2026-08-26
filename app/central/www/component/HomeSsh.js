@@ -33,10 +33,18 @@ export default
       {
         if (s.user.v)
         {
-          if (s.password.v)
+          if (s.password.v || s.privatekey.v)
           {
             s.screen.v = '';
-            let request = {Interface: 'ssh', 'Function': 'connect', Request: {Server: s.server.v, User: s.user.v, Password: s.password.v}};
+            let request = {Interface: 'ssh', 'Function': 'connect', Request: {Server: s.server.v, User: s.user.v}};
+            if (s.password.v)
+            {
+              request.Request.Password = s.password.v;
+            }
+            if (s.privatekey.v)
+            {
+              request.Request.PrivateKey = s.privatekey.v;
+            }
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
@@ -208,6 +216,11 @@ export default
       <div class="row" style="margin-bottom: 10px;">
         <div class="col">
         <div class="input-group"><span class="input-group-text">Password</span><input type="password" class="form-control" c-model="password"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-bottom: 10px;">
+        <div class="col">
+        <div class="input-group"><span class="input-group-text">Private Key</span><input type="privatekey" class="form-control" c-model="privatekey"></div>
         </div>
       </div>
       <div class="row">
