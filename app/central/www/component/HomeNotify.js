@@ -248,7 +248,7 @@ export default
           if (s.notification.v)
           {
             s.info.v = 'Sending notification...';
-            s.notified.v = null;
+            s.notified = null;
             let request = {Interface: 'central', 'Function': s.type.v + 'Notify', Request: {}};
             if (s.type.v == 'application')
             {
@@ -273,7 +273,7 @@ export default
               if (c.wsResponse(response, error))
               {
                 s.info.v = null;
-                s.notified.v = 'Notification has been sent.';
+                s.notified = 'Notification has been sent.';
                 s.u();
               }
               else
