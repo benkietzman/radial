@@ -3084,7 +3084,7 @@ bool Central::groupNotify(radialUser &d, string &e)
                 }
                 if (alert(k.first, m.str(), e))
                 {
-                  k.second->i("sent", "1", 'n');
+                  k.second->i("sent", "1", '1');
                 }
               }
             }
