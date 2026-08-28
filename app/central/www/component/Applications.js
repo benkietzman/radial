@@ -2158,8 +2158,8 @@ export default
     <table class="table table-condensed table-striped">
       <tr>
         <th>Repository</th>
-        <th>Name</th>
         <th>Identifier</th>
+        <th>Name</th>
         {{#if application.bDeveloper}}
         <th></th>
         {{/if}}
@@ -2167,8 +2167,8 @@ export default
       {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="repo.repo" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="repo.name"></td>
         <td><input type="text" class="form-control" c-model="repo.identifier" placeholder="{{repo.repo.pattern}}"></td>
+        <td><input type="text" class="form-control" c-model="repo.name"></td>
         <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addRepo()" title="Add"></button></td>
       </tr>
       {{/if}}
@@ -2183,16 +2183,16 @@ export default
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.repos.[{{@key}}].name">
+          <input type="text" class="form-control" c-model="application.repos.[{{@key}}].identifier">
           {{else}}
-          {{name}}
+          {{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}
           {{/if}}
         </td>
         <td>
           {{#if bEdit}}
-          <input type="text" class="form-control" c-model="application.repos.[{{@key}}].identifier">
+          <input type="text" class="form-control" c-model="application.repos.[{{@key}}].name">
           {{else}}
-          {{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}
+          {{name}}
           {{/if}}
         </td>
         {{#if @root.application.bDeveloper}}
