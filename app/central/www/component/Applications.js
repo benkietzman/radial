@@ -2167,7 +2167,7 @@ export default
       {{#if application.bDeveloper}}
       <tr>
         <td><select class="form-control" c-model="repo.repo" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></td>
-        <td><input type="text" class="form-control" c-model="repo.identifier" placeholder="{{repo.repo.pattern}}"></td>
+        <td><input type="text" class="form-control" c-model="repo.identifier"></td>
         <td><input type="text" class="form-control" c-model="repo.name"></td>
         <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="addRepo()" title="Add"></button></td>
       </tr>
