@@ -155,12 +155,14 @@ export default
         <tr>
           <th>Application</th>
           <th>Repository</th>
+          <th>Name</th>
           <th>Identifier</th>
         </tr>
         {{#eachFilter applications filter narrow}}
         <tr>
           <td valign="top"><a href="#/Applications/{{id}}">{{name}}</a></td>
           <td valign="top">{{repo}}</td>
+          <td valign="top">{{name}}</td>
           <td valign="top">{{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}</td>
         </tr>
         {{/eachFilter}}

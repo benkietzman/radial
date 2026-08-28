@@ -732,7 +732,7 @@ bool Db::dbCentralApplicationRepoAdd(Json *i, Json *o, string &id, string &q, st
   if (dep({"application_id", "repo_id"}, i, e))
   {
     bool fa = true, fb = true;
-    list<string> ks = {"application_id", "identifier", "repo_id"};
+    list<string> ks = {"application_id", "identifier", "name", "repo_id"};
     stringstream qs;
     qs << "insert into application_repo (" << ia(ks, i, fa) << ") values (" << ib(ks, i, fb) << ")";
     b = dbu("central", qs, q, id, e);
@@ -761,7 +761,7 @@ bool Db::dbCentralApplicationRepos(Json *i, Json *o, string &id, string &q, stri
 {
   stringstream qs;
 
-  qs << "select a.id, a.application_id, a.identifier, a.repo_id, b.pattern, b.repo from application_repo a, repo b where a.repo_id = b.id";
+  qs << "select a.id, a.application_id, a.identifier, a.name, a.repo_id, b.pattern, b.repo from application_repo a, repo b where a.repo_id = b.id";
   if (!i->empty({"id"}))
   {
     qs << " and a.id = " << v(i->m["id"]->v);
@@ -793,7 +793,7 @@ bool Db::dbCentralApplicationRepoUpdate(Json *i, Json *o, string &id, string &q,
   {
     bool f = true;
     stringstream qs;
-    qs << "update application_repo set" << u((list<string>){"identifier", "repo_id"}, i, f) << " where id = " << v(i->m["id"]->v);
+    qs << "update application_repo set" << u((list<string>){"identifier", "name", "repo_id"}, i, f) << " where id = " << v(i->m["id"]->v);
     b = dbu("central", qs, q, e);
   }
 
