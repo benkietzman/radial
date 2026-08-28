@@ -59,7 +59,7 @@ export default
     s.loadApplications = () =>
     {
       s.info.v = 'Retrieving applications...';
-      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name, b.identifier, c.pattern, c.repo from application a, application_repo b, repo c where a.id = b.application_id and b.repo_id = c.id and c.id = \''+c.esc(s.repo.v.id)+'\''+((s.identifier.v != '')?' and lower(b.identifier) = lower(\''+c.esc(s.identifier.v)+'\')':'')+' order by a.name'};
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select a.id, a.name application, b.identifier, b.name, c.pattern, c.repo from application a, application_repo b, repo c where a.id = b.application_id and b.repo_id = c.id and c.id = \''+c.esc(s.repo.v.id)+'\''+((s.identifier.v != '')?' and lower(b.identifier) = lower(\''+c.esc(s.identifier.v)+'\')':'')+' order by a.name'};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -144,6 +144,7 @@ export default
       <h5 class="page-header">Search Options</h5>
       <div class="input-group"><span class="input-group-text">Repository</span><select c-model="repo" class="form-control" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></div>
       <div class="input-group"><span class="input-group-text">Identifier</span><input type="text" c-model="identifier" class="form-control"></div>
+      <div class="input-group"><span class="input-group-text">Name</span><input type="text" c-model="name" class="form-control"></div>
       <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
     <div class="col-md-9 table-responsive">
@@ -160,7 +161,7 @@ export default
         </tr>
         {{#eachFilter applications filter narrow}}
         <tr>
-          <td valign="top"><a href="#/Applications/{{id}}">{{name}}</a></td>
+          <td valign="top"><a href="#/Applications/{{id}}">{{application}}</a></td>
           <td valign="top">{{repo}}</td>
           <td valign="top">{{#if website}}<a href="{{website}}" target="_blank">{{identifier}}</a>{{else}}{{identifier}}{{/if}}</td>
           <td valign="top">{{name}}</td>
