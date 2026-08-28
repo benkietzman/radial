@@ -799,7 +799,7 @@ export default
                 {{/if}}
               </td>
               <td style="background: inherit;">
-                <button class="btn btn-warning" type="button" data-bs-toggle="modal" data-bs-target="#passkeysModal" c-click="passkeys()">Passkeys</button>
+                <button class="btn btn-warning" type="button" data-bs-toggle="modal" data-bs-target="#passkeysModal" c-click="passkeys()"><i class="bi bi-key"></i> Passkeys</button>
               </td>
             </tr>
             <tr>
@@ -1036,7 +1036,7 @@ export default
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title">Passkeys</h4>
+          <h4 class="modal-title"><i class="bi bi-key"></i> Passkeys</h4>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body table-responsive">
