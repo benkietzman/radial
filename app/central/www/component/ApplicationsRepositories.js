@@ -144,7 +144,6 @@ export default
       <h5 class="page-header">Search Options</h5>
       <div class="input-group"><span class="input-group-text">Repository</span><select c-model="repo" class="form-control" c-json>{{#each repos}}<option value="{{json .}}">{{repo}}</option>{{/each}}</select></div>
       <div class="input-group"><span class="input-group-text">Identifier</span><input type="text" c-model="identifier" class="form-control"></div>
-      <div class="input-group"><span class="input-group-text">Name</span><input type="text" c-model="name" class="form-control"></div>
       <button class="btn btn-primary bi bi-search float-end" c-click="search()" title="Search"></button>
     </div>
     <div class="col-md-9 table-responsive">
