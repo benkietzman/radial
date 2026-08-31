@@ -4200,7 +4200,7 @@ void Central::schedule(string strPrefix)
                                         dbfree(getPerson);
                                         ssQuery.str("");
                                         ssQuery << "select c.userid from application_group a, group_contact b, person c where a.group_id = b.group_id and b.contact_id = c.id and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and b.notify = 1";
-                                        auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                                        getPerson = dbquery("central_r", ssQuery.str(), strError);
                                         if (getPerson != NULL)
                                         {
                                           for (auto &getPersonRow : *getPerson)
@@ -4331,7 +4331,7 @@ void Central::schedule(string strPrefix)
                 dbfree(getPerson);
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_group b, group_contact c, person d where a.id = b.server_id and b.group_id = c.group_id and c.contact_id = d.id and a.name = '" << esc(server.first) << "' and c.notify = 1";
-                auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                getPerson = dbquery("central_r", ssQuery.str(), strError);
                 if (getPerson != NULL)
                 {
                   for (auto &getPersonRow : *getPerson)
