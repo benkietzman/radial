@@ -3275,15 +3275,98 @@ bool Central::groupUserAdd(radialUser &d, string &e)
     radialUser a;
     userInit(d, a);
     a.p->m["i"]->i("id", i->m["group_id"]->v);
-    if (d.g || (group(a, e) && !a.p->m["o"]->empty({"name"})))
+    if (d.g || isGroupOwner(a, e))
+    {
+      bool bReady = false;
+      radialUser c;
+      userInit(d, c);
+      c.p->m["i"]->i("userid", i->m["userid"]->v);
+      if (user(c, e) && !c.p->m["o"]->empty({"id"}))
+      {
+        bReady = true;
+      }
+      else if (e == "No results returned.")
+      {
+        userDeinit(c);
+        userInit(d, c);
+        c.p->m["i"]->i("userid", i->m["userid"]->v);
+        c.p->m["i"]->i("group_id", i->m["group_id"]->v);
+        if (userAdd(c, e))
+        {
+          userDeinit(c);
+          userInit(d, c);
+          c.p->m["i"]->i("userid", i->m["userid"]->v);
+          if (user(c, e) && !c.p->m["o"]->empty({"id"}))
+          {
+            bReady = true;
+          }
+        }
+      }
+      if (bReady)
+      {
+        if (!i->empty({"type", "type"}))
+        {
+          radialUser f;
+          userInit(d, f);
+          f.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
+          if (contactType(f, e) && !f.p->m["o"]->empty({"id"}))
+          {
+            if (!i->empty({"notify", "value"}))
+            {
+              string id, q;
+              i->i("contact_id", c.p->m["o"]->m["id"]->v);
+              i->i("notify", i->m["notify"]->m["value"]->v);
+              i->i("type_id", f.p->m["o"]->m["id"]->v);
+              if (db("dbCentralGroupUserAdd", i, id, q, e))
+              {
+                b = true;
+                o->i("id", id);
+              }
+            }
+            else
+            {
+              e = "Please provide the notify.";
+            }
+          }
+          userDeinit(f);
+        }
+        else
+        {
+          e = "Please provide the type.";
+        }
+      }
+      userDeinit(c);
+    }
+    else
+    {
+      e = "You are not authorized to perform this action.";
+    }
+    userDeinit(a);
+  }
+
+  return b;
+}
+// }}}
+// {{{ groupUserEdit()
+bool Central::groupUserEdit(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"id", "userid"}, i, e))
+  {
+    radialUser a;
+    userInit(d, a);
+    a.p->m["i"]->i("id", i->m["id"]->v);
+    if (d.g || (groupUser(a, e) && !a.p->m["o"]->empty({"group_id"})))
     {
       radialUser c;
       userInit(d, c);
       if (!d.g)
       {
-        c.p->m["i"]->i("id", i->m["group_id"]->v);
+        c.p->m["i"]->i("id", a.p->m["o"]->m["group_id"]->v);
       }
-      if (d.g || (d.auth.find(a.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[a.p->m["o"]->m["name"]->v]) || isGroupOwner(c, e))
+      if (d.g || isGroupOwner(c, e))
       {
         bool bReady = false;
         radialUser f;
@@ -3321,15 +3404,10 @@ bool Central::groupUserAdd(radialUser &d, string &e)
             {
               if (!i->empty({"notify", "value"}))
               {
-                string id, q;
                 i->i("contact_id", f.p->m["o"]->m["id"]->v);
                 i->i("notify", i->m["notify"]->m["value"]->v);
                 i->i("type_id", h.p->m["o"]->m["id"]->v);
-                if (db("dbCentralGroupUserAdd", i, id, q, e))
-                {
-                  b = true;
-                  o->i("id", id);
-                }
+                b = db("dbCentralGroupUserUpdate", i, e);
               }
               else
               {
@@ -3348,104 +3426,6 @@ bool Central::groupUserAdd(radialUser &d, string &e)
       else
       {
         e = "You are not authorized to perform this action.";
-      }
-      userDeinit(c);
-    }
-    userDeinit(a);
-  }
-
-  return b;
-}
-// }}}
-// {{{ groupUserEdit()
-bool Central::groupUserEdit(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (dep({"id", "userid"}, i, e))
-  {
-    radialUser a;
-    userInit(d, a);
-    a.p->m["i"]->i("id", i->m["id"]->v);
-    if (d.g || (groupUser(a, e) && !a.p->m["o"]->empty({"group_id"})))
-    {
-      radialUser c;
-      userInit(d, c);
-      if (!d.g)
-      {
-        c.p->m["i"]->i("id", a.p->m["o"]->m["group_id"]->v);
-      }
-      if (d.g || (group(c, e) && !c.p->m["o"]->empty({"name"})))
-      {
-        radialUser f;
-        userInit(d, f);
-        if (!d.g)
-        {
-          f.p->m["i"]->i("id", a.p->m["o"]->m["group_id"]->v);
-        }
-        if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isGroupOwner(f, e))
-        {
-          bool bReady = false;
-          radialUser h;
-          userInit(d, h);
-          h.p->m["i"]->i("userid", i->m["userid"]->v);
-          if (user(h, e) && !h.p->m["o"]->empty({"id"}))
-          {
-            bReady = true;
-          }
-          else if (e == "No results returned.")
-          {
-            userDeinit(h);
-            userInit(d, h);
-            h.p->m["i"]->i("userid", i->m["userid"]->v);
-            h.p->m["i"]->i("group_id", i->m["group_id"]->v);
-            if (userAdd(h, e))
-            {
-              userDeinit(h);
-              userInit(d, h);
-              h.p->m["i"]->i("userid", i->m["userid"]->v);
-              if (user(h, e) && !h.p->m["o"]->empty({"id"}))
-              {
-                bReady = true;
-              }
-            }
-          }
-          if (bReady)
-          {
-            if (!i->empty({"type", "type"}))
-            {
-              radialUser k;
-              userInit(d, k);
-              k.p->m["i"]->i("type", i->m["type"]->m["type"]->v);
-              if (contactType(k, e) && !k.p->m["o"]->empty({"id"}))
-              {
-                if (!i->empty({"notify", "value"}))
-                {
-                  i->i("contact_id", h.p->m["o"]->m["id"]->v);
-                  i->i("notify", i->m["notify"]->m["value"]->v);
-                  i->i("type_id", k.p->m["o"]->m["id"]->v);
-                  b = db("dbCentralGroupUserUpdate", i, e);
-                }
-                else
-                {
-                  e = "Please provide the notify.";
-                }
-              }
-              userDeinit(k);
-            }
-            else
-            {
-              e = "Please provide the type.";
-            }
-          }
-          userDeinit(h);
-        }
-        else
-        {
-          e = "You are not authorized to perform this action.";
-        }
-        userDeinit(f);
       }
       userDeinit(c);
     }
@@ -3475,23 +3455,13 @@ bool Central::groupUserRemove(radialUser &d, string &e)
       {
         c.p->m["i"]->i("id", a.p->m["o"]->m["group_id"]->v);
       }
-      if (d.g || (group(c, e) && !c.p->m["o"]->empty({"name"})))
+      if (d.g || isGroupOwner(c, e))
       {
-        radialUser f;
-        userInit(d, f);
-        if (!d.g)
-        {
-          f.p->m["i"]->i("id", a.p->m["o"]->m["group_id"]->v);
-        }
-        if (d.g || (d.auth.find(c.p->m["o"]->m["name"]->v) != d.auth.end() && d.auth[c.p->m["o"]->m["name"]->v]) || isGroupOwner(f, e))
-        {
-          b = db("dbCentralGroupUserRemove", i, e);
-        }
-        else
-        {
-          e = "You are not authorized to perform this action.";
-        }
-        userDeinit(f);
+        b = db("dbCentralGroupUserRemove", i, e);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
       }
       userDeinit(c);
     }
