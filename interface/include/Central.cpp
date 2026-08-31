@@ -4172,6 +4172,7 @@ void Central::schedule(string strPrefix)
                                     {
                                       if (!ptConfigProcess->empty({"applicationName"}))
                                       {
+                                        list <string> alerts;
                                         ssMessage.str("");
                                         ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
                                         chat("#central", ssMessage.str(), strError);
@@ -4193,10 +4194,27 @@ void Central::schedule(string strPrefix)
                                         {
                                           for (auto &getPersonRow : *getPerson)
                                           {
-                                            alert(getPersonRow["userid"], ssMessage.str(), strError);
+                                            alerts.push_back(getPersonRow["userid"]);
                                           }
                                         }
                                         dbfree(getPerson);
+                                        ssQuery.str("");
+                                        ssQuery << "select c.userid from application_group a, group_contact b, person c where a.group_id = b.group_id and b.contact_id = c.id and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and b.notify = 1";
+                                        auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                                        if (getPerson != NULL)
+                                        {
+                                          for (auto &getPersonRow : *getPerson)
+                                          {
+                                            alerts.push_back(getPersonRow["userid"]);
+                                          }
+                                        }
+                                        dbfree(getPerson);
+                                        alerts.sort();
+                                        alerts.unique();
+                                        for (auto &i : alerts)
+                                        {
+                                          alert(i, ssMessage.str(), strError);
+                                        }
                                       }
                                       else
                                       {
@@ -4290,6 +4308,7 @@ void Central::schedule(string strPrefix)
               }
               if (!ssAlarmsSystem.str().empty())
               {
+                list<string> alerts;
                 ssMessage.str("");
                 ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
                 chat("#central", ssMessage.str(), strError);
@@ -4306,10 +4325,27 @@ void Central::schedule(string strPrefix)
                 {
                   for (auto &getPersonRow : *getPerson)
                   {
-                    alert(getPersonRow["userid"], ssMessage.str(), strError);
+                    alerts.push_back(getPersonRow["userid"]);
                   }
                 }
                 dbfree(getPerson);
+                ssQuery.str("");
+                ssQuery << "select d.userid from `server` a, server_group b, group_contact c, person d where a.id = b.server_id and b.group_id = c.group_id and c.contact_id = d.id and a.name = '" << esc(server.first) << "' and c.notify = 1";
+                auto getPerson = dbquery("central_r", ssQuery.str(), strError);
+                if (getPerson != NULL)
+                {
+                  for (auto &getPersonRow : *getPerson)
+                  {
+                    alerts.push_back(getPersonRow["userid"]);
+                  }
+                }
+                dbfree(getPerson);
+                alerts.sort();
+                alerts.unique();
+                for (auto &i : alerts)
+                {
+                  alert(i, ssMessage.str(), strError);
+                }
               }
             }
           }
