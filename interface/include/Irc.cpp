@@ -3543,6 +3543,7 @@ void Irc::bot(string strPrefix)
           // }}}
         }
         // {{{ post work
+        m_bOper = false;
         if (ssl != NULL)
         {
           SSL_shutdown(ssl);
