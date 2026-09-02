@@ -3380,7 +3380,7 @@ void Irc::bot(string strPrefix)
                             log(ssMessage.str());
                             break;
                           }
-                          case 464:
+                          case 491:
                           {
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Not connecting from a valid host.";
