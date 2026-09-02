@@ -32,6 +32,8 @@ class Irc : public Interface
   mutex m_mutex;
   string m_strNick;
   string m_strNickDefault;
+  string m_strOperName;
+  string m_strOperPassword;
   string m_strPort;
   string m_strServer;
   string m_strTimeZone;

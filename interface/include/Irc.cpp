@@ -3211,6 +3211,7 @@ void Irc::bot(string strPrefix)
             }
             ssBuffer << "NICK " << strNick << "\r\n";
             ssBuffer << "USER " << strUser << " 0 * :" << strName << "\r\n";
+            ssBuffer << "OPER " << m_strOperName << " " << m_strOperPassword << "\r\n";
             strBuffer[1] = ssBuffer.str();
           }
           while (message(strMessage))
@@ -4131,15 +4132,17 @@ void Irc::load(string strPrefix, const bool bSilent)
   map<string, string> aliases;
   string strError;
   stringstream ssMessage;
-  Json *ptAes = new Json, *ptCred = new Json, *ptJwt = new Json;
+  Json *ptAes = new Json, *ptCred = new Json, *ptJwt = new Json, *ptOper = new Json;
 
   strPrefix += "->Irc::load()";
-  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"aes"}, ptAes, strError) && m_pWarden->vaultRetrieve({"irc", "oper"}, ptOper, strError) && m_pWarden->vaultRetrieve({"jwt"}, ptJwt, strError) && m_pWarden->vaultRetrieve({"radial"}, ptCred, strError))
   {
     m_bLoaded = true;
     m_strAesSecret = ptAes->val({"Secret"});
     m_strJwtSecret = ptJwt->val({"Secret"});
     m_strJwtSigner = ptJwt->val({"Signer"});
+    m_strOperName = ptOper->val({"name"});
+    m_strOperPassword = ptOper->val({"password"});
     for (auto &cred : ptCred->m)
     {
       if (!cred.second->empty({"Application"}) && cred.second->exist({"Alias"}))
