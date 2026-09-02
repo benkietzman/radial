@@ -60,6 +60,7 @@ class Irc : public Interface
   bool math(vector<string> e, long double &r, string &strError);
   bool message(string &strMessage);
   void monitorChannels(string strPrefix, const bool bSilent = false);
+  void ojoin(const string strChannel);
   void part(const string strChannel);
   void push(const string strMessage);
   void quit();

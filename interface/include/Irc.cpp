@@ -3211,7 +3211,6 @@ void Irc::bot(string strPrefix)
             }
             ssBuffer << "NICK " << strNick << "\r\n";
             ssBuffer << "USER " << strUser << " 0 * :" << strName << "\r\n";
-            ssBuffer << "OPER " << m_strOperName << " " << m_strOperPassword << "\r\n";
             strBuffer[1] = ssBuffer.str();
           }
           while (message(strMessage))
@@ -3295,10 +3294,11 @@ void Irc::bot(string strPrefix)
                               ssIndex << unIndex;
                               strNick += ssIndex.str();
                             }
-                            enable(strNick);
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
+                            ssBuffer << "OPER " << m_strOperName << " " << m_strOperPassword << "\r\n";
+                            push(ssBuffer.str());
                             break;
                           }
                           case 322:
@@ -3350,6 +3350,13 @@ void Irc::bot(string strPrefix)
                             }
                             channels.clear();
                             break;
+                          }
+                          case 381:
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Became operator.";
+                            log(ssMessage.str());
+                            enable(strNick);
                           }
                           case 433:
                           case 436:
@@ -3828,7 +3835,7 @@ void Irc::enable(const string strNick)
     {
       for (auto &i : m_ptMonitor->m)
       {
-        join(i.first);
+        ojoin(i.first);
       }
     }
   }
@@ -4463,6 +4470,15 @@ void Irc::monitorChannels(string strPrefix, const bool bSilent)
     log(ssMessage.str());
   }
   inMonitor.close();
+}
+// }}}
+// {{{ ojoin()
+void Irc::ojoin(const string strChannel)
+{
+  stringstream ssMessage;
+
+  ssMessage << ":" << m_strNick << " OJOIN :" << strChannel << "\r\n";
+  push(ssMessage.str());
 }
 // }}}
 // {{{ part()
