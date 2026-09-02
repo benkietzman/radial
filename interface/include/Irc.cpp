@@ -3297,7 +3297,7 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
-                            ssBuffer << "OPER " << m_strOperName << " " << m_strOperPassword << "\r\n";
+                            ssBuffer << ":" << m_strNick << " OPER :" << m_strOperName << " " << m_strOperPassword << "\r\n";
                             push(ssBuffer.str());
                             break;
                           }
@@ -3357,12 +3357,34 @@ void Irc::bot(string strPrefix)
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Became operator.";
                             log(ssMessage.str());
                             enable(strNick);
+                            break;
                           }
                           case 433:
                           case 436:
                           {
                             bRegistering = false;
                             unIndex++;
+                            break;
+                          }
+                          case 461:
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Need more params.";
+                            log(ssMessage.str());
+                            break;
+                          }
+                          case 464:
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Password mismatch.";
+                            log(ssMessage.str());
+                            break;
+                          }
+                          case 464:
+                          {
+                            ssMessage.str("");
+                            ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Not connecting from a valid host.";
+                            log(ssMessage.str());
                             break;
                           }
                         }
