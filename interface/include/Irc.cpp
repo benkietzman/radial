@@ -22,6 +22,7 @@ Irc::Irc(string strPrefix, int argc, char **argv, void (*pCallback)(string, cons
 
   m_bEnabled = false;
   m_bLoaded = false;
+  m_bOper = false;
   m_pAnalyzeCallback1 = NULL;
   m_pAnalyzeCallback2 = NULL;
   m_ptMonitor = NULL;
@@ -3353,6 +3354,7 @@ void Irc::bot(string strPrefix)
                           }
                           case 381:
                           {
+                            m_bOper = true;
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Became operator.";
                             log(ssMessage.str());
@@ -3371,6 +3373,7 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Need more params.";
                             log(ssMessage.str());
+                            enable(strNick);
                             break;
                           }
                           case 464:
@@ -3378,6 +3381,7 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Password mismatch.";
                             log(ssMessage.str());
+                            enable(strNick);
                             break;
                           }
                           case 491:
@@ -3385,6 +3389,7 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Not connecting from a valid host.";
                             log(ssMessage.str());
+                            enable(strNick);
                             break;
                           }
                         }
@@ -3857,7 +3862,7 @@ void Irc::enable(const string strNick)
     {
       for (auto &i : m_ptMonitor->m)
       {
-        ojoin(i.first);
+        join(i.first);
       }
     }
   }
@@ -4142,7 +4147,7 @@ void Irc::join(const string strChannel)
 {
   stringstream ssMessage;
 
-  ssMessage << ":" << m_strNick << " JOIN :" << strChannel << "\r\n";
+  ssMessage << ":" << m_strNick << " " << ((m_bOper)?"OJOIN":"JOIN") << " :" << strChannel << "\r\n";
   push(ssMessage.str());
 }
 // }}}
@@ -4492,15 +4497,6 @@ void Irc::monitorChannels(string strPrefix, const bool bSilent)
     log(ssMessage.str());
   }
   inMonitor.close();
-}
-// }}}
-// {{{ ojoin()
-void Irc::ojoin(const string strChannel)
-{
-  stringstream ssMessage;
-
-  ssMessage << ":" << m_strNick << " OJOIN :" << strChannel << "\r\n";
-  push(ssMessage.str());
 }
 // }}}
 // {{{ part()
