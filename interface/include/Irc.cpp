@@ -3298,7 +3298,7 @@ void Irc::bot(string strPrefix)
                             ssMessage.str("");
                             ssMessage << strPrefix << " [" << m_strServer << ":" << m_strPort << "," << strNick << "]:  Registered on IRC server.";
                             log(ssMessage.str());
-                            ssBuffer << ":" << m_strNick << " OPER :" << m_strOperName << " " << m_strOperPassword << "\r\n";
+                            ssBuffer << "OPER " << m_strOperName << " " << m_strOperPassword << "\r\n";
                             push(ssBuffer.str());
                             break;
                           }
