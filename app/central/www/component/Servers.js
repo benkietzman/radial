@@ -1012,7 +1012,7 @@ export default
     <div class="card-header bg-primary text-white" style="font-weight: bold;">
       Statistics
     </div>
-    <div class="card-body">
+    <div class="card-body table-responsive">
       <table class="table table-condensed table-striped">
         <tr>
           <th>
@@ -1049,7 +1049,7 @@ export default
     <div class="card-header bg-primary text-white" style="font-weight: bold;">
       Memory
     </div>
-    <div class="card-body">
+    <div class="card-body table-responsive">
       <table class="table table-condensed table-striped">
         <tr>
           <th></th>
