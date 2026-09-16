@@ -1090,7 +1090,7 @@ export default
     <div class="card-header bg-primary text-white" style="font-weight: bold;">
       Partitions
     </div>
-    <div class="card-body">
+    <div class="card-body table-responsive">
       <table class="table table-condensed table-striped">
         {{#each server.monitor.data.partitions}}
         <tr>
