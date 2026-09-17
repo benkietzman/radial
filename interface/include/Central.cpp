@@ -4177,20 +4177,30 @@ void Central::schedule(string strPrefix)
                                       if (!ptConfigProcess->empty({"applicationName"}))
                                       {
                                         list <string> alerts;
+                                        stringstream h;
                                         ssMessage.str("");
                                         ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
                                         chat("#central", ssMessage.str(), strError);
                                         ssMessage.str("");
+                                        h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                                         ssMessage << "Central Monitor - Application Alert:  " << ptConfigProcess->m["applicationName"]->v << " - (" << process.first << " running on " << server.first << ")";
+                                        h << "Central Monitor - Application Alert:  <a href=\"https://" << m_strServer << "/central/#/Applications/" << ptConfigProcess->m["applicationId"]->v << "\" target=\"_blank\">" << ptConfigProcess->m["applicationName"]->v << "</a> - (" << process.first << " running on <a href=\"https://" << m_strServer << "/central/#/Servers/?server=" << m_manip.urlEncode(strValue, server.first) << "\" target=\"_blank\">" << server.first << "</a>)";
                                         ssMessage << endl << endl;
+                                        h << "<br><br>";
                                         ssMessage << ssAlarmsProcess.str();
+                                        h << ssAlarmsProcess.str();
                                         ssMessage << endl << endl;
+                                        h << "<br><br>";
                                         if (!ptConfigProcess->empty({"script"}))
                                         {
                                           ssMessage << "Remotely executed the following script:" << endl << endl;
+                                          h << "Remotely executed the following script:<br><br>";
                                           ssMessage << ptConfigProcess->m["script"]->v << endl << endl;
+                                          h << ptConfigProcess->m["script"]->v << "<br><br>";
                                         }
-                                        ssMessage << "-- Central";
+                                        ssMessage << "-- Central Monitor";
+                                        h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, "Central Monitor") << "\" target=\"_blank\">Central Monitor</a>";
+                                        h << "</div>";
                                         ssQuery.str("");
                                         ssQuery << "select c.userid from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(ptConfigProcess->m["applicationId"]->v) << "' and a.notify = 1";
                                         auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4217,7 +4227,7 @@ void Central::schedule(string strPrefix)
                                         alerts.unique();
                                         for (auto &i : alerts)
                                         {
-                                          alert(i, ssMessage.str(), strError);
+                                          alert(i, ssMessage.str(), h.str(), strError);
                                         }
                                       }
                                       else
@@ -4313,15 +4323,23 @@ void Central::schedule(string strPrefix)
               if (!ssAlarmsSystem.str().empty())
               {
                 list<string> alerts;
+                stringstream h;
                 ssMessage.str("");
                 ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
                 chat("#central", ssMessage.str(), strError);
                 ssMessage.str("");
+                h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                 ssMessage << "Central Monitor - Server Alert:  " << server.first;
+                h << "Central Monitor - Server Alert:  <a href=\"https://" << m_strServer << "/central/#/Servers/?server=" << m_manip.urlEncode(strValue, server.first) << "\" target=\"_blank\">" << server.first << "</a>";
                 ssMessage << endl << endl;
+                h << "<br><br>";
                 ssMessage << ssAlarmsSystem.str();
+                h << ssAlarmsSystem.str();
                 ssMessage << endl << endl;
-                ssMessage << "-- Central";
+                h << "<br><br>";
+                ssMessage << "-- Central Monitor";
+                h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, "Central Monitor") << "\" target=\"_blank\">Central Monitor</a>";
+                h << "</div>";
                 ssQuery.str("");
                 ssQuery << "select d.userid from `server` a, server_contact b, contact_type c, person d where a.id = b.server_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Admin', 'Backup Admin', 'Primary Contact') and a.name = '" << esc(server.first) << "' and b.notify = 1";
                 auto getPerson = dbquery("central_r", ssQuery.str(), strError);
@@ -4393,14 +4411,20 @@ void Central::schedule(string strPrefix)
               reminderRemovals.push_back(reminder.first);
               if (getReminderRow["alert"] == "1" && !getUserRow["userid"].empty())
               {
+                stringstream h;
                 ssMessage.str("");
+                h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                 ssMessage << getReminderRow["title"];
+                h << "<b>" << getReminderRow["title"] << "</b>";
                 if (!getReminderRow["description"].empty())
                 {
                   ssMessage << endl << endl << getReminderRow["description"];
+                  h << "<br><br>" << getReminderRow["description"];
                 }
-                ssMessage << endl << endl << "-- Central Reminder";
-                alert(getUserRow["userid"], ssMessage.str(), strError);
+                ssMessage << endl << endl << "-- Central";
+                h << "<br><br>-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, "Central") << "\" target=\"_blank\">Central</a>";
+                h << "</div>";
+                alert(getUserRow["userid"], ssMessage.str(), h.str(), strError);
               }
               if (getReminderRow["chat"] == "1")
               {
