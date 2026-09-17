@@ -39,7 +39,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
   {
     if (!ptJson->m["Request"]->empty({"Message"}))
     {
-      string strMessage = ptJson->m["Request"]->m["Message"]->v;
+      string strHtml = ptJson->val({"Request", "HTML"}), strMessage = ptJson->m["Request"]->m["Message"]->v;
       if (!ptJson->m["Request"]->empty({"User"}))
       {
         map<string, string> user;
@@ -88,7 +88,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             if (user["alert_email"] == "1" && !user["email"].empty())
             {
               bAlerted = true;
-              email(user["email"], user["email"], "Alert", strMessage, "");
+              email(user["email"], user["email"], "Alert", strMessage, strHtml);
             }
             if (user["alert_live_audio"] == "1")
             {
@@ -98,12 +98,12 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             if (user["alert_live_message"] == "1")
             {
               bAlerted = true;
-              live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", strMessage}});
+              live("", strUser, {{"Action", "message"}, {"Class", "danger"}, {"Body", ((!strHtml.empty())?strHtml:strMessage)}});
             }
             if (user["alert_pager"] == "1" && !user["pager"].empty())
             {
               bAlerted = true;
-              email(user["pager"], user["pager"], "Alert", strMessage, "");
+              email(user["pager"], user["pager"], "Alert", strMessage, strHtml);
             }
             if (!user["alert_remote_url"].empty())
             {
@@ -133,6 +133,10 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
                 ptPost->m["Request"]->i("User", user["alert_remote_user"]);
               }
               ptPost->m["Request"]->i("Message", strMessage);
+              if (!strHtml.empty())
+              {
+                ptPost->m["Request"]->i("HTML", strHtml);
+              }
               if (curl(user["alert_remote_url"], "json", NULL, NULL, NULL, ptPost, NULL, ssProxy.str(), strCookies, strHeader, strContent, strError))
               {
                 Json *ptContent = new Json(strContent);

@@ -260,12 +260,20 @@ void Interface::alert(const string strMessage)
 }
 bool Interface::alert(const string strUser, const string strMessage, string &strError)
 {
+  return alert(strUser, strMessage, "", strError);
+}
+bool Interface::alert(const string strUser, const string strMessage, const string strHtml, string &strError)
+{
   bool bResult = false;
   Json *ptJson = new Json;
 
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("User", strUser);
   ptJson->m["Request"]->i("Message", strMessage);
+  if (!strHtml.empty())
+  {
+    ptJson->m["Request"]->i("HTML", strHtml);
+  }
   if (hub("alert", ptJson, strError))
   {
     bResult = true;
