@@ -83,7 +83,7 @@ void Alert::callback(string strPrefix, const string strPacket, const bool bRespo
             {
               bAlerted = true;
               chat(ssName.str(), strMessage);
-              chat(strUser, strMessage, "live");
+              chat(strUser, ((!strHtml.empty())?strHtml:strMessage), "live");
             }
             if (user["alert_email"] == "1" && !user["email"].empty())
             {
