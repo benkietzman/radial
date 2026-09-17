@@ -1424,7 +1424,7 @@ bool Central::applicationNotify(radialUser &d, string &e)
 
   if (dep({"notification"}, i, e))
   {
-    if (i->empty({"id"}) || !i->empty({"name"}))
+    if (!i->empty({"id"}) || !i->empty({"name"}))
     {
       string strNotification = i->m["notification"]->v;
       if (!d.u.empty() || auth(d.r, e))
