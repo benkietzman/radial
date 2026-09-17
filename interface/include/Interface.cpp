@@ -2507,6 +2507,7 @@ string Interface::getApplication(radialUser &d)
           m_mutexShare.lock();
           m_applications = applications;
           m_mutexShare.unlock();
+          v = m_applications[d.r->m["User"]->v];
         }
       }
       delete ptRadial;

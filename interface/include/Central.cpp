@@ -1418,6 +1418,7 @@ bool Central::applicationIssuesByApplicationID(radialUser &d, string &e)
 bool Central::applicationNotify(radialUser &d, string &e)
 {
   bool b = false;
+  string strValue;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
@@ -1570,54 +1571,73 @@ bool Central::applicationNotify(radialUser &d, string &e)
               }
               for (auto &k : o->m)
               {
-                stringstream m;
+                stringstream h, m;
+                h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                 m << "Application Notification:  " << c.p->m["o"]->m["name"]->v;
+                h << "Application Notification:  <a href=\"https://" << m_strServer << "/central/#/Applications/" << c.p->m["o"]->m["id"]->v << "\" target=\"_blank\">" << c.p->m["o"]->m["name"]->v << "</a>";
                 m << endl << endl;
+                h << "<br><br>";
                 m << strNotification;
+                h << strNotification;
                 m << endl << endl;
+                h << "<br><br>";
                 m << "You are receiving this application notification for the following reason:";
+                h << "You are receiving this application notification for the following reason:<ul>";
                 m << endl << endl;
                 if (k.second->exist({"primary"}))
                 {
                   m << "* You are a Primary Developer for this application." << endl << endl;
+                  h << "<li>You are a Primary Developer for this application.</li>";
                 }
                 else if (k.second->exist({"backup"}))
                 {
                   m << "* You are a Backup Developer for this application." << endl << endl;
+                  h << "<li>You are a Backup Developer for this application.</li>";
                 }
                 else if (k.second->exist({"contact"}))
                 {
                   m << "* You are a Contact for this application." << endl << endl;
+                  h << "<li>You are a Contact for this application.</li>";
                 }
+                h << "</ul>";
                 if (k.second->exist({"depend"}))
                 {
                   m << "You are a developer for the following dependent application(s):";
+                  h << "You are a developer for the following dependent application(s):<ul>";
                   m << endl << endl;
                   for (auto &depend : k.second->m["depend"]->l)
                   {
                     m << "* " << depend->v << endl;
+                    h << "<li><a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, depend->v) << "\" target=\"_blank\">" << depend->v << "</a></li>";
                   }
                   m << endl;
+                  h << "</ul>";
                 }
                 if (k.second->exist({"group"}))
                 {
                   m << "You are a contact for the following associated group(s):";
+                  h << "You are a contact for the following associated group(s):<ul>";
                   m << endl << endl;
                   for (auto &group : k.second->m["group"]->l)
                   {
                     m << "* " << group->v << endl;
+                    h << "<li><a href=\"https://" << m_strServer << "/central/#/Groups/?group=" << m_manip.urlEncode(strValue, group->v) << "\" target=\"_blank\">" << group->v << "</a></li>";
                   }
                   m << endl;
+                  h << "</ul>";
                 }
                 if (!d.u.empty())
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Users/?userid=" << m_manip.urlEncode(strValue, d.u) << "\" target=\"_blank\">" << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << "</a> (" << d.u << ")";
                 }
                 else
                 {
                   m << "-- " << getApplication(d);
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, getApplication(d)) << "\" target=\"_blank\">" << getApplication(d) << "</a>";
                 }
-                if (alert(k.first, m.str(), e))
+                h << "</div>";
+                if (alert(k.first, m.str(), h.str(), e))
                 {
                   k.second->i("sent", "1", 'n');
                 }
@@ -2986,6 +3006,7 @@ bool Central::groupEdit(radialUser &d, string &e)
 bool Central::groupNotify(radialUser &d, string &e)
 {
   bool b = false;
+  string strValue;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
@@ -3055,34 +3076,47 @@ bool Central::groupNotify(radialUser &d, string &e)
               }
               for (auto &k : o->m)
               {
-                stringstream m;
+                stringstream h, m;
+                h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                 m << "Group Notification:  " << c.p->m["o"]->m["name"]->v;
+                h << "Group Notification:  <a href=\"https://" << m_strServer << "/central/#/Groups/" << c.p->m["o"]->m["id"]->v << "\" target=\"_blank\">" << c.p->m["o"]->m["name"]->v << "</a>";
                 m << endl << endl;
+                h << "<br><br>";
                 m << strNotification;
+                h << strNotification;
                 m << endl << endl;
+                h << "<br><br>";
                 m << "You are receiving this group notification for the following reason:";
+                h << "You are receiving this group notification for the following reason:<ul>";
                 m << endl << endl;
                 if (k.second->exist({"primary"}))
                 {
                   m << "* You are a Primary Owner for this group." << endl << endl;
+                  h << "<li>You are a Primary Owner for this group.</li>";
                 }
                 else if (k.second->exist({"backup"}))
                 {
                   m << "* You are a Backup Owner for this group." << endl << endl;
+                  h << "<li>You are a Backup Owner for this group.</li>";
                 }
                 else if (k.second->exist({"contact"}))
                 {
                   m << "* You are a Contact for this group." << endl << endl;
+                  h << "<li>You are a Contact for this group.</li>";
                 }
+                h << "</ul>";
                 if (!d.u.empty())
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Users/?userid=" << m_manip.urlEncode(strValue, d.u) << "\" target=\"_blank\">" << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << "</a> (" << d.u << ")";
                 }
                 else
                 {
                   m << "-- " << getApplication(d);
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, getApplication(d)) << "\" target=\"_blank\">" << getApplication(d) << "</a>";
                 }
-                if (alert(k.first, m.str(), e))
+                h << "</div>";
+                if (alert(k.first, m.str(), h.str(), e))
                 {
                   k.second->i("sent", "1", '1');
                 }
@@ -5005,6 +5039,7 @@ bool Central::serverGroupRemove(radialUser &d, string &e)
 bool Central::serverNotify(radialUser &d, string &e)
 {
   bool b = false;
+  string strValue;
   stringstream q;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
@@ -5120,44 +5155,60 @@ bool Central::serverNotify(radialUser &d, string &e)
               userDeinit(g);
               for (auto &k : o->m)
               {
-                stringstream m;
+                stringstream h, m;
+                h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                 m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+                h << "Server Notification:  <a href=\"https://" << m_strServer << "/central/#/Servers/" << c.p->m["o"]->m["id"]->v << "\" target=\"_blank\">" << c.p->m["o"]->m["name"]->v << "</a>";
                 m << endl << endl;
+                h << "<br><br>";
                 m << strNotification;
+                h << strNotification;
                 m << endl << endl;
+                h << "<br><br>";
                 m << "You are receiving this server notification for the following reason:";
+                h << "You are receiving this server notification for the following reason:</ul>";
                 m << endl << endl;
                 if (k.second->exist({"primary"}))
                 {
                   m << "* You are a Primary Admin for this server." << endl << endl;
+                  h << "<li>You are a Primary Admin for this server.</li>";
                 }
                 else if (k.second->exist({"backup"}))
                 {
                   m << "* You are a Backup Admin for this server." << endl << endl;
+                  h << "<li>You are a Backup Admin for this server.</li>";
                 }
                 else if (k.second->exist({"contact"}))
                 {
                   m << "* You are a Contact for this server." << endl << endl;
+                  h << "<li>You are a Contact for this server.</li>";
                 }
+                h << "</ul>";
                 if (k.second->exist({"group"}))
                 {
                   m << "You are a contact for the following associated group(s):";
+                  h << "You are a contact for the following associated group(s):<ul>";
                   m << endl << endl;
                   for (auto &group : k.second->m["group"]->l)
                   {
                     m << "* " << group->v << endl;
+                    h << "<li><a href=\"https://" << m_strServer << "/central/#/Groups/?group=" << m_manip.urlEncode(strValue, group->v) << "\" target=\"_blank\">" << group->v << "</a></li>";
                   }
                   m << endl;
+                  h << "</ul>";
                 }
                 if (!d.u.empty())
                 {
                   m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Users/?userid=" << m_manip.urlEncode(strValue, d.u) << "\" target=\"_blank\">" << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << "</a> (" << d.u << ")";
                 }
                 else
                 {
                   m << "-- " << getApplication(d);
+                  h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, getApplication(d)) << "\" target=\"_blank\">" << getApplication(d) << "</a>";
                 }
-                if (alert(k.first, m.str(), e))
+                h << "</div>";
+                if (alert(k.first, m.str(), h.str(), e))
                 {
                   k.second->i("sent", "1", 'n');
                 }
@@ -5221,36 +5272,50 @@ bool Central::serverNotify(radialUser &d, string &e)
                   }
                   for (auto &n : developer)
                   {
-                    stringstream m;
+                    stringstream h, m;
+                    h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
                     m << "Server Notification:  " << c.p->m["o"]->m["name"]->v;
+                    h << "Server Notification:  <a href=\"https://" << m_strServer << "/central/#/Servers/" << c.p->m["o"]->m["id"]->v << "\" target=\"_blank\">" << c.p->m["o"]->m["name"]->v << "</a>";
                     m << endl << endl;
+                    h << "<br><br>";
                     m << strNotification;
+                    h << strNotification;
                     m << endl << endl;
+                    h << "<br><br>";
                     m << "You are associated with the following applications that depend upon this server:";
+                    h << "You are associated with the following applications that depend upon this server:<ul>";
                     m << endl << endl;
                     for (auto &p : n.second)
                     {
                       m << "* " << p.first;
+                      h << "<li>" << p.first;
                       if (p.second.find("primary") != p.second.end())
                       {
                         m << ":  You are a Primary Developer for this application.";
+                        h << ":  You are a Primary Developer for this application.";
                       }
                       else
                       {
                         m << ":  You are a Backup Developer for this application.";
+                        h << ":  You are a Backup Developer for this application.";
                       }
                       m << endl;
+                      h << "</li>";
                     }
                     m << endl;
+                    h << "</ul>";
                     if (!d.u.empty())
                     {
                       m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+                      h << "-- <a href=\"https://" << m_strServer << "/central/#/Users/?userid=" << m_manip.urlEncode(strValue, d.u) << "\" target=\"_blank\">" << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << "</a> (" << d.u << ")";
                     }
                     else
                     {
                       m << "-- " << getApplication(d);
+                      h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, getApplication(d)) << "\" target=\"_blank\">" << getApplication(d) << "</a>";
                     }
-                    alert(n.first, m.str(), e);
+                    h << "</div>";
+                    alert(n.first, m.str(), h.str(), e);
                   }
                 }
                 userDeinit(h);
@@ -5915,6 +5980,7 @@ bool Central::userEdit(radialUser &d, string &e)
 bool Central::userNotify(radialUser &d, string &e)
 {
   bool b = false;
+  string strValue;
   stringstream q;
   Json *i = d.p->m["i"];
 
@@ -5942,20 +6008,28 @@ bool Central::userNotify(radialUser &d, string &e)
           }
           if (user(c, e) && !c.p->m["o"]->empty({"id"}) && !c.p->m["o"]->empty({"userid"}))
           {
-            stringstream m;
+            stringstream h, m;
+            h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
             m << "User Notification";
+            h << "User Notification";
             m << endl << endl;
+            h << "<br><br>";
             m << strNotification;
+            h << strNotification;
             m << endl << endl;
+            h << "<br><br>";
             if (!d.u.empty())
             {
               m << "-- " << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << " (" << d.u << ")";
+              h << "-- <a href=\"https://" << m_strServer << "/central/#/Users/?userid=" << m_manip.urlEncode(strValue, d.u) << "\" target=\"_blank\">" << u.p->m["o"]->m["first_name"]->v << " " << u.p->m["o"]->m["last_name"]->v << "</a> (" << d.u << ")";
             }
             else
             {
               m << "-- " << getApplication(d);
+              h << "-- <a href=\"https://" << m_strServer << "/central/#/Applications/?application=" << m_manip.urlEncode(strValue, getApplication(d)) << "\" target=\"_blank\">" << getApplication(d) << "</a>";
             }
-            if (alert(c.p->m["o"]->m["userid"]->v, m.str(), e))
+            h << "</div>";
+            if (alert(c.p->m["o"]->m["userid"]->v, m.str(), h.str(), e))
             {
               b = true;
             }
