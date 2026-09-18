@@ -931,7 +931,7 @@ export default
     };
     // ]]]
     // [[[ insert()
-    s.insert(d)
+    s.insert = (d) =>
     {
       if (s.y < s.sh && s.x < s.w)
       {
