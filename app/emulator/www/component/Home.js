@@ -993,7 +993,6 @@ export default
           {
             b = true;
           }
-          for (let i = 0; 
         }
         s.y++;
         s.x = 0;
