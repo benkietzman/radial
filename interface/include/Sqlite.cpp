@@ -629,7 +629,7 @@ void Sqlite::databaseAdd(string strPrefix, const string strDatabase, const strin
     ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Added database.";
     log(ssMessage.str());
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
+    ssMessage << char(3) << "00,06 " << strDatabase << " | " << strNode << " " << char(3) << " Added database.";
     chat("#sqlite", ssMessage.str());
   }
   m_mutex.unlock();
@@ -683,7 +683,7 @@ void Sqlite::databaseMaster(string strPrefix, const string strDatabase, const st
           ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Set master database.";
           log(ssMessage.str());
           ssMessage.str("");
-          ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
+          ssMessage << char(3) << "00,06 " << strDatabase << " | " << strNode << " " << char(3) << " Set master database.";
           chat("#sqlite", ssMessage.str());
         }
       }
@@ -757,7 +757,7 @@ void Sqlite::databaseRemove(string strPrefix, const string strDatabase, const st
     ssMessage << strPrefix << " [" << strDatabase << "," << strNode << "]:  Removed database.";
     log(ssMessage.str());
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
+    ssMessage << char(3) << "00,06 " << strDatabase << " | " << strNode << " " << char(3) << " Removed database.";
     chat("#sqlite", ssMessage.str());
   }
   m_mutex.unlock();

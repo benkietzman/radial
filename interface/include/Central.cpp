@@ -3668,7 +3668,7 @@ bool Central::monitorData(radialUser &d, string &e)
               merge(ptScript, ptData->m[p.first]);
               o->m["scripts"]->l.push_back(ptScript);
               ssMessage.str("");
-              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << i->m["server"]->v << " " << char(3) << " " << char(3) << "00,14 " << p.first << " " << char(3) << " Remotely executed the following script:  " << ptConfig->m[p.first]->m["script"]->v;
+              ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << i->m["server"]->v << " " << char(3) << " " << char(3) << "00,14 " << p.first << " " << char(3) << " Remotely executed the following script:  " << ptConfig->m[p.first]->m["script"]->v;
               chat("#central", ssMessage.str(), e);
             }
           }
@@ -4179,7 +4179,7 @@ void Central::schedule(string strPrefix)
                                         list <string> alerts;
                                         stringstream h;
                                         ssMessage.str("");
-                                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
+                                        ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsProcess.str();
                                         chat("#central", ssMessage.str(), strError);
                                         ssMessage.str("");
                                         h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";
@@ -4233,14 +4233,14 @@ void Central::schedule(string strPrefix)
                                       else
                                       {
                                         ssMessage.str("");
-                                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application name is missing missing within the processes configuration.  This is an unexpected situation.";
+                                        ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application name is missing missing within the processes configuration.  This is an unexpected situation.";
                                         chat("#central", ssMessage.str(), strError);
                                       }
                                     }
                                     else
                                     {
                                       ssMessage.str("");
-                                      ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application ID is missing missing within the processes configuration.  This is an unexpected situation.";
+                                      ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Application ID is missing missing within the processes configuration.  This is an unexpected situation.";
                                       chat("#central", ssMessage.str(), strError);
                                     }
                                   }
@@ -4249,14 +4249,14 @@ void Central::schedule(string strPrefix)
                               else
                               {
                                 ssMessage.str("");
-                                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Process is missing within the processes configuration.  The daemon was likely removed from the server details in Central.";
+                                ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << char(3) << "00,14 " << process.first << " " << char(3) << " Process is missing within the processes configuration.  The daemon was likely removed from the server details in Central.";
                                 chat("#central", ssMessage.str(), strError);
                               }
                             }
                             else
                             {
                               ssMessage.str("");
-                              ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes configuration is missing.  This is an unexpected situation.";
+                              ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes configuration is missing.  This is an unexpected situation.";
                               chat("#central", ssMessage.str(), strError);
                             }
                           }
@@ -4264,42 +4264,42 @@ void Central::schedule(string strPrefix)
                         else
                         {
                           ssMessage.str("");
-                          ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes data is missing.  This is an unexpected situation.";
+                          ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Processes data is missing.  This is an unexpected situation.";
                           chat("#central", ssMessage.str(), strError);
                         }
                       }
                       else
                       {
                         ssMessage.str("");
-                        ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System data is missing.  This is an unexpected situation.";
+                        ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System data is missing.  This is an unexpected situation.";
                         chat("#central", ssMessage.str(), strError);
                       }
                     }
                     else
                     {
                       ssMessage.str("");
-                      ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data is stale.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
+                      ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data is stale.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
                       chat("#central", ssMessage.str(), strError);
                     }
                   }
                   else
                   {
                     ssMessage.str("");
-                    ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data missing timestamp.  This is an unexpected situation.";
+                    ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Data missing timestamp.  This is an unexpected situation.";
                     chat("#central", ssMessage.str(), strError);
                   }
                 }
                 else
                 {
                   ssMessage.str("");
-                  ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Server appears to be offline.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
+                  ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Server appears to be offline.  This could mean node " << m_strNode << " has become isolated on the links which would make it an isolated master that is not receiving storage updates.  This message was not sent as an alert as it may not actually be a server outage.";
                   chat("#central", ssMessage.str(), strError);
                 }
               }
               else
               {
                 ssMessage.str("");
-                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System configuration is missing.  This is an unexpected situation.";
+                ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " System configuration is missing.  This is an unexpected situation.";
                 chat("#central", ssMessage.str(), strError);
                 storageRemove({"central", "monitor", "servers", server.first}, strError);
               }
@@ -4307,7 +4307,7 @@ void Central::schedule(string strPrefix)
             else
             {
               //ssMessage.str("");
-              //ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could be a new server that was registered in Central but has not yet had its configuration pulled and stored.";
+              //ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " Configuration is missing.  This could be a new server that was registered in Central but has not yet had its configuration pulled and stored.";
               //chat("#central", ssMessage.str(), strError);
               storageRemove({"central", "monitor", "servers", server.first}, strError);
             }
@@ -4325,7 +4325,7 @@ void Central::schedule(string strPrefix)
                 list<string> alerts;
                 stringstream h;
                 ssMessage.str("");
-                ssMessage << char(3) << "13,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
+                ssMessage << char(3) << "00,06 monitor " << char(3) << " " << char(3) << "00,14 " << server.first << " " << char(3) << " " << ssAlarmsSystem.str();
                 chat("#central", ssMessage.str(), strError);
                 ssMessage.str("");
                 h << "<div style=\"font-family: verdana, helvetica, arial, sans-serif; font-size: 12px;\">";

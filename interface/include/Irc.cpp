@@ -133,7 +133,7 @@ void Irc::analyze(const string strNick, const string strTarget, const string str
     string strMessageLower;
     stringstream ssText;
     m_manip.toLower(strMessageLower, m_manip.trim(strMessageLower, strMessage));
-    ssText << char(3) << "08,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
+    ssText << char(3) << "00,03 " << strNick << " @ " << strTarget << " " << char(3) << " " << strMessage;
     for (auto &i : m_ptMonitor->m)
     {
       if (i.first != strTarget && i.second->exist({"Alerts"}))
@@ -691,7 +691,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   string strAction = var("Action", ptData), strError, strQuery, strValue;
   stringstream ssQuery, ssText;
   throughput("analyze");
-  ssText << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "13,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
+  ssText << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "00,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
   if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource))
@@ -2334,7 +2334,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
           if (!strMessage.empty())
           {
             stringstream ssMessage;
-            ssMessage << char(3) << "08,03 " << strUserID;
+            ssMessage << char(3) << "00,03 " << strUserID;
             if (strUserID != strTarget)
             {
               ssMessage << " @ " << strTarget;
@@ -3410,7 +3410,7 @@ void Irc::bot(string strPrefix)
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
-                            ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " Switched to master mode.";
+                            ssMessage << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " Switched to master mode.";
                             chat("#radial", ssMessage.str());
                           }
                         }
@@ -4761,7 +4761,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
       if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
       {
         stringstream ssCursor;
-        ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
+        ssCursor << char(3) << "00,03" << tInfo.screen[i][tInfo.unCol] << char(3);
         tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
       }
       ssText << tInfo.screen[i] << endl;
@@ -4968,7 +4968,7 @@ void Irc::terminal(string strPrefix, const string strTarget, const string strIde
               if (i == tInfo.unRow && tInfo.unCol < tInfo.screen[i].size())
               {
                 stringstream ssCursor;
-                ssCursor << char(3) << "08,03" << tInfo.screen[i][tInfo.unCol] << char(3);
+                ssCursor << char(3) << "00,03" << tInfo.screen[i][tInfo.unCol] << char(3);
                 tInfo.screen[i].replace(tInfo.unCol, 1, ssCursor.str());
               }
               ssText << tInfo.screen[i] << endl;

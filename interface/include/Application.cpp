@@ -76,7 +76,7 @@ void Application::applicationAccept(string strPrefix)
         if (storageRemove({"application", "connectors", i.first, m_strNode}, strError))
         {
           ssMessage.str("");
-          ssMessage << char(3) << "13,06 " << i.first << " " << char(3) << " Removed abandoned connector.";
+          ssMessage << char(3) << "00,06 " << i.first << " " << char(3) << " Removed abandoned connector.";
           chat("#application", ssMessage.str());
         }
         else
@@ -679,7 +679,7 @@ bool Application::connectorAdd(const string strApplication, int fdSocket, string
   {
     bResult = true;
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strApplication << " " << char(3) << " Added connector.";
+    ssMessage << char(3) << "00,06 " << strApplication << " " << char(3) << " Added connector.";
     chat("#application", ssMessage.str());
   }
   else
@@ -706,7 +706,7 @@ bool Application::connectorRemove(const string strApplication, int fdSocket, str
     }
     delete ptData;
     ssMessage.str("");
-    ssMessage << char(3) << "13,06 " << strApplication << " " << char(3) << " Removed connector.";
+    ssMessage << char(3) << "00,06 " << strApplication << " " << char(3) << " Removed connector.";
     chat("#application", ssMessage.str());
   }
   m_mutex.lock();

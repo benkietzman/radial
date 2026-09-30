@@ -750,7 +750,7 @@ void Interface::chat(const string strTarget, const string strMessage, const stri
   stringstream ssMessage;
   Json *ptJson = new Json;
 
-  ssMessage << char(3) << "11,10 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strMessage;
+  ssMessage << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << strMessage;
   ptJson->i("Function", "chat");
   if (!strSource.empty())
   {

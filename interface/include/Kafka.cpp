@@ -176,7 +176,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
     {
       bValidated = false;
       ssMessage.str("");
-      ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " " << char(3) << "00,14 " << i.first << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_conf_set() " << szError << char(3) << char(2);
+      ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " " << char(3) << "00,14 " << i.first << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_conf_set() " << szError << char(3) << char(2);
       chat("#kafka", ssMessage.str());
       ssMessage.str("");
       ssMessage << strPrefix << "->rd_kafka_conf_set() error [" << strTopic << "," << i.first << "]:  " << szError;
@@ -201,7 +201,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
         cerr << "rd_kafka_subscribe() " << rd_kafka_err2str(tError) << endl;
         bLoad = true;
         ssMessage.str("");
-        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_subscribe() " << szError << char(3) << char(2);
+        ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_subscribe() " << szError << char(3) << char(2);
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
         ssMessage << strPrefix << "->rd_kafka_subscribe() error [" << strTopic << "]:  " << szError;
@@ -211,7 +211,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
       if (bSubscribed)
       {
         ssMessage.str("");
-        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " Subscription established.";
+        ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " Subscription established.";
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
         ssMessage << strPrefix << "->rd_kafka_subscribe() [" << strTopic << "]:  Subscription established.";
@@ -235,7 +235,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
               cerr << "rd_kafka_consumer_poll() " << rd_kafka_message_errstr(ptMessage) << endl;
               bLoad = true;
               ssMessage.str("");
-              ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_consumer_poll() " << rd_kafka_message_errstr(ptMessage) << char(3) << char(2);
+              ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_consumer_poll() " << rd_kafka_message_errstr(ptMessage) << char(3) << char(2);
               chat("#kafka", ssMessage.str());
               ssMessage.str("");
               ssMessage << strPrefix << "->rd_kafka_consumer_poll() error [" << strTopic << "]:  " << rd_kafka_message_errstr(ptMessage);
@@ -247,7 +247,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
         bSubscribed = false;
         rd_kafka_consumer_close(ptConsumer);
         ssMessage.str("");
-        ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " Subscription closed.";
+        ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " Subscription closed.";
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
         ssMessage << strPrefix << "->rd_kafka_consumer_close() [" << strTopic << "]:  Subscription closed.";
@@ -259,7 +259,7 @@ void Kafka::consumer(string strPrefix, const string strTopic, map<string, string
     {
       bLoad = true;
       ssMessage.str("");
-      ssMessage << char(3) << "13,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_new() " << szError << char(3) << char(2);
+      ssMessage << char(3) << "00,06 " << strTopic << " " << char(3) << " " << char(2) << char(3) << "07rd_kafka_new() " << szError << char(3) << char(2);
       chat("#kafka", ssMessage.str());
       ssMessage.str("");
       ssMessage << strPrefix << "->rd_kafka_new() error [" << strTopic << "]:  " << szError;
@@ -380,7 +380,7 @@ bool Kafka::reset(radialUser &d, string &e)
       {
         stringstream ssMessage;
         b = true;
-        ssMessage << char(3) << "13,06 " << i->m["Topic"]->v << " " << char(3) << " Subscription has been reset by " << d.u << ".";
+        ssMessage << char(3) << "00,06 " << i->m["Topic"]->v << " " << char(3) << " Subscription has been reset by " << d.u << ".";
         chat("#kafka", ssMessage.str());
         ssMessage.str("");
         ssMessage << "Terminal::reset() [" << i->m["Topic"]->v << "]:  Subscription has been reset by " << d.u << ".";
