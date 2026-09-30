@@ -691,7 +691,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   string strAction = var("Action", ptData), strError, strQuery, strValue;
   stringstream ssQuery, ssText;
   throughput("analyze");
-  ssText << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " " << char(3) << "00,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
+  ssText << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "00,05 " << m_strName << " " << char(3) << " " << char(3) << "00,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
   if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource))
@@ -1668,7 +1668,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
                       ssText << endl;
                       if (!reminder->empty({"cron", "value"}) && !reminder->empty({"sched"}))
                       {
-                        ssText << char(3) << ((reminder->m["cron"]->m["value"]->v == "0")?"00,14":"07,05") << " " << reminder->m["sched"]->v << " " << char(3) << " ";
+                        ssText << char(3) << ((reminder->m["cron"]->m["value"]->v == "0")?"00,14":"00,05") << " " << reminder->m["sched"]->v << " " << char(3) << " ";
                       }
                       ssText << reminder->m["title"]->v;
                     }
@@ -3410,7 +3410,7 @@ void Irc::bot(string strPrefix)
                           if (strChannel == "#radial")
                           {
                             ssMessage.str("");
-                            ssMessage << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "07,05 " << m_strName << " " << char(3) << " Switched to master mode.";
+                            ssMessage << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "00,05 " << m_strName << " " << char(3) << " Switched to master mode.";
                             chat("#radial", ssMessage.str());
                           }
                         }
