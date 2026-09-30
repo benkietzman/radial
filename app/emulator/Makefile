@@ -9,7 +9,7 @@
 all: bin/emulator
 
 bin/emulator: ../../../common/libcommon.a obj/emulator.o bin
-	g++ -o bin/emulator obj/emulator.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssh -lssl -ltar -lz
+	g++ -o bin/emulator obj/emulator.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssh -lssl -lz
 
 bin:
 	if [ ! -d bin ]; then mkdir bin; fi;

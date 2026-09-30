@@ -11,7 +11,7 @@ prefix=/usr/local
 all: bin/sqlite
 
 bin/sqlite: ../../../common/libcommon.a obj/sqlite.o bin
-	g++ -o bin/sqlite obj/sqlite.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -ltar -lz
+	g++ -o bin/sqlite obj/sqlite.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -lz
 
 bin:
 	if [ ! -d bin ]; then mkdir bin; fi;
