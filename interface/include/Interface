@@ -39,6 +39,7 @@ struct radialKafkaPending
 {
   bool bClose;
   int fdPipe[2];
+  Json *ptMessage;
   list<Json *> messages;
   string strError;
   string strID;
