@@ -38,7 +38,6 @@ struct radialCallbackWorker
 struct radialKafkaPending
 {
   bool bClose;
-  bool bClosed;
   int fdPipe[2];
   list<Json *> messages;
   string strError;
