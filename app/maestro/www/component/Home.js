@@ -106,9 +106,9 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == '...' || data.detail.Action == '...'))
+      if (data.detail && data.detail.Action && (data.detail.Action == 'compositionAdd' || data.detail.Action == 'compositionRemove') && !s.composition)
       {
-        s.u();
+        s.init();
       }
     });
     // ]]]
