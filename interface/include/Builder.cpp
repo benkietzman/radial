@@ -52,7 +52,7 @@ Builder::Builder(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 Builder::~Builder()
 {
   m_pThreadInotify->join();
-  delete m_ptThreadInotify;
+  delete m_pThreadInotify;
 }
 // }}}
 // {{{ callback()

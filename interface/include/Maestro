@@ -24,6 +24,7 @@ class Maestro : public Interface
   thread *m_pThreadInotify;
   Json *m_compositions;
 
+  bool composition(radialUser &d, string &e);
   bool compositionAdd(radialUser &d, string &e);
   bool compositionExist(const string strName);
   bool compositionOwner(const string strName, const string strOwner);

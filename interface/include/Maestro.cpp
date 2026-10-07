@@ -20,12 +20,13 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   // {{{ functions
   m_functions["action"] = &Maestro::action;
+  m_functions["composition"] = &Maestro::composition;
   m_functions["compositionAdd"] = &Maestro::compositionAdd;
   m_functions["compositionRemove"] = &Maestro::compositionRemove;
   m_functions["compositions"] = &Maestro::compositions;
   m_functions["status"] = &Maestro::status;
   // }}}
-  m_c = NULL;
+  m_compositions = NULL;
   load(strPrefix, true);
   watches[m_strData + "/maestro"] = {"compositions.json"};
   m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
@@ -36,8 +37,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 Maestro::~Maestro()
 {
   m_pThreadInotify->join();
-  delete m_ptThreadInotify;
-  delete m_c;
+  delete m_pThreadInotify;
+  delete m_compositions;
 }
 // }}}
 // {{{ autoMode()
@@ -119,11 +120,42 @@ void Maestro::callbackInotify(string strPrefix, const string strPath, const stri
   }
 }
 // }}}
+// {{{ composition()
+bool Maestro::composition(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Name"}, i, e))
+  {
+    m_mutex.lock();
+    if (compositionExist(i->m["Name"]->v))
+    {
+      if (compositionOwner(i->m["Name"]->v, d.u))
+      {
+        b = true;
+        o->merge(m_compositions->m[i->m["Name"]->v], true, false);
+      }
+      else
+      {
+        e = "You are not authorized to perform this action.";
+      }
+    }
+    else
+    {
+      e = "Composition not found.";
+    }
+    m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
 // {{{ compositionAdd()
 bool Maestro::compositionAdd(radialUser &d, string &e)
 {
   bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *i = d.p->m["i"];
 
   if (isValid(d))
   {
@@ -133,9 +165,9 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
       if (!compositionExist(i->m["Name"]->v))
       {
         b = true;
-        m_c->m[i->m["Name"]->v] = new Json;
-        m_c->m[i->m["Name"]->v]->m["Owners"];
-        m_c->m[i->m["Name"]->v]->m["Owners"]->pb(d.u);
+        m_compositions->m[i->m["Name"]->v] = new Json;
+        m_compositions->m[i->m["Name"]->v]->m["Owners"];
+        m_compositions->m[i->m["Name"]->v]->m["Owners"]->pb(d.u);
       }
       else
       {
@@ -186,7 +218,7 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
 // {{{ compositionExist()
 bool Maestro::compositionExist(const string strName)
 {
-  return compositions->exist({strName});
+  return m_compositions->exist({strName});
 }
 // }}}
 // {{{ compositionOwner()
@@ -200,7 +232,7 @@ bool Maestro::compositionOwner(const string strName, const string strOwner)
     {
       for (auto i = m_compositions->m[strName]->m["Owners"]->l.begin(); !b && i != m_compositions->m[strName]->m["Owners"]->l.end(); i++)
       {
-        if ((*i)->v == d.u)
+        if ((*i)->v == strOwner)
         {
           b = true;
         }
@@ -215,7 +247,7 @@ bool Maestro::compositionOwner(const string strName, const string strOwner)
 bool Maestro::compositionRemove(radialUser &d, string &e)
 {
   bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *i = d.p->m["i"];
 
   if (dep({"Name"}, i, e))
   {
@@ -278,19 +310,17 @@ bool Maestro::compositionRemove(radialUser &d, string &e)
 bool Maestro::compositions(radialUser &d, string &e)
 {
   bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
+  Json *o = d.p->m["o"];
 
   if (isValid(d))
   {
     b = true;
     m_mutex.lock();
-    for (auto &composition : m_compositions)
+    for (auto &composition : m_compositions->m)
     {
-      if (composition->exist({"Owners"}))
+      if (compositionOwner(composition.first, d.u))
       {
-        bool bOwner = false;
-        for (auto c = composition->m["Owners"]->l
-        o->pb(composition);
+        o->i(composition.first, composition.second);
       }
     }
     m_mutex.unlock();
@@ -308,7 +338,7 @@ bool Maestro::compositionsWrite(string &e)
 {
   bool b = false;
   ofstream outCompositions;
-  stringstream ssMessage, ssNew, ssOld:
+  stringstream ssMessage, ssNew, ssOld;
 
   ssNew << m_strData << "/maestro/compositions_new.json";
   ssOld << m_strData << "/maestro/compositions.json";
@@ -322,7 +352,7 @@ bool Maestro::compositionsWrite(string &e)
   else
   {
     ssMessage.str("");
-    ssMesssage << "ofstream::open(" << errno << ") " << strerror(errno);
+    ssMessage << "ofstream::open(" << errno << ") " << strerror(errno);
     e = ssMessage.str();
   }
   outCompositions.close();
@@ -332,7 +362,7 @@ bool Maestro::compositionsWrite(string &e)
     {
       b = false;
       ssMessage.str("");
-      ssMesssage << "File::rename(" << errno << ") " << strerror(errno);
+      ssMessage << "File::rename(" << errno << ") " << strerror(errno);
       e = ssMessage.str();
     }
   }
