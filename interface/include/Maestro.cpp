@@ -401,7 +401,14 @@ void Maestro::load(string strPrefix, const bool bSilent)
   {
     delete m_compositions;
   }
-  m_compositions = new Json(ssCompositions.str());
+  if (!ssCompositions.str().empty())
+  {
+    m_compositions = new Json(ssCompositions.str());
+  }
+  else
+  {
+    m_compositions = new Json;
+  }
   m_mutex.unlock();
 }
 // }}}
