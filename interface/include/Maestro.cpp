@@ -152,7 +152,7 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
       {
         b = true;
         m_compositions->m[i->m["Name"]->v] = new Json;
-        m_compositions->m[i->m["Name"]->v]->m["Owners"];
+        m_compositions->m[i->m["Name"]->v]->m["Owners"] = new Json;
         m_compositions->m[i->m["Name"]->v]->m["Owners"]->pb(d.u);
       }
       else
