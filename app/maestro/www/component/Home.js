@@ -44,6 +44,7 @@ export default
           {
             c.pushErrorMessage(error.message);
           }
+          s.u();
         });
       }
       else
