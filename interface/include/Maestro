@@ -1,0 +1,45 @@
+// -*- C++ -*-
+// Radial
+// -------------------------------------
+// file       : Maestro
+// author     : Ben Kietzman
+// begin      : 2026-10-07
+// copyright  : Ben Kietzman
+// email      : ben@kietzman.org
+#ifndef _RADIAL_MAESTRO_
+#define _RADIAL_MAESTRO_
+// {{{ includes
+#include "Interface"
+// }}}
+extern "C++"
+{
+namespace radial
+{
+// {{{ Maestro
+class Maestro : public Interface
+{
+  protected:
+  map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
+  mutex m_mutex;
+  thread *m_pThreadInotify;
+  Json *m_compositions;
+
+  bool compositionAdd(radialUser &d, string &e);
+  bool compositionExist(const string strName);
+  bool compositionOwner(const string strName, const string strOwner);
+  bool compositionRemove(radialUser &d, string &e);
+  bool compositions(radialUser &d, string &e);
+  bool compositionsWrite(string &e);
+  void load(string strPrefix, const bool bSilent = false);
+
+  public:
+  Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
+  ~Maestro();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
+  void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
+};
+// }}}
+}
+}
+#endif

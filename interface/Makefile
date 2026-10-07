@@ -7,8 +7,8 @@
 # email      : ben@kietzman.org
 # {{{ prep work
 prefix=/usr/local
-all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
-install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/live bin/log bin/logger bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
+all: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/log bin/logger bin/maestro bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket
+install: bin/alert bin/application bin/auth bin/builder bin/central bin/command bin/data bin/database bin/db bin/emulator bin/feedback bin/irc bin/junction bin/jwt bin/kafka bin/link bin/live bin/log bin/logger bin/maestro bin/mysql bin/mythtv bin/request bin/secure bin/session bin/sqlite bin/ssh bin/status bin/storage bin/terminal bin/websocket $(prefix)/radial/interface
 	install --mode=775 bin/alert $(prefix)/radial/interface/
 	install --mode=775 bin/application $(prefix)/radial/interface/
 	install --mode=775 bin/auth $(prefix)/radial/interface/
@@ -28,6 +28,7 @@ install: bin/alert bin/application bin/auth bin/builder bin/central bin/command 
 	install --mode=775 bin/live $(prefix)/radial/interface/
 	install --mode=775 bin/log $(prefix)/radial/interface/
 	install --mode=775 bin/logger $(prefix)/radial/interface/
+	install --mode=775 bin/maestro $(prefix)/radial/interface/
 	install --mode=775 bin/mysql $(prefix)/radial/interface/
 	install --mode=775 bin/mythtv $(prefix)/radial/interface/
 	install --mode=775 bin/request $(prefix)/radial/interface/
@@ -230,6 +231,16 @@ obj/logger.o: logger.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c logger.cpp -o obj/logger.o $(CPPFLAGS) -I../../common
 obj/Logger.o: include/Logger.cpp obj
 	g++ -ggdb -Wall -c include/Logger.cpp -o obj/Logger.o $(CPPFLAGS) -I../../common
+# }}}
+# {{{ maestro
+maestro: bin/maestro $(prefix)/radial/interface
+	install --mode=775 bin/maestro $(prefix)/radial/interface/
+bin/maestro: ../../common/libcommon.a obj/maestro.o obj/Base.o obj/Interface.o obj/Maestro.o bin
+	g++ -o bin/maestro obj/maestro.o obj/Base.o obj/Interface.o obj/Maestro.o $(LDFLAGS) -L../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -lz
+obj/maestro.o: maestro.cpp ../../common/Makefile obj
+	g++ -ggdb -Wall -c maestro.cpp -o obj/maestro.o $(CPPFLAGS) -I../../common
+obj/Maestro.o: include/Maestro.cpp obj
+	g++ -ggdb -Wall -c include/Maestro.cpp -o obj/Maestro.o $(CPPFLAGS) -I../../common
 # }}}
 # {{{ mysql
 mysql: bin/mysql $(prefix)/radial/interface
