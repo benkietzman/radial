@@ -190,6 +190,17 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
           delete ptLink;
           nodes.pop_front();
         }
+        if (b)
+        {
+          stringstream ssChat;
+          Json *ptLive = new Json;
+          ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "03Composition added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+          ptLive->i("Action", "compositionAdd");
+          ptLive->i("Name", i->m["Name"]->v);
+          live("Maestro", "", ptLive);
+          delete ptLive;
+        }
       }
     }
   }
@@ -285,6 +296,17 @@ bool Maestro::compositionRemove(radialUser &d, string &e)
         }
         delete ptLink;
         nodes.pop_front();
+      }
+      if (b)
+      {
+        stringstream ssChat;
+        Json *ptLive = new Json;
+        ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "07Composition removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "compositionRemove");
+        ptLive->i("Name", i->m["Name"]->v);
+        live("Maestro", "", ptLive);
+        delete ptLive;
       }
     }
   }
