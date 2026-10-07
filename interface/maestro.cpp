@@ -17,14 +17,14 @@ int main(int argc, char *argv[])
   string strPrefix = "maestro->main()";
   gpMaestro = new Maestro(strPrefix, argc, argv, &callback, &callbackInotify);
   gpMaestro->enableWorkers();
-  gpDb->setAutoMode(&autoMode);
+  gpMaestro->setAutoMode(&autoMode);
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
 }
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
 {
-  thread threadAutoMode(&Maestro::autoMode, gpDb, strPrefix, strOldMaster, strNewMaster);
+  thread threadAutoMode(&Maestro::autoMode, gpMaestro, strPrefix, strOldMaster, strNewMaster);
   pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
   threadAutoMode.detach();
 }
