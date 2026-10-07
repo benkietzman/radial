@@ -36,7 +36,6 @@ class Maestro : public Interface
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Maestro();
-  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
 };

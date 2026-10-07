@@ -41,20 +41,6 @@ Maestro::~Maestro()
   delete m_compositions;
 }
 // }}}
-// {{{ autoMode()
-void Maestro::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
-{
-  threadIncrement();
-  strPrefix += "->Maestro::autoMode()";
-  if (strOldMaster != strNewMaster)
-  {
-    stringstream ssMessage;
-    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
-    log(ssMessage.str());
-  }
-  threadDecrement();
-}
-// }}}
 // {{{ callback()
 void Maestro::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
