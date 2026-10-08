@@ -15,20 +15,33 @@ extern "C++"
 {
 namespace radial
 {
+// {{{ structs
+// {{{ radialMaestroPlan
+struct radialMaestroPlan
+{
+  bool a; // application
+  size_t id;
+  map<string, Json *> f; // flows
+};
+// }}}
+// }}}
 // {{{ Maestro
 class Maestro : public Interface
 {
   protected:
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
+  map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
+  string strPath;
 
-  bool composition(radialUser &d, string &e);
-  bool compositionAdd(radialUser &d, string &e);
-  bool compositionExist(const string strName);
-  bool compositionOwner(const string strName, const string strOwner);
-  bool compositionRemove(radialUser &d, string &e);
-  bool compositions(radialUser &d, string &e);
-  bool compositionsWrite(string &e);
+  bool flow(radialUser &d, string &e);
+  bool flows(radialUser &d, string &e);
+  bool isOwner(radialUser &d, const string p);
+  bool isOwner(const string id, const string p);
+  bool owners(radialUser &d, string &e);
+  bool plan(radialUser &d, string &e);
+  bool planAdd(radialUser &d, string &e);
+  bool plans(radialUser &d, string &e);
 
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));

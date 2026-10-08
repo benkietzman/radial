@@ -18,19 +18,31 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 {
   // {{{ functions
   m_functions["action"] = &Maestro::action;
-  m_functions["composition"] = &Maestro::composition;
-  m_functions["compositionAdd"] = &Maestro::compositionAdd;
-  m_functions["compositionRemove"] = &Maestro::compositionRemove;
-  m_functions["compositions"] = &Maestro::compositions;
+  m_functions["flow"] = &Maestro::flow;
+  m_functions["flows"] = &Maestro::flows;
+  m_functions["plan"] = &Maestro::plan;
+  m_functions["planAdd"] = &Maestro::planAdd;
+  m_functions["planExecute"] = &Maestro::planExecute;
+  m_functions["planRemove"] = &Maestro::planRemove;
+  m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
-  m_compositions = NULL;
+  m_strPath = m_strData + (string)"/maestro";
 }
 // }}}
 // {{{ ~Maestro()
 Maestro::~Maestro()
 {
-  delete m_compositions;
+  for (auto &p : m_p)
+  {
+    for (auto &f : p.second->f)
+    {
+      delete f;
+    }
+    p.second->f.clear();
+    delete p;
+  }
+  m_p.clear();
 }
 // }}}
 // {{{ callback()
@@ -85,63 +97,232 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
   delete ptJson;
 }
 // }}}
-// {{{ composition()
-bool Maestro::composition(radialUser &d, string &e)
+// {{{ flow()
+bool Maestro::flow(radialUser &d, string &e)
 {
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"Name"}, i, e))
+  if (isValid(d))
   {
-    m_mutex.lock();
-    if (compositionExist(i->m["Name"]->v))
+    if (dep({"Flow", "Plan"}, i, e))
     {
-      if (compositionOwner(i->m["Name"]->v, d.u))
+      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+      radialUser c;
+      userInit(d, c);
+      if (plan(c, e))
       {
+        stringstream ssPath;
         b = true;
-        o->merge(m_compositions->m[i->m["Name"]->v], true, false);
+        ssPath << m_strPath << "/p/" << p << "/f/" << f;
+        m_mutex.lock();
+        if (m_p[p]->f.find(f) == m_p[p]->f.end())
+        {
+          ifstream inFlow(ssPath.str());
+          stringstream ssJ;
+          ssJ << inFlow.rdbuf();
+          if (!ssJ.empty())
+          {
+            m_p[p]->f[f] = new Json(ssJ.str());
+          }
+          else
+          {
+            m_p[p]->f[f] = new Json;
+          }
+        }
+        o->merge(m_p[p]->f[f], true, false);
+        m_mutex.unlock();
       }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
+      userDeinit(c);
     }
-    else
-    {
-      e = "Composition not found.";
-    }
-    m_mutex.unlock();
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
   }
 
   return b;
 }
 // }}}
-// {{{ compositionAdd()
-bool Maestro::compositionAdd(radialUser &d, string &e)
+// {{{ flows()
+bool Maestro::flows(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (isValid(d))
+  {
+    if (dep({"Plan"}, i, e))
+    {
+      string p = i->m["Plan"]->v;
+      radialUser c;
+      userInit(d, c);
+      if (plan(c, e))
+      {
+        list<string> l;
+        stringstream ssPath;
+        b = true;
+        ssPath << m_strPath << "/p/" << p << "/f";
+        m_file.directoryList(ssPath.str(), l);
+        for (auto &f : l)
+        {
+          if (f != "." && f != "..")
+          {
+            o->pb(f);
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ isOwner()
+bool Maestro::isOwner(radialUser &d, const string p)
+{
+  bool b = false;
+  string e;
+  radialUser u;
+
+  userInit(d, u);
+  u->m["i"]->i("userid", d.u);
+  if (user(u, e) && !u->empty({"o", "id"}) && planOwner(u->m["o"]->m["id"]->v, p))
+  {
+    b = true;
+  }
+  userDeinit(u);
+
+  return b;
+}
+bool Maestro::isOwner(const string id, const string p)
+{
+  bool b = false;
+
+  if (p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_"))
+  {
+    string i, t;
+    stringstream ssP(p);
+    getline(ssP, t, '_');
+    getline(ssP, i);
+    if (!t.empty() && !i.empty())
+    {
+      bool a = (t == "a");
+      bool bUse = false;
+      if (a)
+      {
+        stringstream q;
+        q << "select a.id from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Developer', 'Backup Developer') and a.id = '" << esc(i) << "' and d.id = '" << esc(id) << "' limit 1";
+        auto g = dbquery("central_r", q, e);
+        if (g != NULL && !g->empty())
+        {
+          b = true;
+        }
+        dbfree(g);
+      }
+      else if (id == i)
+      {
+        b = true;
+      }
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ plan()
+bool Maestro::plan(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (isValid(d))
+  {
+    if (dep({"Plan"}, i, e))
+    {
+      string p = i->m["Plan"]->v;
+      if (isOwner(d, p))
+      {
+        stringstream ssPath;
+        ssPath << m_strPath << "/p";
+        m_mutex.lock();
+        if (m_p.empty() && !m_file.directoryExist(ssPath.str()))
+        {
+          m_file.makeDirectory(ssPath.str());
+        }
+        ssPath.str("");
+        ssPath << m_strPath << "/p/" << p;
+        if (m_p.find(p) == m_p.end() && p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_") && file.directoryExist(ssPath.str()))
+        {
+          string i, t;
+          stringstream ssP(p);
+          radialMaestroPlan ptPlan = new radialMaestoPlan;
+          getline(ssP, t, '_');
+          getline(ssP, i);
+          ptPlan->a = (t == 'a');
+          ptPlan->id = i;
+          m_p[p] = ptPlan;
+        }
+        if (m_p.find(p) != m_p.end())
+        {
+          b = true;
+          o->i("Type", ((m_p[p]->a)?"application":"user"));
+          o->i("ID", m_p[p]->id, 'n');
+        }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+      }
+      else
+      {
+        e = "You are not the owner.";
+      }
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ planAdd()
+bool Maestro::planAdd(radialUser &d, string &e)
 {
   bool b = false;
   Json *i = d.p->m["i"];
 
   if (isValid(d))
   {
-    if (dep({"Name"}, i, e))
+    if (dep({"Plan"}, i, e))
     {
-      m_mutex.lock();
-      if (!compositionExist(i->m["Name"]->v))
+      string p = i->m["i"]->v;
+      if (isOwner(d, p))
       {
-        b = true;
-        m_compositions->m[i->m["Name"]->v] = new Json;
-        m_compositions->m[i->m["Name"]->v]->m["Owners"] = new Json;
-        m_compositions->m[i->m["Name"]->v]->m["Owners"]->pb(d.u);
+        stringstream ssPath;
+        ssPath << m_strPath << "/p/" << p;
+        m_mutex.lock();
+        if (m_p.find(p) == m_p.end() && !file.directoryExist(ssPath.str()))
+        {
+          b = true;
+          m_file.makeDirectory(ssPath.str());
+        }
+        else
+        {
+          e = "Plan already exists.";
+        }
+        m_mutex.unlock();
       }
       else
       {
-        e = "Composition already exists.";
-      }
-      m_mutex.unlock();
-      if (b)
-      {
-        compositionsWrite(e);
+        e = "You are not the owner.";
       }
       if (i->val({"_broadcast"}) != "1")
       {
@@ -160,12 +341,9 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
           Json *ptLink = new Json(d.r);
           ptLink->i("Interface", "maestro");
           ptLink->i("Node", nodes.front());
-          ptLink->i("Function", "compositionAdd");
+          ptLink->i("Function", "planAdd");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          if (hub("link", ptLink, e))
-          {
-            b = true;
-          }
+          hub("link", ptLink, e);
           delete ptLink;
           nodes.pop_front();
         }
@@ -173,9 +351,9 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
         {
           stringstream ssChat;
           Json *ptLive = new Json;
-          ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "03Composition added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
-          ptLive->i("Action", "compositionAdd");
+          ptLive->i("Action", "planAdd");
           ptLive->i("Name", i->m["Name"]->v);
           live("Maestro", "", ptLive);
           delete ptLive;
@@ -191,169 +369,37 @@ bool Maestro::compositionAdd(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ compositionExist()
-bool Maestro::compositionExist(const string strName)
-{
-  return m_compositions->exist({strName});
-}
-// }}}
-// {{{ compositionOwner()
-bool Maestro::compositionOwner(const string strName, const string strOwner)
-{
-  bool b = false;
-
-  if (compositionExist(strName))
-  {
-    if (m_compositions->m[strName]->exist({"Owners"}))
-    {
-      for (auto i = m_compositions->m[strName]->m["Owners"]->l.begin(); !b && i != m_compositions->m[strName]->m["Owners"]->l.end(); i++)
-      {
-        if ((*i)->v == strOwner)
-        {
-          b = true;
-        }
-      }
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ compositionRemove()
-bool Maestro::compositionRemove(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (dep({"Name"}, i, e))
-  {
-    m_mutex.lock();
-    if (compositionExist(i->m["Name"]->v))
-    {
-      if (compositionOwner(i->m["Name"]->v, d.u))
-      {
-        b = true;
-        delete m_compositions->m[i->m["Name"]->v];
-        m_compositions->m.erase(i->m["Name"]->v);
-      }
-      else
-      {
-        e = "You are not authorized to perform this action.";
-      }
-    }
-    else
-    {
-      e = "Composition not found.";
-    }
-    m_mutex.unlock();
-    if (b)
-    {
-      compositionsWrite(e);
-    }
-    if (i->val({"_broadcast"}) != "1")
-    {
-      list<string> nodes;
-      m_mutexShare.lock();
-      for (auto &link : m_l)
-      {
-        if (link->interfaces.find("maestro") != link->interfaces.end())
-        {
-          nodes.push_back(link->strNode);
-        }
-      }
-      m_mutexShare.unlock();
-      while (!nodes.empty())
-      {
-        Json *ptLink = new Json(d.r);
-        ptLink->i("Interface", "maestro");
-        ptLink->i("Node", nodes.front());
-        ptLink->i("Function", "compositionRemove");
-        ptLink->m["Request"]->i("_broadcast", "1", '1');
-        if (hub("link", ptLink, e))
-        {
-          b = true;
-        }
-        delete ptLink;
-        nodes.pop_front();
-      }
-      if (b)
-      {
-        stringstream ssChat;
-        Json *ptLive = new Json;
-        ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "07Composition removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-        chat("#maestro", ssChat.str());
-        ptLive->i("Action", "compositionRemove");
-        ptLive->i("Name", i->m["Name"]->v);
-        live("Maestro", "", ptLive);
-        delete ptLive;
-      }
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ compositions()
-bool Maestro::compositions(radialUser &d, string &e)
+// {{{ plans()
+bool Maestro::plans(radialUser &d, string &e)
 {
   bool b = false;
   Json *o = d.p->m["o"];
 
   if (isValid(d))
   {
-    b = true;
-    m_mutex.lock();
-    for (auto &composition : m_compositions->m)
+    radialUser u;
+    userInit(d, u);
+    u->m["i"]->i("userid", d.u);
+    if (user(u, e) && !u->empty({"o", "id"}))
     {
-      if (compositionOwner(composition.first, d.u))
+      list<string> l;
+      stringstream ssPath;
+      b = true;
+      ssPath << m_strPath << "/p";
+      m_file.directoryList(ssPath.str(), l);
+      for (auto &p : l)
       {
-        o->i(composition.first, composition.second);
+        if (isOwner(u->m["o"]->m["id"]->v, p))
+        {
+          o->pb(p);
+        }
       }
     }
-    m_mutex.unlock();
   }
   else
   {
     e = "You are not authorized to perform this action.";
   }
-
-  return b;
-}
-// }}}
-// {{{ compositionsWrite()
-bool Maestro::compositionsWrite(string &e)
-{
-  bool b = false;
-  ofstream outCompositions;
-  stringstream ssMessage, ssNew, ssOld;
-
-  ssNew << m_strData << "/maestro/compositions_new.json";
-  ssOld << m_strData << "/maestro/compositions.json";
-  m_mutex.lock();
-  outCompositions.open(ssNew.str());
-  if (outCompositions)
-  {
-    b = true;
-    outCompositions << m_compositions << endl;
-  }
-  else
-  {
-    ssMessage.str("");
-    ssMessage << "ofstream::open(" << errno << ") " << strerror(errno);
-    e = ssMessage.str();
-  }
-  outCompositions.close();
-  if (b)
-  {
-    if (!m_file.rename(ssNew.str(), ssOld.str()))
-    {
-      b = false;
-      ssMessage.str("");
-      ssMessage << "File::rename(" << errno << ") " << strerror(errno);
-      e = ssMessage.str();
-    }
-  }
-  m_mutex.unlock();
 
   return b;
 }
