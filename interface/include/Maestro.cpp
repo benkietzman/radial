@@ -14,10 +14,8 @@ extern "C++"
 namespace radial
 {
 // {{{ Maestro()
-Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
+Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
 {
-  map<string, list<string> > watches;
-
   // {{{ functions
   m_functions["action"] = &Maestro::action;
   m_functions["composition"] = &Maestro::composition;
@@ -27,17 +25,11 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["status"] = &Maestro::status;
   // }}}
   m_compositions = NULL;
-  load(strPrefix, true);
-  watches[m_strData + "/maestro"] = {"compositions.json"};
-  m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
-  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
 }
 // }}}
 // {{{ ~Maestro()
 Maestro::~Maestro()
 {
-  m_pThreadInotify->join();
-  delete m_pThreadInotify;
   delete m_compositions;
 }
 // }}}
@@ -91,19 +83,6 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
     hub(p, false);
   }
   delete ptJson;
-}
-// }}}
-// {{{ callbackInotify()
-void Maestro::callbackInotify(string strPrefix, const string strPath, const string strFile)
-{
-  string strError;
-  stringstream ssMessage;
-
-  strPrefix += "->Maestro::callbackInotify()";
-  if (strPath == (m_strData + "/maestro") &&  strFile == "config.json")
-  {
-    load(strPrefix);
-  }
 }
 // }}}
 // {{{ composition()
@@ -377,47 +356,6 @@ bool Maestro::compositionsWrite(string &e)
   m_mutex.unlock();
 
   return b;
-}
-// }}}
-// {{{ load()
-void Maestro::load(string strPrefix, const bool bSilent)
-{
-  ifstream inCompositions;
-  stringstream ssCompositions, ssMessage;
-
-  strPrefix += "->Maestro::load()";
-  ssCompositions << m_strData << "/maestro/compositions.json";
-  inCompositions.open(ssCompositions.str());
-  ssCompositions.str("");
-  if (inCompositions)
-  {
-    string strLine;
-    while (getline(inCompositions, strLine))
-    {
-      ssCompositions << strLine;
-    }
-  }
-  else if (!bSilent)
-  {
-    ssMessage.str("");
-    ssMessage << strPrefix << "->ifstream::open(" << errno << ") error [" << m_strData << "/maestro/compositions.json]:  " << strerror(errno);
-    log(ssMessage.str());
-  }
-  inCompositions.close();
-  m_mutex.lock();
-  if (m_compositions != NULL)
-  {
-    delete m_compositions;
-  }
-  if (!ssCompositions.str().empty())
-  {
-    m_compositions = new Json(ssCompositions.str());
-  }
-  else
-  {
-    m_compositions = new Json;
-  }
-  m_mutex.unlock();
 }
 // }}}
 }

@@ -21,8 +21,6 @@ class Maestro : public Interface
   protected:
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   mutex m_mutex;
-  thread *m_pThreadInotify;
-  Json *m_compositions;
 
   bool composition(radialUser &d, string &e);
   bool compositionAdd(radialUser &d, string &e);
@@ -31,13 +29,11 @@ class Maestro : public Interface
   bool compositionRemove(radialUser &d, string &e);
   bool compositions(radialUser &d, string &e);
   bool compositionsWrite(string &e);
-  void load(string strPrefix, const bool bSilent = false);
 
   public:
-  Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
+  Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
-  void callbackInotify(string strPrefix, const string strPath, const string strFile);
 };
 // }}}
 }

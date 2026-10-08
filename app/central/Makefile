@@ -11,7 +11,7 @@ prefix=/usr/local
 all: bin/monitor bin/monitor_read bin/monitor_restart
 
 bin/monitor: ../../../common/libcommon.a obj/monitor.o bin
-	g++ -o bin/monitor obj/monitor.o $(LDFLAGS) -L../../../common -lbz2 -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -lz
+	g++ -o bin/monitor obj/monitor.o $(LDFLAGS) -L../../../common -lcommon -lb64 -lcrypto -lexpat -lmjson -lpthread -lrt -lssl -lz
 
 bin/monitor_read: ../../../common/libcommon.a obj/monitor_read.o bin
 	g++ -o bin/monitor_read obj/monitor_read.o $(LDFLAGS) -L../../../common -lcommon -lb64 -lcrypto -lexpat -lmjson -lssl
