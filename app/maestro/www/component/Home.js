@@ -129,6 +129,7 @@ export default
       <tr>
         <td><input type="text" class="form-conrtol" c-model="planName" placeholder="Plan"></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></td>
+        <td></td>
       </tr>
       {{#each ../plans}}
       <tr>
