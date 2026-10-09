@@ -25,6 +25,52 @@ export default
       c: c
     });
     // ]]]
+    // [[[ init()
+    s.init = () =>
+    {
+      if (c.isValid())
+      {
+        s.planType = 'a';
+        s.applications = null;
+        s.applications = [];
+        let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.userid = \'' + c.getUserID() + '\' order by a.name'};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.applications = response.Response;
+            s.planApplication = s.applications[0];
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
+        s.plans = null;
+        s.plans = {};
+        request = {Interface: 'maestro', 'Function': 'plans'};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.plans = response.Response;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
+      }
+      else
+      {
+        s.u();
+      }
+    };
+    // ]]]
     // [[[ planAdd()
     s.planAdd = () =>
     {
@@ -65,48 +111,10 @@ export default
       }
     };
     // ]]]
-    // [[[ init()
-    s.init = () =>
+    // [[[ typeSelect()
+    s.typeSelect = () =>
     {
-      if (c.isValid())
-      {
-        s.applications = null;
-        s.applications = [];
-        let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.userid = \'' + c.getUserID() + '\' order by a.name'};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.applications = response.Response;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-          s.u();
-        });
-        s.plans = null;
-        s.plans = {};
-        request = {Interface: 'maestro', 'Function': 'plans'};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.plans = response.Response;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-          s.u();
-        });
-      }
-      else
-      {
-        s.u();
-      }
+      s.u();
     };
     // ]]]
     // [[[ main
@@ -146,7 +154,7 @@ export default
         <td>
           <div class="input-group">
             <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Type</span>
-            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType"><option value="a">application</option><option value="u">user</option></select>
+            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option><option value="u">user</option></select>
             {{#ifCond planType "==" "a"}}
             <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Application</span>
             <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
