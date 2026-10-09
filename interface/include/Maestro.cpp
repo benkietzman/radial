@@ -266,7 +266,7 @@ void Maestro::load(string strPrefix)
         map<string, string> row;
         string id, t;
         stringstream ssP(i.first);
-        Json *sl = NULL, ptData = new Json;
+        Json *sl = NULL, *ptData = new Json;
         radialMaestroPlan *ptPlan = new radialMaestroPlan;
         getline(ssP, t, '_');
         getline(ssP, id);
