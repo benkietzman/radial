@@ -45,6 +45,7 @@ class Maestro : public Interface
   bool owners(radialUser &d, string &e);
   bool plan(radialUser &d, string &e);
   bool planAdd(radialUser &d, string &e);
+  bool planRemove(radialUser &d, string &e);
   bool plans(radialUser &d, string &e);
   void schedule(string strPrefix);
 

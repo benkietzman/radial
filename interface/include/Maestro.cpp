@@ -23,6 +23,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["flows"] = &Maestro::flows;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
+  m_functions["planRemove"] = &Maestro::planxRemove;
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
@@ -112,32 +113,31 @@ bool Maestro::flow(radialUser &d, string &e)
     if (dep({"Flow", "Plan"}, i, e))
     {
       string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      radialUser c;
-      userInit(d, c);
-      if (plan(c, e))
+      if (isOwner(d, p))
       {
-        stringstream ssPath;
-        b = true;
-        ssPath << m_strPath << "/p/" << p << "/f/" << f;
         m_mutex.lock();
-        if (m_p[p]->f.find(f) == m_p[p]->f.end())
+        if (m_p.find(p) != m_p.end())
         {
-          ifstream inFlow(ssPath.str());
-          stringstream ssJ;
-          ssJ << inFlow.rdbuf();
-          if (!ssJ.str().empty())
+          if (m_p[p]->f.find(f) != m_p[p]->f.end())
           {
-            m_p[p]->f[f] = new Json(ssJ.str());
+            b = true;
+            o->merge(m_p[p]->f[f], true, false);
           }
           else
           {
-            m_p[p]->f[f] = new Json;
+            e = "Flow not found.";
           }
         }
-        o->merge(m_p[p]->f[f], true, false);
+        else
+        {
+          e = "Plan not found.";
+        }
         m_mutex.unlock();
       }
-      userDeinit(c);
+      else
+      {
+        e = "You are not the owner.";
+      }
     }
   }
   else
@@ -159,22 +159,26 @@ bool Maestro::flows(radialUser &d, string &e)
     if (dep({"Plan"}, i, e))
     {
       string p = i->m["Plan"]->v;
-      radialUser c;
-      userInit(d, c);
-      if (plan(c, e))
+      if (isOwner(d, p))
       {
-        list<string> l;
-        stringstream ssPath;
-        b = true;
-        ssPath << m_strPath << "/p/" << p << "/f";
-        m_file.directoryList(ssPath.str(), l);
-        for (auto &f : l)
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
         {
-          if (f != "." && f != "..")
+          b = true;
+          for (auto &f : m_p[p]->f)
           {
-            o->pb(f);
+            o->i(f.first, f.second);
           }
         }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+      }
+      else
+      {
+        e = "You are not the owner.";
       }
     }
   }
@@ -233,6 +237,10 @@ bool Maestro::isOwner(const string id, const string p)
         b = true;
       }
     }
+  }
+  else
+  {
+    e = "Please provide a valid plan.";
   }
 
   return b;
@@ -322,15 +330,18 @@ void Maestro::load(string strPrefix)
   }
   if (bLoaded)
   {
+    size_t unFlows = 0, unPlans = p.size();
+    string v;
     m_mutex.lock();
     for (auto &i : p)
     {
+      unFlows += i.second->f.size();
       m_p[i.first] = i.second;
     }
     m_mutex.unlock();
     m_bLoaded = true;
     ssChat.str("");
-    ssChat << char(2) << char(3) << "03Loaded plans." << char(3) << char(2);
+    ssChat << char(2) << char(3) << "03Loaded " << m_manip.toShort(unPlans, v) << " plans containing " << m_manip.toShort(unFlows, v) << " from disk into memory." << char(3) << char(2);
     chat("#maestro", ssChat.str());
   }
   else
@@ -355,26 +366,7 @@ bool Maestro::plan(radialUser &d, string &e)
       string p = i->m["Plan"]->v;
       if (isOwner(d, p))
       {
-        stringstream ssPath;
-        ssPath << m_strPath << "/p";
         m_mutex.lock();
-        if (m_p.empty() && !m_file.directoryExist(ssPath.str()))
-        {
-          m_file.makeDirectory(ssPath.str());
-        }
-        ssPath.str("");
-        ssPath << m_strPath << "/p/" << p;
-        if (m_p.find(p) == m_p.end() && p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_") && m_file.directoryExist(ssPath.str()))
-        {
-          string i, t;
-          stringstream ssP(p);
-          radialMaestroPlan *ptPlan = new radialMaestroPlan;
-          getline(ssP, t, '_');
-          getline(ssP, i);
-          ptPlan->a = (t == "a");
-          ptPlan->id = i;
-          m_p[p] = ptPlan;
-        }
         if (m_p.find(p) != m_p.end())
         {
           b = true;
@@ -405,6 +397,7 @@ bool Maestro::plan(radialUser &d, string &e)
 bool Maestro::planAdd(radialUser &d, string &e)
 {
   bool b = false;
+  stringstream ssChat;
   Json *i = d.p->m["i"];
 
   if (isValid(d))
@@ -414,58 +407,154 @@ bool Maestro::planAdd(radialUser &d, string &e)
       string p = i->m["i"]->v;
       if (isOwner(d, p))
       {
-        stringstream ssPath;
-        ssPath << m_strPath << "/p/" << p;
         m_mutex.lock();
-        if (m_p.find(p) == m_p.end() && !m_file.directoryExist(ssPath.str()))
+        if (m_p.find(p) == m_p.end())
         {
-          b = true;
-          m_file.makeDirectory(ssPath.str());
+          string id, t;
+          stringstream ssP(p);
+          getline(ssP, t, '_');
+          getline(ssP, id);
+          if (i->val({"_broadcast"}) == "1" || dataDirectoryAdd(m_strHandle, {p}, e))
+          {
+            b = true;
+            m_p[p] = new Json;
+            m_p[p]->a = (t == "a");
+            m_p[p]->id = id;
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07dataDirectoryAdd() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
         }
         else
         {
           e = "Plan already exists.";
         }
         m_mutex.unlock();
+        if (b && i->val({"_broadcast"}) != "1")
+        {
+          list<string> nodes;
+          Json *ptLive = new Json;
+          m_mutexShare.lock();
+          for (auto &link : m_l)
+          {
+            if (link->interfaces.find("maestro") != link->interfaces.end())
+            {
+              nodes.push_back(link->strNode);
+            }
+          }
+          m_mutexShare.unlock();
+          while (!nodes.empty())
+          {
+            Json *ptLink = new Json(d.r);
+            ptLink->i("Interface", "maestro");
+            ptLink->i("Node", nodes.front());
+            ptLink->i("Function", "planAdd");
+            ptLink->m["Request"]->i("_broadcast", "1", '1');
+            hub("link", ptLink, false);
+            delete ptLink;
+            nodes.pop_front();
+          }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+          ptLive->i("Action", "planAdd");
+          ptLive->i("Name", p);
+          live("Maestro", "", ptLive);
+          delete ptLive;
+        }
       }
       else
       {
         e = "You are not the owner.";
       }
-      if (i->val({"_broadcast"}) != "1")
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ planRemove()
+bool Maestro::planRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (isValid(d))
+  {
+    if (dep({"Plan"}, i, e))
+    {
+      string p = i->m["i"]->v;
+      if (isOwner(d, p))
       {
-        list<string> nodes;
-        m_mutexShare.lock();
-        for (auto &link : m_l)
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
         {
-          if (link->interfaces.find("maestro") != link->interfaces.end())
+          if (dataDirectoryRemove(m_strHandle, {p}, e))
           {
-            nodes.push_back(link->strNode);
+            b = true;
+            for (auto &f : m_p[p]->f)
+            {
+              delete f.second;
+            }
+            delete m_p[p];
+            m_p.erase(p);
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07dataDirectoryRemove() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
           }
         }
-        m_mutexShare.unlock();
-        while (!nodes.empty())
+        else
         {
-          Json *ptLink = new Json(d.r);
-          ptLink->i("Interface", "maestro");
-          ptLink->i("Node", nodes.front());
-          ptLink->i("Function", "planAdd");
-          ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, e);
-          delete ptLink;
-          nodes.pop_front();
+          e = "Plan not found.";
         }
-        if (b)
+        m_mutex.unlock();
+        if (b && i->val({"_broadcast"}) != "1")
         {
-          stringstream ssChat;
+          list<string> nodes;
           Json *ptLive = new Json;
-          ssChat << char(3) << "00,06 " << i->m["Name"]->v << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          m_mutexShare.lock();
+          for (auto &link : m_l)
+          {
+            if (link->interfaces.find("maestro") != link->interfaces.end())
+            {
+              nodes.push_back(link->strNode);
+            }
+          }
+          m_mutexShare.unlock();
+          while (!nodes.empty())
+          {
+            Json *ptLink = new Json(d.r);
+            ptLink->i("Interface", "maestro");
+            ptLink->i("Node", nodes.front());
+            ptLink->i("Function", "planAdd");
+            ptLink->m["Request"]->i("_broadcast", "1", '1');
+            hub("link", ptLink, false);
+            delete ptLink;
+            nodes.pop_front();
+          }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
-          ptLive->i("Action", "planAdd");
-          ptLive->i("Name", i->m["Name"]->v);
+          ptLive->i("Action", "planxRemove");
+          ptLive->i("Name", p);
           live("Maestro", "", ptLive);
           delete ptLive;
         }
+      }
+      else
+      {
+        e = "You are not the owner.";
       }
     }
   }
@@ -490,18 +579,16 @@ bool Maestro::plans(radialUser &d, string &e)
     u.p->m["i"]->i("userid", d.u);
     if (user(u, e) && !u.p->empty({"o", "id"}))
     {
-      list<string> l;
-      stringstream ssPath;
       b = true;
-      ssPath << m_strPath << "/p";
-      m_file.directoryList(ssPath.str(), l);
-      for (auto &p : l)
+      m_mutex.lock();
+      for (auto &p : m_p)
       {
-        if (isOwner(u.p->m["o"]->m["id"]->v, p))
+        if (isOwner(u.p->m["o"]->m["id"]->v, p.first)
         {
           o->pb(p);
         }
       }
+      m_mutex.unlock();
     }
   }
   else
