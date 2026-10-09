@@ -609,6 +609,7 @@ void Maestro::schedule(string strPrefix)
   threadIncrement();
   strPrefix += "->Maestro::schedule()";
   time(&(CTime[0]));
+  msleep(5000);
   load(strPrefix);
   while (!shutdown())
   {
