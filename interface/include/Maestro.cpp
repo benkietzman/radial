@@ -307,7 +307,7 @@ void Maestro::load(string strPrefix)
                       {
                         bLoaded = false;
                         ssChat.str("");
-                        ssChat << char(2) << char(3) << "07dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                        ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
                         chat("#maestro", ssChat.str());
                       }
                     }
@@ -317,7 +317,7 @@ void Maestro::load(string strPrefix)
                 {
                   bLoaded = false;
                   ssChat.str("");
-                  ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                  ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
               }
@@ -328,7 +328,7 @@ void Maestro::load(string strPrefix)
           {
             bLoaded = false;
             ssChat.str("");
-            ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+            ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -347,7 +347,7 @@ void Maestro::load(string strPrefix)
   else
   {
     ssChat.str("");
-    ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "] " << e << char(3) << char(2);
+    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "] " << e << char(3) << char(2);
     chat("#maestro", ssChat.str());
   }
   if (bLoaded)
@@ -461,7 +461,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
             else
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07dataDirectoryAdd() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
@@ -548,7 +548,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07dataDirectoryRemove() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() [" << m_strHandle << "," << p << "] " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
