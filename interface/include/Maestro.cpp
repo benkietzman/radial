@@ -231,7 +231,7 @@ bool Maestro::isOwner(const string id, const string p)
         }
         dbfree(g);
       }
-      else if (t == "p" || id = i)
+      else if (t == "p" || id == i)
       {
         b = true;
       }
@@ -272,7 +272,7 @@ void Maestro::load(string strPrefix)
         ptPlan->id = id;
         ptPlan->type = t[0];
         ptData->i("id", id);
-        if (db(((ptPlan->a)?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
+        if (ptPlan->type == 'p' || db(((ptPlan->type == 'a')?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
         {
           stringstream ssOwner;
           if (t == "a")
@@ -335,7 +335,7 @@ void Maestro::load(string strPrefix)
         {
           bLoaded = false;
           ssChat.str("");
-          ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->a)?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+          ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->type == 'a')?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
           chat("#maestro", ssChat.str());
         }
         p[i.first] = ptPlan;
@@ -451,11 +451,11 @@ bool Maestro::planAdd(radialUser &d, string &e)
               m_p[p] = new radialMaestroPlan;
               m_p[p]->type = t[0];
               m_p[p]->id = id;
-              if (m_p[p]->a)
+              if (m_p[p]->type == 'a')
               {
                 ssOwner << row["name"];
               }
-              else
+              else if (m_p[p]->type == 'u')
               {
                 ssOwner << row["first_name"] << " " << row["last_name"];
               }
