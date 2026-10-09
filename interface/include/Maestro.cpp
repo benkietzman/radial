@@ -588,6 +588,7 @@ bool Maestro::plans(radialUser &d, string &e)
           Json *ptPlan = new Json;
           ptPlan->i("ID", p.second->id);
           ptPlan->i("Name", p.first);
+          ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
           ptPlan->i("Type", ((p.second->a)?"application":"user"));
           o->l.push_back(ptPlan);
         }
