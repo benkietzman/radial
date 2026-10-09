@@ -391,7 +391,10 @@ bool Maestro::plan(radialUser &d, string &e)
         m_mutex.lock();
         if (m_p.find(p) != m_p.end())
         {
+          stringstream ssPlan;
           b = true;
+          ssPlan << ((m_p[p]->a)?"a":"u") << "_" << m_p[p]->id;
+          o->i("Plan", ssPlan.str());
           o->i("Type", ((m_p[p]->a)?"application":"user"));
           o->i("ID", m_p[p]->id, 'n');
         }
@@ -625,9 +628,9 @@ bool Maestro::plans(radialUser &d, string &e)
         {
           Json *ptPlan = new Json;
           ptPlan->i("ID", p.second->id);
-          ptPlan->i("Name", p.first);
           ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
           ptPlan->i("Owner", p.second->owner);
+          ptPlan->i("Plan", p.first);
           ptPlan->i("Type", ((p.second->a)?"application":"user"));
           o->l.push_back(ptPlan);
         }
