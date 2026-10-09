@@ -28,7 +28,6 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
-  load(strPrefix);
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
@@ -445,6 +444,7 @@ void Maestro::schedule(string strPrefix)
   threadIncrement();
   strPrefix += "->Maestro::schedule()";
   time(&(CTime[0]));
+  load(strPrefix);
   while (!shutdown())
   {
     time(&(CTime[1]));
