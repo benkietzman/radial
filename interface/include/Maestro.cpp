@@ -168,7 +168,7 @@ bool Maestro::isOwner(radialUser &d, const string p)
   bool b = false;
   string e;
 
-  if (isValid())
+  if (isValid(d))
   {
     radialUser u;
     userInit(d, u);
@@ -364,7 +364,7 @@ bool Maestro::plan(radialUser &d, string &e)
       bool bEditable = isOwner(d, p);
       stringstream ssPlan, ssType;
       b = true;
-      o->i("editable", ((bEditable)?"1":"0"), ((bEditable)?'1':'0"));
+      o->i("editable", ((bEditable)?"1":"0"), ((bEditable)?'1':'0'));
       o->i("ID", m_p[p]->id);
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("Owner", m_p[p]->owner);
@@ -601,7 +601,7 @@ bool Maestro::plans(radialUser &d, string &e)
     bool bEditable = isOwner(d, p.first);
     stringstream ssType;
     Json *ptPlan = new Json;
-    ptPlan->i("editable", ((bEditable)?"1":"0"), ((bEditable)?'1':'0"));
+    ptPlan->i("editable", ((bEditable)?"1":"0"), ((bEditable)?'1':'0'));
     ptPlan->i("ID", p.second->id);
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("Owner", p.second->owner);
