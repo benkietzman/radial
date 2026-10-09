@@ -241,26 +241,104 @@ bool Maestro::isOwner(const string id, const string p)
 // {{{ load()
 void Maestro::load(string strPrefix)
 {
+  bool bLoaded = false;
   string e;
   stringstream ssChat;
   Json *l = NULL;
+  map<string, radialMaestroPlan *> p;
 
   strPrefix += "->Maestro::load()";
   if (dataDirectoryList(m_strHandle, {}, &l, e))
   {
-    ssChat.str("");
-    ssChat << l;
-    chat("#maestro", ssChat.str());
+    bLoaded = true;
+    for (auto &i : l->m)
+    {
+      if (i.second->val({"Type"}) == "directory" && (i.first.substr(0, 2) == "a_" || i.first.substr(0, 2) == "u_"))
+      {
+        string id, t;
+        stringstream ssP(i.first);
+        Json *sl = NULL;
+        radialMaestroPlan *ptPlan = new radialMaestroPlan;
+        getline(ssP, t, '_');
+        getline(ssP, id);
+        ptPlan->a = (t == "a");
+        ptPlan->id = id;
+        if (dataDirectoryList(m_strHandle, {i.first}, &sl, e))
+        {
+          for (auto &j : sl->m)
+          {
+            if (j.second->val({"Type"}) == "directory" && j.first == "f")
+            {
+              Json *dl = NULL;
+              if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
+              {
+                for (auto &k : dl->m)
+                {
+                  if (k.second->val({"Type"}) == "regular file")
+                  {
+                    string b;
+                    if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                    {
+                      ptPlan->f[k.first] = new Json(b);
+                    }
+                    else
+                    {
+                      bLoaded = false;
+                      ssChat.str("");
+                      ssChat << char(2) << char(3) << "07dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                      chat("#maestro", ssChat.str());
+                    }
+                  }
+                }
+              }
+              else
+              {
+                bLoaded = false;
+                ssChat.str("");
+                ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+          }
+          delete sl;
+        }
+        else
+        {
+          bLoaded = false;
+          ssChat.str("");
+          ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+        p[i.first] = ptPlan;
+      }
+    }
+    delete l;
   }
   else
   {
     ssChat.str("");
-    ssChat << char(2) << char(3) << "07dataDirectoryList() " << e << char(3) << char(2);
+    ssChat << char(2) << char(3) << "07dataDirectoryList() [" << m_strHandle << "] " << e << char(3) << char(2);
     chat("#maestro", ssChat.str());
   }
-  if (l != NULL)
+  if (bLoaded)
   {
-    delete l;
+    m_mutex.lock();
+    for (auto &i : p)
+    {
+      m_p[i.first] = i.second;
+    }
+    m_mutex.unlock();
+    m_bLoaded = true;
+    ssChat.str("");
+    ssChat << char(2) << char(3) << "03Loaded plans." << char(3) << char(2);
+    chat("#maestro", ssChat.str());
+  }
+  else
+  {
+    bLoaded = false;
+    ssChat.str("");
+    ssChat << char(2) << char(3) << "04Failed to load plans." << char(3) << char(2);
+    chat("#maestro", ssChat.str());
   }
 }
 // }}}
