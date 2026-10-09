@@ -585,30 +585,23 @@ bool Maestro::planRemove(radialUser &d, string &e)
 // {{{ plans()
 bool Maestro::plans(radialUser &d, string &e)
 {
-  bool b = false;
+  bool b = true;
   Json *o = d.p->m["o"];
-  radialUser u;
 
-  userInit(d, u);
-  u.p->m["i"]->i("userid", d.u);
-  if (user(u, e) && !u.p->empty({"o", "id"}))
+  m_mutex.lock();
+  for (auto &p : m_p)
   {
-    b = true;
-    m_mutex.lock();
-    for (auto &p : m_p)
-    {
-      stringstream ssType;
-      Json *ptPlan = new Json;
-      ptPlan->i("ID", p.second->id);
-      ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
-      ptPlan->i("Owner", p.second->owner);
-      ptPlan->i("Plan", p.first);
-      ssType << p.second->type;
-      ptPlan->i("Type", ssType.str());
-      o->l.push_back(ptPlan);
-    }
-    m_mutex.unlock();
+    stringstream ssType;
+    Json *ptPlan = new Json;
+    ptPlan->i("ID", p.second->id);
+    ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
+    ptPlan->i("Owner", p.second->owner);
+    ptPlan->i("Plan", p.first);
+    ssType << p.second->type;
+    ptPlan->i("Type", ssType.str());
+    o->l.push_back(ptPlan);
   }
+  m_mutex.unlock();
 
   return b;
 }
