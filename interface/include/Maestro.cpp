@@ -341,7 +341,7 @@ void Maestro::load(string strPrefix)
     m_mutex.unlock();
     m_bLoaded = true;
     ssChat.str("");
-    ssChat << char(2) << char(3) << "03Loaded " << m_manip.toShort(unPlans, v) << " plans containing " << m_manip.toShort(unFlows, v) << " from disk into memory." << char(3) << char(2);
+    ssChat << char(2) << char(3) << "03Loaded " << m_manip.toShort(unPlans, v) << " plan" << ((unPlans != 1)?"s":"") << " containing " << m_manip.toShort(unFlows, v) << " flow" << ((unFlows != 1)?"s":"") << " from disk into memory." << char(3) << char(2);
     chat("#maestro", ssChat.str());
   }
   else
