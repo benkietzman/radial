@@ -25,26 +25,72 @@ export default
       c: c
     });
     // ]]]
-    // [[[ compositionAdd()
-    s.compositionAdd = () =>
+    // [[[ init()
+    s.init = () =>
     {
       if (c.isValid())
       {
-        s.composition = null;
-        s.composition = {};
-        let request = {Interface: 'maestro', 'Function': 'compositionAdd', Request: {'Name': s.compositionName.v}};
+        s.planType = 'a';
+        s.applications = null;
+        s.applications = [];
+        let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.userid = \'' + c.getUserID() + '\' order by a.name'};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            let request = {Interface: 'maestro', 'Function': 'composition', Request: {'Name': s.compositionName.v}};
+            s.applications = response.Response;
+            s.planApplication = s.applications[0];
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
+        s.plans = null;
+        s.plans = {};
+        request = {Interface: 'maestro', 'Function': 'plans'};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.plans = response.Response;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
+      }
+      else
+      {
+        s.u();
+      }
+    };
+    // ]]]
+    // [[[ planAdd()
+    s.planAdd = () =>
+    {
+      if (c.isValid())
+      {
+        s.plan = null;
+        s.plan = {};
+        let request = {Interface: 'maestro', 'Function': 'planAdd', Request: {'Plan': s.planName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            let request = {Interface: 'maestro', 'Function': 'plan', Request: {'Plan': s.planName.v}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
               if (c.wsResponse(response, error))
               {
-                s.composition = response.Response;
+                s.plan = response.Response;
               }
               else
               {
@@ -65,32 +111,10 @@ export default
       }
     };
     // ]]]
-    // [[[ init()
-    s.init = () =>
+    // [[[ typeSelect()
+    s.typeSelect = () =>
     {
-      if (c.isValid())
-      {
-        s.compositions = null;
-        s.compositions = {};
-        let request = {Interface: 'maestro', 'Function': 'compositions'};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.compositions = response.Response;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-          s.u();
-        });
-      }
-      else
-      {
-        s.u();
-      }
+      s.u();
     };
     // ]]]
     // [[[ main
@@ -106,7 +130,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'compositionAdd' || data.detail.Action == 'compositionRemove') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove') && !s.composition)
       {
         s.init();
       }
@@ -117,23 +141,33 @@ export default
   // [[[ template
   template: `
   {{#isValid}}
-  {{#if ../composition}}
-  {{json ../composition}}
+  {{#if ../plan}}
+  {{json ../plan}}
   {{else}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
     <thead>
-      <tr><th>Composition</th><th>Owners</th></tr>
+      <tr><th>Plan</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" class="form-conrtol" c-model="compositionName" placeholder="Composition"></td>
-        <td><button class="btn btn-primary bi bi-plus-circle" c-click="compositionAdd()" title="Add Composition"></button></td>
+        <td>
+          <div class="input-group">
+            <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Type</span>
+            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option><option value="u">user</option></select>
+            {{#ifCond planType "==" "a"}}
+            <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Application</span>
+            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            {{/ifCond}}
+            <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
+          </div>
+        </td>
       </tr>
-      {{#each ../compositions}}
+      {{#each ../plans}}
       <tr>
         <td>{{@key}}</td>
-        <td>{{json Owners}}</td>
+        <td>{{Type}}</td>
+        <td>{{Owner}}</td>
       </tr>
       {{/each}}
     </tbody>
