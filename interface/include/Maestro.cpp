@@ -23,7 +23,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["flows"] = &Maestro::flows;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
-  m_functions["planRemove"] = &Maestro::planxRemove;
+  m_functions["planRemove"] = &Maestro::planRemove;
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
@@ -417,7 +417,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
           if (i->val({"_broadcast"}) == "1" || dataDirectoryAdd(m_strHandle, {p}, e))
           {
             b = true;
-            m_p[p] = new Json;
+            m_p[p] = new radialMaestroPlan;
             m_p[p]->a = (t == "a");
             m_p[p]->id = id;
           }
@@ -546,7 +546,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           ssChat.str("");
           ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
-          ptLive->i("Action", "planxRemove");
+          ptLive->i("Action", "planRemove");
           ptLive->i("Name", p);
           live("Maestro", "", ptLive);
           delete ptLive;
@@ -583,9 +583,9 @@ bool Maestro::plans(radialUser &d, string &e)
       m_mutex.lock();
       for (auto &p : m_p)
       {
-        if (isOwner(u.p->m["o"]->m["id"]->v, p.first)
+        if (isOwner(u.p->m["o"]->m["id"]->v, p.first))
         {
-          o->pb(p);
+          o->pb(p.first);
         }
       }
       m_mutex.unlock();
