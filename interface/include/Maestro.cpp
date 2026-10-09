@@ -167,15 +167,18 @@ bool Maestro::isOwner(radialUser &d, const string p)
 {
   bool b = false;
   string e;
-  radialUser u;
 
-  userInit(d, u);
-  u.p->m["i"]->i("userid", d.u);
-  if (user(u, e) && !u.p->empty({"o", "id"}) && isOwner(u.p->m["o"]->m["id"]->v, p))
+  if (isValid())
   {
-    b = true;
+    radialUser u;
+    userInit(d, u);
+    u.p->m["i"]->i("userid", d.u);
+    if (user(u, e) && !u.p->empty({"o", "id"}) && isOwner(u.p->m["o"]->m["id"]->v, p))
+    {
+      b = true;
+    }
+    userDeinit(u);
   }
-  userDeinit(u);
 
   return b;
 }
