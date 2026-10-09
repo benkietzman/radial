@@ -361,7 +361,7 @@ bool Maestro::plan(radialUser &d, string &e)
       stringstream ssPlan, ssType;
       b = true;
       o->i("ID", m_p[p]->id);
-      o->i("Owner", p.second->owner);
+      o->i("Owner", m_p[p]->owner);
       ssPlan << m_p[p]->type << "_" << m_p[p]->id;
       o->i("Plan", ssPlan.str());
       ssType << m_p[p]->type;
