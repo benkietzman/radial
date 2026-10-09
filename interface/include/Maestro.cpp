@@ -586,9 +586,9 @@ bool Maestro::plans(radialUser &d, string &e)
         if (isOwner(u.p->m["o"]->m["id"]->v, p.first))
         {
           Json *ptPlan = new Json;
-          ptPlan->i("ID", p->id);
+          ptPlan->i("ID", p.second->id);
           ptPlan->i("Name", p.first);
-          ptPlan->i("Type", ((p->a)?"application":"user"))
+          ptPlan->i("Type", ((p.second->a)?"application":"user"))
           o->l.push_back(ptPlan);
         }
       }
