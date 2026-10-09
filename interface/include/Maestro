@@ -19,7 +19,7 @@ namespace radial
 // {{{ radialMaestroPlan
 struct radialMaestroPlan
 {
-  bool a; // application
+  char type;
   map<string, Json *> f; // flows
   string id;
   string owner;

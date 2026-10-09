@@ -212,7 +212,7 @@ bool Maestro::isOwner(const string id, const string p)
   bool b = false;
   string e;
 
-  if (p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_"))
+  if (p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "p_" || p.substr(0, 2) == "u_"))
   {
     string i, t;
     stringstream ssP(p);
@@ -220,8 +220,7 @@ bool Maestro::isOwner(const string id, const string p)
     getline(ssP, i);
     if (!t.empty() && !i.empty())
     {
-      bool a = (t == "a");
-      if (a)
+      if (t == "a")
       {
         stringstream q;
         q << "select a.id from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Developer', 'Backup Developer') and a.id = '" << esc(i) << "' and d.id = '" << esc(id) << "' limit 1";
@@ -232,7 +231,7 @@ bool Maestro::isOwner(const string id, const string p)
         }
         dbfree(g);
       }
-      else if (id == i)
+      else if (t == "p" || id = i)
       {
         b = true;
       }
@@ -261,7 +260,7 @@ void Maestro::load(string strPrefix)
     bLoaded = true;
     for (auto &i : l->m)
     {
-      if (i.second->val({"Type"}) == "directory" && (i.first.substr(0, 2) == "a_" || i.first.substr(0, 2) == "u_"))
+      if (i.second->val({"Type"}) == "directory" && (i.first.substr(0, 2) == "a_" || i.first.substr(0, 2) == "p_" || i.first.substr(0, 2) == "u_"))
       {
         map<string, string> row;
         string id, t;
@@ -270,17 +269,17 @@ void Maestro::load(string strPrefix)
         radialMaestroPlan *ptPlan = new radialMaestroPlan;
         getline(ssP, t, '_');
         getline(ssP, id);
-        ptPlan->a = (t == "a");
         ptPlan->id = id;
+        ptPlan->type = t[0];
         ptData->i("id", id);
         if (db(((ptPlan->a)?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
         {
           stringstream ssOwner;
-          if (ptPlan->a)
+          if (t == "a")
           {
             ssOwner << row["name"];
           }
-          else
+          else if (t == "u")
           {
             ssOwner << row["first_name"] << " " << row["last_name"];
           }
@@ -391,11 +390,12 @@ bool Maestro::plan(radialUser &d, string &e)
         m_mutex.lock();
         if (m_p.find(p) != m_p.end())
         {
-          stringstream ssPlan;
+          stringstream ssPlan, ssType;
           b = true;
-          ssPlan << ((m_p[p]->a)?"a":"u") << "_" << m_p[p]->id;
+          ssPlan << m_p[p]->type << "_" << m_p[p]->id;
           o->i("Plan", ssPlan.str());
-          o->i("Type", ((m_p[p]->a)?"application":"user"));
+          ssType << m_p[p]->type;
+          o->i("Type", ssType.str());
           o->i("ID", m_p[p]->id, 'n');
         }
         else
@@ -449,7 +449,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
               stringstream ssOwner;
               b = true;
               m_p[p] = new radialMaestroPlan;
-              m_p[p]->a = (t == "a");
+              m_p[p]->type = t[0];
               m_p[p]->id = id;
               if (m_p[p]->a)
               {
@@ -626,12 +626,14 @@ bool Maestro::plans(radialUser &d, string &e)
       {
         if (isOwner(u.p->m["o"]->m["id"]->v, p.first))
         {
+          stringstream ssType;
           Json *ptPlan = new Json;
           ptPlan->i("ID", p.second->id);
           ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
           ptPlan->i("Owner", p.second->owner);
           ptPlan->i("Plan", p.first);
-          ptPlan->i("Type", ((p.second->a)?"application":"user"));
+          ssType << p.second->type;
+          ptPlan->i("Type", ssType.str());
           o->l.push_back(ptPlan);
         }
       }
