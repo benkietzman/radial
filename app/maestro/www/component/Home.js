@@ -127,9 +127,8 @@ export default
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" class="form-conrtol" c-model="planName" placeholder="Plan"></td>
-        <td><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></td>
-        <td></td>
+        <td><div class="input-group"><input type="text" class="form-conrtol" c-model="planName" placeholder="Plan"><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></div></td>
+        <td colspan="2"></td>
       </tr>
       {{#each ../plans}}
       <tr>
