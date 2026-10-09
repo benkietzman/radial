@@ -70,9 +70,25 @@ export default
     {
       if (c.isValid())
       {
+        s.applications = null;
+        s.applications = [];
+        let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.user = \'' + c.getUserID() + '\' order by a.name'];
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s.applications = response.Response;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
         s.plans = null;
         s.plans = {};
-        let request = {Interface: 'maestro', 'Function': 'plans'};
+        request = {Interface: 'maestro', 'Function': 'plans'};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -123,13 +139,21 @@ export default
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
     <thead>
-      <tr><th>Plan</th><th>Type</th><th>Owner</th></tr>
+      <tr><th>Plan</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" class="form-conrtol bg-primary-subtle border border-primary-subtle" c-model="planName"></td>
-        <td><select class="form-control bg-primary-subtle border border-primary-subtle" c-model="planType"><option value="a">application</option><option value="u">user</option></td>
-        <td><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></td>
+        <td>
+          <div class="input-group">
+            <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Type</span>
+            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType"><option value="a">application</option><option value="u">user</option></select>
+            {{#ifCond planType "==" "a"}}
+            <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Application</span>
+            <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+            {{/ifCond}}
+            <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
+          </div>
+        </td>
       </tr>
       {{#each ../plans}}
       <tr>
