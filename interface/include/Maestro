@@ -22,6 +22,7 @@ struct radialMaestroPlan
   bool a; // application
   map<string, Json *> f; // flows
   string id;
+  string owner;
 };
 // }}}
 // }}}
