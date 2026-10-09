@@ -25,26 +25,26 @@ export default
       c: c
     });
     // ]]]
-    // [[[ compositionAdd()
-    s.compositionAdd = () =>
+    // [[[ planAdd()
+    s.planAdd = () =>
     {
       if (c.isValid())
       {
-        s.composition = null;
-        s.composition = {};
-        let request = {Interface: 'maestro', 'Function': 'compositionAdd', Request: {'Name': s.compositionName.v}};
+        s.plan = null;
+        s.plan = {};
+        let request = {Interface: 'maestro', 'Function': 'planAdd', Request: {'Plan': s.planName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            let request = {Interface: 'maestro', 'Function': 'composition', Request: {'Name': s.compositionName.v}};
+            let request = {Interface: 'maestro', 'Function': 'plan', Request: {'Plan': s.planName.v}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
               if (c.wsResponse(response, error))
               {
-                s.composition = response.Response;
+                s.plan = response.Response;
               }
               else
               {
@@ -70,15 +70,15 @@ export default
     {
       if (c.isValid())
       {
-        s.compositions = null;
-        s.compositions = {};
-        let request = {Interface: 'maestro', 'Function': 'compositions'};
+        s.plans = null;
+        s.plans = {};
+        let request = {Interface: 'maestro', 'Function': 'plans'};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.compositions = response.Response;
+            s.plans = response.Response;
           }
           else
           {
@@ -106,7 +106,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'compositionAdd' || data.detail.Action == 'compositionRemove') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove') && !s.composition)
       {
         s.init();
       }
@@ -117,23 +117,24 @@ export default
   // [[[ template
   template: `
   {{#isValid}}
-  {{#if ../composition}}
-  {{json ../composition}}
+  {{#if ../plan}}
+  {{json ../plan}}
   {{else}}
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
     <thead>
-      <tr><th>Composition</th><th>Owners</th></tr>
+      <tr><th>Plan</th><th>Type</th><th>Owner</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" class="form-conrtol" c-model="compositionName" placeholder="Composition"></td>
-        <td><button class="btn btn-primary bi bi-plus-circle" c-click="compositionAdd()" title="Add Composition"></button></td>
+        <td><input type="text" class="form-conrtol" c-model="planName" placeholder="Plan"></td>
+        <td><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></td>
       </tr>
-      {{#each ../compositions}}
+      {{#each ../plans}}
       <tr>
         <td>{{@key}}</td>
-        <td>{{json Owners}}</td>
+        <td>{{Type}}
+        <td>{{Owner}}</td>
       </tr>
       {{/each}}
     </tbody>
