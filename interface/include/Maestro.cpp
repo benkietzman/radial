@@ -404,7 +404,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
   {
     if (dep({"Plan"}, i, e))
     {
-      string p = i->m["i"]->v;
+      string p = i->m["Plan"]->v;
       if (isOwner(d, p))
       {
         m_mutex.lock();
@@ -491,7 +491,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
   {
     if (dep({"Plan"}, i, e))
     {
-      string p = i->m["i"]->v;
+      string p = i->m["Plan"]->v;
       if (isOwner(d, p))
       {
         m_mutex.lock();
