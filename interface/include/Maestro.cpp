@@ -16,31 +16,36 @@ namespace radial
 // {{{ Maestro()
 Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
 {
+  m_bLoaded = false;
   // {{{ functions
   m_functions["action"] = &Maestro::action;
   m_functions["flow"] = &Maestro::flow;
   m_functions["flows"] = &Maestro::flows;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
-  m_functions["planExecute"] = &Maestro::planExecute;
-  m_functions["planRemove"] = &Maestro::planRemove;
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
+  m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
+  load(strPrefix);
+  m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
+  pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
 // }}}
 // {{{ ~Maestro()
 Maestro::~Maestro()
 {
+  m_pThreadSchedule->join();
+  delete m_pThreadSchedule;
   for (auto &p : m_p)
   {
     for (auto &f : p.second->f)
     {
-      delete f;
+      delete f.second;
     }
     p.second->f.clear();
-    delete p;
+    delete p.second;
   }
   m_p.clear();
 }
@@ -121,7 +126,7 @@ bool Maestro::flow(radialUser &d, string &e)
           ifstream inFlow(ssPath.str());
           stringstream ssJ;
           ssJ << inFlow.rdbuf();
-          if (!ssJ.empty())
+          if (!ssJ.str().empty())
           {
             m_p[p]->f[f] = new Json(ssJ.str());
           }
@@ -190,8 +195,8 @@ bool Maestro::isOwner(radialUser &d, const string p)
   radialUser u;
 
   userInit(d, u);
-  u->m["i"]->i("userid", d.u);
-  if (user(u, e) && !u->empty({"o", "id"}) && planOwner(u->m["o"]->m["id"]->v, p))
+  u.p->m["i"]->i("userid", d.u);
+  if (user(u, e) && !u.p->empty({"o", "id"}) && isOwner(u.p->m["o"]->m["id"]->v, p))
   {
     b = true;
   }
@@ -202,6 +207,7 @@ bool Maestro::isOwner(radialUser &d, const string p)
 bool Maestro::isOwner(const string id, const string p)
 {
   bool b = false;
+  string e;
 
   if (p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_"))
   {
@@ -212,12 +218,11 @@ bool Maestro::isOwner(const string id, const string p)
     if (!t.empty() && !i.empty())
     {
       bool a = (t == "a");
-      bool bUse = false;
       if (a)
       {
         stringstream q;
         q << "select a.id from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Developer', 'Backup Developer') and a.id = '" << esc(i) << "' and d.id = '" << esc(id) << "' limit 1";
-        auto g = dbquery("central_r", q, e);
+        auto g = dbquery("central_r", q.str(), e);
         if (g != NULL && !g->empty())
         {
           b = true;
@@ -232,6 +237,32 @@ bool Maestro::isOwner(const string id, const string p)
   }
 
   return b;
+}
+// }}}
+// {{{ load()
+void Maestro::load(string strPrefix)
+{
+  string e;
+  stringstream ssChat;
+  Json *l = NULL;
+
+  strPrefix += "->Maestro::load()";
+  if (dataDirectoryList(m_strHandle, {}, &l, e))
+  {
+    ssChat.str("");
+    ssChat << l;
+    chat("#maestro", ssChat.str());
+  }
+  else
+  {
+    ssChat.str("");
+    ssChat << char(2) << char(3) << "07dataDirectoryList() " << e << char(3) << char(2);
+    chat("#maestro", ssChat.str());
+  }
+  if (l != NULL)
+  {
+    delete l;
+  }
 }
 // }}}
 // {{{ plan()
@@ -256,14 +287,14 @@ bool Maestro::plan(radialUser &d, string &e)
         }
         ssPath.str("");
         ssPath << m_strPath << "/p/" << p;
-        if (m_p.find(p) == m_p.end() && p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_") && file.directoryExist(ssPath.str()))
+        if (m_p.find(p) == m_p.end() && p.size() > 2 && (p.substr(0, 2) == "a_" || p.substr(0, 2) == "u_") && m_file.directoryExist(ssPath.str()))
         {
           string i, t;
           stringstream ssP(p);
-          radialMaestroPlan ptPlan = new radialMaestoPlan;
+          radialMaestroPlan *ptPlan = new radialMaestroPlan;
           getline(ssP, t, '_');
           getline(ssP, i);
-          ptPlan->a = (t == 'a');
+          ptPlan->a = (t == "a");
           ptPlan->id = i;
           m_p[p] = ptPlan;
         }
@@ -309,7 +340,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
         stringstream ssPath;
         ssPath << m_strPath << "/p/" << p;
         m_mutex.lock();
-        if (m_p.find(p) == m_p.end() && !file.directoryExist(ssPath.str()))
+        if (m_p.find(p) == m_p.end() && !m_file.directoryExist(ssPath.str()))
         {
           b = true;
           m_file.makeDirectory(ssPath.str());
@@ -379,8 +410,8 @@ bool Maestro::plans(radialUser &d, string &e)
   {
     radialUser u;
     userInit(d, u);
-    u->m["i"]->i("userid", d.u);
-    if (user(u, e) && !u->empty({"o", "id"}))
+    u.p->m["i"]->i("userid", d.u);
+    if (user(u, e) && !u.p->empty({"o", "id"}))
     {
       list<string> l;
       stringstream ssPath;
@@ -389,7 +420,7 @@ bool Maestro::plans(radialUser &d, string &e)
       m_file.directoryList(ssPath.str(), l);
       for (auto &p : l)
       {
-        if (isOwner(u->m["o"]->m["id"]->v, p))
+        if (isOwner(u.p->m["o"]->m["id"]->v, p))
         {
           o->pb(p);
         }
@@ -402,6 +433,32 @@ bool Maestro::plans(radialUser &d, string &e)
   }
 
   return b;
+}
+// }}}
+// {{{ schedule()
+void Maestro::schedule(string strPrefix)
+{
+  list<string> removals;
+  string e;
+  time_t CTime[2];
+
+  threadIncrement();
+  strPrefix += "->Maestro::schedule()";
+  time(&(CTime[0]));
+  while (!shutdown())
+  {
+    time(&(CTime[1]));
+    if ((CTime[1] - CTime[0]) > 300)
+    {
+      CTime[0] = CTime[1];
+      if (!m_bLoaded)
+      {
+        load(strPrefix);
+      }
+    }
+    msleep(1000);
+  }
+  threadDecrement();
 }
 // }}}
 }

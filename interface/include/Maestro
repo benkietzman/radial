@@ -20,8 +20,8 @@ namespace radial
 struct radialMaestroPlan
 {
   bool a; // application
-  size_t id;
   map<string, Json *> f; // flows
+  string id;
 };
 // }}}
 // }}}
@@ -29,19 +29,24 @@ struct radialMaestroPlan
 class Maestro : public Interface
 {
   protected:
+  bool m_bLoaded;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
-  string strPath;
+  string m_strHandle;
+  string m_strPath;
+  thread *m_pThreadSchedule;
 
   bool flow(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p);
+  void load(string strPrefix);
   bool owners(radialUser &d, string &e);
   bool plan(radialUser &d, string &e);
   bool planAdd(radialUser &d, string &e);
   bool plans(radialUser &d, string &e);
+  void schedule(string strPrefix);
 
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
