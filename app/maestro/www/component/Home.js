@@ -127,8 +127,8 @@ export default
     </thead>
     <tbody>
       <tr>
-        <td><input type="text" class="form-conrtol bg-primary-subtle" c-model="planName"></td>
-        <td><select class="form-control bg-success-subtle" c-model="planType"><option value="a">application</option><option value="u">User</option></td>
+        <td><input type="text" class="form-conrtol bg-primary-subtle border border-primary-subtle" c-model="planName"></td>
+        <td><select class="form-control bg-primary-subtle border border-primary-subtle" c-model="planType"><option value="a">application</option><option value="u">user</option></td>
         <td><button class="btn btn-primary bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button></td>
       </tr>
       {{#each ../plans}}
