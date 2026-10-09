@@ -133,7 +133,7 @@ export default
       {{#each ../plans}}
       <tr>
         <td>{{@key}}</td>
-        <td>{{Type}}
+        <td>{{Type}}</td>
         <td>{{Owner}}</td>
       </tr>
       {{/each}}
