@@ -246,7 +246,7 @@ void Maestro::load(string strPrefix)
   Json *l = NULL;
 
   strPrefix += "->Maestro::load()";
-  if (dataDirectoryList(m_strHandle, {}, &l, e))
+  if (dataDirectoryList(m_strHandle, {"missing"}, &l, e))
   {
     ssChat.str("");
     ssChat << l;
