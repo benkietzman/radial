@@ -25,83 +25,63 @@ export default
       c: c
     });
     // ]]]
-    // [[[ init()
-    s.init = () =>
+    // [[[ applications()
+    s.applications = () =>
     {
-      if (s.list)
+      let request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.userid = \'' + c.getUserID() + '\' order by a.name'};
+      c.wsRequest('radial', request).then((response) =>
       {
-        if (c.isValid())
+        let error = {};
+        if (c.wsResponse(response, error))
         {
-          s.planType = 'a';
-          let request = {Interface: 'central', 'Function': 'user', Request: {userid: c.getUserID()}};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            if (c.wsResponse(response, error))
-            {
-              s.userid = response.Response.id;
-            }
-            else
-            {
-              c.pushErrorMessage(error.message);
-            }
-            s.u();
-          });
-          s.applications = null;
-          s.applications = [];
-          request = {Interface: 'database', Database: 'central_r', Query: 'select distinct a.id, a.name from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in (\'Primary Developer\', \'Backup Developer\') and d.userid = \'' + c.getUserID() + '\' order by a.name'};
-          c.wsRequest('radial', request).then((response) =>
-          {
-            let error = {};
-            if (c.wsResponse(response, error))
-            {
-              s.applications = response.Response;
-              s.planApplication = s.applications[0];
-            }
-            else
-            {
-              c.pushErrorMessage(error.message);
-            }
-            s.u();
-          });
+          s.apps = response.Response;
+          s.planApplication = s.apps[0];
         }
-        s.plans = null;
-        s.plans = [];
-        let request = {Interface: 'maestro', 'Function': 'plans'};
-        c.wsRequest('radial', request).then((response) =>
+        else
         {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s.plans = response.Response;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-          s.u();
-        });
-      }
-      else
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ flow()
+    s.flow = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'flow', Request: {Plan: s.strPlan, Flow: s.strFlow}};
+      c.wsRequest('radial', request).then((response) =>
       {
-        s.plan = null;
-        s.plan = {};
-        let request = {Interface: 'maestro', 'Function': 'plan', Request: {Plan: c.getParam(nav, 'plan')}};
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.f = response.Response;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ flowAdd()
+    s.flowAdd = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'flowAdd', Request: {Plan: s.strPlan, Flow: s.flowName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s.plan = response.Response;
-            s.flows = null;
-            s.flows = {};
-            let request = {Interface: 'maestro', 'Function': 'flows', Request: {Plan: c.getParam(nav, 'plan')}};
+            let request = {Interface: 'maestro', 'Function': 'flow', Request: {Plan: s.strPlan, Flow: s.flowName.v}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
               if (c.wsResponse(response, error))
               {
-                s.flows = response.Response;
+                document.location.href = '#/Home/' + response.Response.Plan + '/' + response.Response.Flow;
               }
               else
               {
@@ -114,9 +94,99 @@ export default
           {
             c.pushErrorMessage(error.message);
           }
-          s.u();
         });
       }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ flowRemove()
+    s.flowRemove = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'flowRemove', Request: {Plan: s.strPlan, Flow: s.strFlow}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Home/' + s.strPlan;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ flows()
+    s.flows = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'flows', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.fs = response.Response;
+          if (s.strFlow != '')
+          {
+            s.flow();
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ init()
+    s.init = () =>
+    {
+      if (s.strPlan != '')
+      {
+        s.plan();
+      }
+      else
+      {
+        if (c.isValid())
+        {
+          s.planType = 'a';
+          s.user();
+          s.applications();
+        }
+        s.plans();
+      }
+    };
+    // ]]]
+    // [[[ plan()
+    s.plan = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'plan', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.p = response.Response;
+          s.flows();
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
     };
     // ]]]
     // [[[ planAdd()
@@ -125,13 +195,13 @@ export default
       if (c.isValid())
       {
         s.planName = s.planType.v + '_' + ((s.planType.v == 'a')?s.planApplication.v.id:((s.planType.v == 'p')?s.planName.v:s.userid));
-        let request = {Interface: 'maestro', 'Function': 'planAdd', Request: {'Plan': s.planName}};
+        let request = {Interface: 'maestro', 'Function': 'planAdd', Request: {Plan: s.planName}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            let request = {Interface: 'maestro', 'Function': 'plan', Request: {'Plan': s.planName}};
+            let request = {Interface: 'maestro', 'Function': 'plan', Request: {Plan: s.planName}};
             c.wsRequest('radial', request).then((response) =>
             {
               let error = {};
@@ -163,7 +233,7 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'planRemove', Request: {'Plan': s.plan.Plan}};
+        let request = {Interface: 'maestro', 'Function': 'planRemove', Request: {Plan: s.strPlan}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -183,19 +253,66 @@ export default
       }
     };
     // ]]]
+    // [[[ plans()
+    s.plans = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'plans'};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.ps = response.Response;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
     {
       s.u();
     };
     // ]]]
+    // [[[ user()
+    s.user = () =>
+    {
+      let request = {Interface: 'central', 'Function': 'user', Request: {userid: c.getUserID()}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.userid = response.Response.id;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
     // [[[ main
     c.setMenu('Home');
-    s.list = true;
+    s.strPlan = s.strFlow = '';
     if (c.isParam(nav, 'plan') && c.getParam(nav, 'plan') != '')
     {
-      s.list = false;
+      s.strPlan = c.getParam(nav, 'plan');
+      if (c.isParam(nav, 'flow') && c.getParam(nav, 'flow') != '')
+      {
+        s.strFlow = c.getParam(nav, 'flow');
+      }
     }
+    s.apps = null;
+    s.p = null;
+    s.ps = null;
+    s.f = null;
+    s.fs = null;
     s.u();
     if (a.ready())
     {
@@ -207,7 +324,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove') && !s.composition)
       {
         s.init();
       }
@@ -217,17 +334,72 @@ export default
   // ]]]
   // [[[ template
   template: `
-  {{#if list}}
+  <!-- [[[ plan -->
+  {{#if p}}
+  <div class="input-group">
+    {{#if p.edit}}
+    <button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
+    {{/if}}
+    <span class="input-group-text bg-secondary border border-secondary">Plan</span>
+    <span class="input-group-text bg-primary-subtle border border-primary">{{p.Plan}}</span>
+  </div>
+  <div class="table-responsive">
+  <table class="table table-condensed table-striped">
+  <tbody>
+    <tr><th>Type</th><td colspan="2">{{#ifCond p.Type "==" "a"}}application{{else}}user{{/ifCond}}</td></tr>
+    <tr><th>Owner</th><td colspan="2"><a href="/central/#/{{#ifCond p.Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{p.ID}}" target="_blank">{{p.Owner}}</a></td>
+  </tbody>
+  </table>
+  </div>
+  {{#if p.edit}}
+  <div class="input-group">
+    <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="flowName">
+    <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
+  </div>
+  {{/if}}
+  <!-- [[[ flows -->
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+    <thead>
+      <tr>
+        <th>Flow</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each fs}}
+      <tr>
+        <td><a href="#/Home/{{Plan}}/{{Flow}}">{{Flow}}</a></td>
+      </tr>
+      {{/each}}
+    </tbody>
+    </table>
+  </div>
+  <!-- ]]] -->
+  <!-- [[[ flow -->
+  {{#if f}}
+  <div class="input-group">
+    {{#if p.edit}}
+    <button class="btn btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+    {{/if}}
+    <span class="input-group-text bg-secondary border border-secondary">Flow</span>
+    <span class="input-group-text bg-primary-subtle border border-primary">{{f.Flow}}</span>
+  </div>
+  {{/if}}
+  <!-- ]]] -->
+  <!-- ]]] -->
+  <!-- [[[ plans -->
+  {{else}}
   {{#isValid}}
   <div class="input-group">
-    <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Type</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option>{{#isValid "Maestro"}}<option value="p">public</option>{{/isValid}}<option value="u">user</option></select>
+    <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option><option value="u">user</option></select>
     {{#ifCond @root.planType.val "==" "a"}}
-    <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Application</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.applications}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+    <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
     {{/ifCond}}
     {{#ifCond @root.planType.val "==" "p"}}
-    <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Name</span>
+    <span class="input-group-text bg-secondary border bordrer-secondary">Name</span>
     <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="planName">
     {{/ifCond}}
     <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
@@ -241,10 +413,10 @@ export default
         <th>Type</th>
         <th>Owner</th>
         <th class="text-end text-nowrap"># Flows</th>
-        </tr>
+      </tr>
     </thead>
     <tbody>
-      {{#each plans}}
+      {{#each ps}}
       <tr>
         <td><a href="#/Home/{{Plan}}">{{Plan}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}{{#ifCond ../Type "==" "p"}}public{{else}}user{{/ifCond}}{{/ifCond}}</td>
@@ -255,38 +427,8 @@ export default
     </tbody>
     </table>
   </div>
-  {{else}}
-  <div class="table-responsive">
-  <table class="table table-condensed table-striped">
-  <tbody>
-    {{#if plan.edit}}
-    <tr><th class="text-end" colspan="3"><button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button></tr>
-    {{/if}}
-    <tr><th>Plan</th><td>{{plan.Plan}}</td></tr>
-    <tr><th>Type</th><td>{{#ifCond plan.Type "==" "a"}}application{{else}}{{#ifCond ../plan.Type "==" "p"}}public{{else}}user{{/ifCond}}{{/ifCond}}</td></tr>
-    <tr><th>Owner</th><td>{{#ifCond plan.Type "!=" "p"}}<a href="/central/#/{{#ifCond ../plan.Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{../plan.ID}}" target="_blank">{{../plan.Owner}}</a>{{/ifCond}}</td>
-  </tbody>
-  </table>
-  </div>
-  {{#if plan.edit}}
-  <div class="input-group">
-    <span class="input-group-text bg-success-subtle border bordrer-success-subtle">Flow</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="flowName">
-    <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
-  </div>
   {{/if}}
-  <div class="row">
-    {{#each flows}}
-    <div class="col-auto">
-      <div class="card border border-secondary-subtle mb-2 mt-3">
-        <div class="card-header bg-secondary fw-bold text-center text-nowrap">
-          {{@key}}
-        </div>
-      </div>
-    </div>
-    {{/each}}
-  </div>
-  {{/if}}
+  <!-- ]]] -->
   `
   // ]]]
 }
