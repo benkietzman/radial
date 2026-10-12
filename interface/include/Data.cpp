@@ -62,6 +62,7 @@ Data::Data(string strPrefix, int argc, char **argv, void (*pCallback)(string, co
   // {{{ functions
   m_functions["dirAdd"] = &Data::dirAdd;
   m_functions["dirList"] = &Data::dirList;
+  m_functions["dirRemove"] = &Data::dirRemove;
   m_functions["fileAppend"] = &Data::fileAppend;
   m_functions["fileRead"] = &Data::fileRead;
   m_functions["fileRemove"] = &Data::fileRemove;
@@ -816,7 +817,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           bFileClose = true;
                           j = new Json;
                           j->i("Status", "error");
-                          strError = (string)"Please provide a valid Function. (" + strFunction + ")";
+                          strError = "Please provide a valid Function.";
                           j->i("Error", strError);
                           j->j(strSocketWriteBuffer);
                           delete j;
