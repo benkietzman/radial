@@ -816,7 +816,7 @@ void Data::dataSocket(string strPrefix, int fdSocket, SSL_CTX *ctx)
                           bFileClose = true;
                           j = new Json;
                           j->i("Status", "error");
-                          strError = "Please provide a valid Function.";
+                          strError = (string)"Please provide a valid Function. (" + strFunction + ")";
                           j->i("Error", strError);
                           j->j(strSocketWriteBuffer);
                           delete j;
