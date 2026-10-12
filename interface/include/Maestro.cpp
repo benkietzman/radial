@@ -20,6 +20,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // {{{ functions
   m_functions["action"] = &Maestro::action;
   m_functions["flow"] = &Maestro::flow;
+  m_functions["flowAdd"] = &Maestro::flowAdd;
+  m_functions["flowRemove"] = &Maestro::flowRemove;
   m_functions["flows"] = &Maestro::flows;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
