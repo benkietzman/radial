@@ -39,6 +39,8 @@ class Maestro : public Interface
   thread *m_pThreadSchedule;
 
   bool flow(radialUser &d, string &e);
+  bool flowAdd(radialUser &d, string &e);
+  bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p);
