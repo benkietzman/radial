@@ -723,12 +723,15 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   bool b = false;
   string e;
 
+chat("#maestro", "0");
 	if (argc == 2)
   {
+chat("#maestro", "0-0");
     const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]);
     if (pszPlan != NULL && pszFlow != NULL)
     {
       string f = pszFlow, p = pszFlow;
+chat("#maestro", (string)"0-0-0 " + p + (string)" | " + f);
       Json *ptFlow = NULL;;
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
@@ -749,8 +752,10 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       m_mutex.unlock();
       if (ptFlow != NULL)
       {
+chat("#maestro", "0-0-0-0");
         if (!ptFlow->empty({"Script"}))
         {
+chat("#maestro", "0-0-0-0-0");
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
           if (JS_IsException(jsres))
           {
