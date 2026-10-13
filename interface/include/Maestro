@@ -17,6 +17,13 @@ extern "C++"
 namespace radial
 {
 // {{{ structs
+// {{{ radialMaestroJavascript
+struct radialMaestroJavascript
+{
+  JSCFunction *func;
+  int length;
+};
+// }}}
 // {{{ radialMaestroPlan
 struct radialMaestroPlan
 {
@@ -34,6 +41,7 @@ class Maestro : public Interface
   bool m_bLoaded;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
+  map<string, radialMaestroJavascript *> m_javascript;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
@@ -62,7 +70,6 @@ class Maestro : public Interface
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-  JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(const char *prop, JSCFunction *func, int length);
 };
 // }}}

@@ -31,8 +31,6 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
-  m_jsrun = JS_NewRuntime();
-  m_jsctx = JS_NewContext(m_jsrun);
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
@@ -54,8 +52,11 @@ Maestro::~Maestro()
     delete p.second;
   }
   m_p.clear();
-  JS_FreeContext(m_jsctx);
-  JS_FreeRuntime(m_jsrun);
+  for (auto &i : m_javascript)
+  {
+    delete i.second;
+  }
+  m_javascript.clear();
 }
 // }}}
 // {{{ callback()
@@ -290,47 +291,55 @@ bool Maestro::flowExec(radialUser &d, string &e)
         {
           if (!ptFlow->empty({"Script"}))
           {
-            JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+            JSRuntime *jsrun = JS_NewRuntime();
+            JSContext *jsctx = JS_NewContext(jsrun);
+            for (auto &i : m_javascript)
+            {
+              JSValue jsglobal = JS_GetGlobalObject(jsctx);
+              JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
+              JS_FreeValue(jsctx, jsglobal);
+            }
+            JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
             if (JS_IsException(jsres))
             {
-              JSValue jsexc = JS_GetException(m_jsctx);
-              if (JS_IsError(m_jsctx, jsexc))
+              JSValue jsexc = JS_GetException(jsctx);
+              if (JS_IsError(jsctx, jsexc))
               {
-                JSValue jsmsg = JS_GetPropertyStr(m_jsctx, jsexc, "message");
+                JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
                 if (JS_IsException(jsmsg))
                 {
-                  JSValue jssubexc = JS_GetException(m_jsctx);
-                  const char *pszMessage = JS_ToCString(m_jsctx, jssubexc);
+                  JSValue jssubexc = JS_GetException(jsctx);
+                  const char *pszMessage = JS_ToCString(jsctx, jssubexc);
                   if (pszMessage != NULL)
                   {
                     e = pszMessage;
-                    JS_FreeCString(m_jsctx, pszMessage);
+                    JS_FreeCString(jsctx, pszMessage);
                   }
                   else
                   {
                     e = "Failed to retrieve the exception from the message from the exception from the script.";
                   }
-                  JS_FreeValue(m_jsctx, jssubexc);
+                  JS_FreeValue(jsctx, jssubexc);
                 }
                 else if (JS_IsString(jsmsg))
                 {
                   size_t unLength = 0;
-                  const char *pszMessage = JS_ToCStringLen(m_jsctx, &unLength, jsmsg);
+                  const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
                   if (pszMessage != NULL)
                   {
-                    JSValue jsstk = JS_GetPropertyStr(m_jsctx, jsexc, "stack");
+                    JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
                     e.assign(pszMessage, unLength);
                     if (JS_IsString(jsstk))
                     {
-                      const char *pszStk = JS_ToCString(m_jsctx, jsstk);
+                      const char *pszStk = JS_ToCString(jsctx, jsstk);
                       if (pszStk != NULL)
                       {
                         e += (string)" " + pszStk;
-                        JS_FreeCString(m_jsctx, pszStk);
+                        JS_FreeCString(jsctx, pszStk);
                       }
                     }
-                    JS_FreeValue(m_jsctx, jsstk);
-                    JS_FreeCString(m_jsctx, pszMessage);
+                    JS_FreeValue(jsctx, jsstk);
+                    JS_FreeCString(jsctx, pszMessage);
                   }
                   else
                   {
@@ -346,34 +355,36 @@ bool Maestro::flowExec(radialUser &d, string &e)
               {
                 e = "Encountered a non-error exception from the script.";
               }
-              JS_FreeValue(m_jsctx, jsexc);
+              JS_FreeValue(jsctx, jsexc);
             }
             else
             {
-              const char *pszRes = JS_ToCString(m_jsctx, jsres);
+              const char *pszRes = JS_ToCString(jsctx, jsres);
               if (pszRes != NULL)
               {
                 b = true;
                 chat("#maestro", pszRes);
-                JS_FreeCString(m_jsctx, pszRes);
+                JS_FreeCString(jsctx, pszRes);
               }
               else
               {
-                JSValue jsexc = JS_GetException(m_jsctx);
-                const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
+                JSValue jsexc = JS_GetException(jsctx);
+                const char *pszMessage = JS_ToCString(jsctx, jsexc);
                 if (pszMessage != NULL)
                 {
                   e = pszMessage;
-                  JS_FreeCString(m_jsctx, pszMessage);
+                  JS_FreeCString(jsctx, pszMessage);
                 }
                 else
                 {
                   e = "Failed to retrieve the result from the script.";
                 }
-                JS_FreeValue(m_jsctx, jsexc);
+                JS_FreeValue(jsctx, jsexc);
               }
             }
-            JS_FreeValue(m_jsctx, jsres);
+            JS_FreeValue(jsctx, jsres);
+            JS_FreeContext(jsctx);
+            JS_FreeRuntime(jsrun);
           }
           else
           {
@@ -708,97 +719,18 @@ JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
   return JS_NewBool(ctx, ((b)?1:0));
 }
 // }}}
-// {{{ js_flow()
-JSValue Maestro::js_flow(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
-{
-  bool b = false;
-  string e;
-
-  if (argc == 2)
-  {
-    const char *pszPlan = JS_ToCString(ctx, argv[0]), *pszFlow = JS_ToCString(ctx, argv[1]);
-    if (pszPlan != NULL && pszFlow != NULL)
-    {
-      string f = pszFlow, p = pszPlan;
-      Json *ptFlow = NULL;
-      m_mutex.lock();
-      if (m_p.find(p) != m_p.end())
-      {
-        if (m_p[p]->f.find(f) != m_p[p]->f.end())
-        {
-          ptFlow = new Json(m_p[p]->f[f]);
-        }
-        else
-        {
-          e = "Flow not found.";
-        }
-      }
-      else
-      {
-        e = "Plan not found.";
-      }
-      m_mutex.unlock();
-      if (ptFlow != NULL)
-      {
-        if (!ptFlow->empty({"Script"}))
-        {
-          JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-          if (!JS_IsException(jsres))
-          {
-            b = true;
-          }
-          else
-          {
-            JSValue jsexc = JS_GetException(m_jsctx);
-            const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-            if (pszMessage != NULL)
-            {
-              e = pszMessage;
-              JS_FreeCString(m_jsctx, pszMessage);
-            }
-            else
-            {
-              e = "Encountered an unknown error.";
-            }
-            JS_FreeValue(m_jsctx, jsexc);
-          }
-          JS_FreeValue(m_jsctx, jsres);
-        }
-        else
-        {
-          e = "Script not found.";
-        }
-        delete ptFlow;
-      }
-    }
-    else
-    {
-      e = "Please provide the Plan and Flow.";
-    }
-    if (pszPlan != NULL)
-    {
-      JS_FreeCString(ctx, pszPlan);
-    }
-    if (pszFlow != NULL)
-    {
-      JS_FreeCString(ctx, pszFlow);
-    }
-  }
-  else
-  {
-    e = "Please provide the Plan and Flow.";
-  }
-
-  return JS_NewBool(ctx, ((b)?1:0));
-}
-// }}}
 // {{{ jsreg()
 void Maestro::jsreg(const char *prop, JSCFunction *func, int length)
 {
-  JSValue jsglobal = JS_GetGlobalObject(m_jsctx);
+  radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
 
-  JS_SetPropertyStr(m_jsctx, jsglobal, prop, JS_NewCFunction(m_jsctx, func, prop, length));
-  JS_FreeValue(m_jsctx, jsglobal);
+  ptJavascript->func = func;
+  ptJavascript->length = length;
+  if (m_javascript.find(prop) != m_javascript.end())
+  {
+    delete m_javascript[prop];
+  }
+  m_javascript[prop] = ptJavascript;
 }
 // }}}
 // {{{ load()

@@ -11,14 +11,12 @@ using namespace radial;
 Maestro *gpMaestro = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
   gpMaestro = new Maestro(strPrefix, argc, argv, &callback);
   gpMaestro->enableWorkers();
   gpMaestro->jsreg("chat", js_chat, 3);
-  gpMaestro->jsreg("flow", js_flow, 2);
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
@@ -30,8 +28,4 @@ void callback(string strPrefix, const string strPacket, const bool bResponse)
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {
   return gpMaestro->js_chat(ctx, obj, argc, argv);
-}
-JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_flow(ctx, obj, argc, argv);
 }
