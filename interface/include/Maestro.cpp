@@ -803,6 +803,10 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
         delete ptFlow;
       }
     }
+    else
+    {
+      e = "Please provide the Plan and Flow.";
+    }
     if (pszPlan != NULL)
     {
       JS_FreeCString(jsctx, pszPlan);
@@ -810,6 +814,51 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     if (pszFlow != NULL)
     {
       JS_FreeCString(jsctx, pszFlow);
+    }
+  }
+  else
+  {
+    e = "Please provide the Plan and Flow.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_getError()
+JSValue Maestro::js_getError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "error");
+
+  JS_FreeValue(jsctx, jsglobal);
+
+  return jserror;
+}
+// }}}
+// {{{ js_setError()
+JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+
+  if (argc == 1)
+  {
+    const char *pszError = JS_ToCString(jsctx, argv[0]);
+    if (pszError != NULL)
+    {
+      b = true;
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "error", JS_NewStringLen(jsctx, pszError, sizeof(pszError)));
+      JS_FreeValue(jsctx, jsglobal);
+    }
+    if (pszError != NULL)
+    {
+      JS_FreeCString(jsctx, pszError);
     }
   }
 
