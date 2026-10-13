@@ -54,6 +54,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
+          s['status'] = null;
           s.f = response.Response;
         }
         else
