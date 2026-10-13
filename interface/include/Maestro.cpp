@@ -291,11 +291,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
           if (!ptFlow->empty({"Script"}))
           {
             JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-            if (!JS_IsException(jsres))
-            {
-              b = true;
-            }
-            else
+            if (JS_IsException(jsres))
             {
               JSValue jsexc = JS_GetException(m_jsctx);
               const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
@@ -306,9 +302,34 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
               else
               {
-                e = "Encountered an unknown javascript error.";
+                e = "Encountered an unknown javascript error while attempting to retrieve the exception from the script.";
               }
               JS_FreeValue(m_jsctx, jsexc);
+            }
+            else
+            {
+              const char *pszRes = JS_TOCString(m_jsctx, jsres);
+              if (pszRes != NULL)
+              {
+                b = true;
+                chat("#maestro", pszRes);
+                JS_FreeCString(m_jsctx, pszRes);
+              }
+              else
+              {
+                JSValue jsexc = JS_GetException(m_jsctx);
+                const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
+                if (pszMessage != NULL)
+                {
+                  e = pszMessage;
+                  JS_FreeCString(m_jsctx, pszMessage);
+                }
+                else
+                {
+                  e = "Encountered an unknown javascript error while attempting to retrieve the result from the script.";
+                }
+              JS_FreeValue(m_jsctx, jsexc);
+              }
             }
             JS_FreeValue(m_jsctx, jsres);
           }
