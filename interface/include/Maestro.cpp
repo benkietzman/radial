@@ -359,12 +359,10 @@ bool Maestro::flowExec(radialUser &d, string &e)
             }
             else
             {
-              const char *pszRes = JS_ToCString(jsctx, jsres);
-              if (pszRes != NULL)
+              int nB = JS_ToBool(jsctx, jsres);
+              if (nB != -1)
               {
-                b = true;
-                chat("#maestro", pszRes);
-                JS_FreeCString(jsctx, pszRes);
+                b = nB;
               }
               else
               {
@@ -690,13 +688,13 @@ bool Maestro::isOwner(const string id, const string p)
 }
 // }}}
 // {{{ js_chat()
-JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
+JSValue Maestro::js_chat(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
 
   if (argc >= 2 && argc <= 3)
   {
-    const char *pszTarget = JS_ToCString(ctx, argv[0]), *pszMessage = JS_ToCString(ctx, argv[1]), *pszSource = ((argc >= 3)?JS_ToCString(ctx, argv[2]):NULL);
+    const char *pszTarget = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]), *pszSource = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
     if (pszTarget != NULL && pszMessage != NULL && (argc < 3 || pszSource != NULL))
     {
       b = true;
@@ -704,19 +702,156 @@ JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     }
     if (pszTarget != NULL)
     {
-      JS_FreeCString(ctx, pszTarget);
+      JS_FreeCString(jsctx, pszTarget);
     }
     if (pszMessage != NULL)
     {
-      JS_FreeCString(ctx, pszMessage);
+      JS_FreeCString(jsctx, pszMessage);
     }
     if (pszSource != NULL)
     {
-      JS_FreeCString(ctx, pszSource);
+      JS_FreeCString(jsctx, pszSource);
     }
   }
 
-  return JS_NewBool(ctx, ((b)?1:0));
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_flow()
+JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+	if (argc == 2)
+  {
+    const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]);
+    if (pszPlan != NULL && pszFlow != NULL)
+    {
+      string f = pszFlow, p = pszFlow;
+      Json *ptFlow = NULL;;
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (m_p[p]->f.find(f) != m_p[p]->f.end())
+        {
+          ptFlow = new Json(m_p[p]->f[f]);
+        }
+        else
+        {
+          e = "Flow not found.";
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (ptFlow != NULL)
+      {
+        if (!ptFlow->empty({"Script"}))
+        {
+          JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+          if (JS_IsException(jsres))
+          {
+            JSValue jsexc = JS_GetException(jsctx);
+            if (JS_IsError(jsctx, jsexc))
+            {
+              JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
+              if (JS_IsException(jsmsg))
+              {
+                JSValue jssubexc = JS_GetException(jsctx);
+                const char *pszMessage = JS_ToCString(jsctx, jssubexc);
+                if (pszMessage != NULL)
+                {
+                  e = pszMessage;
+                  JS_FreeCString(jsctx, pszMessage);
+                }
+                else
+                {
+                  e = "Failed to retrieve the exception from the message from the exception from the script.";
+                }
+                JS_FreeValue(jsctx, jssubexc);
+              }
+              else if (JS_IsString(jsmsg))
+              {
+                size_t unLength = 0;
+                const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
+                if (pszMessage != NULL)
+                {
+                  JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
+                  e.assign(pszMessage, unLength);
+                  if (JS_IsString(jsstk))
+                  {
+                    const char *pszStk = JS_ToCString(jsctx, jsstk);
+                    if (pszStk != NULL)
+                    {
+                      e += (string)" " + pszStk;
+                      JS_FreeCString(jsctx, pszStk);
+                    }
+                  }
+                  JS_FreeValue(jsctx, jsstk);
+                  JS_FreeCString(jsctx, pszMessage);
+                }
+                else
+                {
+                  e = "Failed to retrieve the message within the exception from the script.";
+                }
+              }
+              else
+              {
+                e = "Encountered a non-string message within the exception from the script.";
+              }
+            }
+            else
+            {
+              e = "Encountered a non-error exception from the script.";
+            }
+            JS_FreeValue(jsctx, jsexc);
+          }
+          else
+          {
+            int nB = JS_ToBool(jsctx, jsres);
+            if (nB != -1)
+            {
+              b = nB;
+            }
+            else
+            {
+              JSValue jsexc = JS_GetException(jsctx);
+              const char *pszMessage = JS_ToCString(jsctx, jsexc);
+              if (pszMessage != NULL)
+              {
+                e = pszMessage;
+                JS_FreeCString(jsctx, pszMessage);
+              }
+              else
+              {
+                e = "Failed to retrieve the result from the script.";
+              }
+              JS_FreeValue(jsctx, jsexc);
+            }
+          }
+          JS_FreeValue(jsctx, jsres);
+        }
+        else
+        {
+          e = "Script not found.";
+        }
+        delete ptFlow;
+      }
+    }
+    if (pszPlan != NULL)
+    {
+      JS_FreeCString(jsctx, pszPlan);
+    }
+    if (pszFlow != NULL)
+    {
+      JS_FreeCString(jsctx, pszFlow);
+    }
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
 // {{{ jsreg()
