@@ -21,6 +21,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["action"] = &Maestro::action;
   m_functions["flow"] = &Maestro::flow;
   m_functions["flowAdd"] = &Maestro::flowAdd;
+  m_functions["flowExec"] = &Maestro::flowExec;
   m_functions["flowRemove"] = &Maestro::flowRemove;
   m_functions["flows"] = &Maestro::flows;
   m_functions["plan"] = &Maestro::plan;
@@ -29,6 +30,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
+  m_jsrun = JS_NewRuntime();
+  m_jsctx = JS_NewContext(m_jsrun);
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
@@ -50,6 +53,8 @@ Maestro::~Maestro()
     delete p.second;
   }
   m_p.clear();
+  JS_FreeContext(m_jsctx);
+  JS_FreeRuntime(m_jsrun);
 }
 // }}}
 // {{{ callback()
@@ -250,6 +255,84 @@ bool Maestro::flowAdd(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ flowExec()
+bool Maestro::flowExec(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (isValid(d))
+  {
+    if (dep({"Flow", "Plan"}, i, e))
+    {
+      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+      if (isOwner(d, p))
+      {
+        Json *ptFlow = NULL;;
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
+        {
+          if (m_p[p]->f.find(f) != m_p[p]->f.end())
+          {
+            ptFlow = new Json(m_p[p]->f[f]);
+          }
+          else
+          {
+            e = "Flow not found.";
+          }
+        }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+        if (ptFlow != NULL)
+        {
+          if (!ptFlow->empty({"Script"}))
+          {
+            JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+            if (!JS_IsException(jsres))
+            {
+              b = true;
+            }
+            else
+            {
+              JSValue jsexc = JS_GetException(m_jsctx);
+              const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
+              if (pszMessage != NULL)
+              {
+                e = pszMessage;
+                JS_FreeCString(m_jsctx, pszMessage);
+              }
+              else
+              {
+                e = "Encountered an unknown error.";
+              }
+              JS_FreeValue(m_jsctx, jsexc);
+            }
+            JS_FreeValue(m_jsctx, jsres);
+          }
+          else
+          {
+            e = "Script not found.";
+          }
+          delete ptFlow;
+        }
+      }
+      else
+      {
+        e = "You are not the owner.";
+      }
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
 // {{{ flowRemove()
 bool Maestro::flowRemove(radialUser &d, string &e)
 {
@@ -432,6 +515,48 @@ bool Maestro::isOwner(const string id, const string p)
   }
 
   return b;
+}
+// }}}
+// {{{ js_chat()
+JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  JSValue jsreturn = JS_UNDEFINED;
+
+  if (argc >= 2)
+  {
+    const char *pszTarget = JS_ToCString(ctx, argv[0]), *pszMessage = JS_ToCString(ctx, argv[1]), *pszSource = ((argc >= 3)?JS_ToCString(ctx, argv[2]):NULL);
+    if (pszTarget != NULL && pszMessage != NULL && (argc < 3 || pszSource != NULL))
+    {
+      chat(pszTarget, pszMessage, ((argc >= 3)?pszSource:""));
+    }
+    else
+    {
+      jsreturn = JS_EXCEPTION;
+    }
+    if (pszTarget != NULL)
+    {
+      JS_FreeCString(ctx, pszTarget);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(ctx, pszMessage);
+    }
+    if (pszSource != NULL)
+    {
+      JS_FreeCString(ctx, pszSource);
+    }
+  }
+
+  return jsreturn;
+}
+// }}}
+// {{{ jsreg()
+void Maestro::jsreg(const char *prop, JSCFunction *func, int length)
+{
+  JSValue jsglobal = JS_GetGlobalObject(m_jsctx);
+
+  JS_SetPropertyStr(m_jsctx, jsglobal, prop, JS_NewCFunction(m_jsctx, func, prop, length));
+  JS_FreeValue(m_jsctx, jsglobal);
 }
 // }}}
 // {{{ load()

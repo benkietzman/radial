@@ -9,6 +9,7 @@
 #ifndef _RADIAL_MAESTRO_
 #define _RADIAL_MAESTRO_
 // {{{ includes
+#include <quickjs/quickjs.h>
 #include "Interface"
 // }}}
 extern "C++"
@@ -31,6 +32,8 @@ class Maestro : public Interface
 {
   protected:
   bool m_bLoaded;
+  JSContext *m_jsctx;
+  JSRuntime *m_jsrun;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
@@ -40,6 +43,7 @@ class Maestro : public Interface
 
   bool flow(radialUser &d, string &e);
   bool flowAdd(radialUser &d, string &e);
+  bool flowExec(radialUser &d, string &e);
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool isOwner(radialUser &d, const string p);
@@ -56,6 +60,8 @@ class Maestro : public Interface
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+  void jsreg(const char *prop, JSCFunction *func, int length);
 };
 // }}}
 }
