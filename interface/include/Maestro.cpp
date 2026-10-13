@@ -359,26 +359,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
             }
             else
             {
-              int nB = JS_ToBool(jsctx, jsres);
-              if (nB != -1)
-              {
-                b = nB;
-              }
-              else
-              {
-                JSValue jsexc = JS_GetException(jsctx);
-                const char *pszMessage = JS_ToCString(jsctx, jsexc);
-                if (pszMessage != NULL)
-                {
-                  e = pszMessage;
-                  JS_FreeCString(jsctx, pszMessage);
-                }
-                else
-                {
-                  e = "Failed to retrieve the result from the script.";
-                }
-                JS_FreeValue(jsctx, jsexc);
-              }
+              b = true;
             }
             JS_FreeValue(jsctx, jsres);
             JS_FreeContext(jsctx);
@@ -811,26 +792,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
           }
           else
           {
-            int nB = JS_ToBool(jsctx, jsres);
-            if (nB != -1)
-            {
-              b = nB;
-            }
-            else
-            {
-              JSValue jsexc = JS_GetException(jsctx);
-              const char *pszMessage = JS_ToCString(jsctx, jsexc);
-              if (pszMessage != NULL)
-              {
-                e = pszMessage;
-                JS_FreeCString(jsctx, pszMessage);
-              }
-              else
-              {
-                e = "Failed to retrieve the result from the script.";
-              }
-              JS_FreeValue(jsctx, jsexc);
-            }
+            b = true;
           }
           JS_FreeValue(jsctx, jsres);
         }
