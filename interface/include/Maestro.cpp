@@ -730,7 +730,7 @@ chat("#maestro", "0-0");
     const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]);
     if (pszPlan != NULL && pszFlow != NULL)
     {
-      string f = pszFlow, p = pszFlow;
+      string f = pszFlow, p = pszPlan;
 chat("#maestro", (string)"0-0-0 " + p + (string)" | " + f);
       Json *ptFlow = NULL;;
       m_mutex.lock();
