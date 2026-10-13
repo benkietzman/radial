@@ -293,7 +293,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
 stringstream ssChat;
 ssChat << "Maestro::flowExec() " << ptFlow->m["Script"]->v.c_str();
 chat("#maestro", ssChat.str());
-            JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+            JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.c_str(), (ptFlow->m["Script"]->v.size() - 1), "<embedded>", JS_EVAL_TYPE_GLOBAL);
             if (!JS_IsException(jsres))
             {
               b = true;
