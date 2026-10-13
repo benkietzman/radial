@@ -61,6 +61,7 @@ class Maestro : public Interface
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(const char *prop, JSCFunction *func, int length);
 };
 // }}}

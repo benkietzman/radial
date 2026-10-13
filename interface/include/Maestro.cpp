@@ -520,18 +520,15 @@ bool Maestro::isOwner(const string id, const string p)
 // {{{ js_chat()
 JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-  JSValue jsreturn = JS_UNDEFINED;
+  bool b = false;
 
-  if (argc >= 2)
+  if (argc >= 2 && argc <= 3)
   {
     const char *pszTarget = JS_ToCString(ctx, argv[0]), *pszMessage = JS_ToCString(ctx, argv[1]), *pszSource = ((argc >= 3)?JS_ToCString(ctx, argv[2]):NULL);
     if (pszTarget != NULL && pszMessage != NULL && (argc < 3 || pszSource != NULL))
     {
+      b = true;
       chat(pszTarget, pszMessage, ((argc >= 3)?pszSource:""));
-    }
-    else
-    {
-      jsreturn = JS_EXCEPTION;
     }
     if (pszTarget != NULL)
     {
@@ -547,7 +544,91 @@ JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     }
   }
 
-  return jsreturn;
+  return JS_NewBool(ctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_flow()
+JSValue Maestro::js_flow(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszPlan = JS_ToCString(ctx, argv[0]), *pszFlow = JS_ToCString(ctx, argv[1]);
+    if (pszPlan != NULL && pszFlow != NULL)
+    {
+      string f = pszFlow, p = pszPlan;
+      Json *ptFlow = NULL;
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (m_p[p]->f.find(f) != m_p[p]->f.end())
+        {
+          ptFlow = new Json(m_p[p]->f[f]);
+        }
+        else
+        {
+          e = "Flow not found.";
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (ptFlow != NULL)
+      {
+        if (!ptFlow->empty({"Script"}))
+        {
+          JSValue jsres = JS_Eval(m_jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+          if (!JS_IsException(jsres))
+          {
+            b = true;
+          }
+          else
+          {
+            JSValue jsexc = JS_GetException(m_jsctx);
+            const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
+            if (pszMessage != NULL)
+            {
+              e = pszMessage;
+              JS_FreeCString(m_jsctx, pszMessage);
+            }
+            else
+            {
+              e = "Encountered an unknown error.";
+            }
+            JS_FreeValue(m_jsctx, jsexc);
+          }
+          JS_FreeValue(m_jsctx, jsres);
+        }
+        else
+        {
+          e = "Script not found.";
+        }
+        delete ptFlow;
+      }
+    }
+    else
+    {
+      e = "Please provide the Plan and Flow.";
+    }
+    if (pszPlan != NULL)
+    {
+      JS_FreeCString(ctx, pszPlan);
+    }
+    if (pszFlow != NULL)
+    {
+      JS_FreeCString(ctx, pszFlow);
+    }
+  }
+  else
+  {
+    e = "Please provide the Plan and Flow.";
+  }
+
+  return JS_NewBool(ctx, ((b)?1:0));
 }
 // }}}
 // {{{ jsreg()
