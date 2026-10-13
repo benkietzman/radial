@@ -177,7 +177,11 @@ bool Maestro::flowAdd(radialUser &d, string &e)
                 if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
                 {
                   b = true;
-                  m_p[p]->f->i(f, new Json(i));
+                  if (m_p[p]->f.find(f) != m_p[p]->f.end())
+                  {
+                    delete m_p[p]->f[f];
+                  }
+                  m_p[p]->f[f] = new Json(i);
                 }
                 else
                 {
@@ -483,7 +487,11 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
             if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
             {
               b = true;
-              m_p[p]->f->i(f, new Json(i));
+              if (m_p[p]->f.find(f) != m_p[p]->f.end())
+              {
+                delete m_p[p]->f[f];
+              }
+              m_p[p]->f[f] = new Json(i);
             }
             else
             {
