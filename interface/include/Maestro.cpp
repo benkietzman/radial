@@ -853,7 +853,7 @@ JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     {
       b = true;
       JSValue jsglobal = JS_GetGlobalObject(jsctx);
-      JS_SetPropertyStr(jsctx, jsglobal, "error", JS_NewStringLen(jsctx, pszError, sizeof(pszError)));
+      JS_SetPropertyStr(jsctx, jsglobal, "error", JS_NewStringLen(jsctx, pszError, strlen(pszError)));
       JS_FreeValue(jsctx, jsglobal);
     }
     if (pszError != NULL)
