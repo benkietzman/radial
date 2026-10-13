@@ -295,21 +295,21 @@ bool Maestro::flowExec(radialUser &d, string &e)
             {
               JSValue jsexc = JS_GetException(m_jsctx);
               const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-              if (pszMessage != NULL)
+              if (pszMessage)
               {
                 e = pszMessage;
                 JS_FreeCString(m_jsctx, pszMessage);
               }
               else
               {
-                e = "Encountered an unknown javascript error while attempting to retrieve the exception from the script.";
+                e = "Failed to retrieve the exception from the script.";
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
             else
             {
               const char *pszRes = JS_ToCString(m_jsctx, jsres);
-              if (pszRes != NULL)
+              if (pszRes)
               {
                 b = true;
                 chat("#maestro", pszRes);
@@ -319,16 +319,16 @@ bool Maestro::flowExec(radialUser &d, string &e)
               {
                 JSValue jsexc = JS_GetException(m_jsctx);
                 const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-                if (pszMessage != NULL)
+                if (pszMessage)
                 {
                   e = pszMessage;
                   JS_FreeCString(m_jsctx, pszMessage);
                 }
                 else
                 {
-                  e = "Encountered an unknown javascript error while attempting to retrieve the result from the script.";
+                  e = "Failed to retrieve the result from the script.";
                 }
-              JS_FreeValue(m_jsctx, jsexc);
+                JS_FreeValue(m_jsctx, jsexc);
               }
             }
             JS_FreeValue(m_jsctx, jsres);
