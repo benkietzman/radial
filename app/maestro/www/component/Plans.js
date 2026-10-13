@@ -102,6 +102,31 @@ export default
       }
     };
     // ]]]
+    // [[[ flowExec()
+    s.flowExec = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['status'].v = 'executed flow';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
     // [[[ flowRemove()
     s.flowRemove = () =>
     {
@@ -148,6 +173,31 @@ export default
         }
         s.u();
       });
+    };
+    // ]]]
+    // [[[ flowUpdate()
+    s.flowUpdate = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Script: s.f.Script.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['status'].v = 'updated flow';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
     };
     // ]]]
     // [[[ init()
@@ -336,6 +386,8 @@ export default
   template: `
   <!-- [[[ plan -->
   {{#if p}}
+  <div class="row">
+  <div class="col-auto">
   <div class="input-group">
     {{#if p.edit}}
     <button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
@@ -343,7 +395,7 @@ export default
     <span class="input-group-text bg-secondary border border-secondary">Plan</span>
     <span class="input-group-text bg-primary-subtle border border-primary">{{p.Plan}}</span>
   </div>
-  <div class="table-responsive">
+  <div class="table-responsive mt-2">
   <table class="table table-condensed table-striped">
   <tbody>
     <tr><th>Type</th><td colspan="2">{{#ifCond p.Type "==" "a"}}application{{else}}user{{/ifCond}}</td></tr>
@@ -361,11 +413,6 @@ export default
   <!-- [[[ flows -->
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
-    <thead>
-      <tr>
-        <th>Flow</th>
-      </tr>
-    </thead>
     <tbody>
       {{#each fs}}
       <tr>
@@ -376,17 +423,25 @@ export default
     </table>
   </div>
   <!-- ]]] -->
+  </div>
   <!-- [[[ flow -->
   {{#if f}}
+  <div class="col">
   <div class="input-group">
     {{#if p.edit}}
     <button class="btn btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
     {{/if}}
     <span class="input-group-text bg-secondary border border-secondary">Flow</span>
     <span class="input-group-text bg-primary-subtle border border-primary">{{f.Flow}}</span>
+    <button class="btn btn-success bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
+    <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+    <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
+  </div>
+  <textarea class="form-control bg-primary-subtle border border-primary mt-2" c-model="f\.Script" style="font-family: monospace;" rows="20" placeholder="javascript"></textarea>
   </div>
   {{/if}}
   <!-- ]]] -->
+  </div>
   <!-- ]]] -->
   <!-- [[[ plans -->
   {{else}}
