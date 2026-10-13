@@ -307,11 +307,13 @@ bool Maestro::flowExec(radialUser &d, string &e)
                 if (jssubexc)
                 {
                   e = pszSubMessage;
+                  JS_FreeCString(m_jsctx, pszSubMessage);
                 }
                 else
                 {
                   e = "Failed to retrieve the exception from the script.";
                 }
+                JS_FreeVAlue(m_jsctx, jssubexc);
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
