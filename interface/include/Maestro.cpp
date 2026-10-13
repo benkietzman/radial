@@ -308,7 +308,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
             }
             else
             {
-              const char *pszRes = JS_TOCString(m_jsctx, jsres);
+              const char *pszRes = JS_ToCString(m_jsctx, jsres);
               if (pszRes != NULL)
               {
                 b = true;
