@@ -51,7 +51,7 @@ class App
     this.c.clearMenu();
     this.c.menu = {left: [], right: []};
     unIndex = 0;
-    this.c.menu.left[unIndex++] = {value: 'Home', href: '/Home', icon: 'house', active: null};
+    this.c.menu.left[unIndex++] = {value: 'Plans', href: '/Plans', icon: 'app', active: null};
     if (this.c.isValid())
     {
       unIndex = 0;
