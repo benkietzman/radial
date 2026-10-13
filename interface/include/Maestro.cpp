@@ -295,21 +295,30 @@ bool Maestro::flowExec(radialUser &d, string &e)
             {
               JSValue jsexc = JS_GetException(m_jsctx);
               const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-              if (pszMessage)
+              if (pszMessage != NULL)
               {
                 e = pszMessage;
                 JS_FreeCString(m_jsctx, pszMessage);
               }
               else
               {
-                e = "Failed to retrieve the exception from the script.";
+                JSValue jssubexc = JS_GetException(m_jsctx);
+                const char *pszSubMessage = JS_ToCString(m_jsctx, jssubexc);
+                if (jssubexc)
+                {
+                  e = pszSubMessage;
+                }
+                else
+                {
+                  e = "Failed to retrieve the exception from the script.";
+                }
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
             else
             {
               const char *pszRes = JS_ToCString(m_jsctx, jsres);
-              if (pszRes)
+              if (pszRes != NULL)
               {
                 b = true;
                 chat("#maestro", pszRes);
@@ -319,7 +328,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               {
                 JSValue jsexc = JS_GetException(m_jsctx);
                 const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-                if (pszMessage)
+                if (pszMessage != NULL)
                 {
                   e = pszMessage;
                   JS_FreeCString(m_jsctx, pszMessage);
