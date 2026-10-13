@@ -620,14 +620,20 @@ JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
 {
   bool b = false;
 
+chat("#maestro", "0");
   if (argc >= 2 && argc <= 3)
   {
+chat("#maestro", "0-0");
     const char *pszTarget = JS_ToCString(ctx, argv[0]), *pszMessage = JS_ToCString(ctx, argv[1]), *pszSource = ((argc >= 3)?JS_ToCString(ctx, argv[2]):NULL);
+chat("#maestro", "0-1");
     if (pszTarget != NULL && pszMessage != NULL && (argc < 3 || pszSource != NULL))
     {
+chat("#maestro", "0-1-0");
       b = true;
       chat(pszTarget, pszMessage, ((argc >= 3)?pszSource:""));
+chat("#maestro", "0-1-1");
     }
+chat("#maestro", "0-2");
     if (pszTarget != NULL)
     {
       JS_FreeCString(ctx, pszTarget);
@@ -640,7 +646,9 @@ JSValue Maestro::js_chat(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     {
       JS_FreeCString(ctx, pszSource);
     }
+chat("#maestro", "0-3");
   }
+chat("#maestro", "1");
 
   return JS_NewBool(ctx, ((b)?1:0));
 }
