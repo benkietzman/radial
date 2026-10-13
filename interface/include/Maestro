@@ -46,6 +46,7 @@ class Maestro : public Interface
   bool flowExec(radialUser &d, string &e);
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
+  bool flowUpdate(radialUser &d, string &e);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p);
   void load(string strPrefix);

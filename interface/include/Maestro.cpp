@@ -24,6 +24,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["flowExec"] = &Maestro::flowExec;
   m_functions["flowRemove"] = &Maestro::flowRemove;
   m_functions["flows"] = &Maestro::flows;
+  m_functions["flowUpdate"] = &Maestro::flowUpdate;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
   m_functions["planRemove"] = &Maestro::planRemove;
@@ -175,13 +176,8 @@ bool Maestro::flowAdd(radialUser &d, string &e)
                 i->j(j);
                 if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
                 {
-                  stringstream ssOwner;
                   b = true;
-                  if (m_p[p]->f.find(f) != m_p[p]->f.end())
-                  {
-                    delete m_p[p]->f[f];
-                  }
-                  m_p[p]->f[f] = new Json(i);
+                  m_p[p]->f->i(f, new Json(i));
                 }
                 else
                 {
@@ -454,6 +450,100 @@ bool Maestro::flows(radialUser &d, string &e)
       e = "Plan not found.";
     }
     m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
+// {{{ flowUpdate()
+bool Maestro::flowUpdate(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (isValid(d))
+  {
+    if (dep({"Flow", "Plan", "Script"}, i, e))
+    {
+      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+      if (isOwner(d, p))
+      {
+        string id, t;
+        stringstream ssP(p);
+        getline(ssP, t, '_');
+        getline(ssP, id);
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
+        {
+          if (m_p[p]->f.find(f) != m_p[p]->f.end())
+          {
+            string j;
+            i->j(j);
+            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
+            {
+              b = true;
+              m_p[p]->f->i(f, new Json(i));
+            }
+            else
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+          else
+          {
+            e = "Flow not found.";
+          }
+        }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+        if (b && i->val({"_broadcast"}) != "1")
+        {
+          list<string> nodes;
+          Json *ptLive = new Json;
+          m_mutexShare.lock();
+          for (auto &link : m_l)
+          {
+            if (link->interfaces.find("maestro") != link->interfaces.end())
+            {
+              nodes.push_back(link->strNode);
+            }
+          }
+          m_mutexShare.unlock();
+          while (!nodes.empty())
+          {
+            Json *ptLink = new Json(d.r);
+            ptLink->i("Interface", "maestro");
+            ptLink->i("Node", nodes.front());
+            ptLink->i("Function", "flowUpdate");
+            ptLink->m["Request"]->i("_broadcast", "1", '1');
+            hub("link", ptLink, false);
+            delete ptLink;
+            nodes.pop_front();
+          }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+          ptLive->i("Action", "flowUpdate");
+          ptLive->i("Name", p);
+          live("Maestro", "", ptLive);
+          delete ptLive;
+        }
+      }
+      else
+      {
+        e = "You are not the owner.";
+      }
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
   }
 
   return b;
