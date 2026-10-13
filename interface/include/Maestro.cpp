@@ -291,7 +291,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
           if (!ptFlow->empty({"Script"}))
           {
             const char *pszScript = ptFlow->m["Script"]->v.c_str();
-            JSValue jsres = JS_Eval(m_jsctx, pszScript, (sizeof(pszScript - 1), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+            JSValue jsres = JS_Eval(m_jsctx, pszScript, (sizeof(pszScript) - 1), "<embedded>", JS_EVAL_TYPE_GLOBAL);
             if (!JS_IsException(jsres))
             {
               b = true;
