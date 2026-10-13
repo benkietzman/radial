@@ -318,21 +318,18 @@ bool Maestro::flowExec(radialUser &d, string &e)
                   const char *pszMessage = JS_ToCStringLen(m_jsctx, &unLength, jsmsg);
                   if (pszMessage != NULL)
                   {
+                    JSValue jsstk = JS_GetPropertyStr(m_jsctx, jsexc, "stack");
                     e.assign(pszMessage, unLength);
-                    if (e == "stack overflow")
+                    if (JS_IsString(jsstk))
                     {
-                      JSValue jsstk = JS_GetPropertyStr(m_jsctx, jsexc, "stack");
-                      if (JS_IsString(jsstk))
+                      const char *pszStk = JS_ToCString(m_jsctx, jsstk);
+                      if (pszStk != NULL)
                       {
-                        const char *pszStk = JS_ToCString(m_jsctx, jsstk);
-                        if (pszStk != NULL)
-                        {
-                          e += (string)" " + pszStk;
-                          JS_FreeCString(m_jsctx, pszStk);
-                        }
+                        e += (string)" " + pszStk;
+                        JS_FreeCString(m_jsctx, pszStk);
                       }
-                      JS_FreeValue(m_jsctx, jsstk);
                     }
+                    JS_FreeValue(m_jsctx, jsstk);
                     JS_FreeCString(m_jsctx, pszMessage);
                   }
                   else
