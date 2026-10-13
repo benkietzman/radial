@@ -304,7 +304,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               {
                 JSValue jssubexc = JS_GetException(m_jsctx);
                 const char *pszSubMessage = JS_ToCString(m_jsctx, jssubexc);
-                if (jssubexc)
+                if (pszSubMessage != NULL)
                 {
                   e = pszSubMessage;
                   JS_FreeCString(m_jsctx, pszSubMessage);
