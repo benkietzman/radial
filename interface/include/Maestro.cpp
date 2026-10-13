@@ -294,26 +294,46 @@ bool Maestro::flowExec(radialUser &d, string &e)
             if (JS_IsException(jsres))
             {
               JSValue jsexc = JS_GetException(m_jsctx);
-              const char *pszMessage = JS_ToCString(m_jsctx, jsexc);
-              if (pszMessage != NULL)
+              if (JS_IsError(m_jsctx, jsexc))
               {
-                e = pszMessage;
-                JS_FreeCString(m_jsctx, pszMessage);
-              }
-              else
-              {
-                JSValue jssubexc = JS_GetException(m_jsctx);
-                const char *pszSubMessage = JS_ToCString(m_jsctx, jssubexc);
-                if (pszSubMessage != NULL)
+                JSValue jsmsg = JS_GetPropertyStr(m_jsctx, jsexc, "message");
+                if (JS_IsException(jsmsg))
                 {
-                  e = pszSubMessage;
-                  JS_FreeCString(m_jsctx, pszSubMessage);
+                  JSValue jssubexc = JS_GetException(m_jsctx);
+                  const char *pszMessage = JS_ToCString(m_jsctx, jssubexc);
+                  if (pszMessage != NULL)
+                  {
+                    e = pszMessage;
+                    JS_FreeCString(m_jsctx, pszMessage);
+                  }
+                  else
+                  {
+                    e = "Failed to retrieve the exception from the message from the exception from the script.";
+                  }
+                  JS_FreeValue(m_jsctx, jssubexc);
+                }
+                else if (JS_IsString(jsmsg))
+                {
+                  size_t unLength = 0;
+                  const char *pszMessage = JS_ToCStringLen(m_jsctx, &unLength, jsmsg);
+                  if (pszMessage != NULL)
+                  {
+                    e.assign(pszMessage, unLength);
+                    JS_FreeCString(m_jsctx, pszMessage);
+                  }
+                  else
+                  {
+                    e = "Failed to retrieve the message within the exception from the script.";
+                  }
                 }
                 else
                 {
-                  e = "Failed to retrieve the exception from the script.";
+                  e = "Encountered a non-string message within the exception from the script.";
                 }
-                JS_FreeValue(m_jsctx, jssubexc);
+              }
+              else
+              {
+                e = "Encountered a non-error exception from the script.";
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
