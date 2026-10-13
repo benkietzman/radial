@@ -313,7 +313,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
                 {
                   e = "Failed to retrieve the exception from the script.";
                 }
-                JS_FreeVAlue(m_jsctx, jssubexc);
+                JS_FreeValue(m_jsctx, jssubexc);
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
