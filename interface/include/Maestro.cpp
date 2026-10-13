@@ -306,7 +306,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
               else
               {
-                e = "Encountered an unknown error.";
+                e = "Encountered an unknown javascript error.";
               }
               JS_FreeValue(m_jsctx, jsexc);
             }
