@@ -120,9 +120,9 @@ export default
           if (c.wsResponse(response, error))
           {
             s['status'].v = 'executed flow';
-            if (response.Response && response.Response.Response)
+            if (response.Response && response.Response)
             {
-              s.response.v = JSON.stringify(response.Response.Response);
+              s.response.v = JSON.stringify(response.Response);
             }
           }
           else
