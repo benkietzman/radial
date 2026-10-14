@@ -946,7 +946,7 @@ JSValue Maestro::js_setResponse(JSContext *jsctx, JSValueConst, int argc, JSValu
     {
       b = true;
       JSValue jsglobal = JS_GetGlobalObject(jsctx);
-      JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, pszResponse, strlen(pszResponse)));
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, pszResponse, strlen(pszResponse)));
       JS_FreeValue(jsctx, jsglobal);
     }
     if (pszResponse != NULL)
