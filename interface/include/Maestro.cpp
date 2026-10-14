@@ -869,24 +869,30 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
           }
           else
           {
+            string strResponse;
             JSValue jssuberror = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_error"), jssubresponse = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_response"), jssubstatus = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_status");
             const char *pszError = JS_ToCString(jssubctx, jssuberror), *pszResponse = JS_ToCString(jssubctx, jssubresponse), *pszStatus = JS_ToCString(jssubctx, jssubstatus);
+            Json *ptResponse = new Json;
             b = true;
             if (pszStatus != NULL)
             {
-              JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_status", JS_NewStringLen(jsctx, pszStatus, strlen(pszStatus)));
+              ptResponse->i("Status", pszStatus);
               JS_FreeCString(jssubctx, pszStatus);
             }
             if (pszError != NULL)
             {
-              JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, pszError, strlen(pszError)));
+              ptResponse->i("Error", pszError);
               JS_FreeCString(jssubctx, pszError);
             }
             if (pszResponse != NULL)
             {
-              JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, pszResponse, strlen(pszResponse)));
+              Json *ptRes = new Json(pszResponse);
+              ptResponse->i("Response", ptRes);
+              delete ptRes;
               JS_FreeCString(jssubctx, pszResponse);
             }
+            ptResponse->j(strResponse);
+            JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
           }
           JS_FreeValue(jssubctx, jssubglobal);
           JS_FreeValue(jssubctx, jssubres);
