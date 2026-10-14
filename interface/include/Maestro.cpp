@@ -33,7 +33,6 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
-  jsreg("chatter", &Maestro::js_chat, 3);
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
