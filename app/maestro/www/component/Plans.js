@@ -108,13 +108,18 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
+        s.response.v = '';
+        let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow, Request: JSON.parse(s.request.v)}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
             s['status'].v = 'executed flow';
+            if (response.Response && response.Response.Response)
+            {
+              s.response.v = JSON.stringify(response.Response.Response);
+            }
           }
           else
           {
@@ -438,7 +443,9 @@ export default
     <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
     <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
   </div>
+  <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
   <textarea class="form-control bg-primary-subtle border border-primary mt-2" c-model="f\.Script" style="font-family: monospace;" rows="20" placeholder="javascript"></textarea>
+  <pre class="mt-2" c-model="response" style="background: inherit; color: inherit; white-space: pre-wrap;"></pre>
   </div>
   {{/if}}
   <!-- ]]] -->
