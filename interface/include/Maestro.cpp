@@ -293,20 +293,18 @@ bool Maestro::flowExec(radialUser &d, string &e)
           {
             JSRuntime *jsrun = JS_NewRuntime();
             JSContext *jsctx = JS_NewContext(jsrun);
+            JSValue jsglobal = JS_GetGlobalObject(jsctx);
             for (auto &i : m_javascript)
             {
-              JSValue jsglobal = JS_GetGlobalObject(jsctx);
               JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
-              JS_FreeValue(jsctx, jsglobal);
             }
             if (i->exist({"Request"}))
             {
               string strRequest;
-              JSValue jsglobal = JS_GetGlobalObject(jsctx);
               i->m["Request"]->j(strRequest);
               JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
-              JS_FreeValue(jsctx, jsglobal);
             }
+            JS_FreeValue(jsctx, jsglobal);
             JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
             if (JS_IsException(jsres))
             {
