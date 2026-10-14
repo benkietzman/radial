@@ -693,6 +693,149 @@ bool Maestro::isOwner(const string id, const string p)
   return b;
 }
 // }}}
+// {{{ js_alert()
+JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 3)
+  {
+    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]), *pszHtml = JS_ToCString(jsctx, argv[2]);
+    if (pszUser != NULL && pszMessage != NULL && pszHtml != NULL)
+    {
+      if (alert(pszUser, pszMessage, pszHtml, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the User, Message, and Html.";
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+    if (pszHtml != NULL)
+    {
+      JS_FreeCString(jsctx, pszHtml);
+    }
+  }
+  else
+  {
+    e = "Please provide the User, Message, and Html.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_application()
+JSValue Maestro::js_application(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszApplication != NULL && pszMessage != NULL)
+    {
+      Json *ptMessage = new Json(pszMessage);
+      if (application(pszApplication, ptMessage, e))
+      {
+        b = true;
+      }
+      delete ptMessage;
+    }
+    else
+    {
+      e = "Please provide the Application and Message.";
+    }
+    if (pszApplication != NULL)
+    {
+      JS_FreeCString(jsctx, pszApplication);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the Appllication and Message.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_centralmon()
+JSValue Maestro::js_centralmon(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszServer = JS_ToCString(jsctx, argv[0]), *pszProcess = JS_ToCString(jsctx, argv[1]);
+    if (pszServer != NULL && pszProcess != NULL)
+    {
+      string strResponse;
+      Json *ptResponse = new Json;
+      ptResponse->m["Data"] = new Json;
+      if (centralmon(pszServer, pszProcess, ptResponse->m["Data"], e))
+      {
+        b = true;
+      }
+      ptResponse->j(strResponse);
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      JS_FreeValue(jsctx, jsglobal);
+      delete ptResponse;
+    }
+    else
+    {
+      e = "Please provide the Server and Process.";
+    }
+    if (pszServer != NULL)
+    {
+      JS_FreeCString(jsctx, pszServer);
+    }
+    if (pszProcess != NULL)
+    {
+      JS_FreeCString(jsctx, pszProcess);
+    }
+  }
+  else
+  {
+    e = "Please provide the Server and Process.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_chat()
 JSValue Maestro::js_chat(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {

@@ -10,6 +10,9 @@
 using namespace radial;
 Maestro *gpMaestro = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
+JSValue js_alert(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_alert(ctx, obj, argc, argv);}
+JSValue js_application(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_application(ctx, obj, argc, argv);}
+JSValue js_centralmon(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_centralmon(ctx, obj, argc, argv);}
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_chat(ctx, obj, argc, argv);}
 JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_email(ctx, obj, argc, argv);}
 JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_flow(ctx, obj, argc, argv);}
@@ -26,6 +29,9 @@ int main(int argc, char *argv[])
   string strPrefix = "maestro->main()";
   gpMaestro = new Maestro(strPrefix, argc, argv, &callback);
   gpMaestro->enableWorkers();
+  gpMaestro->jsreg("alert", js_alert, 3);
+  gpMaestro->jsreg("application", js_application, 2);
+  gpMaestro->jsreg("centralmon", js_centralmon, 2);
   gpMaestro->jsreg("chat", js_chat, 3);
   gpMaestro->jsreg("email", js_email, 5);
   gpMaestro->jsreg("flow", js_flow, 2);

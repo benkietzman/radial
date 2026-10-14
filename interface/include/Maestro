@@ -69,6 +69,9 @@ class Maestro : public Interface
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  JSValue js_alert(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_application(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_centralmon(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_chat(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_email(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_flow(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
