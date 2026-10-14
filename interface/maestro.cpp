@@ -10,50 +10,17 @@
 using namespace radial;
 Maestro *gpMaestro = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
-JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_chat(ctx, obj, argc, argv);
-}
-JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_email(ctx, obj, argc, argv);
-}
-JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_flow(ctx, obj, argc, argv);
-}
-JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_getError(ctx, obj, argc, argv);
-}
-JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_getRequest(ctx, obj, argc, argv);
-}
-JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_getResponse(ctx, obj, argc, argv);
-}
-JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_getStatus(ctx, obj, argc, argv);
-}
-JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_setError(ctx, obj, argc, argv);
-}
-JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_setRequest(ctx, obj, argc, argv);
-}
-JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_setResponse(ctx, obj, argc, argv);
-}
-JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
-{
-  return gpMaestro->js_setStatus(ctx, obj, argc, argv);
-}
+JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_chat(ctx, obj, argc, argv);}
+JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_email(ctx, obj, argc, argv);}
+JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_flow(ctx, obj, argc, argv);}
+JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getError(ctx, obj, argc, argv);}
+JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getRequest(ctx, obj, argc, argv);}
+JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getResponse(ctx, obj, argc, argv);}
+JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getStatus(ctx, obj, argc, argv);}
+JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setError(ctx, obj, argc, argv);}
+JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setRequest(ctx, obj, argc, argv);}
+JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setResponse(ctx, obj, argc, argv);}
+JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setStatus(ctx, obj, argc, argv);}
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
