@@ -368,9 +368,22 @@ bool Maestro::flowExec(radialUser &d, string &e)
             else
             {
               JSValue jsglobal = JS_GetGlobalObject(jsctx);
-              JSValue jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response");
-              const char *pszResponse = JS_ToCString(jsctx, jsresponse);
-              b = true;
+              JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetProperyStr(jsctx, jsglobal, "g_js_status");
+              const char *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);;
+              if (pszStatus != NULL)
+              {
+                o->i("Status", pszStatus);
+                if (o->m["Status"]->v == "okay")
+                {
+                  b = true;
+                }
+                JS_FreeCString(jsctx, pszStatus);
+              }
+              if (pszError != NULL)
+              {
+                o->i("Error", pszError);
+                JS_FreeCString(jsctx, pszError);
+              }
               if (pszResponse != NULL)
               {
                 Json *ptResponse = new Json(pszResponse);
@@ -378,7 +391,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
                 delete ptResponse;
                 JS_FreeCString(jsctx, pszResponse);
               }
-              JS_FreeValue(jsctx, jsresponse);
               JS_FreeValue(jsctx, jsglobal);
             }
             JS_FreeValue(jsctx, jsres);
