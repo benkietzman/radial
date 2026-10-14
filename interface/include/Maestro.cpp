@@ -996,8 +996,8 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
-// {{{ js_dbQuery()
-JSValue Maestro::js_dbQuery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+// {{{ js_dbquery()
+JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
   string e;
@@ -1012,7 +1012,7 @@ JSValue Maestro::js_dbQuery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
       unsigned long long ullRows = 0;
       Json *ptResponse = new Json;
       ptResponse->m["Response"] = new Json;
-      auto get = dbQuery(pszDatabase, pszQuery, ullRows, e);
+      auto get = dbquery(pszDatabase, pszQuery, ullRows, e);
       if (get != NULL)
       {
         b = true;
@@ -1057,8 +1057,8 @@ JSValue Maestro::js_dbQuery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
-// {{{ js_dbUpdate()
-JSValue Maestro::js_dbUpdate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+// {{{ js_dbupdate()
+JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
   string e;
@@ -1070,15 +1070,13 @@ JSValue Maestro::js_dbUpdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     {
       string strResponse;
       stringstream ssID, ssRows;
-      unsigned long long ulID = 0, ullRows = 0;
+      unsigned long long ullID = 0, ullRows = 0;
       Json *ptResponse = new Json;
       ptResponse->m["Response"] = new Json;
-      if (dbUpdate(pszDatabase, pszUpdate, ullID, ullRows, e);
-      if (get != NULL)
+      if (dbupdate(pszDatabase, pszUpdate, ullID, ullRows, e))
       {
         b = true;
       }
-      dbfree(get);
       ssID << ullID;
       ptResponse->i("ID", ssID.str(), 'n');
       ssRows << ullRows;

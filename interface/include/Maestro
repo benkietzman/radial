@@ -75,8 +75,8 @@ class Maestro : public Interface
   JSValue js_chat(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_command(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_db(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
-  JSValue js_dbQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
-  JSValue js_dbUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dbquery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dbupdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_email(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_flow(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
