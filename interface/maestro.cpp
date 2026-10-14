@@ -15,7 +15,10 @@ JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 int main(int argc, char *argv[])
@@ -28,7 +31,10 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("flow", js_flow, 2);
   gpMaestro->jsreg("getError", js_getError, 0);
   gpMaestro->jsreg("getRequest", js_getRequest, 0);
+  gpMaestro->jsreg("getResponse", js_getResponse, 0);
+  gpMaestro->jsreg("getStatus", js_getStatus, 0);
   gpMaestro->jsreg("setError", js_setError, 1);
+  gpMaestro->jsreg("setRequest", js_setRequest, 1);
   gpMaestro->jsreg("setResponse", js_setResponse, 1);
   gpMaestro->jsreg("setStatus", js_setStatus, 1);
   gpMaestro->process(strPrefix);
@@ -59,9 +65,21 @@ JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *
 {
   return gpMaestro->js_getRequest(ctx, obj, argc, argv);
 }
+JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_getResponse(ctx, obj, argc, argv);
+}
+JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_getStatus(ctx, obj, argc, argv);
+}
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {
   return gpMaestro->js_setError(ctx, obj, argc, argv);
+}
+JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_setRequest(ctx, obj, argc, argv);
 }
 JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {

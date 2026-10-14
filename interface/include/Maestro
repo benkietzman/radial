@@ -74,7 +74,10 @@ class Maestro : public Interface
   JSValue js_flow(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_getResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_getStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(const char *prop, JSCFunction *func, int length);

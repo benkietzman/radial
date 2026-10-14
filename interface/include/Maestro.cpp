@@ -269,7 +269,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
       string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
       if (isOwner(d, p))
       {
-        Json *ptFlow = NULL;;
+        Json *ptFlow = NULL;
         m_mutex.lock();
         if (m_p.find(p) != m_p.end())
         {
@@ -304,7 +304,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
               i->m["Request"]->j(strRequest);
               JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
             }
-            JS_FreeValue(jsctx, jsglobal);
             JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
             if (JS_IsException(jsres))
             {
@@ -365,9 +364,8 @@ bool Maestro::flowExec(radialUser &d, string &e)
             }
             else
             {
-              JSValue jsglobal = JS_GetGlobalObject(jsctx);
               JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
-              const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);;
+              const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
               b = true;
               if (pszStatus != NULL)
               {
@@ -386,8 +384,8 @@ bool Maestro::flowExec(radialUser &d, string &e)
                 delete ptResponse;
                 JS_FreeCString(jsctx, pszResponse);
               }
-              JS_FreeValue(jsctx, jsglobal);
             }
+            JS_FreeValue(jsctx, jsglobal);
             JS_FreeValue(jsctx, jsres);
             JS_FreeContext(jsctx);
             JS_FreeRuntime(jsrun);
@@ -772,10 +770,13 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
 	if (argc == 2)
   {
     const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]);
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JSValue jsrequest = JS_GetPropertyStr(jsctx, jsglobal, "g_js_internal_request");
+    const char *pszRequest = JS_ToCString(jsctx, jsrequest);
     if (pszPlan != NULL && pszFlow != NULL)
     {
       string f = pszFlow, p = pszPlan;
-      Json *ptFlow = NULL;;
+      Json *ptFlow = NULL;
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
@@ -797,47 +798,58 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       {
         if (!ptFlow->empty({"Script"}))
         {
-          JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-          if (JS_IsException(jsres))
+          JSRuntime *jssubrun = JS_NewRuntime();
+          JSContext *jssubctx = JS_NewContext(jssubrun);
+          JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
+          for (auto &i : m_javascript)
           {
-            JSValue jsexc = JS_GetException(jsctx);
-            if (JS_IsError(jsctx, jsexc))
+            JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->length));
+          }
+          if (pszRequest != NULL)
+          {
+            JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_request", JS_NewStringLen(jssubctx, pszRequest, strlen(pszRequest)));
+          }
+          JSValue jssubres = JS_Eval(jssubctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+          if (JS_IsException(jssubres))
+          {
+            JSValue jssubexc = JS_GetException(jssubctx);
+            if (JS_IsError(jssubctx, jssubexc))
             {
-              JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
-              if (JS_IsException(jsmsg))
+              JSValue jssubmsg = JS_GetPropertyStr(jssubctx, jssubexc, "message");
+              if (JS_IsException(jssubmsg))
               {
-                JSValue jssubexc = JS_GetException(jsctx);
-                const char *pszMessage = JS_ToCString(jsctx, jssubexc);
+                JSValue jsdeepexc = JS_GetException(jssubctx);
+                const char *pszMessage = JS_ToCString(jssubctx, jsdeepexc);
                 if (pszMessage != NULL)
                 {
                   e = pszMessage;
-                  JS_FreeCString(jsctx, pszMessage);
+                  JS_FreeCString(jssubctx, pszMessage);
                 }
                 else
                 {
                   e = "Failed to retrieve the exception from the message from the exception from the script.";
                 }
-                JS_FreeValue(jsctx, jssubexc);
+                JS_FreeValue(jssubctx, jsdeepexc);
               }
-              else if (JS_IsString(jsmsg))
+              else if (JS_IsString(jssubmsg))
               {
                 size_t unLength = 0;
-                const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
+                const char *pszMessage = JS_ToCStringLen(jssubctx, &unLength, jssubmsg);
                 if (pszMessage != NULL)
                 {
-                  JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
+                  JSValue jssubstk = JS_GetPropertyStr(jssubctx, jssubexc, "stack");
                   e.assign(pszMessage, unLength);
-                  if (JS_IsString(jsstk))
+                  if (JS_IsString(jssubstk))
                   {
-                    const char *pszStk = JS_ToCString(jsctx, jsstk);
+                    const char *pszStk = JS_ToCString(jssubctx, jssubstk);
                     if (pszStk != NULL)
                     {
                       e += (string)" " + pszStk;
-                      JS_FreeCString(jsctx, pszStk);
+                      JS_FreeCString(jssubctx, pszStk);
                     }
                   }
-                  JS_FreeValue(jsctx, jsstk);
-                  JS_FreeCString(jsctx, pszMessage);
+                  JS_FreeValue(jssubctx, jssubstk);
+                  JS_FreeCString(jssubctx, pszMessage);
                 }
                 else
                 {
@@ -853,13 +865,33 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             {
               e = "Encountered a non-error exception from the script.";
             }
-            JS_FreeValue(jsctx, jsexc);
+            JS_FreeValue(jssubctx, jssubexc);
           }
           else
           {
+            JSValue jssuberror = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_error"), jssubresponse = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_response"), jssubstatus = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_status");
+            const char *pszError = JS_ToCString(jssubctx, jssuberror), *pszResponse = JS_ToCString(jssubctx, jssubresponse), *pszStatus = JS_ToCString(jssubctx, jssubstatus);
             b = true;
+            if (pszStatus != NULL)
+            {
+              JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_status", JS_NewStringLen(jsctx, pszStatus, strlen(pszStatus)));
+              JS_FreeCString(jssubctx, pszStatus);
+            }
+            if (pszError != NULL)
+            {
+              JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, pszError, strlen(pszError)));
+              JS_FreeCString(jssubctx, pszError);
+            }
+            if (pszResponse != NULL)
+            {
+              JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, pszResponse, strlen(pszResponse)));
+              JS_FreeCString(jssubctx, pszResponse);
+            }
           }
-          JS_FreeValue(jsctx, jsres);
+          JS_FreeValue(jssubctx, jssubglobal);
+          JS_FreeValue(jssubctx, jssubres);
+          JS_FreeContext(jssubctx);
+          JS_FreeRuntime(jssubrun);
         }
         else
         {
@@ -872,14 +904,19 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     {
       e = "Please provide the Plan and Flow.";
     }
-    if (pszPlan != NULL)
+    if (pszRequest != NULL)
     {
-      JS_FreeCString(jsctx, pszPlan);
+      JS_FreeCString(jsctx, pszRequest);
     }
     if (pszFlow != NULL)
     {
       JS_FreeCString(jsctx, pszFlow);
     }
+    if (pszPlan != NULL)
+    {
+      JS_FreeCString(jsctx, pszPlan);
+    }
+    JS_FreeValue(jsctx, jsglobal);
   }
   else
   {
@@ -917,6 +954,28 @@ JSValue Maestro::js_getRequest(JSContext *jsctx, JSValueConst, int argc, JSValue
   return jsrequest;
 }
 // }}}
+// {{{ js_getResponse()
+JSValue Maestro::js_getResponse(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_internal_response");
+
+  JS_FreeValue(jsctx, jsglobal);
+
+  return jsresponse;
+}
+// }}}
+// {{{ js_getStatus()
+JSValue Maestro::js_getStatus(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_internal_status");
+
+  JS_FreeValue(jsctx, jsglobal);
+
+  return jsstatus;
+}
+// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -935,6 +994,30 @@ JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     if (pszError != NULL)
     {
       JS_FreeCString(jsctx, pszError);
+    }
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_setRequest()
+JSValue Maestro::js_setRequest(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+
+  if (argc == 1)
+  {
+    const char *pszRequest = JS_ToCString(jsctx, argv[0]);
+    if (pszRequest != NULL)
+    {
+      b = true;
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_request", JS_NewStringLen(jsctx, pszRequest, strlen(pszRequest)));
+      JS_FreeValue(jsctx, jsglobal);
+    }
+    if (pszRequest != NULL)
+    {
+      JS_FreeCString(jsctx, pszRequest);
     }
   }
 
