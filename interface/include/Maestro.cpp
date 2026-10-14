@@ -886,7 +886,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             }
             if (pszResponse != NULL)
             {
-              ptResponse->m["Response"] = ptRes;
+              ptResponse->m["Response"] = new Json(pszResponse);
               JS_FreeCString(jssubctx, pszResponse);
             }
             ptResponse->j(strResponse);
