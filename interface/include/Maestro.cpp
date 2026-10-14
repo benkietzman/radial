@@ -698,6 +698,44 @@ JSValue Maestro::js_chat(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_email()
+JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+
+  if (argc >= 4 && argc <= 5)
+  {
+    const char *pszFrom = JS_ToCString(jsctx, argv[0]), *pszTo = JS_ToCString(jsctx, argv[1]), *pszSubject = JS_ToCString(jsctx, argv[2]), *pszText = JS_ToCString(jsctx, argv[3]), *pszHtml = ((argc >= 5)?JS_ToCString(jsctx, argv[4]):NULL);
+    if (pszFrom != NULL && pszTo != NULL && pszSubject != NULL && pszText != NULL && (argc < 5 || pszHtml != NULL))
+    {
+      b = true;
+      email(pszFrom, pszTo, pszSubject, pszText, ((argc >= 5)?pszHtml:""));
+    }
+    if (pszFrom != NULL)
+    {
+      JS_FreeCString(jsctx, pszFrom);
+    }
+    if (pszTo != NULL)
+    {
+      JS_FreeCString(jsctx, pszTo);
+    }
+    if (pszSubject != NULL)
+    {
+      JS_FreeCString(jsctx, pszSubject);
+    }
+    if (pszText != NULL)
+    {
+      JS_FreeCString(jsctx, pszText);
+    }
+    if (pszHtml != NULL)
+    {
+      JS_FreeCString(jsctx, pszHtml);
+    }
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_flow()
 JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
