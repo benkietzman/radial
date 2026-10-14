@@ -14,6 +14,7 @@ JSValue js_alert(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 JSValue js_application(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_application(ctx, obj, argc, argv);}
 JSValue js_centralmon(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_centralmon(ctx, obj, argc, argv);}
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_chat(ctx, obj, argc, argv);}
+JSValue js_command(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_command(ctx, obj, argc, argv);}
 JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_email(ctx, obj, argc, argv);}
 JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_flow(ctx, obj, argc, argv);}
 JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getError(ctx, obj, argc, argv);}
@@ -33,6 +34,7 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("application", js_application, 2);
   gpMaestro->jsreg("centralmon", js_centralmon, 2);
   gpMaestro->jsreg("chat", js_chat, 3);
+  gpMaestro->jsreg("command", js_command, 5);
   gpMaestro->jsreg("email", js_email, 5);
   gpMaestro->jsreg("flow", js_flow, 2);
   gpMaestro->jsreg("getError", js_getError, 0);

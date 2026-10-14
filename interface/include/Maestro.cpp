@@ -866,6 +866,82 @@ JSValue Maestro::js_chat(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_command()
+JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 5)
+  {
+    const char *pszCommand = JS_ToCString(jsctx, argv[0]), *pszArguments = JS_ToCString(jsctx, argv[1]), *pszInput = JS_ToCString(jsctx, argv[2]), *pszTimeout = JS_ToCString(jsctx, argv[3]), *pszNode = JS_ToCString(jsctx, argv[4]);
+    if (pszCommand != NULL && pszArguments != NULL && pszInput != NULL && pszTimeout != NULL && pszNode != NULL)
+    {
+      list<string> arguments;
+      string strOutput, strResponse;
+      stringstream ssDuration, ssTimeout(pszTimeout);
+      size_t unDuration = 0;
+      time_t CTimeout;
+      Json *ptArguments = new Json(pszArguments), *ptResponse = new Json;
+      for (auto &i : ptArguments->l)
+      {
+        arguments.push_back(i->v);
+      }
+      delete ptArguments;
+      ssTimeout >> CTimeout;
+      ptResponse->m["Output"] = new Json;
+      if (command(pszCommand, arguments, pszInput, strOutput, unDuration, e, CTimeout, pszNode))
+      {
+        b = true;
+      }
+      ptResponse->i("Output", strOutput);
+      ssDuration << unDuration;
+      ptResponse->i("Duration", ssDuration.str(), 'n');
+      ptResponse->j(strResponse);
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      JS_FreeValue(jsctx, jsglobal);
+      delete ptResponse;
+    }
+    else
+    {
+      e = "Please provide the Command, Arguments, Input, Timeout, and Node.";
+    }
+    if (pszCommand != NULL)
+    {
+      JS_FreeCString(jsctx, pszCommand);
+    }
+    if (pszArguments != NULL)
+    {
+      JS_FreeCString(jsctx, pszArguments);
+    }
+    if (pszInput != NULL)
+    {
+      JS_FreeCString(jsctx, pszInput);
+    }
+    if (pszTimeout != NULL)
+    {
+      JS_FreeCString(jsctx, pszTimeout);
+    }
+    if (pszNode != NULL)
+    {
+      JS_FreeCString(jsctx, pszNode);
+    }
+  }
+  else
+  {
+    e = "Please provide the Command, Arguments, Input, Timeout, and Node.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_email()
 JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
