@@ -996,6 +996,126 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_dbQuery()
+JSValue Maestro::js_dbQuery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszQuery = JS_ToCString(jsctx, argv[1]);
+    if (pszDatabase != NULL && pszQuery != NULL)
+    {
+      string strResponse;
+      stringstream ssRows;
+      unsigned long long ullRows = 0;
+      Json *ptResponse = new Json;
+      ptResponse->m["Response"] = new Json;
+      auto get = dbQuery(pszDatabase, pszQuery, ullRows, e);
+      if (get != NULL)
+      {
+        b = true;
+        for (auto &row : *get)
+        {
+          ptResponse->m["Response"]->pb(row);
+        }
+      }
+      dbfree(get);
+      ssRows << ullRows;
+      ptResponse->i("Rows", ssRows.str(), 'n');
+      ptResponse->j(strResponse);
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      JS_FreeValue(jsctx, jsglobal);
+      delete ptResponse;
+    }
+    else
+    {
+      e = "Please provide the Database and Query.";
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszQuery != NULL)
+    {
+      JS_FreeCString(jsctx, pszQuery);
+    }
+  }
+  else
+  {
+    e = "Please provide the Database and Query.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dbUpdate()
+JSValue Maestro::js_dbUpdate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszUpdate = JS_ToCString(jsctx, argv[1]);
+    if (pszDatabase != NULL && pszUpdate != NULL)
+    {
+      string strResponse;
+      stringstream ssID, ssRows;
+      unsigned long long ulID = 0, ullRows = 0;
+      Json *ptResponse = new Json;
+      ptResponse->m["Response"] = new Json;
+      if (dbUpdate(pszDatabase, pszUpdate, ullID, ullRows, e);
+      if (get != NULL)
+      {
+        b = true;
+      }
+      dbfree(get);
+      ssID << ullID;
+      ptResponse->i("ID", ssID.str(), 'n');
+      ssRows << ullRows;
+      ptResponse->i("Rows", ssRows.str(), 'n');
+      ptResponse->j(strResponse);
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      JS_FreeValue(jsctx, jsglobal);
+      delete ptResponse;
+    }
+    else
+    {
+      e = "Please provide the Database and Update.";
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszUpdate != NULL)
+    {
+      JS_FreeCString(jsctx, pszUpdate);
+    }
+  }
+  else
+  {
+    e = "Please provide the Database and Update.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_email()
 JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
