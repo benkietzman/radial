@@ -10,41 +10,6 @@
 using namespace radial;
 Maestro *gpMaestro = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
-JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
-int main(int argc, char *argv[])
-{
-  string strPrefix = "maestro->main()";
-  gpMaestro = new Maestro(strPrefix, argc, argv, &callback);
-  gpMaestro->enableWorkers();
-  gpMaestro->jsreg("chat", js_chat, 3);
-  gpMaestro->jsreg("email", js_email, 5);
-  gpMaestro->jsreg("flow", js_flow, 2);
-  gpMaestro->jsreg("getError", js_getError, 0);
-  gpMaestro->jsreg("getRequest", js_getRequest, 0);
-  gpMaestro->jsreg("getResponse", js_getResponse, 0);
-  gpMaestro->jsreg("getStatus", js_getStatus, 0);
-  gpMaestro->jsreg("setError", js_setError, 1);
-  gpMaestro->jsreg("setRequest", js_setRequest, 1);
-  gpMaestro->jsreg("setResponse", js_setResponse, 1);
-  gpMaestro->jsreg("setStatus", js_setStatus, 1);
-  gpMaestro->process(strPrefix);
-  delete gpMaestro;
-  return 0;
-}
-void callback(string strPrefix, const string strPacket, const bool bResponse)
-{
-  gpMaestro->callback(strPrefix, strPacket, bResponse);
-}
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {
   return gpMaestro->js_chat(ctx, obj, argc, argv);
@@ -88,4 +53,28 @@ JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst 
 JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {
   return gpMaestro->js_setStatus(ctx, obj, argc, argv);
+}
+int main(int argc, char *argv[])
+{
+  string strPrefix = "maestro->main()";
+  gpMaestro = new Maestro(strPrefix, argc, argv, &callback);
+  gpMaestro->enableWorkers();
+  gpMaestro->jsreg("chat", js_chat, 3);
+  gpMaestro->jsreg("email", js_email, 5);
+  gpMaestro->jsreg("flow", js_flow, 2);
+  gpMaestro->jsreg("getError", js_getError, 0);
+  gpMaestro->jsreg("getRequest", js_getRequest, 0);
+  gpMaestro->jsreg("getResponse", js_getResponse, 0);
+  gpMaestro->jsreg("getStatus", js_getStatus, 0);
+  gpMaestro->jsreg("setError", js_setError, 1);
+  gpMaestro->jsreg("setRequest", js_setRequest, 1);
+  gpMaestro->jsreg("setResponse", js_setResponse, 1);
+  gpMaestro->jsreg("setStatus", js_setStatus, 1);
+  gpMaestro->process(strPrefix);
+  delete gpMaestro;
+  return 0;
+}
+void callback(string strPrefix, const string strPacket, const bool bResponse)
+{
+  gpMaestro->callback(strPrefix, strPacket, bResponse);
 }
