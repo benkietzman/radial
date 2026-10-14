@@ -112,7 +112,7 @@ export default
         let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
         if (s.request.v)
         {
-          request.Request = JSON.parse(s.request.v);
+          request.Request.Request = JSON.parse(s.request.v);
         }
         c.wsRequest('radial', request).then((response) =>
         {
