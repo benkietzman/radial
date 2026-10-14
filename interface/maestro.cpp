@@ -27,10 +27,10 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("email", js_email, 5);
   gpMaestro->jsreg("flow", js_flow, 2);
   gpMaestro->jsreg("getError", js_getError, 0);
-  gpMaestro->jsreg("getRequest", js_getError, 0);
+  gpMaestro->jsreg("getRequest", js_getRequest, 0);
   gpMaestro->jsreg("setError", js_setError, 1);
-  gpMaestro->jsreg("setResponse", js_setError, 1);
-  gpMaestro->jsreg("setStatus", js_setError, 1);
+  gpMaestro->jsreg("setResponse", js_setResponse, 1);
+  gpMaestro->jsreg("setStatus", js_setStatus, 1);
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
