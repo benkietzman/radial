@@ -886,12 +886,11 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             }
             if (pszResponse != NULL)
             {
-              Json *ptRes = new Json(pszResponse);
-              ptResponse->i("Response", ptRes);
-              delete ptRes;
+              ptResponse->m["Response"] = ptRes;
               JS_FreeCString(jssubctx, pszResponse);
             }
             ptResponse->j(strResponse);
+            delete ptResponse;
             JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
           }
           JS_FreeValue(jssubctx, jssubglobal);
