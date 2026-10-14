@@ -942,6 +942,60 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_db()
+JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+
+  if (argc == 2)
+  {
+    const char *pszFunction = JS_ToCString(jsctx, argv[0]), *pszInput = JS_ToCString(jsctx, argv[1]);
+    if (pszFunction != NULL && pszInput != NULL)
+    {
+      string strID, strQuery, strResponse;
+      Json *ptInput = new Json(pszInput), *ptResponse = new Json;
+      ptResponse->m["Output"] = new Json;
+      if (db(pszFunction, ptInput, ptResponse->m["Output"], strID, strQuery, e))
+      {
+        b = true;
+      }
+      delete ptInput;
+      ptResponse->i("ID", strID);
+      ptResponse->i("Query", strQuery);
+      ptResponse->j(strResponse);
+      JSValue jsglobal = JS_GetGlobalObject(jsctx);
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      JS_FreeValue(jsctx, jsglobal);
+      delete ptResponse;
+    }
+    else
+    {
+      e = "Please provide the Function and Input.";
+    }
+    if (pszFunction != NULL)
+    {
+      JS_FreeCString(jsctx, pszFunction);
+    }
+    if (pszInput != NULL)
+    {
+      JS_FreeCString(jsctx, pszInput);
+    }
+  }
+  else
+  {
+    e = "Please provide the Function and Input.";
+  }
+  if (!e.empty())
+  {
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+    JS_FreeValue(jsctx, jsglobal);
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_email()
 JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
