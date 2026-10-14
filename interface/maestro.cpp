@@ -14,7 +14,10 @@ JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_email(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_flow(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
+JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv);
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
@@ -24,7 +27,10 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("email", js_email, 5);
   gpMaestro->jsreg("flow", js_flow, 2);
   gpMaestro->jsreg("getError", js_getError, 0);
+  gpMaestro->jsreg("getRequest", js_getError, 0);
   gpMaestro->jsreg("setError", js_setError, 1);
+  gpMaestro->jsreg("setResponse", js_setError, 1);
+  gpMaestro->jsreg("setStatus", js_setError, 1);
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
@@ -49,7 +55,19 @@ JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *ar
 {
   return gpMaestro->js_getError(ctx, obj, argc, argv);
 }
+JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_getRequest(ctx, obj, argc, argv);
+}
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
 {
   return gpMaestro->js_setError(ctx, obj, argc, argv);
+}
+JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_setResponse(ctx, obj, argc, argv);
+}
+JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv)
+{
+  return gpMaestro->js_setStatus(ctx, obj, argc, argv);
 }
