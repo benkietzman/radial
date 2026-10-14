@@ -236,7 +236,7 @@ obj/Logger.o: include/Logger.cpp obj
 maestro: bin/maestro $(prefix)/radial/interface
 	install --mode=775 bin/maestro $(prefix)/radial/interface/
 bin/maestro: ../../common/libcommon.a obj/maestro.o obj/Base.o obj/Interface.o obj/Maestro.o bin
-	g++ -o bin/maestro obj/maestro.o obj/Base.o obj/Interface.o obj/Maestro.o $(LDFLAGS) -L/usr/lib/x86_64-linux-gnu/quickjs -L../../common -lcommon -lb64 -lcrypto -lexpat -lmjson -lquickjs -lpthread -lrt -lssl -lz
+	g++ -o bin/maestro obj/maestro.o obj/Base.o obj/Interface.o obj/Maestro.o $(LDFLAGS) -L/usr/lib/quickjs -L/usr/lib/x86_64-linux-gnu/quickjs -L../../common -lcommon -lb64 -lcrypto -lexpat -lmjson -lquickjs -lpthread -lrt -lssl -lz
 obj/maestro.o: maestro.cpp ../../common/Makefile obj
 	g++ -ggdb -Wall -c maestro.cpp -o obj/maestro.o $(CPPFLAGS) -I../../common
 obj/Maestro.o: include/Maestro.cpp obj
