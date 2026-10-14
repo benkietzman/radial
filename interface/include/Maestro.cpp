@@ -699,19 +699,19 @@ JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   bool b = false;
   string e;
 
-  if (argc == 3)
+  if (argc >= 2 && argc <= 3)
   {
-    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]), *pszHtml = JS_ToCString(jsctx, argv[2]);
-    if (pszUser != NULL && pszMessage != NULL && pszHtml != NULL)
+    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]), *pszHtml = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+    if (pszUser != NULL && pszMessage != NULL)
     {
-      if (alert(pszUser, pszMessage, pszHtml, e))
+      if (alert(pszUser, pszMessage, ((pszHtml != NULL)?pszHtml:""), e))
       {
         b = true;
       }
     }
     else
     {
-      e = "Please provide the User, Message, and Html.";
+      e = "Please provide the User and Message.";
     }
     if (pszUser != NULL)
     {
@@ -728,7 +728,7 @@ JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   }
   else
   {
-    e = "Please provide the User, Message, and Html.";
+    e = "Please provide the User and Message.";
   }
   if (!e.empty())
   {
