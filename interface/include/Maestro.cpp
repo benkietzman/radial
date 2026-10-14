@@ -368,13 +368,10 @@ bool Maestro::flowExec(radialUser &d, string &e)
               JSValue jsglobal = JS_GetGlobalObject(jsctx);
               JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
               const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);;
+              b = true;
               if (pszStatus != NULL)
               {
                 o->i("Status", pszStatus);
-                if (o->m["Status"]->v == "okay")
-                {
-                  b = true;
-                }
                 JS_FreeCString(jsctx, pszStatus);
               }
               if (pszError != NULL)
