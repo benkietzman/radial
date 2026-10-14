@@ -109,7 +109,11 @@ export default
       if (c.isValid())
       {
         s.response.v = '';
-        let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow, Request: JSON.parse(s.request.v)}};
+        let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow};
+        if (s.request.v)
+        {
+          request.Request = JSON.parse(s.request.v);
+        }
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
