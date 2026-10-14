@@ -304,6 +304,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               string strRequest;
               JSValue jsglobal = JS_GetGlobalObject(jsctx);
               i->m["Request"]->j(strRequest);
+              chat("#maestro", (string)"Interface::flowExec() " + strRequest);
               JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
               JS_FreeValue(jsctx, jsglobal);
             }
