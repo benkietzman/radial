@@ -1528,9 +1528,20 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
 JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
-  string e;
+  string e, sp;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
 
+  if (JS_IsString(jsplan))
+  {
+    const char *pszPlan = JS_ToCString(jsctx, jsplan);
+    if (pszPlan != NULL)
+    {
+      sp = pszPlan;
+      JS_FreeCString(jsctx, pszPlan);
+    }
+  }
+  JS_FreeValue(jsctx, jsplan);
 	if (argc >= 2 && argc <= 3)
   {
     const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
@@ -1557,7 +1568,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       m_mutex.unlock();
       if (ptFlow != NULL)
       {
-        if (haveAccess(jsctx, pszPlan, pszFlow, e))
+        if (sp == pszPlan || haveAccess(jsctx, pszPlan, pszFlow, e))
         {
           if (!ptFlow->empty({"Script"}))
           {
