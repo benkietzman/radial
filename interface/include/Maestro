@@ -46,6 +46,7 @@ class Maestro : public Interface
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
+  string m_strCipher;
   string m_strHandle;
   string m_strPath;
   string m_strSecret;

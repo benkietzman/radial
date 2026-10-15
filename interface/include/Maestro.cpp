@@ -37,6 +37,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["plans"] = &Maestro::plans;
   m_functions["status"] = &Maestro::status;
   // }}}
+  m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
   if (m_pWarden != NULL)
@@ -605,7 +606,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
             if (!m_strSecret.empty())
             {
               string strPlan;
-              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
+              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
               {
                 JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
               }
@@ -991,7 +992,7 @@ bool Maestro::haveAccess(JSContext *jsctx, const string strFunction, const strin
     if (pszPlan != NULL)
     {
       string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM").empty() && haveAccess(strPlan, strFunction, strAccess, strError))
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strFunction, strAccess, strError))
       {
         bResult = true;
       }
@@ -1539,7 +1540,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     {
       if (!m_strSecret.empty())
       {
-        m_manip.decryptAes(m_manip.decodeBase64(pszPlan, sp), m_strSecret, sp, e, "AES-256 GCM");
+        m_manip.decryptAes(m_manip.decodeBase64(pszPlan, sp), m_strSecret, sp, e, m_strCipher);
       }
       JS_FreeCString(jsctx, pszPlan);
     }
@@ -1585,7 +1586,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             if (!m_strSecret.empty())
             {
               string strPlan;
-              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
+              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
               {
                 JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_plan", JS_NewStringLen(jssubctx, strPlan.c_str(), strPlan.size()));
               }
