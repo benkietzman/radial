@@ -37,7 +37,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_strPath = m_strData + (string)"/maestro";
   if (m_pWarden != NULL)
   {
-    m_pWarden->vaultRetrieve({"maestro", "secret"}, m_strSecret, strError);
+    m_pWarden->vaultRetrieve({"maestro", "Secret"}, m_strSecret, strError);
   }
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
