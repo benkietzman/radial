@@ -563,15 +563,15 @@ bool Maestro::flowAdd(radialUser &d, string &e)
 // {{{ flowExec()
 bool Maestro::flowExec(radialUser &d, string &e)
 {
-  bool b = false;
+  bool a = auth(d.r, e), b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (isValid(d))
+  if (a || isValid(d))
   {
     if (dep({"Flow", "Plan"}, i, e))
     {
       string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      if (isOwner(d, p))
+      if (a || isOwner(d, p))
       {
         Json *ptFlow = NULL;
         m_mutex.lock();
