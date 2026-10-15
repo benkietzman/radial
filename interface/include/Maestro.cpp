@@ -1539,7 +1539,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     {
       if (!m_strSecret.empty())
       {
-        m_manip.decryptAes(m_manip.decodeBase64(pszPlan, sp), m_strSecret, sp, strError, "AES-256 GCM");
+        m_manip.decryptAes(m_manip.decodeBase64(pszPlan, sp), m_strSecret, sp, e, "AES-256 GCM");
       }
       JS_FreeCString(jsctx, pszPlan);
     }
