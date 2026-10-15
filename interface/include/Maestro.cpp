@@ -121,20 +121,15 @@ bool Maestro::accessAdd(radialUser &d, string &e)
       if (m_p.find(p) != m_p.end())
       {
         bool bHaveAccess = false;
-        Json *ptAccess = NULL;
-        if (m_p[p]->a != NULL)
+        if (m_p[p]->a == NULL)
         {
-          ptAccess = new Json(m_p[p]->a);
+          m_p[p]->a = new Json;
         }
-        else
+        if (!m_p[p]->a->exist({f}))
         {
-          ptAccess = new Json;
+          m_p[p]->a->m[f] = new Json;
         }
-        if (!ptAccess->exist({f}))
-        {
-          ptAccess->m[f] = new Json;
-        }
-        for (auto c = ptAccess->m[f]->l.begin(); !bHaveAccess && c != ptAccess->m[f]->l.end(); c++)
+        for (auto c = m_p[p]->a->m[f]->l.begin(); !bHaveAccess && c != m_p[p]->a->m[f]->l.end(); c++)
         {
           if ((*c)->v == a)
           {
@@ -144,15 +139,11 @@ bool Maestro::accessAdd(radialUser &d, string &e)
         if (!bHaveAccess)
         {
           string j;
-          ptAccess->j(j);
+          m_p[p]->a->m[f]->pb(a);
+          m_p[p]->a->j(j);
           if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
           {
             b = true;
-            if (m_p[p]->a != NULL)
-            {
-              delete m_p[p]->a;
-            }
-            m_p[p]->a = new Json(ptAccess);
           }
           else
           {
@@ -165,7 +156,6 @@ bool Maestro::accessAdd(radialUser &d, string &e)
         {
           e = "Access already exists.";
         }
-        delete ptAccess;
       }
       else
       {
