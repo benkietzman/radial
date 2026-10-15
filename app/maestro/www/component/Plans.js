@@ -500,7 +500,7 @@ export default
     <div class="col-auto">
       <div class="card border border-warning mb-2 mt-3">
         <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
-          Access
+          Access ({{numberShort p.NumAccesses 0}})
         </div>
         {{#if expand.access}}
         <div class="card-body bg bg-warning-subtle">
@@ -554,7 +554,7 @@ export default
     <div class="col-auto">
       <div class="card border border-success mb-2 mt-3">
         <div class="card-header bg bg-success fw-bold text-center text-nowrap" c-click="collapseExpand('flows')" style="cursor: row-resize;">
-          Flows
+          Flows ({{numberShort p.NumFlows 0}})
         </div>
         {{#if expand.flows}}
         <div class="card-body bg bg-success-subtle">
