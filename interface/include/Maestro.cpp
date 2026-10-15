@@ -840,7 +840,7 @@ bool Maestro::flows(radialUser &d, string &e)
       b = true;
       for (auto &f : m_p[p]->f)
       {
-        o->i(f.first, f.second);
+        o->pb(f.first);
       }
     }
     else
