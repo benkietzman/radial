@@ -70,7 +70,7 @@ export default
     };
     // ]]]
     // [[[ accessRemove()
-    s.accessRemove = (strFunction, strScope) =>
+    s.accessRemove = (strAccess, strScope) =>
     {
       if (c.isValid())
       {
