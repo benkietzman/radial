@@ -210,6 +210,37 @@ bool Maestro::accessAdd(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ accesses()
+bool Maestro::accesses(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Plan"}, i, e))
+  {
+    string p = i->m["Plan"]->v;
+    m_mutex.lock();
+    if (m_p.find(p) != m_p.end())
+    {
+      b = true;
+      if (m_p[p]->a != NULL)
+      {
+        for (auto &a : m_p[p]->a->m)
+        {
+          o->i(a.first, a.second);
+        }
+      }
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
 // {{{ accessRemove()
 bool Maestro::accessRemove(radialUser &d, string &e)
 {
@@ -337,37 +368,6 @@ bool Maestro::accessRemove(radialUser &d, string &e)
   else
   {
     e = "You are not authorized to perform this action.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ accesses()
-bool Maestro::accesses(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"], *o = d.p->m["o"];
-
-  if (dep({"Plan"}, i, e))
-  {
-    string p = i->m["Plan"]->v;
-    m_mutex.lock();
-    if (m_p.find(p) != m_p.end())
-    {
-      b = true;
-      if (m_p[p]->a != NULL)
-      {
-        for (auto &a : m_p[p]->a->m)
-        {
-          o->i(a.first, a.second);
-        }
-      }
-    }
-    else
-    {
-      e = "Plan not found.";
-    }
-    m_mutex.unlock();
   }
 
   return b;
