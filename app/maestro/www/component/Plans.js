@@ -31,7 +31,7 @@ export default
     {
       if (c.isLocalAdmin('Maestro'))
       {
-        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, 'Function': s.functionName.v, Scope: s.accessScope.v}};
+        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, Access: s.accessName.v, Scope: s.scopeName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -74,7 +74,7 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'accessRemove', Request: {Plan: s.strPlan, 'Function': strFunction, Scope: strScope}};
+        let request = {Interface: 'maestro', 'Function': 'accessRemove', Request: {Plan: s.strPlan, Access: strAccess, Scope: strScope}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -479,8 +479,8 @@ export default
   {{#isLocalAdmin "Maestro"}}
   <div class="input-group">
     <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="functionName">
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName" placeholder="access">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName" placeholder="scope">
     <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
   </div>
   {{/isLocalAdmin}}
@@ -488,7 +488,7 @@ export default
     <table class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th>Function</th>
+        <th>Access</th>
         <th>Scope</th>
       </tr>
     </thead>
