@@ -1571,8 +1571,6 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       m_mutex.unlock();
       if (ptFlow != NULL)
       {
-        chat("#maestro", (string)"Source Plan:  " + sp);
-        chat("#maestro", (string)"Target Plan:  " + pszPlan);
         if (sp == pszPlan || haveAccess(jsctx, pszPlan, pszFlow, e))
         {
           if (!ptFlow->empty({"Script"}))
