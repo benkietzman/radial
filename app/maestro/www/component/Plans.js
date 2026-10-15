@@ -25,6 +25,76 @@ export default
       c: c
     });
     // ]]]
+    // [[[ access
+    // [[[ accessAdd()
+    s.accessAdd = () =>
+    {
+      if (c.isLocalAdmin('Maestro'))
+      {
+        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, 'Function': s.functionName.v, Access: s.accessName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ accesses()
+    s.accesses = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'accesses', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s['as'] = response.Response;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ accessRemove()
+    s.accessRemove = (strFunction, strAccess) =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'accessRemove', Request: {Plan: s.strPlan, 'Function': strFunction, Access: strAccess}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan + '/' + s.strFlow;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // ]]]
     // [[[ applications()
     s.applications = () =>
     {
@@ -45,6 +115,7 @@ export default
       });
     };
     // ]]]
+    // [[[ flow
     // [[[ flow()
     s.flow = () =>
     {
@@ -76,20 +147,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            let request = {Interface: 'maestro', 'Function': 'flow', Request: {Plan: s.strPlan, Flow: s.flowName.v}};
-            c.wsRequest('radial', request).then((response) =>
-            {
-              let error = {};
-              if (c.wsResponse(response, error))
-              {
-                document.location.href = '#/Plans/' + response.Response.Plan + '/' + response.Response.Flow;
-              }
-              else
-              {
-                c.pushErrorMessage(error.message);
-              }
-              s.u();
-            });
+            document.location.href = '#/Plans/' + s.strPlan + '/' + s.flowName.v;
           }
           else
           {
@@ -210,6 +268,7 @@ export default
       }
     };
     // ]]]
+    // ]]]
     // [[[ init()
     s.init = () =>
     {
@@ -229,6 +288,7 @@ export default
       }
     };
     // ]]]
+    // [[[ plan
     // [[[ plan()
     s.plan = () =>
     {
@@ -239,6 +299,7 @@ export default
         if (c.wsResponse(response, error))
         {
           s.p = response.Response;
+          s.accesses();
           s.flows();
         }
         else
@@ -332,6 +393,7 @@ export default
       });
     };
     // ]]]
+    // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
     {
@@ -384,7 +446,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'accessAdd' || data.detail.Action == 'accessRemove' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate') && !s.composition)
       {
         s.init();
       }
@@ -413,6 +475,48 @@ export default
   </tbody>
   </table>
   </div>
+  <!-- [[[ accesses -->
+  {{#isLocalAdmin "Maestro"}}
+  <div class="input-group">
+    <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="functionName">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName">
+    <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
+  </div>
+  {{/isLocalAdmin}}
+  <div class="table-responsive">
+    <table class="table table-condensed table-striped">
+    <thead>
+      <tr>
+        <th>Function</th>
+        <th>Access</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each as}}
+      <tr>
+        <td>
+          {{@key}}
+        </td>
+        <td>
+          {{#each .}}
+          <div class="row">
+            <div class="col">{{.}}</div>
+            {{#if @root.p.edit}}
+            <div class="col">
+              <button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button>
+            </div>
+            {{/if}}
+          </div>
+          {{/each}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+    </table>
+  </div>
+  <!-- ]]] -->
+  <!-- [[[ flows -->
   {{#if p.edit}}
   <div class="input-group">
     <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
@@ -420,7 +524,6 @@ export default
     <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
   </div>
   {{/if}}
-  <!-- [[[ flows -->
   <div class="table-responsive">
     <table class="table table-condensed table-striped">
     <tbody>
