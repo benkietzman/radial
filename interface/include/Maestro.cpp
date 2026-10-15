@@ -366,7 +366,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
             if (!m_strSecret.empty())
             {
               string strPlan;
-              if (!m_manip.encodeBase64((m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
+              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
               {
                 JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
               }
