@@ -570,7 +570,7 @@ export default
             <tbody>
               {{#each fs}}
               <tr>
-                <td><a href="#/Plans/{{Plan}}/{{Flow}}">{{Flow}}</a></td>
+                <td><a href="#/Plans/{{#root.strPlan}}/{{.}}">{{.}}</a></td>
               </tr>
               {{/each}}
             </tbody>
