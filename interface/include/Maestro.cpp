@@ -345,7 +345,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
             nodes.pop_front();
           }
           ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
           ptLive->i("Action", "accessRemove");
           ptLive->i("Name", p);
