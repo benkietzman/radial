@@ -48,6 +48,7 @@ class Maestro : public Interface
   mutex m_mutex;
   string m_strHandle;
   string m_strPath;
+  string m_strSecret;
   thread *m_pThreadSchedule;
 
   bool access(const string strPlan, const string strFunction, const string strAccess, string &strError);

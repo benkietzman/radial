@@ -16,6 +16,8 @@ namespace radial
 // {{{ Maestro()
 Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
 {
+  string strError;
+
   m_bLoaded = false;
   // {{{ functions
   m_functions["action"] = &Maestro::action;
@@ -33,6 +35,10 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // }}}
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
+  if (m_pWarden != NULL)
+  {
+    m_pWarden->vaultRetrieve({"maestro", "secret"}, m_strSecret, strError);
+  }
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
@@ -104,7 +110,8 @@ bool Maestro::access(JSContext *jsctx, const string strFunction, const string st
     const char *pszPlan = JS_ToCString(jsctx, jsplan);
     if (pszPlan != NULL)
     {
-      if (access(pszPlan, strFunction, strAccess, strError))
+      string strPlan;
+      if (!m_strSecret.empty() && !m_manip.decryptAes(pszPlan, m_strSecret, strPlan, strError, "AES-256 GCM").empty() && access(strPlan, strFunction, strAccess, strError))
       {
         bResult = true;
       }
@@ -356,7 +363,14 @@ bool Maestro::flowExec(radialUser &d, string &e)
             {
               JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
             }
-            JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, p.c_str(), p.size()));
+            if (!m_strSecret.empty())
+            {
+              string strPlan;
+              if (!m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM").empty())
+              {
+                JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
+              }
+            }
             if (i->exist({"Request"}))
             {
               string strRequest;
@@ -1263,6 +1277,14 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             {
               JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->length));
             }
+            if (!m_strSecret.empty())
+            {
+              string strPlan;
+              if (!m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM").empty())
+              {
+                JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_plan", JS_NewStringLen(jssubctx, strPlan.c_str(), strPlan.size()));
+              }
+            }
             if (pszRequest != NULL)
             {
               JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_request", JS_NewStringLen(jssubctx, pszRequest, strlen(pszRequest)));
@@ -1966,7 +1988,7 @@ void Maestro::schedule(string strPrefix)
   while (!shutdown())
   {
     time(&(CTime[1]));
-    if ((CTime[1] - CTime[0]) > 300)
+    if ((CTime[1] - CTime[0]) > 60)
     {
       CTime[0] = CTime[1];
       if (!m_bLoaded)
