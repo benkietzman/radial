@@ -2028,6 +2028,7 @@ bool Maestro::plan(radialUser &d, string &e)
       b = true;
       o->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
       o->i("ID", m_p[p]->id);
+      o->i("NumAccessess", to_string(m_p[p]->a->m.size()), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("Owner", m_p[p]->owner);
       ssPlan << m_p[p]->type << "_" << m_p[p]->id;
@@ -2256,6 +2257,7 @@ bool Maestro::plans(radialUser &d, string &e)
     Json *ptPlan = new Json;
     ptPlan->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
     ptPlan->i("ID", p.second->id);
+    ptPlan->i("NumAccesses", to_string(p.second->a->m.size()), 'n');
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
