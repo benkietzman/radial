@@ -680,19 +680,19 @@ bool Maestro::flowExec(radialUser &d, string &e)
               JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
               const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
               b = true;
-              if (pszStatus != NULL)
+              if (pszStatus != NULL && (string)pszResponse != "undefined")
               {
                 o->i("Status", pszStatus);
                 JS_FreeCString(jsctx, pszStatus);
               }
               JS_FreeValue(jsctx, jsstatus);
-              if (pszError != NULL)
+              if (pszError != NULL && (string)pszError != "undefined")
               {
                 o->i("Error", pszError);
                 JS_FreeCString(jsctx, pszError);
               }
               JS_FreeValue(jsctx, jserror);
-              if (pszResponse != NULL)
+              if (pszResponse != NULL && (string)pszResponse != "undefined")
               {
                 Json *ptResponse = new Json(pszResponse);
                 o->i("Response", ptResponse);
@@ -1647,21 +1647,24 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
               const char *pszError = JS_ToCString(jssubctx, jssuberror), *pszResponse = JS_ToCString(jssubctx, jssubresponse), *pszStatus = JS_ToCString(jssubctx, jssubstatus);
               Json *ptResponse = new Json;
               b = true;
-              if (pszStatus != NULL)
+              if (pszStatus != NULL && (string)pszStatus != "undefined")
               {
                 ptResponse->i("Status", pszStatus);
                 JS_FreeCString(jssubctx, pszStatus);
               }
-              if (pszError != NULL)
+              JS_FreeValue(jsctx, jssubstatus);
+              if (pszError != NULL && (string)pszError != "undefined")
               {
                 ptResponse->i("Error", pszError);
                 JS_FreeCString(jssubctx, pszError);
               }
-              if (pszResponse != NULL)
+              JS_FreeValue(jsctx, jssuberror);
+              if (pszResponse != NULL && (string)pszResponse != "undefined")
               {
                 ptResponse->m["Response"] = new Json(pszResponse);
                 JS_FreeCString(jssubctx, pszResponse);
               }
+              JS_FreeValue(jsctx, jssubresponse);
               ptResponse->j(strResponse);
               delete ptResponse;
               JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
