@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("dbquery", js_dbquery, 2);
   gpMaestro->jsreg("dbupdate", js_dbupdate, 2);
   gpMaestro->jsreg("email", js_email, 5);
-  gpMaestro->jsreg("flow", js_flow, 2);
+  gpMaestro->jsreg("flow", js_flow, 3);
   gpMaestro->jsreg("getError", js_getError, 0);
   gpMaestro->jsreg("getRequest", js_getRequest, 0);
   gpMaestro->jsreg("getResponse", js_getResponse, 0);
