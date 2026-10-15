@@ -1688,7 +1688,6 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     {
       JS_FreeCString(jsctx, pszRequest);
     }
-    JS_FreeValue(jsctx, jsrequest);
     if (pszFlow != NULL)
     {
       JS_FreeCString(jsctx, pszFlow);
