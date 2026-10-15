@@ -31,7 +31,7 @@ export default
     {
       if (c.isLocalAdmin('Maestro'))
       {
-        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, 'Function': s.functionName.v, Access: s.accessName.v}};
+        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, 'Function': s.functionName.v, Scope: s.accessScope.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -70,11 +70,11 @@ export default
     };
     // ]]]
     // [[[ accessRemove()
-    s.accessRemove = (strFunction, strAccess) =>
+    s.accessRemove = (strFunction, strScope) =>
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'accessRemove', Request: {Plan: s.strPlan, 'Function': strFunction, Access: strAccess}};
+        let request = {Interface: 'maestro', 'Function': 'accessRemove', Request: {Plan: s.strPlan, 'Function': strFunction, Scope: strScope}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -480,7 +480,7 @@ export default
   <div class="input-group">
     <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
     <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="functionName">
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName">
     <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
   </div>
   {{/isLocalAdmin}}
@@ -489,7 +489,7 @@ export default
     <thead>
       <tr>
         <th>Function</th>
-        <th>Access</th>
+        <th>Scope</th>
       </tr>
     </thead>
     <tbody>
@@ -582,6 +582,7 @@ export default
         <th>Plan</th>
         <th>Type</th>
         <th>Owner</th>
+        <th class="text-end text-nowrap"># Accesses</th>
         <th class="text-end text-nowrap"># Flows</th>
       </tr>
     </thead>
@@ -591,6 +592,7 @@ export default
         <td><a href="#/Plans/{{Plan}}">{{Plan}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}{{#ifCond ../Type "==" "p"}}public{{else}}user{{/ifCond}}{{/ifCond}}</td>
         <td>{{#ifCond Type "!=" "p"}}<a href="/central/#/{{#ifCond ../Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{../ID}}" target="_blank">{{../Owner}}</a>{{/ifCond}}</td>
+        <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
       </tr>
       {{/each}}
