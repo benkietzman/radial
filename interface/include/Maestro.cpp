@@ -111,7 +111,7 @@ bool Maestro::access(JSContext *jsctx, const string strFunction, const string st
     if (pszPlan != NULL)
     {
       string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(pszPlan, m_strSecret, strPlan, strError, "AES-256 GCM").empty() && access(strPlan, strFunction, strAccess, strError))
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM")).empty() && access(strPlan, strFunction, strAccess, strError))
       {
         bResult = true;
       }
@@ -366,7 +366,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
             if (!m_strSecret.empty())
             {
               string strPlan;
-              if (!m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM").empty())
+              if (!m_manip.encodeBase64((m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
               {
                 JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
               }
@@ -1280,7 +1280,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             if (!m_strSecret.empty())
             {
               string strPlan;
-              if (!m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM").empty())
+              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, "AES-256 GCM"), strPlan).empty())
               {
                 JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_plan", JS_NewStringLen(jssubctx, strPlan.c_str(), strPlan.size()));
               }
