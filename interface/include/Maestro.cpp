@@ -1533,7 +1533,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
 
 	if (argc >= 2 && argc <= 3)
   {
-    const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCstring(jsctx, argv[2]):NULL);
+    const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
     if (pszPlan != NULL && pszFlow != NULL)
     {
       string f = pszFlow, p = pszPlan;
