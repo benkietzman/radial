@@ -111,7 +111,7 @@ bool Maestro::access(JSContext *jsctx, const string strFunction, const string st
     if (pszPlan != NULL)
     {
       string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM")).empty() && access(strPlan, strFunction, strAccess, strError))
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM").empty() && access(strPlan, strFunction, strAccess, strError))
       {
         bResult = true;
       }
