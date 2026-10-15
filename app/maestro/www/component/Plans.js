@@ -477,14 +477,14 @@ export default
   </div>
   <!-- [[[ accesses -->
   {{#isLocalAdmin "Maestro"}}
-  <div class="input-group">
+  <div class="input-group mt-2">
     <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName" placeholder="access">
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName" placeholder="scope">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName" style="flex-grow: 0; flex-basis: 100px;" placeholder="access">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;" placeholder="scope">
     <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
   </div>
   {{/isLocalAdmin}}
-  <div class="table-responsive">
+  <div class="table-responsive mt-2">
     <table class="table table-condensed table-striped">
     <thead>
       <tr>
@@ -499,16 +499,18 @@ export default
           {{@key}}
         </td>
         <td>
-          {{#each .}}
-          <div class="row">
-            <div class="col">{{.}}</div>
-            {{#if @root.p.edit}}
-            <div class="col">
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button>
-            </div>
-            {{/if}}
-          </div>
-          {{/each}}
+          <table class="table table-condensed">
+          <tbody>
+            {{#each .}}
+            <tr>
+              <td class="w-100">{{.}}</td>
+              {{#if @root.p.edit}}
+              <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button></td>
+              {{/if}}
+            </tr>
+            {{/each}}
+          </tbody>
+          </table>
         </td>
       </tr>
       {{/each}}
@@ -518,13 +520,13 @@ export default
   <!-- ]]] -->
   <!-- [[[ flows -->
   {{#if p.edit}}
-  <div class="input-group">
+  <div class="input-group mt-2">
     <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="flowName">
+    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
     <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
   </div>
   {{/if}}
-  <div class="table-responsive">
+  <div class="table-responsive mt-2">
     <table class="table table-condensed table-striped">
     <tbody>
       {{#each fs}}
@@ -563,14 +565,10 @@ export default
   {{#isValid}}
   <div class="input-group">
     <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option><option value="u">user</option></select>
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()" style="flex-grow: 0; flex-basis: 120px;"><option value="a">application</option><option value="u">user</option></select>
     {{#ifCond @root.planType.val "==" "a"}}
     <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-    {{/ifCond}}
-    {{#ifCond @root.planType.val "==" "p"}}
-    <span class="input-group-text bg-secondary border bordrer-secondary">Name</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="planName">
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" style="flex-grow: 0; flex-basis: 200px;" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
     {{/ifCond}}
     <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
   </div>
