@@ -51,14 +51,18 @@ class Maestro : public Interface
   string m_strSecret;
   thread *m_pThreadSchedule;
 
-  bool access(const string strPlan, const string strFunction, const string strAccess, string &strError);
-  bool access(JSContext *jsctx, const string strFunction, const string strAccess, string &strError);
+  bool access(radialUser &d, string &e);
+  bool accessAdd(radialUser &d, string &e);
+  bool accessRemove(radialUser &d, string &e);
+  bool accesses(radialUser &d, string &e);
   bool flow(radialUser &d, string &e);
   bool flowAdd(radialUser &d, string &e);
   bool flowExec(radialUser &d, string &e);
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool flowUpdate(radialUser &d, string &e);
+  bool haveAccess(const string strPlan, const string strFunction, const string strAccess, string &strError);
+  bool haveAccess(JSContext *jsctx, const string strFunction, const string strAccess, string &strError);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p);
   void load(string strPrefix);

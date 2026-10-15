@@ -65,64 +65,314 @@ Maestro::~Maestro()
   m_javascript.clear();
 }
 // }}}
+// {{{ access
 // {{{ access()
-bool Maestro::access(const string strPlan, const string strFunction, const string strAccess, string &strError)
+bool Maestro::access(radialUser &d, string &e)
 {
-  bool bResult = false;
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (!strPlan.empty() && !strFunction.empty() && !strAccess.empty())
+  if (dep({"Function", "Plan"}, i, e))
   {
+    string f = i->m["Function"]->v, p = i->m["Plan"]->v;
     m_mutex.lock();
-    if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({strFunction}))
+    if (m_p.find(p) != m_p.end())
     {
-      if (m_p[strPlan]->a->m[strFunction]->v == "all" || m_p[strPlan]->a->m[strFunction]->v == strAccess)
+      if (m_p[p]->a != NULL && m_p[p]->a->exist({f}))
       {
-        bResult = true;
+        b = true;
+        o->merge(m_p[p]->a->m[f], true, false);
       }
       else
       {
-        for (auto i = m_p[strPlan]->a->m[strFunction]->l.begin(); !bResult && i != m_p[strPlan]->a->m[strFunction]->l.end(); i++)
-        {
-          if ((*i)->v == strAccess)
-          {
-            bResult = true;
-          }
-        }
+        e = "Function not found.";
       }
+    }
+    else
+    {
+      e = "Plan not found.";
     }
     m_mutex.unlock();
   }
-  if (!bResult)
-  {
-    strError = "Plan is not authorized to perform this action.";
-  }
 
-  return bResult;
+  return b;
 }
-bool Maestro::access(JSContext *jsctx, const string strFunction, const string strAccess, string &strError)
+// }}}
+// {{{ accessAdd()
+bool Maestro::accessAdd(radialUser &d, string &e)
 {
-  bool bResult = false;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
-  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
 
-  if (JS_IsString(jsplan))
+  if (isLocalAdmin(d, "Maestro"))
   {
-    const char *pszPlan = JS_ToCString(jsctx, jsplan);
-    if (pszPlan != NULL)
+    if (dep({"Access", "Function", "Plan"}, i, e))
     {
-      string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM").empty() && access(strPlan, strFunction, strAccess, strError))
+      string a = i->m["Access"]->v, f = i->m["Function"]->v, id, p = i->m["Plan"]->v, t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        bResult = true;
+        bool bHaveAccess = false;
+        Json *ptAccess = NULL;
+        if (m_p[p]->a != NULL)
+        {
+          ptAccess = new Json(m_p[p]->a);
+        }
+        else
+        {
+          ptAccess = new Json;
+        }
+        if (!ptAccess->exist({f}))
+        {
+          ptAccess->m[f] = new Json;
+        }
+        for (auto c = ptAccess->m[f]->l.begin(); !bHaveAccess && c != ptAccess->m[f]->l.end(); c++)
+        {
+          if ((*c)->v == a)
+          {
+            bHaveAccess = true;
+          }
+        }
+        if (!bHaveAccess)
+        {
+          string j;
+          ptAccess->j(j);
+          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+          {
+            b = true;
+            if (m_p[p]->a != NULL)
+            {
+              delete m_p[p]->a;
+            }
+            m_p[p]->a = new Json(ptAccess);
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else
+        {
+          e = "Access already exists.";
+        }
+        delete ptAccess;
       }
-      JS_FreeCString(jsctx, pszPlan);
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "accessAdd");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "03Access added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "accessAdd");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
+      }
     }
   }
-  JS_FreeValue(jsctx, jsplan);
-  JS_FreeValue(jsctx, jsglobal);
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
 
-  return bResult;
+  return b;
 }
+// }}}
+// {{{ accessRemove()
+bool Maestro::accessRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (isValid(d))
+  {
+    if (dep({"Function", "Plan"}, i, e))
+    {
+      string a = i->m["Access"]->v, f = i->m["Function"]->v, p = i->m["Plan"]->v;
+      if (isOwner(d, p))
+      {
+        string t;
+        stringstream ssP(p);
+        getline(ssP, t, '_');
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
+        {
+          if (m_p[p]->a->exist({f}))
+          {
+            list<Json *>::iterator funcIter = m_p[p]->a->m[f]->l.end();
+            for (auto c = m_p[p]->a->m[f]->l.begin(); funcIter == m_p[p]->a->m[f]->l.end() && c != m_p[p]->a->m[f]->l.end(); c++)
+            {
+              if ((*c)->v == a)
+              {
+                funcIter = c;
+              }
+            }
+            if (funcIter != m_p[p]->a->m[f]->l.end())
+            {
+              delete (*funcIter);
+              m_p[p]->a->m[f]->l.erase(funcIter);
+              if (m_p[p]->a->m[f]->l.empty())
+              {
+                delete m_p[p]->a->m[f];
+                m_p[p]->a->m.erase(f);
+              }
+              if (m_p[p]->a->m.empty())
+              {
+                delete m_p[p]->a;
+                m_p[p]->a = NULL;
+              }
+              if (m_p[p]->a != NULL)
+              {
+                string j;
+                m_p[p]->a->j(j);
+                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                {
+                  b = true;
+                }
+                else
+                {
+                  ssChat.str("");
+                  ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  chat("#maestro", ssChat.str());
+                }
+              }
+              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+              {
+                b = true;
+              }
+              else
+              {
+                ssChat.str("");
+                ssChat << char(3) << "00,06 " << p << " | " << f << a << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+            else
+            {
+              e = "Access not found.";
+            }
+          }
+          else
+          {
+            e = "Function not found.";
+          }
+        }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+        if (b && i->val({"_broadcast"}) != "1")
+        {
+          list<string> nodes;
+          Json *ptLive = new Json;
+          m_mutexShare.lock();
+          for (auto &link : m_l)
+          {
+            if (link->interfaces.find("maestro") != link->interfaces.end())
+            {
+              nodes.push_back(link->strNode);
+            }
+          }
+          m_mutexShare.unlock();
+          while (!nodes.empty())
+          {
+            Json *ptLink = new Json(d.r);
+            ptLink->i("Interface", "maestro");
+            ptLink->i("Node", nodes.front());
+            ptLink->i("Function", "flowRemove");
+            ptLink->m["Request"]->i("_broadcast", "1", '1');
+            hub("link", ptLink, false);
+            delete ptLink;
+            nodes.pop_front();
+          }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+          ptLive->i("Action", "flowRemove");
+          ptLive->i("Name", p);
+          live("Maestro", "", ptLive);
+          delete ptLive;
+        }
+      }
+      else
+      {
+        e = "You are not the owner.";
+      }
+    }
+  }
+  else
+  {
+    e = "You are not authorized to perform this action.";
+  }
+
+  return b;
+}
+// }}}
+// {{{ accesses()
+bool Maestro::accesses(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Plan"}, i, e))
+  {
+    string p = i->m["Plan"]->v;
+    m_mutex.lock();
+    if (m_p.find(p) != m_p.end())
+    {
+      b = true;
+      if (m_p[p]->a != NULL)
+      {
+        for (auto &a : m_p[p]->a->m)
+        {
+          o->i(a.first, a.second);
+        }
+      }
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
 // }}}
 // {{{ callback()
 void Maestro::callback(string strPrefix, const string strPacket, const bool bResponse)
@@ -176,6 +426,7 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
   delete ptJson;
 }
 // }}}
+// {{{ flow
 // {{{ flow()
 bool Maestro::flow(radialUser &d, string &e)
 {
@@ -222,89 +473,83 @@ bool Maestro::flowAdd(radialUser &d, string &e)
       string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
       if (isOwner(d, p))
       {
-        map<string, string> row;
         string id, t;
         stringstream ssP(p);
-        Json *ptData = new Json;
         getline(ssP, t, '_');
         getline(ssP, id);
-        ptData->i("id", id);
-        if (db(((t == "a")?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
         {
-          m_mutex.lock();
-          if (m_p.find(p) != m_p.end())
+          if (m_p[p]->f.find(f) == m_p[p]->f.end())
           {
-            if (m_p[p]->f.find(f) == m_p[p]->f.end())
+            if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
             {
-              if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
+              string j;
+              i->j(j);
+              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
               {
-                string j;
-                i->j(j);
-                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
+                b = true;
+                if (m_p[p]->f.find(f) != m_p[p]->f.end())
                 {
-                  b = true;
-                  if (m_p[p]->f.find(f) != m_p[p]->f.end())
-                  {
-                    delete m_p[p]->f[f];
-                  }
-                  m_p[p]->f[f] = new Json(i);
+                  delete m_p[p]->f[f];
                 }
-                else
-                {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
-                }
+                m_p[p]->f[f] = new Json(i);
               }
               else
               {
                 ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                 chat("#maestro", ssChat.str());
               }
             }
             else
             {
-              e = "Flow already exists.";
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
             }
           }
           else
           {
-            e = "Plan not found.";
+            e = "Flow already exists.";
           }
-          m_mutex.unlock();
-          if (b && i->val({"_broadcast"}) != "1")
+        }
+        else
+        {
+          e = "Plan not found.";
+        }
+        m_mutex.unlock();
+        if (b && i->val({"_broadcast"}) != "1")
+        {
+          list<string> nodes;
+          Json *ptLive = new Json;
+          m_mutexShare.lock();
+          for (auto &link : m_l)
           {
-            list<string> nodes;
-            Json *ptLive = new Json;
-            m_mutexShare.lock();
-            for (auto &link : m_l)
+            if (link->interfaces.find("maestro") != link->interfaces.end())
             {
-              if (link->interfaces.find("maestro") != link->interfaces.end())
-              {
-                nodes.push_back(link->strNode);
-              }
+              nodes.push_back(link->strNode);
             }
-            m_mutexShare.unlock();
-            while (!nodes.empty())
-            {
-              Json *ptLink = new Json(d.r);
-              ptLink->i("Interface", "maestro");
-              ptLink->i("Node", nodes.front());
-              ptLink->i("Function", "flowAdd");
-              ptLink->m["Request"]->i("_broadcast", "1", '1');
-              hub("link", ptLink, false);
-              delete ptLink;
-              nodes.pop_front();
-            }
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-            ptLive->i("Action", "flowAdd");
-            ptLive->i("Name", p);
-            live("Maestro", "", ptLive);
-            delete ptLive;
           }
+          m_mutexShare.unlock();
+          while (!nodes.empty())
+          {
+            Json *ptLink = new Json(d.r);
+            ptLink->i("Interface", "maestro");
+            ptLink->i("Node", nodes.front());
+            ptLink->i("Function", "flowAdd");
+            ptLink->m["Request"]->i("_broadcast", "1", '1');
+            hub("link", ptLink, false);
+            delete ptLink;
+            nodes.pop_front();
+          }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+          ptLive->i("Action", "flowAdd");
+          ptLive->i("Name", p);
+          live("Maestro", "", ptLive);
+          delete ptLive;
         }
       }
       else
@@ -712,6 +957,59 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
   return b;
 }
 // }}}
+// }}}
+// {{{ haveAccess()
+bool Maestro::haveAccess(const string strPlan, const string strFunction, const string strAccess, string &strError)
+{
+  bool bResult = false;
+
+  if (!strPlan.empty() && !strFunction.empty() && !strAccess.empty())
+  {
+    m_mutex.lock();
+    if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({strFunction}))
+    {
+      for (auto i = m_p[strPlan]->a->m[strFunction]->l.begin(); !bResult && i != m_p[strPlan]->a->m[strFunction]->l.end(); i++)
+      {
+        if ((*i)->v == strAccess)
+        {
+          bResult = true;
+        }
+      }
+    }
+    m_mutex.unlock();
+  }
+  if (!bResult)
+  {
+    strError = "Plan is not authorized to perform this action.";
+  }
+
+  return bResult;
+}
+bool Maestro::haveAccess(JSContext *jsctx, const string strFunction, const string strAccess, string &strError)
+{
+  bool bResult = false;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
+
+  if (JS_IsString(jsplan))
+  {
+    const char *pszPlan = JS_ToCString(jsctx, jsplan);
+    if (pszPlan != NULL)
+    {
+      string strPlan;
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, "AES-256 GCM").empty() && haveAccess(strPlan, strFunction, strAccess, strError))
+      {
+        bResult = true;
+      }
+      JS_FreeCString(jsctx, pszPlan);
+    }
+  }
+  JS_FreeValue(jsctx, jsplan);
+  JS_FreeValue(jsctx, jsglobal);
+
+  return bResult;
+}
+// }}}
 // {{{ isOwner()
 bool Maestro::isOwner(radialUser &d, const string p)
 {
@@ -770,6 +1068,7 @@ bool Maestro::isOwner(const string id, const string p)
   return b;
 }
 // }}}
+// {{{ js_
 // {{{ js_alert()
 JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -953,7 +1252,7 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     const char *pszCommand = JS_ToCString(jsctx, argv[0]), *pszArguments = JS_ToCString(jsctx, argv[1]), *pszInput = JS_ToCString(jsctx, argv[2]), *pszTimeout = JS_ToCString(jsctx, argv[3]), *pszNode = JS_ToCString(jsctx, argv[4]);
     if (pszCommand != NULL && pszArguments != NULL && pszInput != NULL && pszTimeout != NULL && pszNode != NULL)
     {
-      if (access(jsctx, "command", "", e))
+      if (haveAccess(jsctx, "command", "", e))
       {
         list<string> arguments;
         string strOutput, strResponse;
@@ -1030,7 +1329,7 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
     const char *pszFunction = JS_ToCString(jsctx, argv[0]), *pszInput = JS_ToCString(jsctx, argv[1]);
     if (pszFunction != NULL && pszInput != NULL)
     {
-      if (access(jsctx, "db", pszFunction, e))
+      if (haveAccess(jsctx, "db", pszFunction, e))
       {
         string strID, strQuery, strResponse;
         Json *ptInput = new Json(pszInput), *ptResponse = new Json;
@@ -1085,7 +1384,7 @@ JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszQuery = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszQuery != NULL)
     {
-      if (access(jsctx, "dbquery", pszDatabase, e))
+      if (haveAccess(jsctx, "dbquery", pszDatabase, e))
       {
         string strResponse;
         stringstream ssRows;
@@ -1147,7 +1446,7 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszUpdate = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszUpdate != NULL)
     {
-      if (access(jsctx, "dbupdate", pszDatabase, e))
+      if (haveAccess(jsctx, "dbupdate", pszDatabase, e))
       {
         string strResponse;
         stringstream ssID, ssRows;
@@ -1266,7 +1565,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       m_mutex.unlock();
       if (ptFlow != NULL)
       {
-        if (access(jsctx, pszPlan, pszFlow, e))
+        if (haveAccess(jsctx, pszPlan, pszFlow, e))
         {
           if (!ptFlow->empty({"Script"}))
           {
@@ -1557,6 +1856,7 @@ JSValue Maestro::js_setStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// }}}
 // {{{ jsreg()
 void Maestro::jsreg(const char *prop, JSCFunction *func, int length)
 {
@@ -1716,6 +2016,7 @@ void Maestro::load(string strPrefix)
   }
 }
 // }}}
+// {{{ plan
 // {{{ plan()
 bool Maestro::plan(radialUser &d, string &e)
 {
@@ -1972,6 +2273,7 @@ bool Maestro::plans(radialUser &d, string &e)
 
   return b;
 }
+// }}}
 // }}}
 // {{{ schedule()
 void Maestro::schedule(string strPrefix)
