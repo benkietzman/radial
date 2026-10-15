@@ -20,6 +20,10 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   m_bLoaded = false;
   // {{{ functions
+  m_functions["access"] = &Maestro::access;
+  m_functions["accessAdd"] = &Maestro::accessAdd;
+  m_functions["accesses"] = &Maestro::accesses;
+  m_functions["accessRemove"] = &Maestro::accessRemove;
   m_functions["action"] = &Maestro::action;
   m_functions["flow"] = &Maestro::flow;
   m_functions["flowAdd"] = &Maestro::flowAdd;
@@ -1252,7 +1256,7 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     const char *pszCommand = JS_ToCString(jsctx, argv[0]), *pszArguments = JS_ToCString(jsctx, argv[1]), *pszInput = JS_ToCString(jsctx, argv[2]), *pszTimeout = JS_ToCString(jsctx, argv[3]), *pszNode = JS_ToCString(jsctx, argv[4]);
     if (pszCommand != NULL && pszArguments != NULL && pszInput != NULL && pszTimeout != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "command", "", e))
+      if (haveAccess(jsctx, "command", "all", e))
       {
         list<string> arguments;
         string strOutput, strResponse;
