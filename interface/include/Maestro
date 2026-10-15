@@ -28,9 +28,10 @@ struct radialMaestroJavascript
 struct radialMaestroPlan
 {
   char type;
-  map<string, Json *> f; // flows
+  map<string, Json *> f;
   string id;
   string owner;
+  Json *a;
 };
 // }}}
 // }}}
@@ -49,6 +50,8 @@ class Maestro : public Interface
   string m_strPath;
   thread *m_pThreadSchedule;
 
+  bool access(const string strPlan, const string strFunction, const string strAccess, string &strError);
+  bool access(JSContext *jsctx, const string strFunction, const string strAccess, string &strError);
   bool flow(radialUser &d, string &e);
   bool flowAdd(radialUser &d, string &e);
   bool flowExec(radialUser &d, string &e);
