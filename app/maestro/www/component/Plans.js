@@ -22,7 +22,8 @@ export default
       },
       // ]]]
       a: a,
-      c: c
+      c: c,
+      expand: {general: true, access: true, flows: true, flow: true}
     });
     // ]]]
     // [[[ access
@@ -113,6 +114,13 @@ export default
         }
         s.u();
       });
+    };
+    // ]]]
+    // [[[ collapseExpand()
+    s.collapseExpand = (strKey) =>
+    {
+      s.expand[strKey] = ((s.expand[strKey])?false:true);
+      s.u();
     };
     // ]]]
     // [[[ flow
@@ -272,6 +280,7 @@ export default
     // [[[ init()
     s.init = () =>
     {
+      s.response = '';
       if (s.strPlan != '')
       {
         s.plan();
@@ -459,103 +468,147 @@ export default
   <!-- [[[ plan -->
   {{#if p}}
   <div class="row">
-  <div class="col-auto">
-  <div class="input-group">
-    {{#if p.edit}}
-    <button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
-    {{/if}}
-    <span class="input-group-text bg-secondary border border-secondary">Plan</span>
-    <span class="input-group-text bg-primary-subtle border border-primary">{{p.Plan}}</span>
-  </div>
-  <div class="table-responsive mt-2">
-  <table class="table table-condensed table-striped">
-  <tbody>
-    <tr><th>Type</th><td colspan="2">{{#ifCond p.Type "==" "a"}}application{{else}}user{{/ifCond}}</td></tr>
-    <tr><th>Owner</th><td colspan="2"><a href="/central/#/{{#ifCond p.Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{p.ID}}" target="_blank">{{p.Owner}}</a></td>
-  </tbody>
-  </table>
-  </div>
-  <!-- [[[ accesses -->
-  {{#isLocalAdmin "Maestro"}}
-  <div class="input-group">
-    <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="accessName" placeholder="access">
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="scopeName" placeholder="scope">
-    <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
-  </div>
-  {{/isLocalAdmin}}
-  <div class="table-responsive">
-    <table class="table table-condensed table-striped">
-    <thead>
-      <tr>
-        <th>Access</th>
-        <th>Scope</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each as}}
-      <tr>
-        <td>
-          {{@key}}
-        </td>
-        <td>
-          {{#each .}}
-          <div class="row">
-            <div class="col">{{.}}</div>
-            {{#if @root.p.edit}}
-            <div class="col">
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button>
-            </div>
+    <!-- [[[ general -->
+    <div class="col-auto">
+      <div class="card border border-secondary mb-2 mt-3">
+        <div class="card-header bg bg-secondary fw-bold text-center text-nowrap" c-click="collapseExpand('general')" style="cursor: row-resize;">
+          Plan - {{strPlan}}
+        </div>
+        {{#if expand.general}}
+        <div class="card-body bg bg-secondary-subtle">
+          <div class="input-group">
+            {{#if p.edit}}
+            <button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
             {{/if}}
+            <span class="input-group-text bg-secondary border border-secondary">Plan</span>
+            <span class="input-group-text bg-secondary-subtle border border-secondary">{{p.Plan}}</span>
           </div>
-          {{/each}}
-        </td>
-      </tr>
-      {{/each}}
-    </tbody>
-    </table>
-  </div>
-  <!-- ]]] -->
-  <!-- [[[ flows -->
-  {{#if p.edit}}
-  <div class="input-group">
-    <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="flowName">
-    <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
-  </div>
-  {{/if}}
-  <div class="table-responsive">
-    <table class="table table-condensed table-striped">
-    <tbody>
-      {{#each fs}}
-      <tr>
-        <td><a href="#/Plans/{{Plan}}/{{Flow}}">{{Flow}}</a></td>
-      </tr>
-      {{/each}}
-    </tbody>
-    </table>
-  </div>
-  <!-- ]]] -->
-  </div>
-  <!-- [[[ flow -->
-  {{#if f}}
-  <div class="col">
-  <div class="input-group">
-    {{#if p.edit}}
-    <button class="btn btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <tbody>
+              <tr><th>Type</th><td colspan="2">{{#ifCond p.Type "==" "a"}}application{{else}}user{{/ifCond}}</td></tr>
+              <tr><th>Owner</th><td colspan="2"><a href="/central/#/{{#ifCond p.Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{p.ID}}" target="_blank">{{p.Owner}}</a></td>
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ access -->
+    <div class="col-auto">
+      <div class="card border border-warning mb-2 mt-3">
+        <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
+          Access
+        </div>
+        {{#if expand.access}}
+        <div class="card-body bg bg-warning-subtle">
+          {{#isLocalAdmin "Maestro"}}
+          <div class="input-group mt-2">
+            <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
+            <input type="text" class="form-control bg-secondary-subtle border border-warning-subtle" c-model="accessName" style="flex-grow: 0; flex-basis: 100px;" placeholder="access">
+            <input type="text" class="form-control bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;" placeholder="scope">
+            <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
+          </div>
+          {{/isLocalAdmin}}
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <thead>
+              <tr>
+                <th>Access</th>
+                <th>Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each as}}
+              <tr>
+                <td>
+                  {{@key}}
+                </td>
+                <td>
+                  <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
+                  <tbody>
+                    {{#each .}}
+                    <tr>
+                      <td class="w-100">{{.}}</td>
+                      {{#if @root.p.edit}}
+                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button></td>
+                      {{/if}}
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                  </table>
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ flows -->
+    <div class="col-auto">
+      <div class="card border border-success mb-2 mt-3">
+        <div class="card-header bg bg-success fw-bold text-center text-nowrap" c-click="collapseExpand('flows')" style="cursor: row-resize;">
+          Flows
+        </div>
+        {{#if expand.flows}}
+        <div class="card-body bg bg-success-subtle">
+          {{#if p.edit}}
+          <div class="input-group mt-2">
+            <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
+            <input type="text" class="form-control bg-secondary-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
+          </div>
+          {{/if}}
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <tbody>
+              {{#each fs}}
+              <tr>
+                <td><a href="#/Plans/{{#root.strPlan}}/{{.}}">{{.}}</a></td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ flow -->
+    {{#if f}}
+    <div class="col-*">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap" c-click="collapseExpand('flow')" style="cursor: row-resize;">
+          Flow - {{strFlow}}
+        </div>
+        {{#if expand.flow}}
+        <div class="card-body bg bg-primary-subtle">
+          <div class="input-group">
+            {{#if p.edit}}
+            <button class="btn btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+            {{/if}}
+            <span class="input-group-text bg-secondary border border-secondary">Flow</span>
+            <span class="input-group-text bg-primary-subtle border border-primary">{{f.Flow}}</span>
+            <button class="btn btn-success bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
+            <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+            <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
+          </div>
+          <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
+          <pre class="mt-2" c-model="response" style="background: inherit; color: inherit; white-space: pre-wrap;"></pre>
+        </div>
+        {{/if}}
+      </div>
+    </div>
     {{/if}}
-    <span class="input-group-text bg-secondary border border-secondary">Flow</span>
-    <span class="input-group-text bg-primary-subtle border border-primary">{{f.Flow}}</span>
-    <button class="btn btn-success bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
-    <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
-    <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
-  </div>
-  <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
-  <textarea class="form-control bg-primary-subtle border border-primary mt-2" c-model="f\.Script" style="font-family: monospace;" rows="16" placeholder="javascript"></textarea>
-  <pre class="mt-2" c-model="response" style="background: inherit; color: inherit; white-space: pre-wrap;"></pre>
-  </div>
-  {{/if}}
-  <!-- ]]] -->
+    <!-- ]]] -->
   </div>
   <!-- ]]] -->
   <!-- [[[ plans -->
@@ -563,14 +616,10 @@ export default
   {{#isValid}}
   <div class="input-group">
     <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()"><option value="a">application</option><option value="u">user</option></select>
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()" style="flex-grow: 0; flex-basis: 120px;"><option value="a">application</option><option value="u">user</option></select>
     {{#ifCond @root.planType.val "==" "a"}}
     <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-    {{/ifCond}}
-    {{#ifCond @root.planType.val "==" "p"}}
-    <span class="input-group-text bg-secondary border bordrer-secondary">Name</span>
-    <input type="text" class="form-control bg-success-subtle border border-success-subtle" c-model="planName">
+    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" style="flex-grow: 0; flex-basis: 200px;" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
     {{/ifCond}}
     <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
   </div>
