@@ -111,16 +111,16 @@ bool Maestro::accessAdd(radialUser &d, string &e)
 
   if (isLocalAdmin(d, "Maestro"))
   {
-    if (dep({"Access", "Function", "Plan"}, i, e))
+    if (dep({"Function", "Plan", "Scope"}, i, e))
     {
-      string a = i->m["Access"]->v, f = i->m["Function"]->v, id, p = i->m["Plan"]->v, t;
+      string f = i->m["Function"]->v, id, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
-        bool bHaveAccess = false;
+        bool bHaveScope = false;
         if (m_p[p]->a == NULL)
         {
           m_p[p]->a = new Json;
@@ -129,17 +129,17 @@ bool Maestro::accessAdd(radialUser &d, string &e)
         {
           m_p[p]->a->m[f] = new Json;
         }
-        for (auto c = m_p[p]->a->m[f]->l.begin(); !bHaveAccess && c != m_p[p]->a->m[f]->l.end(); c++)
+        for (auto c = m_p[p]->a->m[f]->l.begin(); !bHaveScope && c != m_p[p]->a->m[f]->l.end(); c++)
         {
-          if ((*c)->v == a)
+          if ((*c)->v == s)
           {
-            bHaveAccess = true;
+            bHaveScope = true;
           }
         }
-        if (!bHaveAccess)
+        if (!bHaveScope)
         {
           string j;
-          m_p[p]->a->m[f]->pb(a);
+          m_p[p]->a->m[f]->pb(s);
           m_p[p]->a->j(j);
           if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
           {
@@ -148,13 +148,13 @@ bool Maestro::accessAdd(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
         else
         {
-          e = "Access already exists.";
+          e = "Scope already exists.";
         }
       }
       else
@@ -187,7 +187,7 @@ bool Maestro::accessAdd(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "03Access added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "accessAdd");
         ptLive->i("Name", p);
@@ -244,9 +244,9 @@ bool Maestro::accessRemove(radialUser &d, string &e)
 
   if (isValid(d))
   {
-    if (dep({"Function", "Plan"}, i, e))
+    if (dep({"Function", "Plan", "Scope"}, i, e))
     {
-      string a = i->m["Access"]->v, f = i->m["Function"]->v, p = i->m["Plan"]->v;
+      string f = i->m["Function"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
       if (isOwner(d, p))
       {
         string t;
@@ -260,7 +260,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
             list<Json *>::iterator funcIter = m_p[p]->a->m[f]->l.end();
             for (auto c = m_p[p]->a->m[f]->l.begin(); funcIter == m_p[p]->a->m[f]->l.end() && c != m_p[p]->a->m[f]->l.end(); c++)
             {
-              if ((*c)->v == a)
+              if ((*c)->v == s)
               {
                 funcIter = c;
               }
@@ -290,7 +290,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
                 else
                 {
                   ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
               }
@@ -301,13 +301,13 @@ bool Maestro::accessRemove(radialUser &d, string &e)
               else
               {
                 ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << f << a << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                 chat("#maestro", ssChat.str());
               }
             }
             else
             {
-              e = "Access not found.";
+              e = "Scope not found.";
             }
           }
           else
@@ -338,16 +338,16 @@ bool Maestro::accessRemove(radialUser &d, string &e)
             Json *ptLink = new Json(d.r);
             ptLink->i("Interface", "maestro");
             ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "flowRemove");
+            ptLink->i("Function", "accessRemove");
             ptLink->m["Request"]->i("_broadcast", "1", '1');
             hub("link", ptLink, false);
             delete ptLink;
             nodes.pop_front();
           }
           ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << p << " | " << f << " | " << a << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
-          ptLive->i("Action", "flowRemove");
+          ptLive->i("Action", "accessRemove");
           ptLive->i("Name", p);
           live("Maestro", "", ptLive);
           delete ptLive;
