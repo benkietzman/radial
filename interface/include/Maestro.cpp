@@ -76,20 +76,20 @@ bool Maestro::access(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"Function", "Plan"}, i, e))
+  if (dep({"Access", "Plan"}, i, e))
   {
-    string f = i->m["Function"]->v, p = i->m["Plan"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v;
     m_mutex.lock();
     if (m_p.find(p) != m_p.end())
     {
-      if (m_p[p]->a != NULL && m_p[p]->a->exist({f}))
+      if (m_p[p]->a != NULL && m_p[p]->a->exist({a}))
       {
         b = true;
-        o->merge(m_p[p]->a->m[f], true, false);
+        o->merge(m_p[p]->a->m[a], true, false);
       }
       else
       {
-        e = "Function not found.";
+        e = "Access not found.";
       }
     }
     else
@@ -111,9 +111,9 @@ bool Maestro::accessAdd(radialUser &d, string &e)
 
   if (isLocalAdmin(d, "Maestro"))
   {
-    if (dep({"Function", "Plan", "Scope"}, i, e))
+    if (dep({"Access", "Plan", "Scope"}, i, e))
     {
-      string f = i->m["Function"]->v, id, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t;
+      string a = i->m["Access"]->v, id, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -125,11 +125,11 @@ bool Maestro::accessAdd(radialUser &d, string &e)
         {
           m_p[p]->a = new Json;
         }
-        if (!m_p[p]->a->exist({f}))
+        if (!m_p[p]->a->exist({a}))
         {
-          m_p[p]->a->m[f] = new Json;
+          m_p[p]->a->m[a] = new Json;
         }
-        for (auto c = m_p[p]->a->m[f]->l.begin(); !bHaveScope && c != m_p[p]->a->m[f]->l.end(); c++)
+        for (auto c = m_p[p]->a->m[a]->l.begin(); !bHaveScope && c != m_p[p]->a->m[a]->l.end(); c++)
         {
           if ((*c)->v == s)
           {
@@ -139,7 +139,7 @@ bool Maestro::accessAdd(radialUser &d, string &e)
         if (!bHaveScope)
         {
           string j;
-          m_p[p]->a->m[f]->pb(s);
+          m_p[p]->a->m[a]->pb(s);
           m_p[p]->a->j(j);
           if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
           {
@@ -148,7 +148,7 @@ bool Maestro::accessAdd(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -187,7 +187,7 @@ bool Maestro::accessAdd(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "accessAdd");
         ptLive->i("Name", p);
@@ -244,9 +244,9 @@ bool Maestro::accessRemove(radialUser &d, string &e)
 
   if (isValid(d))
   {
-    if (dep({"Function", "Plan", "Scope"}, i, e))
+    if (dep({"Access", "Plan", "Scope"}, i, e))
     {
-      string f = i->m["Function"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
+      string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
       if (isOwner(d, p))
       {
         string t;
@@ -255,24 +255,24 @@ bool Maestro::accessRemove(radialUser &d, string &e)
         m_mutex.lock();
         if (m_p.find(p) != m_p.end())
         {
-          if (m_p[p]->a->exist({f}))
+          if (m_p[p]->a->exist({a}))
           {
-            list<Json *>::iterator funcIter = m_p[p]->a->m[f]->l.end();
-            for (auto c = m_p[p]->a->m[f]->l.begin(); funcIter == m_p[p]->a->m[f]->l.end() && c != m_p[p]->a->m[f]->l.end(); c++)
+            list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
+            for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
             {
               if ((*c)->v == s)
               {
-                funcIter = c;
+                scopeIter = c;
               }
             }
-            if (funcIter != m_p[p]->a->m[f]->l.end())
+            if (scopeIter != m_p[p]->a->m[a]->l.end())
             {
-              delete (*funcIter);
-              m_p[p]->a->m[f]->l.erase(funcIter);
-              if (m_p[p]->a->m[f]->l.empty())
+              delete (*scopeIter);
+              m_p[p]->a->m[a]->l.erase(scopeIter);
+              if (m_p[p]->a->m[a]->l.empty())
               {
-                delete m_p[p]->a->m[f];
-                m_p[p]->a->m.erase(f);
+                delete m_p[p]->a->m[a];
+                m_p[p]->a->m.erase(a);
               }
               if (m_p[p]->a->m.empty())
               {
@@ -290,7 +290,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
                 else
                 {
                   ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
               }
@@ -301,7 +301,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
               else
               {
                 ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                 chat("#maestro", ssChat.str());
               }
             }
@@ -345,7 +345,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
             nodes.pop_front();
           }
           ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
           ptLive->i("Action", "accessRemove");
           ptLive->i("Name", p);
