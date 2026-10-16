@@ -36,6 +36,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["planAdd"] = &Maestro::planAdd;
   m_functions["planRemove"] = &Maestro::planRemove;
   m_functions["plans"] = &Maestro::plans;
+  m_functions["scopes"] = &Maestro::scopes;
   m_functions["status"] = &Maestro::status;
   // }}}
   m_strCipher = "AES-256 GCM";
