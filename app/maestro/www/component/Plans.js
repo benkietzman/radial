@@ -100,12 +100,14 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'accessRequest', Request: {Plan: s.strPlan, Access: s.accessName.v, Scope: s.scopeName.v}};
+        s['accessStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'accessRequest', Request: {Plan: s.strPlan, Type: s.typeName.v, Access: s.accessName.v, Scope: s.scopeName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
+            s['accessStatus'].v = 'requested access';
           }
           else
           {
@@ -198,7 +200,7 @@ export default
       if (c.isValid())
       {
         s['error'].v = '';
-        s['status'].v = '';
+        s['flowStatus'].v = '';
         s.response.v = '';
         let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
         if (s.request.v)
@@ -210,7 +212,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s['status'].v = 'executed flow';
+            s['flowStatus'].v = 'executed flow';
             if (response.Response && response.Response)
             {
               s.response.v = JSON.stringify(response.Response);
@@ -281,14 +283,14 @@ export default
     {
       if (c.isValid())
       {
-        s['status'].v = '';
+        s['flowStatus'].v = '';
         let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Description: s.f.Description.v, Script: s.f.Script.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s['status'].v = 'updated flow';
+            s['flowStatus'].v = 'updated flow';
           }
           else
           {
@@ -630,6 +632,7 @@ export default
         </div>
         {{/if}}
         <div class="card-footer">
+          <span class="float-end text-warning" c-model="accessStatus"></span>
         </div>
       </div>
     </div>
@@ -703,7 +706,7 @@ export default
         <div class="card-footer">
           {{#if p.edit}}
           <button class="btn btn-sm btn-primary bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
-          <span class="float-end text-warning" c-model="status"></span>
+          <span class="float-end text-warning" c-model="flowStatus"></span>
           {{/if}}
         </div>
       </div>
