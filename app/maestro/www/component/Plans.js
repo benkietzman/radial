@@ -591,7 +591,7 @@ export default
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <button class="btn btn-success bi bi-send" c-click="accessRequest()" title="Request Access"></button>
+            <button class="btn btn-warning bi bi-send" c-click="accessRequest()" title="Request Access"></button>
           </div>
           {{/isLocalAdmin}}
           <div class="table-responsive mt-2">
@@ -702,7 +702,7 @@ export default
         {{/if}}
         <div class="card-footer">
           {{#if p.edit}}
-          <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+          <button class="btn btn-sm btn-primary bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
           <span class="float-end text-warning" c-model="status"></span>
           {{/if}}
         </div>
