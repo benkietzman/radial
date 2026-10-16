@@ -95,6 +95,30 @@ export default
       }
     };
     // ]]]
+    // [[[ accessRequest()
+    s.accessRequest = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'accessRequest', Request: {Plan: s.strPlan, Access: s.accessName.v, Scope: s.scopeName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
     // ]]]
     // [[[ applications()
     s.applications = () =>
@@ -133,7 +157,6 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s['status'] = null;
           s.f = response.Response;
         }
         else
@@ -174,6 +197,8 @@ export default
     {
       if (c.isValid())
       {
+        s['error'].v = '';
+        s['status'].v = '';
         s.response.v = '';
         let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
         if (s.request.v)
@@ -193,7 +218,7 @@ export default
           }
           else
           {
-            c.pushErrorMessage(error.message);
+            s.error.v = error.message;
           }
         });
       }
@@ -256,6 +281,7 @@ export default
     {
       if (c.isValid())
       {
+        s['status'].v = '';
         let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Description: s.f.Description.v, Script: s.f.Script.v}};
         c.wsRequest('radial', request).then((response) =>
         {
@@ -276,6 +302,53 @@ export default
       }
     };
     // ]]]
+    // ]]]
+    // [[[ getAccesses()
+    s.getAccesses = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'accesses', Request: {Type: c.simplify(s.typeName)}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.access = response.Response;
+          if (s.access.length > 0)
+          {
+            s.accessName = s.access[0];
+          }
+          s.getScopes();
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ getScopes()
+    s.getScopes = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'scopes', Request: {Type: c.simplify(s.typeName), Access: c.simplify(s.accessName)}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.scopes = response.Response;
+          if (s.scopes.length > 0)
+          {
+            s.scopeName = s.scopes[0];
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
     // ]]]
     // [[[ init()
     s.init = () =>
@@ -307,6 +380,8 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
+          s.typeName = 'application';
+          s.getAccesses();
           s.p = response.Response;
           s.accesses();
           s.flows();
@@ -511,11 +586,12 @@ export default
         {{#if expand.access}}
         <div class="card-body bg bg-warning-subtle">
           {{#isLocalAdmin "Maestro"}}
-          <div class="input-group mt-2">
+          <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" style="flex-grow: 0; flex-basis: 100px;" placeholder="access">
-            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;" placeholder="scope">
-            <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <button class="btn btn-success bi bi-plus-circle" c-click="accessRequest()" title="Request Access"></button>
           </div>
           {{/isLocalAdmin}}
           <div class="table-responsive mt-2">
@@ -567,7 +643,7 @@ export default
         {{#if expand.flows}}
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
-          <div class="input-group mt-2">
+          <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
             <input type="text" class="form-control bg bg-secondary-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
             <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
@@ -614,20 +690,21 @@ export default
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
           {{else}}
           <b>Description<b>
-          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{f.Description}}</pre>
+          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{f.Description}}}</pre>
           <b>Script</b>
           <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{f.Script}}</pre>
           {{/if}}
         </div>
         {{/if}}
         <div class="card-footer">
-          <div class="input-group">
-            <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
-            <span class="input-group-text bg bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
-          </div>
+          {{#if p.edit}}
+          <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+          <span class="float-end text-warning" c-model="status"></span>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -638,7 +715,7 @@ export default
   <!-- [[[ plans -->
   {{else}}
   {{#isValid}}
-  <div class="input-group">
+  <div class="input-group flex-nowrap">
     <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
     <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()" style="flex-grow: 0; flex-basis: 120px;"><option value="a">application</option><option value="u">user</option></select>
     {{#ifCond @root.planType.val "==" "a"}}
