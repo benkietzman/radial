@@ -20,14 +20,15 @@ namespace radial
 // {{{ radialMaestroJavascript
 struct radialMaestroJavascript
 {
-  JSCFunction *func;
   int length;
+  list<string> scopes;
+  JSCFunction *func;
 };
 // }}}
 // {{{ radialMaestroPlan
 struct radialMaestroPlan
 {
-  char type;
+  char t;
   map<string, Json *> f;
   string id;
   string owner;
@@ -64,8 +65,8 @@ class Maestro : public Interface
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool flowUpdate(radialUser &d, string &e);
-  bool haveAccess(const string strPlan, const string strFunction, const string strAccess, string &strError);
-  bool haveAccess(JSContext *jsctx, const string strFunction, const string strAccess, string &strError);
+  bool haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError);
+  bool haveAccess(JSContext *jsctx, const string strAccess, const string strScope, string &strError);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p, const bool a = false);
   void load(string strPrefix);
@@ -75,6 +76,7 @@ class Maestro : public Interface
   bool planRemove(radialUser &d, string &e);
   bool plans(radialUser &d, string &e);
   void schedule(string strPrefix);
+  bool scopes(radialUser &d, string &e);
 
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));

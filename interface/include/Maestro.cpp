@@ -211,9 +211,39 @@ bool Maestro::accesses(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (dep({"Plan"}, i, e))
+  if (dep({"Type"}, i, e))
+  {
+    string t = i->m["Type"]->v;
+    if (t == "application" || t == "user")
+    {
+      b = true;
+      m_mutex.lock();
+      for (auto &p : m_p)
+      {
+        if ((t == "application" && p.second->t == 'a') || (t == "user" && p.second->t == 'u'))
+        {
+          o->pb(p.second->id);
+        }
+      }
+      m_mutex.unlock();
+    }
+    else if (t == "core")
+    {
+      b = true;
+      for (auto &j : m_javascript)
+      {
+        o->pb(j.first);
+      }
+    }
+    else
+    {
+      e = "Please provide a valid Type:  application, core, user.";
+    }
+  }
+  else if (dep({"Plan"}, i, e))
   {
     string p = i->m["Plan"]->v;
+    e.clear();
     m_mutex.lock();
     if (m_p.find(p) != m_p.end())
     {
@@ -932,18 +962,18 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
 // }}}
 // }}}
 // {{{ haveAccess()
-bool Maestro::haveAccess(const string strPlan, const string strFunction, const string strAccess, string &strError)
+bool Maestro::haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError)
 {
   bool bResult = false;
 
-  if (!strPlan.empty() && !strFunction.empty() && !strAccess.empty())
+  if (!strPlan.empty() && !strAccess.empty() && !strScope.empty())
   {
     m_mutex.lock();
-    if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({strFunction}))
+    if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({strAccess}))
     {
-      for (auto i = m_p[strPlan]->a->m[strFunction]->l.begin(); !bResult && i != m_p[strPlan]->a->m[strFunction]->l.end(); i++)
+      for (auto i = m_p[strPlan]->a->m[strAccess]->l.begin(); !bResult && i != m_p[strPlan]->a->m[strAccess]->l.end(); i++)
       {
-        if ((*i)->v == strAccess)
+        if ((*i)->v == strScope)
         {
           bResult = true;
         }
@@ -958,7 +988,7 @@ bool Maestro::haveAccess(const string strPlan, const string strFunction, const s
 
   return bResult;
 }
-bool Maestro::haveAccess(JSContext *jsctx, const string strFunction, const string strAccess, string &strError)
+bool Maestro::haveAccess(JSContext *jsctx, const string strAccess, const string strScope, string &strError)
 {
   bool bResult = false;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -970,7 +1000,7 @@ bool Maestro::haveAccess(JSContext *jsctx, const string strFunction, const strin
     if (pszPlan != NULL)
     {
       string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strFunction, strAccess, strError))
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strAccess, strScope, strError))
       {
         bResult = true;
       }
@@ -1920,9 +1950,9 @@ void Maestro::load(string strPrefix)
           getline(ssP, id);
           ptPlan->a = NULL;
           ptPlan->id = id;
-          ptPlan->type = t[0];
+          ptPlan->t = t[0];
           ptData->i("id", id);
-          if (db(((ptPlan->type == 'a')?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
+          if (db(((ptPlan->t == 'a')?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
           {
             stringstream ssOwner;
             if (t == "a")
@@ -2000,7 +2030,7 @@ void Maestro::load(string strPrefix)
           {
             bLoaded = false;
             ssChat.str("");
-            ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->type == 'a')?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+            ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->t == 'a')?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
           p[i.first] = ptPlan;
@@ -2061,9 +2091,9 @@ bool Maestro::plan(radialUser &d, string &e)
       o->i("NumAccesses", to_string((m_p[p]->a != NULL)?m_p[p]->a->m.size():0), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("Owner", m_p[p]->owner);
-      ssPlan << m_p[p]->type << "_" << m_p[p]->id;
+      ssPlan << m_p[p]->t << "_" << m_p[p]->id;
       o->i("Plan", ssPlan.str());
-      ssType << m_p[p]->type;
+      ssType << m_p[p]->t;
       o->i("Type", ssType.str());
     }
     else
@@ -2107,8 +2137,8 @@ bool Maestro::planAdd(radialUser &d, string &e)
             m_p[p] = new radialMaestroPlan;
             m_p[p]->a = NULL;
             m_p[p]->id = id;
-            m_p[p]->type = t[0];
-            if (m_p[p]->type == 'a')
+            m_p[p]->t = t[0];
+            if (m_p[p]->t == 'a')
             {
               ssOwner << row["name"];
             }
@@ -2277,7 +2307,7 @@ bool Maestro::plans(radialUser &d, string &e)
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
-    ssType << p.second->type;
+    ssType << p.second->t;
     ptPlan->i("Type", ssType.str());
     o->l.push_back(ptPlan);
   }
@@ -2313,6 +2343,55 @@ void Maestro::schedule(string strPrefix)
     msleep(1000);
   }
   threadDecrement();
+}
+// }}}
+// {{{ scopes()
+bool Maestro::scopes(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Access", "Type"}, i, e))
+  {
+    string a = i->m["Access"]->v, t = i->m["Type"]->v;
+    if (t == "application" || t == "user")
+    {
+      m_mutex.lock();
+      if (m_p.find(a) != m_p.end() && ((t == "application" && m_p[a]->t == 'a') || (t == "user" && m_p[a]->t == 'u')))
+      {
+        for (auto &f : m_p[a]->f)
+        {
+          o->pb(f.first);
+        }
+      }
+      else
+      {
+        e = "Access not found.";
+      }
+      m_mutex.unlock();
+    }
+    else if (t == "core")
+    {
+      if (m_javascript.find(a) != m_javascript.end())
+      {
+        b = true;
+        for (auto &s : m_javascript[a]->scopes)
+        {
+          o->pb(s);
+        }
+      }
+      else
+      {
+        e = "Access not found.";
+      }
+    }
+    else
+    {
+      e = "Please provide a valid Type:  application, core, user.";
+    }
+  }
+
+  return b;
 }
 // }}}
 }
