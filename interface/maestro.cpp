@@ -10,6 +10,7 @@
 using namespace radial;
 Maestro *gpMaestro = NULL;
 void callback(string strPrefix, const string strPacket, const bool bResponse);
+void callbackInotify(string strPrefix, const string strPath, const string strFile);
 JSValue js_alert(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_alert(ctx, obj, argc, argv);}
 JSValue js_application(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_application(ctx, obj, argc, argv);}
 JSValue js_centralmon(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_centralmon(ctx, obj, argc, argv);}
@@ -31,7 +32,7 @@ JSValue js_setStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *a
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
-  gpMaestro = new Maestro(strPrefix, argc, argv, &callback);
+  gpMaestro = new Maestro(strPrefix, argc, argv, &callback, &callbackInotify);
   gpMaestro->enableWorkers();
   gpMaestro->jsreg("alert", js_alert, 3);
   gpMaestro->jsreg("application", js_application, 2);
@@ -58,4 +59,8 @@ int main(int argc, char *argv[])
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   gpMaestro->callback(strPrefix, strPacket, bResponse);
+}
+void callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  gpMaestro->callbackInotify(strPrefix, strPath, strFile);
 }

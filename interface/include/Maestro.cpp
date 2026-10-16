@@ -14,9 +14,10 @@ extern "C++"
 namespace radial
 {
 // {{{ Maestro()
-Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
+Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
 {
   string strError;
+  map<string, list<string> > watches;
 
   m_bLoaded = false;
   // {{{ functions
@@ -40,10 +41,9 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
-  if (m_pWarden != NULL)
-  {
-    m_pWarden->vaultRetrieve({"maestro", "Secret"}, m_strSecret, strError);
-  }
+  watches[m_strData] = {".cred"};
+  m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
   m_pThreadSchedule = new thread(&Maestro::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
@@ -243,126 +243,119 @@ bool Maestro::accessRemove(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (isValid(d))
+  if (dep({"Access", "Plan", "Scope"}, i, e))
   {
-    if (dep({"Access", "Plan", "Scope"}, i, e))
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
+    if (isOwner(d, p))
     {
-      string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
-      if (isOwner(d, p))
+      string t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        string t;
-        stringstream ssP(p);
-        getline(ssP, t, '_');
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        if (m_p[p]->a->exist({a}))
         {
-          if (m_p[p]->a->exist({a}))
+          list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
+          for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
           {
-            list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
-            for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
+            if ((*c)->v == s)
             {
-              if ((*c)->v == s)
-              {
-                scopeIter = c;
-              }
+              scopeIter = c;
             }
-            if (scopeIter != m_p[p]->a->m[a]->l.end())
+          }
+          if (scopeIter != m_p[p]->a->m[a]->l.end())
+          {
+            delete (*scopeIter);
+            m_p[p]->a->m[a]->l.erase(scopeIter);
+            if (m_p[p]->a->m[a]->l.empty())
             {
-              delete (*scopeIter);
-              m_p[p]->a->m[a]->l.erase(scopeIter);
-              if (m_p[p]->a->m[a]->l.empty())
-              {
-                delete m_p[p]->a->m[a];
-                m_p[p]->a->m.erase(a);
-              }
-              if (m_p[p]->a->m.empty())
-              {
-                delete m_p[p]->a;
-                m_p[p]->a = NULL;
-              }
-              if (m_p[p]->a != NULL)
-              {
-                string j;
-                m_p[p]->a->j(j);
-                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-                {
-                  b = true;
-                }
-                else
-                {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
-                }
-              }
-              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+              delete m_p[p]->a->m[a];
+              m_p[p]->a->m.erase(a);
+            }
+            if (m_p[p]->a->m.empty())
+            {
+              delete m_p[p]->a;
+              m_p[p]->a = NULL;
+            }
+            if (m_p[p]->a != NULL)
+            {
+              string j;
+              m_p[p]->a->j(j);
+              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
               {
                 b = true;
               }
               else
               {
                 ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                 chat("#maestro", ssChat.str());
               }
             }
+            else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+            {
+              b = true;
+            }
             else
             {
-              e = "Scope not found.";
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
             }
           }
           else
           {
-            e = "Function not found.";
+            e = "Scope not found.";
           }
         }
         else
         {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
-        if (b && i->val({"_broadcast"}) != "1")
-        {
-          list<string> nodes;
-          Json *ptLive = new Json;
-          m_mutexShare.lock();
-          for (auto &link : m_l)
-          {
-            if (link->interfaces.find("maestro") != link->interfaces.end())
-            {
-              nodes.push_back(link->strNode);
-            }
-          }
-          m_mutexShare.unlock();
-          while (!nodes.empty())
-          {
-            Json *ptLink = new Json(d.r);
-            ptLink->i("Interface", "maestro");
-            ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "accessRemove");
-            ptLink->m["Request"]->i("_broadcast", "1", '1');
-            hub("link", ptLink, false);
-            delete ptLink;
-            nodes.pop_front();
-          }
-          ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-          chat("#maestro", ssChat.str());
-          ptLive->i("Action", "accessRemove");
-          ptLive->i("Name", p);
-          live("Maestro", "", ptLive);
-          delete ptLive;
+          e = "Function not found.";
         }
       }
       else
       {
-        e = "You are not the owner.";
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "accessRemove");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "accessRemove");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
       }
     }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;
@@ -421,6 +414,19 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
   delete ptJson;
 }
 // }}}
+// {{{ callbackInotify()
+void Maestro::callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Irc::callbackInotify()";
+  if (strPath == m_strData && strFile == ".cred")
+  {
+    load(strPrefix);
+  }
+}
+// }}}
 // {{{ flow
 // {{{ flow()
 bool Maestro::flow(radialUser &d, string &e)
@@ -461,101 +467,94 @@ bool Maestro::flowAdd(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (isValid(d))
+  if (dep({"Flow", "Plan"}, i, e))
   {
-    if (dep({"Flow", "Plan"}, i, e))
+    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+    if (isOwner(d, p))
     {
-      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      if (isOwner(d, p))
+      string id, t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        string id, t;
-        stringstream ssP(p);
-        getline(ssP, t, '_');
-        getline(ssP, id);
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        if (m_p[p]->f.find(f) == m_p[p]->f.end())
         {
-          if (m_p[p]->f.find(f) == m_p[p]->f.end())
+          if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
           {
-            if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
+            string j;
+            i->j(j);
+            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
             {
-              string j;
-              i->j(j);
-              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
+              b = true;
+              if (m_p[p]->f.find(f) != m_p[p]->f.end())
               {
-                b = true;
-                if (m_p[p]->f.find(f) != m_p[p]->f.end())
-                {
-                  delete m_p[p]->f[f];
-                }
-                m_p[p]->f[f] = new Json(i);
+                delete m_p[p]->f[f];
               }
-              else
-              {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
-              }
+              m_p[p]->f[f] = new Json(i);
             }
             else
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
-            e = "Flow already exists.";
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
           }
         }
         else
         {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
-        if (b && i->val({"_broadcast"}) != "1")
-        {
-          list<string> nodes;
-          Json *ptLive = new Json;
-          m_mutexShare.lock();
-          for (auto &link : m_l)
-          {
-            if (link->interfaces.find("maestro") != link->interfaces.end())
-            {
-              nodes.push_back(link->strNode);
-            }
-          }
-          m_mutexShare.unlock();
-          while (!nodes.empty())
-          {
-            Json *ptLink = new Json(d.r);
-            ptLink->i("Interface", "maestro");
-            ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "flowAdd");
-            ptLink->m["Request"]->i("_broadcast", "1", '1');
-            hub("link", ptLink, false);
-            delete ptLink;
-            nodes.pop_front();
-          }
-          ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-          chat("#maestro", ssChat.str());
-          ptLive->i("Action", "flowAdd");
-          ptLive->i("Name", p);
-          live("Maestro", "", ptLive);
-          delete ptLive;
+          e = "Flow already exists.";
         }
       }
       else
       {
-        e = "You are not the owner.";
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "flowAdd");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "flowAdd");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
       }
     }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;
@@ -564,165 +563,158 @@ bool Maestro::flowAdd(radialUser &d, string &e)
 // {{{ flowExec()
 bool Maestro::flowExec(radialUser &d, string &e)
 {
-  bool a = auth(d.r, e), b = false;
+  bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-  if (a || isValid(d))
+  if (dep({"Flow", "Plan"}, i, e))
   {
-    if (dep({"Flow", "Plan"}, i, e))
+    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+    if (isOwner(d, p))
     {
-      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      if (a || isOwner(d, p))
+      Json *ptFlow = NULL;
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        Json *ptFlow = NULL;
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
-          if (m_p[p]->f.find(f) != m_p[p]->f.end())
-          {
-            ptFlow = new Json(m_p[p]->f[f]);
-          }
-          else
-          {
-            e = "Flow not found.";
-          }
+          ptFlow = new Json(m_p[p]->f[f]);
         }
         else
         {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
-        if (ptFlow != NULL)
-        {
-          if (!ptFlow->empty({"Script"}))
-          {
-            JSRuntime *jsrun = JS_NewRuntime();
-            JSContext *jsctx = JS_NewContext(jsrun);
-            JSValue jsglobal = JS_GetGlobalObject(jsctx);
-            for (auto &i : m_javascript)
-            {
-              JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
-            }
-            if (!m_strSecret.empty())
-            {
-              string strPlan;
-              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
-              {
-                JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
-              }
-            }
-            if (i->exist({"Request"}))
-            {
-              string strRequest;
-              i->m["Request"]->j(strRequest);
-              JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
-            }
-            JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-            if (JS_IsException(jsres))
-            {
-              JSValue jsexc = JS_GetException(jsctx);
-              if (JS_IsError(jsctx, jsexc))
-              {
-                JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
-                if (JS_IsException(jsmsg))
-                {
-                  JSValue jssubexc = JS_GetException(jsctx);
-                  const char *pszMessage = JS_ToCString(jsctx, jssubexc);
-                  if (pszMessage != NULL)
-                  {
-                    e = pszMessage;
-                    JS_FreeCString(jsctx, pszMessage);
-                  }
-                  else
-                  {
-                    e = "Failed to retrieve the exception from the message from the exception from the script.";
-                  }
-                  JS_FreeValue(jsctx, jssubexc);
-                }
-                else if (JS_IsString(jsmsg))
-                {
-                  size_t unLength = 0;
-                  const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
-                  if (pszMessage != NULL)
-                  {
-                    JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
-                    e.assign(pszMessage, unLength);
-                    if (JS_IsString(jsstk))
-                    {
-                      const char *pszStk = JS_ToCString(jsctx, jsstk);
-                      if (pszStk != NULL)
-                      {
-                        e += (string)" " + pszStk;
-                        JS_FreeCString(jsctx, pszStk);
-                      }
-                    }
-                    JS_FreeValue(jsctx, jsstk);
-                    JS_FreeCString(jsctx, pszMessage);
-                  }
-                  else
-                  {
-                    e = "Failed to retrieve the message within the exception from the script.";
-                  }
-                }
-                else
-                {
-                  e = "Encountered a non-string message within the exception from the script.";
-                }
-                JS_FreeValue(jsctx, jsmsg);
-              }
-              else
-              {
-                e = "Encountered a non-error exception from the script.";
-              }
-              JS_FreeValue(jsctx, jsexc);
-            }
-            else
-            {
-              JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
-              const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
-              b = true;
-              if (pszStatus != NULL)
-              {
-                o->i("Status", pszStatus);
-                JS_FreeCString(jsctx, pszStatus);
-              }
-              JS_FreeValue(jsctx, jsstatus);
-              if (pszError != NULL)
-              {
-                o->i("Error", pszError);
-                JS_FreeCString(jsctx, pszError);
-              }
-              JS_FreeValue(jsctx, jserror);
-              if (pszResponse != NULL)
-              {
-                Json *ptResponse = new Json(pszResponse);
-                o->i("Response", ptResponse);
-                delete ptResponse;
-                JS_FreeCString(jsctx, pszResponse);
-              }
-              JS_FreeValue(jsctx, jsresponse);
-            }
-            JS_FreeValue(jsctx, jsglobal);
-            JS_FreeValue(jsctx, jsres);
-            JS_FreeContext(jsctx);
-            JS_FreeRuntime(jsrun);
-          }
-          else
-          {
-            e = "Script not found.";
-          }
-          delete ptFlow;
+          e = "Flow not found.";
         }
       }
       else
       {
-        e = "You are not the owner.";
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (ptFlow != NULL)
+      {
+        if (!ptFlow->empty({"Script"}))
+        {
+          JSRuntime *jsrun = JS_NewRuntime();
+          JSContext *jsctx = JS_NewContext(jsrun);
+          JSValue jsglobal = JS_GetGlobalObject(jsctx);
+          for (auto &i : m_javascript)
+          {
+            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
+          }
+          if (!m_strSecret.empty())
+          {
+            string strPlan;
+            if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
+            {
+              JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
+            }
+          }
+          if (i->exist({"Request"}))
+          {
+            string strRequest;
+            i->m["Request"]->j(strRequest);
+            JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
+          }
+          JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+          if (JS_IsException(jsres))
+          {
+            JSValue jsexc = JS_GetException(jsctx);
+            if (JS_IsError(jsctx, jsexc))
+            {
+              JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
+              if (JS_IsException(jsmsg))
+              {
+                JSValue jssubexc = JS_GetException(jsctx);
+                const char *pszMessage = JS_ToCString(jsctx, jssubexc);
+                if (pszMessage != NULL)
+                {
+                  e = pszMessage;
+                  JS_FreeCString(jsctx, pszMessage);
+                }
+                else
+                {
+                  e = "Failed to retrieve the exception from the message from the exception from the script.";
+                }
+                JS_FreeValue(jsctx, jssubexc);
+              }
+              else if (JS_IsString(jsmsg))
+              {
+                size_t unLength = 0;
+                const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
+                if (pszMessage != NULL)
+                {
+                  JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
+                  e.assign(pszMessage, unLength);
+                  if (JS_IsString(jsstk))
+                  {
+                    const char *pszStk = JS_ToCString(jsctx, jsstk);
+                    if (pszStk != NULL)
+                    {
+                      e += (string)" " + pszStk;
+                      JS_FreeCString(jsctx, pszStk);
+                    }
+                  }
+                  JS_FreeValue(jsctx, jsstk);
+                  JS_FreeCString(jsctx, pszMessage);
+                }
+                else
+                {
+                  e = "Failed to retrieve the message within the exception from the script.";
+                }
+              }
+              else
+              {
+                e = "Encountered a non-string message within the exception from the script.";
+              }
+              JS_FreeValue(jsctx, jsmsg);
+            }
+            else
+            {
+              e = "Encountered a non-error exception from the script.";
+            }
+            JS_FreeValue(jsctx, jsexc);
+          }
+          else
+          {
+            JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
+            const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
+            b = true;
+            if (pszStatus != NULL)
+            {
+              o->i("Status", pszStatus);
+              JS_FreeCString(jsctx, pszStatus);
+            }
+            JS_FreeValue(jsctx, jsstatus);
+            if (pszError != NULL)
+            {
+              o->i("Error", pszError);
+              JS_FreeCString(jsctx, pszError);
+            }
+            JS_FreeValue(jsctx, jserror);
+            if (pszResponse != NULL)
+            {
+              Json *ptResponse = new Json(pszResponse);
+              o->i("Response", ptResponse);
+              delete ptResponse;
+              JS_FreeCString(jsctx, pszResponse);
+            }
+            JS_FreeValue(jsctx, jsresponse);
+          }
+          JS_FreeValue(jsctx, jsglobal);
+          JS_FreeValue(jsctx, jsres);
+          JS_FreeContext(jsctx);
+          JS_FreeRuntime(jsrun);
+        }
+        else
+        {
+          e = "Script not found.";
+        }
+        delete ptFlow;
       }
     }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;
@@ -735,92 +727,85 @@ bool Maestro::flowRemove(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (isValid(d))
+  if (dep({"Flow", "Plan"}, i, e))
   {
-    if (dep({"Flow", "Plan"}, i, e))
+    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+    if (isOwner(d, p))
     {
-      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      if (isOwner(d, p))
+      string t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        string t;
-        stringstream ssP(p);
-        getline(ssP, t, '_');
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
-          if (m_p[p]->f.find(f) != m_p[p]->f.end())
+          if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "f", f}, e))
           {
-            if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "f", f}, e))
-            {
-              b = true;
-              delete m_p[p]->f[f];
-              m_p[p]->f.erase(f);
-              if (i->val({"_broadcast"}) != "1" && m_p[p]->f.empty() && !dataDirectoryRemove(m_strHandle, {p, "f"}, e))
-              {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
-              }
-            }
-            else
+            b = true;
+            delete m_p[p]->f[f];
+            m_p[p]->f.erase(f);
+            if (i->val({"_broadcast"}) != "1" && m_p[p]->f.empty() && !dataDirectoryRemove(m_strHandle, {p, "f"}, e))
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
-            e = "Flow not found.";
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
           }
         }
         else
         {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
-        if (b && i->val({"_broadcast"}) != "1")
-        {
-          list<string> nodes;
-          Json *ptLive = new Json;
-          m_mutexShare.lock();
-          for (auto &link : m_l)
-          {
-            if (link->interfaces.find("maestro") != link->interfaces.end())
-            {
-              nodes.push_back(link->strNode);
-            }
-          }
-          m_mutexShare.unlock();
-          while (!nodes.empty())
-          {
-            Json *ptLink = new Json(d.r);
-            ptLink->i("Interface", "maestro");
-            ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "flowRemove");
-            ptLink->m["Request"]->i("_broadcast", "1", '1');
-            hub("link", ptLink, false);
-            delete ptLink;
-            nodes.pop_front();
-          }
-          ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-          chat("#maestro", ssChat.str());
-          ptLive->i("Action", "flowRemove");
-          ptLive->i("Name", p);
-          live("Maestro", "", ptLive);
-          delete ptLive;
+          e = "Flow not found.";
         }
       }
       else
       {
-        e = "You are not the owner.";
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "flowRemove");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "flowRemove");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
       }
     }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;
@@ -861,92 +846,85 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (isValid(d))
+  if (dep({"Flow", "Plan", "Script"}, i, e))
   {
-    if (dep({"Flow", "Plan", "Script"}, i, e))
+    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+    if (isOwner(d, p))
     {
-      string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-      if (isOwner(d, p))
+      string id, t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
       {
-        string id, t;
-        stringstream ssP(p);
-        getline(ssP, t, '_');
-        getline(ssP, id);
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
-          if (m_p[p]->f.find(f) != m_p[p]->f.end())
+          string j;
+          i->j(j);
+          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
           {
-            string j;
-            i->j(j);
-            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
+            b = true;
+            if (m_p[p]->f.find(f) != m_p[p]->f.end())
             {
-              b = true;
-              if (m_p[p]->f.find(f) != m_p[p]->f.end())
-              {
-                delete m_p[p]->f[f];
-              }
-              m_p[p]->f[f] = new Json(i);
+              delete m_p[p]->f[f];
             }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            m_p[p]->f[f] = new Json(i);
           }
           else
           {
-            e = "Flow not found.";
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
           }
         }
         else
         {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
-        if (b && i->val({"_broadcast"}) != "1")
-        {
-          list<string> nodes;
-          Json *ptLive = new Json;
-          m_mutexShare.lock();
-          for (auto &link : m_l)
-          {
-            if (link->interfaces.find("maestro") != link->interfaces.end())
-            {
-              nodes.push_back(link->strNode);
-            }
-          }
-          m_mutexShare.unlock();
-          while (!nodes.empty())
-          {
-            Json *ptLink = new Json(d.r);
-            ptLink->i("Interface", "maestro");
-            ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "flowUpdate");
-            ptLink->m["Request"]->i("_broadcast", "1", '1');
-            hub("link", ptLink, false);
-            delete ptLink;
-            nodes.pop_front();
-          }
-          ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-          chat("#maestro", ssChat.str());
-          ptLive->i("Action", "flowUpdate");
-          ptLive->i("Name", p);
-          live("Maestro", "", ptLive);
-          delete ptLive;
+          e = "Flow not found.";
         }
       }
       else
       {
-        e = "You are not the owner.";
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "flowUpdate");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "flowUpdate");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
       }
     }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;
@@ -1022,10 +1000,22 @@ bool Maestro::isOwner(radialUser &d, const string p)
     }
     userDeinit(u);
   }
+  else if (auth(d.r, e) && !d.r->empty({"User"}) && m_applications.find(d.r->m["User"]->v) != m_applications.end())
+  {
+    map<string, string> getApplicationRow;
+    Json *ptApplication = new Json;
+    ptApplication->i("name", m_applications[d.r->m["User"]->v]);
+    if (db("dbCentralApplications", ptApplication, getApplicationRow, e) && !getApplicationRow["id"].empty() && isOwner(getApplicationRow["id"], p))
+    {
+      b = true;
+      d.l = m_applications[d.r->m["User"]->v];
+    }
+    delete ptApplication;
+  }
 
   return b;
 }
-bool Maestro::isOwner(const string id, const string p)
+bool Maestro::isOwner(const string id, const string p, const bool a)
 {
   bool b = false;
   string e;
@@ -1040,16 +1030,23 @@ bool Maestro::isOwner(const string id, const string p)
     {
       if (t == "a")
       {
-        stringstream q;
-        q << "select a.id from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Developer', 'Backup Developer') and a.id = '" << esc(i) << "' and d.id = '" << esc(id) << "' limit 1";
-        auto g = dbquery("central_r", q.str(), e);
-        if (g != NULL && !g->empty())
+        if (!a)
+        {
+          stringstream q;
+          q << "select a.id from application a, application_contact b, contact_type c, person d where a.id = b.application_id and b.type_id = c.id and b.contact_id = d.id and c.type in ('Primary Developer', 'Backup Developer') and a.id = '" << esc(i) << "' and d.id = '" << esc(id) << "' limit 1";
+          auto g = dbquery("central_r", q.str(), e);
+          if (g != NULL && !g->empty())
+          {
+            b = true;
+          }
+          dbfree(g);
+        }
+        else if (id == i)
         {
           b = true;
         }
-        dbfree(g);
       }
-      else if (id == i)
+      else if (!a && id == i)
       {
         b = true;
       }
@@ -1883,145 +1880,163 @@ void Maestro::jsreg(const char *prop, JSCFunction *func, int length)
 // {{{ load()
 void Maestro::load(string strPrefix)
 {
-  bool bLoaded = false;
   string e;
-  stringstream ssChat;
-  Json *l = NULL;
-  map<string, radialMaestroPlan *> p;
+  Json *ptCred = new Json;
 
   strPrefix += "->Maestro::load()";
-  if (dataDirectoryList(m_strHandle, {}, &l, e))
+  if (m_pWarden != NULL && m_pWarden->vaultRetrieve({"maestro", "Secret"}, m_strSecret, e) && m_pWarden->vaultRetrieve({"radial"}, ptCred, e))
   {
-    bLoaded = true;
-    for (auto &i : l->m)
+    m_mutex.lock();
+    m_applications.clear();
+    for (auto &i : ptCred->m)
     {
-      if (i.second->val({"Type"}) == "directory" && (i.first.substr(0, 2) == "a_" || i.first.substr(0, 2) == "u_"))
+      if (!i.second->empty({"Application"}))
       {
-        map<string, string> row;
-        string id, t;
-        stringstream ssP(i.first);
-        Json *sl = NULL, *ptData = new Json;
-        radialMaestroPlan *ptPlan = new radialMaestroPlan;
-        getline(ssP, t, '_');
-        getline(ssP, id);
-        ptPlan->a = NULL;
-        ptPlan->id = id;
-        ptPlan->type = t[0];
-        ptData->i("id", id);
-        if (db(((ptPlan->type == 'a')?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
+        m_applications[i.first] = i.second->m["Application"]->v;
+      }
+    }
+    m_mutex.unlock();
+  }
+  delete ptCred;
+  if (!m_bLoaded)
+  {
+    bool bLoaded = false;
+    map<string, radialMaestroPlan *> p;
+    stringstream ssChat;
+    Json *l = NULL;
+    if (dataDirectoryList(m_strHandle, {}, &l, e))
+    {
+      bLoaded = true;
+      for (auto &i : l->m)
+      {
+        if (i.second->val({"Type"}) == "directory" && (i.first.substr(0, 2) == "a_" || i.first.substr(0, 2) == "u_"))
         {
-          stringstream ssOwner;
-          if (t == "a")
+          map<string, string> row;
+          string id, t;
+          stringstream ssP(i.first);
+          Json *sl = NULL, *ptData = new Json;
+          radialMaestroPlan *ptPlan = new radialMaestroPlan;
+          getline(ssP, t, '_');
+          getline(ssP, id);
+          ptPlan->a = NULL;
+          ptPlan->id = id;
+          ptPlan->type = t[0];
+          ptData->i("id", id);
+          if (db(((ptPlan->type == 'a')?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
           {
-            ssOwner << row["name"];
-          }
-          else
-          {
-            ssOwner << row["first_name"] << " " << row["last_name"];
-          }
-          ptPlan->owner = ssOwner.str();
-          if (dataDirectoryList(m_strHandle, {i.first}, &sl, e))
-          {
-            for (auto &j : sl->m)
+            stringstream ssOwner;
+            if (t == "a")
             {
-              if (j.second->val({"Type"}) == "regular file" && j.first == "a")
+              ssOwner << row["name"];
+            }
+            else
+            {
+              ssOwner << row["first_name"] << " " << row["last_name"];
+            }
+            ptPlan->owner = ssOwner.str();
+            if (dataDirectoryList(m_strHandle, {i.first}, &sl, e))
+            {
+              for (auto &j : sl->m)
               {
-                string b;
-                if (dataRead(m_strHandle, {i.first, j.first}, b, e))
+                if (j.second->val({"Type"}) == "regular file" && j.first == "a")
                 {
-                  ptPlan->a = new Json(b);
-                }
-                else
-                {
-                  bLoaded = false;
-                  ssChat.str("");
-                  ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
-                }
-              }
-              else if (j.second->val({"Type"}) == "directory" && j.first == "f")
-              {
-                Json *dl = NULL;
-                if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
-                {
-                  for (auto &k : dl->m)
+                  string b;
+                  if (dataRead(m_strHandle, {i.first, j.first}, b, e))
                   {
-                    if (k.second->val({"Type"}) == "regular file")
+                    ptPlan->a = new Json(b);
+                  }
+                  else
+                  {
+                    bLoaded = false;
+                    ssChat.str("");
+                    ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
+                else if (j.second->val({"Type"}) == "directory" && j.first == "f")
+                {
+                  Json *dl = NULL;
+                  if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
+                  {
+                    for (auto &k : dl->m)
                     {
-                      string b;
-                      if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                      if (k.second->val({"Type"}) == "regular file")
                       {
-                        ptPlan->f[k.first] = new Json(b);
-                      }
-                      else
-                      {
-                        bLoaded = false;
-                        ssChat.str("");
-                        ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
-                        chat("#maestro", ssChat.str());
+                        string b;
+                        if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                        {
+                          ptPlan->f[k.first] = new Json(b);
+                        }
+                        else
+                        {
+                          bLoaded = false;
+                          ssChat.str("");
+                          ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                          chat("#maestro", ssChat.str());
+                        }
                       }
                     }
                   }
-                }
-                else
-                {
-                  bLoaded = false;
-                  ssChat.str("");
-                  ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
+                  else
+                  {
+                    bLoaded = false;
+                    ssChat.str("");
+                    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
                 }
               }
+              delete sl;
             }
-            delete sl;
+            else
+            {
+              bLoaded = false;
+              ssChat.str("");
+              ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
           }
           else
           {
             bLoaded = false;
             ssChat.str("");
-            ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
+            ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->type == 'a')?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
+          p[i.first] = ptPlan;
         }
-        else
-        {
-          bLoaded = false;
-          ssChat.str("");
-          ssChat << char(2) << char(3) << "07Interface::db(dbCentral" << ((ptPlan->type == 'a')?"application":"user") << "s) [" << m_strHandle << "," << i.first << "] " << e << char(3) << char(2);
-          chat("#maestro", ssChat.str());
-        }
-        p[i.first] = ptPlan;
       }
+      delete l;
     }
-    delete l;
-  }
-  else
-  {
-    ssChat.str("");
-    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "] " << e << char(3) << char(2);
-    chat("#maestro", ssChat.str());
-  }
-  if (bLoaded)
-  {
-    size_t unFlows = 0, unPlans = p.size();
-    string v;
-    m_mutex.lock();
-    for (auto &i : p)
+    else
     {
-      unFlows += i.second->f.size();
-      m_p[i.first] = i.second;
+      ssChat.str("");
+      ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "] " << e << char(3) << char(2);
+      chat("#maestro", ssChat.str());
     }
-    m_mutex.unlock();
-    m_bLoaded = true;
-    ssChat.str("");
-    ssChat << "Loaded " << m_manip.toShort(unPlans, v) << " plan" << ((unPlans != 1)?"s":"") << " containing " << m_manip.toShort(unFlows, v) << " flow" << ((unFlows != 1)?"s":"") << " from disk into memory.";
-    chat("#maestro", ssChat.str());
-  }
-  else
-  {
-    bLoaded = false;
-    ssChat.str("");
-    ssChat << char(2) << char(3) << "04Failed to load plans." << char(3) << char(2);
-    chat("#maestro", ssChat.str());
+    if (bLoaded)
+    {
+      size_t unFlows = 0, unPlans = p.size();
+      string v;
+      m_mutex.lock();
+      for (auto &i : p)
+      {
+        unFlows += i.second->f.size();
+        m_p[i.first] = i.second;
+      }
+      m_mutex.unlock();
+      m_bLoaded = true;
+      ssChat.str("");
+      ssChat << "Loaded " << m_manip.toShort(unPlans, v) << " plan" << ((unPlans != 1)?"s":"") << " containing " << m_manip.toShort(unFlows, v) << " flow" << ((unFlows != 1)?"s":"") << " from disk into memory.";
+      chat("#maestro", ssChat.str());
+    }
+    else
+    {
+      bLoaded = false;
+      ssChat.str("");
+      ssChat << char(2) << char(3) << "04Failed to load plans." << char(3) << char(2);
+      chat("#maestro", ssChat.str());
+    }
   }
 }
 // }}}
@@ -2068,147 +2083,51 @@ bool Maestro::planAdd(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (isValid(d))
+  if (dep({"Plan"}, i, e))
   {
-    if (dep({"Plan"}, i, e))
+    string p = i->m["Plan"]->v;
+    if (isOwner(d, p))
     {
-      string p = i->m["Plan"]->v;
-      if (isOwner(d, p))
+      map<string, string> row;
+      string id, t;
+      stringstream ssP(p);
+      Json *ptData = new Json;
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      ptData->i("id", id);
+      if (db(((t == "a")?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
       {
-        map<string, string> row;
-        string id, t;
-        stringstream ssP(p);
-        Json *ptData = new Json;
-        getline(ssP, t, '_');
-        getline(ssP, id);
-        ptData->i("id", id);
-        if (db(((t == "a")?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
+        m_mutex.lock();
+        if (m_p.find(p) == m_p.end())
         {
-          m_mutex.lock();
-          if (m_p.find(p) == m_p.end())
+          if (i->val({"_broadcast"}) == "1" || dataDirectoryAdd(m_strHandle, {p}, e))
           {
-            if (i->val({"_broadcast"}) == "1" || dataDirectoryAdd(m_strHandle, {p}, e))
+            stringstream ssOwner;
+            b = true;
+            m_p[p] = new radialMaestroPlan;
+            m_p[p]->a = NULL;
+            m_p[p]->id = id;
+            m_p[p]->type = t[0];
+            if (m_p[p]->type == 'a')
             {
-              stringstream ssOwner;
-              b = true;
-              m_p[p] = new radialMaestroPlan;
-              m_p[p]->a = NULL;
-              m_p[p]->id = id;
-              m_p[p]->type = t[0];
-              if (m_p[p]->type == 'a')
-              {
-                ssOwner << row["name"];
-              }
-              else
-              {
-                ssOwner << row["first_name"] << " " << row["last_name"];
-              }
-              m_p[p]->owner = ssOwner.str();
+              ssOwner << row["name"];
             }
             else
             {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
+              ssOwner << row["first_name"] << " " << row["last_name"];
             }
-          }
-          else
-          {
-            e = "Plan already exists.";
-          }
-          m_mutex.unlock();
-          if (b && i->val({"_broadcast"}) != "1")
-          {
-            list<string> nodes;
-            Json *ptLive = new Json;
-            m_mutexShare.lock();
-            for (auto &link : m_l)
-            {
-              if (link->interfaces.find("maestro") != link->interfaces.end())
-              {
-                nodes.push_back(link->strNode);
-              }
-            }
-            m_mutexShare.unlock();
-            while (!nodes.empty())
-            {
-              Json *ptLink = new Json(d.r);
-              ptLink->i("Interface", "maestro");
-              ptLink->i("Node", nodes.front());
-              ptLink->i("Function", "planAdd");
-              ptLink->m["Request"]->i("_broadcast", "1", '1');
-              hub("link", ptLink, false);
-              delete ptLink;
-              nodes.pop_front();
-            }
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-            ptLive->i("Action", "planAdd");
-            ptLive->i("Name", p);
-            live("Maestro", "", ptLive);
-            delete ptLive;
-          }
-        }
-      }
-      else
-      {
-        e = "You are not the owner.";
-      }
-    }
-  }
-  else
-  {
-    e = "You are not authorized to perform this action.";
-  }
-
-  return b;
-}
-// }}}
-// {{{ planRemove()
-bool Maestro::planRemove(radialUser &d, string &e)
-{
-  bool b = false;
-  stringstream ssChat;
-  Json *i = d.p->m["i"];
-
-  if (isValid(d))
-  {
-    if (dep({"Plan"}, i, e))
-    {
-      string p = i->m["Plan"]->v;
-      if (isOwner(d, p))
-      {
-        string t;
-        stringstream ssP(p);
-        getline(ssP, t, '_');
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
-        {
-          if (i->val({"_broadcast"}) == "1" || dataDirectoryRemove(m_strHandle, {p}, e))
-          {
-            b = true;
-            if (m_p[p]->a != NULL)
-            {
-              delete m_p[p]->a;
-            }
-            for (auto &f : m_p[p]->f)
-            {
-              delete f.second;
-            }
-            delete m_p[p];
-            m_p.erase(p);
+            m_p[p]->owner = ssOwner.str();
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
         else
         {
-          e = "Plan not found.";
+          e = "Plan already exists.";
         }
         m_mutex.unlock();
         if (b && i->val({"_broadcast"}) != "1")
@@ -2229,30 +2148,112 @@ bool Maestro::planRemove(radialUser &d, string &e)
             Json *ptLink = new Json(d.r);
             ptLink->i("Interface", "maestro");
             ptLink->i("Node", nodes.front());
-            ptLink->i("Function", "planRemove");
+            ptLink->i("Function", "planAdd");
             ptLink->m["Request"]->i("_broadcast", "1", '1');
             hub("link", ptLink, false);
             delete ptLink;
             nodes.pop_front();
           }
           ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
-          ptLive->i("Action", "planRemove");
+          ptLive->i("Action", "planAdd");
           ptLive->i("Name", p);
           live("Maestro", "", ptLive);
           delete ptLive;
         }
       }
-      else
-      {
-        e = "You are not the owner.";
-      }
+    }
+    else
+    {
+      e = "You are not the owner.";
     }
   }
-  else
+
+  return b;
+}
+// }}}
+// {{{ planRemove()
+bool Maestro::planRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Plan"}, i, e))
   {
-    e = "You are not authorized to perform this action.";
+    string p = i->m["Plan"]->v;
+    if (isOwner(d, p))
+    {
+      string t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (i->val({"_broadcast"}) == "1" || dataDirectoryRemove(m_strHandle, {p}, e))
+        {
+          b = true;
+          if (m_p[p]->a != NULL)
+          {
+            delete m_p[p]->a;
+          }
+          for (auto &f : m_p[p]->f)
+          {
+            delete f.second;
+          }
+          delete m_p[p];
+          m_p.erase(p);
+        }
+        else
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "planRemove");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink, false);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "planRemove");
+        ptLive->i("Name", p);
+        live("Maestro", "", ptLive);
+        delete ptLive;
+      }
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
   }
 
   return b;

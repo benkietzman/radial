@@ -44,12 +44,14 @@ class Maestro : public Interface
   JSRuntime *m_jsrun;
   map<string, radialMaestroJavascript *> m_javascript;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
+  map<string, string> m_applications;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
   string m_strCipher;
   string m_strHandle;
   string m_strPath;
   string m_strSecret;
+  thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
 
   bool access(radialUser &d, string &e);
@@ -65,7 +67,7 @@ class Maestro : public Interface
   bool haveAccess(const string strPlan, const string strFunction, const string strAccess, string &strError);
   bool haveAccess(JSContext *jsctx, const string strFunction, const string strAccess, string &strError);
   bool isOwner(radialUser &d, const string p);
-  bool isOwner(const string id, const string p);
+  bool isOwner(const string id, const string p, const bool a = false);
   void load(string strPrefix);
   bool owners(radialUser &d, string &e);
   bool plan(radialUser &d, string &e);
@@ -75,9 +77,10 @@ class Maestro : public Interface
   void schedule(string strPrefix);
 
   public:
-  Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool));
+  Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Maestro();
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
   JSValue js_alert(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_application(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_centralmon(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
