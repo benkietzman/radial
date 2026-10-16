@@ -26,6 +26,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["accesses"] = &Maestro::accesses;
   m_functions["accessRemove"] = &Maestro::accessRemove;
   m_functions["action"] = &Maestro::action;
+  m_functions["cores"] = &Maestro::cores;
   m_functions["flow"] = &Maestro::flow;
   m_functions["flowAdd"] = &Maestro::flowAdd;
   m_functions["flowExec"] = &Maestro::flowExec;
@@ -459,6 +460,24 @@ void Maestro::callbackInotify(string strPrefix, const string strPath, const stri
   {
     load(strPrefix);
   }
+}
+// }}}
+// {{{ cores()
+bool Maestro::cores(radialUser &d, string &e)
+{
+  bool b = true;
+  Json *o = d.p->m["o"];
+
+  for (auto &j : m_javascript)
+  {
+    Json *c = new Json;
+    c->i("Function", j.first);
+    c->i("Description", j.second->strDescription);
+    c->i("Scopes", j.second->scopes);
+    o->l.push_back(c);
+  }
+
+  return b;
 }
 // }}}
 // {{{ flow
