@@ -221,7 +221,7 @@ bool Maestro::accesses(radialUser &d, string &e)
       m_mutex.lock();
       for (auto &p : m_p)
       {
-        if ((t == "application" && p.second->t == 'a') || (t == "user" && p.second->t == 'u'))
+        if (!p.second->f.empty() && ((t == "application" && p.second->t == 'a') || (t == "user" && p.second->t == 'u')))
         {
           o->pb(p.second->id);
         }
@@ -233,7 +233,10 @@ bool Maestro::accesses(radialUser &d, string &e)
       b = true;
       for (auto &j : m_javascript)
       {
-        o->pb(j.first);
+        if (!j.second->scopes.empty())
+        {
+          o->pb(j.first);
+        }
       }
     }
     else
@@ -629,7 +632,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
           for (auto &i : m_javascript)
           {
-            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->length));
+            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->unLength));
           }
           if (!m_strSecret.empty())
           {
@@ -1609,7 +1612,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
             for (auto &i : m_javascript)
             {
-              JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->length));
+              JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->unLength));
             }
             if (!m_strSecret.empty())
             {
@@ -1895,12 +1898,14 @@ JSValue Maestro::js_setStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
 // }}}
 // }}}
 // {{{ jsreg()
-void Maestro::jsreg(const char *prop, JSCFunction *func, int length)
+void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const list<string> scopes, const string strDescription)
 {
   radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
 
   ptJavascript->func = func;
-  ptJavascript->length = length;
+  ptJavascript->nLength = nLength;
+  ptJavascript->scopes = scopes;
+  ptJavascript->strDescription = strDescription;
   if (m_javascript.find(prop) != m_javascript.end())
   {
     delete m_javascript[prop];

@@ -20,8 +20,9 @@ namespace radial
 // {{{ radialMaestroJavascript
 struct radialMaestroJavascript
 {
-  int length;
+  int nLength;
   list<string> scopes;
+  string strDescription
   JSCFunction *func;
 };
 // }}}
@@ -101,7 +102,7 @@ class Maestro : public Interface
   JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
-  void jsreg(const char *prop, JSCFunction *func, int length);
+  void jsreg(const char *prop, JSCFunction *func, const int nLength, const list<string> scopes = {}, const string strDescription = "");
 };
 // }}}
 }
