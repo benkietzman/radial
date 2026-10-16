@@ -632,7 +632,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
           for (auto &i : m_javascript)
           {
-            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->unLength));
+            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->nLength));
           }
           if (!m_strSecret.empty())
           {
@@ -1612,7 +1612,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
             for (auto &i : m_javascript)
             {
-              JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->unLength));
+              JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->nLength));
             }
             if (!m_strSecret.empty())
             {

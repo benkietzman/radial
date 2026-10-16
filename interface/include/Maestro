@@ -22,7 +22,7 @@ struct radialMaestroJavascript
 {
   int nLength;
   list<string> scopes;
-  string strDescription
+  string strDescription;
   JSCFunction *func;
 };
 // }}}
