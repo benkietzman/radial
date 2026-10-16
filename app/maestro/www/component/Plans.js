@@ -600,7 +600,7 @@ export default
             <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
             <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
           </div>
-          <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
           <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2" c-model="response" style="background: inherit; color: inherit; white-space: pre-wrap;"></pre>
