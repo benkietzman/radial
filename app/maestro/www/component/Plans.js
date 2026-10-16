@@ -471,18 +471,22 @@ export default
     <!-- [[[ general -->
     <div class="col-auto">
       <div class="card border border-secondary mb-2 mt-3">
-        <div class="card-header bg bg-secondary fw-bold text-center text-nowrap" c-click="collapseExpand('general')" style="cursor: row-resize;">
-          Plan - {{strPlan}}
+        <div class="card-header bg bg-secondary fw-bold text-center text-nowrap">
+          <div class="row flex-nowrap">
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
+              {{/if}}
+            </div>
+            <div class="col" c-click="collapseExpand('general')" style="cursor: row-resize;">
+              Plan - {{strPlan}}
+            </div>
+            <div class="col-auto" c-click="collapseExpand('general')" style="cursor: row-resize;">
+            </div>
+          </div>
         </div>
         {{#if expand.general}}
         <div class="card-body bg bg-secondary-subtle">
-          <div class="input-group">
-            {{#if p.edit}}
-            <button class="btn btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
-            {{/if}}
-            <span class="input-group-text bg-secondary border border-secondary">Plan</span>
-            <span class="input-group-text bg-secondary-subtle border border-secondary">{{p.Plan}}</span>
-          </div>
           <div class="table-responsive mt-2">
             <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
             <tbody>
@@ -493,6 +497,8 @@ export default
           </div>
         </div>
         {{/if}}
+        <div class="card-footer">
+        </div>
       </div>
     </div>
     <!-- ]]] -->
@@ -507,8 +513,8 @@ export default
           {{#isLocalAdmin "Maestro"}}
           <div class="input-group mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-            <input type="text" class="form-control bg-secondary-subtle border border-warning-subtle" c-model="accessName" style="flex-grow: 0; flex-basis: 100px;" placeholder="access">
-            <input type="text" class="form-control bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;" placeholder="scope">
+            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" style="flex-grow: 0; flex-basis: 100px;" placeholder="access">
+            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;" placeholder="scope">
             <button class="btn btn-success bi bi-plus-circle" c-click="accessAdd()" title="Add Access"></button>
           </div>
           {{/isLocalAdmin}}
@@ -547,6 +553,8 @@ export default
           </div>
         </div>
         {{/if}}
+        <div class="card-footer">
+        </div>
       </div>
     </div>
     <!-- ]]] -->
@@ -560,8 +568,8 @@ export default
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
           <div class="input-group mt-2">
-            <span class="input-group-text bg-secondary border bordrer-secondary">Flow</span>
-            <input type="text" class="form-control bg-secondary-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
             <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
           </div>
           {{/if}}
@@ -578,34 +586,49 @@ export default
           </div>
         </div>
         {{/if}}
+        <div class="card-footer">
+        </div>
       </div>
     </div>
     <!-- ]]] -->
     <!-- [[[ flow -->
     {{#if f}}
-    <div class="col-*">
+    <div class="col-{{#if expand.flow}}*{{else}}auto{{/if}}">
       <div class="card border border-primary mb-2 mt-3">
-        <div class="card-header bg bg-primary fw-bold text-center text-nowrap" c-click="collapseExpand('flow')" style="cursor: row-resize;">
-          Flow - {{strFlow}}
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+          <div class="row flex-nowrap">
+            <div class="col-auto">
+              <button class="btn btn-sm btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+            </div>
+            <div class="col" c-click="collapseExpand('flow')" style="cursor: row-resize;">
+              Flow - {{strFlow}}
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-sm btn-warning bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
+            </div>
+          </div>
         </div>
         {{#if expand.flow}}
         <div class="card-body bg bg-primary-subtle">
-          <div class="input-group">
-            {{#if p.edit}}
-            <button class="btn btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
-            {{/if}}
-            <span class="input-group-text bg-secondary border border-secondary">Flow</span>
-            <span class="input-group-text bg-primary-subtle border border-primary">{{f.Flow}}</span>
-            <button class="btn btn-success bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
-            <button class="btn btn-warning bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
-            <span class="input-group-text bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
-          </div>
-          <textarea class="form-control bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
+          {{#if p.edit}}
+          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
-          <textarea class="form-control bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
-          <pre class="mt-2" c-model="response" style="background: inherit; color: inherit; white-space: pre-wrap;"></pre>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
+          {{else}}
+          <b>Description<b>
+          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{f.Description}}</pre>
+          <b>Script</b>
+          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{f.Script}}</pre>
+          {{/if}}
         </div>
         {{/if}}
+        <div class="card-footer">
+          <div class="input-group">
+            <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+            <span class="input-group-text bg bg-secondary-subtle border border-secondary text-warning" c-model="status"></span>
+          </div>
+        </div>
       </div>
     </div>
     {{/if}}
