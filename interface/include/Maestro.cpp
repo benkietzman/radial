@@ -2357,10 +2357,11 @@ bool Maestro::scopes(radialUser &d, string &e)
     string a = i->m["Access"]->v, t = i->m["Type"]->v;
     if (t == "application" || t == "user")
     {
+      string p = t + (string)"_" + a;
       m_mutex.lock();
-      if (m_p.find(a) != m_p.end() && ((t == "application" && m_p[a]->t == 'a') || (t == "user" && m_p[a]->t == 'u')))
+      if (m_p.find(p) != m_p.end() && ((t == "application" && m_p[p]->t == 'a') || (t == "user" && m_p[p]->t == 'u')))
       {
-        for (auto &f : m_p[a]->f)
+        for (auto &f : m_p[p]->f)
         {
           o->pb(f.first);
         }
