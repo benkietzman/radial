@@ -1005,7 +1005,7 @@ bool Maestro::isOwner(radialUser &d, const string p)
     map<string, string> getApplicationRow;
     Json *ptApplication = new Json;
     ptApplication->i("name", m_applications[d.r->m["User"]->v]);
-    if (db("dbCentralApplications", ptApplication, getApplicationRow, e) && !getApplicationRow["id"].empty() && isOwner(getApplicationRow["id"], p))
+    if (db("dbCentralApplications", ptApplication, getApplicationRow, e) && !getApplicationRow["id"].empty() && isOwner(getApplicationRow["id"], p, true))
     {
       b = true;
       d.l = m_applications[d.r->m["User"]->v];
