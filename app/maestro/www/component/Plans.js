@@ -677,13 +677,17 @@ export default
         <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
           <div class="row flex-nowrap">
             <div class="col-auto">
+              {{#if p.edit}}
               <button class="btn btn-sm btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+              {{/if}}
             </div>
             <div class="col" c-click="collapseExpand('flow')" style="cursor: row-resize;">
               Flow - {{strFlow}}
             </div>
             <div class="col-auto">
+              {{#if p.edit}}
               <button class="btn btn-sm btn-warning bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
+              {{/if}}
             </div>
           </div>
         </div>
