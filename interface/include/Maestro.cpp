@@ -405,8 +405,8 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ accessRequestDeny()
-bool Maestro::accessRequestDeny(radialUser &d, string &e)
+// {{{ accessRequestApprove()
+bool Maestro::accessRequestApprove(radialUser &d, string &e)
 {
   bool b = false;
   stringstream ssChat;
@@ -414,7 +414,6 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    bool bAuthorized = true;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
     m_mutex.lock();
     if ((t == "application" && isOwner(d, ((string)"a_" + a))) || (t == "core" && isLocalAdmin(d, "Maestro")) || (t == "user" && isOwner(d, ((string)"u_" + a))))
@@ -641,7 +640,6 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    bool bAuthorized = true;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
     m_mutex.lock();
     if ((t == "application" && isOwner(d, ((string)"a_" + a))) || (t == "core" && isLocalAdmin(d, "Maestro")) || (t == "user" && isOwner(d, ((string)"u_" + a))))
