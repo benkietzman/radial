@@ -420,6 +420,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
           {
             list<string> to;
             stringstream ssText;
+            b = true;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " flow of the a_" << a << " plan on behalf of the " << p << " plan within Maestro.";
             for (auto &getApplicationContactRow : *getApplicationContact)
             {
@@ -445,6 +446,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
           {
             list<string> to;
             stringstream ssText;
+            b = true;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " scope of the " << a << " core function on behalf of the " << p << " plan within Maestro.";
             for (auto &getApplicationContactRow : *getApplicationContact)
             {
@@ -469,7 +471,8 @@ bool Maestro::accessRequest(radialUser &d, string &e)
           if (!getPerson->empty())
           {
             stringstream ssText;
-            ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " flow of the u_" << a << " plan on behalf of the " << p << " plan within Maestro.";
+            b = true;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" flow of the u_" << a << " plan on behalf of the " << p << " plan within Maestro.";
             email("m44310@att.com", getPerson->front()["email"], "Maestro:  Access Request", ssText.str(), "");
           }
           else
@@ -521,7 +524,7 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
     }
     else
     {
-      strError = (string)"Please provide a valid Function (" + strFunction + ").";
+      strError = "Please provide a valid Function.";
     }
     if (bResult)
     {
