@@ -268,24 +268,18 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-chat("#maestro", "0");
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-chat("#maestro", "0-0");
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
     m_mutex.lock();
     if (isOwner(d, p))
     {
-chat("#maestro", "0-0-0");
-      if (!haveAccess(p, a, s, e))
+      if (!haveAccess(p, a, s, e, false))
       {
-chat("#maestro", "0-0-0-0");
         if (!haveAccessRequest(p, a, s))
         {
-chat("#maestro", "0-0-0-0-0");
           if (t == "application" || t == "core" || t == "user")
           {
-chat("#maestro", "0-0-0-0-0-9");
             list<string> to;
             stringstream ssQuery, ssText;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
@@ -309,10 +303,8 @@ chat("#maestro", "0-0-0-0-0-9");
             auto getContact = dbquery("central_r", ssQuery.str(), e);
             if (getContact != NULL)
             {
-chat("#maestro", "0-0-0-0-0-9-0");
               if (!getContact->empty())
               {
-chat("#maestro", "0-0-0-0-0-9-0-0");
                 string j;
                 b = true;
                 for (auto &getContactRow : *getContact)
@@ -335,7 +327,6 @@ chat("#maestro", "0-0-0-0-0-9-0-0");
                 m_p[p]->a->j(j);
                 if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
                 {
-chat("#maestro", "0-0-0-0-0-9-0-0-0");
                   b = true;
                 }
                 else
@@ -1356,13 +1347,16 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
 // }}}
 // {{{ haveAccess
 // {{{ haveAccess()
-bool Maestro::haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError)
+bool Maestro::haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError, const bool bMutex)
 {
   bool bResult = false;
 
   if (!strPlan.empty() && !strAccess.empty() && !strScope.empty())
   {
-    m_mutex.lock();
+    if (bMutex)
+    {
+      m_mutex.lock();
+    }
     if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({"a", strAccess}))
     {
       for (auto i = m_p[strPlan]->a->m["a"]->m[strAccess]->l.begin(); !bResult && i != m_p[strPlan]->a->m["a"]->m[strAccess]->l.end(); i++)
@@ -1373,7 +1367,10 @@ bool Maestro::haveAccess(const string strPlan, const string strAccess, const str
         }
       }
     }
-    m_mutex.unlock();
+    if (bMutex)
+    {
+      m_mutex.unlock();
+    }
   }
   if (!bResult)
   {
@@ -1414,7 +1411,6 @@ bool Maestro::haveAccessRequest(const string strPlan, const string strAccess, co
 
   if (!strPlan.empty() && !strAccess.empty() && !strScope.empty())
   {
-    m_mutex.lock();
     if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({"r", strAccess}))
     {
       for (auto i = m_p[strPlan]->a->m["r"]->m[strAccess]->l.begin(); !bResult && i != m_p[strPlan]->a->m["r"]->m[strAccess]->l.end(); i++)
@@ -1425,7 +1421,6 @@ bool Maestro::haveAccessRequest(const string strPlan, const string strAccess, co
         }
       }
     }
-    m_mutex.unlock();
   }
 
   return bResult;
