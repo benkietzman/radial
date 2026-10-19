@@ -154,24 +154,29 @@ bool Maestro::accessRemove(radialUser &d, string &e)
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
-        if (m_p[p]->a->exist({a}))
+        if (m_p[p]->a->exist({"a", a}))
         {
           list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
-          for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
+          for (auto c = m_p[p]->a->m["a"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["a"]->m[a]->l.end() && c != m_p[p]->a->m["a"]->m[a]->l.end(); c++)
           {
             if ((*c)->v == s)
             {
               scopeIter = c;
             }
           }
-          if (scopeIter != m_p[p]->a->m[a]->l.end())
+          if (scopeIter != m_p[p]->a->m["a"]->m[a]->l.end())
           {
             delete (*scopeIter);
-            m_p[p]->a->m[a]->l.erase(scopeIter);
-            if (m_p[p]->a->m[a]->l.empty())
+            m_p[p]->a->m["a"]->m[a]->l.erase(scopeIter);
+            if (m_p[p]->a->m["a"]->m[a]->l.empty())
             {
-              delete m_p[p]->a->m[a];
-              m_p[p]->a->m.erase(a);
+              delete m_p[p]->a->m["a"]->m[a];
+              m_p[p]->a->m["a"]->m.erase(a);
+            }
+            if (m_p[p]->a->m["a"]->m.empty())
+            {
+              delete m_p[p]->a->m["a"];
+              m_p[p]->a->m.erase("a");
             }
             if (m_p[p]->a->m.empty())
             {
@@ -211,7 +216,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
         }
         else
         {
-          e = "Function not found.";
+          e = "Access not found.";
         }
       }
       else
@@ -513,118 +518,163 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope"}, i, e))
+  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    m_mutex.lock();
     if (isOwner(d, p))
     {
-      string t;
-      stringstream ssP(p);
-      getline(ssP, t, '_');
-      m_mutex.lock();
-      if (m_p.find(p) != m_p.end())
+      if (!haveAccess(p, a, s, e, false))
       {
-        if (m_p[p]->a->exist({a}))
+        if (haveAccessRequest(p, a, s))
         {
-          list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
-          for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
+          if (t == "application" || t == "core" || t == "user")
           {
-            if ((*c)->v == s)
+            list<string> to;
+            stringstream ssQuery, ssText;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+            if (t == "application")
             {
-              scopeIter = c;
+              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
+              ssText << "flow of the a_" << a << " plan";
             }
-          }
-          if (scopeIter != m_p[p]->a->m[a]->l.end())
-          {
-            delete (*scopeIter);
-            m_p[p]->a->m[a]->l.erase(scopeIter);
-            if (m_p[p]->a->m[a]->l.empty())
+            else if (t == "core")
             {
-              delete m_p[p]->a->m[a];
-              m_p[p]->a->m.erase(a);
+              ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
+              ssText << "scope of the " << a << " core function";
             }
-            if (m_p[p]->a->m.empty())
+            else if (t == "user")
             {
-              delete m_p[p]->a;
-              m_p[p]->a = NULL;
+              ssQuery << "select email from person where id = '" << esc(a) << "'";
+              ssText << "flow of the a_" << a << " plan";
             }
-            if (m_p[p]->a != NULL)
+            ssText << " on behalf of the " << p << " plan within Maestro.";
+            auto getContact = dbquery("central_r", ssQuery.str(), e);
+            if (getContact != NULL)
             {
-              string j;
-              m_p[p]->a->j(j);
-              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+              if (!getContact->empty())
               {
-                b = true;
+                list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
+                for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+                {
+                  if ((*c)->v == s)
+                  {
+                    scopeIter = c;
+                  }
+                }
+                if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+                {
+                  for (auto &getContactRow : *getContact)
+                  {
+                    to.push_back(getContactRow["email"]);
+                  }
+                  delete (*scopeIter);
+                  m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                  if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                  {
+                    delete m_p[p]->a->m["r"]->m[a];
+                    m_p[p]->a->m["r"]->m.erase(a);
+                  }
+                  if (m_p[p]->a->m["r"]->m.empty())
+                  {
+                    delete m_p[p]->a->m["r"];
+                    m_p[p]->a->m.erase("r");
+                  }
+                  if (m_p[p]->a->m.empty())
+                  {
+                    delete m_p[p]->a;
+                    m_p[p]->a = NULL;
+                  }
+                  if (m_p[p]->a != NULL)
+                  {
+                    string j;
+                    m_p[p]->a->j(j);
+                    if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                    {
+                      b = true;
+                    }
+                    else
+                    {
+                      ssChat.str("");
+                      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                      chat("#maestro", ssChat.str());
+                    }
+                  }
+                  else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+                  {
+                    b = true;
+                  }
+                  else
+                  {
+                    ssChat.str("");
+                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                  email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
+                }
+                else
+                {
+                  e = "Scope not found.";
+                }
               }
               else
               {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
+                e = "No approvers found.";
               }
             }
-            else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-            {
-              b = true;
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            dbfree(getContact);
           }
           else
           {
-            e = "Scope not found.";
+            e = "Please provide a valid Type:  application, core, user.";
           }
         }
         else
         {
-          e = "Function not found.";
+          e = "You already have a pending request for access.";
         }
       }
       else
       {
-        e = "Plan not found.";
-      }
-      m_mutex.unlock();
-      if (b && i->val({"_broadcast"}) != "1")
-      {
-        list<string> nodes;
-        Json *ptLive = new Json;
-        m_mutexShare.lock();
-        for (auto &link : m_l)
-        {
-          if (link->interfaces.find("maestro") != link->interfaces.end())
-          {
-            nodes.push_back(link->strNode);
-          }
-        }
-        m_mutexShare.unlock();
-        while (!nodes.empty())
-        {
-          Json *ptLink = new Json(d.r);
-          ptLink->i("Interface", "maestro");
-          ptLink->i("Node", nodes.front());
-          ptLink->i("Function", "accessRemove");
-          ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
-          delete ptLink;
-          nodes.pop_front();
-        }
-        ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-        chat("#maestro", ssChat.str());
-        ptLive->i("Action", "accessRemove");
-        ptLive->i("Name", p);
-        live("Maestro", "", ptLive);
-        delete ptLive;
+        e = "You already have access.";
       }
     }
     else
     {
       e = "You are not the owner.";
+    }
+    m_mutex.unlock();
+    if (b && i->val({"_broadcast"}) != "1")
+    {
+      list<string> nodes;
+      Json *ptLive = new Json;
+      m_mutexShare.lock();
+      for (auto &link : m_l)
+      {
+        if (link->interfaces.find("maestro") != link->interfaces.end())
+        {
+          nodes.push_back(link->strNode);
+        }
+      }
+      m_mutexShare.unlock();
+      while (!nodes.empty())
+      {
+        Json *ptLink = new Json(d.r);
+        ptLink->i("Interface", "maestro");
+        ptLink->i("Node", nodes.front());
+        ptLink->i("Function", "accessRequestCancel");
+        ptLink->m["Request"]->i("_broadcast", "1", '1');
+        hub("link", ptLink, false);
+        delete ptLink;
+        nodes.pop_front();
+      }
+      ssChat.str("");
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request canceled by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      chat("#maestro", ssChat.str());
+      ptLive->i("Action", "accessRequestCancel");
+      ptLive->i("Name", p);
+      live("Maestro", "", ptLive);
+      delete ptLive;
     }
   }
 
@@ -638,118 +688,163 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope"}, i, e))
+  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    m_mutex.lock();
     if (isOwner(d, p))
     {
-      string t;
-      stringstream ssP(p);
-      getline(ssP, t, '_');
-      m_mutex.lock();
-      if (m_p.find(p) != m_p.end())
+      if (!haveAccess(p, a, s, e, false))
       {
-        if (m_p[p]->a->exist({a}))
+        if (haveAccessRequest(p, a, s))
         {
-          list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
-          for (auto c = m_p[p]->a->m[a]->l.begin(); scopeIter == m_p[p]->a->m[a]->l.end() && c != m_p[p]->a->m[a]->l.end(); c++)
+          if (t == "application" || t == "core" || t == "user")
           {
-            if ((*c)->v == s)
+            list<string> to;
+            stringstream ssQuery, ssText;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+            if (t == "application")
             {
-              scopeIter = c;
+              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
+              ssText << "flow of the a_" << a << " plan";
             }
-          }
-          if (scopeIter != m_p[p]->a->m[a]->l.end())
-          {
-            delete (*scopeIter);
-            m_p[p]->a->m[a]->l.erase(scopeIter);
-            if (m_p[p]->a->m[a]->l.empty())
+            else if (t == "core")
             {
-              delete m_p[p]->a->m[a];
-              m_p[p]->a->m.erase(a);
+              ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
+              ssText << "scope of the " << a << " core function";
             }
-            if (m_p[p]->a->m.empty())
+            else if (t == "user")
             {
-              delete m_p[p]->a;
-              m_p[p]->a = NULL;
+              ssQuery << "select email from person where id = '" << esc(a) << "'";
+              ssText << "flow of the a_" << a << " plan";
             }
-            if (m_p[p]->a != NULL)
+            ssText << " on behalf of the " << p << " plan within Maestro.";
+            auto getContact = dbquery("central_r", ssQuery.str(), e);
+            if (getContact != NULL)
             {
-              string j;
-              m_p[p]->a->j(j);
-              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+              if (!getContact->empty())
               {
-                b = true;
+                list<Json *>::iterator scopeIter = m_p[p]->a->m[a]->l.end();
+                for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+                {
+                  if ((*c)->v == s)
+                  {
+                    scopeIter = c;
+                  }
+                }
+                if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+                {
+                  for (auto &getContactRow : *getContact)
+                  {
+                    to.push_back(getContactRow["email"]);
+                  }
+                  delete (*scopeIter);
+                  m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                  if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                  {
+                    delete m_p[p]->a->m["r"]->m[a];
+                    m_p[p]->a->m["r"]->m.erase(a);
+                  }
+                  if (m_p[p]->a->m["r"]->m.empty())
+                  {
+                    delete m_p[p]->a->m["r"];
+                    m_p[p]->a->m.erase("r");
+                  }
+                  if (m_p[p]->a->m.empty())
+                  {
+                    delete m_p[p]->a;
+                    m_p[p]->a = NULL;
+                  }
+                  if (m_p[p]->a != NULL)
+                  {
+                    string j;
+                    m_p[p]->a->j(j);
+                    if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                    {
+                      b = true;
+                    }
+                    else
+                    {
+                      ssChat.str("");
+                      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                      chat("#maestro", ssChat.str());
+                    }
+                  }
+                  else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+                  {
+                    b = true;
+                  }
+                  else
+                  {
+                    ssChat.str("");
+                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                  email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
+                }
+                else
+                {
+                  e = "Scope not found.";
+                }
               }
               else
               {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
+                e = "No approvers found.";
               }
             }
-            else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-            {
-              b = true;
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            dbfree(getContact);
           }
           else
           {
-            e = "Scope not found.";
+            e = "Please provide a valid Type:  application, core, user.";
           }
         }
         else
         {
-          e = "Function not found.";
+          e = "You already have a pending request for access.";
         }
       }
       else
       {
-        e = "Plan not found.";
-      }
-      m_mutex.unlock();
-      if (b && i->val({"_broadcast"}) != "1")
-      {
-        list<string> nodes;
-        Json *ptLive = new Json;
-        m_mutexShare.lock();
-        for (auto &link : m_l)
-        {
-          if (link->interfaces.find("maestro") != link->interfaces.end())
-          {
-            nodes.push_back(link->strNode);
-          }
-        }
-        m_mutexShare.unlock();
-        while (!nodes.empty())
-        {
-          Json *ptLink = new Json(d.r);
-          ptLink->i("Interface", "maestro");
-          ptLink->i("Node", nodes.front());
-          ptLink->i("Function", "accessRemove");
-          ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
-          delete ptLink;
-          nodes.pop_front();
-        }
-        ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-        chat("#maestro", ssChat.str());
-        ptLive->i("Action", "accessRemove");
-        ptLive->i("Name", p);
-        live("Maestro", "", ptLive);
-        delete ptLive;
+        e = "You already have access.";
       }
     }
     else
     {
       e = "You are not the owner.";
+    }
+    m_mutex.unlock();
+    if (b && i->val({"_broadcast"}) != "1")
+    {
+      list<string> nodes;
+      Json *ptLive = new Json;
+      m_mutexShare.lock();
+      for (auto &link : m_l)
+      {
+        if (link->interfaces.find("maestro") != link->interfaces.end())
+        {
+          nodes.push_back(link->strNode);
+        }
+      }
+      m_mutexShare.unlock();
+      while (!nodes.empty())
+      {
+        Json *ptLink = new Json(d.r);
+        ptLink->i("Interface", "maestro");
+        ptLink->i("Node", nodes.front());
+        ptLink->i("Function", "accessRequestCancel");
+        ptLink->m["Request"]->i("_broadcast", "1", '1');
+        hub("link", ptLink, false);
+        delete ptLink;
+        nodes.pop_front();
+      }
+      ssChat.str("");
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request canceled by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      chat("#maestro", ssChat.str());
+      ptLive->i("Action", "accessRequestCancel");
+      ptLive->i("Name", p);
+      live("Maestro", "", ptLive);
+      delete ptLive;
     }
   }
 
