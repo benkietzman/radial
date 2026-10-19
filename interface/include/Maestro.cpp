@@ -25,6 +25,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["accessAdd"] = &Maestro::accessAdd;
   m_functions["accesses"] = &Maestro::accesses;
   m_functions["accessRemove"] = &Maestro::accessRemove;
+  m_functions["accessRequest"] = &Maestro::accessRequest;
   m_functions["action"] = &Maestro::action;
   m_functions["cores"] = &Maestro::cores;
   m_functions["flow"] = &Maestro::flow;
@@ -396,6 +397,103 @@ bool Maestro::accessRemove(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ accessRequest()
+bool Maestro::accessRequest(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  {
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    if (isOwner(d, p))
+    {
+      if (t == "application")
+      {
+        stringstream ssQuery;
+        ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "'";
+        auto getApplicationContact = dbquery("central_r", ssQuery.str(), e);
+        if (getApplicationContact != NULL)
+        {
+          if (!getApplicationContact->empty())
+          {
+            list<string> to;
+            stringstream ssText;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " flow of the a_" << a << " plan on behalf of the " << p << " plan within Maestro.";
+            for (auto &getApplicationContactRow : *getApplicationContact)
+            {
+              to.push_back(getApplicationContactRow["email"]);
+            }
+            email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
+          }
+          else
+          {
+            e = "No primary/backup developers found.";
+          }
+        }
+        dbfree(getApplicationContact);
+      }
+      else if (t == "core")
+      {
+        stringstream ssQuery;
+        ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.id = '" << esc(a) << "'";
+        auto getApplicationContact = dbquery("central_r", ssQuery.str(), e);
+        if (getApplicationContact != NULL)
+        {
+          if (!getApplicationContact->empty())
+          {
+            list<string> to;
+            stringstream ssText;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " scope of the " << a << " core function on behalf of the " << p << " plan within Maestro.";
+            for (auto &getApplicationContactRow : *getApplicationContact)
+            {
+              to.push_back(getApplicationContactRow["email"]);
+            }
+            email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
+          }
+          else
+          {
+            e = "No primary/backup developers found.";
+          }
+        }
+        dbfree(getApplicationContact);
+      }
+      else if (t == "user")
+      {
+        stringstream ssQuery;
+        ssQuery << "select email from person where id = '" << esc(a) << "'";
+        auto getPerson = dbquery("central_r", ssQuery.str(), e);
+        if (getPerson != NULL)
+        {
+          if (!getPerson->empty())
+          {
+            stringstream ssText;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the " << s << " flow of the u_" << a << " plan on behalf of the " << p << " plan within Maestro.";
+            email("m44310@att.com", getPerson->front()["email"], "Maestro:  Access Request", ssText.str(), "");
+          }
+          else
+          {
+            e = "No user found.";
+          }
+        }
+        dbfree(getPerson);
+      }
+      else
+      {
+        e = "Please provide a valid Type:  application, core, user.";
+      }
+      m_mutex.lock();
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
+  }
+
+  return b;
+}
+// }}}
 // }}}
 // {{{ callback()
 void Maestro::callback(string strPrefix, const string strPacket, const bool bResponse)
@@ -423,7 +521,7 @@ void Maestro::callback(string strPrefix, const string strPacket, const bool bRes
     }
     else
     {
-      strError = "Please provide a valid Function.";
+      strError = (string)"Please provide a valid Function (" + strFunction + ").";
     }
     if (bResult)
     {

@@ -60,6 +60,7 @@ class Maestro : public Interface
   bool accessAdd(radialUser &d, string &e);
   bool accesses(radialUser &d, string &e);
   bool accessRemove(radialUser &d, string &e);
+  bool accessRequest(radialUser &d, string &e);
   bool cores(radialUser &d, string &e);
   bool flow(radialUser &d, string &e);
   bool flowAdd(radialUser &d, string &e);
