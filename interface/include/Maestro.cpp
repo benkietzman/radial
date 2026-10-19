@@ -268,18 +268,24 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
+chat("#maestro", "0");
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
+chat("#maestro", "0-0");
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
     m_mutex.lock();
     if (isOwner(d, p))
     {
+chat("#maestro", "0-0-0");
       if (!haveAccess(p, a, s, e))
       {
+chat("#maestro", "0-0-0-0");
         if (!haveAccessRequest(p, a, s))
         {
+chat("#maestro", "0-0-0-0-0");
           if (t == "application" || t == "core" || t == "user")
           {
+chat("#maestro", "0-0-0-0-0-9");
             list<string> to;
             stringstream ssQuery, ssText;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
@@ -303,8 +309,10 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             auto getContact = dbquery("central_r", ssQuery.str(), e);
             if (getContact != NULL)
             {
+chat("#maestro", "0-0-0-0-0-9-0");
               if (!getContact->empty())
               {
+chat("#maestro", "0-0-0-0-0-9-0-0");
                 string j;
                 b = true;
                 for (auto &getContactRow : *getContact)
@@ -327,6 +335,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
                 m_p[p]->a->j(j);
                 if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
                 {
+chat("#maestro", "0-0-0-0-0-9-0-0-0");
                   b = true;
                 }
                 else
