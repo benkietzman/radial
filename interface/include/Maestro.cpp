@@ -283,7 +283,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             list<string> to;
             stringstream ssQuery, ssText;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
-            if (t == "application" || t == "user")
+            if (t == "application")
             {
               ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
               ssText << "flow of the a_" << a << " plan";
