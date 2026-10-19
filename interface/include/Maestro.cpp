@@ -156,7 +156,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
       {
         if (m_p[p]->a->exist({"a", a}))
         {
-          list<Json *>::iterator scopeIter = m_p[p]->a->["a"]->m[a]->l.end();
+          list<Json *>::iterator scopeIter = m_p[p]->a->m["a"]->m[a]->l.end();
           for (auto c = m_p[p]->a->m["a"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["a"]->m[a]->l.end() && c != m_p[p]->a->m["a"]->m[a]->l.end(); c++)
           {
             if ((*c)->v == s)
