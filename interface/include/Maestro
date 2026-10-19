@@ -56,11 +56,12 @@ class Maestro : public Interface
   thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
 
-  bool access(radialUser &d, string &e);
-  bool accessAdd(radialUser &d, string &e);
   bool accesses(radialUser &d, string &e);
   bool accessRemove(radialUser &d, string &e);
   bool accessRequest(radialUser &d, string &e);
+  bool accessRequestApprove(radialUser &d, string &e);
+  bool accessRequestCancel(radialUser &d, string &e);
+  bool accessRequestDeny(radialUser &d, string &e);
   bool cores(radialUser &d, string &e);
   bool flow(radialUser &d, string &e);
   bool flowAdd(radialUser &d, string &e);
@@ -70,6 +71,7 @@ class Maestro : public Interface
   bool flowUpdate(radialUser &d, string &e);
   bool haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError);
   bool haveAccess(JSContext *jsctx, const string strAccess, const string strScope, string &strError);
+  bool haveAccessRequest(const string strPlan, const string strAccess, const string strScope);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p, const bool a = false);
   void load(string strPrefix);
