@@ -299,7 +299,6 @@ bool Maestro::accessRequest(radialUser &d, string &e)
               ssText << "flow of the a_" << a << " plan";
             }
             ssText << " on behalf of the " << p << " plan within Maestro.";
-            ssQuery << "select c.email from application_contact a" << ((t == "application")?", contact_type b":"") << ", person c where 1=1" << ((t == "application")?" and a.type_id = b.id":"") << " and a.contact_id = c.id" << ((t == "application")?" and b.type in ('Primary Developer', 'Backup Developer')":"") << " and a.application_id = '" << esc(a) << "'";
             auto getContact = dbquery("central_r", ssQuery.str(), e);
             if (getContact != NULL)
             {
