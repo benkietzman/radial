@@ -121,6 +121,32 @@ export default
       }
     };
     // ]]]
+    // [[[ accessRequestCancel()
+    s.accessRequestCancel = () =>
+    {
+      if (c.isValid())
+      {
+        s['accessStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'accessRequestCancel', Request: {Plan: s.strPlan, Type: s.typeName.v, Access: s.accessName.v, Scope: s.scopeName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['accessStatus'].v = 'canceled requested access';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
     // ]]]
     // [[[ applications()
     s.applications = () =>
@@ -532,7 +558,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'accessAdd' || data.detail.Action == 'accessRemove' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate') && !s.composition)
       {
         s.init();
       }
@@ -605,7 +631,7 @@ export default
               </tr>
             </thead>
             <tbody>
-              {{#each as}}
+              {{#each as.a}}
               <tr>
                 <td>
                   {{@key}}
@@ -618,6 +644,39 @@ export default
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
                       <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button></td>
+                      {{/if}}
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                  </table>
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <thead>
+              <tr>
+                <th>Access</th>
+                <th>Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each as.r}}
+              <tr>
+                <td>
+                  {{@key}}
+                </td>
+                <td>
+                  <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
+                  <tbody>
+                    {{#each .}}
+                    <tr>
+                      <td class="w-100">{{.}}</td>
+                      {{#if @root.p.edit}}
+                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestCancel('{{@../key}}', '{{.}}')" title="Cancel Access Request"></button></td>
                       {{/if}}
                     </tr>
                     {{/each}}
