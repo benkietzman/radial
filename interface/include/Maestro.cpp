@@ -126,16 +126,13 @@ bool Maestro::accesses(radialUser &d, string &e)
         o->merge(m_p[p]->a, true, false);
         for (auto &c : m_p)
         {
-          if (c.second->a != NULL && c.second->a->exist({"r"}))
+          if (c.second->a != NULL && c.second->a->exist({"r"}) && c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
           {
-            if (c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
+            if (!o->exist({"p"}))
             {
-              if (!o->exist({"p"}))
-              {
-                o->m["p"] = new Json;
-              }
-              o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
+              o->m["p"] = new Json;
             }
+            o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
           }
         }
       }
@@ -143,6 +140,30 @@ bool Maestro::accesses(radialUser &d, string &e)
     else
     {
       e = "Plan not found.";
+    }
+    m_mutex.unlock();
+  }
+  else if (isLocalAdmin(d, "Maestro"))
+  {
+    b = true;
+    e.clear();
+    m_mutex.lock();
+    for (auto &c : m_p)
+    {
+      if (c.second->a != NULL && c.second->a->exist({"r"}))
+      {
+        for (auto &g : c.second->a->m["r"]->m)
+        {
+          if (g.first.size() < 2 || (g.first.substr(0, 2) != "a_" && g.first.substr(0, 2) != "u_"))
+          {
+            if (!o->exist({c.first}))
+            {
+              o->m[c.first] = new Json;
+            }
+            o->m[c.first]->i(g.first, g.second);
+          }
+        }
+      }
     }
     m_mutex.unlock();
   }
