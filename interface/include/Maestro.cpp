@@ -312,7 +312,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   {
     list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
-    stringstream ssText;
+    stringstream ssHtml, ssText;
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -333,24 +333,46 @@ bool Maestro::accessRequest(radialUser &d, string &e)
         {
           if (t == "application" || t == "core" || t == "user")
           {
-            stringstream ssQuery;
+            stringstream ssLink, ssQuery;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
+            ssHtml << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
             if (t == "application")
             {
               ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
               ssText << "flow of the " << a << " plan";
+              ssHtml << "flow of the " << a << " plan";
             }
             else if (t == "core")
             {
               ssQuery << "select distinct c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
               ssText << "scope of the " << a << " core function";
+              ssHtml << "scope of the " << a << " core function";
             }
             else if (t == "user")
             {
               ssQuery << "select email from person where id = '" << esc(a.substr(2, (a.size() - 2))) << "'";
               ssText << "flow of the " << a << " plan";
+              ssHtml << "flow of the " << a << " plan";
             }
             ssText << " on behalf of the " << p << " plan within Maestro.";
+            ssHtml << " on behalf of the " << p << " plan within Maestro.";
+            ssText << endl << endl;
+            ssHtml << "<br><br>";
+            ssLink << "https://" << m_strServer << "/maestro/#";
+            if (t == "core")
+            {
+              ssLink << "/Approvals";
+            }
+            else
+            {
+              ssLink << "/Plans/" << a;
+            }
+            ssText << ssLink.str();
+            ssHtml << "<a href=\"" << ssLink.str() << "\" target=\"_blank\">" << ssLink.str() << "</a>";
+            ssText << endl << endl;
+            ssHtml << "<br><br>";
+            ssText << "-- Maestro";
+            ssHtml << "-- Maestro";
             auto getContact = dbquery("central_r", ssQuery.str(), e);
             if (getContact != NULL)
             {
@@ -445,7 +467,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
+      email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), ssHtml.str());
     }
   }
 
@@ -463,7 +485,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
   {
     list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
-    stringstream ssText;
+    stringstream ssHtml, ssText;
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -496,17 +518,25 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
             {
               stringstream ssQuery;
               ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+              ssHtml << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
               if (p.substr(0, 2) == "a_")
               {
                 ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
                 ssText << "flow of the " << a << " plan";
+                ssHtml << "flow of the " << a << " plan";
               }
               else if (p.substr(0, 2) == "u_")
               {
                 ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
                 ssText << "flow of the " << a << " plan";
+                ssHtml << "flow of the " << a << " plan";
               }
               ssText << " on behalf of the " << p << " plan within Maestro.";
+              ssHtml << " on behalf of the " << p << " plan within Maestro.";
+              ssText << endl << endl;
+              ssHtml << "<br><br>";
+              ssText << "-- Maestro";
+              ssHtml << "-- Maestro";
               auto getContact = dbquery("central_r", ssQuery.str(), e);
               if (getContact != NULL)
               {
@@ -654,7 +684,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request Approved", ssText.str(), "");
+      email("m44310@att.com", to, "Maestro:  Access Request Approved", ssText.str(), ssHtml.str());
     }
   }
 
@@ -670,7 +700,9 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope"}, i, e))
   {
+    list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
+    stringstream ssHtml, ssText;
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -689,25 +721,33 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
       {
         if (haveAccessRequest(p, a, s))
         {
-          list<string> to;
-          stringstream ssQuery, ssText;
+          stringstream ssQuery;
           ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+          ssHtml << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
           if (t == "application")
           {
             ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
             ssText << "flow of the " << a << " plan";
+            ssHtml << "flow of the " << a << " plan";
           }
           else if (t == "core")
           {
             ssQuery << "select distinct c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
             ssText << "scope of the " << a << " core function";
+            ssHtml << "scope of the " << a << " core function";
           }
           else if (t == "user")
           {
             ssQuery << "select email from person where id = '" << esc(a.substr(2, (a.size() - 2))) << "'";
             ssText << "flow of the " << a << " plan";
+            ssHtml << "flow of the " << a << " plan";
           }
           ssText << " on behalf of the " << p << " plan within Maestro.";
+          ssHtml << " on behalf of the " << p << " plan within Maestro.";
+          ssText << endl << endl;
+          ssHtml << "<br><br>";
+          ssText << "-- Maestro";
+          ssHtml << "-- Maestro";
           auto getContact = dbquery("central_r", ssQuery.str(), e);
           if (getContact != NULL)
           {
@@ -769,7 +809,6 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
                   ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
-                email("m44310@att.com", to, "Maestro:  Access Request Canceled", ssText.str(), "");
               }
               else
               {
@@ -829,6 +868,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
+      email("m44310@att.com", to, "Maestro:  Access Request Canceled", ssText.str(), ssHtml.str());
     }
   }
 
@@ -846,7 +886,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
   {
     list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
-    stringstream ssText;
+    stringstream ssHtml, ssText;
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -877,17 +917,25 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
           {
             stringstream ssQuery;
             ssText << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
+            ssHtml << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
             if (p.substr(0, 2) == "a_")
             {
               ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
               ssText << "flow of the " << a << " plan";
+              ssHtml << "flow of the " << a << " plan";
             }
             else if (p.substr(0, 2) == "u_")
             {
               ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
               ssText << "flow of the " << a << " plan";
+              ssHtml << "flow of the " << a << " plan";
             }
             ssText << " on behalf of the " << p << " plan within Maestro.";
+            ssHtml << " on behalf of the " << p << " plan within Maestro.";
+            ssText << endl << endl;
+            ssHtml << "<br><br>";
+            ssText << "-- Maestro";
+            ssHtml << "-- Maestro";
             auto getContact = dbquery("central_r", ssQuery.str(), e);
             if (getContact != NULL)
             {
@@ -998,7 +1046,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request Denied", ssText.str(), "");
+      email("m44310@att.com", to, "Maestro:  Access Request Denied", ssText.str(), ssHtml.str());
     }
   }
 
