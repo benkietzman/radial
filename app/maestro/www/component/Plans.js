@@ -27,30 +27,6 @@ export default
     });
     // ]]]
     // [[[ access
-    // [[[ accessAdd()
-    s.accessAdd = () =>
-    {
-      if (c.isLocalAdmin('Maestro'))
-      {
-        let request = {Interface: 'maestro', 'Function': 'accessAdd', Request: {Plan: s.strPlan, Access: s.accessName.v, Scope: s.scopeName.v}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-        });
-      }
-      else
-      {
-        c.pushErrorMessage('You are not authorized to perform this action.');
-      }
-    };
-    // ]]]
     // [[[ accesses()
     s.accesses = () =>
     {
@@ -101,7 +77,8 @@ export default
       if (c.isValid())
       {
         s['accessStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'accessRequest', Request: {Plan: s.strPlan, Type: s.typeName.v, Access: s.accessName.v, Scope: s.scopeName.v}};
+        let strAccess = ((s.typeName.v == 'application')?'a_':((s.typeName.v == 'user')?'u_':'')) + s.accessName.v;
+        let request = {Interface: 'maestro', 'Function': 'accessRequest', Request: {Plan: s.strPlan, Access: strAccess, Scope: s.scopeName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -121,19 +98,71 @@ export default
       }
     };
     // ]]]
-    // [[[ accessRequestCancel()
-    s.accessRequestCancel = () =>
+    // [[[ accessRequestApprove()
+    s.accessRequestApprove = (strAccess, strScope) =>
     {
       if (c.isValid())
       {
         s['accessStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'accessRequestCancel', Request: {Plan: s.strPlan, Type: s.typeName.v, Access: s.accessName.v, Scope: s.scopeName.v}};
+        let request = {Interface: 'maestro', 'Function': 'accessRequestApprove', Request: {Plan: strAccess, Access: s.strPlan, Scope: strScope}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['accessStatus'].v = 'approved requested access';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ accessRequestCancel()
+    s.accessRequestCancel = (strAccess, strScope) =>
+    {
+      if (c.isValid())
+      {
+        s['accessStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'accessRequestCancel', Request: {Plan: s.strPlan, Access: strAccess, Scope: strScope}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
           if (c.wsResponse(response, error))
           {
             s['accessStatus'].v = 'canceled requested access';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ accessRequestDeny()
+    s.accessRequestDeny = (strAccess, strScope) =>
+    {
+      if (c.isValid())
+      {
+        s['accessStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'accessRequestDeny', Request: {Plan: strAccess, Access: s.strPlan, Scope: strScope}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['accessStatus'].v = 'deny requested access';
           }
           else
           {
@@ -622,6 +651,7 @@ export default
             <button class="btn btn-warning bi bi-send" c-click="accessRequest()" title="Request Access"></button>
           </div>
           {{/isLocalAdmin}}
+          {{#if as.a}}
           <div class="table-responsive mt-2">
             <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
             <thead>
@@ -655,7 +685,10 @@ export default
             </tbody>
             </table>
           </div>
-          <div class="table-responsive mt-2">
+          {{/if}}
+          {{#if as.r}}
+          <h5>Pending Requests</h5>
+          <div class="table-responsive">
             <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
             <thead>
               <tr>
@@ -688,6 +721,44 @@ export default
             </tbody>
             </table>
           </div>
+          {{/if}}
+          {{#if as.p}}
+          <h5>Pending Approvals</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each as.p}}
+              <tr>
+                <td>
+                  {{@key}}
+                </td>
+                <td>
+                  <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
+                  <tbody>
+                    {{#each .}}
+                    <tr>
+                      <td class="w-100">{{.}}</td>
+                      {{#if @root.p.edit}}
+                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestDeny('{{@../key}}', '{{.}}')" title="Deny Access Request"></button></td>
+                      <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="accessRequestApprove('{{@../key}}', '{{.}}')" title="Approve Access Request"></button></td>
+                      {{/if}}
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                  </table>
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+          {{/if}}
         </div>
         {{/if}}
         <div class="card-footer">
