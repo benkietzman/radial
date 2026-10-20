@@ -855,7 +855,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
           if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
           {
             stringstream ssQuery;
-            ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+            ssText << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
             if (p.substr(0, 2) == "a_")
             {
               ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
