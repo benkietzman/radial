@@ -414,14 +414,136 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, sp = a, t = i->m["Type"]->v;
     m_mutex.lock();
-    if ((t == "application" && isOwner(d, ((string)"a_" + a))) || (t == "core" && isLocalAdmin(d, "Maestro")) || (t == "user" && isOwner(d, ((string)"u_" + a))))
+    if (m_p.find(p) != m_p.end())
     {
+      if (t == "application" || t == "core" || t == "user")
+      {
+        if (t == "application")
+        {
+          sp = (string)"a_" + a;
+        }
+        else if (t == "user")
+        {
+          sp = (string)"u_" + a;
+        }
+        if (((t == "application" || t == "user") && isOwner(d, sp)) || (t == "core" && isLocalAdmin(d, "Maestro")))
+        {
+          if (haveAccessRequest(p, a, s))
+          {
+            list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+            for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+            {
+              if ((*c)->v == s)
+              {
+                scopeIter = c;
+              }
+            }
+            if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+            {
+              if (!haveAccess(p, a, s, e, false))
+              {
+                string j;
+                delete (*scopeIter);
+                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                {
+                  delete m_p[p]->a->m["r"]->m[a];
+                  m_p[p]->a->m["r"]->m.erase(a);
+                }
+                if (m_p[p]->a->m["r"]->m.empty())
+                {
+                  delete m_p[p]->a->m["r"];
+                  m_p[p]->a->m.erase("r");
+                }
+                if (m_p[p]->a->m.find("a") == m_p[p]->a->m.end())
+                {
+                  m_p[p]->a->m["a"] = new Json;
+                }
+                m_p[p]->a->m["a"]->pb(s);
+                m_p[p]->a->j(j);
+                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                {
+                  b = true;
+                }
+                else
+                {
+                  ssChat.str("");
+                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  chat("#maestro", ssChat.str());
+                }
+              }
+              else
+              {
+                e = "Access already exists.";
+                delete (*scopeIter);
+                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                {
+                  delete m_p[p]->a->m["r"]->m[a];
+                  m_p[p]->a->m["r"]->m.erase(a);
+                }
+                if (m_p[p]->a->m["r"]->m.empty())
+                {
+                  delete m_p[p]->a->m["r"];
+                  m_p[p]->a->m.erase("r");
+                }
+                if (m_p[p]->a->m.empty())
+                {
+                  delete m_p[p]->a;
+                  m_p[p]->a = NULL;
+                }
+                if (m_p[p]->a != NULL)
+                {
+                  string j;
+                  m_p[p]->a->j(j);
+                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                  {
+                    b = true;
+                  }
+                  else
+                  {
+                    ssChat.str("");
+                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
+                else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+                {
+                  b = true;
+                }
+                else
+                {
+                  ssChat.str("");
+                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  chat("#maestro", ssChat.str());
+                }
+              }
+            }
+            else
+            {
+              e = "Scope not found.";
+            }
+          }
+          else
+          {
+            e = "Access request not found.";
+          }
+        }
+        else
+        {
+          e = "You are not the owner.";
+        }
+      }
+      else
+      {
+        e = "Please provide a valid Type:  application, core, user.";
+      }
     }
     else
     {
-      e = "You are not the owner.";
+      e = "Plan not found.";
     }
     m_mutex.unlock();
     if (b && i->val({"_broadcast"}) != "1")
@@ -442,16 +564,16 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
         Json *ptLink = new Json(d.r);
         ptLink->i("Interface", "maestro");
         ptLink->i("Node", nodes.front());
-        ptLink->i("Function", "accessRequestApprove");
+        ptLink->i("Function", "accessRequestDeny");
         ptLink->m["Request"]->i("_broadcast", "1", '1');
         hub("link", ptLink, false);
         delete ptLink;
         nodes.pop_front();
       }
       ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request approved by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request denied by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
-      ptLive->i("Action", "accessRequestApprove");
+      ptLive->i("Action", "accessRequestDeny");
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
@@ -640,14 +762,100 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, sp = a, t = i->m["Type"]->v;
     m_mutex.lock();
-    if ((t == "application" && isOwner(d, ((string)"a_" + a))) || (t == "core" && isLocalAdmin(d, "Maestro")) || (t == "user" && isOwner(d, ((string)"u_" + a))))
+    if (m_p.find(p) != m_p.end())
     {
+      if (t == "application" || t == "core" || t == "user")
+      {
+        if (t == "application")
+        {
+          sp = (string)"a_" + a;
+        }
+        else if (t == "user")
+        {
+          sp = (string)"u_" + a;
+        }
+        if (((t == "application" || t == "user") && isOwner(d, sp)) || (t == "core" && isLocalAdmin(d, "Maestro")))
+        {
+          if (haveAccessRequest(p, a, s))
+          {
+            list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+            for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+            {
+              if ((*c)->v == s)
+              {
+                scopeIter = c;
+              }
+            }
+            if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+            {
+              delete (*scopeIter);
+              m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+              if (m_p[p]->a->m["r"]->m[a]->l.empty())
+              {
+                delete m_p[p]->a->m["r"]->m[a];
+                m_p[p]->a->m["r"]->m.erase(a);
+              }
+              if (m_p[p]->a->m["r"]->m.empty())
+              {
+                delete m_p[p]->a->m["r"];
+                m_p[p]->a->m.erase("r");
+              }
+              if (m_p[p]->a->m.empty())
+              {
+                delete m_p[p]->a;
+                m_p[p]->a = NULL;
+              }
+              if (m_p[p]->a != NULL)
+              {
+                string j;
+                m_p[p]->a->j(j);
+                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                {
+                  b = true;
+                }
+                else
+                {
+                  ssChat.str("");
+                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  chat("#maestro", ssChat.str());
+                }
+              }
+              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+              {
+                b = true;
+              }
+              else
+              {
+                ssChat.str("");
+                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+            else
+            {
+              e = "Scope not found.";
+            }
+          }
+          else
+          {
+            e = "Access request not found.";
+          }
+        }
+        else
+        {
+          e = "You are not the owner.";
+        }
+      }
+      else
+      {
+        e = "Please provide a valid Type:  application, core, user.";
+      }
     }
     else
     {
-      e = "You are not the owner.";
+      e = "Plan not found.";
     }
     m_mutex.unlock();
     if (b && i->val({"_broadcast"}) != "1")
