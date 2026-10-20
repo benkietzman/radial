@@ -52,6 +52,10 @@ class App
     this.c.menu = {left: [], right: []};
     unIndex = 0;
     this.c.menu.left[unIndex++] = {value: 'Plans', href: '/Plans', icon: 'app', active: null};
+    if (this.c.isLocalAdmin('Maestro'))
+    {
+      this.c.menu.left[unIndex++] = {value: 'Approvals', href: '/Approvals', icon: 'plus-circle', active: null};
+    }
     unIndex = 0;
     this.c.menu.right[unIndex++] = {value: 'Info', href: '/Info', icon: 'info-circle', active: null};
     if (this.c.isValid())
