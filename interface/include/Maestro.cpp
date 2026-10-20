@@ -287,19 +287,22 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
     stringstream ssText;
-    if (t == "application")
+    if (a.size() > 2)
     {
-      a = (string)"a_" + a;
-    }
-    else if (t == "user")
-    {
-      a = (string)"u_" + a;
-    }
+      if (a.substr(0, 2) == "a_")
+      {
+        t = "application";
+      }
+      else if (a.substr(0, 2) == "u_")
+      {
+        t = "user";
+      }
+    } 
     m_mutex.lock();
     if (isOwner(d, p))
     {
@@ -435,7 +438,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
@@ -640,7 +643,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
     if (a.size() > 2)
@@ -814,7 +817,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
   stringstream ssChat;
   Json *i = d.p->m["i"];
 
-  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
