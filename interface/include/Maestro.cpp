@@ -316,12 +316,12 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
             if (t == "application")
             {
-              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
+              ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
               ssText << "flow of the " << a << " plan";
             }
             else if (t == "core")
             {
-              ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
+              ssQuery << "select distinct c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
               ssText << "scope of the " << a << " core function";
             }
             else if (t == "user")
@@ -477,7 +477,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
               ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
               if (p.substr(0, 2) == "a_")
               {
-                ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+                ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
                 ssText << "flow of the " << a << " plan";
               }
               else if (p.substr(0, 2) == "u_")
@@ -669,12 +669,12 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
           ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
           if (t == "application")
           {
-            ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
+            ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
             ssText << "flow of the " << a << " plan";
           }
           else if (t == "core")
           {
-            ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
+            ssQuery << "select distinct c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
             ssText << "scope of the " << a << " core function";
           }
           else if (t == "user")
@@ -854,7 +854,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
             ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
             if (p.substr(0, 2) == "a_")
             {
-              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+              ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
               ssText << "flow of the " << a << " plan";
             }
             else if (p.substr(0, 2) == "u_")
