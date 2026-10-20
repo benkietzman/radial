@@ -516,7 +516,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
                   {
                     m_p[p]->a->m["a"]->m[a] = new Json;
                   }
-                  m_p[p]->a->m["a"]-m[a]->>pb(s);
+                  m_p[p]->a->m["a"]->m[a]->pb(s);
                   m_p[p]->a->j(j);
                   if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
                   {
