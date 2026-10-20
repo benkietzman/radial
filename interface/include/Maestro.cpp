@@ -124,6 +124,20 @@ bool Maestro::accesses(radialUser &d, string &e)
       if (m_p[p]->a != NULL)
       {
         o->merge(m_p[p]->a, true, false);
+        for (auto &c : m_p)
+        {
+          if (c.second->a != NULL && c.second->a->exist({"r"}))
+          {
+            if (c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
+            {
+              if (!o->exist({"p"}))
+              {
+                o->m["p"] = new Json;
+              }
+              o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
+            }
+          }
+        }
       }
     }
     else
@@ -275,7 +289,17 @@ bool Maestro::accessRequest(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
+    list<string> to;
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
+    stringstream ssText;
+    if (t == "application")
+    {
+      a = (string)"a_" + a;
+    }
+    else if (t == "user")
+    {
+      a = (string)"u_" + a;
+    }
     m_mutex.lock();
     if (isOwner(d, p))
     {
@@ -285,13 +309,12 @@ bool Maestro::accessRequest(radialUser &d, string &e)
         {
           if (t == "application" || t == "core" || t == "user")
           {
-            list<string> to;
-            stringstream ssQuery, ssText;
+            stringstream ssQuery;
             ssText << d.f << " " << d.l << " (" << d.u << ") has requested access to the \"" << s << "\" ";
             if (t == "application")
             {
               ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
-              ssText << "flow of the a_" << a << " plan";
+              ssText << "flow of the " << a << " plan";
             }
             else if (t == "core")
             {
@@ -301,7 +324,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             else if (t == "user")
             {
               ssQuery << "select email from person where id = '" << esc(a) << "'";
-              ssText << "flow of the a_" << a << " plan";
+              ssText << "flow of the " << a << " plan";
             }
             ssText << " on behalf of the " << p << " plan within Maestro.";
             auto getContact = dbquery("central_r", ssQuery.str(), e);
@@ -339,7 +362,6 @@ bool Maestro::accessRequest(radialUser &d, string &e)
                   ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
-                email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
               }
               else
               {
@@ -399,6 +421,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
+      email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), "");
     }
   }
 
@@ -414,54 +437,120 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, sp = a, t = i->m["Type"]->v;
+    list<string> to;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
+    stringstream ssText;
+    if (a.size() > 2)
+    {
+      if (a.substr(0, 2) == "a_")
+      {
+        t = "application";
+      }
+      else if (a.substr(0, 2) == "u_")
+      {
+        t = "user";
+      }
+    } 
     m_mutex.lock();
     if (m_p.find(p) != m_p.end())
     {
-      if (t == "application" || t == "core" || t == "user")
+      if (((t == "application" || t == "user") && isOwner(d, a)) || (t == "core" && isLocalAdmin(d, "Maestro")))
       {
-        if (t == "application")
+        if (haveAccessRequest(p, a, s))
         {
-          sp = (string)"a_" + a;
-        }
-        else if (t == "user")
-        {
-          sp = (string)"u_" + a;
-        }
-        if (((t == "application" || t == "user") && isOwner(d, sp)) || (t == "core" && isLocalAdmin(d, "Maestro")))
-        {
-          if (haveAccessRequest(p, a, s))
+          list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+          for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
           {
-            list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-            for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+            if ((*c)->v == s)
             {
-              if ((*c)->v == s)
-              {
-                scopeIter = c;
-              }
+              scopeIter = c;
             }
-            if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+          }
+          if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+          {
+            if (!haveAccess(p, a, s, e, false))
             {
-              if (!haveAccess(p, a, s, e, false))
+              stringstream ssQuery;
+              ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+              if (p.substr(0, 2) == "a_")
+              {
+                ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+                ssText << "flow of the " << a << " plan";
+              }
+              else if (p.substr(0, 2) == "u_")
+              {
+                ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
+                ssText << "flow of the " << a << " plan";
+              }
+              ssText << " on behalf of the " << p << " plan within Maestro.";
+              auto getContact = dbquery("central_r", ssQuery.str(), e);
+              if (getContact != NULL)
+              {
+                if (!getContact->empty())
+                {
+                  string j;
+                  for (auto &getContactRow : *getContact)
+                  {
+                    to.push_back(getContactRow["email"]);
+                  }
+                  delete (*scopeIter);
+                  m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                  if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                  {
+                    delete m_p[p]->a->m["r"]->m[a];
+                    m_p[p]->a->m["r"]->m.erase(a);
+                  }
+                  if (m_p[p]->a->m["r"]->m.empty())
+                  {
+                    delete m_p[p]->a->m["r"];
+                    m_p[p]->a->m.erase("r");
+                  }
+                  if (m_p[p]->a->m.find("a") == m_p[p]->a->m.end())
+                  {
+                    m_p[p]->a->m["a"] = new Json;
+                  }
+                  m_p[p]->a->m["a"]->pb(s);
+                  m_p[p]->a->j(j);
+                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                  {
+                    b = true;
+                  }
+                  else
+                  {
+                    ssChat.str("");
+                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
+                else
+                {
+                  e = "No approvers found.";
+                }
+              }
+              dbfree(getContact);
+            }
+            else
+            {
+              delete (*scopeIter);
+              m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+              if (m_p[p]->a->m["r"]->m[a]->l.empty())
+              {
+                delete m_p[p]->a->m["r"]->m[a];
+                m_p[p]->a->m["r"]->m.erase(a);
+              }
+              if (m_p[p]->a->m["r"]->m.empty())
+              {
+                delete m_p[p]->a->m["r"];
+                m_p[p]->a->m.erase("r");
+              }
+              if (m_p[p]->a->m.empty())
+              {
+                delete m_p[p]->a;
+                m_p[p]->a = NULL;
+              }
+              if (m_p[p]->a != NULL)
               {
                 string j;
-                delete (*scopeIter);
-                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-                if (m_p[p]->a->m["r"]->m[a]->l.empty())
-                {
-                  delete m_p[p]->a->m["r"]->m[a];
-                  m_p[p]->a->m["r"]->m.erase(a);
-                }
-                if (m_p[p]->a->m["r"]->m.empty())
-                {
-                  delete m_p[p]->a->m["r"];
-                  m_p[p]->a->m.erase("r");
-                }
-                if (m_p[p]->a->m.find("a") == m_p[p]->a->m.end())
-                {
-                  m_p[p]->a->m["a"] = new Json;
-                }
-                m_p[p]->a->m["a"]->pb(s);
                 m_p[p]->a->j(j);
                 if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
                 {
@@ -474,9 +563,142 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
                   chat("#maestro", ssChat.str());
                 }
               }
+              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+              {
+                b = true;
+              }
               else
               {
-                e = "Access already exists.";
+                ssChat.str("");
+                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+          }
+          else
+          {
+            e = "Scope not found.";
+          }
+        }
+        else
+        {
+          e = "Access request not found.";
+        }
+      }
+      else
+      {
+        e = "You are not the owner.";
+      }
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+    if (b && i->val({"_broadcast"}) != "1")
+    {
+      list<string> nodes;
+      Json *ptLive = new Json;
+      m_mutexShare.lock();
+      for (auto &link : m_l)
+      {
+        if (link->interfaces.find("maestro") != link->interfaces.end())
+        {
+          nodes.push_back(link->strNode);
+        }
+      }
+      m_mutexShare.unlock();
+      while (!nodes.empty())
+      {
+        Json *ptLink = new Json(d.r);
+        ptLink->i("Interface", "maestro");
+        ptLink->i("Node", nodes.front());
+        ptLink->i("Function", "accessRequestApprove");
+        ptLink->m["Request"]->i("_broadcast", "1", '1');
+        hub("link", ptLink, false);
+        delete ptLink;
+        nodes.pop_front();
+      }
+      ssChat.str("");
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request approved by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      chat("#maestro", ssChat.str());
+      ptLive->i("Action", "accessRequestApprove");
+      ptLive->i("Name", p);
+      live("Maestro", "", ptLive);
+      delete ptLive;
+      email("m44310@att.com", to, "Maestro:  Access Request Approved", ssText.str(), "");
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ accessRequestCancel()
+bool Maestro::accessRequestCancel(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
+  {
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
+    if (a.size() > 2)
+    {
+      if (a.substr(0, 2) == "a_")
+      {
+        t = "application";
+      }
+      else if (a.substr(0, 2) == "u_")
+      {
+        t = "user";
+      }
+    } 
+    m_mutex.lock();
+    if (isOwner(d, p))
+    {
+      if (!haveAccess(p, a, s, e, false))
+      {
+        if (haveAccessRequest(p, a, s))
+        {
+          list<string> to;
+          stringstream ssQuery, ssText;
+          ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+          if (t == "application")
+          {
+            ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
+            ssText << "flow of the " << a << " plan";
+          }
+          else if (t == "core")
+          {
+            ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
+            ssText << "scope of the " << a << " core function";
+          }
+          else if (t == "user")
+          {
+            ssQuery << "select email from person where id = '" << esc(a) << "'";
+            ssText << "flow of the " << a << " plan";
+          }
+          ssText << " on behalf of the " << p << " plan within Maestro.";
+          auto getContact = dbquery("central_r", ssQuery.str(), e);
+          if (getContact != NULL)
+          {
+            if (!getContact->empty())
+            {
+              list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+              for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+              {
+                if ((*c)->v == s)
+                {
+                  scopeIter = c;
+                }
+              }
+              if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+              {
+                for (auto &getContactRow : *getContact)
+                {
+                  to.push_back(getContactRow["email"]);
+                }
                 delete (*scopeIter);
                 m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
                 if (m_p[p]->a->m["r"]->m[a]->l.empty())
@@ -519,187 +741,19 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
                   ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
+                email("m44310@att.com", to, "Maestro:  Access Request Canceled", ssText.str(), "");
+              }
+              else
+              {
+                e = "Scope not found.";
               }
             }
             else
             {
-              e = "Scope not found.";
+              e = "No approvers found.";
             }
           }
-          else
-          {
-            e = "Access request not found.";
-          }
-        }
-        else
-        {
-          e = "You are not the owner.";
-        }
-      }
-      else
-      {
-        e = "Please provide a valid Type:  application, core, user.";
-      }
-    }
-    else
-    {
-      e = "Plan not found.";
-    }
-    m_mutex.unlock();
-    if (b && i->val({"_broadcast"}) != "1")
-    {
-      list<string> nodes;
-      Json *ptLive = new Json;
-      m_mutexShare.lock();
-      for (auto &link : m_l)
-      {
-        if (link->interfaces.find("maestro") != link->interfaces.end())
-        {
-          nodes.push_back(link->strNode);
-        }
-      }
-      m_mutexShare.unlock();
-      while (!nodes.empty())
-      {
-        Json *ptLink = new Json(d.r);
-        ptLink->i("Interface", "maestro");
-        ptLink->i("Node", nodes.front());
-        ptLink->i("Function", "accessRequestDeny");
-        ptLink->m["Request"]->i("_broadcast", "1", '1');
-        hub("link", ptLink, false);
-        delete ptLink;
-        nodes.pop_front();
-      }
-      ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request denied by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
-      chat("#maestro", ssChat.str());
-      ptLive->i("Action", "accessRequestDeny");
-      ptLive->i("Name", p);
-      live("Maestro", "", ptLive);
-      delete ptLive;
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ accessRequestCancel()
-bool Maestro::accessRequestCancel(radialUser &d, string &e)
-{
-  bool b = false;
-  stringstream ssChat;
-  Json *i = d.p->m["i"];
-
-  if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
-  {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = i->m["Type"]->v;
-    m_mutex.lock();
-    if (isOwner(d, p))
-    {
-      if (!haveAccess(p, a, s, e, false))
-      {
-        if (haveAccessRequest(p, a, s))
-        {
-          if (t == "application" || t == "core" || t == "user")
-          {
-            list<string> to;
-            stringstream ssQuery, ssText;
-            ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
-            if (t == "application")
-            {
-              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
-              ssText << "flow of the a_" << a << " plan";
-            }
-            else if (t == "core")
-            {
-              ssQuery << "select c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
-              ssText << "scope of the " << a << " core function";
-            }
-            else if (t == "user")
-            {
-              ssQuery << "select email from person where id = '" << esc(a) << "'";
-              ssText << "flow of the a_" << a << " plan";
-            }
-            ssText << " on behalf of the " << p << " plan within Maestro.";
-            auto getContact = dbquery("central_r", ssQuery.str(), e);
-            if (getContact != NULL)
-            {
-              if (!getContact->empty())
-              {
-                list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-                for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
-                {
-                  if ((*c)->v == s)
-                  {
-                    scopeIter = c;
-                  }
-                }
-                if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
-                {
-                  for (auto &getContactRow : *getContact)
-                  {
-                    to.push_back(getContactRow["email"]);
-                  }
-                  delete (*scopeIter);
-                  m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-                  if (m_p[p]->a->m["r"]->m[a]->l.empty())
-                  {
-                    delete m_p[p]->a->m["r"]->m[a];
-                    m_p[p]->a->m["r"]->m.erase(a);
-                  }
-                  if (m_p[p]->a->m["r"]->m.empty())
-                  {
-                    delete m_p[p]->a->m["r"];
-                    m_p[p]->a->m.erase("r");
-                  }
-                  if (m_p[p]->a->m.empty())
-                  {
-                    delete m_p[p]->a;
-                    m_p[p]->a = NULL;
-                  }
-                  if (m_p[p]->a != NULL)
-                  {
-                    string j;
-                    m_p[p]->a->j(j);
-                    if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-                    {
-                      b = true;
-                    }
-                    else
-                    {
-                      ssChat.str("");
-                      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                      chat("#maestro", ssChat.str());
-                    }
-                  }
-                  else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-                  {
-                    b = true;
-                  }
-                  else
-                  {
-                    ssChat.str("");
-                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                    chat("#maestro", ssChat.str());
-                  }
-                  email("m44310@att.com", to, "Maestro:  Access Request Canceled", ssText.str(), "");
-                }
-                else
-                {
-                  e = "Scope not found.";
-                }
-              }
-              else
-              {
-                e = "No approvers found.";
-              }
-            }
-            dbfree(getContact);
-          }
-          else
-          {
-            e = "Please provide a valid Type:  application, core, user.";
-          }
+          dbfree(getContact);
         }
         else
         {
@@ -762,95 +816,122 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
 
   if (dep({"Access", "Plan", "Scope", "Type"}, i, e))
   {
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, sp = a, t = i->m["Type"]->v;
+    list<string> to;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
+    stringstream ssText;
+    if (a.size() > 2)
+    {
+      if (a.substr(0, 2) == "a_")
+      {
+        t = "application";
+      }
+      else if (a.substr(0, 2) == "u_")
+      {
+        t = "user";
+      }
+    } 
     m_mutex.lock();
     if (m_p.find(p) != m_p.end())
     {
-      if (t == "application" || t == "core" || t == "user")
+      if (((t == "application" || t == "user") && isOwner(d, a)) || (t == "core" && isLocalAdmin(d, "Maestro")))
       {
-        if (t == "application")
+        if (haveAccessRequest(p, a, s))
         {
-          sp = (string)"a_" + a;
-        }
-        else if (t == "user")
-        {
-          sp = (string)"u_" + a;
-        }
-        if (((t == "application" || t == "user") && isOwner(d, sp)) || (t == "core" && isLocalAdmin(d, "Maestro")))
-        {
-          if (haveAccessRequest(p, a, s))
+          list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+          for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
           {
-            list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-            for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+            if ((*c)->v == s)
             {
-              if ((*c)->v == s)
-              {
-                scopeIter = c;
-              }
+              scopeIter = c;
             }
-            if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+          }
+          if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+          {
+            stringstream ssQuery;
+            ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+            if (p.substr(0, 2) == "a_")
             {
-              delete (*scopeIter);
-              m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-              if (m_p[p]->a->m["r"]->m[a]->l.empty())
+              ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+              ssText << "flow of the " << a << " plan";
+            }
+            else if (p.substr(0, 2) == "u_")
+            {
+              ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
+              ssText << "flow of the " << a << " plan";
+            }
+            ssText << " on behalf of the " << p << " plan within Maestro.";
+            auto getContact = dbquery("central_r", ssQuery.str(), e);
+            if (getContact != NULL)
+            {
+              if (!getContact->empty())
               {
-                delete m_p[p]->a->m["r"]->m[a];
-                m_p[p]->a->m["r"]->m.erase(a);
-              }
-              if (m_p[p]->a->m["r"]->m.empty())
-              {
-                delete m_p[p]->a->m["r"];
-                m_p[p]->a->m.erase("r");
-              }
-              if (m_p[p]->a->m.empty())
-              {
-                delete m_p[p]->a;
-                m_p[p]->a = NULL;
-              }
-              if (m_p[p]->a != NULL)
-              {
-                string j;
-                m_p[p]->a->j(j);
-                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                for (auto &getContactRow : *getContact)
+                {
+                  to.push_back(getContactRow["email"]);
+                }
+                delete (*scopeIter);
+                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                {
+                  delete m_p[p]->a->m["r"]->m[a];
+                  m_p[p]->a->m["r"]->m.erase(a);
+                }
+                if (m_p[p]->a->m["r"]->m.empty())
+                {
+                  delete m_p[p]->a->m["r"];
+                  m_p[p]->a->m.erase("r");
+                }
+                if (m_p[p]->a->m.empty())
+                {
+                  delete m_p[p]->a;
+                  m_p[p]->a = NULL;
+                }
+                if (m_p[p]->a != NULL)
+                {
+                  string j;
+                  m_p[p]->a->j(j);
+                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                  {
+                    b = true;
+                  }
+                  else
+                  {
+                    ssChat.str("");
+                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
+                else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
                 {
                   b = true;
                 }
                 else
                 {
                   ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
                   chat("#maestro", ssChat.str());
                 }
               }
-              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-              {
-                b = true;
-              }
               else
               {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
+                e = "No approvers found.";
               }
             }
-            else
-            {
-              e = "Scope not found.";
-            }
+            dbfree(getContact);
           }
           else
           {
-            e = "Access request not found.";
+            e = "Scope not found.";
           }
         }
         else
         {
-          e = "You are not the owner.";
+          e = "Access request not found.";
         }
       }
       else
       {
-        e = "Please provide a valid Type:  application, core, user.";
+        e = "You are not the owner.";
       }
     }
     else
@@ -889,6 +970,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
+      email("m44310@att.com", to, "Maestro:  Access Request Denied", ssText.str(), "");
     }
   }
 
