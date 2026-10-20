@@ -2971,7 +2971,7 @@ void Maestro::schedule(string strPrefix)
   while (!shutdown())
   {
     time(&(CTime[1]));
-    if ((CTime[1] - CTime[0]) > 60)
+    if ((CTime[1] - CTime[0]) > 30)
     {
       CTime[0] = CTime[1];
       if (!m_bLoaded)
