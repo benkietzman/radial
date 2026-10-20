@@ -669,7 +669,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
           ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
           if (t == "application")
           {
-            ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a) << "' order by c.email";
+            ssQuery << "select c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
             ssText << "flow of the " << a << " plan";
           }
           else if (t == "core")
@@ -679,7 +679,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
           }
           else if (t == "user")
           {
-            ssQuery << "select email from person where id = '" << esc(a) << "'";
+            ssQuery << "select email from person where id = '" << esc(a.substr(2, (a.size() - 2))) << "'";
             ssText << "flow of the " << a << " plan";
           }
           ssText << " on behalf of the " << p << " plan within Maestro.";
