@@ -196,8 +196,8 @@ class Interface : public Base
   void live(const string strWsRequestID, Json *ptMessage, const bool bWait = false);
   void log(const string strFunction, const string strMessage);
   void log(const string strMessage);
-  void logger(const string strFunction, map<string, string> label, const string strMessage);
   void logger(const string strApplication, const string strFunction, map<string, string> label, const string strMessage);
+  void logger(const string strFunction, map<string, string> label, const string strMessage);
   bool loginType(radialUser &d, string &e);
   string master();
   bool menuAccess(radialUser &d, string &e);

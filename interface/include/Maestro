@@ -106,10 +106,18 @@ class Maestro : public Interface
   JSValue js_live(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_log(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_logger(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mysqlQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mysqlUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_pageGroup(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_pageUser(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_sqliteCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_sqliteDatabases(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_sqliteDrop(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_sqliteQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const list<string> scopes = {}, const string strDescription = "");
 };
 // }}}

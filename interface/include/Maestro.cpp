@@ -2698,6 +2698,239 @@ JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueCons
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_mysqlQuery()
+JSValue Maestro::js_mysqlQuery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 6)
+  {
+    const char *pszServer = JS_ToCString(jsctx, argv[0]), *pszPort = JS_ToCString(jsctx, argv[1]), *pszUser = JS_ToCString(jsctx, argv[2]), *pszPassword = JS_ToCString(jsctx, argv[3]), *pszDatabase = JS_ToCString(jsctx, argv[4]), *pszQuery = JS_ToCString(jsctx, argv[5]);
+    if (pszServer != NULL && pszPort != NULL && pszUser != NULL && pszPassword != NULL && pszDatabase != NULL && pszQuery != NULL)
+    {
+      list<map<string, string> > rows;
+      unsigned int unPort = atoi(pszPort);
+      unsigned long long ullRows = 0;
+      if (mysqlQuery(pszServer, unPort, pszUser, pszPassword, pszDatabase, pszQuery, ullRows, rows, e))
+      {
+        string j;
+        stringstream ssRows;
+        Json *ptResponse = new Json;
+        b = true;
+        ssRows << ullRows;
+        ptResponse->i("Rows", ssRows.str(), 'n');
+        ptResponse->m["Response"] = new Json;
+        for (auto &row : rows)
+        {
+          ptResponse->m["Response"]->pb(row);
+        }
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+      }
+    }
+    else
+    {
+      e = "Please provide the server, port, user, password, database, query.";
+    }
+    if (pszServer != NULL)
+    {
+      JS_FreeCString(jsctx, pszServer);
+    }
+    if (pszPort != NULL)
+    {
+      JS_FreeCString(jsctx, pszPort);
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszPassword != NULL)
+    {
+      JS_FreeCString(jsctx, pszPassword);
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszQuery != NULL)
+    {
+      JS_FreeCString(jsctx, pszQuery);
+    }
+  }
+  else
+  {
+    e = "Please provide the server, port, user, password, database, query.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_mysqlUpdate()
+JSValue Maestro::js_mysqlUpdate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 6)
+  {
+    const char *pszServer = JS_ToCString(jsctx, argv[0]), *pszPort = JS_ToCString(jsctx, argv[1]), *pszUser = JS_ToCString(jsctx, argv[2]), *pszPassword = JS_ToCString(jsctx, argv[3]), *pszDatabase = JS_ToCString(jsctx, argv[4]), *pszQuery = JS_ToCString(jsctx, argv[5]);
+    if (pszServer != NULL && pszPort != NULL && pszUser != NULL && pszPassword != NULL && pszDatabase != NULL && pszQuery != NULL)
+    {
+      list<map<string, string> > rows;
+      unsigned int unPort = atoi(pszPort);
+      unsigned long long ullID = 0, ullRows = 0;
+      if (mysqlUpdate(pszServer, unPort, pszUser, pszPassword, pszDatabase, pszQuery, ullID, ullRows, e))
+      {
+        string j;
+        stringstream ssID, ssRows;
+        Json *ptResponse = new Json;
+        b = true;
+        ssID << ullID;
+        ptResponse->i("ID", ssID.str(), 'n');
+        ssRows << ullRows;
+        ptResponse->i("Rows", ssRows.str(), 'n');
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+      }
+    }
+    else
+    {
+      e = "Please provide the server, port, user, password, database, query.";
+    }
+    if (pszServer != NULL)
+    {
+      JS_FreeCString(jsctx, pszServer);
+    }
+    if (pszPort != NULL)
+    {
+      JS_FreeCString(jsctx, pszPort);
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszPassword != NULL)
+    {
+      JS_FreeCString(jsctx, pszPassword);
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszQuery != NULL)
+    {
+      JS_FreeCString(jsctx, pszQuery);
+    }
+  }
+  else
+  {
+    e = "Please provide the server, port, user, password, database, query.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_pageGroup()
+JSValue Maestro::js_pageGroup(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszGroup = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszGroup != NULL && pszMessage != NULL)
+    {
+      if (pageGroup(pszGroup, pszMessage, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the group and message.";
+    }
+    if (pszGroup != NULL)
+    {
+      JS_FreeCString(jsctx, pszGroup);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the group and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_pageUser()
+JSValue Maestro::js_pageUser(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszUser != NULL && pszMessage != NULL)
+    {
+      if (pageUser(pszUser, pszMessage, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the user and message.";
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the user and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -2844,6 +3077,191 @@ JSValue Maestro::js_setStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
   else
   {
     e = "Please provide the status.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sqliteCreate()
+JSValue Maestro::js_sqliteCreate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
+    if (pszDatabase != NULL && pszNode != NULL)
+    {
+      if (haveAccess(jsctx, "sqliteCreate", "all", e))
+      {
+        if (sqliteCreate(pszDatabase, pszNode, e))
+        {
+          b = true;
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the database and node.";
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszNode != NULL)
+    {
+      JS_FreeCString(jsctx, pszNode);
+    }
+  }
+  else
+  {
+    e = "Please provide the database and node.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sqliteDatabases()
+JSValue Maestro::js_sqliteDatabases(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  map<string, map<string, string> > databases;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (sqliteDatabases(databases, e))
+  {
+    string j;
+    Json *ptResponse = new Json;
+    b = true;
+    for (auto &node : databases)
+    {
+      ptResponse->i(node.first, node.second);
+    }
+    ptResponse->j(j);
+    delete ptResponse;
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sqliteDrop()
+JSValue Maestro::js_sqliteDrop(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
+    if (pszDatabase != NULL && pszNode != NULL)
+    {
+      if (haveAccess(jsctx, "sqliteDrop", "all", e))
+      {
+        if (sqliteDrop(pszDatabase, pszNode, e))
+        {
+          b = true;
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the database and node.";
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszNode != NULL)
+    {
+      JS_FreeCString(jsctx, pszNode);
+    }
+  }
+  else
+  {
+    e = "Please provide the database and node.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sqliteQuery()
+JSValue Maestro::js_sqliteQuery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszStatement = JS_ToCString(jsctx, argv[1]);
+    if (pszDatabase != NULL && pszStatement != NULL)
+    {
+      if (haveAccess(jsctx, "sqliteQuery", "all", e))
+      {
+        size_t unID = 0, unRows = 0;
+        Json *ptResult = new Json;
+        if (sqliteQuery(pszDatabase, pszStatement, ptResult, unID, unRows, e))
+        {
+          string j;
+          stringstream ssID, ssRows;
+          Json *ptResponse = new Json;
+          b = true;
+          ssID << unID;
+          ptResponse->i("ID", ssID.str(), 'n');
+          ssRows << unRows;
+          ptResponse->i("Rows", ssRows.str(), 'n');
+          ptResponse->m["Response"] = ptResult;
+          ptResponse->j(j);
+          delete ptResponse;
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        }
+        else
+        {
+          delete ptResult;
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the database and statement.";
+    }
+    if (pszDatabase != NULL)
+    {
+      JS_FreeCString(jsctx, pszDatabase);
+    }
+    if (pszStatement != NULL)
+    {
+      JS_FreeCString(jsctx, pszStatement);
+    }
+  }
+  else
+  {
+    e = "Please provide the database and statement.";
   }
   if (!e.empty())
   {
