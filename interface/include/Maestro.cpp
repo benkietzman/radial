@@ -2517,16 +2517,14 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     if (pszApplication != NULL && pszUser != NULL && pszMessage != NULL && (argc < 4 || pszWait != NULL))
     {
       bool bWait = (pszWait != NULL && (string)pszWait == "true");
-      map<string, string> message;
       Json *ptMessage = new Json(pszMessage);
       b = true;
 if (pszWait != NULL)
 {
   chat("#maestro", pszWait);
 }
-      ptMessage->flatten(message, true, false);
+      live(pszApplication, pszUser, ptMessage, bWait);
       delete ptMessage;
-      live(pszApplication, pszUser, message, bWait);
     }
     if (pszApplication != NULL)
     {
