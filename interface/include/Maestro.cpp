@@ -2728,7 +2728,7 @@ JSValue Maestro::js_mysqlQuery(JSContext *jsctx, JSValueConst, int argc, JSValue
         }
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
@@ -2800,7 +2800,7 @@ JSValue Maestro::js_mysqlUpdate(JSContext *jsctx, JSValueConst, int argc, JSValu
         ptResponse->i("Rows", ssRows.str(), 'n');
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
@@ -3066,7 +3066,7 @@ JSValue Maestro::js_sqliteDatabases(JSContext *jsctx, JSValueConst, int argc, JS
     }
     ptResponse->j(j);
     delete ptResponse;
-    JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
   }
   if (!e.empty())
   {
@@ -3152,7 +3152,7 @@ JSValue Maestro::js_sqliteQuery(JSContext *jsctx, JSValueConst, int argc, JSValu
           ptResponse->m["Response"] = ptResult;
           ptResponse->j(j);
           delete ptResponse;
-          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
         }
         else
         {
@@ -3208,7 +3208,7 @@ JSValue Maestro::js_sshConnect(JSContext *jsctx, JSValueConst, int argc, JSValue
         ptResponse->i("Session", strSession, 'n');
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
@@ -3315,7 +3315,7 @@ JSValue Maestro::js_sshSend(JSContext *jsctx, JSValueConst, int argc, JSValueCon
         ptResponse->i("Session", strSession);
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
@@ -3493,7 +3493,7 @@ JSValue Maestro::js_storageRetrieve(JSContext *jsctx, JSValueConst, int argc, JS
         ptResponse->m["Data"] = ptData;
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
       else
       {
@@ -3549,7 +3549,7 @@ JSValue Maestro::js_storageRetrieveKeys(JSContext *jsctx, JSValueConst, int argc
         ptResponse->i("Data", subkeys);
         ptResponse->j(j);
         delete ptResponse;
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
