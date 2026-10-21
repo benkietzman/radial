@@ -86,6 +86,7 @@ export default
     <thead>
       <tr>
         <th>Function</th>
+        <th>Prototype</th>
         <th>Description</th>
         <th>Scopes</th>
       </tr>
@@ -94,6 +95,7 @@ export default
       {{#each cores}}
       <tr>
         <td>{{Function}}</td>
+        <td>{{Prototype}}</td>
         <td>{{Description}}</td>
         <td>
           <ul style="list-style-type: none;">
