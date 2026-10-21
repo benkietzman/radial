@@ -2237,6 +2237,10 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
       b = true;
       email(pszFrom, pszTo, pszSubject, pszText, ((argc >= 5)?pszHtml:""));
     }
+    else
+    {
+      e = "Please provide the From, To, Subject, and Text.";
+    }
     if (pszFrom != NULL)
     {
       JS_FreeCString(jsctx, pszFrom);
@@ -2522,6 +2526,10 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       live(pszApplication, pszUser, ptMessage, bWait);
       delete ptMessage;
     }
+    else
+    {
+      e = "Please provide the Application, User, and Message.";
+    }
     if (pszApplication != NULL)
     {
       JS_FreeCString(jsctx, pszApplication);
@@ -2537,6 +2545,32 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     if (pszWait != NULL)
     {
       JS_FreeCString(jsctx, pszWait);
+    }
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_live()
+JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+
+  if (argc == 1)
+  {
+    const char *pszMessage = JS_ToCString(jsctx, argv[0]);
+    if (pszMessage != NULL)
+    {
+      b = true;
+      log(pszMessage);
+    }
+    else
+    {
+      e = "Please provide the Message.";
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
     }
   }
 

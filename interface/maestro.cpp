@@ -26,6 +26,7 @@ JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *
 JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getResponse(ctx, obj, argc, argv);}
 JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getStatus(ctx, obj, argc, argv);}
 JSValue js_live(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_live(ctx, obj, argc, argv);}
+JSValue js_log(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_log(ctx, obj, argc, argv);}
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setError(ctx, obj, argc, argv);}
 JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setRequest(ctx, obj, argc, argv);}
 JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setResponse(ctx, obj, argc, argv);}
@@ -49,7 +50,8 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("getRequest", js_getRequest, 0, {}, "Provides the ability to retrieve the request being provides to the given flow.");
   gpMaestro->jsreg("getResponse", js_getResponse, 0, {}, "Provides the ability to retrieve the response from teh last Maestro function.");
   gpMaestro->jsreg("getStatus", js_getStatus, 0, {}, "Provides the ability to retrieve the status from teh last Maestro function.");
-  gpMaestro->jsreg("live", js_live, 4, {}, "Provides the ability to send a live message.");
+  gpMaestro->jsreg("live", js_live, 4, {}, "Provides the ability to send a live message to an application and/or user.");
+  gpMaestro->jsreg("log", js_log, 1, {}, "Provides the ability to write a log message to the local Radial instance.");
   gpMaestro->jsreg("setError", js_setError, 1, {}, "Provides the ability to set the error prior to exiting the given flow.");
   gpMaestro->jsreg("setRequest", js_setRequest, 1, {}, "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   gpMaestro->jsreg("setResponse", js_setResponse, 1, {}, "Provides the ability to set the response prior to exiting the given flow.");
