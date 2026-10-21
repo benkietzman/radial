@@ -2234,7 +2234,7 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   if (argc == 8)
   {
     const char *pszFrom = JS_ToCString(jsctx, argv[0]), *pszTo = JS_ToCString(jsctx, argv[1]), *pszCc = JS_ToCString(jsctx, argv[2]), *pszBcc = JS_ToCString(jsctx, argv[3]), *pszSubject = JS_ToCString(jsctx, argv[4]), *pszText = JS_ToCString(jsctx, argv[5]), *pszHtml = JS_ToCString(jsctx, argv[6]), *pszFile = JS_ToCString(jsctx, argv[7]);
-    if (pszFrom != NULL && pszTo != NULL && pszCc != NULL, pszBcc, pszSubject != NULL && pszText != NULL && pszHtml && pszFile)
+    if (pszFrom != NULL && pszTo != NULL && pszCc != NULL && pszBcc != NULL && pszSubject != NULL && pszText != NULL && pszHtml != NULL && pszFile != NULL)
     {
       list<string> cc, bcc, to;
       map<string, string> file;
