@@ -2645,6 +2645,59 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_logger()
+JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 4)
+  {
+    const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszFunction = JS_ToCString(jsctx, argv[1]), *pszLabel = JS_ToCString(jsctx, argv[2]), *pszMessage = JS_ToCString(jsctx, argv[3]);
+    if (pszApplication != NULL && pszFunction != NULL && pszLabel != NULL && pszMessage != NULL)
+    {
+      map<string, string> label;
+      Json *ptLabel = new Json(pszLabel);
+      b = true;
+      ptLabel->flatten(label, true, false);
+      delete ptLabel;
+      logger(pszApplication, pszFunction, label, pszMessage);
+    }
+    else
+    {
+      e = "Please provide the application, function, label, and message.";
+    }
+    if (pszApplication != NULL)
+    {
+      JS_FreeCString(jsctx, pszApplication);
+    }
+    if (pszFunction != NULL)
+    {
+      JS_FreeCString(jsctx, pszFunction);
+    }
+    if (pszLabel != NULL)
+    {
+      JS_FreeCString(jsctx, pszLabel);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the application, function, label, and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
