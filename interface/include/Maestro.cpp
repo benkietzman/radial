@@ -2228,6 +2228,8 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
 JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc >= 4 && argc <= 5)
   {
@@ -2262,6 +2264,15 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
       JS_FreeCString(jsctx, pszHtml);
     }
   }
+  else
+  {
+    e = "Please provide the From, To, Subject, and Text.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
@@ -2514,6 +2525,8 @@ JSValue Maestro::js_getStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
 JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc >= 3 && argc <= 4)
   {
@@ -2547,14 +2560,25 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       JS_FreeCString(jsctx, pszWait);
     }
   }
+  else
+  {
+    e = "Please provide the Application, User, and Message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
-// {{{ js_live()
-JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+// {{{ js_log()
+JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc == 1)
   {
@@ -2573,6 +2597,15 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       JS_FreeCString(jsctx, pszMessage);
     }
   }
+  else
+  {
+    e = "Please provide the Message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
