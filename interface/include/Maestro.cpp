@@ -2585,8 +2585,10 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
     const char *pszMessage = JS_ToCString(jsctx, argv[0]);
     if (pszMessage != NULL)
     {
+      stringstream ssMessage;
       b = true;
-      log(pszMessage);
+      ssMessage << "maestro->main()->Maestro::js_log():  " << pszMessage;
+      log(ssMessage.str());
     }
     else
     {
