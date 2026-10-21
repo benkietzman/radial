@@ -1820,7 +1820,7 @@ JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst
     }
     else
     {
-      e = "Please provide the User and Message.";
+      e = "Please provide the user and message.";
     }
     if (pszUser != NULL)
     {
@@ -1837,7 +1837,7 @@ JSValue Maestro::js_alert(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   }
   else
   {
-    e = "Please provide the User and Message.";
+    e = "Please provide the user and message.";
   }
   if (!e.empty())
   {
@@ -1869,7 +1869,7 @@ JSValue Maestro::js_application(JSContext *jsctx, JSValueConst, int argc, JSValu
     }
     else
     {
-      e = "Please provide the Application and Message.";
+      e = "Please provide the application and message.";
     }
     if (pszApplication != NULL)
     {
@@ -1882,7 +1882,7 @@ JSValue Maestro::js_application(JSContext *jsctx, JSValueConst, int argc, JSValu
   }
   else
   {
-    e = "Please provide the Appllication and Message.";
+    e = "Please provide the appllication and message.";
   }
   if (!e.empty())
   {
@@ -1918,7 +1918,7 @@ JSValue Maestro::js_centralmon(JSContext *jsctx, JSValueConst, int argc, JSValue
     }
     else
     {
-      e = "Please provide the Server and Process.";
+      e = "Please provide the server and process.";
     }
     if (pszServer != NULL)
     {
@@ -1931,7 +1931,7 @@ JSValue Maestro::js_centralmon(JSContext *jsctx, JSValueConst, int argc, JSValue
   }
   else
   {
-    e = "Please provide the Server and Process.";
+    e = "Please provide the server and process.";
   }
   if (!e.empty())
   {
@@ -2013,7 +2013,7 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     }
     else
     {
-      e = "Please provide the Command, Arguments, Input, Timeout, and Node.";
+      e = "Please provide the command, arguments, input, timeout, and node.";
     }
     if (pszCommand != NULL)
     {
@@ -2038,7 +2038,7 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   }
   else
   {
-    e = "Please provide the Command, Arguments, Input, Timeout, and Node.";
+    e = "Please provide the command, arguments, input, timeout, and node.";
   }
   if (!e.empty())
   {
@@ -2080,7 +2080,7 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
     }
     else
     {
-      e = "Please provide the Function and Input.";
+      e = "Please provide the function and input.";
     }
     if (pszFunction != NULL)
     {
@@ -2093,7 +2093,7 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
   }
   else
   {
-    e = "Please provide the Function and Input.";
+    e = "Please provide the function and input.";
   }
   if (!e.empty())
   {
@@ -2142,7 +2142,7 @@ JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     }
     else
     {
-      e = "Please provide the Database and Query.";
+      e = "Please provide the database and query.";
     }
     if (pszDatabase != NULL)
     {
@@ -2155,7 +2155,7 @@ JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   }
   else
   {
-    e = "Please provide the Database and Query.";
+    e = "Please provide the database and query.";
   }
   if (!e.empty())
   {
@@ -2200,7 +2200,7 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     }
     else
     {
-      e = "Please provide the Database and Update.";
+      e = "Please provide the database and update.";
     }
     if (pszDatabase != NULL)
     {
@@ -2213,7 +2213,7 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
   }
   else
   {
-    e = "Please provide the Database and Update.";
+    e = "Please provide the database and update.";
   }
   if (!e.empty())
   {
@@ -2231,17 +2231,37 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   string e;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
-  if (argc >= 4 && argc <= 5)
+  if (argc == 8)
   {
-    const char *pszFrom = JS_ToCString(jsctx, argv[0]), *pszTo = JS_ToCString(jsctx, argv[1]), *pszSubject = JS_ToCString(jsctx, argv[2]), *pszText = JS_ToCString(jsctx, argv[3]), *pszHtml = ((argc >= 5)?JS_ToCString(jsctx, argv[4]):NULL);
-    if (pszFrom != NULL && pszTo != NULL && pszSubject != NULL && pszText != NULL && (argc < 5 || pszHtml != NULL))
+    const char *pszFrom = JS_ToCString(jsctx, argv[0]), *pszTo = JS_ToCString(jsctx, argv[1]), *pszCc = JS_ToCString(jsctx, argv[2]), *pszBcc = JS_ToCString(jsctx, argv[3]), *pszSubject = JS_ToCString(jsctx, argv[4]), *pszText = JS_ToCString(jsctx, argv[5]), *pszHtml = JS_ToCString(jsctx, argv[6]), *pszFile = JS_ToCString(jsctx, argv[7]);
+    if (pszFrom != NULL && pszTo != NULL && pszCc != NULL, pszBcc, pszSubject != NULL && pszText != NULL && pszHtml && pszFile)
     {
+      list<string> cc, bcc, to;
+      map<string, string> file;
+      Json *ptTo = new Json(pszTo), *ptCc = new Json(pszCc), *ptBcc = new Json(pszBcc), *ptFile = new Json(pszFile);
       b = true;
-      email(pszFrom, pszTo, pszSubject, pszText, ((argc >= 5)?pszHtml:""));
+      for (auto &i : ptTo->l)
+      {
+        to.push_back(i->v);
+      }
+      delete ptTo;
+      for (auto &i : ptCc->l)
+      {
+        cc.push_back(i->v);
+      }
+      delete ptCc;
+      for (auto &i : ptBcc->l)
+      {
+        bcc.push_back(i->v);
+      }
+      delete ptBcc;
+      ptFile->flatten(file, true, false);
+      delete ptFile;
+      email(pszFrom, to, cc, bcc, pszSubject, pszText, pszHtml, file);
     }
     else
     {
-      e = "Please provide the From, To, Subject, and Text.";
+      e = "Please provide the from, to, cc, bcc, subject, text, html, file.";
     }
     if (pszFrom != NULL)
     {
@@ -2250,6 +2270,14 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
     if (pszTo != NULL)
     {
       JS_FreeCString(jsctx, pszTo);
+    }
+    if (pszCc != NULL)
+    {
+      JS_FreeCString(jsctx, pszCc);
+    }
+    if (pszBcc != NULL)
+    {
+      JS_FreeCString(jsctx, pszBcc);
     }
     if (pszSubject != NULL)
     {
@@ -2263,10 +2291,14 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
     {
       JS_FreeCString(jsctx, pszHtml);
     }
+    if (pszFile != NULL)
+    {
+      JS_FreeCString(jsctx, pszFile);
+    }
   }
   else
   {
-    e = "Please provide the From, To, Subject, and Text.";
+    e = "Please provide the from, to, cc, bcc, subject, text, html, file.";
   }
   if (!e.empty())
   {
@@ -2449,7 +2481,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     }
     else
     {
-      e = "Please provide the Plan and Flow.";
+      e = "Please provide the plan and flow.";
     }
     if (pszRequest != NULL)
     {
@@ -2466,7 +2498,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   }
   else
   {
-    e = "Please provide the Plan and Flow.";
+    e = "Please provide the plan and flow.";
   }
   if (!e.empty())
   {
@@ -2541,7 +2573,7 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
     }
     else
     {
-      e = "Please provide the Application, User, and Message.";
+      e = "Please provide the application, user, and message.";
     }
     if (pszApplication != NULL)
     {
@@ -2562,7 +2594,7 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   }
   else
   {
-    e = "Please provide the Application, User, and Message.";
+    e = "Please provide the application, user, and message.";
   }
   if (!e.empty())
   {
@@ -2592,7 +2624,7 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
     }
     else
     {
-      e = "Please provide the Message.";
+      e = "Please provide the message.";
     }
     if (pszMessage != NULL)
     {
@@ -2601,7 +2633,7 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
   }
   else
   {
-    e = "Please provide the Message.";
+    e = "Please provide the message.";
   }
   if (!e.empty())
   {
@@ -2616,6 +2648,8 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc == 1)
   {
@@ -2627,11 +2661,24 @@ JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueCo
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, pszError, strlen(pszError)));
       JS_FreeValue(jsctx, jsglobal);
     }
+    else
+    {
+      e = "Please provide the error.";
+    }
     if (pszError != NULL)
     {
       JS_FreeCString(jsctx, pszError);
     }
   }
+  else
+  {
+    e = "Please provide the error.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
@@ -2640,6 +2687,8 @@ JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueCo
 JSValue Maestro::js_setRequest(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc == 1)
   {
@@ -2651,11 +2700,24 @@ JSValue Maestro::js_setRequest(JSContext *jsctx, JSValueConst, int argc, JSValue
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_request", JS_NewStringLen(jsctx, pszRequest, strlen(pszRequest)));
       JS_FreeValue(jsctx, jsglobal);
     }
+    else
+    {
+      e = "Please provide the nequest.";
+    }
     if (pszRequest != NULL)
     {
       JS_FreeCString(jsctx, pszRequest);
     }
   }
+  else
+  {
+    e = "Please provide the request.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
@@ -2664,6 +2726,8 @@ JSValue Maestro::js_setRequest(JSContext *jsctx, JSValueConst, int argc, JSValue
 JSValue Maestro::js_setResponse(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc == 1)
   {
@@ -2675,11 +2739,24 @@ JSValue Maestro::js_setResponse(JSContext *jsctx, JSValueConst, int argc, JSValu
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, pszResponse, strlen(pszResponse)));
       JS_FreeValue(jsctx, jsglobal);
     }
+    else
+    {
+      e = "Please provide the response.";
+    }
     if (pszResponse != NULL)
     {
       JS_FreeCString(jsctx, pszResponse);
     }
   }
+  else
+  {
+    e = "Please provide the response.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
@@ -2688,6 +2765,8 @@ JSValue Maestro::js_setResponse(JSContext *jsctx, JSValueConst, int argc, JSValu
 JSValue Maestro::js_setStatus(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
   if (argc == 1)
   {
@@ -2699,18 +2778,31 @@ JSValue Maestro::js_setStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_status", JS_NewStringLen(jsctx, pszStatus, strlen(pszStatus)));
       JS_FreeValue(jsctx, jsglobal);
     }
+    else
+    {
+      e = "Please provide the status.";
+    }
     if (pszStatus != NULL)
     {
       JS_FreeCString(jsctx, pszStatus);
     }
   }
+  else
+  {
+    e = "Please provide the status.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
 // }}}
 // {{{ jsreg()
-void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const list<string> scopes, const string strDescription)
+void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const list<string> scopes, const string strDescription)
 {
   radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
 
@@ -2718,6 +2810,7 @@ void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, cons
   ptJavascript->nLength = nLength;
   ptJavascript->scopes = scopes;
   ptJavascript->strDescription = strDescription;
+  ptJavascript->strPrototype = strPrototype;
   if (m_javascript.find(prop) != m_javascript.end())
   {
     delete m_javascript[prop];
