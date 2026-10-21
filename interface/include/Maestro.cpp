@@ -2857,6 +2857,8 @@ JSValue Maestro::js_pageGroup(JSContext *jsctx, JSValueConst, int argc, JSValueC
     const char *pszGroup = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
     if (pszGroup != NULL && pszMessage != NULL)
     {
+chat("#maestro", pszGroup);
+chat("#maestro", pszMessage);
       if (pageGroup(pszGroup, pszMessage, e))
       {
         b = true;
