@@ -30,8 +30,6 @@ JSValue js_log(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {
 JSValue js_logger(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_logger(ctx, obj, argc, argv);}
 JSValue js_mysqlQuery(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_mysqlQuery(ctx, obj, argc, argv);}
 JSValue js_mysqlUpdate(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_mysqlUpdate(ctx, obj, argc, argv);}
-JSValue js_pageGroup(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_pageGroup(ctx, obj, argc, argv);}
-JSValue js_pageUser(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_pageUser(ctx, obj, argc, argv);}
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setError(ctx, obj, argc, argv);}
 JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setRequest(ctx, obj, argc, argv);}
 JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setResponse(ctx, obj, argc, argv);}
@@ -72,8 +70,6 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("logger", js_logger, 4, "logger(application, function, label, message)", {}, "Provides the ability to send a message to a particular application registered in Logger.");
   gpMaestro->jsreg("mysqlQuery", js_mysqlQuery, 6, "mysqlQuery(server, port, user, password, database, query)", {}, "Provides the ability to query (SQL: select) a given MySQL server and database.");
   gpMaestro->jsreg("mysqlUpdate", js_mysqlUpdate, 6, "mysqlUpdate(server, port, user, password, database, query)", {}, "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
-  gpMaestro->jsreg("pageGroup", js_pageGroup, 2, "pageGroup(group, message)", {}, "Provides the ability to send a page to a group.");
-  gpMaestro->jsreg("pageUser", js_pageUser, 2, "pageUser(user, message)", {}, "Provides the ability to send a page to a user.");
   gpMaestro->jsreg("setError", js_setError, 1, "setError(error)", {}, "Provides the ability to set the error prior to exiting the given flow.");
   gpMaestro->jsreg("setRequest", js_setRequest, 1, "setRequest(request)", {}, "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   gpMaestro->jsreg("setResponse", js_setResponse, 1, "setResponse(response)", {}, "Provides the ability to set the response prior to exiting the given flow.");
@@ -87,8 +83,8 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("sshSend", js_sshSend, 3, "sshSend(session, command, wait)", {}, "Provides the ability to send a command over a SSH session.");
   gpMaestro->jsreg("storageAdd", js_storageAdd, 2, "storageAdd(keys, data)", {"all"}, "Provides the ability to add data to storage.");
   gpMaestro->jsreg("storageRemove", js_storageAdd, 1, "storageRemove(keys)", {"all"}, "Provides the ability to remove data from storage.");
-  gpMaestro->jsreg("storageRetrieve", js_storageRetrieve, 2, "storageRetrieve(keys, data)", {}, "Provides the ability to retrieve data from storage.");
-  gpMaestro->jsreg("storageRetrieveKeys", js_storageRetrieve, 2, "storageRetrieveKeys(keys, data)", {}, "Provides the ability to retrieve key data from storage.");
+  gpMaestro->jsreg("storageRetrieve", js_storageRetrieve, 1, "storageRetrieve(keys)", {}, "Provides the ability to retrieve data from storage.");
+  gpMaestro->jsreg("storageRetrieveKeys", js_storageRetrieve, 1, "storageRetrieveKeys(keys)", {}, "Provides the ability to retrieve key data from storage.");
   gpMaestro->jsreg("storageUpdate", js_storageUpdate, 2, "storageUpdate(keys, data)", {"all"}, "Provides the ability to update data into storage.");
   gpMaestro->process(strPrefix);
   delete gpMaestro;

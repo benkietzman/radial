@@ -2845,94 +2845,6 @@ JSValue Maestro::js_mysqlUpdate(JSContext *jsctx, JSValueConst, int argc, JSValu
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
-// {{{ js_pageGroup()
-JSValue Maestro::js_pageGroup(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
-{
-  bool b = false;
-  string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
-
-  if (argc == 2)
-  {
-    const char *pszGroup = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
-    if (pszGroup != NULL && pszMessage != NULL)
-    {
-chat("#maestro", pszGroup);
-chat("#maestro", pszMessage);
-      if (pageGroup(pszGroup, pszMessage, e))
-      {
-        b = true;
-      }
-    }
-    else
-    {
-      e = "Please provide the group and message.";
-    }
-    if (pszGroup != NULL)
-    {
-      JS_FreeCString(jsctx, pszGroup);
-    }
-    if (pszMessage != NULL)
-    {
-      JS_FreeCString(jsctx, pszMessage);
-    }
-  }
-  else
-  {
-    e = "Please provide the group and message.";
-  }
-  if (!e.empty())
-  {
-    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
-  }
-  JS_FreeValue(jsctx, jsglobal);
-
-  return JS_NewBool(jsctx, ((b)?1:0));
-}
-// }}}
-// {{{ js_pageUser()
-JSValue Maestro::js_pageUser(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
-{
-  bool b = false;
-  string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
-
-  if (argc == 2)
-  {
-    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
-    if (pszUser != NULL && pszMessage != NULL)
-    {
-      if (pageUser(pszUser, pszMessage, e))
-      {
-        b = true;
-      }
-    }
-    else
-    {
-      e = "Please provide the user and message.";
-    }
-    if (pszUser != NULL)
-    {
-      JS_FreeCString(jsctx, pszUser);
-    }
-    if (pszMessage != NULL)
-    {
-      JS_FreeCString(jsctx, pszMessage);
-    }
-  }
-  else
-  {
-    e = "Please provide the user and message.";
-  }
-  if (!e.empty())
-  {
-    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
-  }
-  JS_FreeValue(jsctx, jsglobal);
-
-  return JS_NewBool(jsctx, ((b)?1:0));
-}
-// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -3561,57 +3473,45 @@ JSValue Maestro::js_storageRetrieve(JSContext *jsctx, JSValueConst, int argc, JS
   string e;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
-  if (argc == 2)
+  if (argc == 1)
   {
-    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
-    if (pszKeys != NULL && pszData != NULL)
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]);
+    if (pszKeys != NULL)
     {
       list<string> keys;
-      Json *ptKeys = new Json(pszKeys);
+      Json *ptData = new Json, *ptKeys = new Json(pszKeys);
       for (auto &key : ptKeys->l)
       {
         keys.push_back(key->v);
       }
       delete ptKeys;
-      if (!keys.empty())
+      if (storageRetrieve(keys, ptData, e))
       {
-        Json *ptData = new Json(pszData);
-        if (storageRetrieve(keys, ptData, e))
-        {
-          string j;
-          Json *ptResponse = new Json;
-          b = true;
-          ptResponse->m["Data"] = ptData;
-          ptResponse->j(j);
-          delete ptResponse;
-          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
-        }
-        else
-        {
-          delete ptData;
-        }
+        string j;
+        Json *ptResponse = new Json;
+        b = true;
+        ptResponse->m["Data"] = ptData;
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
       else
       {
-        e = "Please provide the keys.";
+        delete ptData;
       }
     }
     else
     {
-      e = "Please provide the keys and data.";
+      e = "Please provide the keys.";
     }
     if (pszKeys != NULL)
     {
       JS_FreeCString(jsctx, pszKeys);
     }
-    if (pszData != NULL)
-    {
-      JS_FreeCString(jsctx, pszData);
-    }
   }
   else
   {
-    e = "Please provide the keys and data.";
+    e = "Please provide the keys.";
   }
   if (!e.empty())
   {
@@ -3629,53 +3529,41 @@ JSValue Maestro::js_storageRetrieveKeys(JSContext *jsctx, JSValueConst, int argc
   string e;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
-  if (argc == 2)
+  if (argc == 1)
   {
-    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
-    if (pszKeys != NULL && pszData != NULL)
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]);
+    if (pszKeys != NULL)
     {
-      list<string> keys;
+      list<string> keys, subkeys;
       Json *ptKeys = new Json(pszKeys);
       for (auto &key : ptKeys->l)
       {
         keys.push_back(key->v);
       }
       delete ptKeys;
-      if (!keys.empty())
+      if (storageRetrieveKeys(keys, subkeys, e))
       {
-        list<string> subkeys;
-        if (storageRetrieveKeys(keys, subkeys, e))
-        {
-          string j;
-          Json *ptResponse = new Json;
-          b = true;
-          ptResponse->i("Data", subkeys);
-          ptResponse->j(j);
-          delete ptResponse;
-          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
-        }
-      }
-      else
-      {
-        e = "Please provide the keys.";
+        string j;
+        Json *ptResponse = new Json;
+        b = true;
+        ptResponse->i("Data", subkeys);
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
       }
     }
     else
     {
-      e = "Please provide the keys and data.";
+      e = "Please provide the keys.";
     }
     if (pszKeys != NULL)
     {
       JS_FreeCString(jsctx, pszKeys);
     }
-    if (pszData != NULL)
-    {
-      JS_FreeCString(jsctx, pszData);
-    }
   }
   else
   {
-    e = "Please provide the keys and data.";
+    e = "Please provide the keys.";
   }
   if (!e.empty())
   {
