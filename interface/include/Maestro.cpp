@@ -3205,7 +3205,7 @@ JSValue Maestro::js_sshConnect(JSContext *jsctx, JSValueConst, int argc, JSValue
         Json *ptResponse = new Json;
         b = true;
         ptResponse->i("Data", strData);
-        ptResponse->i("Session", strSession, 'n');
+        ptResponse->i("Session", strSession);
         ptResponse->j(j);
         delete ptResponse;
         JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
