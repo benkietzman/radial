@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("getRequest", js_getRequest, 0, {}, "Provides the ability to retrieve the request being provides to the given flow.");
   gpMaestro->jsreg("getResponse", js_getResponse, 0, {}, "Provides the ability to retrieve the response from teh last Maestro function.");
   gpMaestro->jsreg("getStatus", js_getStatus, 0, {}, "Provides the ability to retrieve the status from teh last Maestro function.");
-  gpMaestro->jsreg("live", js_email, 4, {}, "Provides the ability to send a live message.");
+  gpMaestro->jsreg("live", js_live, 4, {}, "Provides the ability to send a live message.");
   gpMaestro->jsreg("setError", js_setError, 1, {}, "Provides the ability to set the error prior to exiting the given flow.");
   gpMaestro->jsreg("setRequest", js_setRequest, 1, {}, "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   gpMaestro->jsreg("setResponse", js_setResponse, 1, {}, "Provides the ability to set the response prior to exiting the given flow.");
