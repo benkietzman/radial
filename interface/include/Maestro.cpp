@@ -3272,6 +3272,480 @@ JSValue Maestro::js_sqliteQuery(JSContext *jsctx, JSValueConst, int argc, JSValu
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_sshConnect()
+JSValue Maestro::js_sshConnect(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 5)
+  {
+    const char *pszServer = JS_ToCString(jsctx, argv[0]), *pszPort = JS_ToCString(jsctx, argv[1]), *pszUser = JS_ToCString(jsctx, argv[2]), *pszPassword = JS_ToCString(jsctx, argv[3]), *pszPrivateKey = JS_ToCString(jsctx, argv[4]);
+    if (pszServer != NULL && pszPort != NULL && pszUser != NULL && pszPassword != NULL && pszPrivateKey != NULL)
+    {
+      string strData, strSession;
+      if (sshConnect(pszServer, pszPort, pszUser, pszPassword, pszPrivateKey, strSession, strData, e))
+      {
+        string j;
+        Json *ptResponse = new Json;
+        b = true;
+        ptResponse->i("Data", strData);
+        ptResponse->i("Session", strSession, 'n');
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+      }
+    }
+    else
+    {
+      e = "Please provide the server, port, user, password, and privatekey.";
+    }
+    if (pszServer != NULL)
+    {
+      JS_FreeCString(jsctx, pszServer);
+    }
+    if (pszPort != NULL)
+    {
+      JS_FreeCString(jsctx, pszPort);
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszPassword != NULL)
+    {
+      JS_FreeCString(jsctx, pszPassword);
+    }
+    if (pszPrivateKey != NULL)
+    {
+      JS_FreeCString(jsctx, pszPrivateKey);
+    }
+  }
+  else
+  {
+    e = "Please provide the server, port, user, password, and privatekey.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sshDisconnect()
+JSValue Maestro::js_sshDisconnect(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszSession = JS_ToCString(jsctx, argv[0]);
+    if (pszSession != NULL)
+    {
+      if (sshDisconnect(pszSession, e))
+      {
+        b = true;
+      }
+    }
+    else
+    {
+      e = "Please provide the session.";
+    }
+    if (pszSession != NULL)
+    {
+      JS_FreeCString(jsctx, pszSession);
+    }
+  }
+  else
+  {
+    e = "Please provide the session.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_sshSend()
+JSValue Maestro::js_sshSend(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc >= 2 && argc <= 3)
+  {
+    const char *pszSession = JS_ToCString(jsctx, argv[0]), *pszCommand = JS_ToCString(jsctx, argv[1]), *pszWait = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+    if (pszSession != NULL && pszCommand != NULL && (argc < 3 || pszWait != NULL))
+    {
+      string strData, strSession = pszSession;
+      time_t CWait = 5;
+      if (pszWait != NULL)
+      {
+        CWait = atoi(pszWait);
+      }
+      if (sshSend(strSession, pszCommand, strData, e, CWait))
+      {
+        string j;
+        Json *ptResponse = new Json;
+        b = true;
+        ptResponse->i("Data", strData);
+        ptResponse->i("Session", strSession);
+        ptResponse->j(j);
+        delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+      }
+    }
+    else
+    {
+      e = "Please provide the session and command.";
+    }
+    if (pszSession != NULL)
+    {
+      JS_FreeCString(jsctx, pszSession);
+    }
+    if (pszCommand != NULL)
+    {
+      JS_FreeCString(jsctx, pszCommand);
+    }
+    if (pszWait != NULL)
+    {
+      JS_FreeCString(jsctx, pszWait);
+    }
+  }
+  else
+  {
+    e = "Please provide the session and command.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_storageAdd()
+JSValue Maestro::js_storageAdd(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
+    if (pszKeys != NULL && pszData != NULL)
+    {
+      if (haveAccess(jsctx, "storageAdd", "all", e))
+      {
+        list<string> keys;
+        Json *ptKeys = new Json(pszKeys);
+        for (auto &key : ptKeys->l)
+        {
+          keys.push_back(key->v);
+        }
+        delete ptKeys;
+        if (!keys.empty())
+        {
+          Json *ptData = new Json(pszData);
+          if (storageAdd(keys, ptData, e))
+          {
+            b = true;
+          }
+          delete ptData;
+        }
+        else
+        {
+          e = "Please provide the keys.";
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the keys and data.";
+    }
+    if (pszKeys != NULL)
+    {
+      JS_FreeCString(jsctx, pszKeys);
+    }
+    if (pszData != NULL)
+    {
+      JS_FreeCString(jsctx, pszData);
+    }
+  }
+  else
+  {
+    e = "Please provide the keys and data.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_storageRemove()
+JSValue Maestro::js_storageRemove(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]);
+    if (pszKeys != NULL)
+    {
+      if (haveAccess(jsctx, "storageRemove", "all", e))
+      {
+        list<string> keys;
+        Json *ptKeys = new Json(pszKeys);
+        for (auto &key : ptKeys->l)
+        {
+          keys.push_back(key->v);
+        }
+        delete ptKeys;
+        if (!keys.empty())
+        {
+          if (storageRemove(keys, e))
+          {
+            b = true;
+          }
+        }
+        else
+        {
+          e = "Please provide the keys.";
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the keys.";
+    }
+    if (pszKeys != NULL)
+    {
+      JS_FreeCString(jsctx, pszKeys);
+    }
+  }
+  else
+  {
+    e = "Please provide the keys.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_storageRetrieve()
+JSValue Maestro::js_storageRetrieve(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
+    if (pszKeys != NULL && pszData != NULL)
+    {
+      list<string> keys;
+      Json *ptKeys = new Json(pszKeys);
+      for (auto &key : ptKeys->l)
+      {
+        keys.push_back(key->v);
+      }
+      delete ptKeys;
+      if (!keys.empty())
+      {
+        Json *ptData = new Json(pszData);
+        if (storageRetrieve(keys, ptData, e))
+        {
+          string j;
+          Json *ptResponse = new Json;
+          b = true;
+          ptResponse->m["Data"] = ptData;
+          ptResponse->j(j);
+          delete ptResponse;
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        }
+        else
+        {
+          delete ptData;
+        }
+      }
+      else
+      {
+        e = "Please provide the keys.";
+      }
+    }
+    else
+    {
+      e = "Please provide the keys and data.";
+    }
+    if (pszKeys != NULL)
+    {
+      JS_FreeCString(jsctx, pszKeys);
+    }
+    if (pszData != NULL)
+    {
+      JS_FreeCString(jsctx, pszData);
+    }
+  }
+  else
+  {
+    e = "Please provide the keys and data.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_storageRetrieveKeys()
+JSValue Maestro::js_storageRetrieveKeys(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
+    if (pszKeys != NULL && pszData != NULL)
+    {
+      list<string> keys;
+      Json *ptKeys = new Json(pszKeys);
+      for (auto &key : ptKeys->l)
+      {
+        keys.push_back(key->v);
+      }
+      delete ptKeys;
+      if (!keys.empty())
+      {
+        list<string> subkeys;
+        if (storageRetrieveKeys(keys, subkeys, e))
+        {
+          string j;
+          Json *ptResponse = new Json;
+          b = true;
+          ptResponse->i("Data", subkeys);
+          ptResponse->j(j);
+          delete ptResponse;
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+        }
+      }
+      else
+      {
+        e = "Please provide the keys.";
+      }
+    }
+    else
+    {
+      e = "Please provide the keys and data.";
+    }
+    if (pszKeys != NULL)
+    {
+      JS_FreeCString(jsctx, pszKeys);
+    }
+    if (pszData != NULL)
+    {
+      JS_FreeCString(jsctx, pszData);
+    }
+  }
+  else
+  {
+    e = "Please provide the keys and data.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_storageUpdate()
+JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
+    if (pszKeys != NULL && pszData != NULL)
+    {
+      if (haveAccess(jsctx, "storageUpdate", "all", e))
+      {
+        list<string> keys;
+        Json *ptKeys = new Json(pszKeys);
+        for (auto &key : ptKeys->l)
+        {
+          keys.push_back(key->v);
+        }
+        delete ptKeys;
+        if (!keys.empty())
+        {
+          Json *ptData = new Json(pszData);
+          if (storageUpdate(keys, ptData, e))
+          {
+            b = true;
+          }
+          delete ptData;
+        }
+        else
+        {
+          e = "Please provide the keys.";
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the keys and data.";
+    }
+    if (pszKeys != NULL)
+    {
+      JS_FreeCString(jsctx, pszKeys);
+    }
+    if (pszData != NULL)
+    {
+      JS_FreeCString(jsctx, pszData);
+    }
+  }
+  else
+  {
+    e = "Please provide the keys and data.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // }}}
 // {{{ jsreg()
 void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const list<string> scopes, const string strDescription)

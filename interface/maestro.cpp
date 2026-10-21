@@ -40,6 +40,14 @@ JSValue js_sqliteCreate(JSContext *ctx, JSValueConst obj, int argc, JSValueConst
 JSValue js_sqliteDatabases(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sqliteDatabases(ctx, obj, argc, argv);}
 JSValue js_sqliteDrop(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sqliteDrop(ctx, obj, argc, argv);}
 JSValue js_sqliteQuery(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sqliteQuery(ctx, obj, argc, argv);}
+JSValue js_sshConnect(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sshConnect(ctx, obj, argc, argv);}
+JSValue js_sshDisconnect(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sshDisconnect(ctx, obj, argc, argv);}
+JSValue js_sshSend(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_sshSend(ctx, obj, argc, argv);}
+JSValue js_storageAdd(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_storageAdd(ctx, obj, argc, argv);}
+JSValue js_storageRemove(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_storageRemove(ctx, obj, argc, argv);}
+JSValue js_storageRetrieve(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_storageRetrieve(ctx, obj, argc, argv);}
+JSValue js_storageRetrieveKeys(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_storageRetrieveKeys(ctx, obj, argc, argv);}
+JSValue js_storageUpdate(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_storageUpdate(ctx, obj, argc, argv);}
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
@@ -73,7 +81,15 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("sqliteCreate", js_sqliteCreate, 2, "sqliteCreate(database, node)", {"all"}, "Provides the ability to create a given SQLite database.");
   gpMaestro->jsreg("sqliteDatabases", js_sqliteDatabases, 0, "sqliteDatabases()", {}, "Provides the ability to retrieve a list SQLite databases.");
   gpMaestro->jsreg("sqliteDrop", js_sqliteDrop, 2, "sqliteDrop(database, node)", {"all"}, "Provides the ability to drop a given SQLite database.");
-  gpMaestro->jsreg("sqliteQuery", js_sqliteQuery, 0, "sqliteQuery(database, statement)", {"all"}, "Provides the ability to query (SQL: delete, insert, select, update) a given SQLite database.");
+  gpMaestro->jsreg("sqliteQuery", js_sqliteQuery, 2, "sqliteQuery(database, statement)", {"all"}, "Provides the ability to query (SQL: delete, insert, select, update) a given SQLite database.");
+  gpMaestro->jsreg("sshConnect", js_sshConnect, 5, "sshConnect(server, port, user, password, privatekey)", {}, "Provides the ability to connect a SSH session.");
+  gpMaestro->jsreg("sshDisconnect", js_sshDisconnect, 1, "sshDisconnect(session)", {}, "Provides the ability to disconnect a SSH session.");
+  gpMaestro->jsreg("sshSend", js_sshSend, 3, "sshSend(session, command, wait)", {}, "Provides the ability to send a command over a SSH session.");
+  gpMaestro->jsreg("storageAdd", js_storageAdd, 2, "storageAdd(keys, data)", {"all"}, "Provides the ability to add data to storage.");
+  gpMaestro->jsreg("storageRemove", js_storageAdd, 1, "storageRemove(keys)", {"all"}, "Provides the ability to remove data from storage.");
+  gpMaestro->jsreg("storageRetrieve", js_storageRetrieve, 2, "storageRetrieve(keys, data)", {}, "Provides the ability to retrieve data from storage.");
+  gpMaestro->jsreg("storageRetrieveKeys", js_storageRetrieve, 2, "storageRetrieveKeys(keys, data)", {}, "Provides the ability to retrieve key data from storage.");
+  gpMaestro->jsreg("storageUpdate", js_storageUpdate, 2, "storageUpdate(keys, data)", {"all"}, "Provides the ability to update data into storage.");
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
