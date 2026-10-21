@@ -1130,6 +1130,7 @@ bool Maestro::cores(radialUser &d, string &e)
     Json *c = new Json;
     c->i("Function", j.first);
     c->i("Description", j.second->strDescription);
+    c->i("Prototype", j.second->strPrototype);
     c->i("Scopes", j.second->scopes);
     o->l.push_back(c);
   }
