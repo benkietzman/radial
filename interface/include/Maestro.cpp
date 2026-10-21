@@ -2646,7 +2646,7 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
 }
 // }}}
 // {{{ js_logger()
-JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
   string e;
