@@ -2519,10 +2519,6 @@ JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       bool bWait = (pszWait != NULL && (string)pszWait == "true");
       Json *ptMessage = new Json(pszMessage);
       b = true;
-if (pszWait != NULL)
-{
-  chat("#maestro", pszWait);
-}
       live(pszApplication, pszUser, ptMessage, bWait);
       delete ptMessage;
     }
