@@ -2506,6 +2506,49 @@ JSValue Maestro::js_getStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
   return jsstatus;
 }
 // }}}
+// {{{ js_live()
+JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+
+  if (argc >= 3 && argc <= 4)
+  {
+    const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszUser = JS_ToCString(jsctx, argv[1]), *pszMessage = JS_ToCString(jsctx, argv[2]), *pszWait = ((argc >= 4)?JS_ToCString(jsctx, argv[3]):NULL);
+    if (pszApplication != NULL && pszUser != NULL && pszMessage != NULL && (argc < 4 || pszWait != NULL))
+    {
+      bool bWait = (pszWait != NULL && (string)pszWait == "true");
+      map<string, string> message;
+      Json *ptMessage = new Json(pszMessage);
+      b = true;
+if (pszWait != NULL)
+{
+  chat("#maestro", pszWait);
+}
+      ptMessage->flatten(message, true, false);
+      delete ptMessage;
+      live(pszApplication, pszUser, message, bWait);
+    }
+    if (pszApplication != NULL)
+    {
+      JS_FreeCString(jsctx, pszApplication);
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+    if (pszWait != NULL)
+    {
+      JS_FreeCString(jsctx, pszWait);
+    }
+  }
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
