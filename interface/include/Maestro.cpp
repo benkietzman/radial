@@ -2561,7 +2561,7 @@ JSValue Maestro::js_junction(JSContext *jsctx, JSValueConst, int argc, JSValueCo
   string e;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
-  if (argc == 1 && argc <= 3)
+  if (argc == 1)
   {
     const char *pszRequest = JS_ToCString(jsctx, argv[0]);
     if (pszRequest != NULL)
