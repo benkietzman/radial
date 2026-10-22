@@ -2554,6 +2554,60 @@ JSValue Maestro::js_getStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
   return jsstatus;
 }
 // }}}
+// {{{ js_junction()
+JSValue Maestro::js_junction(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1 && argc <= 3)
+  {
+    const char *pszRequest = JS_ToCString(jsctx, argv[0]);
+    if (pszRequest != NULL)
+    {
+      string j;
+      list<Json *> in, out;
+      Json *ptRequest = new Json(pszRequest), *ptResponse = new Json;
+      for (auto &i : ptRequest->l)
+      {
+        in.push_back(i);
+      }
+      if (junction(in, out, e))
+      {
+        b = true;
+      }
+      delete ptRequest;
+      for (auto &i : out)
+      {
+        ptResponse->l.push_back(i);
+      }
+      ptResponse->j(j);
+      delete ptResponse;
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+    }
+    else
+    {
+      e = "Please provide the request.";
+    }
+    if (pszRequest != NULL)
+    {
+      JS_FreeCString(jsctx, pszRequest);
+    }
+  }
+  else
+  {
+    e = "Please provide the request.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_live()
 JSValue Maestro::js_live(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {

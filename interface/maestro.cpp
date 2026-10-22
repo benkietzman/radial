@@ -25,6 +25,7 @@ JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *ar
 JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getRequest(ctx, obj, argc, argv);}
 JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getResponse(ctx, obj, argc, argv);}
 JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getStatus(ctx, obj, argc, argv);}
+JSValue js_junction(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_junction(ctx, obj, argc, argv);}
 JSValue js_live(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_live(ctx, obj, argc, argv);}
 JSValue js_log(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_log(ctx, obj, argc, argv);}
 JSValue js_logger(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_logger(ctx, obj, argc, argv);}
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
   gpMaestro->jsreg("getRequest", js_getRequest, 0, "getRequest()", {}, "Provides the ability to retrieve the request being provides to the given flow.");
   gpMaestro->jsreg("getResponse", js_getResponse, 0, "getResponse()", {}, "Provides the ability to retrieve the response from teh last Maestro function.");
   gpMaestro->jsreg("getStatus", js_getStatus, 0, "getStatus()", {}, "Provides the ability to retrieve the status from teh last Maestro function.");
+  gpMaestro->jsreg("junction", js_junction, 1, "junction(request)", {}, "Provides the ability to send a request to Service Junction.");
   gpMaestro->jsreg("live", js_live, 4, "live(application, user, message, wait)", {}, "Provides the ability to send a live message to an application and/or user.");
   gpMaestro->jsreg("log", js_log, 1, "log(message)", {}, "Provides the ability to write a log message to the local Radial instance.");
   gpMaestro->jsreg("logger", js_logger, 4, "logger(application, function, label, message)", {}, "Provides the ability to send a message to a particular application registered in Logger.");
