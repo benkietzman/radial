@@ -3069,7 +3069,7 @@ JSValue Maestro::js_sqliteCreate(JSContext *jsctx, JSValueConst, int argc, JSVal
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "sqliteCreate", "all", e))
+      if (haveAccess(jsctx, "sqlite", "create", e))
       {
         if (sqliteCreate(pszDatabase, pszNode, e))
         {
@@ -3145,7 +3145,7 @@ JSValue Maestro::js_sqliteDrop(JSContext *jsctx, JSValueConst, int argc, JSValue
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "sqliteDrop", "all", e))
+      if (haveAccess(jsctx, "sqlite", "drop", e))
       {
         if (sqliteDrop(pszDatabase, pszNode, e))
         {
@@ -3191,7 +3191,7 @@ JSValue Maestro::js_sqliteQuery(JSContext *jsctx, JSValueConst, int argc, JSValu
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszStatement = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszStatement != NULL)
     {
-      if (haveAccess(jsctx, "sqliteQuery", "all", e))
+      if (haveAccess(jsctx, "sqlite", "query", e))
       {
         size_t unID = 0, unRows = 0;
         Json *ptResult = new Json;
@@ -3416,7 +3416,7 @@ JSValue Maestro::js_storageAdd(JSContext *jsctx, JSValueConst, int argc, JSValue
     const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
     if (pszKeys != NULL && pszData != NULL)
     {
-      if (haveAccess(jsctx, "storageAdd", "all", e))
+      if (haveAccess(jsctx, "storage", "add", e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);
@@ -3478,7 +3478,7 @@ JSValue Maestro::js_storageRemove(JSContext *jsctx, JSValueConst, int argc, JSVa
     const char *pszKeys = JS_ToCString(jsctx, argv[0]);
     if (pszKeys != NULL)
     {
-      if (haveAccess(jsctx, "storageRemove", "all", e))
+      if (haveAccess(jsctx, "storage", "remove", e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);
@@ -3642,7 +3642,7 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
     const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
     if (pszKeys != NULL && pszData != NULL)
     {
-      if (haveAccess(jsctx, "storageUpdate", "all", e))
+      if (haveAccess(jsctx, "storage", "update", e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);
