@@ -21,7 +21,7 @@ namespace radial
 struct radialMaestroJavascript
 {
   int nLength;
-  list<string> scopes;
+  string strAccess;
   string strDescription;
   string strPrototype;
   JSCFunction *func;
@@ -45,9 +45,10 @@ class Maestro : public Interface
   bool m_bLoaded;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
-  map<string, radialMaestroJavascript *> m_javascript;
-  map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
+  map<string, list<string> > m_a;
   map<string, string> m_applications;
+  map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
+  map<string, radialMaestroJavascript *> m_javascript;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
   string m_strCipher;
@@ -125,7 +126,7 @@ class Maestro : public Interface
   JSValue js_storageRetrieve(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_storageRetrieveKeys(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_storageUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
-  void jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const list<string> scopes = {}, const string strDescription = "");
+  void jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const string strDescription = "");
 };
 // }}}
 }

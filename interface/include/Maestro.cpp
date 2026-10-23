@@ -42,6 +42,12 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["scopes"] = &Maestro::scopes;
   m_functions["status"] = &Maestro::status;
   // }}}
+  m_a["command"] = {"all"};
+  m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
+  m_a["dbquery"] = {"central_r", "feedback_r"};
+  m_a["dbupdate"] = {"central", "feedback"};
+  m_a["sqlite"] = {"create", "drop", "query"};
+  m_a["storage"] = {"add", "remove", "update"};
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
@@ -100,12 +106,9 @@ bool Maestro::accesses(radialUser &d, string &e)
     else if (t == "core")
     {
       b = true;
-      for (auto &j : m_javascript)
+      for (auto &a : m_a)
       {
-        if (!j.second->scopes.empty())
-        {
-          o->pb(j.first);
-        }
+        o->pb(a.first);
       }
     }
     else
@@ -1131,7 +1134,6 @@ bool Maestro::cores(radialUser &d, string &e)
     c->i("Function", j.first);
     c->i("Description", j.second->strDescription);
     c->i("Prototype", j.second->strPrototype);
-    c->i("Scopes", j.second->scopes);
     o->l.push_back(c);
   }
 
@@ -3692,13 +3694,12 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
 // }}}
 // }}}
 // {{{ jsreg()
-void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const list<string> scopes, const string strDescription)
+void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const string strDescription)
 {
   radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
 
   ptJavascript->func = func;
   ptJavascript->nLength = nLength;
-  ptJavascript->scopes = scopes;
   ptJavascript->strDescription = strDescription;
   ptJavascript->strPrototype = strPrototype;
   if (m_javascript.find(prop) != m_javascript.end())
@@ -4175,10 +4176,10 @@ bool Maestro::scopes(radialUser &d, string &e)
     }
     else if (t == "core")
     {
-      if (m_javascript.find(a) != m_javascript.end())
+      if (m_a.find(a) != m_a.end())
       {
         b = true;
-        for (auto &s : m_javascript[a]->scopes)
+        for (auto &s : m_a[a])
         {
           o->pb(s);
         }

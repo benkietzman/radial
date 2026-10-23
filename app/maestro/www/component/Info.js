@@ -78,9 +78,6 @@ export default
     </div>
   </div>
   <h3>Core Functions</h3>
-  <div class="card card-body bg-secondary-subtle border border-secondary-subtle">
-    NOTE:  Functions containing scopes require an access request.
-  </div>
   <div class="table-responsive">
     <table class="table table-sm table-condensed table-striped">
     <thead>
@@ -88,7 +85,6 @@ export default
         <th>Function</th>
         <th>Prototype</th>
         <th>Description</th>
-        <th>Scopes</th>
       </tr>
     </thead>
     <tbody>
@@ -97,13 +93,6 @@ export default
         <td>{{Function}}</td>
         <td>{{Prototype}}</td>
         <td>{{Description}}</td>
-        <td>
-          <ul style="list-style-type: none;">
-            {{#each Scopes}}
-            <li>{{.}}</li>
-            {{/each}}
-          </ul>
-        </td>
       </td>
       {{/each}}
     </tbody>
