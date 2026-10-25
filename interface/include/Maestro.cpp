@@ -3738,28 +3738,21 @@ void Maestro::jsreg(map<string, JSCFunction *> javascript)
 {
   for (auto &j : javascript)
   {
-    jsreg(j.first, j.second);
+    if (m_javascript.find(j.first) != m_javascript.end())
+    {
+      m_javascript[j.first]->func = j.second;
+    }
   }
-}
-void Maestro::jsreg(const string strFunction, JSCFunction *function)
-{
-  radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
-
-  ptJavascript->func = function;
-  ptJavascript->nLength = 0;
-  if (m_javascript.find(strFunction) != m_javascript.end())
-  {
-    delete m_javascript[strFunction];
-  }
-  m_javascript[strFunction] = ptJavascript;
 }
 void Maestro::jsreg(const string strFunction, const int nLength, const string strPrototype, const string strDescription)
 {
-  if (m_javascript.find(strFunction) != m_javascript.end())
+  if (m_javascript.find(strFunction) == m_javascript.end())
   {
-    m_javascript[strFunction]->nLength = nLength;
-    m_javascript[strFunction]->strDescription = strDescription;
-    m_javascript[strFunction]->strPrototype = strPrototype;
+    radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
+    ptJavascript->nLength = nLength;
+    ptJavascript->strDescription = strDescription;
+    ptJavascript->strPrototype = strPrototype;
+    m_javascript[strFunction] = ptJavascript;
   }
 }
 // }}}

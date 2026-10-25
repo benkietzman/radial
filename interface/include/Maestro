@@ -127,7 +127,6 @@ class Maestro : public Interface
   JSValue js_storageRetrieveKeys(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_storageUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(map<string, JSCFunction *> javascript);
-  void jsreg(const string strFunction, JSCFunction *func);
   void jsreg(const string strFunction, const int nLength, const string strPrototype, const string strDescription = "");
 };
 // }}}
