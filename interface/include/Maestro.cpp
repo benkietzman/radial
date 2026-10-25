@@ -20,6 +20,14 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   map<string, list<string> > watches;
 
   m_bLoaded = false;
+  // {{{ accesses
+  m_a["command"] = {"all"};
+  m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
+  m_a["dbquery"] = {"central_r", "feedback_r"};
+  m_a["dbupdate"] = {"central", "feedback"};
+  m_a["sqlite"] = {"create", "drop", "query"};
+  m_a["storage"] = {"add", "remove", "update"};
+  // }}}
   // {{{ functions
   m_functions["accesses"] = &Maestro::accesses;
   m_functions["accessRemove"] = &Maestro::accessRemove;
@@ -42,12 +50,44 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["scopes"] = &Maestro::scopes;
   m_functions["status"] = &Maestro::status;
   // }}}
-  m_a["command"] = {"all"};
-  m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
-  m_a["dbquery"] = {"central_r", "feedback_r"};
-  m_a["dbupdate"] = {"central", "feedback"};
-  m_a["sqlite"] = {"create", "drop", "query"};
-  m_a["storage"] = {"add", "remove", "update"};
+  // {{{ javascripts
+  jsreg("alert", 3, "alert(user, message, html)", "Provides the ability to send a message to a given user via the Alert framework.");
+  jsreg("application", 2, "application(application, message)", "Provides the ability to send a message to a given application that is connected to Radial.");
+  jsreg("centralmon", 2, "centralmon(server, process)", "Provides the ability to retrieve server and/or process information from Central Monitor.");
+  jsreg("chat", 3, "chat(target, message, source)", "Provides the ability to send a message to a given channel or user in Internet Relay Chat (IRC) by default or to a user in Live using a Source of live.");
+  jsreg("command", 5, "command(command, arguments, input, timeout, node)", "Provides the ability to send a command to any Radial server.");
+  jsreg("db", 2, "db(function, input)", "Provides the ability to perform a given database function.");
+  jsreg("dbquery", 2, "dbquery(database, query)", "Provides the ability to query (SQL: select) a given database.");
+  jsreg("dbupdate", 2, "dbupdate(database, update)", "Provides the ability to update (SQL: delete, insert, update) a given database.");
+  jsreg("email", 8, "email(from, to, cc, bcc, subject, text, html, file)", "Provides the ability to send an email.");
+  jsreg("flow", 3, "flow(plan, flow, request)");
+  jsreg("getError", 0, "getError()", "Provides the ability to retrieve the error from the last Maestro function.");
+  jsreg("getRequest",  0, "getRequest()", "Provides the ability to retrieve the request being provides to the given flow.");
+  jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
+  jsreg("getStatus", 0, "getStatus()", "Provides the ability to retrieve the status from teh last Maestro function.");
+  jsreg("junction", 1, "junction(request)", "Provides the ability to send a request to Service Junction.");
+  jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
+  jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
+  jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
+  jsreg("mysqlQuery", 6, "mysqlQuery(server, port, user, password, database, query)", "Provides the ability to query (SQL: select) a given MySQL server and database.");
+  jsreg("mysqlUpdate", 6, "mysqlUpdate(server, port, user, password, database, query)", "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
+  jsreg("setError", 1, "setError(error)", "Provides the ability to set the error prior to exiting the given flow.");
+  jsreg("setRequest", 1, "setRequest(request)", "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
+  jsreg("setResponse", 1, "setResponse(response)", "Provides the ability to set the response prior to exiting the given flow.");
+  jsreg("setStatus", 1, "setStatus(status)", "Provides the ability to set the status prior to exiting the given flow.  The status should typically be set to a value of either \"okay\" or \"error\".");
+  jsreg("sqliteCreate", 2, "sqliteCreate(database, node)", "Provides the ability to create a given SQLite database.");
+  jsreg("sqliteDatabases", 0, "sqliteDatabases()", "Provides the ability to retrieve a list SQLite databases.");
+  jsreg("sqliteDrop", 2, "sqliteDrop(database, node)", "Provides the ability to drop a given SQLite database.");
+  jsreg("sqliteQuery", 2, "sqliteQuery(database, statement)", "Provides the ability to query (SQL: delete, insert, select, update) a given SQLite database.");
+  jsreg("sshConnect", 5, "sshConnect(server, port, user, password, privatekey)", "Provides the ability to connect a SSH session.");
+  jsreg("sshDisconnect", 1, "sshDisconnect(session)", "Provides the ability to disconnect a SSH session.");
+  jsreg("sshSend", 3, "sshSend(session, command, wait)", "Provides the ability to send a command over a SSH session.");
+  jsreg("storageAdd", 2, "storageAdd(keys, data)", "Provides the ability to add data to storage.");
+  jsreg("storageRemove", 1, "storageRemove(keys)", "Provides the ability to remove data from storage.");
+  jsreg("storageRetrieve", 1, "storageRetrieve(keys)", "Provides the ability to retrieve data from storage.");
+  jsreg("storageRetrieveKeys", 1, "storageRetrieveKeys(keys)", "Provides the ability to retrieve key data from storage.");
+  jsreg("storageUpdate", 2, "storageUpdate(keys, data)", "Provides the ability to update data into storage.");
+  // }}}
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
@@ -3694,19 +3734,33 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
 // }}}
 // }}}
 // {{{ jsreg()
-void Maestro::jsreg(const char *prop, JSCFunction *func, const int nLength, const string strPrototype, const string strDescription)
+void Maestro::jsreg(map<string, JSCFunction *> javascript)
+{
+  for (auto &j : javascript)
+  {
+    jsreg(j.first, j.second);
+  }
+}
+void Maestro::jsreg(const string strFunction, JSCFunction *function)
 {
   radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
 
-  ptJavascript->func = func;
-  ptJavascript->nLength = nLength;
-  ptJavascript->strDescription = strDescription;
-  ptJavascript->strPrototype = strPrototype;
-  if (m_javascript.find(prop) != m_javascript.end())
+  ptJavascript->func = function;
+  ptJavascript->nLength = 0;
+  if (m_javascript.find(strFunction) != m_javascript.end())
   {
-    delete m_javascript[prop];
+    delete m_javascript[strFunction];
   }
-  m_javascript[prop] = ptJavascript;
+  m_javascript[strFunction] = ptJavascript;
+}
+void Maestro::jsreg(const string strFunction, const int nLength, const string strPrototype, const string strDescription)
+{
+  if (m_javascript.find(strFunction) != m_javascript.end())
+  {
+    m_javascript[strFunction]->nLength = nLength;
+    m_javascript[strFunction]->strDescription = strDescription;
+    m_javascript[strFunction]->strPrototype = strPrototype;
+  }
 }
 // }}}
 // {{{ load()
