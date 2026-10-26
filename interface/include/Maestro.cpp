@@ -25,6 +25,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
   m_a["dbquery"] = {"central_r", "feedback_r"};
   m_a["dbupdate"] = {"central", "feedback"};
+  m_a["logger"] = {"Radial"};
   m_a["sqlite"] = {"create", "drop", "query"};
   m_a["storage"] = {"add", "remove", "update"};
   // }}}
@@ -370,7 +371,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
     m_mutex.lock();
     if (isOwner(d, p))
     {
-      if (!haveAccess(p, a, s, e, false))
+      if (!haveAccess(p, a, {s}, e, false))
       {
         if (!haveAccessRequest(p, a, s))
         {
@@ -557,7 +558,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
           }
           if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
           {
-            if (!haveAccess(p, a, s, e, false))
+            if (!haveAccess(p, a, {s}, e, false))
             {
               stringstream ssQuery;
               ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
@@ -760,7 +761,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
     m_mutex.lock();
     if (isOwner(d, p))
     {
-      if (!haveAccess(p, a, s, e, false))
+      if (!haveAccess(p, a, {s}, e, false))
       {
         if (haveAccessRequest(p, a, s))
         {
@@ -1689,11 +1690,11 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
 // }}}
 // {{{ haveAccess
 // {{{ haveAccess()
-bool Maestro::haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError, const bool bMutex)
+bool Maestro::haveAccess(const string strPlan, const string strAccess, list<string> scopes, string &strError, const bool bMutex)
 {
   bool bResult = false;
 
-  if (!strPlan.empty() && !strAccess.empty() && !strScope.empty())
+  if (!strPlan.empty() && !strAccess.empty() && !scopes.empty())
   {
     if (bMutex)
     {
@@ -1701,11 +1702,14 @@ bool Maestro::haveAccess(const string strPlan, const string strAccess, const str
     }
     if (m_p.find(strPlan) != m_p.end() && m_p[strPlan]->a != NULL && m_p[strPlan]->a->exist({"a", strAccess}))
     {
-      for (auto i = m_p[strPlan]->a->m["a"]->m[strAccess]->l.begin(); !bResult && i != m_p[strPlan]->a->m["a"]->m[strAccess]->l.end(); i++)
+      for (auto i = scopes.begin(); !bResult && i != scopes.end(); i++)
       {
-        if ((*i)->v == strScope)
+        for (auto j = m_p[strPlan]->a->m["a"]->m[strAccess]->l.begin(); !bResult && j != m_p[strPlan]->a->m["a"]->m[strAccess]->l.end(); j++)
         {
-          bResult = true;
+          if ((*i) == (*j)->v)
+          {
+            bResult = true;
+          }
         }
       }
     }
@@ -1721,7 +1725,7 @@ bool Maestro::haveAccess(const string strPlan, const string strAccess, const str
 
   return bResult;
 }
-bool Maestro::haveAccess(JSContext *jsctx, const string strAccess, const string strScope, string &strError)
+bool Maestro::haveAccess(JSContext *jsctx, const string strAccess, list<string> scopes, string &strError)
 {
   bool bResult = false;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1733,7 +1737,7 @@ bool Maestro::haveAccess(JSContext *jsctx, const string strAccess, const string 
     if (pszPlan != NULL)
     {
       string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strAccess, strScope, strError))
+      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strAccess, scopes, strError))
       {
         bResult = true;
       }
@@ -2030,7 +2034,7 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     const char *pszCommand = JS_ToCString(jsctx, argv[0]), *pszArguments = JS_ToCString(jsctx, argv[1]), *pszInput = JS_ToCString(jsctx, argv[2]), *pszTimeout = JS_ToCString(jsctx, argv[3]), *pszNode = JS_ToCString(jsctx, argv[4]);
     if (pszCommand != NULL && pszArguments != NULL && pszInput != NULL && pszTimeout != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "command", "all", e))
+      if (haveAccess(jsctx, "command", {"all"}, e))
       {
         list<string> arguments;
         string strOutput, strResponse;
@@ -2107,7 +2111,7 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
     const char *pszFunction = JS_ToCString(jsctx, argv[0]), *pszInput = JS_ToCString(jsctx, argv[1]);
     if (pszFunction != NULL && pszInput != NULL)
     {
-      if (haveAccess(jsctx, "db", pszFunction, e))
+      if (haveAccess(jsctx, "db", {pszFunction}, e))
       {
         string strID, strQuery, strResponse;
         Json *ptInput = new Json(pszInput), *ptResponse = new Json;
@@ -2162,7 +2166,7 @@ JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszQuery = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszQuery != NULL)
     {
-      if (haveAccess(jsctx, "dbquery", pszDatabase, e))
+      if (haveAccess(jsctx, "dbquery", {pszDatabase}, e))
       {
         string strResponse;
         stringstream ssRows;
@@ -2224,7 +2228,7 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszUpdate = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszUpdate != NULL)
     {
-      if (haveAccess(jsctx, "dbupdate", pszDatabase, e))
+      if (haveAccess(jsctx, "dbupdate", {pszDatabase}, e))
       {
         string strResponse;
         stringstream ssID, ssRows;
@@ -2402,7 +2406,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
       m_mutex.unlock();
       if (ptFlow != NULL)
       {
-        if (sp == pszPlan || haveAccess(jsctx, pszPlan, pszFlow, e))
+        if (sp == pszPlan || haveAccess(jsctx, pszPlan, {pszFlow}, e))
         {
           if (!ptFlow->empty({"Script"}))
           {
@@ -2759,12 +2763,15 @@ JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueCons
     const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszFunction = JS_ToCString(jsctx, argv[1]), *pszLabel = JS_ToCString(jsctx, argv[2]), *pszMessage = JS_ToCString(jsctx, argv[3]);
     if (pszApplication != NULL && pszFunction != NULL && pszLabel != NULL && pszMessage != NULL)
     {
-      map<string, string> label;
-      Json *ptLabel = new Json(pszLabel);
-      b = true;
-      ptLabel->flatten(label, true, false);
-      delete ptLabel;
-      logger(pszApplication, pszFunction, label, pszMessage);
+      if (haveAccess(jsctx, "logger", {pszApplication}, e))
+      {
+        map<string, string> label;
+        Json *ptLabel = new Json(pszLabel);
+        b = true;
+        ptLabel->flatten(label, true, false);
+        delete ptLabel;
+        logger(pszApplication, pszFunction, label, pszMessage);
+      }
     }
     else
     {
@@ -3115,7 +3122,7 @@ JSValue Maestro::js_sqliteCreate(JSContext *jsctx, JSValueConst, int argc, JSVal
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "sqlite", "create", e))
+      if (haveAccess(jsctx, "sqlite", {"create"}, e))
       {
         if (sqliteCreate(pszDatabase, pszNode, e))
         {
@@ -3191,7 +3198,7 @@ JSValue Maestro::js_sqliteDrop(JSContext *jsctx, JSValueConst, int argc, JSValue
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszNode = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszNode != NULL)
     {
-      if (haveAccess(jsctx, "sqlite", "drop", e))
+      if (haveAccess(jsctx, "sqlite", {"drop"}, e))
       {
         if (sqliteDrop(pszDatabase, pszNode, e))
         {
@@ -3237,7 +3244,7 @@ JSValue Maestro::js_sqliteQuery(JSContext *jsctx, JSValueConst, int argc, JSValu
     const char *pszDatabase = JS_ToCString(jsctx, argv[0]), *pszStatement = JS_ToCString(jsctx, argv[1]);
     if (pszDatabase != NULL && pszStatement != NULL)
     {
-      if (haveAccess(jsctx, "sqlite", "query", e))
+      if (haveAccess(jsctx, "sqlite", {"query"}, e))
       {
         size_t unID = 0, unRows = 0;
         Json *ptResult = new Json;
@@ -3462,7 +3469,7 @@ JSValue Maestro::js_storageAdd(JSContext *jsctx, JSValueConst, int argc, JSValue
     const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
     if (pszKeys != NULL && pszData != NULL)
     {
-      if (haveAccess(jsctx, "storage", "add", e))
+      if (haveAccess(jsctx, "storage", {"add"}, e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);
@@ -3524,7 +3531,7 @@ JSValue Maestro::js_storageRemove(JSContext *jsctx, JSValueConst, int argc, JSVa
     const char *pszKeys = JS_ToCString(jsctx, argv[0]);
     if (pszKeys != NULL)
     {
-      if (haveAccess(jsctx, "storage", "remove", e))
+      if (haveAccess(jsctx, "storage", {"remove"}, e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);
@@ -3688,7 +3695,7 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
     const char *pszKeys = JS_ToCString(jsctx, argv[0]), *pszData = JS_ToCString(jsctx, argv[1]);
     if (pszKeys != NULL && pszData != NULL)
     {
-      if (haveAccess(jsctx, "storage", "update", e))
+      if (haveAccess(jsctx, "storage", {"update"}, e))
       {
         list<string> keys;
         Json *ptKeys = new Json(pszKeys);

@@ -71,8 +71,8 @@ class Maestro : public Interface
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
   bool flowUpdate(radialUser &d, string &e);
-  bool haveAccess(const string strPlan, const string strAccess, const string strScope, string &strError, const bool bMutex = true);
-  bool haveAccess(JSContext *jsctx, const string strAccess, const string strScope, string &strError);
+  bool haveAccess(const string strPlan, const string strAccess, list<string> scopes, string &strError, const bool bMutex = true);
+  bool haveAccess(JSContext *jsctx, const string strAccess, list<string> scopes, string &strError);
   bool haveAccessRequest(const string strPlan, const string strAccess, const string strScope);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p, const bool a = false);
