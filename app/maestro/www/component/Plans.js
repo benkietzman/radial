@@ -373,8 +373,8 @@ export default
           if (s.access.length > 0)
           {
             s.accessName = s.access[0];
+            s.getScopes();
           }
-          s.getScopes();
         }
         else
         {
