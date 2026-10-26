@@ -1910,12 +1910,15 @@ JSValue Maestro::js_application(JSContext *jsctx, JSValueConst, int argc, JSValu
     const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
     if (pszApplication != NULL && pszMessage != NULL)
     {
-      Json *ptMessage = new Json(pszMessage);
-      if (application(pszApplication, ptMessage, e))
+      if (haveAccess(jsctx, "application", {pszApplication}, e))
       {
-        b = true;
+        Json *ptMessage = new Json(pszMessage);
+        if (application(pszApplication, ptMessage, e))
+        {
+          b = true;
+        }
+        delete ptMessage;
       }
-      delete ptMessage;
     }
     else
     {
