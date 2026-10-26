@@ -24,7 +24,7 @@ struct radialMaestroJavascript
   string strAccess;
   string strDescription;
   string strPrototype;
-  JSCFunction *func;
+  JSCFunction *function;
 };
 // }}}
 // {{{ radialMaestroPlan

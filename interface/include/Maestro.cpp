@@ -1351,7 +1351,10 @@ bool Maestro::flowExec(radialUser &d, string &e)
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
           for (auto &i : m_javascript)
           {
-            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->func, i.first.c_str(), i.second->nLength));
+            if (i.second->function != NULL)
+            {
+              JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->function, i.first.c_str(), i.second->nLength));
+            }
           }
           if (!m_strSecret.empty())
           {
@@ -2408,7 +2411,10 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
             JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
             for (auto &i : m_javascript)
             {
-              JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->func, i.first.c_str(), i.second->nLength));
+              if (i.second->function != NULL)
+              {
+                JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->function, i.first.c_str(), i.second->nLength));
+              }
             }
             if (!m_strSecret.empty())
             {
@@ -3740,7 +3746,7 @@ void Maestro::jsreg(map<string, JSCFunction *> javascript)
   {
     if (m_javascript.find(j.first) != m_javascript.end())
     {
-      m_javascript[j.first]->func = j.second;
+      m_javascript[j.first]->function = j.second;
     }
   }
 }
@@ -3749,6 +3755,7 @@ void Maestro::jsreg(const string strFunction, const int nLength, const string st
   if (m_javascript.find(strFunction) == m_javascript.end())
   {
     radialMaestroJavascript *ptJavascript = new radialMaestroJavascript;
+    ptJavascript->function = NULL;
     ptJavascript->nLength = nLength;
     ptJavascript->strDescription = strDescription;
     ptJavascript->strPrototype = strPrototype;
