@@ -1692,6 +1692,50 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
 }
 // }}}
 // }}}
+// {{{ getPlan()
+bool Maestro::getPlan(JSContext *jsctx, string &strPlan, string &e)
+{
+  bool bResult = false;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
+
+  if (JS_IsString(jsplan))
+  {
+    const char *pszPlan = JS_ToCString(jsctx, jsplan);
+    if (pszPlan != NULL)
+    {
+      if (!m_strSecret.empty())
+      {
+        if (!m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, e, m_strCipher).empty())
+        {
+          bResult = true;
+        }
+        else if (e.empty())
+        {
+          e = "Failed to decode/decrypt plan.";
+        }
+      }
+      else
+      {
+        e = "Secret is not configured.";
+      }
+      JS_FreeCString(jsctx, pszPlan);
+    }
+    else
+    {
+      e = "Unabled to convert plan to string.";
+    }
+  }
+  else
+  {
+    e = "Plan not found in context.";
+  }
+  JS_FreeValue(jsctx, jsplan);
+  JS_FreeValue(jsctx, jsglobal);
+
+  return bResult;
+}
+// }}}
 // {{{ haveAccess
 // {{{ haveAccess()
 bool Maestro::haveAccess(const string strPlan, const string strAccess, list<string> scopes, string &strError, const bool bMutex)
@@ -1732,24 +1776,12 @@ bool Maestro::haveAccess(const string strPlan, const string strAccess, list<stri
 bool Maestro::haveAccess(JSContext *jsctx, const string strAccess, list<string> scopes, string &strError)
 {
   bool bResult = false;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
-  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
+  string strPlan;
 
-  if (JS_IsString(jsplan))
+  if (getPlan(jsctx, strPlan, strError) && haveAccess(strPlan, strAccess, scopes, strError))
   {
-    const char *pszPlan = JS_ToCString(jsctx, jsplan);
-    if (pszPlan != NULL)
-    {
-      string strPlan;
-      if (!m_strSecret.empty() && !m_manip.decryptAes(m_manip.decodeBase64(pszPlan, strPlan), m_strSecret, strPlan, strError, m_strCipher).empty() && haveAccess(strPlan, strAccess, scopes, strError))
-      {
-        bResult = true;
-      }
-      JS_FreeCString(jsctx, pszPlan);
-    }
+    bResult = true;
   }
-  JS_FreeValue(jsctx, jsplan);
-  JS_FreeValue(jsctx, jsglobal);
 
   return bResult;
 }
@@ -2372,193 +2404,182 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   bool b = false;
   string e, sp;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
-  JSValue jsplan = JS_GetPropertyStr(jsctx, jsglobal, "g_js_plan");
 
-  if (JS_IsString(jsplan))
+  if (getPlan(jsctx, sp, e))
   {
-    const char *pszPlan = JS_ToCString(jsctx, jsplan);
-    if (pszPlan != NULL)
+  	if (argc >= 2 && argc <= 3)
     {
-      if (!m_strSecret.empty())
+      const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+      if (pszPlan != NULL && pszFlow != NULL)
       {
-        m_manip.decryptAes(m_manip.decodeBase64(pszPlan, sp), m_strSecret, sp, e, m_strCipher);
-      }
-      JS_FreeCString(jsctx, pszPlan);
-    }
-  }
-  JS_FreeValue(jsctx, jsplan);
-	if (argc >= 2 && argc <= 3)
-  {
-    const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
-    if (pszPlan != NULL && pszFlow != NULL)
-    {
-      string f = pszFlow, p = pszPlan;
-      Json *ptFlow = NULL;
-      m_mutex.lock();
-      if (m_p.find(p) != m_p.end())
-      {
-        if (m_p[p]->f.find(f) != m_p[p]->f.end())
+        string f = pszFlow, p = pszPlan;
+        Json *ptFlow = NULL;
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
         {
-          ptFlow = new Json(m_p[p]->f[f]);
+          if (m_p[p]->f.find(f) != m_p[p]->f.end())
+          {
+            ptFlow = new Json(m_p[p]->f[f]);
+          }
+          else
+          {
+            e = "Flow not found.";
+          }
         }
         else
         {
-          e = "Flow not found.";
+          e = "Plan not found.";
         }
-      }
-      else
-      {
-        e = "Plan not found.";
-      }
-      m_mutex.unlock();
-      if (ptFlow != NULL)
-      {
-        if (sp == pszPlan || haveAccess(jsctx, pszPlan, {pszFlow}, e))
+        m_mutex.unlock();
+        if (ptFlow != NULL)
         {
-          if (!ptFlow->empty({"Script"}))
+          if (sp == pszPlan || haveAccess(jsctx, pszPlan, {pszFlow}, e))
           {
-            JSRuntime *jssubrun = JS_NewRuntime();
-            JSContext *jssubctx = JS_NewContext(jssubrun);
-            JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
-            for (auto &i : m_javascript)
+            if (!ptFlow->empty({"Script"}))
             {
-              if (i.second->function != NULL)
+              JSRuntime *jssubrun = JS_NewRuntime();
+              JSContext *jssubctx = JS_NewContext(jssubrun);
+              JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
+              for (auto &i : m_javascript)
               {
-                JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->function, i.first.c_str(), i.second->nLength));
-              }
-            }
-            if (!m_strSecret.empty())
-            {
-              string strPlan;
-              if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
-              {
-                JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_plan", JS_NewStringLen(jssubctx, strPlan.c_str(), strPlan.size()));
-              }
-            }
-            if (pszRequest != NULL)
-            {
-              JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_request", JS_NewStringLen(jssubctx, pszRequest, strlen(pszRequest)));
-            }
-            JSValue jssubres = JS_Eval(jssubctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-            if (JS_IsException(jssubres))
-            {
-              JSValue jssubexc = JS_GetException(jssubctx);
-              if (JS_IsError(jssubctx, jssubexc))
-              {
-                JSValue jssubmsg = JS_GetPropertyStr(jssubctx, jssubexc, "message");
-                if (JS_IsException(jssubmsg))
+                if (i.second->function != NULL)
                 {
-                  JSValue jsdeepexc = JS_GetException(jssubctx);
-                  const char *pszMessage = JS_ToCString(jssubctx, jsdeepexc);
-                  if (pszMessage != NULL)
-                  {
-                    e = pszMessage;
-                    JS_FreeCString(jssubctx, pszMessage);
-                  }
-                  else
-                  {
-                    e = "Failed to retrieve the exception from the message from the exception from the script.";
-                  }
-                  JS_FreeValue(jssubctx, jsdeepexc);
+                  JS_SetPropertyStr(jssubctx, jssubglobal, i.first.c_str(), JS_NewCFunction(jssubctx, i.second->function, i.first.c_str(), i.second->nLength));
                 }
-                else if (JS_IsString(jssubmsg))
+              }
+              if (!m_strSecret.empty())
+              {
+                string strPlan;
+                if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
                 {
-                  size_t unLength = 0;
-                  const char *pszMessage = JS_ToCStringLen(jssubctx, &unLength, jssubmsg);
-                  if (pszMessage != NULL)
+                  JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_plan", JS_NewStringLen(jssubctx, strPlan.c_str(), strPlan.size()));
+                }
+              }
+              if (pszRequest != NULL)
+              {
+                JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_request", JS_NewStringLen(jssubctx, pszRequest, strlen(pszRequest)));
+              }
+              JSValue jssubres = JS_Eval(jssubctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+              if (JS_IsException(jssubres))
+              {
+                JSValue jssubexc = JS_GetException(jssubctx);
+                if (JS_IsError(jssubctx, jssubexc))
+                {
+                  JSValue jssubmsg = JS_GetPropertyStr(jssubctx, jssubexc, "message");
+                  if (JS_IsException(jssubmsg))
                   {
-                    JSValue jssubstk = JS_GetPropertyStr(jssubctx, jssubexc, "stack");
-                    e.assign(pszMessage, unLength);
-                    if (JS_IsString(jssubstk))
+                    JSValue jsdeepexc = JS_GetException(jssubctx);
+                    const char *pszMessage = JS_ToCString(jssubctx, jsdeepexc);
+                    if (pszMessage != NULL)
                     {
-                      const char *pszStk = JS_ToCString(jssubctx, jssubstk);
-                      if (pszStk != NULL)
-                      {
-                        e += (string)" " + pszStk;
-                        JS_FreeCString(jssubctx, pszStk);
-                      }
+                      e = pszMessage;
+                      JS_FreeCString(jssubctx, pszMessage);
                     }
-                    JS_FreeValue(jssubctx, jssubstk);
-                    JS_FreeCString(jssubctx, pszMessage);
+                    else
+                    {
+                      e = "Failed to retrieve the exception from the message from the exception from the script.";
+                    }
+                    JS_FreeValue(jssubctx, jsdeepexc);
+                  }
+                  else if (JS_IsString(jssubmsg))
+                  {
+                    size_t unLength = 0;
+                    const char *pszMessage = JS_ToCStringLen(jssubctx, &unLength, jssubmsg);
+                    if (pszMessage != NULL)
+                    {
+                      JSValue jssubstk = JS_GetPropertyStr(jssubctx, jssubexc, "stack");
+                      e.assign(pszMessage, unLength);
+                      if (JS_IsString(jssubstk))
+                      {
+                        const char *pszStk = JS_ToCString(jssubctx, jssubstk);
+                        if (pszStk != NULL)
+                        {
+                          e += (string)" " + pszStk;
+                          JS_FreeCString(jssubctx, pszStk);
+                        }
+                      }
+                      JS_FreeValue(jssubctx, jssubstk);
+                      JS_FreeCString(jssubctx, pszMessage);
+                    }
+                    else
+                    {
+                      e = "Failed to retrieve the message within the exception from the script.";
+                    }
                   }
                   else
                   {
-                    e = "Failed to retrieve the message within the exception from the script.";
+                    e = "Encountered a non-string message within the exception from the script.";
                   }
                 }
                 else
                 {
-                  e = "Encountered a non-string message within the exception from the script.";
+                  e = "Encountered a non-error exception from the script.";
                 }
+                JS_FreeValue(jssubctx, jssubexc);
               }
               else
               {
-                e = "Encountered a non-error exception from the script.";
+                string strResponse;
+                JSValue jssuberror = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_error"), jssubresponse = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_response"), jssubstatus = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_status");
+                const char *pszError = JS_ToCString(jssubctx, jssuberror), *pszResponse = JS_ToCString(jssubctx, jssubresponse), *pszStatus = JS_ToCString(jssubctx, jssubstatus);
+                Json *ptResponse = new Json;
+                b = true;
+                if (pszStatus != NULL)
+                {
+                  ptResponse->i("Status", pszStatus);
+                  JS_FreeCString(jssubctx, pszStatus);
+                }
+                JS_FreeValue(jsctx, jssubstatus);
+                if (pszError != NULL)
+                {
+                  ptResponse->i("Error", pszError);
+                  JS_FreeCString(jssubctx, pszError);
+                }
+                JS_FreeValue(jsctx, jssuberror);
+                if (pszResponse != NULL)
+                {
+                  ptResponse->m["Response"] = new Json(pszResponse);
+                  JS_FreeCString(jssubctx, pszResponse);
+                }
+                JS_FreeValue(jsctx, jssubresponse);
+                ptResponse->j(strResponse);
+                delete ptResponse;
+                JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
               }
-              JS_FreeValue(jssubctx, jssubexc);
+              JS_FreeValue(jssubctx, jssubglobal);
+              JS_FreeValue(jssubctx, jssubres);
+              JS_FreeContext(jssubctx);
+              JS_FreeRuntime(jssubrun);
             }
             else
             {
-              string strResponse;
-              JSValue jssuberror = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_error"), jssubresponse = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_response"), jssubstatus = JS_GetPropertyStr(jssubctx, jssubglobal, "g_js_status");
-              const char *pszError = JS_ToCString(jssubctx, jssuberror), *pszResponse = JS_ToCString(jssubctx, jssubresponse), *pszStatus = JS_ToCString(jssubctx, jssubstatus);
-              Json *ptResponse = new Json;
-              b = true;
-              if (pszStatus != NULL)
-              {
-                ptResponse->i("Status", pszStatus);
-                JS_FreeCString(jssubctx, pszStatus);
-              }
-              JS_FreeValue(jsctx, jssubstatus);
-              if (pszError != NULL)
-              {
-                ptResponse->i("Error", pszError);
-                JS_FreeCString(jssubctx, pszError);
-              }
-              JS_FreeValue(jsctx, jssuberror);
-              if (pszResponse != NULL)
-              {
-                ptResponse->m["Response"] = new Json(pszResponse);
-                JS_FreeCString(jssubctx, pszResponse);
-              }
-              JS_FreeValue(jsctx, jssubresponse);
-              ptResponse->j(strResponse);
-              delete ptResponse;
-              JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+              e = "Script not found.";
             }
-            JS_FreeValue(jssubctx, jssubglobal);
-            JS_FreeValue(jssubctx, jssubres);
-            JS_FreeContext(jssubctx);
-            JS_FreeRuntime(jssubrun);
           }
-          else
-          {
-            e = "Script not found.";
-          }
+          delete ptFlow;
         }
-        delete ptFlow;
+      }
+      else
+      {
+        e = "Please provide the plan and flow.";
+      }
+      if (pszRequest != NULL)
+      {
+        JS_FreeCString(jsctx, pszRequest);
+      }
+      if (pszFlow != NULL)
+      {
+        JS_FreeCString(jsctx, pszFlow);
+      }
+      if (pszPlan != NULL)
+      {
+        JS_FreeCString(jsctx, pszPlan);
       }
     }
     else
     {
       e = "Please provide the plan and flow.";
     }
-    if (pszRequest != NULL)
-    {
-      JS_FreeCString(jsctx, pszRequest);
-    }
-    if (pszFlow != NULL)
-    {
-      JS_FreeCString(jsctx, pszFlow);
-    }
-    if (pszPlan != NULL)
-    {
-      JS_FreeCString(jsctx, pszPlan);
-    }
-  }
-  else
-  {
-    e = "Please provide the plan and flow.";
   }
   if (!e.empty())
   {
@@ -2978,8 +2999,10 @@ JSValue Maestro::js_notify(JSContext *jsctx, JSValueConst, int argc, JSValueCons
     {
       if (haveAccess(jsctx, "notify", {"all"}, e))
       {
+        stringstream ssMessage;
         b = true;
-        notify(pszMessage);
+        ssMessage << "maestro->main()->Maestro::js_notify():  " << pszMessage;
+        notify(ssMessage.str());
       }
     }
     else
