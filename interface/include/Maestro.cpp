@@ -2754,9 +2754,11 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
     {
       if (haveAccess(jsctx, "log", {"all"}, e))
       {
+        string strPlan;
         stringstream ssMessage;
         b = true;
-        ssMessage << "maestro->main()->Maestro::js_log():  " << pszMessage;
+        getPlan(jsctx, strPlan, e);
+        ssMessage << "maestro->main()->Maestro::js_log() [" << strPlan << "]:  " << pszMessage;
         log(ssMessage.str());
       }
     }
@@ -2999,9 +3001,11 @@ JSValue Maestro::js_notify(JSContext *jsctx, JSValueConst, int argc, JSValueCons
     {
       if (haveAccess(jsctx, "notify", {"all"}, e))
       {
+        string strPlan;
         stringstream ssMessage;
         b = true;
-        ssMessage << "maestro->main()->Maestro::js_notify():  " << pszMessage;
+        getPlan(jsctx, strPlan, e);
+        ssMessage << "maestro->main()->Maestro::js_notify() [" << strPlan << "]:  " << pszMessage;
         notify(ssMessage.str());
       }
     }
