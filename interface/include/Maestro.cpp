@@ -28,6 +28,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_a["dbupdate"] = {"central", "feedback"};
   m_a["log"] = {"all"};
   m_a["logger"] = {"Radial"};
+  m_a["notify"] = {"all"};
   m_a["sqlite"] = {"create", "drop", "query"};
   m_a["storage"] = {"add", "remove", "update"};
   // }}}
@@ -74,6 +75,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
   jsreg("mysqlQuery", 6, "mysqlQuery(server, port, user, password, database, query)", "Provides the ability to query (SQL: select) a given MySQL server and database.");
   jsreg("mysqlUpdate", 6, "mysqlUpdate(server, port, user, password, database, query)", "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
+  jsreg("notify", 1, "notify(message)", "Provides the ability to send a message to the configured notification email address.");
   jsreg("setError", 1, "setError(error)", "Provides the ability to set the error prior to exiting the given flow.");
   jsreg("setRequest", 1, "setRequest(request)", "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   jsreg("setResponse", 1, "setResponse(response)", "Provides the ability to set the response prior to exiting the given flow.");
@@ -2952,6 +2954,46 @@ JSValue Maestro::js_mysqlUpdate(JSContext *jsctx, JSValueConst, int argc, JSValu
   else
   {
     e = "Please provide the server, port, user, password, database, query.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_notify()
+JSValue Maestro::js_notify(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszMessage = JS_ToCString(jsctx, argv[0]);
+    if (pszMessage != NULL)
+    {
+      if (haveAccess(jsctx, "notify", {"all"}, e))
+      {
+        b = true;
+        notify(pszMessage);
+      }
+    }
+    else
+    {
+      e = "Please provide the message.";
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the message.";
   }
   if (!e.empty())
   {

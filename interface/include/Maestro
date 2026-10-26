@@ -110,6 +110,7 @@ class Maestro : public Interface
   JSValue js_logger(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_notify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
