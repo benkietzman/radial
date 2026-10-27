@@ -1265,14 +1265,14 @@ bool Maestro::flowAdd(radialUser &d, string &e)
             else
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -1519,14 +1519,14 @@ bool Maestro::flowRemove(radialUser &d, string &e)
             if (i->val({"_broadcast"}) != "1" && m_p[p]->f.empty() && !dataDirectoryRemove(m_strHandle, {p, "f"}, e))
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -1645,7 +1645,7 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4040,6 +4040,8 @@ bool Maestro::plan(radialUser &d, string &e)
       o->i("ID", m_p[p]->id);
       o->i("NumAccesses", to_string((m_p[p]->a != NULL && m_p[p]->a->exist({"a"}))?m_p[p]->a->m["a"]->m.size():0), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
+      o->i("NumSchedules", to_string(m_p[p]->s.size()), 'n');
+      o->i("NumServices", to_string(m_p[p]->d.size()), 'n');
       o->i("Owner", m_p[p]->owner);
       ssPlan << m_p[p]->t << "_" << m_p[p]->id;
       o->i("Plan", ssPlan.str());
@@ -4171,25 +4173,91 @@ bool Maestro::planRemove(radialUser &d, string &e)
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
-        if (i->val({"_broadcast"}) == "1" || dataDirectoryRemove(m_strHandle, {p}, e))
+        b = true;
+        if (m_p[p]->a != NULL)
         {
-          b = true;
-          if (m_p[p]->a != NULL)
+          delete m_p[p]->a;
+          if (i->val({"_broadcast"}) == "1")
           {
-            delete m_p[p]->a;
+            dataRemove(m_strHandle, {p, "a"}, e);
           }
-          for (auto &f : m_p[p]->f)
-          {
-            delete f.second;
-          }
-          delete m_p[p];
-          m_p.erase(p);
         }
-        else
+        for (auto &f : m_p[p]->f)
         {
-          ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-          chat("#maestro", ssChat.str());
+          delete f.second;
+          if (i->val({"_broadcast"}) == "1")
+          {
+            if (!dataRemove(m_strHandle, {p, "f", f.first}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | f | " << f.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+        }
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p, "f"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        for (auto &s : m_p[p]->d)
+        {
+          delete s.second;
+          if (i->val({"_broadcast"}) == "1")
+          {
+            if (!dataRemove(m_strHandle, {p, "d", s.first}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | d | " << s.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+        }
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p, "d"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        for (auto &s : m_p[p]->s)
+        {
+          delete s.second;
+          if (i->val({"_broadcast"}) == "1")
+          {
+            if (!dataRemove(m_strHandle, {p, "s", s.first}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | s | " << s.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+        }
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p, "s"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        delete m_p[p];
+        m_p.erase(p);
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
         }
       }
       else
@@ -4337,14 +4405,14 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
             else
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4456,14 +4524,14 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
             if (i->val({"_broadcast"}) != "1" && m_p[p]->s.empty() && !dataDirectoryRemove(m_strHandle, {p, "s"}, e))
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4582,7 +4650,7 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4690,7 +4758,7 @@ bool Maestro::scopes(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ servicee
+// {{{ service
 // {{{ sevice()
 bool Maestro::service(radialUser &d, string &e)
 {
@@ -4760,14 +4828,14 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
             else
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4851,14 +4919,14 @@ bool Maestro::serviceRemove(radialUser &d, string &e)
             if (i->val({"_broadcast"}) != "1" && m_p[p]->d.empty() && !dataDirectoryRemove(m_strHandle, {p, "d"}, e))
             {
               ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
               chat("#maestro", ssChat.str());
             }
           }
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
@@ -4977,7 +5045,7 @@ bool Maestro::serviceUpdate(radialUser &d, string &e)
           else
           {
             ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
