@@ -387,24 +387,27 @@ export default
     // [[[ getScopes()
     s.getScopes = () =>
     {
-      let request = {Interface: 'maestro', 'Function': 'scopes', Request: {Type: c.simplify(s.typeName), Access: c.simplify(s.accessName)}};
-      c.wsRequest('radial', request).then((response) =>
+      if (s.access.length > 0)
       {
-        let error = {};
-        if (c.wsResponse(response, error))
+        let request = {Interface: 'maestro', 'Function': 'scopes', Request: {Type: c.simplify(s.typeName), Access: c.simplify(s.accessName)}};
+        c.wsRequest('radial', request).then((response) =>
         {
-          s.scopes = response.Response;
-          if (s.scopes.length > 0)
+          let error = {};
+          if (c.wsResponse(response, error))
           {
-            s.scopeName = s.scopes[0];
+            s.scopes = response.Response;
+            if (s.scopes.length > 0)
+            {
+              s.scopeName = s.scopes[0];
+            }
           }
-        }
-        else
-        {
-          c.pushErrorMessage(error.message);
-        }
-        s.u();
-      });
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+          s.u();
+        });
+      }
     };
     // ]]]
     // [[[ init()
