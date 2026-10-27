@@ -1513,6 +1513,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
 {
   if (!ptFlow->empty({"Script"}))
   {
+    stringstream ssChat;
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1535,6 +1536,8 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     {
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, r.c_str(), r.size()));
     }
+    ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " Launched flow.";
+    chat("#maestro", ssChat.str());
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
     JS_FreeValue(jsctx, jsglobal);
     JS_FreeValue(jsctx, jsres);
@@ -4614,12 +4617,7 @@ void Maestro::scheduler(string strPrefix)
             m_mutex.lock();
             if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
-              string r;
-              if (m_p[p.first]->s[s.first]->exist({"Request"}))
-              {
-                m_p[p.first]->s[s.first]->m["Request"]->j(r);
-              }
-              thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, r, new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
+              thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, m_p[p.first]->s[s.first]->val({"Request"}), new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
               pthread_setname_np(tThread.native_handle(), "flowLaunch");
               tThread.detach();
             }
@@ -4640,7 +4638,13 @@ void Maestro::scheduler(string strPrefix)
             {
               if (s.second->val({"Cron"}) == "0")
               {
-                scheds[s.first] = atoi(s.second->m["Sched"]->v.c_str());
+                stringstream ssSched(s.second->m["Sched"]->v);
+                time_t CSched;
+                ssSched >> CSched;
+                if (CSched > CNow)
+                {
+                  scheds[s.first] = CSched;
+                }
               }
               else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
               {
