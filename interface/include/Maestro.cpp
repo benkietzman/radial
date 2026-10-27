@@ -1256,10 +1256,6 @@ bool Maestro::flowAdd(radialUser &d, string &e)
             if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
             {
               b = true;
-              if (m_p[p]->f.find(f) != m_p[p]->f.end())
-              {
-                delete m_p[p]->f[f];
-              }
               m_p[p]->f[f] = new Json(i);
             }
             else
@@ -4396,10 +4392,6 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
             if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "s", s}, j, e))
             {
               b = true;
-              if (m_p[p]->s.find(s) != m_p[p]->s.end())
-              {
-                delete m_p[p]->s[s];
-              }
               m_p[p]->s[s] = new Json(i);
             }
             else
@@ -4819,10 +4811,6 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
             if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "d", s}, j, e))
             {
               b = true;
-              if (m_p[p]->d.find(s) != m_p[p]->d.end())
-              {
-                delete m_p[p]->d[s];
-              }
               m_p[p]->d[s] = new Json(i);
             }
             else
