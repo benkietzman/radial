@@ -901,19 +901,19 @@ export default
     <!-- ]]] -->
     <!-- [[[ access -->
     <div class="col-auto">
-      <div class="card border border-danger mb-2 mt-3">
-        <div class="card-header bg bg-danger fw-bold text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
+      <div class="card border border-warning mb-2 mt-3">
+        <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
           Access ({{numberShort p.NumAccesses 0}})
         </div>
         {{#if expand.access}}
-        <div class="card-body bg bg-danger-subtle">
+        <div class="card-body bg bg-warning-subtle">
           {{#isLocalAdmin "Maestro"}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
-            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <button class="btn btn-danger bi bi-send" c-click="accessRequest()" title="Request Access"></button>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <button class="btn btn-warning bi bi-send" c-click="accessRequest()" title="Request Access"></button>
           </div>
           {{/isLocalAdmin}}
           {{#if as.a}}
@@ -1067,17 +1067,17 @@ export default
     <!-- ]]] -->
     <!-- [[[ schedules -->
     <div class="col-auto">
-      <div class="card border border-warning mb-2 mt-3">
-        <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('schedules')" style="cursor: row-resize;">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap" c-click="collapseExpand('schedules')" style="cursor: row-resize;">
           Schedules ({{numberShort p.NumSchedules 0}})
         </div>
         {{#if expand.schedules}}
-        <div class="card-body bg bg-warning-subtle">
+        <div class="card-body bg bg-primary-subtle">
           {{#if p.edit}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Schedule</span>
-            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="scheduleName" style="flex-grow: 0; flex-basis: 100px;">
-            <button class="btn btn-warning bi bi-plus-circle" c-click="scheduleAdd()" title="Add Schedule"></button>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="scheduleName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-primary bi bi-plus-circle" c-click="scheduleAdd()" title="Add Schedule"></button>
           </div>
           {{/if}}
           <div class="table-responsive mt-2">
@@ -1134,8 +1134,8 @@ export default
     <!-- [[[ flow -->
     {{#if f}}
     <div class="col-{{#if expand.flow}}*{{else}}auto{{/if}}">
-      <div class="card border border-primary mb-2 mt-3">
-        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+      <div class="card border border-success mb-2 mt-3">
+        <div class="card-header bg bg-success fw-bold text-center text-nowrap">
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
@@ -1153,7 +1153,7 @@ export default
           </div>
         </div>
         {{#if expand.flow}}
-        <div class="card-body bg bg-primary-subtle">
+        <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
@@ -1170,7 +1170,7 @@ export default
         {{/if}}
         <div class="card-footer">
           {{#if p.edit}}
-          <button class="btn btn-sm btn-primary bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+          <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
           <span class="float-end text-warning" c-model="flowStatus"></span>
           {{/if}}
         </div>
@@ -1213,7 +1213,7 @@ export default
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
             <select class="form-select" c-model="s.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
           </div>
-          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="s\.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-primary-subtle border border-primary mt-2" c-model="s\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
@@ -1234,8 +1234,8 @@ export default
     <!-- [[[ service -->
     {{#if d}}
     <div class="col-{{#if expand.servicee}}*{{else}}auto{{/if}}">
-      <div class="card border border-primary mb-2 mt-3">
-        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+      <div class="card border border-info mb-2 mt-3">
+        <div class="card-header bg bg-info fw-bold text-dark text-center text-nowrap">
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
@@ -1260,13 +1260,13 @@ export default
           </div>
         </div>
         {{#if expand.service}}
-        <div class="card-body bg bg-primary-subtle">
+        <div class="card-body bg bg-info-subtle">
           {{#if p.edit}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
             <select class="form-select" c-model="d.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
           </div>
-          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="d\.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="d\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
