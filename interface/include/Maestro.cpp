@@ -3929,6 +3929,38 @@ void Maestro::load(string strPrefix)
                     chat("#maestro", ssChat.str());
                   }
                 }
+                else if (j.second->val({"Type"}) == "directory" && j.first == "d")
+                {
+                  Json *dl = NULL;
+                  if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
+                  {
+                    for (auto &k : dl->m)
+                    {
+                      if (k.second->val({"Type"}) == "regular file")
+                      {
+                        string b;
+                        if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                        {
+                          ptPlan->d[k.first] = new Json(b);
+                        }
+                        else
+                        {
+                          bLoaded = false;
+                          ssChat.str("");
+                          ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                          chat("#maestro", ssChat.str());
+                        }
+                      }
+                    }
+                  }
+                  else
+                  {
+                    bLoaded = false;
+                    ssChat.str("");
+                    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
                 else if (j.second->val({"Type"}) == "directory" && j.first == "f")
                 {
                   Json *dl = NULL;
@@ -3942,6 +3974,38 @@ void Maestro::load(string strPrefix)
                         if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
                         {
                           ptPlan->f[k.first] = new Json(b);
+                        }
+                        else
+                        {
+                          bLoaded = false;
+                          ssChat.str("");
+                          ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                          chat("#maestro", ssChat.str());
+                        }
+                      }
+                    }
+                  }
+                  else
+                  {
+                    bLoaded = false;
+                    ssChat.str("");
+                    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
+                else if (j.second->val({"Type"}) == "directory" && j.first == "s")
+                {
+                  Json *dl = NULL;
+                  if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
+                  {
+                    for (auto &k : dl->m)
+                    {
+                      if (k.second->val({"Type"}) == "regular file")
+                      {
+                        string b;
+                        if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                        {
+                          ptPlan->s[k.first] = new Json(b);
                         }
                         else
                         {
@@ -4178,28 +4242,6 @@ bool Maestro::planRemove(radialUser &d, string &e)
             dataRemove(m_strHandle, {p, "a"}, e);
           }
         }
-        for (auto &f : m_p[p]->f)
-        {
-          delete f.second;
-          if (i->val({"_broadcast"}) == "1")
-          {
-            if (!dataRemove(m_strHandle, {p, "f", f.first}, e))
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | f | " << f.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
-          }
-        }
-        if (i->val({"_broadcast"}) == "1")
-        {
-          if (!dataDirectoryRemove(m_strHandle, {p, "f"}, e))
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
-        }
         for (auto &s : m_p[p]->d)
         {
           delete s.second;
@@ -4219,6 +4261,28 @@ bool Maestro::planRemove(radialUser &d, string &e)
           {
             ssChat.str("");
             ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        for (auto &f : m_p[p]->f)
+        {
+          delete f.second;
+          if (i->val({"_broadcast"}) == "1")
+          {
+            if (!dataRemove(m_strHandle, {p, "f", f.first}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | f | " << f.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+        }
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p, "f"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
             chat("#maestro", ssChat.str());
           }
         }
