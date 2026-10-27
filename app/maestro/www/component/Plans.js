@@ -23,7 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
-      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true, services: true, service: true}
+      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
     });
     // ]]]
     // [[[ access
@@ -446,7 +446,6 @@ export default
           s.accesses();
           s.flows();
           s.schedules();
-          s.services();
         }
         else
         {
@@ -676,126 +675,6 @@ export default
     };
     // ]]]
     // ]]]
-    // [[[ service
-    // [[[ service()
-    s.service = () =>
-    {
-      let request = {Interface: 'maestro', 'Function': 'service', Request: {Plan: s.strPlan, Service: s.strService}};
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.d = response.Response;
-        }
-        else
-        {
-          c.pushErrorMessage(error.message);
-        }
-        s.u();
-      });
-    };
-    // ]]]
-    // [[[ serviceAdd()
-    s.serviceAdd = () =>
-    {
-      if (c.isValid())
-      {
-        let request = {Interface: 'maestro', 'Function': 'serviceAdd', Request: {Plan: s.strPlan, Service: s.serviceName.v}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            document.location.href = '#/Plans/' + s.strPlan + '/Service/' + s.serviceName.v;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-        });
-      }
-      else
-      {
-        c.pushErrorMessage('You are not authorized to perform this action.');
-      }
-    };
-    // ]]]
-    // [[[ serviceRemove()
-    s.serviceRemove = () =>
-    {
-      if (c.isValid())
-      {
-        let request = {Interface: 'maestro', 'Function': 'serviceRemove', Request: {Plan: s.strPlan, Service: s.strService}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            document.location.href = '#/Plans/' + s.strPlan;
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-        });
-      }
-      else
-      {
-        c.pushErrorMessage('You are not authorized to perform this action.');
-      }
-    };
-    // ]]]
-    // [[[ services()
-    s.services = () =>
-    {
-      let request = {Interface: 'maestro', 'Function': 'services', Request: {Plan: s.strPlan}};
-      c.wsRequest('radial', request).then((response) =>
-      {
-        let error = {};
-        if (c.wsResponse(response, error))
-        {
-          s.ds = response.Response;
-          if (s.strService != '')
-          {
-            s.service();
-          }
-        }
-        else
-        {
-          c.pushErrorMessage(error.message);
-        }
-        s.u();
-      });
-    };
-    // ]]]
-    // [[[ serviceUpdate()
-    s.serviceUpdate = () =>
-    {
-      if (c.isValid())
-      {
-        s['serviceStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Enabled: s.d.Enabled.v, Flow: s.d.Flow.v, Respawn: s.d.Respawn.v, Description: s.d.Description.v, Request: s.d.Request.v}};
-        c.wsRequest('radial', request).then((response) =>
-        {
-          let error = {};
-          if (c.wsResponse(response, error))
-          {
-            s['serviceStatus'].v = 'updated service';
-          }
-          else
-          {
-            c.pushErrorMessage(error.message);
-          }
-        });
-      }
-      else
-      {
-        c.pushErrorMessage('You are not authorized to perform this action.');
-      }
-    };
-    // ]]]
-    // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
     {
@@ -823,7 +702,7 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Plans');
-    s.strPlan = s.strFlow = s.strSchedule = s.strService = '';
+    s.strPlan = s.strFlow = s.strSchedule = '';
     if (c.isParam(nav, 'plan') && c.getParam(nav, 'plan') != '')
     {
       s.strPlan = c.getParam(nav, 'plan');
@@ -840,10 +719,6 @@ export default
           else if (strSection == 'Schedule')
           {
             s.strSchedule = strID;
-          }
-          else if (strSection == 'Service')
-          {
-            s.strService = strID;
           }
         }
       }
@@ -868,7 +743,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate' || data.detail.Action == 'serviceAdd' || data.detail.Action == 'serviceRemove' || data.detail.Action == 'serviceUpdate') && !s.composition)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate') && !s.composition)
       {
         s.init();
       }
@@ -1114,39 +989,6 @@ export default
       </div>
     </div>
     <!-- ]]] -->
-    <!-- [[[ services -->
-    <div class="col-auto">
-      <div class="card border border-info mb-2 mt-3">
-        <div class="card-header bg bg-info fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('services')" style="cursor: row-resize;">
-          Services ({{numberShort p.NumServices 0}})
-        </div>
-        {{#if expand.services}}
-        <div class="card-body bg bg-info-subtle">
-          {{#if p.edit}}
-          <div class="input-group flex-nowrap mt-2">
-            <span class="input-group-text bg bg-secondary border bordrer-secondary">Service</span>
-            <input type="text" class="form-control bg bg-secondary-subtle border border-info-subtle" c-model="serviceName" style="flex-grow: 0; flex-basis: 100px;">
-            <button class="btn btn-info bi bi-plus-circle" c-click="serviceAdd()" title="Add Servicee"></button>
-          </div>
-          {{/if}}
-          <div class="table-responsive mt-2">
-            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
-            <tbody>
-              {{#each ds}}
-              <tr>
-                <td><a href="#/Plans/{{@root.strPlan}}/Service/{{.}}">{{.}}</a></td>
-              </tr>
-              {{/each}}
-            </tbody>
-            </table>
-          </div>
-        </div>
-        {{/if}}
-        <div class="card-footer">
-        </div>
-      </div>
-    </div>
-    <!-- ]]] -->
     <!-- [[[ flow -->
     {{#if f}}
     <div class="col-{{#if expand.flow}}*{{else}}auto{{/if}}">
@@ -1278,84 +1120,6 @@ export default
         <div class="card-footer">
           {{#if p.edit}}
           <span class="float-end text-warning" c-model="scheduleStatus"></span>
-          {{/if}}
-        </div>
-      </div>
-    </div>
-    {{/if}}
-    <!-- ]]] -->
-    <!-- [[[ service -->
-    {{#if d}}
-    <div class="col-{{#if expand.servicee}}*{{else}}auto{{/if}}">
-      <div class="card border border-info mb-2 mt-3">
-        <div class="card-header bg bg-info fw-bold text-dark text-center text-nowrap">
-          <div class="row flex-nowrap">
-            <div class="col-auto">
-              {{#if p.edit}}
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="serviceeRemove()" title="Remove Service"></button>
-              {{/if}}
-            </div>
-            <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
-              Service - {{strService}}
-            </div>
-            <div class="col-auto">
-              {{#if p.edit}}
-              <div class="form-check form-switch" title="Enables the service.">
-                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="d.Enabled" value="1">
-              </div>
-              {{/if}}
-            </div>
-            <div class="col-auto">
-              {{#if p.edit}}
-              <button class="btn btn-sm btn-warning bi bi-save" c-click="serviceUpdate()" title="Save Service"></button> 
-              {{/if}}
-            </div>
-          </div>
-        </div>
-        {{#if expand.service}}
-        <div class="card-body bg bg-info-subtle">
-          {{#if p.edit}}
-          <div class="row">
-            <div class="col">
-              <div class="input-group flex-nowrap mt-2">
-                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="d.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-              </div>
-            </div>
-            <div class="col">
-              <div class="input-group flex-nowrap mt-2">
-                <span class="input-group-text bg bg-secondary border bordrer-secondary">Respawn</span>
-                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="d.Respawn" style="flex-grow: 0; flex-basis: 100px;"><option value="0">No</option><option value="1">Yes</option></select>
-              </div>
-            </div>
-          </div>
-          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="d.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="d.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
-          <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
-          {{else}}
-          <div class="row">
-            <div class="col">
-              <div class="input-group flex-nowrap mt-2">
-                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-                <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{d.Flow}}</span>
-              </div>
-            </div>
-            <div class="col">
-              <div class="input-group flex-nowrap mt-2">
-                <span class="input-group-text bg bg-secondary border bordrer-secondary">Respawn</span>
-                <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{#ifCond d.Respawn "==" "1"}}Yes{{else}}No{{/ifCond}}</span>
-              </div>
-            </div>
-          </div>
-          <b>Description<b>
-          <pre class="bg bg-info-subtle border border-info mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{d.Description}}}</pre>
-          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Request}}}</pre>
-          {{/if}}
-        </div>
-        {{/if}}
-        <div class="card-footer">
-          {{#if p.edit}}
-          <span class="float-end text-warning" c-model="serviceStatus"></span>
           {{/if}}
         </div>
       </div>
