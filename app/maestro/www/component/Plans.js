@@ -639,7 +639,7 @@ export default
       if (c.isValid())
       {
         s['scheduleStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Description: s.s.Description.v}};
+        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Description: s.s.Description.v, Enabled: s.s.Enabled.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -759,7 +759,7 @@ export default
       if (c.isValid())
       {
         s['serviceStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v, Enabled: s.d.Enabled.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1189,6 +1189,13 @@ export default
               <button class="btn btn-sm btn-danger bi bi-trash" c-click="scheduleRemove()" title="Remove Schedule"></button>
               {{/if}}
             </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <div class="form-check form-switch" title="Enables the schedule.">
+                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="s.Enabled" c-change="scheduleUpdate(false)" value="1">
+              </div>
+              {{/if}}
+            </div>
             <div class="col" c-click="collapseExpand('schedule')" style="cursor: row-resize;">
               Schedule - {{strSchedule}}
             </div>
@@ -1202,6 +1209,10 @@ export default
         {{#if expand.schedule}}
         <div class="card-body bg bg-primary-subtle">
           {{#if p.edit}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+            <select class="form-select" c-model="s.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+          </div>
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="s\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
@@ -1231,6 +1242,13 @@ export default
               <button class="btn btn-sm btn-danger bi bi-trash" c-click="serviceeRemove()" title="Remove Service"></button>
               {{/if}}
             </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <div class="form-check form-switch" title="Enables the service.">
+                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="d.Enabled" c-change="serviceUpdate(false)" value="1">
+              </div>
+              {{/if}}
+            </div>
             <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
               Service - {{strService}}
             </div>
@@ -1244,6 +1262,10 @@ export default
         {{#if expand.service}}
         <div class="card-body bg bg-primary-subtle">
           {{#if p.edit}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+            <select class="form-select" c-model="d.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+          </div>
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="d\.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
