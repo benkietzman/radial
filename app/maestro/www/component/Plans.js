@@ -565,7 +565,7 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'scheduleAdd', Request: {Plan: s.strPlan, Flow: s.scheduleName.v}};
+        let request = {Interface: 'maestro', 'Function': 'scheduleAdd', Request: {Plan: s.strPlan, Schedule: s.scheduleName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -639,7 +639,7 @@ export default
       if (c.isValid())
       {
         s['scheduleStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strFlow, Description: s.s.Description.v, Script: s.s.Script.v}};
+        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Description: s.s.Description.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -759,7 +759,7 @@ export default
       if (c.isValid())
       {
         s['serviceStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v, Script: s.d.Script.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -807,27 +807,27 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Plans');
-    s.strPlan = s.strFlow = s.strSchedule = s.strSection = s.strService = '';
+    s.strPlan = s.strFlow = s.strSchedule = s.strService = '';
     if (c.isParam(nav, 'plan') && c.getParam(nav, 'plan') != '')
     {
       s.strPlan = c.getParam(nav, 'plan');
       if (c.isParam(nav, 'section') && c.getParam(nav, 'section') != '')
       {
-        s.strSection = c.getParam(nav, 'section');
+        let strSection = c.getParam(nav, 'section');
         if (c.isParam(nav, 'id') && c.getParam(nav, 'id') != '')
         {
           let strID = c.getParam(nav, 'id');
-          if (s.strSection == 'Flow')
+          if (strSection == 'Flow')
           {
-            s.strFlow = s.strID;
+            s.strFlow = strID;
           }
-          else if (s.strSection == 'Schedule')
+          else if (strSection == 'Schedule')
           {
-            s.strSchedule = s.strID;
+            s.strSchedule = strID;
           }
-          else if (s.strSection == 'Service')
+          else if (strSection == 'Service')
           {
-            s.strService = s.strID;
+            s.strService = strID;
           }
         }
       }
@@ -1147,7 +1147,7 @@ export default
             </div>
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-warning bi bi-save" c-click="flowUpdate()" title="Save Script"></button> 
+              <button class="btn btn-sm btn-warning bi bi-save" c-click="flowUpdate()" title="Save Flow"></button> 
               {{/if}}
             </div>
           </div>
@@ -1172,6 +1172,90 @@ export default
           {{#if p.edit}}
           <button class="btn btn-sm btn-primary bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
           <span class="float-end text-warning" c-model="flowStatus"></span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    {{/if}}
+    <!-- ]]] -->
+    <!-- [[[ schedule -->
+    {{#if s}}
+    <div class="col-{{#if expand.schedule}}*{{else}}auto{{/if}}">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+          <div class="row flex-nowrap">
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-danger bi bi-trash" c-click="scheduleRemove()" title="Remove Schedule"></button>
+              {{/if}}
+            </div>
+            <div class="col" c-click="collapseExpand('schedule')" style="cursor: row-resize;">
+              Schedule - {{strSchedule}}
+            </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-warning bi bi-save" c-click="scheduleUpdate()" title="Save Schedule"></button> 
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{#if expand.schedule}}
+        <div class="card-body bg bg-primary-subtle">
+          {{#if p.edit}}
+          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="s\.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
+          {{else}}
+          <b>Description<b>
+          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          {{/if}}
+        </div>
+        {{/if}}
+        <div class="card-footer">
+          {{#if p.edit}}
+          <span class="float-end text-warning" c-model="scheduleStatus"></span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    {{/if}}
+    <!-- ]]] -->
+    <!-- [[[ service -->
+    {{#if d}}
+    <div class="col-{{#if expand.servicee}}*{{else}}auto{{/if}}">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+          <div class="row flex-nowrap">
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-danger bi bi-trash" c-click="serviceeRemove()" title="Remove Service"></button>
+              {{/if}}
+            </div>
+            <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
+              Service - {{strService}}
+            </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-warning bi bi-save" c-click="serviceUpdate()" title="Save Service"></button> 
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{#if expand.service}}
+        <div class="card-body bg bg-primary-subtle">
+          {{#if p.edit}}
+          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="d\.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
+          {{else}}
+          <b>Description<b>
+          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{d.Description}}}</pre>
+          {{/if}}
+        </div>
+        {{/if}}
+        <div class="card-footer">
+          {{#if p.edit}}
+          <span class="float-end text-warning" c-model="serviceStatus"></span>
           {{/if}}
         </div>
       </div>
