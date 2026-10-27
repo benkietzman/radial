@@ -4615,7 +4615,7 @@ void Maestro::scheduler(string strPrefix)
             if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
               stringstream ssChat;
-              ssChat << char(3) << "00,06 " << p.first << " | s | " << s.first << " " << char(3) << " Launched \"" << m_p[p.first]->s[s.first]->m["Flow"]->v << "\" flow.";
+              ssChat << char(3) << "00,06 " << p.first << " | " << s.first << " " << char(3) << " Scheduler launched \"" << m_p[p.first]->s[s.first]->m["Flow"]->v << "\" flow.";
               chat("#maestro", ssChat.str());
               thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, m_p[p.first]->s[s.first]->val({"Request"}), new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
               pthread_setname_np(tThread.native_handle(), "flowLaunch");
