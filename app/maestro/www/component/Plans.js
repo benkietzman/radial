@@ -639,7 +639,7 @@ export default
       if (c.isValid())
       {
         s['scheduleStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Description: s.s.Description.v, Enabled: s.s.Enabled.v}};
+        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Cron: s.s.Cron.v, Sched: s.s.Sched.v, Description: s.s.Description.v, Request: s.s.Request.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -759,7 +759,7 @@ export default
       if (c.isValid())
       {
         s['serviceStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v, Enabled: s.d.Enabled.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Enabled: s.d.Enabled.v, Flow: s.d.Flow.v, Respawn: s.d.Respawn.v, Description: s.d.Description.v, Request: s.d.Request.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1155,8 +1155,8 @@ export default
         {{#if expand.flow}}
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
-          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f\.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control mt-2" c-model="f\.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
+          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control mt-2" c-model="f.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
@@ -1209,16 +1209,53 @@ export default
         {{#if expand.schedule}}
         <div class="card-body bg bg-primary-subtle">
           {{#if p.edit}}
-          <div class="input-group flex-nowrap mt-2">
-            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <select class="form-select" c-model="s.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+          <div class="row">
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Cron</span>
+                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Cron" style="flex-grow: 0; flex-basis: 100px;"><option value="0">No</option><option value="1">Yes</option></select>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Sched</span>
+                <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="s.Sched" style="flex-grow: 0; flex-basis: 204px;" placeholder="{{#ifCond s.Cron "==" "1"}}* * * * *{{else}}YYYY-MM-DD HH:MM:SS{{/ifCond}}">
+              </div>
+            </div>
           </div>
-          <textarea class="form-control bg bg-primary-subtle border border-primary mt-2" c-model="s\.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <textarea class="form-control bg bg-primary-subtle border border-primary mt-2" c-model="s.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="s.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
+          <div class="row">
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Flow}}</span>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Cron</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{#ifCond s.Cron "==" "1"}}Yes{{else}}No{{/ifCond}}</span>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Schedule</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Schedule}}</span>
+              </div>
+            </div>
+          </div>
           <b>Description<b>
-          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          <pre class="bg bg-primary-subtle border border-primary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Request}}}</pre>
           {{/if}}
         </div>
         {{/if}}
@@ -1262,16 +1299,41 @@ export default
         {{#if expand.service}}
         <div class="card-body bg bg-info-subtle">
           {{#if p.edit}}
-          <div class="input-group flex-nowrap mt-2">
-            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <select class="form-select" c-model="d.Form" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+          <div class="row">
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="d.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Respawn</span>
+                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="d.Respawn" style="flex-grow: 0; flex-basis: 100px;"><option value="0">No</option><option value="1">Yes</option></select>
+              </div>
+            </div>
           </div>
-          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="d\.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="d.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="d.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
+          <div class="row">
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{d.Flow}}</span>
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group flex-nowrap mt-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Respawn</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{#ifCond d.Respawn "==" "1"}}Yes{{else}}No{{/ifCond}}</span>
+              </div>
+            </div>
+          </div>
           <b>Description<b>
-          <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{d.Description}}}</pre>
+          <pre class="bg bg-info-subtle border border-info mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{d.Description}}}</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Request}}}</pre>
           {{/if}}
         </div>
         {{/if}}
