@@ -46,7 +46,6 @@ class Maestro : public Interface
   protected:
   bool m_bLoaded;
   bool m_bLoadSchedules;
-  bool m_bLoadServices;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
   map<string, list<string> > m_a;
@@ -94,11 +93,6 @@ class Maestro : public Interface
   bool schedules(radialUser &d, string &e);
   bool scheduleUpdate(radialUser &d, string &e);
   bool scopes(radialUser &d, string &e);
-  bool service(radialUser &d, string &e);
-  bool serviceAdd(radialUser &d, string &e);
-  bool serviceRemove(radialUser &d, string &e);
-  bool services(radialUser &d, string &e);
-  bool serviceUpdate(radialUser &d, string &e);
 
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
