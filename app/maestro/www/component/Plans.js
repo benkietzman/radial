@@ -23,7 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
-      expand: {general: true, access: true, flows: true, flow: true}
+      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true, services: true, service: true}
     });
     // ]]]
     // [[[ access
@@ -235,7 +235,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            document.location.href = '#/Plans/' + s.strPlan + '/' + s.flowName.v;
+            document.location.href = '#/Plans/' + s.strPlan + '/Flow/' + s.flowName.v;
           }
           else
           {
@@ -445,6 +445,8 @@ export default
           s.p = response.Response;
           s.accesses();
           s.flows();
+          s.schedules();
+          s.services();
         }
         else
         {
@@ -538,6 +540,246 @@ export default
     };
     // ]]]
     // ]]]
+    // [[[ schedule
+    // [[[ schedule()
+    s.schedule = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'schedule', Request: {Plan: s.strPlan, Schedule: s.strSchedule}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.s = response.Response;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ scheduleAdd()
+    s.scheduleAdd = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'scheduleAdd', Request: {Plan: s.strPlan, Flow: s.scheduleName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan + '/Schedule/' + s.scheduleName.v;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ scheduleRemove()
+    s.scheduleRemove = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'scheduleRemove', Request: {Plan: s.strPlan, Schedule: s.strSchedule}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ schedules()
+    s.schedules = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'schedules', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.ss = response.Response;
+          if (s.strSchedule != '')
+          {
+            s.schedule();
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ scheduleUpdate()
+    s.scheduleUpdate = () =>
+    {
+      if (c.isValid())
+      {
+        s['scheduleStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strFlow, Description: s.s.Description.v, Script: s.s.Script.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['scheduleStatus'].v = 'updated schedule';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // ]]]
+    // [[[ service
+    // [[[ service()
+    s.service = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'service', Request: {Plan: s.strPlan, Service: s.strService}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.d = response.Response;
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ serviceAdd()
+    s.serviceAdd = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'serviceAdd', Request: {Plan: s.strPlan, Service: s.serviceName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan + '/Service/' + s.serviceName.v;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ serviceRemove()
+    s.serviceRemove = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'serviceRemove', Request: {Plan: s.strPlan, Service: s.strService}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ services()
+    s.services = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'services', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.ds = response.Response;
+          if (s.strService != '')
+          {
+            s.service();
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ serviceUpdate()
+    s.serviceUpdate = () =>
+    {
+      if (c.isValid())
+      {
+        s['serviceStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Description: s.d.Description.v, Script: s.d.Script.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['serviceStatus'].v = 'updated service';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
     {
@@ -565,20 +807,40 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Plans');
-    s.strPlan = s.strFlow = '';
+    s.strPlan = s.strFlow = s.strSchedule = s.strSection = s.strService = '';
     if (c.isParam(nav, 'plan') && c.getParam(nav, 'plan') != '')
     {
       s.strPlan = c.getParam(nav, 'plan');
-      if (c.isParam(nav, 'flow') && c.getParam(nav, 'flow') != '')
+      if (c.isParam(nav, 'section') && c.getParam(nav, 'section') != '')
       {
-        s.strFlow = c.getParam(nav, 'flow');
+        s.strSection = c.getParam(nav, 'section');
+        if (c.isParam(nav, 'id') && c.getParam(nav, 'id') != '')
+        {
+          let strID = c.getParam(nav, 'id');
+          if (s.strSection == 'Flow')
+          {
+            s.strFlow = s.strID;
+          }
+          else if (s.strSection == 'Schedule')
+          {
+            s.strSchedule = s.strID;
+          }
+          else if (s.strSection == 'Service')
+          {
+            s.strService = s.strID;
+          }
+        }
       }
     }
     s.apps = null;
+    s.d = null;
+    s.ds = null;
     s.p = null;
     s.ps = null;
     s.f = null;
     s.fs = null;
+    s.s = null;
+    s.ss = null;
     s.u();
     if (a.ready())
     {
@@ -639,19 +901,19 @@ export default
     <!-- ]]] -->
     <!-- [[[ access -->
     <div class="col-auto">
-      <div class="card border border-warning mb-2 mt-3">
-        <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
+      <div class="card border border-danger mb-2 mt-3">
+        <div class="card-header bg bg-danger fw-bold text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
           Access ({{numberShort p.NumAccesses 0}})
         </div>
         {{#if expand.access}}
-        <div class="card-body bg bg-warning-subtle">
+        <div class="card-body bg bg-danger-subtle">
           {{#isLocalAdmin "Maestro"}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
-            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
-            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <button class="btn btn-warning bi bi-send" c-click="accessRequest()" title="Request Access"></button>
+            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
+            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-danger-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <button class="btn btn-danger bi bi-send" c-click="accessRequest()" title="Request Access"></button>
           </div>
           {{/isLocalAdmin}}
           {{#if as.a}}
@@ -790,7 +1052,73 @@ export default
             <tbody>
               {{#each fs}}
               <tr>
-                <td><a href="#/Plans/{{@root.strPlan}}/{{.}}">{{.}}</a></td>
+                <td><a href="#/Plans/{{@root.strPlan}}/Flow/{{.}}">{{.}}</a></td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+        <div class="card-footer">
+        </div>
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ schedules -->
+    <div class="col-auto">
+      <div class="card border border-warning mb-2 mt-3">
+        <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('schedules')" style="cursor: row-resize;">
+          Schedules ({{numberShort p.NumSchedules 0}})
+        </div>
+        {{#if expand.schedules}}
+        <div class="card-body bg bg-warning-subtle">
+          {{#if p.edit}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Schedule</span>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-warning-subtle" c-model="scheduleName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-warning bi bi-plus-circle" c-click="scheduleAdd()" title="Add Schedule"></button>
+          </div>
+          {{/if}}
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <tbody>
+              {{#each ss}}
+              <tr>
+                <td><a href="#/Plans/{{@root.strPlan}}/Schedule/{{.}}">{{.}}</a></td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+        <div class="card-footer">
+        </div>
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ services -->
+    <div class="col-auto">
+      <div class="card border border-info mb-2 mt-3">
+        <div class="card-header bg bg-info fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('services')" style="cursor: row-resize;">
+          Services ({{numberShort p.NumServices 0}})
+        </div>
+        {{#if expand.services}}
+        <div class="card-body bg bg-info-subtle">
+          {{#if p.edit}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Service</span>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-info-subtle" c-model="serviceName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-info bi bi-plus-circle" c-click="serviceAdd()" title="Add Servicee"></button>
+          </div>
+          {{/if}}
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <tbody>
+              {{#each ds}}
+              <tr>
+                <td><a href="#/Plans/{{@root.strPlan}}/Service/{{.}}">{{.}}</a></td>
               </tr>
               {{/each}}
             </tbody>

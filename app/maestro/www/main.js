@@ -25,7 +25,7 @@ let common = new Common(
   [
     {path: '/Plans', name: 'Plans', component: '/maestro/component/Plans.js'},
     {path: '/Plans/:plan', name: 'Plans', component: '/maestro/component/Plans.js'},
-    {path: '/Plans/:plan/:flow', name: 'Plans', component: '/maestro/component/Plans.js'},
+    {path: '/Plans/:plan/:section/:id', name: 'Plans', component: '/maestro/component/Plans.js'},
     {path: '/Approvals', name: 'Approvals', component: '/maestro/component/Approvals.js'},
     {path: '/Info', name: 'Info', component: '/maestro/component/Info.js'},
     {path: '/Login', name: 'Login', component: '/include/common/js/component/Login.js'},
