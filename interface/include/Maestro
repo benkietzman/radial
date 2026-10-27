@@ -31,7 +31,9 @@ struct radialMaestroJavascript
 struct radialMaestroPlan
 {
   char t;
+  map<string, Json *> d;
   map<string, Json *> f;
+  map<string, Json *> s;
   string id;
   string owner;
   Json *a;
@@ -56,7 +58,7 @@ class Maestro : public Interface
   string m_strPath;
   string m_strSecret;
   thread *m_pThreadInotify;
-  thread *m_pThreadSchedule;
+  thread *m_pThreadScheduler;
 
   bool accesses(radialUser &d, string &e);
   bool accessRemove(radialUser &d, string &e);
@@ -83,8 +85,18 @@ class Maestro : public Interface
   bool planAdd(radialUser &d, string &e);
   bool planRemove(radialUser &d, string &e);
   bool plans(radialUser &d, string &e);
-  void schedule(string strPrefix);
+  bool schedule(radialUser &d, string &e);
+  bool scheduleAdd(radialUser &d, string &e);
+  void scheduler(string strPrefix);
+  bool scheduleRemove(radialUser &d, string &e);
+  bool schedules(radialUser &d, string &e);
+  bool scheduleUpdate(radialUser &d, string &e);
   bool scopes(radialUser &d, string &e);
+  bool service(radialUser &d, string &e);
+  bool serviceAdd(radialUser &d, string &e);
+  bool serviceRemove(radialUser &d, string &e);
+  bool services(radialUser &d, string &e);
+  bool serviceUpdate(radialUser &d, string &e);
 
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
