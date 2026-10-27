@@ -551,6 +551,12 @@ export default
         if (c.wsResponse(response, error))
         {
           s.s = response.Response;
+          if (s.s.Cron && s.s.Cron != '1' && s.s.Sched && s.s.Sched != '')
+          {
+            let date = new Date(s.s.Sched * 1000);
+            let pad = n => String(n).padStart(2, "0");
+            s.s.Sched = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+          }
         }
         else
         {
@@ -638,8 +644,18 @@ export default
     {
       if (c.isValid())
       {
+        let strSched = s.s.Sched.v;
+        if (s.s.Cron.v != '1' && strSched != '')
+        {
+          let nIndex;
+          if ((nIndex = strSched.indexOf(' ')) != -1)
+          {
+            strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
+          }
+          strSched = Math.floor(new Date(s.s.Sched.v).getTime() / 1000);
+        }
         s['scheduleStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Cron: s.s.Cron.v, Sched: s.s.Sched.v, Description: s.s.Description.v, Request: s.s.Request.v}};
+        let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Cron: s.s.Cron.v, Sched: strSched, Description: s.s.Description.v, Request: s.s.Request.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1189,15 +1205,15 @@ export default
               <button class="btn btn-sm btn-danger bi bi-trash" c-click="scheduleRemove()" title="Remove Schedule"></button>
               {{/if}}
             </div>
+            <div class="col" c-click="collapseExpand('schedule')" style="cursor: row-resize;">
+              Schedule - {{strSchedule}}
+            </div>
             <div class="col-auto">
               {{#if p.edit}}
               <div class="form-check form-switch" title="Enables the schedule.">
-                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="s.Enabled" c-change="scheduleUpdate(false)" value="1">
+                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="s.Enabled"" value="1">
               </div>
               {{/if}}
-            </div>
-            <div class="col" c-click="collapseExpand('schedule')" style="cursor: row-resize;">
-              Schedule - {{strSchedule}}
             </div>
             <div class="col-auto">
               {{#if p.edit}}
@@ -1279,15 +1295,15 @@ export default
               <button class="btn btn-sm btn-danger bi bi-trash" c-click="serviceeRemove()" title="Remove Service"></button>
               {{/if}}
             </div>
+            <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
+              Service - {{strService}}
+            </div>
             <div class="col-auto">
               {{#if p.edit}}
               <div class="form-check form-switch" title="Enables the service.">
-                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="d.Enabled" c-change="serviceUpdate(false)" value="1">
+                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="d.Enabled" value="1">
               </div>
               {{/if}}
-            </div>
-            <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
-              Service - {{strService}}
             </div>
             <div class="col-auto">
               {{#if p.edit}}
