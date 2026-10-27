@@ -45,6 +45,8 @@ class Maestro : public Interface
 {
   protected:
   bool m_bLoaded;
+  bool m_bLoadSchedules;
+  bool m_bLoadServices;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
   map<string, list<string> > m_a;
@@ -101,8 +103,10 @@ class Maestro : public Interface
   public:
   Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string strPacket, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Maestro();
+  void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
+  void flowLaunch(const string p, const string f, const string r, Json *ptFlow);
   JSValue js_alert(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_application(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_centralmon(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);

@@ -20,6 +20,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   map<string, list<string> > watches;
 
   m_bLoaded = false;
+  m_bLoadSchedules = false;
+  m_bLoadServices = false;
   // {{{ accesses
   m_a["application"] = {"emulator"};
   m_a["command"] = {"all"};
@@ -1112,6 +1114,25 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
 }
 // }}}
 // }}}
+// {{{ autoMode()
+void Maestro::autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  threadIncrement();
+  strPrefix += "->Maestro::autoMode()";
+  if (strOldMaster != strNewMaster)
+  {
+    stringstream ssMessage;
+    ssMessage << strPrefix << " [" << strNewMaster << "]:  Updated master.";
+    log(ssMessage.str());
+    if (strNewMaster == m_strNode)
+    {
+      m_bLoadSchedules = true;
+      m_bLoadServices = true;
+    }
+  }
+  threadDecrement();
+}
+// }}}
 // {{{ callback()
 void Maestro::callback(string strPrefix, const string strPacket, const bool bResponse)
 {
@@ -1485,6 +1506,42 @@ bool Maestro::flowExec(radialUser &d, string &e)
   }
 
   return b;
+}
+// }}}
+// {{{ flowLaunch()
+void Maestro::flowLaunch(const string p, const string f, const string r, Json *ptFlow)
+{
+  if (!ptFlow->empty({"Script"}))
+  {
+    JSRuntime *jsrun = JS_NewRuntime();
+    JSContext *jsctx = JS_NewContext(jsrun);
+    JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    for (auto &c : m_javascript)
+    {
+      if (c.second->function != NULL)
+      {
+        JS_SetPropertyStr(jsctx, jsglobal, c.first.c_str(), JS_NewCFunction(jsctx, c.second->function, c.first.c_str(), c.second->nLength));
+      }
+    }
+    if (!m_strSecret.empty())
+    {
+      string e, strPlan;
+      if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
+      {
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
+      }
+    }
+    if (!r.empty())
+    {
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, r.c_str(), r.size()));
+    }
+    JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+    JS_FreeValue(jsctx, jsglobal);
+    JS_FreeValue(jsctx, jsres);
+    JS_FreeContext(jsctx);
+    JS_FreeRuntime(jsrun);
+  }
+  delete ptFlow;
 }
 // }}}
 // {{{ flowRemove()
@@ -4527,24 +4584,76 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
 // {{{ scheduler()
 void Maestro::scheduler(string strPrefix)
 {
-  list<string> removals;
+  map<string, map<string, time_t> > schedules;
   string e;
-  time_t CTime[2];
+  time_t CLoad = 0, CNow;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
-  time(&(CTime[0]));
   msleep(5000);
-  load(strPrefix);
   while (!shutdown())
   {
-    time(&(CTime[1]));
-    if ((CTime[1] - CTime[0]) > 30)
+    time(&CNow);
+    if ((CNow - CLoad) > 30)
     {
-      CTime[0] = CTime[1];
+      CLoad = CNow;
       if (!m_bLoaded)
       {
         load(strPrefix);
+      }
+    }
+    if (isMasterSettled() && isMaster())
+    {
+      for (auto &p : schedules)
+      {
+        for (auto &s : p.second)
+        {
+          if (CNow >= s.second)
+          {
+            m_bLoadSchedules = true;
+            m_mutex.lock();
+            if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
+            {
+              string r;
+              if (m_p[p.first]->s[s.first]->exist({"Request"}))
+              {
+                m_p[p.first]->s[s.first]->m["Request"]->j(r);
+              }
+              thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, r, new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
+              pthread_setname_np(tThread.native_handle(), "flowLaunch");
+              tThread.detach();
+            }
+            m_mutex.unlock();
+          }
+        }
+      }
+      if (m_bLoadSchedules)
+      {
+        schedules.clear();
+        m_mutex.lock();
+        for (auto &p : m_p)
+        {
+          map<string, time_t> scheds;
+          for (auto &s : p.second->s)
+          {
+            if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Cron"}) && !s.second->empty({"Flow"}) && !s.second->empty({"Sched"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
+            {
+              if (s.second->val({"Cron"}) == "0")
+              {
+                scheds[s.first] = atoi(s.second->m["Sched"]->v.c_str());
+              }
+              else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
+              {
+                scheds.erase(s.first);
+              }
+            }
+          }
+          if (!scheds.empty())
+          {
+            schedules[p.first] = scheds;
+          }
+        }
+        m_mutex.unlock();
       }
     }
     msleep(1000);
@@ -4702,6 +4811,10 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
               delete m_p[p]->s[s];
             }
             m_p[p]->s[s] = new Json(i);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadSchedules = true;
+            }
           }
           else
           {
@@ -5093,6 +5206,10 @@ bool Maestro::serviceUpdate(radialUser &d, string &e)
               delete m_p[p]->d[s];
             }
             m_p[p]->d[s] = new Json(i);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadServices = true;
+            }
           }
           else
           {

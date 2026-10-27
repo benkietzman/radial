@@ -9,6 +9,7 @@
 #include "include/Maestro"
 using namespace radial;
 Maestro *gpMaestro = NULL;
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
 void callbackInotify(string strPrefix, const string strPath, const string strFile);
 JSValue js_alert(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_alert(ctx, obj, argc, argv);}
@@ -53,10 +54,17 @@ int main(int argc, char *argv[])
   string strPrefix = "maestro->main()";
   gpMaestro = new Maestro(strPrefix, argc, argv, &callback, &callbackInotify);
   gpMaestro->enableWorkers();
+  gpMaestro->setAutoMode(&autoMode);
   gpMaestro->jsreg({{"alert", js_alert}, {"application", js_application}, {"centralmon", js_centralmon}, {"chat", js_chat}, {"command", js_command}, {"db", js_db}, {"dbquery", js_dbquery}, {"dbupdate", js_dbupdate}, {"email", js_email}, {"flow", js_flow}, {"getError", js_getError}, {"getRequest", js_getRequest}, {"getResponse", js_getResponse}, {"getStatus", js_getStatus}, {"junction", js_junction}, {"live", js_live}, {"log", js_log}, {"logger", js_logger}, {"mysqlQuery", js_mysqlQuery}, {"mysqlUpdate", js_mysqlUpdate}, {"notify", js_notify}, {"setError", js_setError}, {"setRequest", js_setRequest}, {"setResponse", js_setResponse}, {"setStatus", js_setStatus}, {"sqliteCreate", js_sqliteCreate}, {"sqliteDatabases", js_sqliteDatabases}, {"sqliteDrop", js_sqliteDrop}, {"sqliteQuery", js_sqliteQuery}, {"sshConnect", js_sshConnect}, {"sshDisconnect", js_sshDisconnect}, {"sshSend", js_sshSend}, {"storageAdd", js_storageAdd}, {"storageRemove", js_storageAdd}, {"storageRetrieve", js_storageRetrieve}, {"storageRetrieveKeys", js_storageRetrieve}, {"storageUpdate", js_storageUpdate}});
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;
+}
+void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster)
+{
+  thread threadAutoMode(&Maestro::autoMode, gpMaestro, strPrefix, strOldMaster, strNewMaster);
+  pthread_setname_np(threadAutoMode.native_handle(), "autoMode");
+  threadAutoMode.detach();
 }
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
