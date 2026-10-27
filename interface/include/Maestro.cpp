@@ -1513,7 +1513,6 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
 {
   if (!ptFlow->empty({"Script"}))
   {
-    stringstream ssChat;
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1536,8 +1535,6 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     {
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, r.c_str(), r.size()));
     }
-    ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " Launched flow.";
-    chat("#maestro", ssChat.str());
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
     JS_FreeValue(jsctx, jsglobal);
     JS_FreeValue(jsctx, jsres);
@@ -4617,6 +4614,9 @@ void Maestro::scheduler(string strPrefix)
             m_mutex.lock();
             if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
+              stringstream ssChat;
+              ssChat << char(3) << "00,06 " << p.first << " | s | " << s.first << " " << char(3) << " Launched \"" << m_p[p.first]->s[s.first]->m["Flow"]->v << "\" flow.";
+              chat("#maestro", ssChat.str());
               thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, m_p[p.first]->s[s.first]->val({"Request"}), new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
               pthread_setname_np(tThread.native_handle(), "flowLaunch");
               tThread.detach();
