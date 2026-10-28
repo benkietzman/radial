@@ -110,6 +110,7 @@ class Maestro : public Interface
   JSValue js_dbquery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_dbupdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_email(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_esc(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_flow(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);

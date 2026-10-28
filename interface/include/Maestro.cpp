@@ -70,6 +70,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("dbquery", 2, "dbquery(database, query)", "Provides the ability to query (SQL: select) a given database.");
   jsreg("dbupdate", 2, "dbupdate(database, update)", "Provides the ability to update (SQL: delete, insert, update) a given database.");
   jsreg("email", 8, "email(from, to, cc, bcc, subject, text, html, file)", "Provides the ability to send an email.");
+  jsreg("esc", 1, "esc(value)", "Escapes a value for use in SQL.");
   jsreg("flow", 3, "flow(plan, flow, request)");
   jsreg("getError", 0, "getError()", "Provides the ability to retrieve the error from the last Maestro function.");
   jsreg("getRequest",  0, "getRequest()", "Provides the ability to retrieve the request being provides to the given flow.");
@@ -2555,6 +2556,24 @@ JSValue Maestro::js_email(JSContext *jsctx, JSValueConst, int argc, JSValueConst
   JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_esc()
+JSValue Maestro::js_esc(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  string v;
+
+  if (argc == 1)
+  {
+    const char *pszValue = JS_ToCString(jsctx, argv[0]);
+    if (pszValue != NULL)
+    {
+      v = esc(pszValue);
+      JS_FreeCString(jsctx, pszValue);
+    }
+  }
+
+  return JS_NewStringLen(jsctx, v.c_str(), v.size());
 }
 // }}}
 // {{{ js_flow()
