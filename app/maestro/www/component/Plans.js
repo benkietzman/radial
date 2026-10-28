@@ -255,7 +255,7 @@ export default
       if (c.isValid())
       {
         s['error'].v = '';
-        s['flowStatus'].v = '';
+        s['flowStatus'].v = 'executing flow...';
         s.response.v = '';
         let request = {Interface: 'maestro', 'Function': 'flowExec', Request: {Plan: s.strPlan, Flow: s.strFlow}};
         if (s.request.v)
@@ -265,6 +265,7 @@ export default
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
+          s['flowStatus'].v = '';
           if (c.wsResponse(response, error))
           {
             s['flowStatus'].v = 'executed flow';
