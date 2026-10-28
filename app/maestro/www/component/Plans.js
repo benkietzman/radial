@@ -1150,6 +1150,7 @@ export default
         <th>Owner</th>
         <th class="text-end text-nowrap"># Accesses</th>
         <th class="text-end text-nowrap"># Flows</th>
+        <th class="text-end text-nowrap"># Schedules</th>
       </tr>
     </thead>
     <tbody>
@@ -1160,6 +1161,7 @@ export default
         <td>{{#ifCond Type "!=" "p"}}<a href="/central/#/{{#ifCond ../Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{../ID}}" target="_blank">{{../Owner}}</a>{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
+        <td class="text-end">{{numberShort NumSchedules 0}}</td>
       </tr>
       {{/each}}
     </tbody>
