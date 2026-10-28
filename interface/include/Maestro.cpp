@@ -1535,11 +1535,11 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     ssChat.str("");
     ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Launched flow.";
     chat("#maestro", ssChat.str());
-    ssChat.str("");
-    ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Completed flow in " << (((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)) << " ms.";
     clock_gettime(CLOCK_REALTIME, &start);
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
     clock_gettime(CLOCK_REALTIME, &stop);
+    ssChat.str("");
+    ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Completed flow in " << (((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)) << " ms.";
     if (JS_IsException(jsres))
     {
       string e;
