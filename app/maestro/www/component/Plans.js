@@ -1107,7 +1107,7 @@ export default
             <div class="col">
               <div class="input-group flex-nowrap mt-2">
                 <span class="input-group-text bg bg-secondary border bordrer-secondary">Schedule</span>
-                <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Schedule}}</span>
+                <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Sched}}</span>
               </div>
             </div>
           </div>
