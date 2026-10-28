@@ -3892,7 +3892,7 @@ void Central::schedule(string strPrefix)
   map<string, time_t> reminders;
   string strError, strQuery, strValue;
   stringstream ssMessage, ssQuery;
-  time_t CMonitor = 0, CNow, CReminders = 0, CStatus, CWorkload = 0;
+  time_t CMonitor = 0, CNow, CReminders = 0, CStatus;
   Json *ptJson;
 
   threadIncrement();
