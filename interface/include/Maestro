@@ -31,7 +31,6 @@ struct radialMaestroJavascript
 struct radialMaestroPlan
 {
   char t;
-  map<string, Json *> d;
   map<string, Json *> f;
   map<string, Json *> s;
   string id;
