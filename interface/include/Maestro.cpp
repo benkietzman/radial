@@ -1504,8 +1504,11 @@ bool Maestro::flowExec(radialUser &d, string &e)
 // {{{ flowLaunch()
 void Maestro::flowLaunch(const string p, const string f, const string r, Json *ptFlow)
 {
+  stringstream ssChat;
+
   if (!ptFlow->empty({"Script"}))
   {
+    Json *ptResponse = new Json;
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1528,11 +1531,108 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     {
       JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, r.c_str(), r.size()));
     }
+    ssChat.str("");
+    ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Launched flow.";
+    chat("#maestro", ssChat.str());
+    ssChat.str("");
+    ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Completed flow.";
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(jsres))
+    {
+      string e;
+      JSValue jsexc = JS_GetException(jsctx);
+      ptResponse->i("Status", "error");
+      if (JS_IsError(jsctx, jsexc))
+      {
+        JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
+        if (JS_IsException(jsmsg))
+        {
+          JSValue jssubexc = JS_GetException(jsctx);
+          const char *pszMessage = JS_ToCString(jsctx, jssubexc);
+          if (pszMessage != NULL)
+          {
+            e = pszMessage;
+            JS_FreeCString(jsctx, pszMessage);
+          }
+          else
+          {
+            e = "Failed to retrieve the exception from the message from the exception from the script.";
+          }
+          JS_FreeValue(jsctx, jssubexc);
+        }
+        else if (JS_IsString(jsmsg))
+        {
+          size_t unLength = 0;
+          const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
+          if (pszMessage != NULL)
+          {
+            JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
+            e.assign(pszMessage, unLength);
+            if (JS_IsString(jsstk))
+            {
+              const char *pszStk = JS_ToCString(jsctx, jsstk);
+              if (pszStk != NULL)
+              {
+                e += (string)" " + pszStk;
+                JS_FreeCString(jsctx, pszStk);
+              }
+            }
+            JS_FreeValue(jsctx, jsstk);
+            JS_FreeCString(jsctx, pszMessage);
+          }
+          else
+          {
+            e = "Failed to retrieve the message within the exception from the script.";
+          }
+        }
+        else
+        {
+          e = "Encountered a non-string message within the exception from the script.";
+        }
+        JS_FreeValue(jsctx, jsmsg);
+      }
+      else
+      {
+        e = "Encountered a non-error exception from the script.";
+      }
+      JS_FreeValue(jsctx, jsexc);
+      if (!e.empty())
+      {
+        ptResponse->i("Error", e);
+      }
+    }
+    else
+    {
+      JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
+      const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
+      if (pszStatus != NULL)
+      {
+        ptResponse->i("Status", pszStatus);
+        JS_FreeCString(jsctx, pszStatus);
+      }
+      JS_FreeValue(jsctx, jsstatus);
+      if (pszError != NULL)
+      {
+        ptResponse->i("Error", pszError);
+        JS_FreeCString(jsctx, pszError);
+      }
+      JS_FreeValue(jsctx, jserror);
+      if (pszResponse != NULL)
+      {
+        Json *ptResponse = new Json(pszResponse);
+        ptResponse->i("Response", ptResponse);
+        delete ptResponse;
+        JS_FreeCString(jsctx, pszResponse);
+      }
+      JS_FreeValue(jsctx, jsresponse);
+    }
     JS_FreeValue(jsctx, jsglobal);
     JS_FreeValue(jsctx, jsres);
     JS_FreeContext(jsctx);
     JS_FreeRuntime(jsrun);
+    ssChat << " --- " << ptResponse;
+    delete ptResponse;
+    chat("#maestro", ssChat.str());
   }
   delete ptFlow;
 }
@@ -4607,9 +4707,6 @@ void Maestro::scheduler(string strPrefix)
             m_mutex.lock();
             if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
-              stringstream ssChat;
-              ssChat << char(3) << "00,06 " << p.first << " | " << s.first << " " << char(3) << " Scheduler launched \"" << m_p[p.first]->s[s.first]->m["Flow"]->v << "\" flow.";
-              chat("#maestro", ssChat.str());
               thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, m_p[p.first]->s[s.first]->val({"Request"}), new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
               pthread_setname_np(tThread.native_handle(), "flowLaunch");
               tThread.detach();
