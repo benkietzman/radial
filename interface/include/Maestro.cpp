@@ -4535,6 +4535,7 @@ bool Maestro::plans(radialUser &d, string &e)
     ptPlan->i("ID", p.second->id);
     ptPlan->i("NumAccesses", to_string((p.second->a != NULL && p.second->a->exist({"a"}))?p.second->a->m["a"]->m.size():0), 'n');
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
+    ptPlan->i("NumSchedules", to_string(p.second->s.size()), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
     ssType << p.second->t;
