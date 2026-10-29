@@ -2484,9 +2484,10 @@ string Interface::getApplicationID()
   if (!m_strApplication.empty() && m_strApplicationID.empty())
   {
     map<string, string> getApplicationRow;
+    string strError;
     Json *ptApplication = new Json;
     ptApplication->i("name", m_strApplication);
-    if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
+    if (db("dbCentralApplications", ptApplication, getApplicationRow, strError))
     {
       m_strApplicationID = getApplicationRow["id"];
     }
