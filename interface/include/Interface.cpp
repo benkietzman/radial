@@ -2478,6 +2478,24 @@ bool Interface::footer(radialUser &d, string &e)
   return true;
 }
 // }}}
+// {{{ getApplicationID()
+string Interface::getApplicationID()
+{
+  if (!m_strApplication.empty() && m_strApplicationID.empty())
+  {
+    map<string, string> getApplicationRow;
+    Json *ptApplication = new Json;
+    ptApplication->i("name", m_strApplication);
+    if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
+    {
+      m_strApplicationID = getApplicationRow["id"];
+    }
+    delete ptApplication;
+  }
+
+  return m_strApplicationID;
+}
+// }}}
 // {{{ getApplication()
 string Interface::getApplication(radialUser &d)
 {

@@ -91,6 +91,7 @@ class Interface : public Base
   queue<string> m_kafkaMessages;
   string m_strAesSecret;
   string m_strApplication;
+  string m_strApplicationID;
   string m_strBuffers[2];
   string m_strJwtSecret;
   string m_strJwtSigner;
@@ -163,6 +164,7 @@ class Interface : public Base
   bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   bool feedbackType(const string strTypeID, Json *ptData, string &strError);
   bool footer(radialUser &d, string &e);
+  string getApplicationID();
   string getApplication(radialUser &d);
   string getUserEmail(radialUser &d);
   string getUserFirstName(radialUser &d);

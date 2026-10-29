@@ -3563,23 +3563,12 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
   bool b = true;
   Json *ptJson = new Json;
 
-  if (m_strApplicationID.empty())
-  {
-    map<string, string> getApplicationRow;
-    Json *ptApplication = new Json;
-    ptApplication->i("name", "Central");
-    if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
-    {
-      m_strApplicationID = getApplicationRow["id"];
-    }
-    delete ptApplication;
-  }
   ptJson->i("Interface", "maestro");
   ptJson->i("Function", "flowExec");
   ptJson->i("User", "radial_central");
   ptJson->i("Password", m_strPassword);
   ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Plan", (string)"a_"+m_strApplicationID);
+  ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationID());
   ptJson->m["Request"]->i("Flow", "homeUsefulTools");
   ptJson->m["Request"]->m["Request"] = new Json;
   ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
