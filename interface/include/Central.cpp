@@ -90,6 +90,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["groupUserEdit"] = &Central::groupUserEdit;
   m_functions["groupUserRemove"] = &Central::groupUserRemove;
   m_functions["groupUsersByGroupID"] = &Central::groupUsersByGroupID;
+  m_functions["homeUsefulTools"] = &Central::homeUsefulTools;
   m_functions["isApplicationDeveloper"] = &Central::isApplicationDeveloper;
   m_functions["isGroupOwner"] = &Central::isGroupOwner;
   m_functions["isServerAdmin"] = &Central::isServerAdmin;
@@ -2914,6 +2915,37 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
       }
     }
   }
+
+  return b;
+}
+// }}}
+// {{{ footer()
+bool Central::footer(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *ptJson = new Json;
+
+  ptJson->i("Interface", "maestro");
+  ptJson->i("Function", "flowExec");
+  ptJson->i("User", "radial_central");
+  ptJson->i("Password", m_strPassword);
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationID());
+  ptJson->m["Request"]->i("Flow", "footer");
+  ptJson->m["Request"]->m["Request"] = new Json(d.p->m["i"]);
+  if (hub("maestro", ptJson, e))
+  {
+    if (ptJson->exist({"Response", "Response"}))
+    {
+      b = true;
+      d.p->i("o", ptJson->m["Response"]->m["Response"]);
+    }
+    else
+    {
+      e = "Failed to receive a response.";
+    }
+  }
+  delete ptJson;
 
   return b;
 }

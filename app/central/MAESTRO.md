@@ -1,5 +1,78 @@
 Here are example scripts for Central that can be used in Maestro flows and called registered in schedules.
 
+# footer
+```
+let r = {};
+if (getRequest() !== undefined)
+{
+  r = getRequest();
+}
+if (r.email === undefined)
+{
+  r.email = 'john@doe.org';
+}
+if (r.company === undefined)
+{
+  r.company = 'John\'s Company';
+}
+if (r.server === undefined)
+{
+  r.server = 'doe.org';
+}
+if (r.userid === undefined)
+{
+  r.userid = 'ben';
+}
+if (r.website === undefined)
+{
+  r.website = 'https://'+r.server+'/central';
+}
+if (r.year === undefined)
+{
+  r.year = new Date().getFullYear();
+}
+if (db('dbCentralUsers', JSON.stringify({userid: r.userid})))
+{
+  let getUsers = JSON.parse(getResponse()).Response;
+  if (getUsers.length == 1)
+  {
+    getUsers[0].link = 'https://'+r.server+'/central/#/Users/'+getUsers[0].id;
+    getUsers[0].target = '_blank';
+    r.engineer = getUsers[0];
+  }
+}
+if (db('dbCentralApplications', JSON.stringify({name: 'Radial'})))
+{
+  let getApplications = JSON.parse(getResponse()).Response;
+  if (getApplications.length == 1)
+  {
+    getApplications[0].application = 'Radial';
+    if (getApplications[0].website != '')
+    {
+      getApplications[0].link = getApplications[0].website;
+    }
+    else
+    {
+      getApplications[0].link = 'https://'+r.server+'/central/#/Applications/'+getApplications[0].id;
+    }
+    getApplications[0].target = '_blank';
+    r.power = getApplications[0];
+  }
+}
+setStatus('okay');
+setError('');
+setResponse(JSON.stringify(r));
+```
+
+# homeUsefulTools
+```
+let links = [];
+links.push('<a href="https://doe.og/" target="_blank">John\'s Website</a>');
+setStatus('okay');
+setError('');
+setResponse(JSON.stringify(links));
+```
+
 # statistics
 ```
 let b = false;

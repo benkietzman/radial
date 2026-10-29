@@ -163,7 +163,6 @@ class Interface : public Base
   bool feedbackResultAdd(const string strUser, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, Json *ptData, string &strError);
   bool feedbackSurvey(const string strHash, Json *ptData, string &strError);
   bool feedbackType(const string strTypeID, Json *ptData, string &strError);
-  bool footer(radialUser &d, string &e);
   string getApplicationID();
   string getApplication(radialUser &d);
   string getUserEmail(radialUser &d);
