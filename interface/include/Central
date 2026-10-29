@@ -25,6 +25,8 @@ class Central : public Interface
   bool (*m_pCallbackAddon)(const string, radialUser &, string &, bool &);
   map<string, bool (Central::*)(radialUser &, string &)> m_functions;
   mutex m_mutex;
+  string m_strPassword;
+  thread *m_pThreadInotify;
   thread *m_pThreadSchedule;
 
   bool accountType(radialUser &d, string &e);
@@ -99,6 +101,7 @@ class Central : public Interface
   bool groupUserRemove(radialUser &d, string &e);
   bool groupUsersByGroupID(radialUser &d, string &e);
   bool homeUsefulTools(radialUser &d, string &e);
+  void load(string strPrefix);
   bool loginPasskeyRegister(radialUser &d, string &e);
   bool loginTypes(radialUser &d, string &e);
   void merge(Json *ptOuter, Json *ptInner);
@@ -153,10 +156,11 @@ class Central : public Interface
   bool users(radialUser &d, string &e);
 
   public:
-  Central(string, int argc, char **argv, void (*pCallback)(string, const string, const bool));
+  Central(string, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string));
   ~Central();
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
+  void callbackInotify(string strPrefix, const string strPath, const string strFile);
   void setCallbackAddon(bool (*pCallback)(const string, radialUser &, string &, bool &));
 };
 // }}}

@@ -14,8 +14,9 @@ extern "C++"
 namespace radial
 {
 // {{{ Central()
-Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool)) : Interface(strPrefix, "central", argc, argv, pCallback)
+Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "central", argc, argv, pCallback)
 {
+  map<string, list<string> > watches;
   string strError;
 
   m_bLoadReminders = false;
@@ -145,6 +146,9 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["userReminders"] = &Central::userReminders;
   m_functions["userRemove"] = &Central::userRemove;
   m_functions["users"] = &Central::users;
+  watches[m_strData] = {".cred"};
+  m_pThreadInotify = new thread(&Central::inotify, this, strPrefix, watches, pCallbackInotify);
+  pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
   m_pThreadSchedule = new thread(&Central::schedule, this, strPrefix);
   pthread_setname_np(m_pThreadSchedule->native_handle(), "schedule");
 }
@@ -152,6 +156,8 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 // {{{ ~Central()
 Central::~Central()
 {
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
   m_pThreadSchedule->join();
   delete m_pThreadSchedule;
 }
@@ -2739,6 +2745,19 @@ void Central::callback(string strPrefix, const string strPacket, const bool bRes
   delete ptJson;
 }
 // }}}
+// {{{ callbackInotify()
+void Central::callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  string strError;
+  stringstream ssMessage;
+
+  strPrefix += "->Central::callbackInotify()";
+  if (strPath == m_strData && strFile == ".cred")
+  {
+    load(strPrefix);
+  }
+}
+// }}}
 // {{{ contactType()
 bool Central::contactType(radialUser &d, string &e)
 {
@@ -3547,20 +3566,46 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
   ptApplication->i("name", "Central");
   if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
   {
-    Json *ptRequest = new Json, *ptResponse = new Json;
-    ptRequest->i("FirstName", d.f);
-    ptRequest->i("LastName", d.l);
-    ptRequest->i("User", d.u);
-    if (maestroFlowExec((string)"a_"+getApplicationRow["id"], "homeUsefulTools", ptRequest, ptResponse, e))
+    Json *ptJson = new Json;
+    ptJson->i("Function", "flowExec");
+    ptJson->i("User", "central");
+    ptJson->i("Password", m_strPassword);
+    ptJson->m["Request"] = new Json;
+    ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationRow["id"]);
+    ptJson->m["Request"]->i("Flow", "homeUsefulTools");
+    ptJson->m["Request"]->m["Request"] = new Json;
+    ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
+    ptJson->m["Request"]->m["Request"]->i("LastName", d.l);
+    ptJson->m["Request"]->m["Request"]->i("User", d.u);
+    if (hub("maestro", ptJson, e))
     {
-      d.p->i("o", ptResponse);
+      if (ptJson->exist({"Response", "Response"}))
+      {
+        b = true;
+        d.p->i("o", ptJson->m["Response"]->m["Response"]);
+      }
+      else
+      {
+        e = "Failed to receive a response.";
+      }
     }
-    delete ptRequest;
-    delete ptResponse;
+    delete ptJson;
   }
   delete ptApplication;
 
   return b;
+}
+// }}}
+// {{{ load()
+void Central::load(string strPrefix)
+{
+  string e;
+
+  strPrefix += "->Central::load()";
+  if (m_pWarden != NULL)
+  {
+    m_pWarden->vaultRetrieve({"radial", "central", "Password"}, m_strPassword, e);
+  }
 }
 // }}}
 // {{{ loginPasskeyRegister()

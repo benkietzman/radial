@@ -16,8 +16,8 @@ namespace radial
 // {{{ Maestro()
 Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(string, const string, const bool), void (*pCallbackInotify)(string, const string, const string)) : Interface(strPrefix, "maestro", argc, argv, pCallback)
 {
-  string strError;
   map<string, list<string> > watches;
+  string strError;
 
   m_bLoaded = false;
   m_bLoadSchedules = false;
@@ -113,6 +113,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 // {{{ ~Maestro()
 Maestro::~Maestro()
 {
+  m_pThreadInotify->join();
+  delete m_pThreadInotify;
   m_pThreadScheduler->join();
   delete m_pThreadScheduler;
   for (auto &p : m_p)
@@ -1185,7 +1187,7 @@ void Maestro::callbackInotify(string strPrefix, const string strPath, const stri
   string strError;
   stringstream ssMessage;
 
-  strPrefix += "->Irc::callbackInotify()";
+  strPrefix += "->Maestro::callbackInotify()";
   if (strPath == m_strData && strFile == ".cred")
   {
     load(strPrefix);

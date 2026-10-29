@@ -3610,44 +3610,6 @@ bool Interface::loginType(radialUser &d, string &e)
   return b;
 }
 // }}}
-// {{{ maestroFlowExec()
-bool Interface::maestroFlowExec(const string strPlan, const string strFlow, Json *ptRequest, Json *ptResponse, string &strError)
-{
-  bool bResult = false;
-
-  if (!strPlan.empty())
-  {
-    if (!strFlow.empty())
-    {
-      Json *ptJson = new Json;
-      ptJson->i("Interface", "maestro");
-      ptJson->i("Function", "flowExec");
-      ptJson->m["Request"] = new Json(ptRequest);
-      ptJson->m["Request"]->i("Plan", strPlan);
-      ptJson->m["Request"]->i("Flow", strFlow);
-      if (hub("maestro", ptJson, strError))
-      {
-        bResult = true;
-        if (ptJson->exist({"Response"}))
-        {
-          ptResponse->merge(ptJson->m["Response"], true, false);
-        }
-      }
-      delete ptJson;
-    }
-    else
-    {
-      strError = "Please provide the Flow.";
-    }
-  }
-  else
-  {
-    strError = "Please provide the Plan.";
-  }
-
-  return bResult;
-}
-// }}}
 // {{{ master()
 string Interface::master()
 {

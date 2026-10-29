@@ -10,10 +10,11 @@
 radial::Central *gpCentral = NULL;
 void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
 void callback(string strPrefix, const string strPacket, const bool bResponse);
+void callbackInotify(string strPrefix, const string strPath, const string strFile);
 int main(int argc, char *argv[])
 {
   string strPrefix = "central->main()";
-  gpCentral = new radial::Central(strPrefix, argc, argv, &callback);
+  gpCentral = new radial::Central(strPrefix, argc, argv, &callback, &callbackInotify);
   gpCentral->enableWorkers();
   gpCentral->setApplication("Central");
   gpCentral->setAutoMode(&autoMode);
@@ -30,4 +31,8 @@ void autoMode(string strPrefix, const string strOldMaster, const string strNewMa
 void callback(string strPrefix, const string strPacket, const bool bResponse)
 {
   gpCentral->callback(strPrefix, strPacket, bResponse);
+}
+void callbackInotify(string strPrefix, const string strPath, const string strFile)
+{
+  gpCentral->callbackInotify(strPrefix, strPath, strFile);
 }
