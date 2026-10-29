@@ -3568,6 +3568,7 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
   if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
   {
     Json *ptJson = new Json;
+    ptJson->i("Interface", "maestro");
     ptJson->i("Function", "flowExec");
     ptJson->i("User", "radial_central");
     ptJson->i("Password", m_strPassword);
