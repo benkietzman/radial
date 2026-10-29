@@ -3615,23 +3615,34 @@ bool Interface::maestroFlowExec(const string strPlan, const string strFlow, Json
 {
   bool bResult = false;
 
-  if (dep({"Plan", "Flow"}, ptRequest, strError))
+  if (!strPlan.empty())
   {
-    Json *ptJson = new Json;
-    ptJson->i("Interface", "maestro");
-    ptJson->i("Function", "flowExec");
-    ptJson->m["Request"] = new Json(ptRequest);
-    ptJson->m["Request"]->i("Plan", strPlan);
-    ptJson->m["Request"]->i("Flow", strFlow);
-    if (hub("maestro", ptJson, strError))
+    if (!strFlow.empty())
     {
-      bResult = true;
-      if (ptJson->exist({"Response"}))
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "maestro");
+      ptJson->i("Function", "flowExec");
+      ptJson->m["Request"] = new Json(ptRequest);
+      ptJson->m["Request"]->i("Plan", strPlan);
+      ptJson->m["Request"]->i("Flow", strFlow);
+      if (hub("maestro", ptJson, strError))
       {
-        ptResponse->merge(ptJson->m["Response"], true, false);
+        bResult = true;
+        if (ptJson->exist({"Response"}))
+        {
+          ptResponse->merge(ptJson->m["Response"], true, false);
+        }
       }
+      delete ptJson;
     }
-    delete ptJson;
+    else
+    {
+      strError = "Please provide the Flow.";
+    }
+  }
+  else
+  {
+    strError = "Please provide the Plan.";
   }
 
   return bResult;
