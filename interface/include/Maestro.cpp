@@ -1977,6 +1977,18 @@ bool Maestro::isOwner(radialUser &d, const string p)
   bool b = false;
   string e;
 
+if (auth(d.r, e))
+{
+  chat("#maestro", "step 1");
+  if (!d.r->empty({"User"}))
+  {
+    chat("#maestro", "step 2");
+    if (m_applications.find(d.r->m["User"]->v) != m_applications.end())
+    {
+      chat("#maestro", "step 3");
+    }
+  }
+}
   if (isValid(d))
   {
     radialUser u;
@@ -1992,11 +2004,9 @@ bool Maestro::isOwner(radialUser &d, const string p)
   {
     map<string, string> getApplicationRow;
     Json *ptApplication = new Json;
-chat("#maestro", "step 1");
     ptApplication->i("name", m_applications[d.r->m["User"]->v]);
     if (db("dbCentralApplications", ptApplication, getApplicationRow, e) && !getApplicationRow["id"].empty() && isOwner(getApplicationRow["id"], p, true))
     {
-chat("#maestro", "step 2");
       b = true;
       d.l = m_applications[d.r->m["User"]->v];
     }
