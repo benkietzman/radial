@@ -1402,13 +1402,13 @@ bool Maestro::flowExec(radialUser &d, string &e)
           }
           ssChat.str("");
           ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Executed flow.";
-          chat("#maestro", ssChat.str());
+          //chat("#maestro", ssChat.str());
           clock_gettime(CLOCK_REALTIME, &start);
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
           clock_gettime(CLOCK_REALTIME, &stop);
           ssChat.str("");
           ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Completed flow in " << (((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)) << " ms.";
-          chat("#maestro", ssChat.str());
+          //chat("#maestro", ssChat.str());
           if (JS_IsException(jsres))
           {
             JSValue jsexc = JS_GetException(jsctx);
