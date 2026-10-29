@@ -1,6 +1,7 @@
-Here are example scripts for Central that can be used in Maestro.
+Here are example scripts for Central that can be used in Maestro flows and called registered in schedules.
 
-``` statistics
+# statistics
+```
 let b = false;
 let e = '';
 let strQuery = 'delete from statistic where `date` < date_format(date_sub(now(), interval 6 month), \'%Y-%m-%d\')'
@@ -17,7 +18,8 @@ setStatus((b)?'okay':'error');
 setError(e);
 ```
 
-``` workload
+# workload
+```
 let b = false;
 let e = '';
 let people = {};
