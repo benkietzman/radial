@@ -1347,8 +1347,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
-string j;
-chat("#maestro", d.r->j(j));
   if (dep({"Flow", "Plan"}, i, e))
   {
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
@@ -1994,9 +1992,11 @@ bool Maestro::isOwner(radialUser &d, const string p)
   {
     map<string, string> getApplicationRow;
     Json *ptApplication = new Json;
+chat("#maestro", "step 1");
     ptApplication->i("name", m_applications[d.r->m["User"]->v]);
     if (db("dbCentralApplications", ptApplication, getApplicationRow, e) && !getApplicationRow["id"].empty() && isOwner(getApplicationRow["id"], p, true))
     {
+chat("#maestro", "step 2");
       b = true;
       d.l = m_applications[d.r->m["User"]->v];
     }
