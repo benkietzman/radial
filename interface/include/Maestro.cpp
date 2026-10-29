@@ -1977,19 +1977,6 @@ bool Maestro::isOwner(radialUser &d, const string p)
   bool b = false;
   string e;
 
-chat("#maestro", "step 0");
-if (auth(d.r, e))
-{
-  chat("#maestro", "step 1");
-  if (!d.r->empty({"User"}))
-  {
-    chat("#maestro", "step 2");
-    if (m_applications.find(d.r->m["User"]->v) != m_applications.end())
-    {
-      chat("#maestro", "step 3");
-    }
-  }
-}
   if (isValid(d))
   {
     radialUser u;
