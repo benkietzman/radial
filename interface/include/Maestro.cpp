@@ -1347,6 +1347,8 @@ bool Maestro::flowExec(radialUser &d, string &e)
   bool b = false;
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
+string j;
+chat("#maestro", d.r->j(j));
   if (dep({"Flow", "Plan"}, i, e))
   {
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
