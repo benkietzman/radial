@@ -1374,6 +1374,8 @@ bool Maestro::flowExec(radialUser &d, string &e)
       {
         if (!ptFlow->empty({"Script"}))
         {
+          stringstream ssChat;
+          struct timespec start, stop;
           JSRuntime *jsrun = JS_NewRuntime();
           JSContext *jsctx = JS_NewContext(jsrun);
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1398,7 +1400,15 @@ bool Maestro::flowExec(radialUser &d, string &e)
             i->m["Request"]->j(strRequest);
             JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, strRequest.c_str(), strRequest.size()));
           }
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Executed flow.";
+          chat("#maestro", ssChat.str());
+          clock_gettime(CLOCK_REALTIME, &start);
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+          clock_gettime(CLOCK_REALTIME, &stop);
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " Completed flow in " << (((stop.tv_sec - start.tv_sec) * 1000) + ((stop.tv_nsec - start.tv_nsec) / 1000000)) << " ms.";
+          chat("#maestro", ssChat.str());
           if (JS_IsException(jsres))
           {
             JSValue jsexc = JS_GetException(jsctx);
@@ -4649,21 +4659,14 @@ void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
   string e;
-  time_t CLoad = 0, CNow;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
-  msleep(5000);
   while (!shutdown())
   {
-    time(&CNow);
-    if ((CNow - CLoad) > 30)
+    if (!m_bLoaded)
     {
-      CLoad = CNow;
-      if (!m_bLoaded)
-      {
-        load(strPrefix);
-      }
+      load(strPrefix);
     }
     if (isMasterSettled() && isMaster())
     {
@@ -4674,15 +4677,26 @@ void Maestro::scheduler(string strPrefix)
         {
           if (CNow >= s.second)
           {
+            bool bLaunch = false;
+            string strFlow, strPlan, strRequest;
+            Json *ptFlow = NULL;
             m_bLoadSchedules = true;
             m_mutex.lock();
             if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
-              thread tThread(&Maestro::flowLaunch, this, p.first, m_p[p.first]->s[s.first]->m["Flow"]->v, m_p[p.first]->s[s.first]->val({"Request"}), new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]));
+              bLaunch = true;
+              strPlan = p.first;
+              strFlow = m_p[p.first]->s[s.first]->m["Flow"]->v;
+              strRequest = m_p[p.first]->s[s.first]->val({"Request"});
+              ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]);
+            }
+            m_mutex.unlock();
+            if (bLaunch)
+            {
+              thread tThread(&Maestro::flowLaunch, this, strPlan, strFlow, strRequest, ptFlow);
               pthread_setname_np(tThread.native_handle(), "flowLaunch");
               tThread.detach();
             }
-            m_mutex.unlock();
           }
         }
       }
