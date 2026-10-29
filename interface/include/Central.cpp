@@ -3561,39 +3561,32 @@ bool Central::groupUsersByGroupID(radialUser &d, string &e)
 bool Central::homeUsefulTools(radialUser &d, string &e)
 {
   bool b = true;
-  map<string, string> getApplicationRow;
-  Json *ptApplication = new Json;
+  Json *ptJson = new Json;
 
-  ptApplication->i("name", "Central");
-  if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
+  ptJson->i("Interface", "maestro");
+  ptJson->i("Function", "flowExec");
+  ptJson->i("User", "radial_central");
+  ptJson->i("Password", m_strPassword);
+  ptJson->m["Request"] = new Json;
+  ptJson->m["Request"]->i("Plan", (string)"a_"+m_strApplicationID);
+  ptJson->m["Request"]->i("Flow", "homeUsefulTools");
+  ptJson->m["Request"]->m["Request"] = new Json;
+  ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
+  ptJson->m["Request"]->m["Request"]->i("LastName", d.l);
+  ptJson->m["Request"]->m["Request"]->i("User", d.u);
+  if (hub("maestro", ptJson, e))
   {
-    Json *ptJson = new Json;
-    ptJson->i("Interface", "maestro");
-    ptJson->i("Function", "flowExec");
-    ptJson->i("User", "radial_central");
-    ptJson->i("Password", m_strPassword);
-    ptJson->m["Request"] = new Json;
-    ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationRow["id"]);
-    ptJson->m["Request"]->i("Flow", "homeUsefulTools");
-    ptJson->m["Request"]->m["Request"] = new Json;
-    ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
-    ptJson->m["Request"]->m["Request"]->i("LastName", d.l);
-    ptJson->m["Request"]->m["Request"]->i("User", d.u);
-    if (hub("maestro", ptJson, e))
+    if (ptJson->exist({"Response", "Response"}))
     {
-      if (ptJson->exist({"Response", "Response"}))
-      {
-        b = true;
-        d.p->i("o", ptJson->m["Response"]->m["Response"]);
-      }
-      else
-      {
-        e = "Failed to receive a response.";
-      }
+      b = true;
+      d.p->i("o", ptJson->m["Response"]->m["Response"]);
     }
-    delete ptJson;
+    else
+    {
+      e = "Failed to receive a response.";
+    }
   }
-  delete ptApplication;
+  delete ptJson;
 
   return b;
 }
@@ -3601,9 +3594,18 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
 // {{{ load()
 void Central::load(string strPrefix)
 {
+  map<string, string> getApplicationRow;
   string e;
+  Json *ptApplication = new Json;
 
   strPrefix += "->Central::load()";
+
+  ptApplication->i("name", "Central");
+  if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
+  {
+    m_strApplicationID = getApplicationRow["id"];
+  }
+  delete ptApplication;
   if (m_pWarden != NULL)
   {
     m_pWarden->vaultRetrieve({"radial", "radial_central", "Password"}, m_strPassword, e);
