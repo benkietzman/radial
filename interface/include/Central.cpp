@@ -146,6 +146,7 @@ Central::Central(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["userReminders"] = &Central::userReminders;
   m_functions["userRemove"] = &Central::userRemove;
   m_functions["users"] = &Central::users;
+  load(strPrefix);
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Central::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
