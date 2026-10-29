@@ -334,7 +334,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "accessRemove");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -511,7 +511,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
         ptLink->i("Node", nodes.front());
         ptLink->i("Function", "accessRequest");
         ptLink->m["Request"]->i("_broadcast", "1", '1');
-        hub("link", ptLink, false);
+        hub("link", ptLink);
         delete ptLink;
         nodes.pop_front();
       }
@@ -728,7 +728,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
         ptLink->i("Node", nodes.front());
         ptLink->i("Function", "accessRequestApprove");
         ptLink->m["Request"]->i("_broadcast", "1", '1');
-        hub("link", ptLink, false);
+        hub("link", ptLink);
         delete ptLink;
         nodes.pop_front();
       }
@@ -912,7 +912,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
         ptLink->i("Node", nodes.front());
         ptLink->i("Function", "accessRequestCancel");
         ptLink->m["Request"]->i("_broadcast", "1", '1');
-        hub("link", ptLink, false);
+        hub("link", ptLink);
         delete ptLink;
         nodes.pop_front();
       }
@@ -1090,7 +1090,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
         ptLink->i("Node", nodes.front());
         ptLink->i("Function", "accessRequestDeny");
         ptLink->m["Request"]->i("_broadcast", "1", '1');
-        hub("link", ptLink, false);
+        hub("link", ptLink);
         delete ptLink;
         nodes.pop_front();
       }
@@ -1317,7 +1317,7 @@ bool Maestro::flowAdd(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "flowAdd");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -1710,7 +1710,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "flowRemove");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -1829,7 +1829,7 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "flowUpdate");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -4331,7 +4331,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
             ptLink->i("Node", nodes.front());
             ptLink->i("Function", "planAdd");
             ptLink->m["Request"]->i("_broadcast", "1", '1');
-            hub("link", ptLink, false);
+            hub("link", ptLink);
             delete ptLink;
             nodes.pop_front();
           }
@@ -4462,7 +4462,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "planRemove");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -4620,7 +4620,7 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "scheduleAdd");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -4794,7 +4794,7 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "scheduleRemove");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
@@ -4917,7 +4917,7 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
           ptLink->i("Node", nodes.front());
           ptLink->i("Function", "scheduleUpdate");
           ptLink->m["Request"]->i("_broadcast", "1", '1');
-          hub("link", ptLink, false);
+          hub("link", ptLink);
           delete ptLink;
           nodes.pop_front();
         }
