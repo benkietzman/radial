@@ -1977,6 +1977,7 @@ bool Maestro::isOwner(radialUser &d, const string p)
   bool b = false;
   string e;
 
+chat("#maestro", "step 0");
 if (auth(d.r, e))
 {
   chat("#maestro", "step 1");
