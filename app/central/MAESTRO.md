@@ -1,6 +1,6 @@
 Here are example scripts for Central that can be used in Maestro.
 
-# statistics
+``` statistics
 let b = false;
 let e = '';
 let strQuery = 'delete from statistic where `date` < date_format(date_sub(now(), interval 6 month), \'%Y-%m-%d\')'
@@ -15,8 +15,9 @@ else
 }
 setStatus((b)?'okay':'error');
 setError(e);
+```
 
-# workload
+``` workload
 let b = false;
 let e = '';
 let people = {};
@@ -230,3 +231,4 @@ Object.entries(people).forEach(([key, person]) =>
 });
 setStatus((b)?'okay':'error');
 setError(e);
+```
