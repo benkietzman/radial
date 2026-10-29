@@ -4659,6 +4659,7 @@ void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
   string e;
+  time_t  CNow;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
@@ -4668,6 +4669,7 @@ void Maestro::scheduler(string strPrefix)
     {
       load(strPrefix);
     }
+    time(&CNow);
     if (isMasterSettled() && isMaster())
     {
       // {{{ schedules
