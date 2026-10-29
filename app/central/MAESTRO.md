@@ -5,7 +5,7 @@ Here are example scripts for Central that can be used in Maestro flows and calle
 let r = {};
 if (getRequest() !== undefined)
 {
-  r = getRequest();
+  r = JSON.parse(getRequest());
 }
 if (r.email === undefined)
 {
