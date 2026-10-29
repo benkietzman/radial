@@ -3578,10 +3578,10 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
     ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
     ptJson->m["Request"]->m["Request"]->i("LastName", d.l);
     ptJson->m["Request"]->m["Request"]->i("User", d.u);
-string j;
-chat("#central", ptJson->j(j));
     if (hub("maestro", ptJson, e))
     {
+string j;
+chat("#central", ptJson->j(j));
       if (ptJson->exist({"Response", "Response"}))
       {
         b = true;
