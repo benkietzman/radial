@@ -31,7 +31,7 @@ if (r.year === undefined)
 {
   r.year = new Date().getFullYear();
 }
-if (db('dbCentralUsers', JSON.stringify({userid: r.userid})))
+if (dbquery('central_r', 'select id, first_name, last_name from person where userid = \''+esc(r.userid)+'\''))
 {
   let getUsers = JSON.parse(getResponse()).Response;
   if (getUsers.length == 1)
@@ -41,7 +41,7 @@ if (db('dbCentralUsers', JSON.stringify({userid: r.userid})))
     r.engineer = getUsers[0];
   }
 }
-if (db('dbCentralApplications', JSON.stringify({name: 'Radial'})))
+if (dbquery('central_r', 'select id, name application, website from application where name = \''+esc('Radial')+'\''))
 {
   let getApplications = JSON.parse(getResponse()).Response;
   if (getApplications.length == 1)
