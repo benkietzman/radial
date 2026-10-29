@@ -3551,7 +3551,7 @@ bool Central::homeUsefulTools(radialUser &d, string &e)
     ptRequest->i("FirstName", d.f);
     ptRequest->i("LastName", d.l);
     ptRequest->i("User", d.u);
-    if (maestroFlowExec(getApplicationRow["id"], "homeUsefulTools", ptRequest, ptResponse, e))
+    if (maestroFlowExec((string)"a_"+getApplicationRow["id"], "homeUsefulTools", ptRequest, ptResponse, e))
     {
       d.p->i("o", ptResponse);
     }
