@@ -2326,8 +2326,8 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
       {
         string strID, strQuery, strResponse;
         Json *ptInput = new Json(pszInput), *ptResponse = new Json;
-        ptResponse->m["Output"] = new Json;
-        if (db(pszFunction, ptInput, ptResponse->m["Output"], strID, strQuery, e))
+        ptResponse->m["Response"] = new Json;
+        if (db(pszFunction, ptInput, ptResponse->m["Response"], strID, strQuery, e))
         {
           b = true;
         }
