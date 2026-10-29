@@ -199,6 +199,7 @@ class Interface : public Base
   void logger(const string strApplication, const string strFunction, map<string, string> label, const string strMessage);
   void logger(const string strFunction, map<string, string> label, const string strMessage);
   bool loginType(radialUser &d, string &e);
+  bool maestroFlowExec(const string strPlan, const string strFlow, Json *ptRequest, Json *ptResponse, string &strError);
   string master();
   bool menuAccess(radialUser &d, string &e);
   bool mysql(const string strServer, const unsigned int unPort, const string strUser, const string strPassword, const string strDatabase, const string strType, const string strQuery, unsigned long long &ullID, unsigned long long &ullRows, list<map<string, string> > &rows, string &strError);

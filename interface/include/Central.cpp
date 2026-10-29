@@ -3537,6 +3537,32 @@ bool Central::groupUsersByGroupID(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ homeUsefulTools()
+bool Central::homeUsefulTools(radialUser &d, string &e)
+{
+  bool b = true;
+  map<string, string> getApplicationRow;
+  Json *ptApplication = new Json;
+
+  ptApplication->i("name", "Central");
+  if (db("dbCentralApplications", ptApplication, getApplicationRow, e))
+  {
+    Json *ptRequest = new Json, *ptResponse = new Json;
+    ptRequest->i("FirstName", d.f);
+    ptRequest->i("LastName", d.l);
+    ptRequest->i("User", d.u);
+    if (maestroFlowExec(getApplicationRow["id"], "homeUsefulTools", ptRequest, ptResponse, e))
+    {
+      d.p->i("o", ptResponse);
+    }
+    delete ptRequest;
+    delete ptResponse;
+  }
+  delete ptApplication;
+
+  return b;
+}
+// }}}
 // {{{ loginPasskeyRegister()
 bool Central::loginPasskeyRegister(radialUser &d, string &e)
 {
