@@ -3606,6 +3606,7 @@ void Central::load(string strPrefix)
   if (m_pWarden != NULL)
   {
     m_pWarden->vaultRetrieve({"radial", "central", "Password"}, m_strPassword, e);
+    chat("#central", (string)"Password Size:  "+to_string(m_strPassword.size()));
   }
 }
 // }}}
