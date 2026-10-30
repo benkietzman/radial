@@ -23,7 +23,8 @@ export default
       // ]]]
       a: a,
       c: c,
-      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
+      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true},
+      orderBy: 'Plan'
     });
     // ]]]
     // [[[ access
@@ -567,15 +568,38 @@ export default
         if (c.wsResponse(response, error))
         {
           s.ps = response.Response;
+          for (let i = 0; i < s.ps.length; i++)
+          {
+            s.ps[i].narrow = JSON.stringify(s.ps[i]);
+          }
         }
         else
         {
           c.pushErrorMessage(error.message);
         }
-        s.u();
+        s.refresh();
       });
     };
     // ]]]
+    // ]]]
+    // [[[ refresh()
+    s.refresh = (bNarrow) =>
+    {
+      s.psn = null;
+      s.psn = [];
+      for (let i = 0; i < s.ps.length; i++)
+      {
+        if (s.ps[i].narrow.search(new RegExp(s.narrow.v, 'i')) != -1)
+        {
+          s.psn.push(s.ps[i]);
+        }
+      }
+      s.u();
+      if (bNarrow)
+      {
+        s.narrow.e().focus();
+      }
+    };  
     // ]]]
     // [[[ schedule
     // [[[ schedule()
@@ -1171,6 +1195,8 @@ export default
   <!-- ]]] -->
   <!-- [[[ plans -->
   {{else}}
+  <div class="row">
+  <div class="col-md-8">
   {{#isValid}}
   <div class="input-group flex-nowrap">
     <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
@@ -1182,23 +1208,28 @@ export default
     <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
   </div>
   {{/isValid}}
+  </div>
+  <div class="col-md-4">
+  <div class="input-group input-group"><span class="input-group-text">Filter</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-keyup="refresh(true)" placeholder="narrow results"></div>
+  </div>
+  </div>
   <div class="table-responsive">
-    <table class="table table-condensed table-striped">
+    <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th>Plan</th>
-        <th>Type</th>
-        <th>Owner</th>
-        <th class="text-end text-nowrap"># Accesses</th>
-        <th class="text-end text-nowrap"># Flows</th>
-        <th class="text-end text-nowrap"># Schedules</th>
+        <th c-click="c.tableSort('plans', 0)" style="cursor: ns-resize;">Plan</th>
+        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Type</th>
+        <th c-click="c.tableSort('plans', 2)" style="cursor: ns-resize;">Owner</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 3, true)" style="cursor: ns-resize;"># Accesses</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 4, true)" style="cursor: ns-resize;"># Flows</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 5, true)" style="cursor: ns-resize;"># Schedules</th>
       </tr>
     </thead>
     <tbody>
-      {{#each ps}}
+      {{#each psn}}
       <tr>
         <td><a href="#/Plans/{{Plan}}">{{Plan}}</a></td>
-        <td>{{#ifCond Type "==" "a"}}application{{else}}{{#ifCond ../Type "==" "p"}}public{{else}}user{{/ifCond}}{{/ifCond}}</td>
+        <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td>{{#ifCond Type "!=" "p"}}<a href="/central/#/{{#ifCond ../Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{../ID}}" target="_blank">{{../Owner}}</a>{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
