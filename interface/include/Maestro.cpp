@@ -1228,6 +1228,10 @@ bool Maestro::flow(radialUser &d, string &e)
       if (m_p[p]->f.find(f) != m_p[p]->f.end())
       {
         b = true;
+        if (!isOwner(d, p) && !m_p[p]->f[f]->empty({"Script"}))
+        {
+          m_p[p]->f[f]->i("Script", "");
+        }
         o->merge(m_p[p]->f[f], true, false);
       }
       else
@@ -4428,6 +4432,10 @@ bool Maestro::schedule(radialUser &d, string &e)
       if (m_p[p]->s.find(s) != m_p[p]->s.end())
       {
         b = true;
+        if (!isOwner(d, p) && !m_p[p]->s[s]->empty({"Request"}))
+        {
+          m_p[p]->s[s]->i("Request", "");
+        }
         o->merge(m_p[p]->s[s], true, false);
       }
       else
