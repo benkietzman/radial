@@ -1354,27 +1354,27 @@ bool Maestro::flowExec(radialUser &d, string &e)
   if (dep({"Flow", "Plan"}, i, e))
   {
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-    if (isOwner(d, p))
+    Json *ptFlow = NULL;
+    m_mutex.lock();
+    if (m_p.find(p) != m_p.end())
     {
-      Json *ptFlow = NULL;
-      m_mutex.lock();
-      if (m_p.find(p) != m_p.end())
+      if (m_p[p]->f.find(f) != m_p[p]->f.end())
       {
-        if (m_p[p]->f.find(f) != m_p[p]->f.end())
-        {
-          ptFlow = new Json(m_p[p]->f[f]);
-        }
-        else
-        {
-          e = "Flow not found.";
-        }
+        ptFlow = new Json(m_p[p]->f[f]);
       }
       else
       {
-        e = "Plan not found.";
+        e = "Flow not found.";
       }
-      m_mutex.unlock();
-      if (ptFlow != NULL)
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+    if (ptFlow != NULL)
+    {
+      if (ptFlow->val({"Public"}) == "1" || isOwner(d, p))
       {
         if (!ptFlow->empty({"Script"}))
         {
@@ -1496,12 +1496,12 @@ bool Maestro::flowExec(radialUser &d, string &e)
         {
           e = "Script not found.";
         }
-        delete ptFlow;
       }
-    }
-    else
-    {
-      e = "You are not the owner.";
+      else
+      {
+        e = "You are not the owner.";
+      }
+      delete ptFlow;
     }
   }
 
