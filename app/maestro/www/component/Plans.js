@@ -1051,8 +1051,11 @@ export default
         {{#if expand.flow}}
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
-          <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
-          <div id="editor-box"><textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea><div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div></div>
+          <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
+          <div id="editor-box">
+            <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
+            <div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div>
+          </div>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
