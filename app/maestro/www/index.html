@@ -21,6 +21,37 @@
     <link href="https://cdn.jsdelivr.net/npm/codemirror@5/theme/dracula.css" rel="stylesheet">
     <link href="/include/common/css/common.css" rel="stylesheet">
     <link href="/include/common/css/sticky-footer.css" rel="stylesheet">
+    <style>
+      #editor-box
+      {
+        height: 300px;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #aaa;
+      }
+      #editor-box .CodeMirror
+      {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+      }
+      #resize-handle
+      {
+        flex: 0 0 12px;
+        cursor: ns-resize;
+        touch-action: none;
+        background: #eee;
+        display: grid;
+        place-items: center;
+      }
+      #resize-handle::after
+      {
+        content: "";
+        width: 36px;
+        border-top: 2px solid #888;
+      }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5/lib/codemirror.min.js"></script>

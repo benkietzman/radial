@@ -233,6 +233,31 @@ export default
         {
           editor.save();
         });
+        let resizeObserver = new ResizeObserver(() =>
+        {
+          editor.refresh();
+        });
+        resizeObserver.observe(document.getElementById('editor-box'));
+        let box = document.getElementById("editor-box");
+        let handle = document.getElementById("resize-handle");
+        let startY, startHeight;
+        handle.addEventListener('pointerdown', (event) =>
+        {
+          event.preventDefault();
+          startY = event.clientY;
+          startHeight = box.getBoundingClientRect().height;
+          handle.setPointerCapture(event.pointerId);
+        });
+        handle.addEventListener('pointermove', (event) =>
+        {
+          if (!handle.hasPointerCapture(event.pointerId))
+          {
+            return;
+          }
+          let newHeight = Math.max(150, startHeight + event.clientY - startY);
+          box.style.height = newHeight + "px";
+          editor.refresh();
+        });
       });
     };
     // ]]]
@@ -1027,8 +1052,8 @@ export default
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
-          <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <div id="editor-box"><textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea><div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div></div>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
           {{else}}
