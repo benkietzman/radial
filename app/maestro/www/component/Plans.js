@@ -1023,7 +1023,7 @@ export default
           <b>Description<b>
           <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{f.Description}}}</pre>
           <b>Script</b>
-          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{f.Script}}</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary text-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the script.</pre>
           {{/if}}
         </div>
         {{/if}}
@@ -1114,7 +1114,7 @@ export default
           </div>
           <b>Description<b>
           <pre class="bg bg-primary-subtle border border-primary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
-          <pre class="bg bg-secondary-subtle border border-secondary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Request}}}</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary text-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
           {{/if}}
         </div>
         {{/if}}
