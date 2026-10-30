@@ -378,7 +378,7 @@ export default
       if (c.isValid())
       {
         s['flowStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Description: s.f.Description.v, Script: document.getElementById('script').value}};
+        let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Public: s.f.Public.v, Description: s.f.Description.v, Script: document.getElementById('script').value}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1075,6 +1075,16 @@ export default
         {{#if expand.flow}}
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
+          <div class="row">
+            <div class="col-auto fw-bold" title="Allows execution without authentication.">
+              Public:
+            </div>
+            <div class="col">
+              <div class="form-check form-switch" title="Allows execution without authentication.">
+                <input class="form-check-input bg bg-success" type="checkbox" c-model="f.Public"" value="1">
+              </div>
+            </div>
+          </div>
           <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
           <div id="editor-box">
             <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
@@ -1087,7 +1097,7 @@ export default
           <b>Description<b>
           <pre class="bg bg-success-subtle border border-success mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{f.Description}}}</pre>
           <b>Script</b>
-          <pre class="bg bg-secondary-subtle border border-secondary text-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the script.</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary fw-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the script.</pre>
           {{/if}}
         </div>
         {{/if}}
@@ -1118,7 +1128,7 @@ export default
             <div class="col-auto">
               {{#if p.edit}}
               <div class="form-check form-switch" title="Enables the schedule.">
-                <input class="form-check-input bg bg-secondary" type="checkbox" id="enabled" c-model="s.Enabled"" value="1">
+                <input class="form-check-input bg bg-secondary" type="checkbox" c-model="s.Enabled"" value="1">
               </div>
               {{/if}}
             </div>
@@ -1178,7 +1188,7 @@ export default
           </div>
           <b>Description<b>
           <pre class="bg bg-primary-subtle border border-primary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
-          <pre class="bg bg-secondary-subtle border border-secondary text-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary rw-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
           {{/if}}
         </div>
         {{/if}}
