@@ -227,7 +227,7 @@ export default
           lineNumbers: true,
           mode: "javascript",
           theme: 'dracula',
-          indentUnit: 2,
+          indentUnit: 0,
           tabSize: 2
         });
         editor.on('change', () =>
