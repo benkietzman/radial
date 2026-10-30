@@ -221,6 +221,18 @@ export default
           c.pushErrorMessage(error.message);
         }
         s.u();
+        let editor = CodeMirror.fromTextArea(document.getElementById('script'),
+        {
+          lineNumbers: true,
+          mode: "javascript",
+          theme: 'dracula',
+          indentUnit: 2,
+          tabSize: 2
+        });
+        editor.on('change', () =>
+        {
+          editor.save();
+        });
       });
     };
     // ]]]
@@ -340,7 +352,7 @@ export default
       if (c.isValid())
       {
         s['flowStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Description: s.f.Description.v, Script: s.f.Script.v}};
+        let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Description: s.f.Description.v, Script: document.getElementById('script').value}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1015,7 +1027,7 @@ export default
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
           <textarea class="form-control bg bg-success-subtle border border-success mt-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control mt-2" c-model="f.Script" style="font-family: monospace;" rows="14" placeholder="javascript"></textarea>
+          <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
