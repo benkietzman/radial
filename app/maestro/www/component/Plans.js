@@ -1206,22 +1206,22 @@ export default
   <!-- [[[ plans -->
   {{else}}
   <div class="row">
-  <div class="col-md-8">
-  {{#isValid}}
-  <div class="input-group flex-nowrap">
-    <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()" style="flex-grow: 0; flex-basis: 120px;"><option value="a">application</option><option value="u">user</option></select>
-    {{#ifCond @root.planType.val "==" "a"}}
-    <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
-    <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" style="flex-grow: 0; flex-basis: 200px;" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
-    {{/ifCond}}
-    <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
-  </div>
-  {{/isValid}}
-  </div>
-  <div class="col-md-4">
-  <div class="input-group input-group"><span class="input-group-text">Filter</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-keyup="refresh(true)" placeholder="narrow results"></div>
-  </div>
+    <div class="col-md-8">
+      {{#isValid}}
+      <div class="input-group flex-nowrap">
+        <span class="input-group-text bg-secondary border bordrer-secondary">Type</span>
+        <select class="form-control bg-success-subtle border border-success-subtle" c-model="planType" c-change="typeSelect()" style="flex-grow: 0; flex-basis: 120px;"><option value="a">application</option><option value="u">user</option></select>
+        {{#ifCond @root.planType.val "==" "a"}}
+        <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
+        <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" style="flex-grow: 0; flex-basis: 200px;" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
+        {{/ifCond}}
+        <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
+      </div>
+      {{/isValid}}
+      </div>
+    <div class="col-md-4">
+      <div class="input-group input-group"><span class="input-group-text">Filter</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-keyup="refresh(true)" placeholder="narrow results"></div>
+    </div>
   </div>
   <div class="table-responsive">
     <table id="plans" class="table table-condensed table-striped">
