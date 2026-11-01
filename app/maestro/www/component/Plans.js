@@ -228,7 +228,8 @@ export default
           mode: "javascript",
           theme: 'dracula',
           indentUnit: 0,
-          tabSize: 2
+          tabSize: 2,
+          keyMap: 'vim'
         });
         let resizeObserver = new ResizeObserver(() =>
         {
