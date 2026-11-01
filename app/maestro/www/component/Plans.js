@@ -222,7 +222,7 @@ export default
           c.pushErrorMessage(error.message);
         }
         s.u();
-        let editor = CodeMirror.fromTextArea(document.getElementById('script'),
+        s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
         {
           lineNumbers: true,
           mode: "javascript",
@@ -230,13 +230,9 @@ export default
           indentUnit: 0,
           tabSize: 2
         });
-        editor.on('change', () =>
-        {
-          editor.save();
-        });
         let resizeObserver = new ResizeObserver(() =>
         {
-          editor.refresh();
+          s.editor.refresh();
         });
         resizeObserver.observe(document.getElementById('editor-box'));
         let box = document.getElementById("editor-box");
@@ -257,7 +253,7 @@ export default
           }
           let newHeight = Math.max(150, startHeight + event.clientY - startY);
           box.style.height = newHeight + "px";
-          editor.refresh();
+          s.editor.refresh();
         });
       });
     };
@@ -378,6 +374,7 @@ export default
       if (c.isValid())
       {
         s['flowStatus'].v = '';
+        s.editor.save();
         let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Public: s.f.Public.v, Description: s.f.Description.v, Script: document.getElementById('script').value}};
         c.wsRequest('radial', request).then((response) =>
         {
