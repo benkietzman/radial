@@ -823,7 +823,7 @@ export default
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="planRemove()" title="Remove Plan"></button>
+              <button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove</button>
               {{/if}}
             </div>
             <div class="col" c-click="collapseExpand('general')" style="cursor: row-resize;">
@@ -859,12 +859,12 @@ export default
         {{#if expand.access}}
         <div class="card-body bg bg-warning-subtle">
           {{#isLocalAdmin "Maestro"}}
-          <div class="input-group flex-nowrap mt-2">
+          <div class="input-group input-group-sm flex-nowrap mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
-            <button class="btn btn-warning bi bi-send" c-click="accessRequest()" title="Request Access"></button>
+            <button class="btn btn-warning bi bi-send text-nowrap" c-click="accessRequest()" title="Request Access"> Request</button>
           </div>
           {{/isLocalAdmin}}
           {{#if as.a}}
@@ -889,7 +889,7 @@ export default
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
-                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"></button></td>
+                      <td><button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="accessRemove('{{@../key}}', '{{.}}')" title="Remove Access"> Remove</button></td>
                       {{/if}}
                     </tr>
                     {{/each}}
@@ -925,7 +925,7 @@ export default
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
-                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestCancel('{{@../key}}', '{{.}}')" title="Cancel Access Request"></button></td>
+                      <td><button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="accessRequestCancel('{{@../key}}', '{{.}}')" title="Cancel Access Request"> Cancel</button></td>
                       {{/if}}
                     </tr>
                     {{/each}}
@@ -961,8 +961,8 @@ export default
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
-                      <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestDeny('{{@../key}}', '{{.}}')" title="Deny Access Request"></button></td>
-                      <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="accessRequestApprove('{{@../key}}', '{{.}}')" title="Approve Access Request"></button></td>
+                      <td><button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="accessRequestDeny('{{@../key}}', '{{.}}')" title="Deny Access Request"> Deny</button></td>
+                      <td><button class="btn btn-sm btn-success bi bi-plus-circle text-nowrap" c-click="accessRequestApprove('{{@../key}}', '{{.}}')" title="Approve Access Request"> Approve</button></td>
                       {{/if}}
                     </tr>
                     {{/each}}
@@ -992,10 +992,10 @@ export default
         {{#if expand.flows}}
         <div class="card-body bg bg-success-subtle">
           {{#if p.edit}}
-          <div class="input-group flex-nowrap mt-2">
+          <div class="input-group input-group-sm flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
             <input type="text" class="form-control bg bg-secondary-subtle border border-success-subtle" c-model="flowName" style="flex-grow: 0; flex-basis: 100px;">
-            <button class="btn btn-success bi bi-plus-circle" c-click="flowAdd()" title="Add Flow"></button>
+            <button class="btn btn-success bi bi-plus-circle text-nowrap" c-click="flowAdd()" title="Add Flow"> Add</button>
           </div>
           {{/if}}
           <div class="table-responsive mt-2">
@@ -1025,10 +1025,10 @@ export default
         {{#if expand.schedules}}
         <div class="card-body bg bg-primary-subtle">
           {{#if p.edit}}
-          <div class="input-group flex-nowrap mt-2">
+          <div class="input-group input-group-sm flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Schedule</span>
             <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="scheduleName" style="flex-grow: 0; flex-basis: 100px;">
-            <button class="btn btn-primary bi bi-plus-circle" c-click="scheduleAdd()" title="Add Schedule"></button>
+            <button class="btn btn-primary bi bi-plus-circle text-nowrap" c-click="scheduleAdd()" title="Add Schedule"> Add</button>
           </div>
           {{/if}}
           <div class="table-responsive mt-2">
@@ -1057,7 +1057,7 @@ export default
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="flowRemove()" title="Remove Flow"></button>
+              <button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="flowRemove()" title="Remove Flow"> Remove</button>
               {{/if}}
             </div>
             <div class="col" c-click="collapseExpand('flow')" style="cursor: row-resize;">
@@ -1065,7 +1065,7 @@ export default
             </div>
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-warning bi bi-save" c-click="flowUpdate()" title="Save Flow"></button> 
+              <button class="btn btn-sm btn-warning bi bi-save text-nowrap" c-click="flowUpdate()" title="Save Flow"> Save</button> 
               {{/if}}
             </div>
           </div>
@@ -1101,7 +1101,7 @@ export default
         {{/if}}
         <div class="card-footer">
           {{#if p.edit}}
-          <button class="btn btn-sm btn-success bi bi-box-arrow-right" c-click="flowExec()" title="Execute flow"></button>
+          <button class="btn btn-sm btn-success bi bi-box-arrow-right text-nowrap" c-click="flowExec()" title="Execute flow"> Execute</button>
           <span class="float-end text-warning" c-model="flowStatus"></span>
           {{/if}}
         </div>
@@ -1117,7 +1117,7 @@ export default
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-danger bi bi-trash" c-click="scheduleRemove()" title="Remove Schedule"></button>
+              <button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="scheduleRemove()" title="Remove Schedule"> Remove</button>
               {{/if}}
             </div>
             <div class="col" c-click="collapseExpand('schedule')" style="cursor: row-resize;">
@@ -1132,7 +1132,7 @@ export default
             </div>
             <div class="col-auto">
               {{#if p.edit}}
-              <button class="btn btn-sm btn-warning bi bi-save" c-click="scheduleUpdate()" title="Save Schedule"></button> 
+              <button class="btn btn-sm btn-warning bi bi-save text-nowrap" c-click="scheduleUpdate()" title="Save Schedule"> Save</button> 
               {{/if}}
             </div>
           </div>
@@ -1213,7 +1213,7 @@ export default
         <span class="input-group-text bg-secondary border bordrer-secondary">Application</span>
         <select class="form-control bg-success-subtle border border-success-subtle" c-model="planApplication" style="flex-grow: 0; flex-basis: 200px;" c-json>{{#each @root.apps}}<option value="{{json .}}">{{name}}</option>{{/each}}</select>
         {{/ifCond}}
-        <button class="btn btn-success bi bi-plus-circle" c-click="planAdd()" title="Add Plan"></button>
+        <button class="btn btn-success bi bi-plus-circle text-nowrap" c-click="planAdd()" title="Add Plan"> Add</button>
       </div>
       {{/isValid}}
       </div>
