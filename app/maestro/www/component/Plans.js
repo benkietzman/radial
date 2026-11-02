@@ -23,6 +23,7 @@ export default
       // ]]]
       a: a,
       c: c,
+      editor: 'text',
       expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true},
       orderBy: 'Plan'
     });
@@ -228,8 +229,7 @@ export default
           mode: "javascript",
           theme: 'dracula',
           indentUnit: 0,
-          tabSize: 2,
-          keyMap: 'vim'
+          tabSize: 2
         });
         let resizeObserver = new ResizeObserver(() =>
         {
@@ -282,6 +282,12 @@ export default
       {
         c.pushErrorMessage('You are not authorized to perform this action.');
       }
+    };
+    // ]]]
+    // [[[ flowEditor()
+    s.flowEditor = (strEditor) =>
+    {
+      s.editor.setOption('keyMap', strEditor);
     };
     // ]]]
     // [[[ flowExec()
@@ -1084,6 +1090,13 @@ export default
             </div>
           </div>
           <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
+          <div class="input-group input-group-small flex-nowrap mb-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Editor</span>
+            <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditor('default')" checked>
+            <label class="btn btn-light" for="editorText">Text</label>
+            <input type="radio" class="btn-check" name="edtor" id="editorVim" autocomplete="off"c-click="flowEditor('vim')" >
+            <label class="btn btn-light" for="editorVim">VIM</label>
+          </div>
           <div id="editor-box">
             <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
             <div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div>
