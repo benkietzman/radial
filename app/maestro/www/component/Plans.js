@@ -1239,19 +1239,19 @@ export default
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
+        <th></th>
         <th c-click="c.tableSort('plans', 0)" style="cursor: ns-resize;">Owner</th>
-        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Plan</th>
-        <th c-click="c.tableSort('plans', 2)" style="cursor: ns-resize;">Type</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 3, true)" style="cursor: ns-resize;"># Accesses</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 4, true)" style="cursor: ns-resize;"># Flows</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 5, true)" style="cursor: ns-resize;"># Schedules</th>
+        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Type</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 2, true)" style="cursor: ns-resize;"># Accesses</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 3, true)" style="cursor: ns-resize;"># Flows</th>
+        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 4, true)" style="cursor: ns-resize;"># Schedules</th>
       </tr>
     </thead>
     <tbody>
       {{#each psn}}
       <tr>
+        <th><a class="btn btn-sm btn-primary" href="#/Plans/{{Plan}}">View</a></td>
         <td>{{Owner}}</td>
-        <td><a href="#/Plans/{{Plan}}">{{Plan}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
