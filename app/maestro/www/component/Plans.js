@@ -823,7 +823,7 @@ export default
   <button class="btn btn-sm btn-danger bi bi-trash float-end text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove Plan</button>
   {{/if}}
   {{#if p}}
-  <h3>Plan - {{p.Owner}}</h3>
+  <h3>{{p.Owner}}</h3>
   <div class="row">
     <!-- [[[ access -->
     <div class="col-auto">
