@@ -820,41 +820,11 @@ export default
   template: `
   <!-- [[[ plan -->
   {{#if p}}
+  <h2>Plan - {{Owner}}</h2>
+  {{#if p.edit}}
+  <button class="btn btn-sm btn-danger bi bi-trash float-end text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove Plan</button>
+  {{/if}}
   <div class="row">
-    <!-- [[[ general -->
-    <div class="col-auto">
-      <div class="card border border-secondary mb-2 mt-3">
-        <div class="card-header bg bg-secondary fw-bold text-center text-nowrap">
-          <div class="row flex-nowrap">
-            <div class="col-auto">
-              {{#if p.edit}}
-              <button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove</button>
-              {{/if}}
-            </div>
-            <div class="col" c-click="collapseExpand('general')" style="cursor: row-resize;">
-              Plan - {{strPlan}}
-            </div>
-            <div class="col-auto" c-click="collapseExpand('general')" style="cursor: row-resize;">
-            </div>
-          </div>
-        </div>
-        {{#if expand.general}}
-        <div class="card-body bg bg-secondary-subtle">
-          <div class="table-responsive mt-2">
-            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
-            <tbody>
-              <tr><th>Type</th><td colspan="2">{{#ifCond p.Type "==" "a"}}application{{else}}user{{/ifCond}}</td></tr>
-              <tr><th>Owner</th><td colspan="2"><a href="/central/#/{{#ifCond p.Type "==" "a"}}Applications{{else}}Users{{/ifCond}}/{{p.ID}}" target="_blank">{{p.Owner}}</a></td>
-            </tbody>
-            </table>
-          </div>
-        </div>
-        {{/if}}
-        <div class="card-footer">
-        </div>
-      </div>
-    </div>
-    <!-- ]]] -->
     <!-- [[[ access -->
     <div class="col-auto">
       <div class="card border border-warning mb-2 mt-3">
@@ -1237,7 +1207,7 @@ export default
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th>Owner</th>
+        <th>Plan</th>
         <th>Type</th>
         <th class="text-end text-nowrap"># Accesses</th>
         <th class="text-end text-nowrap"># Flows</th>
