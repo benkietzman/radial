@@ -1217,7 +1217,7 @@ export default
     <tbody>
       {{#each psn}}
       <tr>
-        <td><a href="#/Plans/{{Plan}}">{{Owner}}</a></td>
+        <td><a href="#/Plans/{{Plan}}">{{Owner}}</a> [{{Plan}}]</td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
