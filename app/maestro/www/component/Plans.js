@@ -576,6 +576,7 @@ export default
           {
             s.ps[i].narrow = JSON.stringify(s.ps[i]);
           }
+          c.tableSort('plans', 0);
         }
         else
         {
@@ -1238,8 +1239,9 @@ export default
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th c-click="c.tableSort('plans', 0)" style="cursor: ns-resize;">Plan</th>
-        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Type</th>
+        <th c-click="c.tableSort('plans', 0)" style="cursor: ns-resize;">Owner</th>
+        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Plan</th>
+        <th c-click="c.tableSort('plans', 2)" style="cursor: ns-resize;">Type</th>
         <th class="text-end text-nowrap" c-click="c.tableSort('plans', 3, true)" style="cursor: ns-resize;"># Accesses</th>
         <th class="text-end text-nowrap" c-click="c.tableSort('plans', 4, true)" style="cursor: ns-resize;"># Flows</th>
         <th class="text-end text-nowrap" c-click="c.tableSort('plans', 5, true)" style="cursor: ns-resize;"># Schedules</th>
@@ -1248,7 +1250,8 @@ export default
     <tbody>
       {{#each psn}}
       <tr>
-        <td>{{Owner}} [<a href="#/Plans/{{Plan}}">{{Plan}}]</a></td>
+        <td>{{Owner}}</td>
+        <td><a href="#/Plans/{{Plan}}">{{Plan}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
