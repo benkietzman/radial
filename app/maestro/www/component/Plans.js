@@ -574,8 +574,8 @@ export default
           {
             return (a, b) =>
             {
-              a = a[key].toLowerCase();
-              b = b[key].toLowerCase()
+              a = a.Owner.toLowerCase();
+              b = b.Owner.toLowerCase()
               return a.localeCompare(b);
             }
           });
