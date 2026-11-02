@@ -414,7 +414,7 @@ export default
           s.access = response.Response;
           if (s.access.length > 0)
           {
-            s.accessName = s.access[0];
+            s.accessName = s.access[0].ID;
             s.getScopes();
           }
         }
@@ -837,7 +837,7 @@ export default
           <div class="input-group input-group-sm flex-nowrap mt-2">
             <span class="input-group-text bg-secondary border bordrer-secondary">Access</span>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="typeName" c-click="getAccesses()" style="flex-grow: 0; flex-basis: 100px;"><option value="application">application</option><option value="core">core</option><option value="user">user</option></select>
-            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="accessName" c-click="getScopes()" style="flex-grow: 0; flex-basis: 100px;">{{#each ../access}}<option value="{{ID}}">{{Owner}}</option>{{/each}}</select>
             <select class="form-select bg bg-secondary-subtle border border-warning-subtle" c-model="scopeName" style="flex-grow: 0; flex-basis: 100px;">{{#each ../scopes}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
             <button class="btn btn-warning bi bi-send text-nowrap" c-click="accessRequest()" title="Request Access"> Request</button>
           </div>

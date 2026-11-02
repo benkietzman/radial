@@ -152,7 +152,7 @@ bool Maestro::accesses(radialUser &d, string &e)
       {
         if (!p.second->f.empty() && ((t == "application" && p.second->t == 'a') || (t == "user" && p.second->t == 'u')))
         {
-          o->pb(p.second->id);
+          o->pb({{"ID", p.second->id}, {"Owner", p.second->owner}});
         }
       }
       m_mutex.unlock();
