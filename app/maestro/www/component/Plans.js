@@ -24,10 +24,7 @@ export default
       a: a,
       c: c,
       editor: 'text',
-      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true},
-      orderBy: 'Plan',
-      plansTableSortIndex: 0,
-      plansTableSortNumeric: false
+      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
     });
     // ]]]
     // [[[ access
@@ -587,14 +584,6 @@ export default
       });
     };
     // ]]]
-    // [[[ plansTableSort()
-    s.plansTableSort = (nIndex, bNumeric) =>
-    {
-      s.plansTableSortIndex = nIndex;
-      s.plansTableSortNumeric = bNumeric;
-      c.tableSort('plans', nIndex, bNumeric);
-    };
-    // ]]]
     // ]]]
     // [[[ refresh()
     s.refresh = (bNarrow) =>
@@ -613,7 +602,6 @@ export default
       {
         s.narrow.e().focus();
       }
-      c.tableSort('plans', s.plansTableSortIndex, s.plansTableSortNumeric);
     };  
     // ]]]
     // [[[ schedule
@@ -1249,19 +1237,17 @@ export default
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th></th>
-        <th c-click="plansTableSort(0)" style="cursor: ns-resize;">Owner</th>
-        <th c-click="plansTableSort(1)" style="cursor: ns-resize;">Type</th>
-        <th class="text-end text-nowrap" c-click="plansTableSort(2, true)" style="cursor: ns-resize;"># Accesses</th>
-        <th class="text-end text-nowrap" c-click="plansTableSort(3, true)" style="cursor: ns-resize;"># Flows</th>
-        <th class="text-end text-nowrap" c-click="plansTableSort(4, true)" style="cursor: ns-resize;"># Schedules</th>
+        <th>Owner</th>
+        <th>Type</th>
+        <th class="text-end text-nowrap"># Accesses</th>
+        <th class="text-end text-nowrap"># Flows</th>
+        <th class="text-end text-nowrap"># Schedules</th>
       </tr>
     </thead>
     <tbody>
       {{#each psn}}
       <tr>
-        <th><a class="btn btn-sm btn-primary" href="#/Plans/{{Plan}}">View</a></td>
-        <td>{{Owner}}</td>
+        <td><a href="#/Plans/{{Plan}}">{{Owner}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
