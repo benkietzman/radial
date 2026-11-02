@@ -162,7 +162,7 @@ bool Maestro::accesses(radialUser &d, string &e)
       b = true;
       for (auto &a : m_a)
       {
-        o->pb(a.first);
+        o->pb({{"ID", a.first}, {"Owner", a.first}});
       }
     }
     else
