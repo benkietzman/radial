@@ -1067,10 +1067,10 @@ export default
             <label class="btn btn-light" for="editorVim">VIM</label>
           </div>
           <div id="editor-box">
-            <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14" placeholder="javascript">{{f.Script}}</textarea>
+            <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;" rows="14">{{f.Script}}</textarea>
             <div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div>
           </div>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
           {{else}}
