@@ -587,7 +587,7 @@ export default
     };
     // ]]]
     // [[[ plansTableSort()
-    s.plansTableSort = (nIndex, bNumeric)
+    s.plansTableSort = (nIndex, bNumeric) =>
     {
       s.plansTableSortIndex = nIndex;
       c.tableSort('plans', nIndex, bNumeric);
