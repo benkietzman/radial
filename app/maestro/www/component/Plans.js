@@ -587,10 +587,10 @@ export default
     };
     // ]]]
     // [[[ plansTableSort()
-    s.plansTableSort = (i)
+    s.plansTableSort = (nIndex, bNumeric)
     {
-      s.plansTableSortIndex = i;
-      c.tableSort('plans', i);
+      s.plansTableSortIndex = nIndex;
+      c.tableSort('plans', nIndex, bNumeric);
     };
     // ]]]
     // ]]]
