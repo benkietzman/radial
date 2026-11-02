@@ -570,7 +570,15 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.ps = response.Response;
+          s.ps = response.Response.sort(() =>
+          {
+            return (a, b) =>
+            {
+              a = a[key].toLowerCase();
+              b = b[key].toLowerCase()
+              return a.localeCompare(b);
+            }
+          });
           for (let i = 0; i < s.ps.length; i++)
           {
             s.ps[i].narrow = JSON.stringify(s.ps[i]);
