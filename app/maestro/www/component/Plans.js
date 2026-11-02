@@ -819,11 +819,11 @@ export default
   // [[[ template
   template: `
   <!-- [[[ plan -->
-  {{#if p}}
-  <h2>Plan - {{Owner}}</h2>
   {{#if p.edit}}
   <button class="btn btn-sm btn-danger bi bi-trash float-end text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove Plan</button>
   {{/if}}
+  {{#if p}}
+  <h2>Plan - {{p.Owner}}</h2>
   <div class="row">
     <!-- [[[ access -->
     <div class="col-auto">
