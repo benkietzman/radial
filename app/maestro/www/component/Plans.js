@@ -26,7 +26,8 @@ export default
       editor: 'text',
       expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true},
       orderBy: 'Plan',
-      plansTableSortIndex: 0
+      plansTableSortIndex: 0,
+      plansTableSortNumeric: false
     });
     // ]]]
     // [[[ access
@@ -590,6 +591,7 @@ export default
     s.plansTableSort = (nIndex, bNumeric) =>
     {
       s.plansTableSortIndex = nIndex;
+      s.plansTableSortNumeric = bNumeric;
       c.tableSort('plans', nIndex, bNumeric);
     };
     // ]]]
@@ -611,7 +613,7 @@ export default
       {
         s.narrow.e().focus();
       }
-      c.tableSort('plans', s.plansTableSortIndex);
+      c.tableSort('plans', s.plansTableSortIndex, s.plansTableSortNumeric);
     };  
     // ]]]
     // [[[ schedule
