@@ -582,7 +582,6 @@ export default
           c.pushErrorMessage(error.message);
         }
         s.refresh();
-        c.tableSort('plans', 0);
       });
     };
     // ]]]
@@ -604,6 +603,7 @@ export default
       {
         s.narrow.e().focus();
       }
+      c.tableSort('plans', 0);
     };  
     // ]]]
     // [[[ schedule
