@@ -25,7 +25,8 @@ export default
       c: c,
       editor: 'text',
       expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true},
-      orderBy: 'Plan'
+      orderBy: 'Plan',
+      plansTableSortIndex: 0
     });
     // ]]]
     // [[[ access
@@ -585,6 +586,13 @@ export default
       });
     };
     // ]]]
+    // [[[ plansTableSort()
+    s.plansTableSort = (i)
+    {
+      s.plansTableSortIndex = i;
+      c.tableSort('plans', i);
+    };
+    // ]]]
     // ]]]
     // [[[ refresh()
     s.refresh = (bNarrow) =>
@@ -603,6 +611,7 @@ export default
       {
         s.narrow.e().focus();
       }
+      c.tableSort('plans', s.plansTableSortIndex);
     };  
     // ]]]
     // [[[ schedule
@@ -1239,11 +1248,11 @@ export default
     <thead>
       <tr>
         <th></th>
-        <th c-click="c.tableSort('plans', 0)" style="cursor: ns-resize;">Owner</th>
-        <th c-click="c.tableSort('plans', 1)" style="cursor: ns-resize;">Type</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 2, true)" style="cursor: ns-resize;"># Accesses</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 3, true)" style="cursor: ns-resize;"># Flows</th>
-        <th class="text-end text-nowrap" c-click="c.tableSort('plans', 4, true)" style="cursor: ns-resize;"># Schedules</th>
+        <th c-click="plansTableSort(0)" style="cursor: ns-resize;">Owner</th>
+        <th c-click="plansTableSort(1)" style="cursor: ns-resize;">Type</th>
+        <th class="text-end text-nowrap" c-click="plansTableSort(2, true)" style="cursor: ns-resize;"># Accesses</th>
+        <th class="text-end text-nowrap" c-click="plansTableSort(3, true)" style="cursor: ns-resize;"># Flows</th>
+        <th class="text-end text-nowrap" c-click="plansTableSort(4, true)" style="cursor: ns-resize;"># Schedules</th>
       </tr>
     </thead>
     <tbody>
