@@ -1083,7 +1083,7 @@ export default
         {{/if}}
         <div class="card-footer">
           {{#if p.edit}}
-          <button class="btn btn-sm btn-success bi bi-box-arrow-right float-end text-nowrap" c-click="flowExec()" title="Execute flow"> Execute</button>
+          <button class="btn btn-sm btn-success bi bi-box-arrow-right text-nowrap" c-click="flowExec()" title="Execute flow"> Execute</button>
           <span class="float-end text-warning" c-model="flowStatus"></span>
           {{/if}}
         </div>
