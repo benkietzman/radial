@@ -603,7 +603,6 @@ export default
       {
         s.narrow.e().focus();
       }
-      c.tableSort('plans', 0);
     };  
     // ]]]
     // [[[ schedule
