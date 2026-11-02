@@ -576,13 +576,13 @@ export default
           {
             s.ps[i].narrow = JSON.stringify(s.ps[i]);
           }
-          c.tableSort('plans', 0);
         }
         else
         {
           c.pushErrorMessage(error.message);
         }
         s.refresh();
+        c.tableSort('plans', 0);
       });
     };
     // ]]]
