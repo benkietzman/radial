@@ -549,7 +549,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request", ssText.str(), ssHtml.str());
+      email("m44310@email.web.att.com", to, "Maestro:  Access Request", ssText.str(), ssHtml.str());
     }
   }
 
@@ -766,7 +766,7 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request Approved", ssText.str(), ssHtml.str());
+      email("m44310@email.web.att.com", to, "Maestro:  Access Request Approved", ssText.str(), ssHtml.str());
     }
   }
 
@@ -950,7 +950,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request Canceled", ssText.str(), ssHtml.str());
+      email("m44310@email.web.att.com", to, "Maestro:  Access Request Canceled", ssText.str(), ssHtml.str());
     }
   }
 
@@ -1128,7 +1128,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
       ptLive->i("Name", p);
       live("Maestro", "", ptLive);
       delete ptLive;
-      email("m44310@att.com", to, "Maestro:  Access Request Denied", ssText.str(), ssHtml.str());
+      email("m44310@email.web.att.com", to, "Maestro:  Access Request Denied", ssText.str(), ssHtml.str());
     }
   }
 
