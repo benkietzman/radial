@@ -3586,10 +3586,21 @@ bool Interface::maestroFlowExec(const string strUser, const string strPassword, 
   }
   if (hub("maestro", ptJson, strError))
   {
-    if (ptJson->exist({"Response", "Response"}))
+    if (ptJson->exist({"Response"}))
     {
-      bResult = true;
-      if (ptResponse != NULL)
+      if (ptJson->m["Response"]->val({"Status"}) == "okay")
+      {
+        bResult = true;
+      }
+      else if (!ptJson->m["Response"]->empty({"Error"}))
+      {
+        strError = ptJson->m["Response"]->m["Error"]->v;
+      }
+      else
+      {
+        strError = "Encountered an unknown error.";
+      }
+      if (ptResponse != NULL && ptJson->m["Response"]->exist({"Response"}))
       {
         ptResponse->merge(ptJson->m["Response"]->m["Response"], true, false);
       }
