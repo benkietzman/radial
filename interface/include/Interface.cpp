@@ -3580,13 +3580,19 @@ bool Interface::maestroFlowExec(const string strUser, const string strPassword, 
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("Plan", strPlan);
   ptJson->m["Request"]->i("Flow", strFlow);
-  ptJson->m["Request"]->i("Request", ptRequest);
+  if (ptRequest != NULL)
+  {
+    ptJson->m["Request"]->i("Request", ptRequest);
+  }
   if (hub("maestro", ptJson, strError))
   {
     if (ptJson->exist({"Response", "Response"}))
     {
       bResult = true;
-      ptResponse->merge(ptJson->m["Response"]->m["Response"], true, false);
+      if (ptResponse != NULL)
+      {
+        ptResponse->merge(ptJson->m["Response"]->m["Response"], true, false);
+      }
     }
     else
     {
