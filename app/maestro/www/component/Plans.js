@@ -1209,11 +1209,11 @@ export default
       <tr>
         <th>Plan</th>
         <th>Type</th>
-        <th class="text-end text-nowrap"># Accesses</th>
-        <th class="text-end text-nowrap"># Approvals</th>
-        <th class="text-end text-nowrap"># Requests</th>
-        <th class="text-end text-nowrap"># Flows</th>
-        <th class="text-end text-nowrap"># Schedules</th>
+        <th class="bg bg-warning-subtle text-end text-nowrap"># Accesses</th>
+        <th class="bg bg-warning-subtle text-end text-nowrap"># Approvals</th>
+        <th class="bg bg-warning-subtle text-end text-nowrap"># Requests</th>
+        <th class="bg bg-success-subtle text-end text-nowrap"># Flows</th>
+        <th class="bg bg-primary-subtle text-end text-nowrap"># Schedules</th>
       </tr>
     </thead>
     <tbody>
@@ -1221,11 +1221,11 @@ export default
       <tr>
         <td><a href="#/Plans/{{Plan}}">{{Owner}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
-        <td class="text-end">{{numberShort NumAccesses 0}}</td>
-        <td class="text-end">{{numberShort NumApprovals 0}}</td>
-        <td class="text-end">{{numberShort NumRequests 0}}</td>
-        <td class="text-end">{{numberShort NumFlows 0}}</td>
-        <td class="text-end">{{numberShort NumSchedules 0}}</td>
+        <td class="bg bg-warning-subtle text-end">{{numberShort NumAccesses 0}}</td>
+        <td class="bg bg-warning-subtle text-end">{{numberShort NumApprovals 0}}</td>
+        <td class="bg bg-warning-subtle text-end">{{numberShort NumRequests 0}}</td>
+        <td class="bg bg-success-subtle text-end">{{numberShort NumFlows 0}}</td>
+        <td class="bg bg-primary-subtle text-end">{{numberShort NumSchedules 0}}</td>
       </tr>
       {{/each}}
     </tbody>
