@@ -1207,7 +1207,6 @@ export default
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
-        <th>Owner</th>
         <th>Plan</th>
         <th>Type</th>
         <th class="text-end text-nowrap"># Accesses</th>
@@ -1218,8 +1217,7 @@ export default
     <tbody>
       {{#each psn}}
       <tr>
-        <td>{{Owner}}</td>
-        <td><a href="#/Plans/{{Plan}}">{{Plan}}</a></td>
+        <td><a href="#/Plans/{{Plan}}">{{Owner}}</a></td>
         <td>{{#ifCond Type "==" "a"}}application{{else}}user{{/ifCond}}</td>
         <td class="text-end">{{numberShort NumAccesses 0}}</td>
         <td class="text-end">{{numberShort NumFlows 0}}</td>
