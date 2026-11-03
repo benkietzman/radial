@@ -24,6 +24,7 @@ export default
       a: a,
       c: c,
       editor: 'text',
+      editorKeyMap: 'default',
       expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
     });
     // ]]]
@@ -203,6 +204,10 @@ export default
     {
       s.expand[strKey] = ((s.expand[strKey])?false:true);
       s.u();
+      if (s.strFlow != '')
+      {
+        s.flowEditor();
+      }
     };
     // ]]]
     // [[[ flow
@@ -222,39 +227,7 @@ export default
           c.pushErrorMessage(error.message);
         }
         s.u();
-        s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
-        {
-          lineNumbers: true,
-          mode: "javascript",
-          theme: 'dracula',
-          indentUnit: 0,
-          tabSize: 2
-        });
-        let resizeObserver = new ResizeObserver(() =>
-        {
-          s.editor.refresh();
-        });
-        resizeObserver.observe(document.getElementById('editor-box'));
-        let box = document.getElementById("editor-box");
-        let handle = document.getElementById("resize-handle");
-        let startY, startHeight;
-        handle.addEventListener('pointerdown', (event) =>
-        {
-          event.preventDefault();
-          startY = event.clientY;
-          startHeight = box.getBoundingClientRect().height;
-          handle.setPointerCapture(event.pointerId);
-        });
-        handle.addEventListener('pointermove', (event) =>
-        {
-          if (!handle.hasPointerCapture(event.pointerId))
-          {
-            return;
-          }
-          let newHeight = Math.max(150, startHeight + event.clientY - startY);
-          box.style.height = newHeight + "px";
-          s.editor.refresh();
-        });
+        s.flowEditor();
       });
     };
     // ]]]
@@ -284,9 +257,49 @@ export default
     };
     // ]]]
     // [[[ flowEditor()
-    s.flowEditor = (strEditor) =>
+    s.flowEditor = () =>
     {
-      s.editor.setOption('keyMap', strEditor);
+      s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
+      {
+        lineNumbers: true,
+        mode: "javascript",
+        theme: 'dracula',
+        indentUnit: 0,
+        tabSize: 2,
+        keyMap: s.editorKeyMap
+      });
+      let resizeObserver = new ResizeObserver(() =>
+      {
+        s.editor.refresh();
+      });
+      resizeObserver.observe(document.getElementById('editor-box'));
+      let box = document.getElementById("editor-box");
+      let handle = document.getElementById("resize-handle");
+      let startY, startHeight;
+      handle.addEventListener('pointerdown', (event) =>
+      {
+        event.preventDefault();
+        startY = event.clientY;
+        startHeight = box.getBoundingClientRect().height;
+        handle.setPointerCapture(event.pointerId);
+      });
+      handle.addEventListener('pointermove', (event) =>
+      {
+        if (!handle.hasPointerCapture(event.pointerId))
+        {
+          return;
+        }
+        let newHeight = Math.max(150, startHeight + event.clientY - startY);
+        box.style.height = newHeight + "px";
+        s.editor.refresh();
+      });
+    };
+    // ]]]
+    // [[[ flowEditoKeyMap()
+    s.flowEditorKeyMap = (strKeyMap) =>
+    {
+      s.editorKeyMap = strKeyMap;
+      s.editor.setOption('keyMap', strKeyMap);
     };
     // ]]]
     // [[[ flowExec()
@@ -1061,9 +1074,9 @@ export default
           <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
           <div class="input-group input-group-small flex-nowrap mb-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Editor</span>
-            <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditor('default')" checked>
+            <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditorKeyMap('default')"{{#ifCond editorKeyMap "==" "default"}} checked{{/ifCond}}>
             <label class="btn btn-light" for="editorText">Text</label>
-            <input type="radio" class="btn-check" name="edtor" id="editorVim" autocomplete="off"c-click="flowEditor('vim')" >
+            <input type="radio" class="btn-check" name="edtor" id="editorVim" autocomplete="off"c-click="flowEditorKeyMap('vim')" {{#ifCond editorKeyMap "==" "vim"}} checked{{/ifCond}}>
             <label class="btn btn-light" for="editorVim">VIM</label>
           </div>
           <div id="editor-box">
