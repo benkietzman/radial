@@ -2922,32 +2922,7 @@ bool Central::dependentsByApplicationID(radialUser &d, string &e)
 // {{{ footer()
 bool Central::footer(radialUser &d, string &e)
 {
-  bool b = false;
-  Json *ptJson = new Json;
-
-  ptJson->i("Interface", "maestro");
-  ptJson->i("Function", "flowExec");
-  ptJson->i("User", "radial_central");
-  ptJson->i("Password", m_strPassword);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationID());
-  ptJson->m["Request"]->i("Flow", "footer");
-  ptJson->m["Request"]->m["Request"] = new Json(d.p->m["i"]);
-  if (hub("maestro", ptJson, e))
-  {
-    if (ptJson->exist({"Response", "Response"}))
-    {
-      b = true;
-      d.p->i("o", ptJson->m["Response"]->m["Response"]);
-    }
-    else
-    {
-      e = "Failed to receive a response.";
-    }
-  }
-  delete ptJson;
-
-  return b;
+  return maestroFlowExec("radial_central", m_strPassword, "Central", "footer", d.p->m["i"], d.p->m["o"], e);
 }
 // }}}
 // {{{ group()
@@ -3592,33 +3567,17 @@ bool Central::groupUsersByGroupID(radialUser &d, string &e)
 // {{{ homeUsefulTools()
 bool Central::homeUsefulTools(radialUser &d, string &e)
 {
-  bool b = true;
-  Json *ptJson = new Json;
+  bool b = false;
+  Json *ptRequest = new Json;
 
-  ptJson->i("Interface", "maestro");
-  ptJson->i("Function", "flowExec");
-  ptJson->i("User", "radial_central");
-  ptJson->i("Password", m_strPassword);
-  ptJson->m["Request"] = new Json;
-  ptJson->m["Request"]->i("Plan", (string)"a_"+getApplicationID());
-  ptJson->m["Request"]->i("Flow", "homeUsefulTools");
-  ptJson->m["Request"]->m["Request"] = new Json;
-  ptJson->m["Request"]->m["Request"]->i("FirstName", d.f);
-  ptJson->m["Request"]->m["Request"]->i("LastName", d.l);
-  ptJson->m["Request"]->m["Request"]->i("User", d.u);
-  if (hub("maestro", ptJson, e))
+  ptRequest->i("FirstName", d.f);
+  ptRequest->i("LastName", d.l);
+  ptRequest->i("User", d.u);
+  if (maestroFlowExec("radial_central", m_strPassword, "Central", "homeUsefulTools", ptRequest, d.p->m["o"], e))
   {
-    if (ptJson->exist({"Response", "Response"}))
-    {
-      b = true;
-      d.p->i("o", ptJson->m["Response"]->m["Response"]);
-    }
-    else
-    {
-      e = "Failed to receive a response.";
-    }
+    b = true;
   }
-  delete ptJson;
+  delete ptRequest;
 
   return b;
 }
