@@ -760,7 +760,9 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
         nodes.pop_front();
       }
       ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request approved by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+Json *ptTo = new Json(to);
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request approved by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2) << " --- " << ptTo;
+delete ptTo;
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestApprove");
       ptLive->i("Name", p);
