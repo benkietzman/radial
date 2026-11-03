@@ -4162,11 +4162,21 @@ bool Maestro::plan(radialUser &d, string &e)
     if (m_p.find(p) != m_p.end())
     {
       bool bEdit = isOwner(d, p);
+      size_t unApprovals = 0;
       stringstream ssPlan, ssType;
       b = true;
       o->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
       o->i("ID", m_p[p]->id);
       o->i("NumAccesses", to_string((m_p[p]->a != NULL && m_p[p]->a->exist({"a"}))?m_p[p]->a->m["a"]->m.size():0), 'n');
+      for (auto &c : m_p)
+      {
+        if (c.second->a != NULL && c.second->a->exist({"r"}) && c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
+        {
+          unApprovals++;
+        }
+      }
+      o->i("NumApprovals", to_string(unApprovals), 'n');
+      o->i("NumRequests", to_string((m_p[p]->a != NULL && m_p[p]->a->exist({"r"}))?m_p[p]->a->m["r"]->m.size():0), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("NumSchedules", to_string(m_p[p]->s.size()), 'n');
       o->i("Owner", m_p[p]->owner);
@@ -4422,11 +4432,21 @@ bool Maestro::plans(radialUser &d, string &e)
   for (auto &p : m_p)
   {
     bool bEdit = isOwner(d, p.first);
+    size_t unApprovals = 0;
     stringstream ssType;
     Json *ptPlan = new Json;
     ptPlan->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
     ptPlan->i("ID", p.second->id);
     ptPlan->i("NumAccesses", to_string((p.second->a != NULL && p.second->a->exist({"a"}))?p.second->a->m["a"]->m.size():0), 'n');
+    for (auto &c : m_p)
+    {
+      if (c.second->a != NULL && c.second->a->exist({"r"}) && c.second->a->m["r"]->m.find(p.first) != c.second->a->m["r"]->m.end())
+      {
+        unApprovals++;
+      }
+    }
+    ptPlan->i("NumApprovals", to_string(unApprovals), 'n');
+    ptPlan->i("NumRequests", to_string((p.second->a != NULL && p.second->a->exist({"r"}))?p.second->a->m["r"]->m.size():0), 'n');
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("NumSchedules", to_string(p.second->s.size()), 'n');
     ptPlan->i("Owner", p.second->owner);
