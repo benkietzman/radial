@@ -181,16 +181,16 @@ bool Maestro::accesses(radialUser &d, string &e)
       if (m_p[p]->a != NULL)
       {
         o->merge(m_p[p]->a, true, false);
-        for (auto &c : m_p)
+      }
+      for (auto &c : m_p)
+      {
+        if (c.second->a != NULL && c.second->a->exist({"r"}) && c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
         {
-          if (c.second->a != NULL && c.second->a->exist({"r"}) && c.second->a->m["r"]->m.find(p) != c.second->a->m["r"]->m.end())
+          if (!o->exist({"p"}))
           {
-            if (!o->exist({"p"}))
-            {
-              o->m["p"] = new Json;
-            }
-            o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
+            o->m["p"] = new Json;
           }
+          o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
         }
       }
     }
