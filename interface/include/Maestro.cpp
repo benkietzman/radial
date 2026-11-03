@@ -1381,6 +1381,21 @@ bool Maestro::flowExec(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     Json *ptFlow = NULL;
     m_mutex.lock();
+    if (p.size() < 2 || (p.substr(0, 2) != "a_" && p.substr(0, 2) != "u_"))
+    {
+      auto pIter = m_p.end();
+      for (auto c = m_p.begin(); pIter == m_p.end() && c != m_p.end(); c++)
+      {
+        if (c->second->owner == p)
+        {
+          pIter = c;
+        }
+      }
+      if (pIter != m_p.end())
+      {
+        p = pIter->second->owner;
+      }
+    }
     if (m_p.find(p) != m_p.end())
     {
       if (m_p[p]->f.find(f) != m_p[p]->f.end())
