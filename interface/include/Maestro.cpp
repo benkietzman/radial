@@ -1393,7 +1393,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
       }
       if (pIter != m_p.end())
       {
-        p = pIter->second->owner;
+        p = pIter->first;
       }
     }
     if (m_p.find(p) != m_p.end())
