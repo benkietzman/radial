@@ -1203,7 +1203,7 @@ export default
       <div class="input-group input-group"><span class="input-group-text">Filter</span><input type="text" class="form-control" id="narrow" c-model="narrow" c-keyup="refresh(true)" placeholder="narrow results"></div>
     </div>
   </div>
-  <div class="table-responsive">
+  <div class="mt-2 table-responsive">
     <table id="plans" class="table table-condensed table-striped">
     <thead>
       <tr>
