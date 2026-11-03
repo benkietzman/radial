@@ -366,7 +366,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "accessRemove");
         ptLive->i("Name", p);
@@ -543,7 +543,7 @@ bool Maestro::accessRequest(radialUser &d, string &e)
         nodes.pop_front();
       }
       ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access requested by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Access requested by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequest");
       ptLive->i("Name", p);
@@ -944,7 +944,7 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
         nodes.pop_front();
       }
       ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request canceled by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Access request canceled by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestCancel");
       ptLive->i("Name", p);
@@ -1122,7 +1122,7 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
         nodes.pop_front();
       }
       ssChat.str("");
-      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request denied by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+      ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Access request denied by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestDeny");
       ptLive->i("Name", p);
@@ -1643,7 +1643,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "04Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowRemove");
         ptLive->i("Name", p);
@@ -1762,7 +1762,7 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowUpdate");
         ptLive->i("Name", p);
@@ -4405,7 +4405,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "04Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "planRemove");
         ptLive->i("Name", p);
@@ -4757,7 +4757,7 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Schedule removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Schedule removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleRemove");
         ptLive->i("Name", p);
@@ -4880,7 +4880,7 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Schedule updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Schedule updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleUpdate");
         ptLive->i("Name", p);
