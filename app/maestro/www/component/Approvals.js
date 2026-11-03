@@ -160,8 +160,8 @@ export default
                   {{#each .}}
                   <tr>
                     <td class="w-100">{{.}}</td>
-                    <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestDeny('{{@../../key}}', '{{@../key}}', '{{.}}')" title="Deny Access Request"></button></td>
-                    <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="accessRequestApprove('{{@../../key}}', '{{@../key}}', '{{.}}')" title="Approve Access Request"></button></td>
+                    <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="accessRequestDeny('{{@../../key}}', '{{@../key}}', '{{.}}')" title="Deny Access Request"> Deny</button></td>
+                    <td><button class="btn btn-sm btn-success bi bi-plus-circle" c-click="accessRequestApprove('{{@../../key}}', '{{@../key}}', '{{.}}')" title="Approve Access Request"> Approve</button></td>
                   </tr>
                   {{/each}}
                 </tbody>
