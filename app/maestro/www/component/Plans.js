@@ -825,11 +825,11 @@ export default
   {{#if p}}
   <h3>{{p.Owner}}</h3>
   <div class="row">
-    <!-- [[[ access -->
+    <!-- [[[ accesses -->
     <div class="col-auto">
       <div class="card border border-warning mb-2 mt-3">
         <div class="card-header bg bg-warning fw-bold text-dark text-center text-nowrap" c-click="collapseExpand('access')" style="cursor: row-resize;">
-          Access ({{numberShort p.NumAccesses 0}})
+          Accesses ({{numberShort p.NumAccesses 0}})
         </div>
         {{#if expand.access}}
         <div class="card-body bg bg-warning-subtle">
