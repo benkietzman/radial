@@ -180,7 +180,23 @@ bool Maestro::accesses(radialUser &d, string &e)
       b = true;
       if (m_p[p]->a != NULL)
       {
-        o->merge(m_p[p]->a, true, false);
+        for (auto &t : m_p[p]->a->m)
+        {
+          o->m[t.first] = new Json;
+          for (auto &c : t.second->m)
+          {
+            o->m[t.first]->m[c.first] = new Json;
+            if (c.first.size() > 2 && (c.first.substr(0, 2) == "a_" || c.first.substr(0, 2) == "u_") && m_p.find(c.first) != m_p.end())
+            {
+              o->m[t.first]->m[c.first]->i("Owner", m_p[c.first]->owner);
+            }
+            else
+            {
+              o->m[t.first]->m[c.first]->i("Owner", c.first);
+            }
+            o->m[t.first]->m[c.first]->i("Scopes", c.second);
+          }
+        }
       }
       for (auto &c : m_p)
       {
@@ -190,7 +206,16 @@ bool Maestro::accesses(radialUser &d, string &e)
           {
             o->m["p"] = new Json;
           }
-          o->m["p"]->i(c.first, c.second->a->m["r"]->m[p]);
+          o->m["p"]->m[c.first] = new Json;
+          if (c.first.size() > 2 && (c.first.substr(0, 2) == "a_" || c.first.substr(0, 2) == "u_") && m_p.find(c.first) != m_p.end())
+          {
+            o->m["p"]->m[c.first]->i("Owner", m_p[c.first]->owner);
+          }
+          else
+          {
+            o->m["p"]->m[c.first]->i("Owner", c.first);
+          }
+          o->m["p"]->m[c.first]->i("Scopes", c.second->a->m["r"]->m[p]);
         }
       }
     }
