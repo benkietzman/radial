@@ -855,12 +855,12 @@ export default
               {{#each as.a}}
               <tr>
                 <td>
-                  {{@key}}
+                  {{Owner}}
                 </td>
                 <td>
                   <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
                   <tbody>
-                    {{#each .}}
+                    {{#each Scopes}}
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
@@ -891,12 +891,12 @@ export default
               {{#each as.r}}
               <tr>
                 <td>
-                  {{@key}}
+                  {{Owner}}
                 </td>
                 <td>
                   <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
                   <tbody>
-                    {{#each .}}
+                    {{#each Scopes}}
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
@@ -927,12 +927,12 @@ export default
               {{#each as.p}}
               <tr>
                 <td>
-                  {{@key}}
+                  {{Owner}}
                 </td>
                 <td>
                   <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
                   <tbody>
-                    {{#each .}}
+                    {{#each Scopes}}
                     <tr>
                       <td class="w-100">{{.}}</td>
                       {{#if @root.p.edit}}
