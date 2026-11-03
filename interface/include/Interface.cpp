@@ -3569,8 +3569,14 @@ bool Interface::maestroFlowExec(const string strUser, const string strPassword, 
 
   ptJson->i("Interface", "maestro");
   ptJson->i("Function", "flowExec");
-  ptJson->i("User", strUser);
-  ptJson->i("Password", strPassword);
+  if (!strUser.empty())
+  {
+    ptJson->i("User", strUser);
+  }
+  if (!strPassword.empty())
+  {
+    ptJson->i("Password", strPassword);
+  }
   ptJson->m["Request"] = new Json;
   ptJson->m["Request"]->i("Plan", strPlan);
   ptJson->m["Request"]->i("Flow", strFlow);
