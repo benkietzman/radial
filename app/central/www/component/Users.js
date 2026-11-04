@@ -589,7 +589,7 @@ export default
               for (let i = 0; i < s.user.reminders.length; i++)
               {
                 s.user.reminders[i].timestamp = s.user.reminders[i].datetime;
-                if (s.user.reminders[i].cron.value == '1' && s.user.reminders[i].sched != '')
+                if (s.user.reminders[i].cron.value == '0' && s.user.reminders[i].sched != '')
                 {
                   let date = new Date(s.user.reminders[i].sched * 1000);
                   let pad = n => String(n).padStart(2, "0");
