@@ -666,7 +666,7 @@ export default
           {
             s.s.Cron = 0;
           }
-          if (s.s.Cron && s.s.Cron != '1' && s.s.Sched && s.s.Sched != '')
+          if (c.isDefined(s.s.Cron) && s.s.Cron != '1' && c.isDefined(s.s.Sched) && s.s.Sched != '')
           {
             let date = new Date(s.s.Sched * 1000);
             let pad = n => String(n).padStart(2, "0");
