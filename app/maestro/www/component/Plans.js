@@ -199,6 +199,12 @@ export default
       s.u();
     };
     // ]]]
+    // [[[ cronSelect()
+    s.cronSelect = () =>
+    {
+      s.u();
+    };
+    // ]]]
     // [[[ flow
     // [[[ flow()
     s.flow = () =>
@@ -656,6 +662,10 @@ export default
         if (c.wsResponse(response, error))
         {
           s.s = response.Response;
+          if (!s.s.Cron)
+          {
+            s.s.Cron = 0;
+          }
           if (s.s.Cron && s.s.Cron != '1' && s.s.Sched && s.s.Sched != '')
           {
             let date = new Date(s.s.Sched * 1000);
@@ -1184,13 +1194,13 @@ export default
             <div class="col">
               <div class="input-group flex-nowrap mt-2">
                 <span class="input-group-text bg bg-secondary border bordrer-secondary">Cron</span>
-                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Cron" style="flex-grow: 0; flex-basis: 100px;"><option value="0">No</option><option value="1">Yes</option></select>
+                <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Cron" c-change="cronSelect()" style="flex-grow: 0; flex-basis: 100px;"><option value="0">No</option><option value="1">Yes</option></select>
               </div>
             </div>
             <div class="col">
               <div class="input-group flex-nowrap mt-2">
                 <span class="input-group-text bg bg-secondary border bordrer-secondary">Sched</span>
-                <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="s.Sched" style="flex-grow: 0; flex-basis: 204px;" placeholder="{{#ifCond s.Cron "==" "1"}}* * * * *{{else}}YYYY-MM-DD HH:MM:SS{{/ifCond}}">
+                <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="s.Sched" style="flex-grow: 0; flex-basis: 204px;" placeholder="{{#ifCond s.Cron "==" "1"}}* * * * *{{else}}{{#ifCond ../s.Cron.val "==" "1"}}* * * * *{{else}}YYYY-MM-DD HH:MM:SS{{/ifCond}}{{/ifCond}}">
               </div>
             </div>
           </div>
