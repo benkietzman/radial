@@ -259,6 +259,13 @@ export default
         {
           lineNumbers: true,
           mode: "javascript",
+          gutters: ['CodeMirror-lint-markers'],
+          lint:
+          {
+            getAnnotations: s.getAnnotations,
+            async: false,
+            delay: 300
+          },
           theme: 'dracula',
           indentUnit: 0,
           tabSize: 2,
@@ -434,6 +441,30 @@ export default
         }
         s.u();
       });
+    };
+    // ]]]
+    // [[[ getAnnotations()
+    s.getAnnotations = (strText, options, cm) =>
+    {
+      try
+      {
+        acorn.parse(strText,
+        {
+          ecmaVersion: "latest",
+          sourceType: "script"
+        });
+        return [];
+      }
+      catch (err)
+      {
+        let nIndex = Math.max(0, Math.min(err.pos ?? 0, strText.length));
+        return [{
+          'from': cm.posFromIndex(nIndex),
+          to: cm.posFromIndex(Math.min(nIndex + 1, strText.length)),
+          message: err.message,
+          severity: "error"
+        }];
+      }
     };
     // ]]]
     // [[[ getScopes()
