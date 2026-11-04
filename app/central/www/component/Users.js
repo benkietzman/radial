@@ -85,7 +85,7 @@ export default
         {
           strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
         }
-        strSched = Math.floor(new Date(s.s.Sched.v).getTime() / 1000);
+        strSched = Math.floor(new Date(s.reminder.sched.v).getTime() / 1000);
       }
       let request = {Interface: 'central', 'Function': 'userReminderAdd', Request: c.simplify(s.reminder)};
       request.Request.sched = strSched;
