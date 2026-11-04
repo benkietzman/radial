@@ -809,7 +809,6 @@ export default
     s.fs = null;
     s.s = null;
     s.ss = null;
-    s.u();
     if (a.ready())
     {
       s.init();
