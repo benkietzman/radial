@@ -1071,7 +1071,7 @@ export default
             </div>
           </div>
           <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
-          <div class="input-group input-group-small flex-nowrap mb-2">
+          <div class="input-group input-group-sm flex-nowrap mb-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Editor</span>
             <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditorKeyMap('default')"{{#ifCond editorKeyMap "==" "default"}} checked{{/ifCond}}>
             <label class="btn btn-light" for="editorText">Text</label>
