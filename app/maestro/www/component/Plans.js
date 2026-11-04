@@ -250,6 +250,10 @@ export default
       let script = document.getElementById('script');
       if (s.strFlow != '' && c.isDefined(script) && c.isObject(script) && c.isDefined(script.value))
       {
+        CodeMirror.commands.save = (cm) =>
+        {
+          s.flowUpdate();
+        };
         s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
         {
           lineNumbers: true,
