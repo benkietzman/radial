@@ -767,7 +767,7 @@ export default
           {
             strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
           }
-          strSched = Math.floor(new Date(s.s.Sched.v).getTime() / 1000);
+          strSched = Math.floor(new Date(strSched).getTime() / 1000);
         }
         s['scheduleStatus'].v = '';
         let request = {Interface: 'maestro', 'Function': 'scheduleUpdate', Request: {Plan: s.strPlan, Schedule: s.strSchedule, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Cron: s.s.Cron.v, Sched: strSched, Description: s.s.Description.v, Request: s.s.Request.v}};
