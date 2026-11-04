@@ -1086,11 +1086,6 @@ export default
             <div class="col" c-click="collapseExpand('flow')" style="cursor: row-resize;">
               Flow - {{strFlow}}
             </div>
-            <div class="col-auto">
-              {{#if p.edit}}
-              <button class="btn btn-sm btn-warning bi bi-save text-nowrap" c-click="flowUpdate()" title="Save Flow"> Save</button> 
-              {{/if}}
-            </div>
           </div>
         </div>
         {{#if expand.flow}}
@@ -1107,18 +1102,31 @@ export default
             </div>
           </div>
           <textarea class="form-control bg bg-success-subtle border border-success mb-2" c-model="f.Description" rows="4" placeholder="description"></textarea>
-          <div class="input-group input-group-sm flex-nowrap mb-2">
-            <span class="input-group-text bg bg-secondary border bordrer-secondary">Editor</span>
-            <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditorKeyMap('default')"{{#ifCond editorKeyMap "==" "default"}} checked{{/ifCond}}>
-            <label class="btn btn-light" for="editorText">Text</label>
-            <input type="radio" class="btn-check" name="edtor" id="editorVim" autocomplete="off"c-click="flowEditorKeyMap('vim')" {{#ifCond editorKeyMap "==" "vim"}} checked{{/ifCond}}>
-            <label class="btn btn-light" for="editorVim">VIM</label>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mb-2" c-model="request" placeholder="JSON request"></textarea>
+          <div class="row">
+            <div class="col-auto">
+              <div class="input-group input-group-sm flex-nowrap mb-2">
+                <span class="input-group-text bg bg-secondary border bordrer-secondary">Editor</span>
+                <input type="radio" class="btn-check" name="edtor" id="editorText" autocomplete="off" c-click="flowEditorKeyMap('default')"{{#ifCond editorKeyMap "==" "default"}} checked{{/ifCond}}>
+                <label class="btn btn-light" for="editorText">Text</label>
+                <input type="radio" class="btn-check" name="edtor" id="editorVim" autocomplete="off"c-click="flowEditorKeyMap('vim')" {{#ifCond editorKeyMap "==" "vim"}} checked{{/ifCond}}>
+                <label class="btn btn-light" for="editorVim">VIM</label>
+              </div>
+            </div>
+            <div class="col">
+              <span class="float-end text-warning" c-model="flowStatus"></span>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-sm btn-warning bi bi-save text-nowrap" c-click="flowUpdate()" title="Save Flow"> Save</button> 
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-sm btn-success bi bi-box-arrow-right text-nowrap" c-click="flowExec()" title="Execute flow"> Execute</button>
+            </div>
           </div>
           <div id="editor-box" style="height: 600px;">
             <textarea id="script" name="script" class="form-control mt-2" style="font-family: monospace;">{{f.Script}}</textarea>
             <div id="resize-handle" aria-label="Resize editor" title="Drag to resize"></div>
           </div>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="request" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           <pre class="mt-2" c-model="response" style="white-space: pre-wrap;"></pre>
           {{else}}
@@ -1130,10 +1138,6 @@ export default
         </div>
         {{/if}}
         <div class="card-footer">
-          {{#if p.edit}}
-          <button class="btn btn-sm btn-success bi bi-box-arrow-right text-nowrap" c-click="flowExec()" title="Execute flow"> Execute</button>
-          <span class="float-end text-warning" c-model="flowStatus"></span>
-          {{/if}}
         </div>
       </div>
     </div>
