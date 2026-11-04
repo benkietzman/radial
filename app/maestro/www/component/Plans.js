@@ -831,10 +831,10 @@ export default
   // [[[ template
   template: `
   <!-- [[[ plan -->
+  {{#if strPlan}}
   {{#if p.edit}}
   <button class="btn btn-sm btn-danger bi bi-trash float-end text-nowrap" c-click="planRemove()" title="Remove Plan"> Remove Plan</button>
   {{/if}}
-  {{#if p}}
   <h3>{{p.Owner}}</h3>
   <div class="row">
     <!-- [[[ accesses -->
