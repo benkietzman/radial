@@ -77,7 +77,18 @@ export default
     // [[[ addReminder()
     s.addReminder = () =>
     {
+      let strSched = s.reminder.sched.v;
+      if (s.reminder.v.value == '0' && strSched != '')
+      { 
+        let nIndex;
+        if ((nIndex = strSched.indexOf(' ')) != -1)
+        {
+          strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
+        }
+        strSched = Math.floor(new Date(s.s.Sched.v).getTime() / 1000);
+      }
       let request = {Interface: 'central', 'Function': 'userReminderAdd', Request: c.simplify(s.reminder)};
+      request.Request.sched = strSched;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -149,8 +160,19 @@ export default
     // [[[ editReminder()
     s.editReminder = (nIndex) =>
     {
+      let strSched = s.user.reminders[nIndex].sched.v;
+      if (s.user.reminders[nIndex].v.value == '0' && strSched != '')
+      { 
+        let nIndex;
+        if ((nIndex = strSched.indexOf(' ')) != -1)
+        {
+          strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
+        }
+        strSched = Math.floor(new Date(s.s.Sched.v).getTime() / 1000);
+      }
       s.info.v = 'Updating reminder...';
       let request = {Interface: 'central', 'Function': 'userReminderEdit', Request: c.simplify(s.user.reminders[nIndex])};
+      request.Request.sched = strSched;
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -567,6 +589,12 @@ export default
               for (let i = 0; i < s.user.reminders.length; i++)
               {
                 s.user.reminders[i].timestamp = s.user.reminders[i].datetime;
+                if (s.user.reminders[i].cron == '1' && s.user.reminders[i].sched != '')
+                {
+                  let date = new Date(s.user.reminders[i].sched * 1000);
+                  let pad = n => String(n).padStart(2, "0");
+                  s.user.reminders[i].sched = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+                }
               }
               s.cronUpdate();
             }

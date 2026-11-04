@@ -4577,36 +4577,43 @@ void Central::schedule(string strPrefix)
           {
             if (getReminderRow["cron"] == "0")
             {
-              string strDate, strDay, strHour, strMinute, strMonth, strSecond, strTime, strYear;
-              stringstream ssDate, ssDateTime(getReminderRow["sched"]), ssDay, ssHour, ssMinute, ssMonth, ssSecond, ssTime, ssYear;
-              struct tm tTime;
-              memset(&tTime, 0, sizeof(struct tm));
-              getline(ssDateTime, strDate, ' ');
-              ssDate.str(strDate);
-              getline(ssDate, strYear, '-');
-              ssYear.str(strYear);
-              ssYear >> tTime.tm_year;
-              tTime.tm_year -= 1900;
-              getline(ssDate, strMonth, '-');
-              ssMonth.str(strMonth);
-              ssMonth >> tTime.tm_mon;
-              tTime.tm_mon--;
-              getline(ssDate, strDay, '-');
-              ssDay.str(strDay);
-              ssDay >> tTime.tm_mday;
-              getline(ssDateTime, strTime, ' ');
-              ssTime.str(strTime);
-              getline(ssTime, strHour, ':');
-              ssHour.str(strHour);
-              ssHour >> tTime.tm_hour;
-              getline(ssTime, strMinute, ':');
-              ssMinute.str(strMinute);
-              ssMinute >> tTime.tm_min;
-              getline(ssTime, strSecond, ':');
-              ssSecond.str(strSecond);
-              ssSecond >> tTime.tm_sec;
-              tTime.tm_isdst = -1;
-              reminders[getReminderRow["id"]] = mktime(&tTime);
+              if (getReminderRow["sched"].size() > 4 && getReminderRow["sched"][4] == '-')
+              {
+                string strDate, strDay, strHour, strMinute, strMonth, strSecond, strTime, strYear;
+                stringstream ssDate, ssDateTime(getReminderRow["sched"]), ssDay, ssHour, ssMinute, ssMonth, ssSecond, ssTime, ssYear;
+                struct tm tTime;
+                memset(&tTime, 0, sizeof(struct tm));
+                getline(ssDateTime, strDate, ' ');
+                ssDate.str(strDate);
+                getline(ssDate, strYear, '-');
+                ssYear.str(strYear);
+                ssYear >> tTime.tm_year;
+                tTime.tm_year -= 1900;
+                getline(ssDate, strMonth, '-');
+                ssMonth.str(strMonth);
+                ssMonth >> tTime.tm_mon;
+                tTime.tm_mon--;
+                getline(ssDate, strDay, '-');
+                ssDay.str(strDay);
+                ssDay >> tTime.tm_mday;
+                getline(ssDateTime, strTime, ' ');
+                ssTime.str(strTime);
+                getline(ssTime, strHour, ':');
+                ssHour.str(strHour);
+                ssHour >> tTime.tm_hour;
+                getline(ssTime, strMinute, ':');
+                ssMinute.str(strMinute);
+                ssMinute >> tTime.tm_min;
+                getline(ssTime, strSecond, ':');
+                ssSecond.str(strSecond);
+                ssSecond >> tTime.tm_sec;
+                tTime.tm_isdst = -1;
+                reminders[getReminderRow["id"]] = mktime(&tTime);
+              }
+              else
+              {
+                reminders[getReminderRow["id"]] = atoi(getReminderRow["sched"].c_str());
+              }
             }
             else if (!cron(reminders[getReminderRow["id"]], getReminderRow["sched"], strError))
             {
