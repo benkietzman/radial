@@ -396,7 +396,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s['flowStatus'].v = 'updated flow';
+            s['flowStatus'].v = 'saved flow';
           }
           else
           {
@@ -734,7 +734,7 @@ export default
           let error = {};
           if (c.wsResponse(response, error))
           {
-            s['scheduleStatus'].v = 'updated schedule';
+            s['scheduleStatus'].v = 'saved schedule';
           }
           else
           {
