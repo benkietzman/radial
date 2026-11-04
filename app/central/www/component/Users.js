@@ -85,7 +85,7 @@ export default
         {
           strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
         }
-        strSched = Math.floor(new Date(s.reminder.sched.v).getTime() / 1000);
+        strSched = Math.floor(new Date(strSched).getTime() / 1000);
       }
       let request = {Interface: 'central', 'Function': 'userReminderAdd', Request: c.simplify(s.reminder)};
       request.Request.sched = strSched;
@@ -168,7 +168,7 @@ export default
         {
           strSched = strSched.substr(0, nIndex) + 'T' + strSched.substr(nIndex + 1);
         }
-        strSched = Math.floor(new Date(s.user.reminders[nIndex].sched.v).getTime() / 1000);
+        strSched = Math.floor(new Date(strSched).getTime() / 1000);
       }
       s.info.v = 'Updating reminder...';
       let request = {Interface: 'central', 'Function': 'userReminderEdit', Request: c.simplify(s.user.reminders[nIndex])};
