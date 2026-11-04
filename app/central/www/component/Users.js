@@ -78,7 +78,7 @@ export default
     s.addReminder = () =>
     {
       let strSched = s.reminder.sched.v;
-      if (s.reminder.v.value == '0' && strSched != '')
+      if (s.reminder.cron.v.value == '0' && strSched != '')
       { 
         let nIndex;
         if ((nIndex = strSched.indexOf(' ')) != -1)
@@ -161,7 +161,7 @@ export default
     s.editReminder = (nIndex) =>
     {
       let strSched = s.user.reminders[nIndex].sched.v;
-      if (s.user.reminders[nIndex].v.value == '0' && strSched != '')
+      if (s.user.reminders[nIndex].cron.v.value == '0' && strSched != '')
       { 
         let nIndex;
         if ((nIndex = strSched.indexOf(' ')) != -1)
@@ -589,7 +589,7 @@ export default
               for (let i = 0; i < s.user.reminders.length; i++)
               {
                 s.user.reminders[i].timestamp = s.user.reminders[i].datetime;
-                if (s.user.reminders[i].cron == '1' && s.user.reminders[i].sched != '')
+                if (s.user.reminders[i].cron.value == '1' && s.user.reminders[i].sched != '')
                 {
                   let date = new Date(s.user.reminders[i].sched * 1000);
                   let pad = n => String(n).padStart(2, "0");
