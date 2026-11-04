@@ -253,6 +253,7 @@ export default
         CodeMirror.commands.save = (cm) =>
         {
           s.flowUpdate();
+          cm.openNotification('"'+s.strFlow+'" '+((document.getElementById('script').value.match(/\n|\n/g) || []).length+1)+'L, '+document.getElementById('script').value.length+'B written');
         };
         s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
         {
