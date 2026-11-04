@@ -15,15 +15,8 @@ export default
     let c = common;
     let s = c.scope('Plans',
     {
-      // [[[ u()
-      u: () =>
-      {
-        c.update('Plans');
-      },
-      // ]]]
       a: a,
       c: c,
-      editor: 'text',
       editorKeyMap: 'default',
       expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
     });
@@ -204,10 +197,6 @@ export default
     {
       s.expand[strKey] = ((s.expand[strKey])?false:true);
       s.u();
-      if (s.strFlow != '')
-      {
-        s.flowEditor();
-      }
     };
     // ]]]
     // [[[ flow
@@ -227,7 +216,6 @@ export default
           c.pushErrorMessage(error.message);
         }
         s.u();
-        s.flowEditor();
       });
     };
     // ]]]
@@ -259,40 +247,44 @@ export default
     // [[[ flowEditor()
     s.flowEditor = () =>
     {
-      s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
+      let script = document.getElementById('script');
+      if (s.strFlow != '' && c.isDefined(script) && c.isObject(script) && c.isDefined(script.value))
       {
-        lineNumbers: true,
-        mode: "javascript",
-        theme: 'dracula',
-        indentUnit: 0,
-        tabSize: 2,
-        keyMap: s.editorKeyMap
-      });
-      let resizeObserver = new ResizeObserver(() =>
-      {
-        s.editor.refresh();
-      });
-      resizeObserver.observe(document.getElementById('editor-box'));
-      let box = document.getElementById("editor-box");
-      let handle = document.getElementById("resize-handle");
-      let startY, startHeight;
-      handle.addEventListener('pointerdown', (event) =>
-      {
-        event.preventDefault();
-        startY = event.clientY;
-        startHeight = box.getBoundingClientRect().height;
-        handle.setPointerCapture(event.pointerId);
-      });
-      handle.addEventListener('pointermove', (event) =>
-      {
-        if (!handle.hasPointerCapture(event.pointerId))
+        s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
         {
-          return;
-        }
-        let newHeight = Math.max(150, startHeight + event.clientY - startY);
-        box.style.height = newHeight + "px";
-        s.editor.refresh();
-      });
+          lineNumbers: true,
+          mode: "javascript",
+          theme: 'dracula',
+          indentUnit: 0,
+          tabSize: 2,
+          keyMap: s.editorKeyMap
+        });
+        let resizeObserver = new ResizeObserver(() =>
+        {
+          s.editor.refresh();
+        });
+        resizeObserver.observe(document.getElementById('editor-box'));
+        let box = document.getElementById("editor-box");
+        let handle = document.getElementById("resize-handle");
+        let startY, startHeight;
+        handle.addEventListener('pointerdown', (event) =>
+        {
+          event.preventDefault();
+          startY = event.clientY;
+          startHeight = box.getBoundingClientRect().height;
+          handle.setPointerCapture(event.pointerId);
+        });
+        handle.addEventListener('pointermove', (event) =>
+        {
+          if (!handle.hasPointerCapture(event.pointerId))
+          {
+            return;
+          }
+          let newHeight = Math.max(150, startHeight + event.clientY - startY);
+          box.style.height = newHeight + "px";
+          s.editor.refresh();
+        });
+      }
     };
     // ]]]
     // [[[ flowEditoKeyMap()
@@ -759,6 +751,13 @@ export default
       s.u();
     };
     // ]]]
+      // [[[ u()
+      s.u = () =>
+      {
+        c.update('Plans');
+        s.flowEditor();
+      },
+      // ]]]
     // [[[ user()
     s.user = () =>
     {
