@@ -688,7 +688,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData, const string strSource)
 {
   // {{{ prep work
-  list<string> nodes;
+  map<string, string> nodes;
   string strAction = var("Action", ptData), strError, strQuery, strValue;
   stringstream ssQuery, ssText;
   throughput("analyze");
@@ -698,7 +698,7 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
   m_mutexShare.lock();
   for (auto &link : m_l)
   {
-    nodes.push_back(link->strNode);
+    nodes[link->strNode] = link->strServer;
   }
   m_mutexShare.unlock();
   if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource, nodes, &m_bShutdown))
@@ -4541,7 +4541,7 @@ void Irc::quit()
 }
 // }}}
 // {{{ setAnalyze()
-void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string, list<string>, bool *))
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string, map<string, string>, bool *))
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;
