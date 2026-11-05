@@ -604,14 +604,30 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
               if (p.substr(0, 2) == "a_")
               {
                 ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
-                ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+                if (t == "core")
+                {
+                  ssText << " core function";
+                  ssHtml << " core function";
+                }
+                else
+                {
+                  ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
+                  ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+                }
               }
               else if (p.substr(0, 2) == "u_")
               {
                 ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
-                ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+                if (t == "core")
+                {
+                  ssText << " core function";
+                  ssHtml << " core function";
+                }
+                else
+                {
+                  ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
+                  ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+                }
               }
               ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
               ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
