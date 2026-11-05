@@ -486,7 +486,7 @@ void Hub::process(string strPrefix)
               bool bExit = false;
               inotify_event *pEvent;
               int nReturn;
-              map<int, vector<string> > m, s;
+              map<int, vector<string> > m;
               map<string, map<string, size_t> > t;
               pid_t nPid = getpid();
               pollfd *fds;

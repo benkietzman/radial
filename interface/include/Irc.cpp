@@ -688,13 +688,20 @@ void Irc::analyze(string strPrefix, const string strTarget, const string strUser
 void Irc::analyze(string strPrefix, const string strTarget, const string strUserID, const string strIdent, const string strFirstName, const string strLastName, const bool bAdmin, map<string, bool> &auth, list<string> &actions, Json *ptData, const string strSource)
 {
   // {{{ prep work
+  list<string> nodes;
   string strAction = var("Action", ptData), strError, strQuery, strValue;
   stringstream ssQuery, ssText;
   throughput("analyze");
   ssText << char(3) << "00,02 " << m_strNode << " " << char(3) << " " << char(3) << "00,05 " << m_strName << " " << char(3) << " " << char(3) << "00,06 " << ((!strAction.empty())?strAction:"actions") << " " << char(3);
   // }}}
   // {{{ callback
-  if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource))
+  m_mutexShare.lock();
+  for (auto &link : m_l)
+  {
+    nodes.push_back(link->strNode);
+  }
+  m_mutexShare.unlock();
+  if (m_pAnalyzeCallback2 != NULL && m_pAnalyzeCallback2(strPrefix, strTarget, strUserID, strIdent, strFirstName, strLastName, bAdmin, auth, strAction, ptData, ssText, strSource, nodes, &m_bShutdown))
   {
   }
   // }}}
@@ -4534,7 +4541,7 @@ void Irc::quit()
 }
 // }}}
 // {{{ setAnalyze()
-void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string))
+void Irc::setAnalyze(bool (*pCallback1)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, list<string> &, const string, stringstream &, Json *, const string), bool (*pCallback2)(string, const string, const string, const string, const string, const string, const bool, map<string, bool> &, const string, Json *, stringstream &, const string, list<string>, bool *))
 {
   m_pAnalyzeCallback1 = pCallback1;
   m_pAnalyzeCallback2 = pCallback2;
