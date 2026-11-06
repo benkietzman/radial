@@ -117,7 +117,7 @@ export default
       </tr>
     </thead>
     <tbody>
-      {{#each r}}
+      {{#each ../r}}
       <tr>
         <td>
           {{Node}}
