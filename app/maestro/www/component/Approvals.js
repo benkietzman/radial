@@ -144,12 +144,12 @@ export default
       {{#each ../as}}
       <tr>
         <td>
-          {{@key}}
+          <a href="#/Plans/{{@key}}">{{Owner}}</a>
         </td>
         <td>
           <table class="table table-sm table-condensed" style="--bs-table-bg: transparent;">
           <tbody>
-            {{#each .}}
+            {{#each Scopes}}
             <tr>
               <td>
                 {{@key}}
