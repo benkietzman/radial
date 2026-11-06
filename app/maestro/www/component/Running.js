@@ -134,7 +134,7 @@ export default
           {{datetime Time}}
         </td>
         <td>
-          <button class="btn btn-sm btn-danger btn-trash" c-click="stop(@key)">Stop</button>
+          <button class="btn btn-sm btn-danger btn-trash" c-click="stop({{@key}})">Stop</button>
         </td>
       </tr>
       {{/each}}
