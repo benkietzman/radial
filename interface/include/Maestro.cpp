@@ -4681,7 +4681,7 @@ bool Maestro::running(radialUser &d, string &e)
       ptLink->m["Request"]->i("_broadcast", "1", '1');
       if (hub("link", ptLink, e) && ptLink->exist({"Response"}))
       {
-        o->i(m_strNode, ptLink->m["Response"]);
+        o->merge(ptLink->m["Response"], true, false);
       }
       delete ptLink;
       nodes.pop_front();
