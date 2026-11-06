@@ -241,8 +241,10 @@ bool Maestro::accesses(radialUser &d, string &e)
             if (!o->exist({c.first}))
             {
               o->m[c.first] = new Json;
+              o->m[c.first]->i("Owner", c.second->owner);
+              o->m[c.first]->m["Scopes"] = new Json;
             }
-            o->m[c.first]->i(g.first, g.second);
+            o->m[c.first]->m["Scopes"]->i(g.first, g.second);
           }
         }
       }
