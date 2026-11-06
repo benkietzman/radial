@@ -30,7 +30,7 @@ struct radialMaestroJavascript
 // {{{ radialMaestroRunning
 struct radialMaestroRunning
 {
-  bool *pbKill;
+  bool *pbStop;
   time_t CTime;
 };
 // }}}
@@ -88,6 +88,7 @@ class Maestro : public Interface
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p, const bool a = false);
   void load(string strPrefix);
+  bool stop(radialUser &d, string &e);
   bool owners(radialUser &d, string &e);
   bool plan(radialUser &d, string &e);
   bool planAdd(radialUser &d, string &e);

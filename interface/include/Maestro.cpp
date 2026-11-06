@@ -62,6 +62,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["flowRemove"] = &Maestro::flowRemove;
   m_functions["flows"] = &Maestro::flows;
   m_functions["flowUpdate"] = &Maestro::flowUpdate;
+  m_functions["stop"] = &Maestro::stop;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
   m_functions["planRemove"] = &Maestro::planRemove;
@@ -4638,20 +4639,21 @@ bool Maestro::running(radialUser &d, string &e)
   bool b = true;
   Json *o = d.p->m["o"];
 
+  o->m[m_strNode] = new Json;
   m_mutex.lock();
   for (auto &p : m_p)
   {
     if (!p.second->r.empty())
     {
-      o->m[p.first] = new Json;
-      o->m[p.first]->i("Owner", p.second->owner);
-      o->m[p.first]->m["Flows"] = new Json;
+      o->m[m_strNode]->m[p.first] = new Json;
+      o->m[m_strNode]->m[p.first]->i("Owner", p.second->owner);
+      o->m[m_strNode]->m[p.first]->m["Flows"] = new Json;
       for (auto &f : p.second->r)
       {
-        o->m[p.first]->m["Flows"]->m[f.first] = new Json;
+        o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first] = new Json;
         for (auto &r : f.second)
         {
-          o->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
+          o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
         }
       }
     }
@@ -5143,6 +5145,30 @@ bool Maestro::scopes(radialUser &d, string &e)
     else
     {
       e = "Please provide a valid Type:  application, core, user.";
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ stop()
+bool Maestro::stop(radialUser &d, string &e)
+{
+  bool b = true;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Flow", "Plan", "Thread"}, i, e))
+  {
+    long lThread = atol(i->m["Thread"]->v.c_str());
+    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
+    if (isOwner(d, p))
+    {
+      m_mutex.lock();
+      m_mutex.unlock();
+    }
+    else
+    {
+      e = "You are not the owner.";
     }
   }
 
