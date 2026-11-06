@@ -4653,7 +4653,7 @@ bool Maestro::running(radialUser &d, string &e)
           o->m[p.first]->m["Flows"]->m[f.first] = new Json;
           for (auto &r : f.second)
           {
-            o->m[p.first]->m["Flows"]->i(to_string(r.first), to_string(r.second->CTime), 'n');
+            o->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
           }
         }
       }
