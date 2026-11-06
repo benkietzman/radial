@@ -4466,7 +4466,6 @@ bool Maestro::planAdd(radialUser &d, string &e)
           chat("#maestro", ssChat.str());
           ptLive->i("Action", "planAdd");
           ptLive->i("Plan", p);
-          ptLive->i("Flow", f);
           live("Maestro", "", ptLive);
           delete ptLive;
         }
@@ -4609,7 +4608,6 @@ bool Maestro::planRemove(radialUser &d, string &e)
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "planRemove");
         ptLive->i("Plan", p);
-        ptLive->i("Flow", f);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
