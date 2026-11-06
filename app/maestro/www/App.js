@@ -56,6 +56,7 @@ class App
     {
       this.c.menu.left[unIndex++] = {value: 'Approvals', href: '/Approvals', icon: 'plus-circle', active: null};
     }
+    this.c.menu.left[unIndex++] = {value: 'Running', href: '/Running', icon: 'cpu', active: null};
     unIndex = 0;
     this.c.menu.right[unIndex++] = {value: 'Info', href: '/Info', icon: 'info-circle', active: null};
     if (this.c.isValid())
