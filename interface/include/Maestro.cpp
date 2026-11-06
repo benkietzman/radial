@@ -4677,6 +4677,7 @@ bool Maestro::running(radialUser &d, string &e)
       ptLink->i("Interface", "maestro");
       ptLink->i("Node", nodes.front());
       ptLink->i("Function", "running");
+      ptLink->m["Request"] = new Json;
       ptLink->m["Request"]->i("_broadcast", "1", '1');
       if (hub("link", ptLink, e) && ptLink->exist({"Response"}))
       {
