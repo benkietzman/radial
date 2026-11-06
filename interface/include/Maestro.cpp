@@ -402,7 +402,9 @@ bool Maestro::accessRemove(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Access removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "accessRemove");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Access", a);
+        ptLive->i("Scope", s);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -579,7 +581,9 @@ bool Maestro::accessRequest(radialUser &d, string &e)
       ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Access requested by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequest");
-      ptLive->i("Name", p);
+      ptLive->i("Plan", p);
+      ptLive->i("Access", a);
+      ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
       email("", to, "Maestro:  Access Request", ssText.str(), ssHtml.str());
@@ -812,7 +816,9 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
       ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Access request approved by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestApprove");
-      ptLive->i("Name", p);
+      ptLive->i("Plan", p);
+      ptLive->i("Access", a);
+      ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
       email("", to, "Maestro:  Access Request Approved", ssText.str(), ssHtml.str());
@@ -996,7 +1002,9 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
       ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Access request canceled by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestCancel");
-      ptLive->i("Name", p);
+      ptLive->i("Plan", p);
+      ptLive->i("Access", a);
+      ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
       email("", to, "Maestro:  Access Request Canceled", ssText.str(), ssHtml.str());
@@ -1190,7 +1198,9 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
       ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Access request denied by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
       chat("#maestro", ssChat.str());
       ptLive->i("Action", "accessRequestDeny");
-      ptLive->i("Name", p);
+      ptLive->i("Plan", p);
+      ptLive->i("Access", a);
+      ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
       email("", to, "Maestro:  Access Request Denied", ssText.str(), ssHtml.str());
@@ -1421,7 +1431,8 @@ bool Maestro::flowAdd(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowAdd");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Flow", f);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -1488,6 +1499,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
           JSRuntime *jsrun = JS_NewRuntime();
           JSContext *jsctx = JS_NewContext(jsrun);
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
+          Json *ptLive = new Json;
           for (auto &i : m_javascript)
           {
             if (i.second->function != NULL)
@@ -1523,6 +1535,10 @@ bool Maestro::flowExec(radialUser &d, string &e)
             m_p[p]->r[f][lThreadID] = ptRunning;
           }
           m_mutex.unlock();
+          ptLive->i("Action", "flowExec");
+          ptLive->i("Plan", p);
+          ptLive->i("Flow", f);
+          live("Maestro", "", ptLive);
           if (pbStop != NULL)
           {
             JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
@@ -1544,6 +1560,8 @@ bool Maestro::flowExec(radialUser &d, string &e)
             m_mutex.unlock();
             delete pbStop;
           }
+          live("Maestro", "", ptLive);
+          delete ptLive;
           if (JS_IsException(jsres))
           {
             JSValue jsexc = JS_GetException(jsctx);
@@ -1660,6 +1678,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
+    Json *ptLive = new Json;
     for (auto &c : m_javascript)
     {
       if (c.second->function != NULL)
@@ -1693,6 +1712,10 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
       m_p[p]->r[f][lThreadID] = ptRunning;
     }
     m_mutex.unlock();
+    ptLive->i("Action", "flowExec");
+    ptLive->i("Plan", p);
+    ptLive->i("Flow", f);
+    live("Maestro", "", ptLive);
     if (pbStop != NULL)
     {
       JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
@@ -1714,6 +1737,8 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
       m_mutex.unlock();
       delete pbStop;
     }
+    live("Maestro", "", ptLive);
+    delete ptLive;
     JS_FreeValue(jsctx, jsglobal);
     JS_FreeValue(jsctx, jsres);
     JS_FreeContext(jsctx);
@@ -1807,7 +1832,8 @@ bool Maestro::flowRemove(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "04Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowRemove");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Flow", f);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -1926,7 +1952,8 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowUpdate");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Flow", f);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -4438,7 +4465,8 @@ bool Maestro::planAdd(radialUser &d, string &e)
           ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
           ptLive->i("Action", "planAdd");
-          ptLive->i("Name", p);
+          ptLive->i("Plan", p);
+          ptLive->i("Flow", f);
           live("Maestro", "", ptLive);
           delete ptLive;
         }
@@ -4580,7 +4608,8 @@ bool Maestro::planRemove(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "04Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "planRemove");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Flow", f);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -4810,7 +4839,8 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Schedule added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleAdd");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Schedule", s);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -4990,7 +5020,8 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Schedule removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleRemove");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Schedule", s);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
@@ -5113,7 +5144,8 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
         ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Schedule updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleUpdate");
-        ptLive->i("Name", p);
+        ptLive->i("Plan", p);
+        ptLive->i("Schedule", s);
         live("Maestro", "", ptLive);
         delete ptLive;
       }
