@@ -5200,6 +5200,7 @@ bool Maestro::stop(radialUser &d, string &e)
           {
             if (m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
             {
+              b = true;
               (*m_p[p]->r[f][lThread]->pbStop) = true;
             }
             else
