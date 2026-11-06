@@ -102,6 +102,7 @@ export default
   // ]]]
   // [[[ template
   template: `
+  {{#isValid}}
   <h5>Running Flows</h5>
   <div class="table-responsive">
     <table class="table table-sm table-condensed table-striped">
@@ -141,6 +142,9 @@ export default
     </tbody>
     </table>
   </div>
+  {{else}}
+    <b class="text-warning">Please login to view this page.</b>
+  {{/isValid}}
   `
   // ]]]
 }
