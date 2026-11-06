@@ -27,10 +27,18 @@ struct radialMaestroJavascript
   JSCFunction *function;
 };
 // }}}
+// {{{ radialMaestroRunning
+struct radialMaestroRunning
+{
+  bool *pbKill;
+  time_t CTime;
+};
+// }}}
 // {{{ radialMaestroPlan
 struct radialMaestroPlan
 {
   char t;
+  map<string, map<long, radialMaestroRunning *> > r;
   map<string, Json *> f;
   map<string, Json *> s;
   string id;
@@ -85,6 +93,7 @@ class Maestro : public Interface
   bool planAdd(radialUser &d, string &e);
   bool planRemove(radialUser &d, string &e);
   bool plans(radialUser &d, string &e);
+  bool running(radialUser &d, string &e);
   bool schedule(radialUser &d, string &e);
   bool scheduleAdd(radialUser &d, string &e);
   void scheduler(string strPrefix);
