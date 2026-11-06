@@ -177,6 +177,12 @@ export default
     </tbody>
     </table>
   </div>
+  {{else}}
+  {{#isValid}}
+    <b class="text-danger">You must be a local admininstrator of Maestro to view this page.</b>
+  {{else}}
+    <b class="text-warning">Please login to view this page.</b>
+  {{/isValid}}
   {{/isLocalAdmin}}
   `
   // ]]]
