@@ -16,10 +16,10 @@ namespace radial
 // {{{ maestroInterrupt()
 int maestroInterrupt(JSRuntime *rt, void *opaque)
 {
-  bool *pbKill = (bool *)opaque;
+  bool *pbStop = (bool *)opaque;
   int nReturn = 0;  // 0 - keep running, 1 - kill script
 
-  if (*pbKill)
+  if (*pbStop)
   {
     nReturn = 1;
   }
@@ -141,7 +141,7 @@ Maestro::~Maestro()
       {
         for (auto &r : c.second)
         {
-          (*r.second->pbKill) = true;
+          (*r.second->pbStop) = true;
           delete r.second;
         }
       }
@@ -1484,7 +1484,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
       {
         if (!ptFlow->empty({"Script"}))
         {
-          bool *pbKill = NULL;
+          bool *pbStop = NULL;
           JSRuntime *jsrun = JS_NewRuntime();
           JSContext *jsctx = JS_NewContext(jsrun);
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1513,22 +1513,22 @@ bool Maestro::flowExec(radialUser &d, string &e)
           if (m_p.find(p) != m_p.end())
           {
             radialMaestroRunning *ptRunning = new radialMaestroRunning;
-            pbKill = new bool(false);
+            pbStop = new bool(false);
             if (m_p[p]->r.find(f) == m_p[p]->r.end())
             {
               m_p[p]->r[f] = {};
             }
             time(&(ptRunning->CTime));
-            ptRunning->pbKill = pbKill;
+            ptRunning->pbStop = pbStop;
             m_p[p]->r[f][lThreadID] = ptRunning;
           }
           m_mutex.unlock();
-          if (pbKill != NULL)
+          if (pbStop != NULL)
           {
-            JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
+            JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
           }
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-          if (pbKill != NULL)
+          if (pbStop != NULL)
           {
             JS_SetInterruptHandler(jsrun, NULL, NULL);
             m_mutex.lock();
@@ -1542,7 +1542,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
             }
             m_mutex.unlock();
-            delete pbKill;
+            delete pbStop;
           }
           if (JS_IsException(jsres))
           {
@@ -1656,7 +1656,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
 
   if (!ptFlow->empty({"Script"}))
   {
-    bool *pbKill = NULL;
+    bool *pbStop = NULL;
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1683,22 +1683,22 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     if (m_p.find(p) != m_p.end())
     {
       radialMaestroRunning *ptRunning = new radialMaestroRunning;
-      pbKill = new bool(false);
+      pbStop = new bool(false);
       if (m_p[p]->r.find(f) == m_p[p]->r.end())
       {
         m_p[p]->r[f] = {};
       }
       time(&(ptRunning->CTime));
-      ptRunning->pbKill = pbKill;
+      ptRunning->pbStop = pbStop;
       m_p[p]->r[f][lThreadID] = ptRunning;
     }
     m_mutex.unlock();
-    if (pbKill != NULL)
+    if (pbStop != NULL)
     {
-      JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
+      JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
     }
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-    if (pbKill != NULL)
+    if (pbStop != NULL)
     {
       JS_SetInterruptHandler(jsrun, NULL, NULL);
       m_mutex.lock();
@@ -1712,7 +1712,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         }
       }
       m_mutex.unlock();
-      delete pbKill;
+      delete pbStop;
     }
     JS_FreeValue(jsctx, jsglobal);
     JS_FreeValue(jsctx, jsres);
@@ -1749,7 +1749,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
             {
               for (auto &r : m_p[p]->r[f])
               {
-                (*r.second->pbKill) = true;
+                (*r.second->pbStop) = true;
                 delete r.second;
               }
             }
@@ -4478,7 +4478,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           {
             for (auto &r : c.second)
             {
-              (*r.second->pbKill) = true;
+              (*r.second->pbStop) = true;
               delete r.second;
             }
           }
