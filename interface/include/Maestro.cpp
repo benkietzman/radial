@@ -4637,7 +4637,7 @@ bool Maestro::plans(radialUser &d, string &e)
 bool Maestro::running(radialUser &d, string &e)
 {
   bool b = true;
-  Json *o = d.p->m["o"];
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   o->m[m_strNode] = new Json;
   m_mutex.lock();
@@ -4659,6 +4659,33 @@ bool Maestro::running(radialUser &d, string &e)
     }
   }
   m_mutex.unlock();
+  if (i->val({"_broadcast"}) != "1")
+  {
+    list<string> nodes;
+    m_mutexShare.lock();
+    for (auto &link : m_l)
+    {
+      if (link->interfaces.find("maestro") != link->interfaces.end())
+      {
+        nodes.push_back(link->strNode);
+      }
+    }
+    m_mutexShare.unlock();
+    while (!nodes.empty())
+    {
+      Json *ptLink = new Json;
+      ptLink->i("Interface", "maestro");
+      ptLink->i("Node", nodes.front());
+      ptLink->i("Function", "running");
+      ptLink->m["Request"]->i("_broadcast", "1", '1');
+      if (hub("link", ptLink, e) && ptLink->exist({"Response"}))
+      {
+        o->i(m_strNode, ptLink->m["Response"]);
+      }
+      delete ptLink;
+      nodes.pop_front();
+    }
+  }
 
   return b;
 }
@@ -5154,17 +5181,54 @@ bool Maestro::scopes(radialUser &d, string &e)
 // {{{ stop()
 bool Maestro::stop(radialUser &d, string &e)
 {
-  bool b = true;
+  bool b = false;
   Json *i = d.p->m["i"];
 
-  if (dep({"Flow", "Plan", "Thread"}, i, e))
+  if (dep({"Flow", "Node", "Plan", "Thread"}, i, e))
   {
     long lThread = atol(i->m["Thread"]->v.c_str());
-    string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
-    if (isOwner(d, p))
+    string f = i->m["Flow"]->v, n = i->m["Node"]->v, p = i->m["Plan"]->v;
+    if (isLocalAdmin(d, "Maestro") || isOwner(d, p))
     {
-      m_mutex.lock();
-      m_mutex.unlock();
+      if (n == m_strNode)
+      {
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
+        {
+          if (m_p[p]->r.find(f) != m_p[p]->r.end())
+          {
+            if (m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
+            {
+              (*m_p[p]->r[f][lThread]->pbStop) = true;
+            }
+            else
+            {
+              e = "Failed to find the Thread.";
+            }
+          }
+          else
+          {
+            e = "Failed to find the Flow.";
+          }
+        }
+        else
+        {
+          e = "Failed to find the Plan.";
+        }
+        m_mutex.unlock();
+      }
+      else
+      {
+        Json *ptLink = new Json(d.r);
+        ptLink->i("Interface", "maestro");
+        ptLink->i("Node", n);
+        ptLink->i("Function", "stop");
+        if (hub("link", ptLink, e))
+        {
+          b = true;
+        }
+        delete ptLink;
+      }
     }
     else
     {
