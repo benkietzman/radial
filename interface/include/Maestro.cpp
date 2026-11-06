@@ -4638,32 +4638,25 @@ bool Maestro::running(radialUser &d, string &e)
   bool b = true;
   Json *o = d.p->m["o"];
 
-  if (isLocalAdmin(d, "Maestro"))
+  m_mutex.lock();
+  for (auto &p : m_p)
   {
-    m_mutex.lock();
-    for (auto &p : m_p)
+    if (!p.second->r.empty())
     {
-      if (!p.second->r.empty())
+      o->m[p.first] = new Json;
+      o->m[p.first]->i("Owner", p.second->owner);
+      o->m[p.first]->m["Flows"] = new Json;
+      for (auto &f : p.second->r)
       {
-        o->m[p.first] = new Json;
-        o->m[p.first]->i("Owner", p.second->owner);
-        o->m[p.first]->m["Flows"] = new Json;
-        for (auto &f : p.second->r)
+        o->m[p.first]->m["Flows"]->m[f.first] = new Json;
+        for (auto &r : f.second)
         {
-          o->m[p.first]->m["Flows"]->m[f.first] = new Json;
-          for (auto &r : f.second)
-          {
-            o->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
-          }
+          o->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
         }
       }
     }
-    m_mutex.unlock();
   }
-  else
-  {
-    e = "You are not authorized to perform this action.";
-  }
+  m_mutex.unlock();
 
   return b;
 }
