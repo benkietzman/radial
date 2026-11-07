@@ -25,10 +25,10 @@ export default
       c: c
     });
     // ]]]
-    // [[[ stop()
-    s.stop = (nIndex) =>
+    // [[[ kill()
+    s.kill = (nIndex) =>
     {
-      let request = {Interface: 'maestro', 'Function': 'stop', Request: {Node: s.r[nIndex].Node, Plan: s.r[nIndex].Plan, Flow: s.r[nIndex].Flow, Thread: s.r[nIndex].Thread}};
+      let request = {Interface: 'maestro', 'Function': 'kill', Request: {Node: s.r[nIndex].Node, Plan: s.r[nIndex].Plan, Flow: s.r[nIndex].Flow, Thread: s.r[nIndex].Thread}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
@@ -124,7 +124,7 @@ export default
         <td><a href="#/Plans/{{Plan}}/Flow/{{Flow}}">{{Flow}}</a></td>
         <td>{{Thread}}</td>
         <td>{{datetime Time}}</td>
-        <td><button class="btn btn-sm btn-danger btn-trash" c-click="stop({{@key}})">Stop</button></td>
+        <td><button class="btn btn-sm btn-danger btn-trash" c-click="kill({{@key}})">Kill</button></td>
       </tr>
       {{/each}}
     </tbody>

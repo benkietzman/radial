@@ -16,10 +16,10 @@ namespace radial
 // {{{ maestroInterrupt()
 int maestroInterrupt(JSRuntime *rt, void *opaque)
 {
-  bool *pbStop = (bool *)opaque;
+  bool *pbKill = (bool *)opaque;
   int nReturn = 0;  // 0 - keep running, 1 - kill script
 
-  if (*pbStop)
+  if (*pbKill)
   {
     nReturn = 1;
   }
@@ -62,7 +62,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["flowRemove"] = &Maestro::flowRemove;
   m_functions["flows"] = &Maestro::flows;
   m_functions["flowUpdate"] = &Maestro::flowUpdate;
-  m_functions["stop"] = &Maestro::stop;
+  m_functions["kill"] = &Maestro::kill;
   m_functions["plan"] = &Maestro::plan;
   m_functions["planAdd"] = &Maestro::planAdd;
   m_functions["planRemove"] = &Maestro::planRemove;
@@ -141,7 +141,7 @@ Maestro::~Maestro()
       {
         for (auto &r : c.second)
         {
-          (*r.second->pbStop) = true;
+          (*r.second->pbKill) = true;
           delete r.second;
         }
       }
@@ -1495,7 +1495,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
       {
         if (!ptFlow->empty({"Script"}))
         {
-          bool *pbStop = NULL;
+          bool *pbKill = NULL;
           JSRuntime *jsrun = JS_NewRuntime();
           JSContext *jsctx = JS_NewContext(jsrun);
           JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1525,13 +1525,13 @@ bool Maestro::flowExec(radialUser &d, string &e)
           if (m_p.find(p) != m_p.end())
           {
             radialMaestroRunning *ptRunning = new radialMaestroRunning;
-            pbStop = new bool(false);
+            pbKill = new bool(false);
             if (m_p[p]->r.find(f) == m_p[p]->r.end())
             {
               m_p[p]->r[f] = {};
             }
             time(&(ptRunning->CTime));
-            ptRunning->pbStop = pbStop;
+            ptRunning->pbKill = pbKill;
             m_p[p]->r[f][lThreadID] = ptRunning;
           }
           m_mutex.unlock();
@@ -1539,12 +1539,12 @@ bool Maestro::flowExec(radialUser &d, string &e)
           ptLive->i("Plan", p);
           ptLive->i("Flow", f);
           live("Maestro", "", ptLive);
-          if (pbStop != NULL)
+          if (pbKill != NULL)
           {
-            JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
+            JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
           }
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-          if (pbStop != NULL)
+          if (pbKill != NULL)
           {
             JS_SetInterruptHandler(jsrun, NULL, NULL);
             m_mutex.lock();
@@ -1558,7 +1558,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
             }
             m_mutex.unlock();
-            delete pbStop;
+            delete pbKill;
           }
           live("Maestro", "", ptLive);
           delete ptLive;
@@ -1674,7 +1674,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
 
   if (!ptFlow->empty({"Script"}))
   {
-    bool *pbStop = NULL;
+    bool *pbKill = NULL;
     JSRuntime *jsrun = JS_NewRuntime();
     JSContext *jsctx = JS_NewContext(jsrun);
     JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -1702,13 +1702,13 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     if (m_p.find(p) != m_p.end())
     {
       radialMaestroRunning *ptRunning = new radialMaestroRunning;
-      pbStop = new bool(false);
+      pbKill = new bool(false);
       if (m_p[p]->r.find(f) == m_p[p]->r.end())
       {
         m_p[p]->r[f] = {};
       }
       time(&(ptRunning->CTime));
-      ptRunning->pbStop = pbStop;
+      ptRunning->pbKill = pbKill;
       m_p[p]->r[f][lThreadID] = ptRunning;
     }
     m_mutex.unlock();
@@ -1716,12 +1716,12 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     ptLive->i("Plan", p);
     ptLive->i("Flow", f);
     live("Maestro", "", ptLive);
-    if (pbStop != NULL)
+    if (pbKill != NULL)
     {
-      JS_SetInterruptHandler(jsrun, maestroInterrupt, pbStop);
+      JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
     }
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-    if (pbStop != NULL)
+    if (pbKill != NULL)
     {
       JS_SetInterruptHandler(jsrun, NULL, NULL);
       m_mutex.lock();
@@ -1735,7 +1735,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         }
       }
       m_mutex.unlock();
-      delete pbStop;
+      delete pbKill;
     }
     live("Maestro", "", ptLive);
     delete ptLive;
@@ -1774,7 +1774,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
             {
               for (auto &r : m_p[p]->r[f])
               {
-                (*r.second->pbStop) = true;
+                (*r.second->pbKill) = true;
                 delete r.second;
               }
             }
@@ -4336,6 +4336,68 @@ void Maestro::load(string strPrefix)
   }
 }
 // }}}
+// {{{ kill()
+bool Maestro::kill(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Flow", "Node", "Plan", "Thread"}, i, e))
+  {
+    long lThread = atol(i->m["Thread"]->v.c_str());
+    string f = i->m["Flow"]->v, n = i->m["Node"]->v, p = i->m["Plan"]->v;
+    if (isLocalAdmin(d, "Maestro") || isOwner(d, p))
+    {
+      if (n == m_strNode)
+      {
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end())
+        {
+          if (m_p[p]->r.find(f) != m_p[p]->r.end())
+          {
+            if (m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
+            {
+              b = true;
+              (*m_p[p]->r[f][lThread]->pbKill) = true;
+            }
+            else
+            {
+              e = "Failed to find the Thread.";
+            }
+          }
+          else
+          {
+            e = "Failed to find the Flow.";
+          }
+        }
+        else
+        {
+          e = "Failed to find the Plan.";
+        }
+        m_mutex.unlock();
+      }
+      else
+      {
+        Json *ptLink = new Json(d.r);
+        ptLink->i("Interface", "maestro");
+        ptLink->i("Node", n);
+        ptLink->i("Function", "kill");
+        if (hub("link", ptLink, e))
+        {
+          b = true;
+        }
+        delete ptLink;
+      }
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
+  }
+
+  return b;
+}
+// }}}
 // {{{ plan
 // {{{ plan()
 bool Maestro::plan(radialUser &d, string &e)
@@ -4505,7 +4567,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           {
             for (auto &r : c.second)
             {
-              (*r.second->pbStop) = true;
+              (*r.second->pbKill) = true;
               delete r.second;
             }
           }
@@ -5207,68 +5269,6 @@ bool Maestro::scopes(radialUser &d, string &e)
     else
     {
       e = "Please provide a valid Type:  application, core, user.";
-    }
-  }
-
-  return b;
-}
-// }}}
-// {{{ stop()
-bool Maestro::stop(radialUser &d, string &e)
-{
-  bool b = false;
-  Json *i = d.p->m["i"];
-
-  if (dep({"Flow", "Node", "Plan", "Thread"}, i, e))
-  {
-    long lThread = atol(i->m["Thread"]->v.c_str());
-    string f = i->m["Flow"]->v, n = i->m["Node"]->v, p = i->m["Plan"]->v;
-    if (isLocalAdmin(d, "Maestro") || isOwner(d, p))
-    {
-      if (n == m_strNode)
-      {
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
-        {
-          if (m_p[p]->r.find(f) != m_p[p]->r.end())
-          {
-            if (m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
-            {
-              b = true;
-              (*m_p[p]->r[f][lThread]->pbStop) = true;
-            }
-            else
-            {
-              e = "Failed to find the Thread.";
-            }
-          }
-          else
-          {
-            e = "Failed to find the Flow.";
-          }
-        }
-        else
-        {
-          e = "Failed to find the Plan.";
-        }
-        m_mutex.unlock();
-      }
-      else
-      {
-        Json *ptLink = new Json(d.r);
-        ptLink->i("Interface", "maestro");
-        ptLink->i("Node", n);
-        ptLink->i("Function", "stop");
-        if (hub("link", ptLink, e))
-        {
-          b = true;
-        }
-        delete ptLink;
-      }
-    }
-    else
-    {
-      e = "You are not the owner.";
     }
   }
 
