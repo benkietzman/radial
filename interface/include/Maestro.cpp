@@ -4664,13 +4664,14 @@ bool Maestro::plans(radialUser &d, string &e)
 bool Maestro::running(radialUser &d, string &e)
 {
   bool b = true;
+  string strPlan = d.p->m["i"]->val({"Plan"});
   Json *i = d.p->m["i"], *o = d.p->m["o"];
 
   o->m[m_strNode] = new Json;
   m_mutex.lock();
   for (auto &p : m_p)
   {
-    if (!p.second->r.empty())
+    if ((strPlan.empty() || strPlan == p.first) && !p.second->r.empty())
     {
       o->m[m_strNode]->m[p.first] = new Json;
       o->m[m_strNode]->m[p.first]->i("Owner", p.second->owner);
