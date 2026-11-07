@@ -4701,11 +4701,14 @@ bool Maestro::running(radialUser &d, string &e)
     m_mutexShare.unlock();
     while (!nodes.empty())
     {
-      Json *ptLink = new Json;
+      Json *ptLink = new Json(d.r);
       ptLink->i("Interface", "maestro");
       ptLink->i("Node", nodes.front());
       ptLink->i("Function", "running");
-      ptLink->m["Request"] = new Json;
+      if (!ptLink->exist({"Request"}))
+      {
+        ptLink->m["Request"] = new Json;
+      }
       ptLink->m["Request"]->i("_broadcast", "1", '1');
       if (hub("link", ptLink, e) && ptLink->exist({"Response"}))
       {

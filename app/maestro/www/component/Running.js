@@ -119,24 +119,12 @@ export default
     <tbody>
       {{#each ../r}}
       <tr>
-        <td>
-          {{Node}}
-        </td>
-        <td>
-          <a href="#/Plans/{{Plan}}">{{Owner}}</a>
-        </td>
-        <td>
-          <a href="#/Plans/{{Plan}}/Flow/{{Flow}}">{{Flow}}</a>
-        </td>
-        <td>
-          {{Thread}}
-        </td>
-        <td>
-          {{datetime Time}}
-        </td>
-        <td>
-          <button class="btn btn-sm btn-danger btn-trash" c-click="stop({{@key}})">Stop</button>
-        </td>
+        <td>{{Node}}</td>
+        <td><a href="#/Plans/{{Plan}}">{{Owner}}</a></td>
+        <td><a href="#/Plans/{{Plan}}/Flow/{{Flow}}">{{Flow}}</a></td>
+        <td>{{Thread}}</td>
+        <td>{{datetime Time}}</td>
+        <td><button class="btn btn-sm btn-danger btn-trash" c-click="stop({{@key}})">Stop</button></td>
       </tr>
       {{/each}}
     </tbody>
