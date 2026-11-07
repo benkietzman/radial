@@ -671,7 +671,7 @@ export default
               {
                 for (let t in r[n][p].Flows[f])
                 {
-                  s.r.push({Node: n, Plan: p, Flow: f, Owner: r[n][p].Owner, Thread: t, Time: r[n][p].Flows[f][t]});
+                  s.r.push({Node: n, Plan: p, Flow: f, Owner: r[n][p].Owner, Status: r[n][p].Flows[f][t].Status, Thread: t, Time: r[n][p].Flows[f][t].Time});
                 }
               }
             }
@@ -1147,6 +1147,7 @@ export default
                 <td>Flow</td>
                 <td>Thread</td>
                 <td>Started</td>
+                <td>Status</td>
                 <td></td>
               </tr>
             </thead>
@@ -1157,6 +1158,7 @@ export default
                 <td><a href="#/Plans/{{Plan}}/Flow/{{Flow}}">{{Flow}}</a></td>
                 <td>{{Thread}}</td>
                 <td>{{datetime Time}}</td>
+                <td class="text-{{#ifCond Status "==" "running"}}success{{else}}danger{{/ifCond}}">{{Status}}</td>
                 <td><button class="btn btn-sm btn-danger btn-trash" c-click="kill({{@key}})">Kill</button></td>
               </tr>
               {{/each}}

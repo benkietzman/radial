@@ -4357,8 +4357,14 @@ bool Maestro::kill(radialUser &d, string &e)
           {
             if (m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
             {
+              Json *ptLive = new Json;
               b = true;
               (*m_p[p]->r[f][lThread]->pbKill) = true;
+              ptLive->i("Action", "flowExec");
+              ptLive->i("Plan", p);
+              ptLive->i("Flow", f);
+              live("Maestro", "", ptLive);
+              delete ptLive;
             }
             else
             {
@@ -4743,7 +4749,9 @@ bool Maestro::running(radialUser &d, string &e)
         o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first] = new Json;
         for (auto &r : f.second)
         {
-          o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first]->i(to_string(r.first), to_string(r.second->CTime), 'n');
+          o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first]->m[to_string(r.first)] = new Json;
+          o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first]->m[to_string(r.first)]->i("Status", ((*r.second->pbKill)?"terminating":"running"));
+          o->m[m_strNode]->m[p.first]->m["Flows"]->m[f.first]->m[to_string(r.first)]->i("Time", to_string(r.second->CTime), 'n');
         }
       }
     }
