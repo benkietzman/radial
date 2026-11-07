@@ -18,7 +18,7 @@ export default
       a: a,
       c: c,
       editorKeyMap: 'default',
-      expand: {general: true, access: true, flows: true, flow: true, schedules: true, schedule: true}
+      expand: {general: true, access: true, flows: true, flow: true, running: true, schedules: true, schedule: true}
     });
     // ]]]
     // [[[ access
@@ -534,6 +534,7 @@ export default
           s.p = response.Response;
           s.accesses();
           s.flows();
+          s.running();
           s.schedules();
         }
         else
@@ -650,6 +651,39 @@ export default
         s.narrow.e().focus();
       }
     };  
+    // ]]]
+    // [[[ running()
+    s.running = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'running', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          let r = response.Response;
+          s.r = [];
+          for (let n in r)
+          {
+            for (let p in r[n])
+            {
+              for (let f in r[n][p].Flows)
+              {
+                for (let t in r[n][p].Flows[f])
+                {
+                  s.r.push({Node: n, Plan: p, Flow: f, Owner: r[n][p].Owner, Thread: t, Time: r[n][p].Flows[f][t]});
+                }
+              }
+            }
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
     // ]]]
     // [[[ schedule
     // [[[ schedule()
@@ -791,19 +825,34 @@ export default
     };
     // ]]]
     // ]]]
+    // [[[ stop()
+    s.stop = (nIndex) =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'stop', Request: {Node: s.r[nIndex].Node, Plan: s.r[nIndex].Plan, Flow: s.r[nIndex].Flow, Thread: s.r[nIndex].Thread}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (!c.wsResponse(response, error))
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
     {
       s.u();
     };
     // ]]]
-      // [[[ u()
-      s.u = () =>
-      {
-        c.update('Plans');
-        s.flowEditor();
-      },
-      // ]]]
+    // [[[ u()
+    s.u = () =>
+    {
+      c.update('Plans');
+      s.flowEditor();
+    },
+    // ]]]
     // [[[ user()
     s.user = () =>
     {
@@ -866,7 +915,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate') && !s.strFlow && !s.strSchedule)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowExec' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate') && !s.strFlow && !s.strSchedule)
       {
         s.init();
       }
@@ -1070,6 +1119,45 @@ export default
               {{#each ss}}
               <tr>
                 <td><a href="#/Plans/{{@root.strPlan}}/Schedule/{{.}}">{{.}}</a></td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+        <div class="card-footer">
+        </div>
+      </div>
+    </div>
+    <!-- ]]] -->
+    <!-- [[[ running -->
+    <div class="col-auto">
+      <div class="card border border-secondary mb-2 mt-3">
+        <div class="card-header bg bg-secondary fw-bold text-center text-nowrap" c-click="collapseExpand('running')" style="cursor: row-resize;">
+          Running
+        </div>
+        {{#if expand.running}}
+        <div class="card-body bg bg-secondary-subtle">
+          <div class="table-responsive">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <thead>
+              <tr>
+                <td>Node</td>
+                <td>Flow</td>
+                <td>Thread</td>
+                <td>Started</td>
+                <td></td>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each r}}
+              <tr>
+                <td>{{Node}}</td>
+                <td><a href="#/Plans/{{Plan}}/Flow/{{Flow}}">{{Flow}}</a></td>
+                <td>{{Thread}}</td>
+                <td>{{datetime Time}}</td>
+                <td><button class="btn btn-sm btn-danger btn-trash" c-click="stop({{@key}})">Stop</button></td>
               </tr>
               {{/each}}
             </tbody>
