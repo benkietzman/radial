@@ -1533,6 +1533,19 @@ bool Maestro::flowExec(radialUser &d, string &e)
             time(&(ptRunning->CTime));
             ptRunning->pbKill = pbKill;
             m_p[p]->r[f][lThreadID] = ptRunning;
+            if (!m_strSecret.empty())
+            {
+              string strThread[2];
+              Json *ptThread = new Json;
+              ptThread->i("p", p);
+              ptThread->i("f", f);
+              ptThread->i("t", lThreadID);
+              ptThread->j(strThread[0]);
+              if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
+              {
+                JS_SetPropertyStr(jsctx, jsglobal, "g_js_thread", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
+              }
+            }
           }
           m_mutex.unlock();
           ptLive->i("Action", "flowExec");
@@ -1710,6 +1723,19 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
       time(&(ptRunning->CTime));
       ptRunning->pbKill = pbKill;
       m_p[p]->r[f][lThreadID] = ptRunning;
+      if (!m_strSecret.empty())
+      {
+        string e, strThread[2];
+        Json *ptThread = new Json;
+        ptThread->i("p", p);
+        ptThread->i("f", f);
+        ptThread->i("t", lThreadID);
+        ptThread->j(strThread[0]);
+        if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
+        {
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_thread", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
+        }
+      }
     }
     m_mutex.unlock();
     ptLive->i("Action", "flowExec");
@@ -2731,9 +2757,11 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
           {
             if (!ptFlow->empty({"Script"}))
             {
+              bool *pbKill = NULL;
               JSRuntime *jssubrun = JS_NewRuntime();
               JSContext *jssubctx = JS_NewContext(jssubrun);
-              JSValue jssubglobal = JS_GetGlobalObject(jssubctx);
+              JSValue jssubglobal = JS_GetGlobalObject(jssubctx), jsthread = JS_GetPropertyStr(jsctx, jsglobal, "g_js_thread");
+              const char *pszThread = JS_ToCString(jsctx, jsthread);
               for (auto &i : m_javascript)
               {
                 if (i.second->function != NULL)
@@ -2753,7 +2781,36 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
               {
                 JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_request", JS_NewStringLen(jssubctx, pszRequest, strlen(pszRequest)));
               }
+              if (pszThread != NULL)
+              {
+                string strThread;
+                if (!m_manip.decryptAes(m_manip.decodeBase64(pszThread, strThread), m_strSecret, strThread, e, m_strCipher).empty())
+                {
+                  Json *ptThread = new Json(strThread);;
+                  if (dep({"f", "p", "t"}, ptThread, e))
+                  {
+                    long lThread = atoi(ptThread->m["t"]->v.c_str());
+                    m_mutex.lock();
+                    if (m_p.find(ptThread->m["p"]->v) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
+                    {
+                      pbKill = m_p[p]->r[f][lThread]->pbKill;
+                    }
+                    m_mutex.unlock();
+                    JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_thread", JS_NewStringLen(jssubctx, pszThread, strlen(pszThread)));
+                  }
+                  delete ptThread;
+                }
+                JS_FreeCString(jsctx, pszThread);
+              }
+              if (pbKill != NULL)
+              {
+                JS_SetInterruptHandler(jssubrun, maestroInterrupt, pbKill);
+              }
               JSValue jssubres = JS_Eval(jssubctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+              if (pbKill != NULL)
+              {
+                JS_SetInterruptHandler(jssubrun, NULL, NULL);
+              }
               if (JS_IsException(jssubres))
               {
                 JSValue jssubexc = JS_GetException(jssubctx);
