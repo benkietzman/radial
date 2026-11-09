@@ -87,7 +87,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("dbupdate", 2, "dbupdate(database, update)", "Provides the ability to update (SQL: delete, insert, update) a given database.");
   jsreg("email", 8, "email(from, to, cc, bcc, subject, text, html, file)", "Provides the ability to send an email.");
   jsreg("esc", 1, "esc(value)", "Escapes a value for use in SQL.");
-  jsreg("flow", 3, "flow(plan, flow, request)");
+  jsreg("flow", 2, "flow(plan, flow, request)");
   jsreg("getError", 0, "getError()", "Provides the ability to retrieve the error from the last Maestro function.");
   jsreg("getRequest",  0, "getRequest()", "Provides the ability to retrieve the request being provides to the given flow.");
   jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
@@ -115,10 +115,14 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("storageRetrieve", 1, "storageRetrieve(keys)", "Provides the ability to retrieve data from storage.");
   jsreg("storageRetrieveKeys", 1, "storageRetrieveKeys(keys)", "Provides the ability to retrieve key data from storage.");
   jsreg("storageUpdate", 2, "storageUpdate(keys, data)", "Provides the ability to update data into storage.");
+  jsreg("threadCreate", 2, "threadCreate(plan, flow, request)", "Provides the ability to create a thread.");
+  jsreg("threadDetach", 1, "threadDetach(thread)", "Provides the ability to detach a thread.");
+  jsreg("threadJoin", 1, "threadJoin(thread)", "Provides the ability to join a thread.");
   // }}}
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
+  m_nThread = 0;
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -154,6 +158,15 @@ Maestro::~Maestro()
     delete p.second;
   }
   m_p.clear();
+  for (auto &t : m_t)
+  {
+    if (t.second->joinable())
+    {
+      t.second->join();
+    }
+    delete t.second;
+  }
+  m_t.clear();
   for (auto &i : m_javascript)
   {
     delete i.second;
@@ -2735,6 +2748,21 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
         string f = pszFlow, p = pszPlan;
         Json *ptFlow = NULL;
         m_mutex.lock();
+        if (p.size() < 2 || (p.substr(0, 2) != "a_" && p.substr(0, 2) != "u_"))
+        {
+          auto pIter = m_p.end();
+          for (auto c = m_p.begin(); pIter == m_p.end() && c != m_p.end(); c++)
+          {
+            if (c->second->owner == p)
+            {
+              pIter = c;
+            }
+          }
+          if (pIter != m_p.end())
+          {
+            p = pIter->first;
+          }
+        }
         if (m_p.find(p) != m_p.end())
         {
           if (m_p[p]->f.find(f) != m_p[p]->f.end())
@@ -4163,6 +4191,136 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
   else
   {
     e = "Please provide the keys and data.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_threadCreate()
+JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
+{
+  int32_t nThread = 0;
+  thread *pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
+
+  m_mutex.lock();
+  while (m_t.find(m_nThread) != m_t.end())
+  {
+    m_nThread++;
+  }
+  nThread = m_nThread;
+  m_t[m_nThread] = pThread;
+  m_mutex.unlock();
+
+  return JS_NewInt32(jsctx, nThread);
+}
+// }}}
+// {{{ js_threadDetach()
+JSValue Maestro::js_threadDetach(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszThread = JS_ToCString(jsctx, argv[0]);
+    if (pszThread != NULL)
+    {
+      int32_t nThread;
+      stringstream ssThread(pszThread);
+      thread *pThread = NULL;
+      ssThread >> nThread;
+      m_mutex.lock();
+      if (m_t.find(nThread) != m_t.end())
+      {
+        b = true;
+        pThread = m_t[nThread];
+        m_t.erase(nThread);
+      }
+      m_mutex.unlock();
+      if (pThread != NULL)
+      {
+        pThread->detach();
+        delete pThread;
+      }
+      else
+      {
+        e = "Please provide a valid thread.";
+      }
+    }
+    else
+    {
+      e = "Please provide the thread.";
+    }
+    if (pszThread != NULL)
+    {
+      JS_FreeCString(jsctx, pszThread);
+    }
+  }
+  else
+  {
+    e = "Please provide the thread.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_threadJoin()
+JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszThread = JS_ToCString(jsctx, argv[0]);
+    if (pszThread != NULL)
+    {
+      int32_t nThread;
+      stringstream ssThread(pszThread);
+      thread *pThread = NULL;
+      ssThread >> nThread;
+      m_mutex.lock();
+      if (m_t.find(nThread) != m_t.end())
+      {
+        pThread = m_t[nThread];
+        m_t.erase(nThread);
+      }
+      m_mutex.unlock();
+      if (pThread != NULL)
+      {
+        b = true;
+        pThread->join();
+        delete pThread;
+      }
+      else
+      {
+        e = "Please provide a valid thread.";
+      }
+    }
+    else
+    {
+      e = "Please provide the thread.";
+    }
+    if (pszThread != NULL)
+    {
+      JS_FreeCString(jsctx, pszThread);
+    }
+  }
+  else
+  {
+    e = "Please provide the thread.";
   }
   if (!e.empty())
   {

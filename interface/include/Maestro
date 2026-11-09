@@ -53,11 +53,13 @@ class Maestro : public Interface
   protected:
   bool m_bLoaded;
   bool m_bLoadSchedules;
+  int32_t m_nThread;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
+  map<int32_t, thread *> m_t;
+  map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, list<string> > m_a;
   map<string, string> m_applications;
-  map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, radialMaestroJavascript *> m_javascript;
   map<string, radialMaestroPlan *> m_p;
   mutex m_mutex;
@@ -148,6 +150,9 @@ class Maestro : public Interface
   JSValue js_storageRetrieve(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_storageRetrieveKeys(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_storageUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_threadCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_threadDetach(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_threadJoin(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(map<string, JSCFunction *> javascript);
   void jsreg(const string strFunction, const int nLength, const string strPrototype, const string strDescription = "");
 };
