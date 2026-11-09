@@ -53,9 +53,13 @@ class Maestro : public Interface
   protected:
   bool m_bLoaded;
   bool m_bLoadSchedules;
+  int32_t m_nMutex;
+  int32_t m_nSem;
   int32_t m_nThread;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
+  map<int32_t, mutex *> m_m;
+  map<int32_t, sem_t *> m_s;
   map<int32_t, thread *> m_t;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, list<string> > m_a;
@@ -131,9 +135,17 @@ class Maestro : public Interface
   JSValue js_live(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_log(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_logger(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mutexCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mutexDestroy(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mutexLock(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_mutexUnlock(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_notify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_semCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_semDestroy(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_semPost(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_semWait(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);

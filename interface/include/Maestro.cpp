@@ -96,9 +96,17 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
   jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
+  jsreg("mutexCreate", 0, "mutexCreate()", "Provides the ability to create a mutex.");
+  jsreg("mutexDestroy", 1, "mutexDestroy(mutex)", "Provides the ability to destroy a mutex.");
+  jsreg("mutexLock", 1, "mutexLock(mutex)", "Provides the ability to lock a mutex.");
+  jsreg("mutexUnlock", 1, "mutexUnlock(mutex)", "Provides the ability to lock a mutex.");
   jsreg("mysqlQuery", 6, "mysqlQuery(server, port, user, password, database, query)", "Provides the ability to query (SQL: select) a given MySQL server and database.");
   jsreg("mysqlUpdate", 6, "mysqlUpdate(server, port, user, password, database, query)", "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
   jsreg("notify", 1, "notify(message)", "Provides the ability to send a message to the configured notification email address.");
+  jsreg("semCreate", 1, "semCreate(value)", "Provides the ability to create a mutex.");
+  jsreg("semDestroy", 1, "semDestroy(mutex)", "Provides the ability to destroy a mutex.");
+  jsreg("semPost", 1, "semPost(mutex)", "Provides the ability to lock a mutex.");
+  jsreg("semWait", 1, "semWait(mutex)", "Provides the ability to lock a mutex.");
   jsreg("setError", 1, "setError(error)", "Provides the ability to set the error prior to exiting the given flow.");
   jsreg("setRequest", 1, "setRequest(request)", "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   jsreg("setResponse", 1, "setResponse(response)", "Provides the ability to set the response prior to exiting the given flow.");
@@ -122,6 +130,8 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
+  m_nMutex = 0;
+  m_nSem = 0;
   m_nThread = 0;
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
@@ -158,6 +168,17 @@ Maestro::~Maestro()
     delete p.second;
   }
   m_p.clear();
+  for (auto &m : m_m)
+  {
+    delete m.second;
+  }
+  m_m.clear();
+  for (auto &s : m_s)
+  {
+    sem_destroy(s.second);
+    delete s.second;
+  }
+  m_s.clear();
   for (auto &t : m_t)
   {
     if (t.second->joinable())
@@ -3219,6 +3240,187 @@ JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueCons
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_mutexCreate()
+JSValue Maestro::js_mutexCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
+{
+  int32_t nMutex = -1;
+  mutex *pMutex = new mutex;
+
+  m_mutex.lock();
+  while (m_nMutex != -1 && m_m.find(m_nMutex) != m_m.end())
+  {
+    m_nMutex++;
+  }
+  nMutex = m_nMutex;
+  m_m[m_nMutex] = pMutex;
+  m_mutex.unlock();
+
+  return JS_NewInt32(jsctx, nMutex);
+}
+// }}}
+// {{{ js_mutexDestroy()
+JSValue Maestro::js_mutexDestroy(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
+    if (pszMutex != NULL)
+    {
+      int32_t nMutex;
+      stringstream ssMutex(pszMutex);
+      mutex *pMutex = NULL;
+      ssMutex >> nMutex;
+      m_mutex.lock();
+      if (m_m.find(nMutex) != m_m.end())
+      {
+        b = true;
+        pMutex = m_m[nMutex];
+        m_m.erase(nMutex);
+      }
+      m_mutex.unlock();
+      if (pMutex != NULL)
+      {
+        delete pMutex;
+      }
+      else
+      {
+        e = "Please provide a valid mutex.";
+      }
+    }
+    else
+    {
+      e = "Please provide the mutex.";
+    }
+    if (pszMutex != NULL)
+    {
+      JS_FreeCString(jsctx, pszMutex);
+    }
+  }
+  else
+  {
+    e = "Please provide the mutex.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_mutexLock()
+JSValue Maestro::js_mutexLock(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
+    if (pszMutex != NULL)
+    {
+      int32_t nMutex;
+      stringstream ssMutex(pszMutex);
+      mutex *pMutex = NULL;
+      ssMutex >> nMutex;
+      m_mutex.lock();
+      if (m_m.find(nMutex) != m_m.end())
+      {
+        pMutex = m_m[nMutex];
+      }
+      m_mutex.unlock();
+      if (pMutex != NULL)
+      {
+        b = true;
+        pMutex->lock();
+      }
+      else
+      {
+        e = "Please provide a valid mutex.";
+      }
+    }
+    else
+    {
+      e = "Please provide the mutex.";
+    }
+    if (pszMutex != NULL)
+    {
+      JS_FreeCString(jsctx, pszMutex);
+    }
+  }
+  else
+  {
+    e = "Please provide the mutex.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_mutexUnlock()
+JSValue Maestro::js_mutexUnlock(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
+    if (pszMutex != NULL)
+    {
+      int32_t nMutex;
+      stringstream ssMutex(pszMutex);
+      mutex *pMutex = NULL;
+      ssMutex >> nMutex;
+      m_mutex.lock();
+      if (m_m.find(nMutex) != m_m.end())
+      {
+        pMutex = m_m[nMutex];
+      }
+      m_mutex.unlock();
+      if (pMutex != NULL)
+      {
+        b = true;
+        pMutex->unlock();
+      }
+      else
+      {
+        e = "Please provide a valid mutex.";
+      }
+    }
+    else
+    {
+      e = "Please provide the mutex.";
+    }
+    if (pszMutex != NULL)
+    {
+      JS_FreeCString(jsctx, pszMutex);
+    }
+  }
+  else
+  {
+    e = "Please provide the mutex.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_mysqlQuery()
 JSValue Maestro::js_mysqlQuery(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -3400,6 +3602,202 @@ JSValue Maestro::js_notify(JSContext *jsctx, JSValueConst, int argc, JSValueCons
   else
   {
     e = "Please provide the message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_semCreate()
+JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
+{
+  int32_t nSem = -1;
+
+  if (argc == 1)
+  {
+    const char *pszValue = JS_ToCString(jsctx, argv[0]);
+    if (pszValue != NULL)
+    {
+      sem_t *pSem = new sem_t;
+      stringstream ssValue(pszValue);
+      unsigned int unValue;
+      ssValue >> unValue;
+      if (sem_init(pSem, 0, unValue) == 0)
+      {
+        m_mutex.lock();
+        while (m_nSem != -1 && m_s.find(m_nSem) != m_s.end())
+        {
+          m_nSem++;
+        }
+        nSem = m_nSem;
+        m_s[m_nSem] = pSem;
+        m_mutex.unlock();
+      }
+      JS_FreeCString(jsctx, pszValue);
+    }
+  }
+
+  return JS_NewInt32(jsctx, nSem);
+}
+// }}}
+// {{{ js_semDestroy()
+JSValue Maestro::js_semDestroy(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszSem = JS_ToCString(jsctx, argv[0]);
+    if (pszSem != NULL)
+    {
+      int32_t nSem;
+      stringstream ssSem(pszSem);
+      sem_t *pSem = NULL;
+      ssSem >> nSem;
+      m_mutex.lock();
+      if (m_s.find(nSem) != m_s.end())
+      {
+        b = true;
+        pSem = m_s[nSem];
+        m_s.erase(nSem);
+      }
+      m_mutex.unlock();
+      if (pSem != NULL)
+      {
+        sem_destroy(pSem);
+        delete pSem;
+      }
+      else
+      {
+        e = "Please provide a valid sem.";
+      }
+    }
+    else
+    {
+      e = "Please provide the sem.";
+    }
+    if (pszSem != NULL)
+    {
+      JS_FreeCString(jsctx, pszSem);
+    }
+  }
+  else
+  {
+    e = "Please provide the sem.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_semPost()
+JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszSem = JS_ToCString(jsctx, argv[0]);
+    if (pszSem != NULL)
+    {
+      int32_t nSem;
+      stringstream ssSem(pszSem);
+      sem_t *pSem = NULL;
+      ssSem >> nSem;
+      m_mutex.lock();
+      if (m_s.find(nSem) != m_s.end())
+      {
+        pSem = m_s[nSem];
+      }
+      m_mutex.unlock();
+      if (pSem != NULL)
+      {
+        b = true;
+        sem_post(pSem);
+      }
+      else
+      {
+        e = "Please provide a valid sem.";
+      }
+    }
+    else
+    {
+      e = "Please provide the sem.";
+    }
+    if (pszSem != NULL)
+    {
+      JS_FreeCString(jsctx, pszSem);
+    }
+  }
+  else
+  {
+    e = "Please provide the sem.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_semWait()
+JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszSem = JS_ToCString(jsctx, argv[0]);
+    if (pszSem != NULL)
+    {
+      int32_t nSem;
+      stringstream ssSem(pszSem);
+      sem_t *pSem = NULL;
+      ssSem >> nSem;
+      m_mutex.lock();
+      if (m_s.find(nSem) != m_s.end())
+      {
+        pSem = m_s[nSem];
+      }
+      m_mutex.unlock();
+      if (pSem != NULL)
+      {
+        b = true;
+        sem_wait(pSem);
+      }
+      else
+      {
+        e = "Please provide a valid sem.";
+      }
+    }
+    else
+    {
+      e = "Please provide the sem.";
+    }
+    if (pszSem != NULL)
+    {
+      JS_FreeCString(jsctx, pszSem);
+    }
+  }
+  else
+  {
+    e = "Please provide the sem.";
   }
   if (!e.empty())
   {
@@ -4204,11 +4602,11 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
 // {{{ js_threadCreate()
 JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
 {
-  int32_t nThread = 0;
+  int32_t nThread = -1;
   thread *pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
 
   m_mutex.lock();
-  while (m_t.find(m_nThread) != m_t.end())
+  while (m_nThread != -1 && m_t.find(m_nThread) != m_t.end())
   {
     m_nThread++;
   }
