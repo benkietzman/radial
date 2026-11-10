@@ -2854,7 +2854,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
         m_mutex.unlock();
         if (ptFlow != NULL)
         {
-          if (sp == pszPlan || haveAccess(jsctx, pszPlan, {pszFlow}, e))
+          if (sp == p || haveAccess(jsctx, p, {f}, e))
           {
             if (!ptFlow->empty({"Script"}))
             {
