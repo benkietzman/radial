@@ -2026,11 +2026,11 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
     {
       if (!ptFlow->empty({"Script"}))
       {
-        bool *pbDone = NULL, *pbKill = NULL;
-        string *pstrResponse = NULL;
+        bool *pbKill = NULL;
         JSRuntime *jsrun = JS_NewRuntime();
         JSContext *jsctx = JS_NewContext(jsrun);
         JSValue jsglobal = JS_GetGlobalObject(jsctx);
+        radialMaestroThread *ptThread = NULL;
         for (auto &i : m_javascript)
         {
           if (i.second->function != NULL)
@@ -2065,8 +2065,7 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
                 pbKill = m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->pbKill;
                 if (m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.find(nID) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.end())
                 {
-                  pbDone = &(m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->bDone);
-                  pstrResponse = &(m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->strResponse);
+                  ptThread = m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID];
                 }
               }
               m_mutex.unlock();
@@ -2080,9 +2079,9 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
           JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
         }
         JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-        if (pbDone != NULL)
+        if (ptThread != NULL)
         {
-          *pbDone = true;
+          ptThread->bDone = true;
         }
         if (pbKill != NULL)
         {
@@ -2111,11 +2110,32 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
             JS_FreeCString(jsctx, pszResponse);
           }
           JS_FreeValue(jsctx, jsresponse);
-          if (pstrResponse != NULL)
+          if (ptThread != NULL)
           {
-            ptResponse->j(*pstrResponse);
+            ptResponse->j(ptThread->strResponse);
           }
           delete ptResponse;
+        }
+        if (ptThread != NULL && ptThread->bDetached)
+        {
+          string strRun;
+          if (!m_manip.decryptAes(m_manip.decodeBase64(run, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+          {
+            Json *ptRun = new Json(strRun);
+            if (dep({"f", "p", "t"}, ptRun, e))
+            {
+              long lThread = atoi(ptRun->m["t"]->v.c_str());
+              m_mutex.lock();
+              if (m_p.find(ptRun->m["p"]->v) != m_p.end() && m_p[ptRun->m["p"]->v]->r.find(ptRun->m["f"]->v) != m_p[ptRun->m["p"]->v]->r.end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].find(lThread) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.find(nID) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.end())
+              {
+                delete m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->pThread;
+                delete m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID];
+                m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.erase(nID);
+              }
+              m_mutex.unlock();
+            }
+            delete ptRun;
+          }
         }
         JS_FreeValue(jsctx, jsglobal);
         JS_FreeValue(jsctx, jsres);
