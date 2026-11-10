@@ -2062,10 +2062,9 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
         }
         if (!run.empty())
         {
-          string strRun;
           if (!m_manip.decryptAes(m_manip.decodeBase64(run, strRun), m_strSecret, strRun, e, m_strCipher).empty())
           {
-            Json *ptRun = new Json(strRun);;
+            Json *ptRun = new Json(strRun);
             if (dep({"f", "p", "t"}, ptRun, e))
             {
               long lThread = atoi(ptRun->m["t"]->v.c_str());
@@ -5099,7 +5098,7 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
               string p = r->m["p"]->v, f = r->m["f"]->v;
               radialMaestroThread *ptThread = new radialMaestroThread;
               ptThread->bDetached = false;
-              ptThread->pThread = new thread(&Maestro::flowThread, this, sp, strPlan, strFlow, strRequest, strRun);
+              ptThread->pThread = new thread(&Maestro::flowThread, this, sp, strPlan, strFlow, strRequest, pszRun);
               m_mutex.lock();
               if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
               {
