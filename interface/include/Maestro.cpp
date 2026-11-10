@@ -3788,6 +3788,7 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
             if (sem_init(pSem, 0, unValue) == 0)
             {
               radialMaestroSem *ptSem = new radialMaestroSem;
+              ptSem->pSem = pSem;
               ptSem->unInUse = 0;
               m_mutex.lock();
               if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
