@@ -27,10 +27,31 @@ struct radialMaestroJavascript
   JSCFunction *function;
 };
 // }}}
+// {{{ radialMaestroSem
+struct radialMaestroSem
+{
+  sem_t *pSem;
+  unsigned int unInUse;
+};
+// }}}
+// {{{ radialMaestroThread
+struct radialMaestroThread
+{
+  bool bDetached;
+  bool bDone;
+  thread *pThread;
+};
+// }}}
 // {{{ radialMaestroRunning
 struct radialMaestroRunning
 {
   bool *pbKill;
+  int32_t nMutex;
+  int32_t nSem;
+  int32_t nThread;
+  map<int32_t, mutex *> mutexes;
+  map<int32_t, radialMaestroSem *> sems;
+  map<int32_t, radialMaestroThread *> threads;
   time_t CTime;
 };
 // }}}
@@ -46,13 +67,6 @@ struct radialMaestroPlan
   Json *a;
 };
 // }}}
-// {{{ radialMaestroSem
-struct radialMaestroSem
-{
-  sem_t *pSem;
-  unsigned int unInUse;
-};
-// }}}
 // }}}
 // {{{ Maestro
 class Maestro : public Interface
@@ -60,14 +74,8 @@ class Maestro : public Interface
   protected:
   bool m_bLoaded;
   bool m_bLoadSchedules;
-  int32_t m_nMutex;
-  int32_t m_nSem;
-  int32_t m_nThread;
   JSContext *m_jsctx;
   JSRuntime *m_jsrun;
-  map<int32_t, mutex *> m_m;
-  map<int32_t, radialMaestroSem *> m_s;
-  map<int32_t, thread *> m_t;
   map<string, bool (Maestro::*)(radialUser &, string &)> m_functions;
   map<string, list<string> > m_a;
   map<string, string> m_applications;

@@ -97,16 +97,16 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
   jsreg("mutexCreate", 0, "mutexCreate()", "Provides the ability to create a mutex.");
-  jsreg("mutexDestroy", 1, "mutexDestroy(mutex)", "Provides the ability to destroy a mutex.");
-  jsreg("mutexLock", 1, "mutexLock(mutex)", "Provides the ability to lock a mutex.");
-  jsreg("mutexUnlock", 1, "mutexUnlock(mutex)", "Provides the ability to lock a mutex.");
+  jsreg("mutexDestroy", 1, "mutexDestroy(id)", "Provides the ability to destroy a mutex.");
+  jsreg("mutexLock", 1, "mutexLock(id)", "Provides the ability to lock a mutex.");
+  jsreg("mutexUnlock", 1, "mutexUnlock(id)", "Provides the ability to lock a mutex.");
   jsreg("mysqlQuery", 6, "mysqlQuery(server, port, user, password, database, query)", "Provides the ability to query (SQL: select) a given MySQL server and database.");
   jsreg("mysqlUpdate", 6, "mysqlUpdate(server, port, user, password, database, query)", "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
   jsreg("notify", 1, "notify(message)", "Provides the ability to send a message to the configured notification email address.");
   jsreg("semCreate", 1, "semCreate(value)", "Provides the ability to create a mutex.");
-  jsreg("semDestroy", 1, "semDestroy(mutex)", "Provides the ability to destroy a mutex.");
-  jsreg("semPost", 1, "semPost(mutex)", "Provides the ability to lock a mutex.");
-  jsreg("semWait", 1, "semWait(mutex)", "Provides the ability to lock a mutex.");
+  jsreg("semDestroy", 1, "semDestroy(id)", "Provides the ability to destroy a mutex.");
+  jsreg("semPost", 1, "semPost(id)", "Provides the ability to lock a mutex.");
+  jsreg("semWait", 1, "semWait(id)", "Provides the ability to lock a mutex.");
   jsreg("setError", 1, "setError(error)", "Provides the ability to set the error prior to exiting the given flow.");
   jsreg("setRequest", 1, "setRequest(request)", "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   jsreg("setResponse", 1, "setResponse(response)", "Provides the ability to set the response prior to exiting the given flow.");
@@ -124,15 +124,12 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("storageRetrieveKeys", 1, "storageRetrieveKeys(keys)", "Provides the ability to retrieve key data from storage.");
   jsreg("storageUpdate", 2, "storageUpdate(keys, data)", "Provides the ability to update data into storage.");
   jsreg("threadCreate", 2, "threadCreate(plan, flow, request)", "Provides the ability to create a thread.");
-  jsreg("threadDetach", 1, "threadDetach(thread)", "Provides the ability to detach a thread.");
-  jsreg("threadJoin", 1, "threadJoin(thread)", "Provides the ability to join a thread.");
+  jsreg("threadDetach", 1, "threadDetach(id)", "Provides the ability to detach a thread.");
+  jsreg("threadJoin", 1, "threadJoin(id)", "Provides the ability to join a thread.");
   // }}}
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
-  m_nMutex = 0;
-  m_nSem = 0;
-  m_nThread = 0;
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -151,14 +148,35 @@ Maestro::~Maestro()
   {
     if (!p.second->r.empty())
     {
-      for (auto &c : p.second->r)
+      for (auto &r : p.second->r)
       {
-        for (auto &r : c.second)
+        for (auto &c : r.second)
         {
-          (*r.second->pbKill) = true;
-          delete r.second;
+          (*c.second->pbKill) = true;
+          for (auto &t : c.second->threads)
+          {
+            t.second->pThread->join();
+            delete t.second->pThread;
+            delete t.second;
+          }
+          c.second->threads.clear();
+          for (auto &s : c.second->sems)
+          {
+            sem_destroy(s.second->pSem);
+            delete s.second->pSem;
+            delete s.second;
+          }
+          c.second->sems.clear();
+          for (auto &m : c.second->mutexes)
+          {
+            delete m.second;
+          }
+          c.second->mutexes.clear();
+          delete c.second;
         }
+        r.second.clear();
       }
+      p.second->r.clear();
     }
     for (auto &f : p.second->f)
     {
@@ -168,31 +186,6 @@ Maestro::~Maestro()
     delete p.second;
   }
   m_p.clear();
-  for (auto &m : m_m)
-  {
-    delete m.second;
-  }
-  m_m.clear();
-  for (auto &s : m_s)
-  {
-    while (s.second->unInUse > 0)
-    {
-      msleep(100);
-    }
-    sem_destroy(s.second->pSem);
-    delete s.second->pSem;
-    delete s.second;
-  }
-  m_s.clear();
-  for (auto &t : m_t)
-  {
-    if (t.second->joinable())
-    {
-      t.second->join();
-    }
-    delete t.second;
-  }
-  m_t.clear();
   for (auto &i : m_javascript)
   {
     delete i.second;
@@ -1582,7 +1575,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               ptThread->j(strThread[0]);
               if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
               {
-                JS_SetPropertyStr(jsctx, jsglobal, "g_js_thread", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
+                JS_SetPropertyStr(jsctx, jsglobal, "g_js_run", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
               }
             }
           }
@@ -1598,10 +1591,30 @@ bool Maestro::flowExec(radialUser &d, string &e)
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
           if (pbKill != NULL)
           {
+            list<thread *> threads;
             JS_SetInterruptHandler(jsrun, NULL, NULL);
+            (*pbKill) = true;
             m_mutex.lock();
             if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
             {
+              for (auto &t : m_p[p]->r[f][lThreadID]->threads)
+              {
+                threads.push_back(t.second->pThread);
+                delete t.second;
+              }
+              m_p[p]->r[f][lThreadID]->threads.clear();
+              for (auto &s : m_p[p]->r[f][lThreadID]->sems)
+              {
+                sem_destroy(s.second->pSem);
+                delete s.second->pSem;
+                delete s.second;
+              }
+              m_p[p]->r[f][lThreadID]->sems.clear();
+              for (auto &m : m_p[p]->r[f][lThreadID]->mutexes)
+              {
+                delete m.second;
+              }
+              m_p[p]->r[f][lThreadID]->mutexes.clear();
               delete m_p[p]->r[f][lThreadID];
               m_p[p]->r[f].erase(lThreadID);
               if (m_p[p]->r[f].empty())
@@ -1610,6 +1623,12 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
             }
             m_mutex.unlock();
+            while (!threads.empty())
+            {
+              threads.front()->join();
+              delete threads.front();
+              threads.pop_front();
+            }
             delete pbKill;
           }
           live("Maestro", "", ptLive);
@@ -1772,7 +1791,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         ptThread->j(strThread[0]);
         if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
         {
-          JS_SetPropertyStr(jsctx, jsglobal, "g_js_thread", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_run", JS_NewStringLen(jsctx, strThread[1].c_str(), strThread[1].size()));
         }
       }
     }
@@ -1788,10 +1807,30 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
     JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
     if (pbKill != NULL)
     {
+      list<thread *> threads;
       JS_SetInterruptHandler(jsrun, NULL, NULL);
+      (*pbKill) = true;
       m_mutex.lock();
       if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
       {
+        for (auto &t : m_p[p]->r[f][lThreadID]->threads)
+        {
+          threads.push_back(t.second->pThread);
+          delete t.second;
+        }
+        m_p[p]->r[f][lThreadID]->threads.clear();
+        for (auto &s : m_p[p]->r[f][lThreadID]->sems)
+        {
+          sem_destroy(s.second->pSem);
+          delete s.second->pSem;
+          delete s.second;
+        }
+        m_p[p]->r[f][lThreadID]->sems.clear();
+        for (auto &m : m_p[p]->r[f][lThreadID]->mutexes)
+        {
+          delete m.second;
+        }
+        m_p[p]->r[f][lThreadID]->mutexes.clear();
         delete m_p[p]->r[f][lThreadID];
         m_p[p]->r[f].erase(lThreadID);
         if (m_p[p]->r[f].empty())
@@ -1800,6 +1839,12 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         }
       }
       m_mutex.unlock();
+      while (!threads.empty())
+      {
+        threads.front()->join();
+        delete threads.front();
+        threads.pop_front();
+      }
       delete pbKill;
     }
     live("Maestro", "", ptLive);
@@ -2814,7 +2859,7 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
               bool *pbKill = NULL;
               JSRuntime *jssubrun = JS_NewRuntime();
               JSContext *jssubctx = JS_NewContext(jssubrun);
-              JSValue jssubglobal = JS_GetGlobalObject(jssubctx), jsthread = JS_GetPropertyStr(jsctx, jsglobal, "g_js_thread");
+              JSValue jssubglobal = JS_GetGlobalObject(jssubctx), jsthread = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
               const char *pszThread = JS_ToCString(jsctx, jsthread);
               for (auto &i : m_javascript)
               {
@@ -2845,12 +2890,12 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
                   {
                     long lThread = atoi(ptThread->m["t"]->v.c_str());
                     m_mutex.lock();
-                    if (m_p.find(ptThread->m["p"]->v) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThread) != m_p[p]->r[f].end())
+                    if (m_p.find(ptThread->m["p"]->v) != m_p.end() && m_p[ptThread->m["p"]->v]->r.find(ptThread->m["f"]->v) != m_p[ptThread->m["p"]->v]->r.end() && m_p[ptThread->m["p"]->v]->r[ptThread->m["f"]->v].find(lThread) != m_p[ptThread->m["p"]->v]->r[ptThread->m["f"]->v].end())
                     {
-                      pbKill = m_p[p]->r[f][lThread]->pbKill;
+                      pbKill = m_p[ptThread->m["p"]->v]->r[ptThread->m["f"]->v][lThread]->pbKill;
                     }
                     m_mutex.unlock();
-                    JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_thread", JS_NewStringLen(jssubctx, pszThread, strlen(pszThread)));
+                    JS_SetPropertyStr(jssubctx, jssubglobal, "g_js_run", JS_NewStringLen(jssubctx, pszThread, strlen(pszThread)));
                   }
                   delete ptThread;
                 }
@@ -3248,19 +3293,52 @@ JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueCons
 // {{{ js_mutexCreate()
 JSValue Maestro::js_mutexCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
 {
-  int32_t nMutex = -1;
-  mutex *pMutex = new mutex;
+  int32_t nID = -1;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  m_mutex.lock();
-  while (m_nMutex != -1 && m_m.find(m_nMutex) != m_m.end())
+  if (pszRun != NULL)
   {
-    m_nMutex++;
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+        {
+          while (m_p[p]->r[f][t]->nMutex != -1 && m_p[p]->r[f][t]->mutexes.find(m_p[p]->r[f][t]->nMutex) != m_p[p]->r[f][t]->mutexes.end())
+          {
+            m_p[p]->r[f][t]->nMutex++;
+          }
+          nID = m_p[p]->r[f][t]->nMutex;
+          m_p[p]->r[f][t]->mutexes[nID] = new mutex;
+        }
+        else
+        {
+          e = "Failed to find plan, flow, and thread.";
+        }
+        m_mutex.unlock();
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
   }
-  nMutex = m_nMutex;
-  m_m[m_nMutex] = pMutex;
-  m_mutex.unlock();
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
-  return JS_NewInt32(jsctx, nMutex);
+  return JS_NewInt32(jsctx, nID);
 }
 // }}}
 // {{{ js_mutexDestroy()
@@ -3268,46 +3346,66 @@ JSValue Maestro::js_mutexDestroy(JSContext *jsctx, JSValueConst, int argc, JSVal
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
-    if (pszMutex != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nMutex;
-      stringstream ssMutex(pszMutex);
-      mutex *pMutex = NULL;
-      ssMutex >> nMutex;
-      m_mutex.lock();
-      if (m_m.find(nMutex) != m_m.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        b = true;
-        pMutex = m_m[nMutex];
-        m_m.erase(nMutex);
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            mutex *pMutex = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->mutexes.find(nID) != m_p[p]->r[f][t]->mutexes.end())
+            {
+              pMutex = m_p[p]->r[f][t]->mutexes[nID];
+              m_p[p]->r[f][t]->mutexes.erase(nID);
+            }
+            m_mutex.unlock();
+            if (pMutex != NULL)
+            {
+              b = true;
+              delete pMutex;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      m_mutex.unlock();
-      if (pMutex != NULL)
-      {
-        delete pMutex;
-      }
-      else
-      {
-        e = "Please provide a valid mutex.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the mutex.";
-    }
-    if (pszMutex != NULL)
-    {
-      JS_FreeCString(jsctx, pszMutex);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the mutex.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -3323,45 +3421,65 @@ JSValue Maestro::js_mutexLock(JSContext *jsctx, JSValueConst, int argc, JSValueC
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
-    if (pszMutex != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nMutex;
-      stringstream ssMutex(pszMutex);
-      mutex *pMutex = NULL;
-      ssMutex >> nMutex;
-      m_mutex.lock();
-      if (m_m.find(nMutex) != m_m.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        pMutex = m_m[nMutex];
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            mutex *pMutex = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->mutexes.find(nID) != m_p[p]->r[f][t]->mutexes.end())
+            {
+              pMutex = m_p[p]->r[f][t]->mutexes[nID];
+            }
+            m_mutex.unlock();
+            if (pMutex != NULL)
+            {
+              b = true;
+              pMutex->lock();
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      m_mutex.unlock();
-      if (pMutex != NULL)
-      {
-        b = true;
-        pMutex->lock();
-      }
-      else
-      {
-        e = "Please provide a valid mutex.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the mutex.";
-    }
-    if (pszMutex != NULL)
-    {
-      JS_FreeCString(jsctx, pszMutex);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the mutex.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -3377,45 +3495,65 @@ JSValue Maestro::js_mutexUnlock(JSContext *jsctx, JSValueConst, int argc, JSValu
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszMutex = JS_ToCString(jsctx, argv[0]);
-    if (pszMutex != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nMutex;
-      stringstream ssMutex(pszMutex);
-      mutex *pMutex = NULL;
-      ssMutex >> nMutex;
-      m_mutex.lock();
-      if (m_m.find(nMutex) != m_m.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        pMutex = m_m[nMutex];
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            mutex *pMutex = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->mutexes.find(nID) != m_p[p]->r[f][t]->mutexes.end())
+            {
+              pMutex = m_p[p]->r[f][t]->mutexes[nID];
+            }
+            m_mutex.unlock();
+            if (pMutex != NULL)
+            {
+              b = true;
+              pMutex->unlock();
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      m_mutex.unlock();
-      if (pMutex != NULL)
-      {
-        b = true;
-        pMutex->unlock();
-      }
-      else
-      {
-        e = "Please provide a valid mutex.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the mutex.";
-    }
-    if (pszMutex != NULL)
-    {
-      JS_FreeCString(jsctx, pszMutex);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the mutex.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -3620,39 +3758,87 @@ JSValue Maestro::js_notify(JSContext *jsctx, JSValueConst, int argc, JSValueCons
 // {{{ js_semCreate()
 JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
 {
-  int32_t nSem = -1;
+  int32_t nID = -1;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszValue = JS_ToCString(jsctx, argv[0]);
-    if (pszValue != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      sem_t *pSem = new sem_t;
-      stringstream ssValue(pszValue);
-      unsigned int unValue;
-      ssValue >> unValue;
-      if (sem_init(pSem, 0, unValue) == 0)
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        radialMaestroSem *ptSem = new radialMaestroSem;
-        ptSem->unInUse = 0;
-        m_mutex.lock();
-        while (m_nSem != -1 && m_s.find(m_nSem) != m_s.end())
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
         {
-          m_nSem++;
+          const char *pszValue = JS_ToCString(jsctx, argv[0]);
+          if (pszValue != NULL)
+          {
+            sem_t *pSem = new sem_t;
+            stringstream ssValue(pszValue);
+            unsigned int unValue;
+            ssValue >> unValue;
+            if (sem_init(pSem, 0, unValue) == 0)
+            {
+              radialMaestroSem *ptSem = new radialMaestroSem;
+              ptSem->unInUse = 0;
+              m_mutex.lock();
+              if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+              {
+                while (m_p[p]->r[f][t]->nSem != -1 && m_p[p]->r[f][t]->sems.find(m_p[p]->r[f][t]->nSem) != m_p[p]->r[f][t]->sems.end())
+                {
+                  m_p[p]->r[f][t]->nSem++;
+                }
+                nID = m_p[p]->r[f][t]->nSem;
+                m_p[p]->r[f][t]->sems[nID] = ptSem;
+              }
+              else
+              {
+                e = "Failed to find plan, flow, and thread.";
+                sem_destroy(pSem);
+                delete pSem;
+                delete ptSem;
+              }
+              m_mutex.unlock();
+            }
+            else
+            {
+              delete pSem;
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszValue != NULL)
+          {
+            JS_FreeCString(jsctx, pszValue);
+          }
         }
-        nSem = m_nSem;
-        m_s[m_nSem] = ptSem;
-        m_mutex.unlock();
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      else
-      {
-        delete pSem;
-      }
-      JS_FreeCString(jsctx, pszValue);
+      delete r;
     }
+    JS_FreeCString(jsctx, pszRun);
   }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
-  return JS_NewInt32(jsctx, nSem);
+  return JS_NewInt32(jsctx, nID);
 }
 // }}}
 // {{{ js_semDestroy()
@@ -3660,52 +3846,72 @@ JSValue Maestro::js_semDestroy(JSContext *jsctx, JSValueConst, int argc, JSValue
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszSem = JS_ToCString(jsctx, argv[0]);
-    if (pszSem != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nSem;
-      stringstream ssSem(pszSem);
-      radialMaestroSem *ptSem = NULL;
-      ssSem >> nSem;
-      m_mutex.lock();
-      if (m_s.find(nSem) != m_s.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        b = true;
-        ptSem = m_s[nSem];
-        m_s.erase(nSem);
-      }
-      m_mutex.unlock();
-      if (ptSem != NULL)
-      {
-        while (ptSem->unInUse > 0)
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
         {
-          msleep(100);
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroSem *ptSem = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->sems.find(nID) != m_p[p]->r[f][t]->sems.end())
+            {
+              ptSem = m_p[p]->r[f][t]->sems[nID];
+              m_p[p]->r[f][t]->sems.erase(nID);
+            }
+            m_mutex.unlock();
+            if (ptSem != NULL)
+            {
+              b = true;
+              while (!shutdown() && ptSem->unInUse > 0)
+              {
+                msleep(100);
+              }
+              sem_destroy(ptSem->pSem);
+              delete ptSem->pSem;
+              delete ptSem;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
         }
-        sem_destroy(ptSem->pSem);
-        delete ptSem->pSem;
-        delete ptSem;
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      else
-      {
-        e = "Please provide a valid sem.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the sem.";
-    }
-    if (pszSem != NULL)
-    {
-      JS_FreeCString(jsctx, pszSem);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the sem.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -3721,49 +3927,69 @@ JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueCon
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszSem = JS_ToCString(jsctx, argv[0]);
-    if (pszSem != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nSem;
-      stringstream ssSem(pszSem);
-      radialMaestroSem *ptSem = NULL;
-      ssSem >> nSem;
-      m_mutex.lock();
-      if (m_s.find(nSem) != m_s.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        ptSem = m_s[nSem];
-      }
-      m_mutex.unlock();
-      if (ptSem != NULL)
-      {
-        b = true;
-        sem_post(ptSem->pSem);
-        if (ptSem->unInUse > 0)
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
         {
-          ptSem->unInUse--;
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroSem *ptSem = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->sems.find(nID) != m_p[p]->r[f][t]->sems.end())
+            {
+              ptSem = m_p[p]->r[f][t]->sems[nID];
+            }
+            m_mutex.unlock();
+            if (ptSem != NULL)
+            {
+              b = true;
+              sem_post(ptSem->pSem);
+              if (ptSem->unInUse > 0)
+              {
+                ptSem->unInUse--;
+              }
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
         }
       }
-      else
-      {
-        e = "Please provide a valid sem.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the sem.";
-    }
-    if (pszSem != NULL)
-    {
-      JS_FreeCString(jsctx, pszSem);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the sem.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -3779,46 +4005,66 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
 {
   bool b = false;
   string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  if (argc == 1)
+  if (pszRun != NULL)
   {
-    const char *pszSem = JS_ToCString(jsctx, argv[0]);
-    if (pszSem != NULL)
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
-      int32_t nSem;
-      stringstream ssSem(pszSem);
-      radialMaestroSem *ptSem = NULL;
-      ssSem >> nSem;
-      m_mutex.lock();
-      if (m_s.find(nSem) != m_s.end())
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
       {
-        ptSem = m_s[nSem];
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroSem *ptSem = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->sems.find(nID) != m_p[p]->r[f][t]->sems.end())
+            {
+              ptSem = m_p[p]->r[f][t]->sems[nID];
+            }
+            m_mutex.unlock();
+            if (ptSem != NULL)
+            {
+              b = true;
+              sem_wait(ptSem->pSem);
+              ptSem->unInUse++;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
       }
-      m_mutex.unlock();
-      if (ptSem != NULL)
-      {
-        b = true;
-        sem_wait(ptSem->pSem);
-        ptSem->unInUse++;
-      }
-      else
-      {
-        e = "Please provide a valid sem.";
-      }
+      delete r;
     }
-    else
-    {
-      e = "Please provide the sem.";
-    }
-    if (pszSem != NULL)
-    {
-      JS_FreeCString(jsctx, pszSem);
-    }
+    JS_FreeCString(jsctx, pszRun);
   }
   else
   {
-    e = "Please provide the sem.";
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -4623,67 +4869,126 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
 // {{{ js_threadCreate()
 JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
 {
-  int32_t nThread = -1;
-  thread *pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
+  int32_t nID = -1;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
 
-  m_mutex.lock();
-  while (m_nThread != -1 && m_t.find(m_nThread) != m_t.end())
+  if (pszRun != NULL)
   {
-    m_nThread++;
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        thread *pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
+        radialMaestroThread *ptThread = new radialMaestroThread;
+        ptThread->bDetached = false;
+        ptThread->bDone = false;
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+        {
+          while (m_p[p]->r[f][t]->nThread != -1 && m_p[p]->r[f][t]->threads.find(m_p[p]->r[f][t]->nThread) != m_p[p]->r[f][t]->threads.end())
+          {
+            m_p[p]->r[f][t]->nThread++;
+          }
+          nID = m_p[p]->r[f][t]->nThread;
+          m_p[p]->r[f][t]->threads[m_p[p]->r[f][t]->nThread] = ptThread;
+        }
+        else
+        {
+          e = "Failed to find plan, flow, and thread.";
+          delete ptThread;
+          pThread->detach();
+          delete pThread;
+        }
+        m_mutex.unlock();
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
   }
-  nThread = m_nThread;
-  m_t[m_nThread] = pThread;
-  m_mutex.unlock();
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
 
-  return JS_NewInt32(jsctx, nThread);
+  return JS_NewInt32(jsctx, nID);
 }
 // }}}
 // {{{ js_threadDetach()
 JSValue Maestro::js_threadDetach(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
   bool b = false;
-  string e;
   JSValue jsglobal = JS_GetGlobalObject(jsctx);
+  string e;
 
   if (argc == 1)
   {
-    const char *pszThread = JS_ToCString(jsctx, argv[0]);
-    if (pszThread != NULL)
+    const char *pszID = JS_ToCString(jsctx, argv[0]);
+    if (pszID != NULL)
     {
-      int32_t nThread;
-      stringstream ssThread(pszThread);
-      thread *pThread = NULL;
-      ssThread >> nThread;
-      m_mutex.lock();
-      if (m_t.find(nThread) != m_t.end())
+      int32_t nID;
+      JSValue jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+      const char *pszRun = JS_ToCString(jsctx, jsrun);
+      stringstream ssID(pszID);
+      ssID >> nID;
+      if (pszRun != NULL)
       {
-        b = true;
-        pThread = m_t[nThread];
-        m_t.erase(nThread);
-      }
-      m_mutex.unlock();
-      if (pThread != NULL)
-      {
-        pThread->detach();
-        delete pThread;
+        string e, strRun;
+        if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+        {
+          Json *r = new Json(strRun);
+          if (dep({"f", "p", "t"}, r, e))
+          {
+            long t = atol(r->m["t"]->v.c_str());
+            string p = r->m["p"]->v, f = r->m["f"]->v;
+            radialMaestroThread *ptThread = NULL;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->threads.find(nID) != m_p[p]->r[f][t]->threads.end())
+            {
+              ptThread = m_p[p]->r[f][t]->threads[nID];
+            }
+            m_mutex.unlock();
+            if (ptThread != NULL)
+            {
+              b = true;
+              ptThread->bDetached = true;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          delete r;
+        }
+        JS_FreeCString(jsctx, pszRun);
       }
       else
       {
-        e = "Please provide a valid thread.";
+        e = "Failed to retrieve g_js_run.";
       }
     }
     else
     {
-      e = "Please provide the thread.";
+      e = "Please provide the id.";
     }
-    if (pszThread != NULL)
+    if (pszID != NULL)
     {
-      JS_FreeCString(jsctx, pszThread);
+      JS_FreeCString(jsctx, pszID);
     }
   }
   else
   {
-    e = "Please provide the thread.";
+    e = "Please provide the id.";
   }
   if (!e.empty())
   {
@@ -4703,43 +5008,65 @@ JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValue
 
   if (argc == 1)
   {
-    const char *pszThread = JS_ToCString(jsctx, argv[0]);
-    if (pszThread != NULL)
+    const char *pszID = JS_ToCString(jsctx, argv[0]);
+    if (pszID != NULL)
     {
-      int32_t nThread;
-      stringstream ssThread(pszThread);
-      thread *pThread = NULL;
-      ssThread >> nThread;
-      m_mutex.lock();
-      if (m_t.find(nThread) != m_t.end())
+      int32_t nID;
+      JSValue jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+      const char *pszRun = JS_ToCString(jsctx, jsrun);
+      stringstream ssID(pszID);
+      ssID >> nID;
+      if (pszRun != NULL)
       {
-        pThread = m_t[nThread];
-        m_t.erase(nThread);
-      }
-      m_mutex.unlock();
-      if (pThread != NULL)
-      {
-        b = true;
-        pThread->join();
-        delete pThread;
+        string e, strRun;
+        if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+        {
+          Json *r = new Json(strRun);
+          if (dep({"f", "p", "t"}, r, e))
+          {
+            long t = atol(r->m["t"]->v.c_str());
+            string p = r->m["p"]->v, f = r->m["f"]->v;
+            radialMaestroThread *ptThread = NULL;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->threads.find(nID) != m_p[p]->r[f][t]->threads.end())
+            {
+              ptThread = m_p[p]->r[f][t]->threads[nID];
+              m_p[p]->r[f][t]->threads.erase(nID);
+            }
+            m_mutex.unlock();
+            if (ptThread != NULL)
+            {
+              b = true;
+              ptThread->pThread->join();
+              delete ptThread->pThread;
+              delete ptThread;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          delete r;
+        }
+        JS_FreeCString(jsctx, pszRun);
       }
       else
       {
-        e = "Please provide a valid thread.";
+        e = "Failed to retrieve g_js_run.";
       }
     }
     else
     {
-      e = "Please provide the thread.";
+      e = "Please provide the id.";
     }
-    if (pszThread != NULL)
+    if (pszID != NULL)
     {
-      JS_FreeCString(jsctx, pszThread);
+      JS_FreeCString(jsctx, pszID);
     }
   }
   else
   {
-    e = "Please provide the thread.";
+    e = "Please provide the id.";
   }
   if (!e.empty())
   {
