@@ -3967,6 +3967,7 @@ JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueCon
             if (ptSem != NULL)
             {
               b = true;
+              chat("#maestro", "sem_post()");
               sem_post(ptSem->pSem);
               if (ptSem->unInUse > 0)
               {
@@ -4045,6 +4046,7 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
             if (ptSem != NULL)
             {
               b = true;
+              chat("#maestro", "sem_wait()");
               sem_wait(ptSem->pSem);
               ptSem->unInUse++;
             }
