@@ -1563,6 +1563,9 @@ bool Maestro::flowExec(radialUser &d, string &e)
               m_p[p]->r[f] = {};
             }
             time(&(ptRunning->CTime));
+            ptRunning->nMutex = 0;
+            ptRunning->nSem = 0;
+            ptRunning->nThread = 0;
             ptRunning->pbKill = pbKill;
             m_p[p]->r[f][lThreadID] = ptRunning;
             if (!m_strSecret.empty())
@@ -1780,6 +1783,9 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         m_p[p]->r[f] = {};
       }
       time(&(ptRunning->CTime));
+      ptRunning->nMutex = 0;
+      ptRunning->nSem = 0;
+      ptRunning->nThread = 0;
       ptRunning->pbKill = pbKill;
       m_p[p]->r[f][lThreadID] = ptRunning;
       if (!m_strSecret.empty())
