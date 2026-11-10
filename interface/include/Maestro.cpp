@@ -1571,7 +1571,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               Json *ptThread = new Json;
               ptThread->i("p", p);
               ptThread->i("f", f);
-              ptThread->i("t", lThreadID);
+              ptThread->i("t", to_string(lThreadID), 'n');
               ptThread->j(strThread[0]);
               chat("#maestro", strThread[0]);
               delete ptThread;
@@ -1789,7 +1789,7 @@ void Maestro::flowLaunch(const string p, const string f, const string r, Json *p
         Json *ptThread = new Json;
         ptThread->i("p", p);
         ptThread->i("f", f);
-        ptThread->i("t", lThreadID);
+        ptThread->i("t", to_string(lThreadID), 'n');
         ptThread->j(strThread[0]);
         delete ptThread;
         if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
@@ -3772,7 +3772,6 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
     if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
       Json *r = new Json(strRun);
-      chat("#maestro", strRun);
       if (dep({"f", "p", "t"}, r, e))
       {
         long t = atol(r->m["t"]->v.c_str());
