@@ -1993,6 +1993,201 @@ bool Maestro::flows(radialUser &d, string &e)
   return b;
 }
 // }}}
+// {{{ flowThread()
+void Maestro::flowThread(const string sp, string p, const string f, const string r, const string run)
+{
+  string e;
+  Json *ptFlow = NULL;
+
+  m_mutex.lock();
+  if (p.size() < 2 || (p.substr(0, 2) != "a_" && p.substr(0, 2) != "u_"))
+  {
+    auto pIter = m_p.end();
+    for (auto c = m_p.begin(); pIter == m_p.end() && c != m_p.end(); c++)
+    {
+      if (c->second->owner == p)
+      {
+        pIter = c;
+      }
+    }
+    if (pIter != m_p.end())
+    {
+      p = pIter->first;
+    }
+  }
+  if (m_p.find(p) != m_p.end())
+  {
+    if (m_p[p]->f.find(f) != m_p[p]->f.end())
+    {
+      ptFlow = new Json(m_p[p]->f[f]);
+    }
+    else
+    {
+      e = "Flow not found.";
+    }
+  }
+  else
+  {
+    e = "Plan not found.";
+  }
+  m_mutex.unlock();
+  if (ptFlow != NULL)
+  {
+    if (sp == p || haveAccess(sp, p, {f}, e))
+    {
+      if (!ptFlow->empty({"Script"}))
+      {
+        bool *pbKill = NULL;
+        JSRuntime *jsrun = JS_NewRuntime();
+        JSContext *jsctx = JS_NewContext(jsrun);
+        JSValue jsglobal = JS_GetGlobalObject(jsctx);
+        for (auto &i : m_javascript)
+        {
+          if (i.second->function != NULL)
+          {
+            JS_SetPropertyStr(jsctx, jsglobal, i.first.c_str(), JS_NewCFunction(jsctx, i.second->function, i.first.c_str(), i.second->nLength));
+          }
+        }
+        if (!m_strSecret.empty())
+        {
+          string strPlan;
+          if (!m_manip.encodeBase64(m_manip.encryptAes(p, m_strSecret, strPlan, e, m_strCipher), strPlan).empty())
+          {
+            JS_SetPropertyStr(jsctx, jsglobal, "g_js_plan", JS_NewStringLen(jsctx, strPlan.c_str(), strPlan.size()));
+          }
+        }
+        if (!r.empty())
+        {
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_request", JS_NewStringLen(jsctx, r.c_str(), r.size()));
+        }
+        if (!run.empty())
+        {
+          string strRun;
+          if (!m_manip.decryptAes(m_manip.decodeBase64(run, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+          {
+            Json *ptRun = new Json(strRun);;
+            if (dep({"f", "p", "t"}, ptRun, e))
+            {
+              long lThread = atoi(ptRun->m["t"]->v.c_str());
+              m_mutex.lock();
+              if (m_p.find(ptRun->m["p"]->v) != m_p.end() && m_p[ptRun->m["p"]->v]->r.find(ptRun->m["f"]->v) != m_p[ptRun->m["p"]->v]->r.end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].find(lThread) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].end())
+              {
+                pbKill = m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->pbKill;
+              }
+              m_mutex.unlock();
+              JS_SetPropertyStr(jsctx, jsglobal, "g_js_run", JS_NewStringLen(jsctx, run.c_str(), run.size()));
+            }
+            delete ptRun;
+          }
+        }
+        if (pbKill != NULL)
+        {
+          JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
+        }
+        JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+        if (pbKill != NULL)
+        {
+          JS_SetInterruptHandler(jsrun, NULL, NULL);
+        }
+        if (JS_IsException(jsres))
+        {
+          JSValue jsexc = JS_GetException(jsctx);
+          if (JS_IsError(jsctx, jsexc))
+          {
+            JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
+            if (JS_IsException(jsmsg))
+            {
+              JSValue jssubexc = JS_GetException(jsctx);
+              const char *pszMessage = JS_ToCString(jsctx, jssubexc);
+              if (pszMessage != NULL)
+              {
+                e = pszMessage;
+                JS_FreeCString(jsctx, pszMessage);
+              }
+              else
+              {
+                e = "Failed to retrieve the exception from the message from the exception from the script.";
+              }
+              JS_FreeValue(jsctx, jssubexc);
+            }
+            else if (JS_IsString(jsmsg))
+            {
+              size_t unLength = 0;
+              const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
+              if (pszMessage != NULL)
+              {
+                JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
+                e.assign(pszMessage, unLength);
+                if (JS_IsString(jsstk))
+                {
+                  const char *pszStk = JS_ToCString(jsctx, jsstk);
+                  if (pszStk != NULL)
+                  {
+                    e += (string)" " + pszStk;
+                    JS_FreeCString(jsctx, pszStk);
+                  }
+                }
+                JS_FreeValue(jsctx, jsstk);
+                JS_FreeCString(jsctx, pszMessage);
+              }
+              else
+              {
+                e = "Failed to retrieve the message within the exception from the script.";
+              }
+            }
+            else
+            {
+              e = "Encountered a non-string message within the exception from the script.";
+            }
+          }
+          else
+          {
+            e = "Encountered a non-error exception from the script.";
+          }
+          JS_FreeValue(jsctx, jsexc);
+        }
+        else
+        {
+          string strResponse;
+          JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
+          const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
+          Json *ptResponse = new Json;
+          if (pszStatus != NULL)
+          {
+            ptResponse->i("Status", pszStatus);
+            JS_FreeCString(jsctx, pszStatus);
+          }
+          JS_FreeValue(jsctx, jsstatus);
+          if (pszError != NULL)
+          {
+            ptResponse->i("Error", pszError);
+            JS_FreeCString(jsctx, pszError);
+          }
+          JS_FreeValue(jsctx, jserror);
+          if (pszResponse != NULL)
+          {
+            ptResponse->m["Response"] = new Json(pszResponse);
+            JS_FreeCString(jsctx, pszResponse);
+          }
+          JS_FreeValue(jsctx, jsresponse);
+          ptResponse->j(strResponse);
+          delete ptResponse;
+          JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+        }
+        JS_FreeValue(jsctx, jsglobal);
+        JS_FreeValue(jsctx, jsres);
+        JS_FreeContext(jsctx);
+        JS_FreeRuntime(jsrun);
+      }
+      else
+      {
+        e = "Script not found.";
+      }
+    }
+    delete ptFlow;
+  }
+}
+// }}}
 // {{{ flowUpdate()
 bool Maestro::flowUpdate(radialUser &d, string &e)
 {
@@ -3967,7 +4162,6 @@ JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueCon
             if (ptSem != NULL)
             {
               b = true;
-              chat("#maestro", "sem_post()");
               sem_post(ptSem->pSem);
               if (ptSem->unInUse > 0)
               {
@@ -4046,7 +4240,6 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
             if (ptSem != NULL)
             {
               b = true;
-              chat("#maestro", "sem_wait()");
               sem_wait(ptSem->pSem);
               ptSem->unInUse++;
             }
@@ -4881,51 +5074,81 @@ JSValue Maestro::js_storageUpdate(JSContext *jsctx, JSValueConst, int argc, JSVa
 JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
 {
   int32_t nID = -1;
-  string e;
-  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
-  const char *pszRun = JS_ToCString(jsctx, jsrun);
+  string e, sp;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
 
-  if (pszRun != NULL)
+  if (getPlan(jsctx, sp, e))
   {
-    string strRun;
-    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+  	if (argc >= 2 && argc <= 3)
     {
-      Json *r = new Json(strRun);
-      if (dep({"f", "p", "t"}, r, e))
+      const char *pszPlan = JS_ToCString(jsctx, argv[0]), *pszFlow = JS_ToCString(jsctx, argv[1]), *pszRequest = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+      if (pszPlan != NULL && pszFlow != NULL)
       {
-        long t = atol(r->m["t"]->v.c_str());
-        string p = r->m["p"]->v, f = r->m["f"]->v;
-        radialMaestroThread *ptThread = new radialMaestroThread;
-        ptThread->bDetached = false;
-        ptThread->argc = argc;
-        ptThread->argv = JS_DupValue(jsctx, *argv);
-        ptThread->pThread = new thread(&Maestro::js_flow, this, jsctx, na, ptThread->argc, &(ptThread->argv));
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+        string strPlan = pszPlan, strFlow = pszFlow, strRequest = ((argc >= 3)?pszRequest:"");
+        JSValue jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+        const char *pszRun = JS_ToCString(jsctx, jsrun);
+        if (pszRun != NULL)
         {
-          while (m_p[p]->r[f][t]->nThread != -1 && m_p[p]->r[f][t]->threads.find(m_p[p]->r[f][t]->nThread) != m_p[p]->r[f][t]->threads.end())
+          string strRun;
+          if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
           {
-            m_p[p]->r[f][t]->nThread++;
+            Json *r = new Json(strRun);
+            if (dep({"f", "p", "t"}, r, e))
+            {
+              long t = atol(r->m["t"]->v.c_str());
+              string p = r->m["p"]->v, f = r->m["f"]->v;
+              radialMaestroThread *ptThread = new radialMaestroThread;
+              ptThread->bDetached = false;
+              ptThread->pThread = new thread(&Maestro::flowThread, this, sp, strPlan, strFlow, strRequest, strRun);
+              m_mutex.lock();
+              if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+              {
+                while (m_p[p]->r[f][t]->nThread != -1 && m_p[p]->r[f][t]->threads.find(m_p[p]->r[f][t]->nThread) != m_p[p]->r[f][t]->threads.end())
+                {
+                  m_p[p]->r[f][t]->nThread++;
+                }
+                nID = m_p[p]->r[f][t]->nThread;
+                m_p[p]->r[f][t]->threads[m_p[p]->r[f][t]->nThread] = ptThread;
+              }
+              else
+              {
+                e = "Failed to find plan, flow, and thread.";
+                ptThread->pThread->detach();
+                delete ptThread->pThread;
+                delete ptThread;
+              }
+              m_mutex.unlock();
+            }
+            delete r;
           }
-          nID = m_p[p]->r[f][t]->nThread;
-          m_p[p]->r[f][t]->threads[m_p[p]->r[f][t]->nThread] = ptThread;
+          JS_FreeCString(jsctx, pszRun);
         }
         else
         {
-          e = "Failed to find plan, flow, and thread.";
-          ptThread->pThread->detach();
-          delete ptThread->pThread;
-          delete ptThread;
+          e = "Failed to retrieve g_js_run.";
         }
-        m_mutex.unlock();
       }
-      delete r;
+      else
+      {
+        e = "Please provide the plan and flow.";
+      }
+      if (pszRequest != NULL)
+      {
+        JS_FreeCString(jsctx, pszRequest);
+      }
+      if (pszFlow != NULL)
+      {
+        JS_FreeCString(jsctx, pszFlow);
+      }
+      if (pszPlan != NULL)
+      {
+        JS_FreeCString(jsctx, pszPlan);
+      }
     }
-    JS_FreeCString(jsctx, pszRun);
-  }
-  else
-  {
-    e = "Failed to retrieve g_js_run.";
+    else
+    {
+      e = "Please provide the plan and flow.";
+    }
   }
   if (!e.empty())
   {

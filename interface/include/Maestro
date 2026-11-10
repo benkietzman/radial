@@ -38,8 +38,6 @@ struct radialMaestroSem
 struct radialMaestroThread
 {
   bool bDetached;
-  int argc;
-  JSValue argv;
   thread *pThread;
 };
 // }}}
@@ -102,6 +100,7 @@ class Maestro : public Interface
   bool flowExec(radialUser &d, string &e);
   bool flowRemove(radialUser &d, string &e);
   bool flows(radialUser &d, string &e);
+  void flowThread(const string sp, string p, const string f, const string r, const string run);
   bool flowUpdate(radialUser &d, string &e);
   bool getPlan(JSContext *jsctx, string &strPlan, string &e);
   bool haveAccess(const string strPlan, const string strAccess, list<string> scopes, string &strError, const bool bMutex = true);
