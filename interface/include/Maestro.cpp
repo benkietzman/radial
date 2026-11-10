@@ -4897,7 +4897,7 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
         ptThread->bDetached = false;
         //ptThread->argc = argc;
         //ptThread->argv = JS_DupValue(jsctx, argv);
-        ptThread->pThread = new thread(&Maestro::js_flow, this, jsctx, na, ptThread->argc, ptThread->argv);
+        ptThread->pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
         m_mutex.lock();
         if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
         {
@@ -4911,9 +4911,9 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
         else
         {
           e = "Failed to find plan, flow, and thread.";
+          ptThread->pThread->detach();
+          delete ptThread->pThread;
           delete ptThread;
-          pThread->detach();
-          delete pThread;
         }
         m_mutex.unlock();
       }
