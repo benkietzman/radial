@@ -2062,6 +2062,7 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
         }
         if (!run.empty())
         {
+          string strRun;
           if (!m_manip.decryptAes(m_manip.decodeBase64(run, strRun), m_strSecret, strRun, e, m_strCipher).empty())
           {
             Json *ptRun = new Json(strRun);
