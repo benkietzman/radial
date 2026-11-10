@@ -1573,7 +1573,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
               ptThread->i("f", f);
               ptThread->i("t", to_string(lThreadID), 'n');
               ptThread->j(strThread[0]);
-              chat("#maestro", strThread[0]);
               delete ptThread;
               if (!m_manip.encodeBase64(m_manip.encryptAes(strThread[0], m_strSecret, strThread[1], e, m_strCipher), strThread[1]).empty())
               {
