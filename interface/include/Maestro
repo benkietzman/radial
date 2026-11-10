@@ -38,7 +38,8 @@ struct radialMaestroSem
 struct radialMaestroThread
 {
   bool bDetached;
-  bool bDone;
+  //int argc;
+  //JSValue *argv;
   thread *pThread;
 };
 // }}}

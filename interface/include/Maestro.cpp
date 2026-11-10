@@ -4893,10 +4893,11 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
       {
         long t = atol(r->m["t"]->v.c_str());
         string p = r->m["p"]->v, f = r->m["f"]->v;
-        thread *pThread = new thread(&Maestro::js_flow, this, jsctx, na, argc, argv);
         radialMaestroThread *ptThread = new radialMaestroThread;
         ptThread->bDetached = false;
-        ptThread->bDone = false;
+        //ptThread->argc = argc;
+        //ptThread->argv = JS_DupValue(jsctx, argv);
+        ptThread->pThread = new thread(&Maestro::js_flow, this, jsctx, na, ptThread->argc, ptThread->argv);
         m_mutex.lock();
         if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
         {
