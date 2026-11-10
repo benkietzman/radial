@@ -175,7 +175,7 @@ Maestro::~Maestro()
   m_m.clear();
   for (auto &s : m_s)
   {
-    while (s.second->nInUse > 0)
+    while (s.second->unInUse > 0)
     {
       msleep(100);
     }
