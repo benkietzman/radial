@@ -1994,7 +1994,7 @@ bool Maestro::flows(radialUser &d, string &e)
 }
 // }}}
 // {{{ flowThread()
-void Maestro::flowThread(const string sp, string p, const string f, const string r, const string run)
+void Maestro::flowThread(const string sp, string p, const string f, const string r, const int32_t nID, const string run)
 {
   string e;
   Json *ptFlow = NULL;
@@ -2015,20 +2015,9 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
       p = pIter->first;
     }
   }
-  if (m_p.find(p) != m_p.end())
+  if (m_p.find(p) != m_p.end() && m_p[p]->f.find(f) != m_p[p]->f.end())
   {
-    if (m_p[p]->f.find(f) != m_p[p]->f.end())
-    {
-      ptFlow = new Json(m_p[p]->f[f]);
-    }
-    else
-    {
-      e = "Flow not found.";
-    }
-  }
-  else
-  {
-    e = "Plan not found.";
+    ptFlow = new Json(m_p[p]->f[f]);
   }
   m_mutex.unlock();
   if (ptFlow != NULL)
@@ -2037,7 +2026,8 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
     {
       if (!ptFlow->empty({"Script"}))
       {
-        bool *pbKill = NULL;
+        bool *pbDone = NULL, *pbKill = NULL;
+        string *pstrResponse = NULL;
         JSRuntime *jsrun = JS_NewRuntime();
         JSContext *jsctx = JS_NewContext(jsrun);
         JSValue jsglobal = JS_GetGlobalObject(jsctx);
@@ -2073,6 +2063,11 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
               if (m_p.find(ptRun->m["p"]->v) != m_p.end() && m_p[ptRun->m["p"]->v]->r.find(ptRun->m["f"]->v) != m_p[ptRun->m["p"]->v]->r.end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].find(lThread) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].end())
               {
                 pbKill = m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->pbKill;
+                if (m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.find(nID) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.end())
+                {
+                  pbDone = &(m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->bDone);
+                  pstrResponse = &(m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->strResponse);
+                }
               }
               m_mutex.unlock();
               JS_SetPropertyStr(jsctx, jsglobal, "g_js_run", JS_NewStringLen(jsctx, run.c_str(), run.size()));
@@ -2085,70 +2080,16 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
           JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
         }
         JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
+        if (pbDone != NULL)
+        {
+          *pbDone = true;
+        }
         if (pbKill != NULL)
         {
           JS_SetInterruptHandler(jsrun, NULL, NULL);
         }
-        if (JS_IsException(jsres))
+        if (!JS_IsException(jsres))
         {
-          JSValue jsexc = JS_GetException(jsctx);
-          if (JS_IsError(jsctx, jsexc))
-          {
-            JSValue jsmsg = JS_GetPropertyStr(jsctx, jsexc, "message");
-            if (JS_IsException(jsmsg))
-            {
-              JSValue jssubexc = JS_GetException(jsctx);
-              const char *pszMessage = JS_ToCString(jsctx, jssubexc);
-              if (pszMessage != NULL)
-              {
-                e = pszMessage;
-                JS_FreeCString(jsctx, pszMessage);
-              }
-              else
-              {
-                e = "Failed to retrieve the exception from the message from the exception from the script.";
-              }
-              JS_FreeValue(jsctx, jssubexc);
-            }
-            else if (JS_IsString(jsmsg))
-            {
-              size_t unLength = 0;
-              const char *pszMessage = JS_ToCStringLen(jsctx, &unLength, jsmsg);
-              if (pszMessage != NULL)
-              {
-                JSValue jsstk = JS_GetPropertyStr(jsctx, jsexc, "stack");
-                e.assign(pszMessage, unLength);
-                if (JS_IsString(jsstk))
-                {
-                  const char *pszStk = JS_ToCString(jsctx, jsstk);
-                  if (pszStk != NULL)
-                  {
-                    e += (string)" " + pszStk;
-                    JS_FreeCString(jsctx, pszStk);
-                  }
-                }
-                JS_FreeValue(jsctx, jsstk);
-                JS_FreeCString(jsctx, pszMessage);
-              }
-              else
-              {
-                e = "Failed to retrieve the message within the exception from the script.";
-              }
-            }
-            else
-            {
-              e = "Encountered a non-string message within the exception from the script.";
-            }
-          }
-          else
-          {
-            e = "Encountered a non-error exception from the script.";
-          }
-          JS_FreeValue(jsctx, jsexc);
-        }
-        else
-        {
-          string strResponse;
           JSValue jserror = JS_GetPropertyStr(jsctx, jsglobal, "g_js_error"), jsresponse = JS_GetPropertyStr(jsctx, jsglobal, "g_js_response"), jsstatus = JS_GetPropertyStr(jsctx, jsglobal, "g_js_status");
           const char *pszError = JS_ToCString(jsctx, jserror), *pszResponse = JS_ToCString(jsctx, jsresponse), *pszStatus = JS_ToCString(jsctx, jsstatus);
           Json *ptResponse = new Json;
@@ -2170,18 +2111,16 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
             JS_FreeCString(jsctx, pszResponse);
           }
           JS_FreeValue(jsctx, jsresponse);
-          ptResponse->j(strResponse);
+          if (pstrResponse != NULL)
+          {
+            ptResponse->j(*pstrResponse);
+          }
           delete ptResponse;
-          JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
         }
         JS_FreeValue(jsctx, jsglobal);
         JS_FreeValue(jsctx, jsres);
         JS_FreeContext(jsctx);
         JS_FreeRuntime(jsrun);
-      }
-      else
-      {
-        e = "Script not found.";
       }
     }
     delete ptFlow;
@@ -5099,7 +5038,7 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
               string p = r->m["p"]->v, f = r->m["f"]->v;
               radialMaestroThread *ptThread = new radialMaestroThread;
               ptThread->bDetached = false;
-              ptThread->pThread = new thread(&Maestro::flowThread, this, sp, strPlan, strFlow, strRequest, pszRun);
+              ptThread->bDone = false;
               m_mutex.lock();
               if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
               {
@@ -5108,13 +5047,12 @@ JSValue Maestro::js_threadCreate(JSContext *jsctx, JSValueConst na, int argc, JS
                   m_p[p]->r[f][t]->nThread++;
                 }
                 nID = m_p[p]->r[f][t]->nThread;
+                ptThread->pThread = new thread(&Maestro::flowThread, this, sp, strPlan, strFlow, strRequest, nID, pszRun);
                 m_p[p]->r[f][t]->threads[m_p[p]->r[f][t]->nThread] = ptThread;
               }
               else
               {
                 e = "Failed to find plan, flow, and thread.";
-                ptThread->pThread->detach();
-                delete ptThread->pThread;
                 delete ptThread;
               }
               m_mutex.unlock();
@@ -5274,6 +5212,10 @@ JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValue
               b = true;
               ptThread->pThread->join();
               delete ptThread->pThread;
+              if (!ptThread->strResponse.empty())
+              {
+                JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, ptThread->strResponse.c_str(), ptThread->strResponse.size()));
+              }
               delete ptThread;
             }
             else
