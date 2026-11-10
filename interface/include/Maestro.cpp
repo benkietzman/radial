@@ -175,6 +175,10 @@ Maestro::~Maestro()
   m_m.clear();
   for (auto &s : m_s)
   {
+    while (s.second->nInUse > 0)
+    {
+      msleep(100);
+    }
     sem_destroy(s.second->pSem);
     delete s.second->pSem;
     delete s.second;
@@ -3677,7 +3681,7 @@ JSValue Maestro::js_semDestroy(JSContext *jsctx, JSValueConst, int argc, JSValue
       m_mutex.unlock();
       if (ptSem != NULL)
       {
-        while (ptSem->unInUse)
+        while (ptSem->unInUse > 0)
         {
           msleep(100);
         }
@@ -3738,6 +3742,10 @@ JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueCon
       {
         b = true;
         sem_post(ptSem->pSem);
+        if (ptSem->unInUse > 0)
+        {
+          ptSem->unInUse--;
+        }
       }
       else
       {
@@ -3792,6 +3800,7 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
       {
         b = true;
         sem_wait(ptSem->pSem);
+        ptSem->unInUse++;
       }
       else
       {
