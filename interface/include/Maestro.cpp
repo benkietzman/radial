@@ -3768,6 +3768,7 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
     string strRun;
     if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
     {
+      chat("#maestro", strRun);
       Json *r = new Json(strRun);
       if (dep({"f", "p", "t"}, r, e))
       {
