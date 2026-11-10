@@ -175,7 +175,8 @@ Maestro::~Maestro()
   m_m.clear();
   for (auto &s : m_s)
   {
-    sem_destroy(s.second);
+    sem_destroy(s.second->pSem);
+    delete s.second->pSem;
     delete s.second;
   }
   m_s.clear();
@@ -3628,14 +3629,20 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
       ssValue >> unValue;
       if (sem_init(pSem, 0, unValue) == 0)
       {
+        radialMaestroSem *ptSem = new radialMaestroSem;
+        ptSem->unInUse = 0;
         m_mutex.lock();
         while (m_nSem != -1 && m_s.find(m_nSem) != m_s.end())
         {
           m_nSem++;
         }
         nSem = m_nSem;
-        m_s[m_nSem] = pSem;
+        m_s[m_nSem] = ptSem;
         m_mutex.unlock();
+      }
+      else
+      {
+        delete pSem;
       }
       JS_FreeCString(jsctx, pszValue);
     }
@@ -3658,20 +3665,25 @@ JSValue Maestro::js_semDestroy(JSContext *jsctx, JSValueConst, int argc, JSValue
     {
       int32_t nSem;
       stringstream ssSem(pszSem);
-      sem_t *pSem = NULL;
+      radialMaestroSem *ptSem = NULL;
       ssSem >> nSem;
       m_mutex.lock();
       if (m_s.find(nSem) != m_s.end())
       {
         b = true;
-        pSem = m_s[nSem];
+        ptSem = m_s[nSem];
         m_s.erase(nSem);
       }
       m_mutex.unlock();
-      if (pSem != NULL)
+      if (ptSem != NULL)
       {
-        sem_destroy(pSem);
-        delete pSem;
+        while (ptSem->unInUse)
+        {
+          msleep(100);
+        }
+        sem_destroy(ptSem->pSem);
+        delete ptSem->pSem;
+        delete ptSem;
       }
       else
       {
@@ -3714,18 +3726,18 @@ JSValue Maestro::js_semPost(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     {
       int32_t nSem;
       stringstream ssSem(pszSem);
-      sem_t *pSem = NULL;
+      radialMaestroSem *ptSem = NULL;
       ssSem >> nSem;
       m_mutex.lock();
       if (m_s.find(nSem) != m_s.end())
       {
-        pSem = m_s[nSem];
+        ptSem = m_s[nSem];
       }
       m_mutex.unlock();
-      if (pSem != NULL)
+      if (ptSem != NULL)
       {
         b = true;
-        sem_post(pSem);
+        sem_post(ptSem->pSem);
       }
       else
       {
@@ -3768,18 +3780,18 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
     {
       int32_t nSem;
       stringstream ssSem(pszSem);
-      sem_t *pSem = NULL;
+      radialMaestroSem *ptSem = NULL;
       ssSem >> nSem;
       m_mutex.lock();
       if (m_s.find(nSem) != m_s.end())
       {
-        pSem = m_s[nSem];
+        ptSem = m_s[nSem];
       }
       m_mutex.unlock();
-      if (pSem != NULL)
+      if (ptSem != NULL)
       {
         b = true;
-        sem_wait(pSem);
+        sem_wait(ptSem->pSem);
       }
       else
       {
