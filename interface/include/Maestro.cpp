@@ -5871,7 +5871,7 @@ bool Maestro::plans(radialUser &d, string &e)
     {
       unRunning += c.second.size();
     }
-    o->i("NumRunning", to_string(unRunning), 'n');
+    ptPlan->i("NumRunning", to_string(unRunning), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
     ssType << p.second->t;
