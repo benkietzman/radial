@@ -6155,6 +6155,35 @@ void Maestro::scheduler(string strPrefix)
         m_mutex.unlock();
       }
       // }}}
+      // {{{ threads
+      m_mutex.lock();
+      for (auto &p : m_p)
+      {
+        for (auto &f : p.second->r)
+        {
+          for (auto &r : f.second)
+          {
+            list<int32_t> rs;
+            for (auto &t : r.second->threads)
+            {
+              if (t.second->bDetached && t.second->bDone)
+              {
+                t.second->pThread->join();
+                delete t.second->pThread;
+                delete t.second;
+                rs.push_back(t.first);
+              }
+            }
+            while (!rs.empty())
+            {
+              r.second->threads.erase(rs.front());
+              rs.pop_front();
+            }
+          }
+        }
+      }
+      m_mutex.unlock();
+      // }}}
     }
     msleep(1000);
   }
