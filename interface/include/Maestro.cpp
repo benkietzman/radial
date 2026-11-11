@@ -6077,10 +6077,11 @@ void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
   string e;
-  time_t  CNow;
+  time_t CNow, CThread;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
+  time(&CThread);
   while (!shutdown())
   {
     if (!m_bLoaded)
@@ -6156,33 +6157,37 @@ void Maestro::scheduler(string strPrefix)
       }
       // }}}
       // {{{ threads
-      m_mutex.lock();
-      for (auto &p : m_p)
+      if ((CNow - CThread) > 60)
       {
-        for (auto &f : p.second->r)
+        CThread = CNow;
+        m_mutex.lock();
+        for (auto &p : m_p)
         {
-          for (auto &r : f.second)
+          for (auto &f : p.second->r)
           {
-            list<int32_t> rs;
-            for (auto &t : r.second->threads)
+            for (auto &r : f.second)
             {
-              if (t.second->bDetached && t.second->bDone)
+              list<int32_t> rs;
+              for (auto &t : r.second->threads)
               {
-                t.second->pThread->join();
-                delete t.second->pThread;
-                delete t.second;
-                rs.push_back(t.first);
+                if (t.second->bDetached && t.second->bDone)
+                {
+                  t.second->pThread->join();
+                  delete t.second->pThread;
+                  delete t.second;
+                  rs.push_back(t.first);
+                }
               }
-            }
-            while (!rs.empty())
-            {
-              r.second->threads.erase(rs.front());
-              rs.pop_front();
+              while (!rs.empty())
+              {
+                r.second->threads.erase(rs.front());
+                rs.pop_front();
+              }
             }
           }
         }
+        m_mutex.unlock();
       }
-      m_mutex.unlock();
       // }}}
     }
     msleep(1000);
