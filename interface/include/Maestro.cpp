@@ -6077,11 +6077,12 @@ void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
   string e;
-  time_t CNow, CThread;
+  time_t CNow, CSchedule, CThread;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
-  time(&CThread);
+  time(&CSchedule);
+  CThread = CSchedule;
   while (!shutdown())
   {
     if (!m_bLoaded)
@@ -6092,104 +6093,108 @@ void Maestro::scheduler(string strPrefix)
     if (isMasterSettled() && isMaster())
     {
       // {{{ schedules
-      for (auto &p : schedules)
+      if ((CNow - CSchedule) > 10)
       {
-        for (auto &s : p.second)
+        CSchedule = CNow;
+        for (auto &p : schedules)
         {
-          if (CNow >= s.second)
+          for (auto &s : p.second)
           {
-            bool bLaunch = false;
-            string strFlow, strPlan, strRequest;
-            Json *ptFlow = NULL;
-            m_bLoadSchedules = true;
-            m_mutex.lock();
-            if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
+            if (CNow >= s.second)
             {
-              bLaunch = true;
-              strPlan = p.first;
-              strFlow = m_p[p.first]->s[s.first]->m["Flow"]->v;
-              strRequest = m_p[p.first]->s[s.first]->val({"Request"});
-              ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]);
-            }
-            m_mutex.unlock();
-            if (bLaunch)
-            {
-              thread tThread(&Maestro::flowLaunch, this, strPlan, strFlow, strRequest, ptFlow);
-              pthread_setname_np(tThread.native_handle(), "flowLaunch");
-              tThread.detach();
+              bool bLaunch = false;
+              string strFlow, strPlan, strRequest;
+              Json *ptFlow = NULL;
+              m_bLoadSchedules = true;
+              m_mutex.lock();
+              if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
+              {
+                bLaunch = true;
+                strPlan = p.first;
+                strFlow = m_p[p.first]->s[s.first]->m["Flow"]->v;
+                strRequest = m_p[p.first]->s[s.first]->val({"Request"});
+                ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]);
+              }
+              m_mutex.unlock();
+              if (bLaunch)
+              {
+                thread tThread(&Maestro::flowLaunch, this, strPlan, strFlow, strRequest, ptFlow);
+                pthread_setname_np(tThread.native_handle(), "flowLaunch");
+                tThread.detach();
+              }
             }
           }
         }
-      }
-      if (m_bLoadSchedules)
-      {
-        schedules.clear();
-        m_mutex.lock();
-        for (auto &p : m_p)
+        if (m_bLoadSchedules)
         {
-          map<string, time_t> scheds;
-          for (auto &s : p.second->s)
+          schedules.clear();
+          m_mutex.lock();
+          for (auto &p : m_p)
           {
-            if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Cron"}) && !s.second->empty({"Flow"}) && !s.second->empty({"Sched"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
+            map<string, time_t> scheds;
+            for (auto &s : p.second->s)
             {
-              if (s.second->val({"Cron"}) == "0")
+              if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Cron"}) && !s.second->empty({"Flow"}) && !s.second->empty({"Sched"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
               {
-                stringstream ssSched(s.second->m["Sched"]->v);
-                time_t CSched;
-                ssSched >> CSched;
-                if (CSched > CNow)
+                if (s.second->val({"Cron"}) == "0")
                 {
-                  scheds[s.first] = CSched;
+                  stringstream ssSched(s.second->m["Sched"]->v);
+                  time_t CSched;
+                  ssSched >> CSched;
+                  if (CSched > CNow)
+                  {
+                    scheds[s.first] = CSched;
+                  }
+                }
+                else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
+                {
+                  scheds.erase(s.first);
                 }
               }
-              else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
-              {
-                scheds.erase(s.first);
-              }
             }
-          }
-          if (!scheds.empty())
-          {
-            schedules[p.first] = scheds;
-          }
-        }
-        m_mutex.unlock();
-      }
-      // }}}
-      // {{{ threads
-      if ((CNow - CThread) > 60)
-      {
-        CThread = CNow;
-        m_mutex.lock();
-        for (auto &p : m_p)
-        {
-          for (auto &f : p.second->r)
-          {
-            for (auto &r : f.second)
+            if (!scheds.empty())
             {
-              list<int32_t> rs;
-              for (auto &t : r.second->threads)
-              {
-                if (t.second->bDetached && t.second->bDone)
-                {
-                  t.second->pThread->join();
-                  delete t.second->pThread;
-                  delete t.second;
-                  rs.push_back(t.first);
-                }
-              }
-              while (!rs.empty())
-              {
-                r.second->threads.erase(rs.front());
-                rs.pop_front();
-              }
+              schedules[p.first] = scheds;
             }
           }
+          m_mutex.unlock();
         }
-        m_mutex.unlock();
       }
       // }}}
     }
+    // {{{ threads
+    if ((CNow - CThread) > 60)
+    {
+      CThread = CNow;
+      m_mutex.lock();
+      for (auto &p : m_p)
+      {
+        for (auto &f : p.second->r)
+        {
+          for (auto &r : f.second)
+          {
+            list<int32_t> rs;
+            for (auto &t : r.second->threads)
+            {
+              if (t.second->bDetached && t.second->bDone)
+              {
+                t.second->pThread->join();
+                delete t.second->pThread;
+                delete t.second;
+                rs.push_back(t.first);
+              }
+            }
+            while (!rs.empty())
+            {
+              r.second->threads.erase(rs.front());
+              rs.pop_front();
+            }
+          }
+        }
+      }
+      m_mutex.unlock();
+    }
+    // }}}
     msleep(1000);
   }
   threadDecrement();
