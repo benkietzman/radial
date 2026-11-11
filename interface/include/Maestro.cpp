@@ -2116,26 +2116,9 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
           }
           delete ptResponse;
         }
-        if (ptThread != NULL && ptThread->bDetached)
+        if (ptThread != NULL)
         {
-          string strRun;
-          if (!m_manip.decryptAes(m_manip.decodeBase64(run, strRun), m_strSecret, strRun, e, m_strCipher).empty())
-          {
-            Json *ptRun = new Json(strRun);
-            if (dep({"f", "p", "t"}, ptRun, e))
-            {
-              long lThread = atoi(ptRun->m["t"]->v.c_str());
-              m_mutex.lock();
-              if (m_p.find(ptRun->m["p"]->v) != m_p.end() && m_p[ptRun->m["p"]->v]->r.find(ptRun->m["f"]->v) != m_p[ptRun->m["p"]->v]->r.end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].find(lThread) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.find(nID) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.end())
-              {
-                delete m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID]->pThread;
-                delete m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads[nID];
-                m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.erase(nID);
-              }
-              m_mutex.unlock();
-            }
-            delete ptRun;
-          }
+          ptThread->bDone = true;
         }
         JS_FreeValue(jsctx, jsglobal);
         JS_FreeValue(jsctx, jsres);
