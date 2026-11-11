@@ -263,19 +263,20 @@ export default
         };
         s.editor = CodeMirror.fromTextArea(document.getElementById('script'),
         {
+          foldGutter: true,
+          gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers', 'CodeMirror-lint-markers'],
+          indentUnit: 0,
+          keyMap: s.editorKeyMap,
           lineNumbers: true,
-          mode: "javascript",
-          gutters: ['CodeMirror-lint-markers'],
           lint:
           {
             getAnnotations: s.getAnnotations,
             async: false,
             delay: 300
           },
-          theme: 'dracula',
-          indentUnit: 0,
+          mode: "javascript",
           tabSize: 2,
-          keyMap: s.editorKeyMap
+          theme: 'dracula'
         });
         let resizeObserver = new ResizeObserver(() =>
         {
