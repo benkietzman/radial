@@ -1393,13 +1393,14 @@ bool Maestro::flowAdd(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      string id, t, strOwner;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) == m_p[p]->f.end())
         {
           if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
@@ -1460,7 +1461,7 @@ bool Maestro::flowAdd(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << f << " " << char(3) << " " << char(2) << char(3) << "03Flow added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowAdd");
         ptLive->i("Plan", p);
@@ -1877,12 +1878,13 @@ bool Maestro::flowRemove(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string t;
+      string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
           if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "f", f}, e))
@@ -1947,7 +1949,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "04Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << f << " " << char(3) << " " << char(2) << char(3) << "04Flow removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowRemove");
         ptLive->i("Plan", p);
@@ -2142,13 +2144,14 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      string id, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
           string j;
@@ -2204,7 +2207,7 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << f << " " << char(3) << " " << char(2) << char(3) << "07Flow updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "flowUpdate");
         ptLive->i("Plan", p);
@@ -5623,6 +5626,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
       ptData->i("id", id);
       if (db(((t == "a")?"dbCentralApplications":"dbCentralUsers"), ptData, row, e))
       {
+        string strOwner;
         m_mutex.lock();
         if (m_p.find(p) == m_p.end())
         {
@@ -5642,7 +5646,8 @@ bool Maestro::planAdd(radialUser &d, string &e)
             {
               ssOwner << row["first_name"] << " " << row["last_name"];
             }
-            m_p[p]->owner = ssOwner.str();
+            strOwner = ssOwner.str();
+            m_p[p]->owner = strOwner;
           }
           else
           {
@@ -5681,7 +5686,7 @@ bool Maestro::planAdd(radialUser &d, string &e)
             nodes.pop_front();
           }
           ssChat.str("");
-          ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+          ssChat << char(3) << "00,06 " << strOwner << " " << char(3) << " " << char(2) << char(3) << "03Plan added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
           chat("#maestro", ssChat.str());
           ptLive->i("Action", "planAdd");
           ptLive->i("Plan", p);
@@ -5711,13 +5716,14 @@ bool Maestro::planRemove(radialUser &d, string &e)
     string p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string t;
+      string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
         b = true;
+        strOwner = m_p[p]->owner;
         if (!m_p[p]->r.empty())
         {
           for (auto &c : m_p[p]->r)
@@ -5823,7 +5829,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "04Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " " << char(3) << " " << char(2) << char(3) << "04Plan removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "planRemove");
         ptLive->i("Plan", p);
