@@ -274,6 +274,7 @@ export default
             async: false,
             delay: 300
           },
+          matchBrackets: true,
           mode: "javascript",
           tabSize: 2,
           theme: 'dracula'
