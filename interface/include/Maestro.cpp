@@ -5564,7 +5564,7 @@ bool Maestro::plan(radialUser &d, string &e)
     if (m_p.find(p) != m_p.end())
     {
       bool bEdit = isOwner(d, p);
-      size_t unApprovals = 0;
+      size_t unApprovals = 0, unRunning = 0;
       stringstream ssPlan, ssType;
       b = true;
       o->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
@@ -5581,6 +5581,11 @@ bool Maestro::plan(radialUser &d, string &e)
       o->i("NumRequests", to_string((m_p[p]->a != NULL && m_p[p]->a->exist({"r"}))?m_p[p]->a->m["r"]->m.size():0), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("NumSchedules", to_string(m_p[p]->s.size()), 'n');
+      for (auto &c : m_p[p]->r)
+      {
+        unRunning += c.second.size();
+      }
+      o->i("NumRunning", to_string(unRunning), 'n');
       o->i("Owner", m_p[p]->owner);
       ssPlan << m_p[p]->t << "_" << m_p[p]->id;
       o->i("Plan", ssPlan.str());
@@ -5845,7 +5850,7 @@ bool Maestro::plans(radialUser &d, string &e)
   for (auto &p : m_p)
   {
     bool bEdit = isOwner(d, p.first);
-    size_t unApprovals = 0;
+    size_t unApprovals = 0, unRunning = 0;
     stringstream ssType;
     Json *ptPlan = new Json;
     ptPlan->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
@@ -5862,6 +5867,11 @@ bool Maestro::plans(radialUser &d, string &e)
     ptPlan->i("NumRequests", to_string((p.second->a != NULL && p.second->a->exist({"r"}))?p.second->a->m["r"]->m.size():0), 'n');
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("NumSchedules", to_string(p.second->s.size()), 'n');
+    for (auto &c : p.second->r)
+    {
+      unRunning += c.second.size();
+    }
+    o->i("NumRunning", to_string(unRunning), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
     ssType << p.second->t;
@@ -6077,12 +6087,11 @@ void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
   string e;
-  time_t CNow, CSchedule, CThread;
+  time_t CNow, CThread;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
-  time(&CSchedule);
-  CThread = CSchedule;
+  time(&CThread);
   while (!shutdown())
   {
     if (!m_bLoaded)
@@ -6093,72 +6102,69 @@ void Maestro::scheduler(string strPrefix)
     if (isMasterSettled() && isMaster())
     {
       // {{{ schedules
-      if ((CNow - CSchedule) > 10)
+      for (auto &p : schedules)
       {
-        CSchedule = CNow;
-        for (auto &p : schedules)
+        for (auto &s : p.second)
         {
-          for (auto &s : p.second)
+          if (CNow >= s.second)
           {
-            if (CNow >= s.second)
+            bool bLaunch = false;
+            string strFlow, strPlan, strRequest;
+            Json *ptFlow = NULL;
+            m_bLoadSchedules = true;
+            m_mutex.lock();
+            if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
-              bool bLaunch = false;
-              string strFlow, strPlan, strRequest;
-              Json *ptFlow = NULL;
-              m_bLoadSchedules = true;
-              m_mutex.lock();
-              if (m_p.find(p.first) != m_p.end() && m_p[p.first]->s.find(s.first) != m_p[p.first]->s.end() && m_p[p.first]->s[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->s[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->s[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
-              {
-                bLaunch = true;
-                strPlan = p.first;
-                strFlow = m_p[p.first]->s[s.first]->m["Flow"]->v;
-                strRequest = m_p[p.first]->s[s.first]->val({"Request"});
-                ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]);
-              }
-              m_mutex.unlock();
-              if (bLaunch)
-              {
-                thread tThread(&Maestro::flowLaunch, this, strPlan, strFlow, strRequest, ptFlow);
-                pthread_setname_np(tThread.native_handle(), "flowLaunch");
-                tThread.detach();
-              }
+              bLaunch = true;
+              strPlan = p.first;
+              strFlow = m_p[p.first]->s[s.first]->m["Flow"]->v;
+              strRequest = m_p[p.first]->s[s.first]->val({"Request"});
+              ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->s[s.first]->m["Flow"]->v]);
+            }
+            m_mutex.unlock();
+            if (bLaunch)
+            {
+              thread tThread(&Maestro::flowLaunch, this, strPlan, strFlow, strRequest, ptFlow);
+              pthread_setname_np(tThread.native_handle(), "flowLaunch");
+              tThread.detach();
             }
           }
         }
-        if (m_bLoadSchedules)
+      }
+      if (m_bLoadSchedules)
+      {
+        m_bLoadSchedules = false;
+        schedules.clear();
+        m_mutex.lock();
+        for (auto &p : m_p)
         {
-          schedules.clear();
-          m_mutex.lock();
-          for (auto &p : m_p)
+          map<string, time_t> scheds;
+          for (auto &s : p.second->s)
           {
-            map<string, time_t> scheds;
-            for (auto &s : p.second->s)
+            if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Cron"}) && !s.second->empty({"Flow"}) && !s.second->empty({"Sched"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
             {
-              if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Cron"}) && !s.second->empty({"Flow"}) && !s.second->empty({"Sched"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
+              if (s.second->val({"Cron"}) == "0")
               {
-                if (s.second->val({"Cron"}) == "0")
+                stringstream ssSched(s.second->m["Sched"]->v);
+                time_t CSched;
+                ssSched >> CSched;
+                if (CSched > CNow)
                 {
-                  stringstream ssSched(s.second->m["Sched"]->v);
-                  time_t CSched;
-                  ssSched >> CSched;
-                  if (CSched > CNow)
-                  {
-                    scheds[s.first] = CSched;
-                  }
-                }
-                else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
-                {
-                  scheds.erase(s.first);
+                  scheds[s.first] = CSched;
                 }
               }
-            }
-            if (!scheds.empty())
-            {
-              schedules[p.first] = scheds;
+              else if (!cron(scheds[s.first], s.second->m["Sched"]->v, e))
+              {
+                scheds.erase(s.first);
+              }
             }
           }
-          m_mutex.unlock();
+          if (!scheds.empty())
+          {
+            schedules[p.first] = scheds;
+          }
         }
+        m_mutex.unlock();
       }
       // }}}
     }
