@@ -4036,6 +4036,7 @@ JSValue Maestro::js_semDestroy(JSContext *jsctx, JSValueConst, int argc, JSValue
             {
               e = "Please provide a valid id.";
             }
+            m_mutex.lock();
             if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->sems.find(nID) != m_p[p]->r[f][t]->sems.end())
             {
               m_p[p]->r[f][t]->sems.erase(nID);
