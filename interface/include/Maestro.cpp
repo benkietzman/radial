@@ -3355,7 +3355,11 @@ JSValue Maestro::js_msleep(JSContext *jsctx, JSValueConst, int argc, JSValueCons
       }
       else
       {
-        size_t unIterations = (ulMS / 500) + 1;
+        size_t unIterations = (ulMS / 500);
+        if (unIterations == 0)
+        {
+          unIterations++;
+        }
         for (size_t i = 0; !shutdown() && i < unIterations; i++)
         {
           msleep(500);
