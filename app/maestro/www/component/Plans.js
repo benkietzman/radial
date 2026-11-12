@@ -18,7 +18,7 @@ export default
       a: a,
       c: c,
       editorKeyMap: 'default',
-      expand: {general: true, access: true, flows: true, flow: true, running: true, schedules: true, schedule: true}
+      expand: {general: true, access: true, flows: true, flow: true, running: true, schedules: true, schedule: true, services: true, service: true}
     });
     // ]]]
     // [[[ access
@@ -521,6 +521,21 @@ export default
       }
     };
     // ]]]
+    // [[[ kill()
+    s.kill = (nIndex) =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'kill', Request: {Node: s.r[nIndex].Node, Plan: s.r[nIndex].Plan, Flow: s.r[nIndex].Flow, Thread: s.r[nIndex].Thread}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (!c.wsResponse(response, error))
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
     // [[[ plan
     // [[[ plan()
     s.plan = () =>
@@ -538,6 +553,7 @@ export default
           s.flows();
           s.running();
           s.schedules();
+          s.services();
         }
         else
         {
@@ -827,20 +843,135 @@ export default
     };
     // ]]]
     // ]]]
-    // [[[ kill()
-    s.kill = (nIndex) =>
+    // [[[ service
+    // [[[ service()
+    s.service = () =>
     {
-      let request = {Interface: 'maestro', 'Function': 'kill', Request: {Node: s.r[nIndex].Node, Plan: s.r[nIndex].Plan, Flow: s.r[nIndex].Flow, Thread: s.r[nIndex].Thread}};
+      let request = {Interface: 'maestro', 'Function': 'service', Request: {Plan: s.strPlan, Service: s.strService}};
       c.wsRequest('radial', request).then((response) =>
       {
         let error = {};
-        if (!c.wsResponse(response, error))
+        if (c.wsResponse(response, error))
+        {
+          s.s = response.Response;
+          if (!s.s.Cron)
+          {
+            s.s.Cron = 0;
+          }
+          if (c.isDefined(s.s.Cron) && s.s.Cron != '1' && c.isDefined(s.s.Sched) && s.s.Sched != '')
+          {
+            let date = new Date(s.s.Sched * 1000);
+            let pad = n => String(n).padStart(2, "0");
+            s.s.Sched = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+          }
+        }
+        else
         {
           c.pushErrorMessage(error.message);
         }
         s.u();
       });
     };
+    // ]]]
+    // [[[ serviceAdd()
+    s.serviceAdd = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'serviceleAdd', Request: {Plan: s.strPlan, Service: s.serviceeName.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan + '/Service/' + s.serviceName.v;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ serviceRemove()
+    s.serviceRemove = () =>
+    {
+      if (c.isValid())
+      {
+        let request = {Interface: 'maestro', 'Function': 'serviceRemove', Request: {Plan: s.strPlan, Service: s.strService}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            document.location.href = '#/Plans/' + s.strPlan;
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
+    // [[[ services()
+    s.services = () =>
+    {
+      let request = {Interface: 'maestro', 'Function': 'services', Request: {Plan: s.strPlan}};
+      c.wsRequest('radial', request).then((response) =>
+      {
+        let error = {};
+        if (c.wsResponse(response, error))
+        {
+          s.ss = response.Response;
+          if (s.strService != '')
+          {
+            s.service();
+          }
+        }
+        else
+        {
+          c.pushErrorMessage(error.message);
+        }
+        s.u();
+      });
+    };
+    // ]]]
+    // [[[ serviceUpdate()
+    s.serviceUpdate = () =>
+    {
+      if (c.isValid())
+      {
+        s['serviceStatus'].v = '';
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Description: s.s.Description.v, Request: s.s.Request.v}};
+        c.wsRequest('radial', request).then((response) =>
+        {
+          let error = {};
+          if (c.wsResponse(response, error))
+          {
+            s['serviceStatus'].v = 'saved service';
+          }
+          else
+          {
+            c.pushErrorMessage(error.message);
+          }
+        });
+      }
+      else
+      {
+        c.pushErrorMessage('You are not authorized to perform this action.');
+      }
+    };
+    // ]]]
     // ]]]
     // [[[ typeSelect()
     s.typeSelect = () =>
@@ -876,7 +1007,7 @@ export default
     // ]]]
     // [[[ main
     c.setMenu('Plans');
-    s.strPlan = s.strFlow = s.strSchedule = '';
+    s.strPlan = s.strFlow = s.strSchedule = s.strService = '';
     if (c.isParam(nav, 'plan') && c.getParam(nav, 'plan') != '')
     {
       s.strPlan = c.getParam(nav, 'plan');
@@ -893,6 +1024,10 @@ export default
           else if (strSection == 'Schedule')
           {
             s.strSchedule = strID;
+          }
+          else if (strSection == 'Service')
+          {
+            s.strService = strID;
           }
         }
       }
@@ -917,7 +1052,7 @@ export default
     });
     c.attachEvent('commonWsMessage_Maestro', (data) =>
     {
-      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowExec' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate') && !s.strFlow && !s.strSchedule)
+      if (data.detail && data.detail.Action && (data.detail.Action == 'accessRemove' || data.detail.Action == 'accessRequest' || data.detail.Action == 'accessRequestApprove' || data.detail.Action == 'accessRequestCancel' || data.detail.Action == 'accessRequestDeny' || data.detail.Action == 'planAdd' || data.detail.Action == 'planRemove' || data.detail.Action == 'flowAdd' || data.detail.Action == 'flowExec' || data.detail.Action == 'flowRemove' || data.detail.Action == 'flowUpdate' || data.detail.Action == 'scheduleAdd' || data.detail.Action == 'scheduleRemove' || data.detail.Action == 'scheduleUpdate' || data.detail.Action == 'serviceAdd' || data.detail.Action == 'serviceRemove' || data.detail.Action == 'serviceUpdate') && !s.strFlow && !s.strSchedule && !s.strService)
       {
         s.init();
       }
@@ -1133,6 +1268,39 @@ export default
       </div>
     </div>
     <!-- ]]] -->
+    <!-- [[[ services -->
+    <div class="col-auto">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap" c-click="collapseExpand('services')" style="cursor: row-resize;">
+          Services ({{numberShort p.NumServices 0}})
+        </div>
+        {{#if expand.services}}
+        <div class="card-body bg bg-primary-subtle">
+          {{#if p.edit}}
+          <div class="input-group input-group-sm flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Service</span>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="serviceName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-primary bi bi-plus-circle text-nowrap" c-click="serviceAdd()" title="Add Service"> Add</button>
+          </div>
+          {{/if}}
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
+            <tbody>
+              {{#each ss}}
+              <tr>
+                <td><a href="#/Plans/{{@root.strPlan}}/Service/{{.}}">{{.}}</a></td>
+              </tr>
+              {{/each}}
+            </tbody>
+            </table>
+          </div>
+        </div>
+        {{/if}}
+        <div class="card-footer">
+        </div>
+      </div>
+    </div>
+    <!-- ]]] -->
     <!-- [[[ running -->
     <div class="col-auto">
       <div class="card border border-secondary mb-2 mt-3">
@@ -1335,6 +1503,64 @@ export default
     </div>
     {{/if}}
     <!-- ]]] -->
+    <!-- [[[ service -->
+    {{#if s}}
+    <div class="col-{{#if expand.service}}*{{else}}auto{{/if}}">
+      <div class="card border border-primary mb-2 mt-3">
+        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+          <div class="row flex-nowrap">
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-danger bi bi-trash text-nowrap" c-click="serviceRemove()" title="Remove Service"> Remove</button>
+              {{/if}}
+            </div>
+            <div class="col" c-click="collapseExpand('service')" style="cursor: row-resize;">
+              Service - {{strService}}
+            </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <div class="form-check form-switch" title="Enables the service.">
+                <input class="form-check-input bg bg-secondary" type="checkbox" c-model="s.Enabled"" value="1">
+              </div>
+              {{/if}}
+            </div>
+            <div class="col-auto">
+              {{#if p.edit}}
+              <button class="btn btn-sm btn-warning bi bi-save text-nowrap" c-click="serviceUpdate()" title="Save Service"> Save</button> 
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{#if expand.service}}
+        <div class="card-body bg bg-primary-subtle">
+          {{#if p.edit}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+            <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+          </div>
+          <textarea class="form-control bg bg-primary-subtle border border-primary mt-2" c-model="s.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="s.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
+          {{else}}
+          <div class="input-group flex-nowrap mt-2">
+            <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
+            <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Flow}}</span>
+          </div>
+          <b>Description<b>
+          <pre class="bg bg-primary-subtle border border-primary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          <pre class="bg bg-secondary-subtle border border-secondary rw-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
+          {{/if}}
+        </div>
+        {{/if}}
+        <div class="card-footer">
+          {{#if p.edit}}
+          <span class="float-end text-warning" c-model="serviceStatus"></span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    {{/if}}
+    <!-- ]]] -->
   </div>
   <!-- ]]] -->
   <!-- [[[ plans -->
@@ -1369,6 +1595,7 @@ export default
         <th class="bg bg-warning-subtle text-end text-nowrap"># Requests</th>
         <th class="bg bg-success-subtle text-end text-nowrap"># Flows</th>
         <th class="bg bg-primary-subtle text-end text-nowrap"># Schedules</th>
+        <th class="bg bg-primary-subtle text-end text-nowrap"># Services</th>
         <th class="text-end text-nowrap"># Running</th>
       </tr>
     </thead>
@@ -1383,6 +1610,7 @@ export default
         <td class="bg bg-warning-subtle text-end">{{numberShort NumRequests 0}}</td>
         <td class="bg bg-success-subtle text-end">{{numberShort NumFlows 0}}</td>
         <td class="bg bg-primary-subtle text-end">{{numberShort NumSchedules 0}}</td>
+        <td class="bg bg-primary-subtle text-end">{{numberShort NumServices 0}}</td>
         <td class="text-end">{{numberShort NumRunning 0}}</td>
       </tr>
       {{/each}}
