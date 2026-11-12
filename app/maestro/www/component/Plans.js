@@ -1161,7 +1161,7 @@ export default
                 <td>{{Thread}}</td>
                 <td>{{datetime Time}}</td>
                 <td class="text-{{#ifCond Status "==" "running"}}success{{else}}danger{{/ifCond}}">{{Status}}</td>
-                <td><button class="btn btn-sm btn-danger btn-trash" c-click="kill({{@key}})">Kill</button></td>
+                <td><button class="btn btn-sm btn-danger bi bi-trash" c-click="kill({{@key}})">Kill</button></td>
               </tr>
               {{/each}}
             </tbody>
