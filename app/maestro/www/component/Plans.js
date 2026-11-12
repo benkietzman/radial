@@ -878,7 +878,7 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'serviceleAdd', Request: {Plan: s.strPlan, Service: s.serviceeName.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceleAdd', Request: {Plan: s.strPlan, Service: s.serviceName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1270,17 +1270,17 @@ export default
     <!-- ]]] -->
     <!-- [[[ services -->
     <div class="col-auto">
-      <div class="card border border-primary mb-2 mt-3">
-        <div class="card-header bg bg-primary fw-bold text-center text-nowrap" c-click="collapseExpand('services')" style="cursor: row-resize;">
+      <div class="card border border-info mb-2 mt-3">
+        <div class="card-header bg bg-info fw-bold text-center text-dark text-nowrap" c-click="collapseExpand('services')" style="cursor: row-resize;">
           Services ({{numberShort p.NumServices 0}})
         </div>
         {{#if expand.services}}
-        <div class="card-body bg bg-primary-subtle">
+        <div class="card-body bg bg-info-subtle">
           {{#if p.edit}}
           <div class="input-group input-group-sm flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Service</span>
-            <input type="text" class="form-control bg bg-secondary-subtle border border-primary-subtle" c-model="serviceName" style="flex-grow: 0; flex-basis: 100px;">
-            <button class="btn btn-primary bi bi-plus-circle text-nowrap" c-click="serviceAdd()" title="Add Service"> Add</button>
+            <input type="text" class="form-control bg bg-secondary-subtle border border-info-subtle" c-model="serviceName" style="flex-grow: 0; flex-basis: 100px;">
+            <button class="btn btn-info bi bi-plus-circle text-nowrap" c-click="serviceAdd()" title="Add Service"> Add</button>
           </div>
           {{/if}}
           <div class="table-responsive mt-2">
@@ -1506,8 +1506,8 @@ export default
     <!-- [[[ service -->
     {{#if s}}
     <div class="col-{{#if expand.service}}*{{else}}auto{{/if}}">
-      <div class="card border border-primary mb-2 mt-3">
-        <div class="card-header bg bg-primary fw-bold text-center text-nowrap">
+      <div class="card border border-info mb-2 mt-3">
+        <div class="card-header bg bg-info fw-bold text-center text-nowrap">
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
@@ -1532,22 +1532,22 @@ export default
           </div>
         </div>
         {{#if expand.service}}
-        <div class="card-body bg bg-primary-subtle">
+        <div class="card-body bg bg-info-subtle">
           {{#if p.edit}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <select class="form-select bg bg-secondary-subtle border border-primary-subtle" c-model="s.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-info-subtle" c-model="s.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
           </div>
-          <textarea class="form-control bg bg-primary-subtle border border-primary mt-2" c-model="s.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="s.Description" rows="4" placeholder="description"></textarea>
           <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="s.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <span class="input-group-text bg bg-secondary-subtle border bordrer-primary-subtle">{{s.Flow}}</span>
+            <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{s.Flow}}</span>
           </div>
           <b>Description<b>
-          <pre class="bg bg-primary-subtle border border-primary mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          <pre class="bg bg-info-subtle border border-info mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
           <pre class="bg bg-secondary-subtle border border-secondary rw-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
           {{/if}}
         </div>
@@ -1595,7 +1595,7 @@ export default
         <th class="bg bg-warning-subtle text-end text-nowrap"># Requests</th>
         <th class="bg bg-success-subtle text-end text-nowrap"># Flows</th>
         <th class="bg bg-primary-subtle text-end text-nowrap"># Schedules</th>
-        <th class="bg bg-primary-subtle text-end text-nowrap"># Services</th>
+        <th class="bg bg-info-subtle text-end text-nowrap"># Services</th>
         <th class="text-end text-nowrap"># Running</th>
       </tr>
     </thead>
@@ -1610,7 +1610,7 @@ export default
         <td class="bg bg-warning-subtle text-end">{{numberShort NumRequests 0}}</td>
         <td class="bg bg-success-subtle text-end">{{numberShort NumFlows 0}}</td>
         <td class="bg bg-primary-subtle text-end">{{numberShort NumSchedules 0}}</td>
-        <td class="bg bg-primary-subtle text-end">{{numberShort NumServices 0}}</td>
+        <td class="bg bg-info-subtle text-end">{{numberShort NumServices 0}}</td>
         <td class="text-end">{{numberShort NumRunning 0}}</td>
       </tr>
       {{/each}}
