@@ -3874,7 +3874,6 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
             stringstream ssValue(pszValue);
             unsigned int unValue;
             ssValue >> unValue;
-            chat("#maestro", (string)"sem:  "+pszValue+(string)" == "+to_string(unValue));
             if (sem_init(pSem, 0, unValue) == 0)
             {
               radialMaestroSem *ptSem = new radialMaestroSem;
