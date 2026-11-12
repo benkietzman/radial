@@ -122,6 +122,7 @@ class Maestro : public Interface
   bool running(radialUser &d, string &e);
   bool schedule(radialUser &d, string &e);
   bool scheduleAdd(radialUser &d, string &e);
+  void scheduleLaunch(const string p, const string f, const string r, Json *ptFlow);
   void scheduler(string strPrefix);
   bool scheduleRemove(radialUser &d, string &e);
   bool schedules(radialUser &d, string &e);
@@ -129,6 +130,7 @@ class Maestro : public Interface
   bool scopes(radialUser &d, string &e);
   bool service(radialUser &d, string &e);
   bool serviceAdd(radialUser &d, string &e);
+  void serviceLaunch(const string p, const string f, const string r, Json *ptFlow, long *plID);
   bool serviceRemove(radialUser &d, string &e);
   bool services(radialUser &d, string &e);
   bool serviceUpdate(radialUser &d, string &e);
@@ -139,7 +141,6 @@ class Maestro : public Interface
   void autoMode(string strPrefix, const string strOldMaster, const string strNewMaster);
   void callback(string strPrefix, const string strPacket, const bool bResponse);
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
-  void flowLaunch(const string p, const string f, const string r, Json *ptFlow);
   JSValue js_alert(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_application(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_centralmon(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
