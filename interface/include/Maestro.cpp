@@ -75,6 +75,11 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_functions["schedules"] = &Maestro::schedules;
   m_functions["scheduleUpdate"] = &Maestro::scheduleUpdate;
   m_functions["scopes"] = &Maestro::scopes;
+  m_functions["service"] = &Maestro::service;
+  m_functions["serviceAdd"] = &Maestro::serviceAdd;
+  m_functions["serviceRemove"] = &Maestro::serviceRemove;
+  m_functions["services"] = &Maestro::services;
+  m_functions["serviceUpdate"] = &Maestro::serviceUpdate;
   m_functions["status"] = &Maestro::status;
   // }}}
   // {{{ javascripts
