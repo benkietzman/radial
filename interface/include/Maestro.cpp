@@ -6374,7 +6374,7 @@ void Maestro::scheduler(string strPrefix)
               m_mutex.unlock();
               if (bLaunch)
               {
-                thread tThread(&Maestro::serviceLaunch, this, p.first, strFlow, strRequest, ptFlow, &(s.second));
+                thread tThread(&Maestro::serviceLaunch, this, p.first, s.first, strFlow, strRequest, ptFlow, &(s.second));
                 pthread_setname_np(tThread.native_handle(), "serviceLaunch");
                 tThread.detach();
               }
