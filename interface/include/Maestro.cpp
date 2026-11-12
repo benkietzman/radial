@@ -3349,7 +3349,18 @@ JSValue Maestro::js_msleep(JSContext *jsctx, JSValueConst, int argc, JSValueCons
       stringstream ssMS(pszMS);
       ssMS >> ulMS;
       b = true;
-      msleep(ulMS);
+      if (ulMS <= 2000)
+      {
+        msleep(ulMS);
+      }
+      else
+      {
+        size_t unIterations = (ulMS / 500) + 1;
+        for (size_t i = 0; !shutdown() && i < unIterations; i++)
+        {
+          msleep(500);
+        }
+      }
     }
     else
     {
