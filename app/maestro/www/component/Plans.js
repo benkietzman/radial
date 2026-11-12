@@ -853,17 +853,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.s = response.Response;
-          if (!s.s.Cron)
-          {
-            s.s.Cron = 0;
-          }
-          if (c.isDefined(s.s.Cron) && s.s.Cron != '1' && c.isDefined(s.s.Sched) && s.s.Sched != '')
-          {
-            let date = new Date(s.s.Sched * 1000);
-            let pad = n => String(n).padStart(2, "0");
-            s.s.Sched = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-          }
+          s.d = response.Response;
         }
         else
         {
@@ -932,7 +922,7 @@ export default
         let error = {};
         if (c.wsResponse(response, error))
         {
-          s.ss = response.Response;
+          s.ds = response.Response;
           if (s.strService != '')
           {
             s.service();
@@ -952,7 +942,7 @@ export default
       if (c.isValid())
       {
         s['serviceStatus'].v = '';
-        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Enabled: s.s.Enabled.v, Flow: s.s.Flow.v, Description: s.s.Description.v, Request: s.s.Request.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceUpdate', Request: {Plan: s.strPlan, Service: s.strService, Enabled: s.d.Enabled.v, Flow: s.d.Flow.v, Description: s.d.Description.v, Request: s.d.Request.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
@@ -1286,7 +1276,7 @@ export default
           <div class="table-responsive mt-2">
             <table class="table table-sm table-condensed table-striped" style="--bs-table-bg: transparent;">
             <tbody>
-              {{#each ss}}
+              {{#each ds}}
               <tr>
                 <td><a href="#/Plans/{{@root.strPlan}}/Service/{{.}}">{{.}}</a></td>
               </tr>
@@ -1504,10 +1494,10 @@ export default
     {{/if}}
     <!-- ]]] -->
     <!-- [[[ service -->
-    {{#if s}}
+    {{#if d}}
     <div class="col-{{#if expand.service}}*{{else}}auto{{/if}}">
       <div class="card border border-info mb-2 mt-3">
-        <div class="card-header bg bg-info fw-bold text-center text-nowrap">
+        <div class="card-header bg bg-info fw-bold text-center text-dark text-nowrap">
           <div class="row flex-nowrap">
             <div class="col-auto">
               {{#if p.edit}}
@@ -1520,7 +1510,7 @@ export default
             <div class="col-auto">
               {{#if p.edit}}
               <div class="form-check form-switch" title="Enables the service.">
-                <input class="form-check-input bg bg-secondary" type="checkbox" c-model="s.Enabled"" value="1">
+                <input class="form-check-input bg bg-secondary" type="checkbox" c-model="d.Enabled"" value="1">
               </div>
               {{/if}}
             </div>
@@ -1536,18 +1526,18 @@ export default
           {{#if p.edit}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <select class="form-select bg bg-secondary-subtle border border-info-subtle" c-model="s.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
+            <select class="form-select bg bg-secondary-subtle border border-info-subtle" c-model="d.Flow" style="flex-grow: 0; flex-basis: 200px;">{{#each fs}}<option value="{{.}}">{{.}}</option>{{/each}}</select>
           </div>
-          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="s.Description" rows="4" placeholder="description"></textarea>
-          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="s.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
+          <textarea class="form-control bg bg-info-subtle border border-info mt-2" c-model="d.Description" rows="4" placeholder="description"></textarea>
+          <textarea class="form-control bg bg-secondary-subtle border border-secondary mt-2" c-model="d.Request" style="font-family: monospace;" rows="4" placeholder="JSON request"></textarea>
           <pre class="mt-2 text-danger" c-model="error" style="white-space: pre-wrap;"></pre>
           {{else}}
           <div class="input-group flex-nowrap mt-2">
             <span class="input-group-text bg bg-secondary border bordrer-secondary">Flow</span>
-            <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{s.Flow}}</span>
+            <span class="input-group-text bg bg-secondary-subtle border bordrer-info-subtle">{{d.Flow}}</span>
           </div>
           <b>Description<b>
-          <pre class="bg bg-info-subtle border border-info mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{s.Description}}}</pre>
+          <pre class="bg bg-info-subtle border border-info mt-2 p-2 rounded" style="white-space: pre-wrap;">{{{d.Description}}}</pre>
           <pre class="bg bg-secondary-subtle border border-secondary rw-bold text-warning mt-2 p-2 rounded" style="white-space: pre-wrap;">You are not authorized to view the request.</pre>
           {{/if}}
         </div>
