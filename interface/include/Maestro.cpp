@@ -5312,6 +5312,42 @@ void Maestro::load(string strPrefix)
                     chat("#maestro", ssChat.str());
                   }
                 }
+                else if (j.second->val({"Type"}) == "directory" && j.first == "d")
+                {
+                  Json *dl = NULL;
+                  if (dataDirectoryList(m_strHandle, {i.first, j.first}, &dl, e))
+                  {
+                    for (auto &k : dl->m)
+                    {
+                      if (k.second->val({"Type"}) == "regular file")
+                      {
+                        string b;
+                        if (dataRead(m_strHandle, {i.first, j.first, k.first}, b, e))
+                        {
+                          ptPlan->d[k.first] = new Json(b);
+                        }
+                        else
+                        {
+                          bLoaded = false;
+                          ssChat.str("");
+                          ssChat << char(2) << char(3) << "07Interface::dataRead() [" << m_strHandle << "," << i.first << "," << j.first << "," << k.first << "] " << e << char(3) << char(2);
+                          chat("#maestro", ssChat.str());
+                        }
+                      }
+                    }
+                    if (isMasterSettled() && isMaster())
+                    {
+                      m_bLoadServices = true;
+                    }
+                  }
+                  else
+                  {
+                    bLoaded = false;
+                    ssChat.str("");
+                    ssChat << char(2) << char(3) << "07Interface::dataDirectoryList() [" << m_strHandle << "," << i.first << "," << j.first << "] " << e << char(3) << char(2);
+                    chat("#maestro", ssChat.str());
+                  }
+                }
                 else if (j.second->val({"Type"}) == "directory" && j.first == "f")
                 {
                   Json *dl = NULL;
@@ -5366,6 +5402,10 @@ void Maestro::load(string strPrefix)
                           chat("#maestro", ssChat.str());
                         }
                       }
+                    }
+                    if (isMasterSettled() && isMaster())
+                    {
+                      m_bLoadSchedules = true;
                     }
                   }
                   else
