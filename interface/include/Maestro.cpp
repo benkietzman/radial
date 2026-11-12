@@ -3345,25 +3345,19 @@ JSValue Maestro::js_msleep(JSContext *jsctx, JSValueConst, int argc, JSValueCons
     const char *pszMS = JS_ToCString(jsctx, argv[0]);
     if (pszMS != NULL)
     {
-      unsigned long ulMS;
+      size_t unIterations;
       stringstream ssMS(pszMS);
+      unsigned long ulMS;
       ssMS >> ulMS;
+      unIterations = (ulMS / 500);
       b = true;
-      if (ulMS <= 2000)
+      if (unIterations == 0)
       {
-        msleep(ulMS);
+        unIterations++;
       }
-      else
+      for (size_t i = 0; !shutdown() && i < unIterations; i++)
       {
-        size_t unIterations = (ulMS / 500);
-        if (unIterations == 0)
-        {
-          unIterations++;
-        }
-        for (size_t i = 0; !shutdown() && i < unIterations; i++)
-        {
-          msleep(500);
-        }
+        msleep(500);
       }
     }
     else
@@ -3880,6 +3874,7 @@ JSValue Maestro::js_semCreate(JSContext *jsctx, JSValueConst na, int argc, JSVal
             stringstream ssValue(pszValue);
             unsigned int unValue;
             ssValue >> unValue;
+            chat("#maestro", (string)"sem:  "+pszValue+(string)" == "+to_string(unValue));
             if (sem_init(pSem, 0, unValue) == 0)
             {
               radialMaestroSem *ptSem = new radialMaestroSem;
