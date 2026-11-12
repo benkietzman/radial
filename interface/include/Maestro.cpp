@@ -102,6 +102,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
   jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
+  jsreg("msleep", 1, "msleep(ms)", "Provides the ability to for the given number of milliseconds.");
   jsreg("mutexCreate", 0, "mutexCreate()", "Provides the ability to create a mutex.");
   jsreg("mutexDestroy", 1, "mutexDestroy(id)", "Provides the ability to destroy a mutex.");
   jsreg("mutexLock", 1, "mutexLock(id)", "Provides the ability to lock a mutex.");
@@ -3322,6 +3323,46 @@ JSValue Maestro::js_logger(JSContext *jsctx, JSValueConst, int argc, JSValueCons
   else
   {
     e = "Please provide the application, function, label, and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_msleep()
+JSValue Maestro::js_msleep(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 1)
+  {
+    const char *pszMS = JS_ToCString(jsctx, argv[0]);
+    if (pszMS != NULL)
+    {
+      unsigned long ulMS;
+      stringstream ssMS(pszMS);
+      ssMS >> ulMS;
+      b = true;
+      msleep(ulMS);
+    }
+    else
+    {
+      e = "Please provide the ms.";
+    }
+    if (pszMS != NULL)
+    {
+      JS_FreeCString(jsctx, pszMS);
+    }
+  }
+  else
+  {
+    e = "Please provide the ms.";
   }
   if (!e.empty())
   {

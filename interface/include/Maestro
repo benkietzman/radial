@@ -160,6 +160,7 @@ class Maestro : public Interface
   JSValue js_live(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_log(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_logger(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_msleep(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mutexCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mutexDestroy(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mutexLock(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
