@@ -6298,10 +6298,10 @@ void Maestro::scheduler(string strPrefix)
               bool bLaunch = false;
               string strFlow, strRequest;
               Json *ptFlow = NULL;
-              if (s.second != -1)
+              m_mutex.lock();
+              if (m_p.find(p.first) != m_p.end() && m_p[p.first]->d.find(s.first) != m_p[p.first]->d.end() && m_p[p.first]->d[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->d[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->d[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
               {
-                m_mutex.lock();
-                if (m_p.find(p.first) != m_p.end() && m_p[p.first]->d.find(s.first) != m_p[p.first]->d.end() && m_p[p.first]->d[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->d[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->d[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
+                if (s.second != -1)
                 {
                   bool bFound = false;
                   for (auto i = m_p[p.first]->r.begin(); !bFound && i != m_p[p.first]->r.end(); i++)
@@ -6323,12 +6323,15 @@ void Maestro::scheduler(string strPrefix)
                     ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->d[s.first]->m["Flow"]->v]);
                   }
                 }
-                m_mutex.unlock();
+                else
+                {
+                  bLaunch = true;
+                  strFlow = m_p[p.first]->d[s.first]->m["Flow"]->v;
+                  strRequest = m_p[p.first]->d[s.first]->val({"Request"});
+                  ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->d[s.first]->m["Flow"]->v]);
+                }
               }
-              else
-              {
-                bLaunch = true;
-              }
+              m_mutex.unlock();
               if (bLaunch)
               {
                 thread tThread(&Maestro::serviceLaunch, this, p.first, strFlow, strRequest, ptFlow, &(s.second));
