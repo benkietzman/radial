@@ -2592,8 +2592,8 @@ JSValue Maestro::js_db(JSContext *jsctx, JSValueConst, int argc, JSValueConst *a
         ptResponse->i("ID", strID);
         ptResponse->i("Query", strQuery);
         ptResponse->j(strResponse);
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
         delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
       }
     }
     else
@@ -2654,8 +2654,8 @@ JSValue Maestro::js_dbquery(JSContext *jsctx, JSValueConst, int argc, JSValueCon
         ssRows << ullRows;
         ptResponse->i("Rows", ssRows.str(), 'n');
         ptResponse->j(strResponse);
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
         delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
       }
     }
     else
@@ -2712,8 +2712,8 @@ JSValue Maestro::js_dbupdate(JSContext *jsctx, JSValueConst, int argc, JSValueCo
         ssRows << ullRows;
         ptResponse->i("Rows", ssRows.str(), 'n');
         ptResponse->j(strResponse);
-        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
         delete ptResponse;
+        JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
       }
     }
     else
