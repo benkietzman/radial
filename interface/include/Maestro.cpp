@@ -35,6 +35,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
 
   m_bLoaded = false;
   m_bLoadSchedules = false;
+  m_bLoadServices = false;
   // {{{ accesses
   m_a["application"] = {"emulator"};
   m_a["command"] = {"all"};
@@ -178,11 +179,21 @@ Maestro::~Maestro()
       }
       p.second->r.clear();
     }
+    for (auto &s : p.second->d)
+    {
+      delete s.second;
+    }
+    p.second->d.clear();
     for (auto &f : p.second->f)
     {
       delete f.second;
     }
     p.second->f.clear();
+    for (auto &s : p.second->s)
+    {
+      delete s.second;
+    }
+    p.second->s.clear();
     delete p.second;
   }
   m_p.clear();
@@ -1256,6 +1267,7 @@ void Maestro::autoMode(string strPrefix, const string strOldMaster, const string
     if (strNewMaster == m_strNode)
     {
       m_bLoadSchedules = true;
+      m_bLoadServices = true;
     }
   }
   threadDecrement();
@@ -5584,6 +5596,7 @@ bool Maestro::plan(radialUser &d, string &e)
       o->i("NumRequests", to_string((m_p[p]->a != NULL && m_p[p]->a->exist({"r"}))?m_p[p]->a->m["r"]->m.size():0), 'n');
       o->i("NumFlows", to_string(m_p[p]->f.size()), 'n');
       o->i("NumSchedules", to_string(m_p[p]->s.size()), 'n');
+      o->i("NumServices", to_string(m_p[p]->d.size()), 'n');
       for (auto &c : m_p[p]->r)
       {
         unRunning += c.second.size();
@@ -5743,6 +5756,28 @@ bool Maestro::planRemove(radialUser &d, string &e)
             dataRemove(m_strHandle, {p, "a"}, e);
           }
         }
+        for (auto &s : m_p[p]->d)
+        {
+          delete s.second;
+          if (i->val({"_broadcast"}) == "1")
+          {
+            if (!dataRemove(m_strHandle, {p, "d", s.first}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | d | " << s.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+        }
+        if (i->val({"_broadcast"}) == "1")
+        {
+          if (!dataDirectoryRemove(m_strHandle, {p, "d"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
         for (auto &f : m_p[p]->f)
         {
           delete f.second;
@@ -5873,6 +5908,7 @@ bool Maestro::plans(radialUser &d, string &e)
     ptPlan->i("NumRequests", to_string((p.second->a != NULL && p.second->a->exist({"r"}))?p.second->a->m["r"]->m.size():0), 'n');
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("NumSchedules", to_string(p.second->s.size()), 'n');
+    ptPlan->i("NumServices", to_string(p.second->d.size()), 'n');
     for (auto &c : p.second->r)
     {
       unRunning += c.second.size();
@@ -6020,6 +6056,10 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
             {
               b = true;
               m_p[p]->s[s] = new Json(i);
+              if (isMasterSettled() && isMaster())
+              {
+                m_bLoadSchedules = true;
+              }
             }
             else
             {
@@ -6092,6 +6132,7 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
 void Maestro::scheduler(string strPrefix)
 {
   map<string, map<string, time_t> > schedules;
+  map<string, map<string, long> > services;
   string e;
   time_t CNow, CThread;
 
@@ -6173,6 +6214,40 @@ void Maestro::scheduler(string strPrefix)
         m_mutex.unlock();
       }
       // }}}
+      // {{{ services
+      for (auto &p : services)
+      {
+        for (auto &s : p.second)
+        {
+          // check that each service have a running thread
+          // -1 means the service has never been launched
+          // need to check that launched services are still running
+          // relaunch them if not
+        }
+      }
+      if (m_bLoadServices)
+      {
+        m_bLoadServices = false;
+        services.clear();
+        m_mutex.lock();
+        for (auto &p : m_p)
+        {
+          map<string, long> servs;
+          for (auto &s : p.second->d)
+          {
+            if (s.second->val({"Enabled"}) == "1" && !s.second->empty({"Flow"}) && p.second->f.find(s.second->m["Flow"]->v) != p.second->f.end())
+            {
+              servs[s.first] = -1;
+            }
+          }
+          if (!servs.empty())
+          {
+            services[p.first] = servs;
+          }
+        }
+        m_mutex.unlock();
+      }
+      // }}}
     }
     // {{{ threads
     if ((CNow - CThread) > 60)
@@ -6237,6 +6312,10 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
             b = true;
             delete m_p[p]->s[s];
             m_p[p]->s.erase(s);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadSchedules = true;
+            }
             if (i->val({"_broadcast"}) != "1" && m_p[p]->s.empty() && !dataDirectoryRemove(m_strHandle, {p, "s"}, e))
             {
               ssChat.str("");
@@ -6479,6 +6558,365 @@ bool Maestro::scopes(radialUser &d, string &e)
 
   return b;
 }
+// }}}
+// {{{ service
+// {{{ service()
+bool Maestro::service(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Plan", "Service"}, i, e))
+  {
+    string p = i->m["Plan"]->v, s = i->m["Service"]->v;
+    m_mutex.lock();
+    if (m_p.find(p) != m_p.end())
+    {
+      if (m_p[p]->d.find(s) != m_p[p]->d.end())
+      {
+        b = true;
+        if (!isOwner(d, p) && !m_p[p]->d[s]->empty({"Request"}))
+        {
+          m_p[p]->d[s]->i("Request", "");
+        }
+        o->merge(m_p[p]->d[s], true, false);
+      }
+      else
+      {
+        e = "Service not found.";
+      }
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
+// {{{ serviceAdd()
+bool Maestro::serviceAdd(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Plan", "Service"}, i, e))
+  {
+    string p = i->m["Plan"]->v, s = i->m["Service"]->v;
+    if (isOwner(d, p))
+    {
+      string id, t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (m_p[p]->d.find(s) == m_p[p]->d.end())
+        {
+          if (i->val({"_broadcast"}) == "1" || !m_p[p]->d.empty() || dataDirectoryAdd(m_strHandle, {p, "d"}, e))
+          {
+            string j;
+            i->j(j);
+            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "d", s}, j, e))
+            {
+              b = true;
+              m_p[p]->d[s] = new Json(i);
+              if (isMasterSettled() && isMaster())
+              {
+                m_bLoadServices = true;
+              }
+            }
+            else
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else
+        {
+          e = "Service already exists.";
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "serviceAdd");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Service added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "serviceAdd");
+        ptLive->i("Plan", p);
+        ptLive->i("Service", s);
+        live("Maestro", "", ptLive);
+        delete ptLive;
+      }
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ serviceRemove()
+bool Maestro::serviceRemove(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Plan", "Service"}, i, e))
+  {
+    string p = i->m["Plan"]->v, s = i->m["Service"]->v;
+    if (isOwner(d, p))
+    {
+      string t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (m_p[p]->d.find(s) != m_p[p]->d.end())
+        {
+          if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "d", s}, e))
+          {
+            b = true;
+            delete m_p[p]->d[s];
+            m_p[p]->d.erase(s);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadServices = true;
+            }
+            if (i->val({"_broadcast"}) != "1" && m_p[p]->d.empty() && !dataDirectoryRemove(m_strHandle, {p, "d"}, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else
+        {
+          e = "Service not found.";
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "serviceRemove");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Service removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "serviceRemove");
+        ptLive->i("Plan", p);
+        ptLive->i("Service", s);
+        live("Maestro", "", ptLive);
+        delete ptLive;
+      }
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
+  }
+
+  return b;
+}
+// }}}
+// {{{ services()
+bool Maestro::services(radialUser &d, string &e)
+{
+  bool b = false;
+  Json *i = d.p->m["i"], *o = d.p->m["o"];
+
+  if (dep({"Plan"}, i, e))
+  {
+    string p = i->m["Plan"]->v;
+    m_mutex.lock();
+    if (m_p.find(p) != m_p.end())
+    {
+      b = true;
+      for (auto &s : m_p[p]->d)
+      {
+        o->pb(s.first);
+      }
+    }
+    else
+    {
+      e = "Plan not found.";
+    }
+    m_mutex.unlock();
+  }
+
+  return b;
+}
+// }}}
+// {{{ serviceUpdate()
+bool Maestro::serviceUpdate(radialUser &d, string &e)
+{
+  bool b = false;
+  stringstream ssChat;
+  Json *i = d.p->m["i"];
+
+  if (dep({"Plan", "Service"}, i, e))
+  {
+    string p = i->m["Plan"]->v, s = i->m["Service"]->v;
+    if (isOwner(d, p))
+    {
+      string id, t;
+      stringstream ssP(p);
+      getline(ssP, t, '_');
+      getline(ssP, id);
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end())
+      {
+        if (m_p[p]->d.find(s) != m_p[p]->d.end())
+        {
+          string j;
+          i->j(j);
+          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "d", s}, j, e))
+          {
+            b = true;
+            if (m_p[p]->d.find(s) != m_p[p]->d.end())
+            {
+              delete m_p[p]->d[s];
+            }
+            m_p[p]->d[s] = new Json(i);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadServices = true;
+            }
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else
+        {
+          e = "Service not found.";
+        }
+      }
+      else
+      {
+        e = "Plan not found.";
+      }
+      m_mutex.unlock();
+      if (b && i->val({"_broadcast"}) != "1")
+      {
+        list<string> nodes;
+        Json *ptLive = new Json;
+        m_mutexShare.lock();
+        for (auto &link : m_l)
+        {
+          if (link->interfaces.find("maestro") != link->interfaces.end())
+          {
+            nodes.push_back(link->strNode);
+          }
+        }
+        m_mutexShare.unlock();
+        while (!nodes.empty())
+        {
+          Json *ptLink = new Json(d.r);
+          ptLink->i("Interface", "maestro");
+          ptLink->i("Node", nodes.front());
+          ptLink->i("Function", "serviceUpdate");
+          ptLink->m["Request"]->i("_broadcast", "1", '1');
+          hub("link", ptLink);
+          delete ptLink;
+          nodes.pop_front();
+        }
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Service updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+        ptLive->i("Action", "serviceUpdate");
+        ptLive->i("Plan", p);
+        ptLive->i("Schedule", s);
+        live("Maestro", "", ptLive);
+        delete ptLive;
+      }
+    }
+    else
+    {
+      e = "You are not the owner.";
+    }
+  }
+
+  return b;
+}
+// }}}
 // }}}
 }
 }
