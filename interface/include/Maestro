@@ -130,7 +130,7 @@ class Maestro : public Interface
   bool scopes(radialUser &d, string &e);
   bool service(radialUser &d, string &e);
   bool serviceAdd(radialUser &d, string &e);
-  void serviceLaunch(const string p, const string f, const string r, Json *ptFlow, long *plID);
+  void serviceLaunch(const string p, const string s, const string f, const string r, Json *ptFlow, long *plID);
   bool serviceRemove(radialUser &d, string &e);
   bool services(radialUser &d, string &e);
   bool serviceUpdate(radialUser &d, string &e);
