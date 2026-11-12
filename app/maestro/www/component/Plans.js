@@ -878,7 +878,7 @@ export default
     {
       if (c.isValid())
       {
-        let request = {Interface: 'maestro', 'Function': 'serviceleAdd', Request: {Plan: s.strPlan, Service: s.serviceName.v}};
+        let request = {Interface: 'maestro', 'Function': 'serviceAdd', Request: {Plan: s.strPlan, Service: s.serviceName.v}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
