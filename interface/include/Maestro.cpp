@@ -1626,6 +1626,18 @@ bool Maestro::flowExec(radialUser &d, string &e)
                 }
                 threads.push_back(t.second);
               }
+            }
+            m_mutex.unlock();
+            while (!threads.empty())
+            {
+              threads.front()->pThread->join();
+              delete threads.front()->pThread;
+              delete threads.front();
+              threads.pop_front();
+            }
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
+            {
               m_p[p]->r[f][lThreadID]->threads.clear();
               for (auto &s : m_p[p]->r[f][lThreadID]->sems)
               {
@@ -1646,13 +1658,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
               }
             }
             m_mutex.unlock();
-            while (!threads.empty())
-            {
-              threads.front()->pThread->join();
-              delete threads.front()->pThread;
-              delete threads.front();
-              threads.pop_front();
-            }
             delete pbKill;
           }
           live("Maestro", "", ptLive);
@@ -6200,6 +6205,18 @@ void Maestro::scheduleLaunch(const string p, const string f, const string r, Jso
           }
           threads.push_back(t.second);
         }
+      }
+      m_mutex.unlock();
+      while (!threads.empty())
+      {
+        threads.front()->pThread->join();
+        delete threads.front()->pThread;
+        delete threads.front();
+        threads.pop_front();
+      }
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
+      {
         m_p[p]->r[f][lThreadID]->threads.clear();
         for (auto &s : m_p[p]->r[f][lThreadID]->sems)
         {
@@ -6220,13 +6237,6 @@ void Maestro::scheduleLaunch(const string p, const string f, const string r, Jso
         }
       }
       m_mutex.unlock();
-      while (!threads.empty())
-      {
-        threads.front()->pThread->join();
-        delete threads.front()->pThread;
-        delete threads.front();
-        threads.pop_front();
-      }
       delete pbKill;
     }
     live("Maestro", "", ptLive);
@@ -7009,6 +7019,18 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
           }
           threads.push_back(t.second);
         }
+      }
+      m_mutex.unlock();
+      while (!threads.empty())
+      {
+        threads.front()->pThread->join();
+        delete threads.front()->pThread;
+        delete threads.front();
+        threads.pop_front();
+      }
+      m_mutex.lock();
+      if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
+      {
         m_p[p]->r[f][lThreadID]->threads.clear();
         for (auto &s : m_p[p]->r[f][lThreadID]->sems)
         {
@@ -7029,13 +7051,6 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
         }
       }
       m_mutex.unlock();
-      while (!threads.empty())
-      {
-        threads.front()->pThread->join();
-        delete threads.front()->pThread;
-        delete threads.front();
-        threads.pop_front();
-      }
       delete pbKill;
     }
     live("Maestro", "", ptLive);
