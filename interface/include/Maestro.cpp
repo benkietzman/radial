@@ -6250,11 +6250,12 @@ void Maestro::scheduler(string strPrefix)
   map<string, map<string, time_t> > schedules;
   map<string, map<string, long> > services;
   string e;
-  time_t CNow, CServices;
+  time_t CNow, CService, CThread;
 
   threadIncrement();
   strPrefix += "->Maestro::scheduler()";
-  time(&CServices);
+  time(&CService);
+  CThread = CService;
   while (!shutdown())
   {
     if (!m_bLoaded)
@@ -6330,9 +6331,9 @@ void Maestro::scheduler(string strPrefix)
       }
       // }}}
       // {{{ services
-      if ((CNow - CServices) > 60)
+      if ((CNow - CService) > 60)
       {
-        CServices = CNow;
+        CService = CNow;
         if (!services.empty())
         {
           for (auto &p : services)
@@ -6508,6 +6509,39 @@ void Maestro::scheduler(string strPrefix)
       }
       // }}}
     }
+    // {{{ threads
+    if ((CNow - CThread) > 60)
+    {
+      CThread = CNow;
+      m_mutex.lock();
+      for (auto &p : m_p)
+      {
+        for (auto &f : p.second->r)
+        {
+          for (auto &r : f.second)
+          {
+            list<int32_t> rs;
+            for (auto &t : r.second->threads)
+            {
+              if (t.second->bDetached && t.second->bDone)
+              {
+                t.second->pThread->join();
+                delete t.second->pThread;
+                delete t.second;
+                rs.push_back(t.first);
+              }
+            }
+            while (!rs.empty())
+            {
+              r.second->threads.erase(rs.front());
+              rs.pop_front();
+            }
+          }
+        }
+      }
+      m_mutex.unlock();
+    }
+    // }}}
     msleep(1000);
   }
   threadDecrement();
