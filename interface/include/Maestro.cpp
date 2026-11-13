@@ -1615,7 +1615,6 @@ bool Maestro::flowExec(radialUser &d, string &e)
           {
             list<radialMaestroThread *> threads;
             JS_SetInterruptHandler(jsrun, NULL, NULL);
-            (*pbKill) = true;
             m_mutex.lock();
             if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
             {
@@ -6186,7 +6185,6 @@ void Maestro::scheduleLaunch(const string p, const string f, const string r, Jso
     {
       list<radialMaestroThread *> threads;
       JS_SetInterruptHandler(jsrun, NULL, NULL);
-      (*pbKill) = true;
       m_mutex.lock();
       if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
       {
@@ -6996,7 +6994,6 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
     {
       list<radialMaestroThread *> threads;
       JS_SetInterruptHandler(jsrun, NULL, NULL);
-      (*pbKill) = true;
       m_mutex.lock();
       if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(lThreadID) != m_p[p]->r[f].end())
       {
