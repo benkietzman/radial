@@ -1630,7 +1630,17 @@ bool Maestro::flowExec(radialUser &d, string &e)
             m_mutex.unlock();
             while (!threads.empty())
             {
-              threads.front()->pThread->join();
+              if (threads.front()->bDetached)
+              {
+                while (!shutdown() && !threads.front()->bDone)
+                {
+                  msleep(250);
+                }
+              }
+              else
+              {
+                threads.front()->pThread->join();
+              }
               delete threads.front()->pThread;
               delete threads.front();
               threads.pop_front();
@@ -1981,10 +1991,6 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
             JS_SetInterruptHandler(jsrun, maestroInterrupt, pbKill);
           }
           JSValue jsres = JS_Eval(jsctx, ptFlow->m["Script"]->v.data(), ptFlow->m["Script"]->v.size(), "<embedded>", JS_EVAL_TYPE_GLOBAL);
-          if (ptThread != NULL)
-          {
-            ptThread->bDone = true;
-          }
           if (pbKill != NULL)
           {
             JS_SetInterruptHandler(jsrun, NULL, NULL);
@@ -2026,18 +2032,17 @@ void Maestro::flowThread(const string sp, string p, const string f, const string
       }
       delete ptFlow;
     }
-    if (ptThread != NULL && ptThread->bDetached)
+    if (ptThread != NULL)
     {
-      ptThread->pThread->join();
-      m_mutex.lock();
-      if (m_p.find(ptRun->m["p"]->v) != m_p.end() && m_p[ptRun->m["p"]->v]->r.find(ptRun->m["f"]->v) != m_p[ptRun->m["p"]->v]->r.end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].find(lThread) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v].end() && m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.find(nID) != m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.end())
+      ptThread->bDone = true;
+      if (ptThread->bDetached)
       {
-        m_p[ptRun->m["p"]->v]->r[ptRun->m["f"]->v][lThread]->threads.erase(nID);
+        ptThread->pThread->join();
       }
-      m_mutex.unlock();
-      delete ptThread->pThread;
-      delete ptThread;
     }
+  }
+  if (ptRun != NULL)
+  {
     delete ptRun;
   }
 }
@@ -5159,24 +5164,27 @@ JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValue
             m_mutex.unlock();
             if (ptThread != NULL)
             {
-              if (ptThread->bDetached)
+              if (!ptThread->bDetached)
               {
-                ptThread->bDetached = false;
+                b = true;
+                ptThread->pThread->join();
+                m_mutex.lock();
+                if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->threads.find(nID) != m_p[p]->r[f][t]->threads.end())
+                {
+                  m_p[p]->r[f][t]->threads.erase(nID);
+                }
+                m_mutex.unlock();
+                delete ptThread->pThread;
+                if (!ptThread->strResponse.empty())
+                {
+                  JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, ptThread->strResponse.c_str(), ptThread->strResponse.size()));
+                }
+                delete ptThread;
               }
-              b = true;
-              ptThread->pThread->join();
-              m_mutex.lock();
-              if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->threads.find(nID) != m_p[p]->r[f][t]->threads.end())
+              else
               {
-                m_p[p]->r[f][t]->threads.erase(nID);
+                e = "Can not join a detached thread.";
               }
-              m_mutex.unlock();
-              delete ptThread->pThread;
-              if (!ptThread->strResponse.empty())
-              {
-                JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, ptThread->strResponse.c_str(), ptThread->strResponse.size()));
-              }
-              delete ptThread;
             }
             else
             {
@@ -6209,7 +6217,17 @@ void Maestro::scheduleLaunch(const string p, const string f, const string r, Jso
       m_mutex.unlock();
       while (!threads.empty())
       {
-        threads.front()->pThread->join();
+        if (threads.front()->bDetached)
+        {
+          while (!shutdown() && !threads.front()->bDone)
+          {
+            msleep(250);
+          }
+        }
+        else
+        {
+          threads.front()->pThread->join();
+        }
         delete threads.front()->pThread;
         delete threads.front();
         threads.pop_front();
@@ -7023,7 +7041,17 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
       m_mutex.unlock();
       while (!threads.empty())
       {
-        threads.front()->pThread->join();
+        if (threads.front()->bDetached)
+        {
+          while (!shutdown() && !threads.front()->bDone)
+          {
+            msleep(250);
+          }
+        }
+        else
+        {
+          threads.front()->pThread->join();
+        }
         delete threads.front()->pThread;
         delete threads.front();
         threads.pop_front();
