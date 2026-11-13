@@ -5154,6 +5154,10 @@ JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValue
             m_mutex.unlock();
             if (ptThread != NULL)
             {
+              if (ptThread->bDetached)
+              {
+                ptThread->bDetached = false;
+              }
               b = true;
               ptThread->pThread->join();
               m_mutex.lock();
