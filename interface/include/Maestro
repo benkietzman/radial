@@ -27,13 +27,6 @@ struct radialMaestroJavascript
   JSCFunction *function;
 };
 // }}}
-// {{{ radialMaestroSem
-struct radialMaestroSem
-{
-  sem_t *pSem;
-  unsigned int unInUse;
-};
-// }}}
 // {{{ radialMaestroThread
 struct radialMaestroThread
 {
@@ -51,7 +44,7 @@ struct radialMaestroRunning
   int32_t nSem;
   int32_t nThread;
   map<int32_t, mutex *> mutexes;
-  map<int32_t, radialMaestroSem *> sems;
+  map<int32_t, sem_t *> sems;
   map<int32_t, radialMaestroThread *> threads;
   time_t CTime;
 };
