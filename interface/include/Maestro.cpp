@@ -99,6 +99,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
   jsreg("getStatus", 0, "getStatus()", "Provides the ability to retrieve the status from teh last Maestro function.");
   jsreg("junction", 1, "junction(request)", "Provides the ability to send a request to Service Junction.");
+  jsreg("killed", 0, "killed()", "Provides the ability to check if the flow has been killed.");
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
   jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
@@ -3177,6 +3178,52 @@ JSValue Maestro::js_junction(JSContext *jsctx, JSValueConst, int argc, JSValueCo
   else
   {
     e = "Please provide the request.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_killed()
+JSValue Maestro::js_killed(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        m_mutex.lock();
+        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && (*m_p[p]->r[f][t]->pbKilled))
+        {
+          b = true;
+        }
+        else
+        {
+          e = "Failed to find plan, flow, and thread.";
+        }
+        m_mutex.unlock();
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
