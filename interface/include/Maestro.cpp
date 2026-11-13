@@ -3207,7 +3207,7 @@ JSValue Maestro::js_killed(JSContext *jsctx, JSValueConst na, int argc, JSValueC
         long t = atol(r->m["t"]->v.c_str());
         string p = r->m["p"]->v, f = r->m["f"]->v;
         m_mutex.lock();
-        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && (*m_p[p]->r[f][t]->pbKilled))
+        if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && (*m_p[p]->r[f][t]->pbKill))
         {
           b = true;
         }
