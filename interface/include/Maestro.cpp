@@ -3029,19 +3029,19 @@ JSValue Maestro::js_flow(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
                   ptResponse->i("Status", pszStatus);
                   JS_FreeCString(jssubctx, pszStatus);
                 }
-                JS_FreeValue(jsctx, jssubstatus);
+                JS_FreeValue(jssubctx, jssubstatus);
                 if (pszError != NULL)
                 {
                   ptResponse->i("Error", pszError);
                   JS_FreeCString(jssubctx, pszError);
                 }
-                JS_FreeValue(jsctx, jssuberror);
+                JS_FreeValue(jssubctx, jssuberror);
                 if (pszResponse != NULL)
                 {
                   ptResponse->m["Response"] = new Json(pszResponse);
                   JS_FreeCString(jssubctx, pszResponse);
                 }
-                JS_FreeValue(jsctx, jssubresponse);
+                JS_FreeValue(jssubctx, jssubresponse);
                 ptResponse->j(strResponse);
                 delete ptResponse;
                 JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
