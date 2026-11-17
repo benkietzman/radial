@@ -122,7 +122,7 @@ export default
                       {
                         s.exportData += ', ';
                       }
-                      if (response.Response.ResultSet[i][key] != '')
+                      if (this.isDefined(response.Response.ResultSet[i][key]) && response.Response.ResultSet[i][key] != '')
                       {
                         s.exportData += '\'' + c.esc(response.Response.ResultSet[i][key]) + '\'';
                       }
