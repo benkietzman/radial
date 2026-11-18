@@ -3304,6 +3304,15 @@ JSValue Maestro::js_log(JSContext *jsctx, JSValueConst, int argc, JSValueConst *
         stringstream ssMessage;
         b = true;
         getPlan(jsctx, strPlan, e);
+        if (!strPlan.empty())
+        {
+          m_mutex.lock();
+          if (m_p.find(strPlan) != m_p.end())
+          {
+            strPlan = m_p[strPlan]->owner;
+          }
+          m_mutex.unlock();
+        }
         ssMessage << "maestro->main()->Maestro::js_log() [" << strPlan << "]:  " << pszMessage;
         log(ssMessage.str());
       }
