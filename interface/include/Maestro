@@ -82,7 +82,9 @@ class Maestro : public Interface
   string m_strCipher;
   string m_strHandle;
   string m_strPath;
+  string m_strPassword;
   string m_strSecret;
+  string m_strUser;
   thread *m_pThreadInotify;
   thread *m_pThreadScheduler;
 
@@ -137,6 +139,7 @@ class Maestro : public Interface
   void callbackInotify(string strPrefix, const string strPath, const string strFile);
   JSValue js_alert(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_application(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_applicationNotify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_centralmon(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_chat(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_command(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
@@ -150,6 +153,7 @@ class Maestro : public Interface
   JSValue js_getRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_groupNotify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_junction(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_killed(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_live(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
@@ -167,6 +171,7 @@ class Maestro : public Interface
   JSValue js_semDestroy(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_semPost(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_semWait(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_serverNotify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setError(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setRequest(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_setResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
@@ -186,6 +191,7 @@ class Maestro : public Interface
   JSValue js_threadCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_threadDetach(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_threadJoin(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_userNotify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   void jsreg(map<string, JSCFunction *> javascript);
   void jsreg(const string strFunction, const int nLength, const string strPrototype, const string strDescription = "");
 };

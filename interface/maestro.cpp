@@ -14,6 +14,7 @@ void callback(string strPrefix, const string strPacket, const bool bResponse);
 void callbackInotify(string strPrefix, const string strPath, const string strFile);
 JSValue js_alert(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_alert(ctx, obj, argc, argv);}
 JSValue js_application(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_application(ctx, obj, argc, argv);}
+JSValue js_applicationNotify(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_applicationNotify(ctx, obj, argc, argv);}
 JSValue js_centralmon(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_centralmon(ctx, obj, argc, argv);}
 JSValue js_chat(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_chat(ctx, obj, argc, argv);}
 JSValue js_command(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_command(ctx, obj, argc, argv);}
@@ -27,6 +28,7 @@ JSValue js_getError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *ar
 JSValue js_getRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getRequest(ctx, obj, argc, argv);}
 JSValue js_getResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getResponse(ctx, obj, argc, argv);}
 JSValue js_getStatus(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_getStatus(ctx, obj, argc, argv);}
+JSValue js_groupNotify(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_groupNotify(ctx, obj, argc, argv);}
 JSValue js_junction(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_junction(ctx, obj, argc, argv);}
 JSValue js_killed(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_killed(ctx, obj, argc, argv);}
 JSValue js_live(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_live(ctx, obj, argc, argv);}
@@ -44,6 +46,7 @@ JSValue js_semCreate(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *a
 JSValue js_semDestroy(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_semDestroy(ctx, obj, argc, argv);}
 JSValue js_semPost(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_semPost(ctx, obj, argc, argv);}
 JSValue js_semWait(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_semWait(ctx, obj, argc, argv);}
+JSValue js_serverNotify(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_serverNotify(ctx, obj, argc, argv);}
 JSValue js_setError(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setError(ctx, obj, argc, argv);}
 JSValue js_setRequest(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setRequest(ctx, obj, argc, argv);}
 JSValue js_setResponse(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_setResponse(ctx, obj, argc, argv);}
@@ -63,13 +66,14 @@ JSValue js_storageUpdate(JSContext *ctx, JSValueConst obj, int argc, JSValueCons
 JSValue js_threadCreate(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_threadCreate(ctx, obj, argc, argv);}
 JSValue js_threadDetach(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_threadDetach(ctx, obj, argc, argv);}
 JSValue js_threadJoin(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_threadJoin(ctx, obj, argc, argv);}
+JSValue js_userNotify(JSContext *ctx, JSValueConst obj, int argc, JSValueConst *argv) {return gpMaestro->js_userNotify(ctx, obj, argc, argv);}
 int main(int argc, char *argv[])
 {
   string strPrefix = "maestro->main()";
   gpMaestro = new Maestro(strPrefix, argc, argv, &callback, &callbackInotify);
   gpMaestro->enableWorkers();
   gpMaestro->setAutoMode(&autoMode);
-  gpMaestro->jsreg({{"alert", js_alert}, {"application", js_application}, {"centralmon", js_centralmon}, {"chat", js_chat}, {"command", js_command}, {"db", js_db}, {"dbquery", js_dbquery}, {"dbupdate", js_dbupdate}, {"email", js_email}, {"esc", js_esc}, {"flow", js_flow}, {"getError", js_getError}, {"getRequest", js_getRequest}, {"getResponse", js_getResponse}, {"getStatus", js_getStatus}, {"junction", js_junction}, {"killed", js_killed}, {"live", js_live}, {"log", js_log}, {"logger", js_logger}, {"msleep", js_msleep}, {"mutexCreate", js_mutexCreate}, {"mutexDestroy", js_mutexDestroy}, {"mutexLock", js_mutexLock}, {"mutexUnlock", js_mutexUnlock}, {"mysqlQuery", js_mysqlQuery}, {"mysqlUpdate", js_mysqlUpdate}, {"notify", js_notify}, {"semCreate", js_semCreate}, {"semDestroy", js_semDestroy}, {"semPost", js_semPost}, {"semWait", js_semWait}, {"setError", js_setError}, {"setRequest", js_setRequest}, {"setResponse", js_setResponse}, {"setStatus", js_setStatus}, {"sqliteCreate", js_sqliteCreate}, {"sqliteDatabases", js_sqliteDatabases}, {"sqliteDrop", js_sqliteDrop}, {"sqliteQuery", js_sqliteQuery}, {"sshConnect", js_sshConnect}, {"sshDisconnect", js_sshDisconnect}, {"sshSend", js_sshSend}, {"storageAdd", js_storageAdd}, {"storageRemove", js_storageAdd}, {"storageRetrieve", js_storageRetrieve}, {"storageRetrieveKeys", js_storageRetrieve}, {"storageUpdate", js_storageUpdate}, {"threadCreate", js_threadCreate}, {"threadDetach", js_threadDetach}, {"threadJoin", js_threadJoin}});
+  gpMaestro->jsreg({{"alert", js_alert}, {"application", js_application}, {"applicationNotify", js_applicationNotify}, {"centralmon", js_centralmon}, {"chat", js_chat}, {"command", js_command}, {"db", js_db}, {"dbquery", js_dbquery}, {"dbupdate", js_dbupdate}, {"email", js_email}, {"esc", js_esc}, {"flow", js_flow}, {"getError", js_getError}, {"getRequest", js_getRequest}, {"getResponse", js_getResponse}, {"getStatus", js_getStatus}, {"groupNotify", js_groupNotify}, {"junction", js_junction}, {"killed", js_killed}, {"live", js_live}, {"log", js_log}, {"logger", js_logger}, {"msleep", js_msleep}, {"mutexCreate", js_mutexCreate}, {"mutexDestroy", js_mutexDestroy}, {"mutexLock", js_mutexLock}, {"mutexUnlock", js_mutexUnlock}, {"mysqlQuery", js_mysqlQuery}, {"mysqlUpdate", js_mysqlUpdate}, {"notify", js_notify}, {"semCreate", js_semCreate}, {"semDestroy", js_semDestroy}, {"semPost", js_semPost}, {"semWait", js_semWait}, {"setError", js_setError}, {"setRequest", js_setRequest}, {"setResponse", js_setResponse}, {"setStatus", js_setStatus}, {"serverNotify", js_serverNotify}, {"sqliteCreate", js_sqliteCreate}, {"sqliteDatabases", js_sqliteDatabases}, {"sqliteDrop", js_sqliteDrop}, {"sqliteQuery", js_sqliteQuery}, {"sshConnect", js_sshConnect}, {"sshDisconnect", js_sshDisconnect}, {"sshSend", js_sshSend}, {"storageAdd", js_storageAdd}, {"storageRemove", js_storageAdd}, {"storageRetrieve", js_storageRetrieve}, {"storageRetrieveKeys", js_storageRetrieve}, {"storageUpdate", js_storageUpdate}, {"threadCreate", js_threadCreate}, {"threadDetach", js_threadDetach}, {"threadJoin", js_threadJoin}, {"userNotify", js_userNotify}});
   gpMaestro->process(strPrefix);
   delete gpMaestro;
   return 0;

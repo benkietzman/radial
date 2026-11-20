@@ -85,6 +85,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // {{{ javascripts
   jsreg("alert", 3, "alert(user, message, html)", "Provides the ability to send a message to a given user via the Alert framework.");
   jsreg("application", 2, "application(application, message)", "Provides the ability to send a message to a given application that is connected to Radial.");
+  jsreg("applicationNotify", 2, "application(application, message)", "Provides the ability to send a message to the primary/backup developers of an application via the Alert framework.");
   jsreg("centralmon", 2, "centralmon(server, process)", "Provides the ability to retrieve server and/or process information from Central Monitor.");
   jsreg("chat", 3, "chat(target, message, source)", "Provides the ability to send a message to a given channel or user in Internet Relay Chat (IRC) by default or to a user in Live using a Source of live.");
   jsreg("command", 5, "command(command, arguments, input, timeout, node)", "Provides the ability to send a command to any Radial server.");
@@ -98,6 +99,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("getRequest",  0, "getRequest()", "Provides the ability to retrieve the request being provides to the given flow.");
   jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
   jsreg("getStatus", 0, "getStatus()", "Provides the ability to retrieve the status from teh last Maestro function.");
+  jsreg("groupNotify", 2, "group(group, message)", "Provides the ability to send a message to a group via the Alert framework.");
   jsreg("junction", 1, "junction(request)", "Provides the ability to send a request to Service Junction.");
   jsreg("killed", 0, "killed()", "Provides the ability to check if the flow has been killed.");
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
@@ -115,6 +117,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("semDestroy", 1, "semDestroy(id)", "Provides the ability to destroy a mutex.");
   jsreg("semPost", 1, "semPost(id)", "Provides the ability to lock a mutex.");
   jsreg("semWait", 1, "semWait(id)", "Provides the ability to lock a mutex.");
+  jsreg("serverNotify", 2, "server(server, message)", "Provides the ability to send a message to the primary/backup admins of a server via the Alert framework.");
   jsreg("setError", 1, "setError(error)", "Provides the ability to set the error prior to exiting the given flow.");
   jsreg("setRequest", 1, "setRequest(request)", "Provides the ability to set the request prior to entering a Maestro function.  NOTE: This is not typically required as the requested is normally set as an argument in the function.");
   jsreg("setResponse", 1, "setResponse(response)", "Provides the ability to set the response prior to exiting the given flow.");
@@ -134,10 +137,12 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("threadCreate", 2, "threadCreate(plan, flow, request)", "Provides the ability to create a thread.");
   jsreg("threadDetach", 1, "threadDetach(id)", "Provides the ability to detach a thread.");
   jsreg("threadJoin", 1, "threadJoin(id)", "Provides the ability to join a thread.");
+  jsreg("userNotify", 2, "user(user, message)", "Provides the ability to send a message to a user via the Alert framework.");
   // }}}
   m_strCipher = "AES-256 GCM";
   m_strHandle = "maestro";
   m_strPath = m_strData + (string)"/maestro";
+  m_strUser = "radial_maestro";
   watches[m_strData] = {".cred"};
   m_pThreadInotify = new thread(&Maestro::inotify, this, strPrefix, watches, pCallbackInotify);
   pthread_setname_np(m_pThreadInotify->native_handle(), "inotify");
@@ -2418,6 +2423,58 @@ JSValue Maestro::js_application(JSContext *jsctx, JSValueConst, int argc, JSValu
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_applicationNotify()
+JSValue Maestro::js_applicationNotify(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszApplication = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszApplication != NULL && pszMessage != NULL)
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "central");
+      ptJson->i("Function", "applicationNotify");
+      ptJson->i("User", m_strUser);
+      ptJson->i("Password", m_strPassword);
+      ptJson->m["Request"] = new Json;
+      ptJson->m["Request"]->i("name", pszApplication);
+      ptJson->m["Request"]->i("notification", pszMessage);
+      if (hub("central", ptJson, e))
+      {
+        b = true;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      e = "Please provide the application and message.";
+    }
+    if (pszApplication != NULL)
+    {
+      JS_FreeCString(jsctx, pszApplication);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the appllication and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_centralmon()
 JSValue Maestro::js_centralmon(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -3132,6 +3189,58 @@ JSValue Maestro::js_getStatus(JSContext *jsctx, JSValueConst, int argc, JSValueC
   JS_FreeValue(jsctx, jsglobal);
 
   return jsstatus;
+}
+// }}}
+// {{{ js_groupNotify()
+JSValue Maestro::js_groupNotify(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszGroup = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszGroup != NULL && pszMessage != NULL)
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "central");
+      ptJson->i("Function", "groupNotify");
+      ptJson->i("User", m_strUser);
+      ptJson->i("Password", m_strPassword);
+      ptJson->m["Request"] = new Json;
+      ptJson->m["Request"]->i("name", pszGroup);
+      ptJson->m["Request"]->i("notification", pszMessage);
+      if (hub("central", ptJson, e))
+      {
+        b = true;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      e = "Please provide the group and message.";
+    }
+    if (pszGroup != NULL)
+    {
+      JS_FreeCString(jsctx, pszGroup);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the group and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
 // {{{ js_junction()
@@ -4221,6 +4330,58 @@ JSValue Maestro::js_semWait(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_serverNotify()
+JSValue Maestro::js_serverNotify(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszServer = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszServer != NULL && pszMessage != NULL)
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "central");
+      ptJson->i("Function", "serverNotify");
+      ptJson->i("User", m_strUser);
+      ptJson->i("Password", m_strPassword);
+      ptJson->m["Request"] = new Json;
+      ptJson->m["Request"]->i("name", pszServer);
+      ptJson->m["Request"]->i("notification", pszMessage);
+      if (hub("central", ptJson, e))
+      {
+        b = true;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      e = "Please provide the server and message.";
+    }
+    if (pszServer != NULL)
+    {
+      JS_FreeCString(jsctx, pszServer);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the server and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // {{{ js_setError()
 JSValue Maestro::js_setError(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -5265,6 +5426,58 @@ JSValue Maestro::js_threadJoin(JSContext *jsctx, JSValueConst, int argc, JSValue
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_userNotify()
+JSValue Maestro::js_userNotify(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszUser = JS_ToCString(jsctx, argv[0]), *pszMessage = JS_ToCString(jsctx, argv[1]);
+    if (pszUser != NULL && pszMessage != NULL)
+    {
+      Json *ptJson = new Json;
+      ptJson->i("Interface", "central");
+      ptJson->i("Function", "userNotify");
+      ptJson->i("User", m_strUser);
+      ptJson->i("Password", m_strPassword);
+      ptJson->m["Request"] = new Json;
+      ptJson->m["Request"]->i("userid", pszUser);
+      ptJson->m["Request"]->i("notification", pszMessage);
+      if (hub("central", ptJson, e))
+      {
+        b = true;
+      }
+      delete ptJson;
+    }
+    else
+    {
+      e = "Please provide the user and message.";
+    }
+    if (pszUser != NULL)
+    {
+      JS_FreeCString(jsctx, pszUser);
+    }
+    if (pszMessage != NULL)
+    {
+      JS_FreeCString(jsctx, pszMessage);
+    }
+  }
+  else
+  {
+    e = "Please provide the user and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
 // }}}
 // {{{ jsreg()
 void Maestro::jsreg(map<string, JSCFunction *> javascript)
@@ -5309,6 +5522,10 @@ void Maestro::load(string strPrefix)
       }
     }
     m_mutex.unlock();
+    if (!ptCred->empty({m_strUser, "Password"}))
+    {
+      m_strPassword = ptCred->m[m_strUser]->m["Password"]->v;
+    }
   }
   delete ptCred;
   if (!m_bLoaded)
