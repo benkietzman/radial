@@ -7266,11 +7266,18 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
 void Maestro::serviceLaunch(const string p, const string s, const string f, const string r, Json *ptFlow, long *plID)
 {
   long lThreadID = syscall(SYS_gettid);
+  string strOwner;
   stringstream ssChat;
 
   (*plID) = lThreadID;
+  m_mutex.lock();
+  if (m_p.find(p) != m_p.end())
+  {
+    strOwner = m_p[p]->owner;
+  }
+  m_mutex.unlock();
   ssChat.str("");
-  ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Service started." << char(3) << char(2);
+  ssChat << char(3) << "00,06 " << strOwner << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Service started." << char(3) << char(2);
   chat("#maestro", ssChat.str());
   if (!ptFlow->empty({"Script"}))
   {
@@ -7396,7 +7403,7 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
   }
   delete ptFlow;
   ssChat.str("");
-  ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Service stopped." << char(3) << char(2);
+  ssChat << char(3) << "00,06 " << strOwner << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Service stopped." << char(3) << char(2);
   chat("#maestro", ssChat.str());
 }
 // }}}
