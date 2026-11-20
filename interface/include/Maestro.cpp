@@ -6298,13 +6298,14 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      string id, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) == m_p[p]->s.end())
         {
           if (i->val({"_broadcast"}) == "1" || !m_p[p]->s.empty() || dataDirectoryAdd(m_strHandle, {p, "s"}, e))
@@ -6369,7 +6370,7 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Schedule added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << s << " " << char(3) << " " << char(2) << char(3) << "03Schedule added by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleAdd");
         ptLive->i("Plan", p);
@@ -6864,12 +6865,13 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
-      string t;
+      string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) != m_p[p]->s.end())
         {
           if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "s", s}, e))
@@ -6930,7 +6932,7 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Schedule removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << s << " " << char(3) << " " << char(2) << char(3) << "04Schedule removed by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleRemove");
         ptLive->i("Plan", p);
@@ -6988,13 +6990,14 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      string id, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
       m_mutex.lock();
       if (m_p.find(p) != m_p.end())
       {
+        strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) != m_p[p]->s.end())
         {
           string j;
@@ -7054,7 +7057,7 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
           nodes.pop_front();
         }
         ssChat.str("");
-        ssChat << char(3) << "00,06 " << p << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Schedule updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
+        ssChat << char(3) << "00,06 " << strOwner << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Schedule updated by " << d.f << " " << d.l << " (" << d.u << ")." << char(3) << char(2);
         chat("#maestro", ssChat.str());
         ptLive->i("Action", "scheduleUpdate");
         ptLive->i("Plan", p);
