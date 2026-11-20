@@ -6607,41 +6607,30 @@ void Maestro::scheduler(string strPrefix)
       if ((CNow - CService) > 60)
       {
         CService = CNow;
-        if (!services.empty())
+        for (auto &p : services)
         {
-          for (auto &p : services)
+          for (auto &s : p.second)
           {
-            for (auto &s : p.second)
+            bool bLaunch = false;
+            string strFlow, strRequest;
+            Json *ptFlow = NULL;
+            m_mutex.lock();
+            if (m_p.find(p.first) != m_p.end() && m_p[p.first]->d.find(s.first) != m_p[p.first]->d.end() && m_p[p.first]->d[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->d[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->d[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
             {
-              bool bLaunch = false;
-              string strFlow, strRequest;
-              Json *ptFlow = NULL;
-              m_mutex.lock();
-              if (m_p.find(p.first) != m_p.end() && m_p[p.first]->d.find(s.first) != m_p[p.first]->d.end() && m_p[p.first]->d[s.first]->val({"Enabled"}) == "1" && !m_p[p.first]->d[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->d[s.first]->m["Flow"]->v) != m_p[p.first]->f.end())
+              if (s.second != -1)
               {
-                if (s.second != -1)
+                bool bFound = false;
+                for (auto i = m_p[p.first]->r.begin(); !bFound && i != m_p[p.first]->r.end(); i++)
                 {
-                  bool bFound = false;
-                  for (auto i = m_p[p.first]->r.begin(); !bFound && i != m_p[p.first]->r.end(); i++)
+                  for (auto j = i->second.begin(); !bFound && j != i->second.end(); j++)
                   {
-                    for (auto j = i->second.begin(); !bFound && j != i->second.end(); j++)
+                    if (s.second == j->first)
                     {
-                      if (s.second == j->first)
-                      {
-                        bFound = true;
-                        strFlow = j->first;
-                      }
+                      bFound = true;
                     }
                   }
-                  if (!bFound)
-                  {
-                    bLaunch = true;
-                    strFlow = m_p[p.first]->d[s.first]->m["Flow"]->v;
-                    strRequest = m_p[p.first]->d[s.first]->val({"Request"});
-                    ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->d[s.first]->m["Flow"]->v]);
-                  }
                 }
-                else
+                if (!bFound)
                 {
                   bLaunch = true;
                   strFlow = m_p[p.first]->d[s.first]->m["Flow"]->v;
@@ -6649,13 +6638,20 @@ void Maestro::scheduler(string strPrefix)
                   ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->d[s.first]->m["Flow"]->v]);
                 }
               }
-              m_mutex.unlock();
-              if (bLaunch)
+              else
               {
-                thread tThread(&Maestro::serviceLaunch, this, p.first, s.first, strFlow, strRequest, ptFlow, &(s.second));
-                pthread_setname_np(tThread.native_handle(), "serviceLaunch");
-                tThread.detach();
+                bLaunch = true;
+                strFlow = m_p[p.first]->d[s.first]->m["Flow"]->v;
+                strRequest = m_p[p.first]->d[s.first]->val({"Request"});
+                ptFlow = new Json(m_p[p.first]->f[m_p[p.first]->d[s.first]->m["Flow"]->v]);
               }
+            }
+            m_mutex.unlock();
+            if (bLaunch)
+            {
+              thread tThread(&Maestro::serviceLaunch, this, p.first, s.first, strFlow, strRequest, ptFlow, &(s.second));
+              pthread_setname_np(tThread.native_handle(), "serviceLaunch");
+              tThread.detach();
             }
           }
         }
@@ -6782,6 +6778,42 @@ void Maestro::scheduler(string strPrefix)
       }
       // }}}
     }
+    // {{{ services
+    else if ((CNow - CService) > 60)
+    {
+      CService = CNow;
+      for (auto &p : services)
+      {
+        for (auto &s : p.second)
+        {
+          m_mutex.lock();
+          if (m_p.find(p.first) != m_p.end() && m_p[p.first]->d.find(s.first) != m_p[p.first]->d.end() && !m_p[p.first]->d[s.first]->empty({"Flow"}) && m_p[p.first]->f.find(m_p[p.first]->d[s.first]->m["Flow"]->v) != m_p[p.first]->f.end() && s.second != -1)
+          {
+            bool bFound = false;
+            for (auto i = m_p[p.first]->r.begin(); !bFound && i != m_p[p.first]->r.end(); i++)
+            {
+              for (auto j = i->second.begin(); !bFound && j != i->second.end(); j++)
+              {
+                if (s.second == j->first)
+                {
+                  Json *ptLive = new Json;
+                  bFound = true;
+                  (*j->second->pbKill) = true;
+                  ptLive->i("Action", "flowExec");
+                  ptLive->i("Plan", p.first);
+                  ptLive->i("Flow", i->first);
+                  live("Maestro", "", ptLive);
+                  delete ptLive;
+                }
+              }
+            }
+          }
+          m_mutex.unlock();
+        }
+      }
+      services.clear();
+    }
+    // }}}
     // {{{ threads
     if ((CNow - CThread) > 60)
     {
