@@ -105,7 +105,7 @@ class Maestro : public Interface
   bool getPlan(JSContext *jsctx, string &strPlan, string &e);
   bool haveAccess(const string strPlan, const string strAccess, list<string> scopes, string &strError, const bool bMutex = true);
   bool haveAccess(JSContext *jsctx, const string strAccess, list<string> scopes, string &strError);
-  bool haveAccessRequest(const string strPlan, const string strAccess, const string strScope);
+  bool haveAccessRequest(const string strPlan, const string strAccess, const string strScope, const bool bMutex = true);
   bool isOwner(radialUser &d, const string p);
   bool isOwner(const string id, const string p, const bool a = false);
   void load(string strPrefix);
