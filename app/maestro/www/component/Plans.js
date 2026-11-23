@@ -1586,7 +1586,6 @@ export default
         <th class="bg bg-success-subtle text-end text-nowrap"># Flows</th>
         <th class="bg bg-primary-subtle text-end text-nowrap"># Schedules</th>
         <th class="bg bg-info-subtle text-end text-nowrap"># Services</th>
-        <th class="text-end text-nowrap"># Running</th>
       </tr>
     </thead>
     <tbody>
@@ -1601,7 +1600,6 @@ export default
         <td class="bg bg-success-subtle text-end">{{numberShort NumFlows 0}}</td>
         <td class="bg bg-primary-subtle text-end">{{numberShort NumSchedules 0}}</td>
         <td class="bg bg-info-subtle text-end">{{numberShort NumServices 0}}</td>
-        <td class="text-end">{{numberShort NumRunning 0}}</td>
       </tr>
       {{/each}}
     </tbody>

@@ -6188,7 +6188,7 @@ bool Maestro::plans(radialUser &d, string &e)
   for (auto &p : m_p)
   {
     bool bEdit = isOwner(d, p.first);
-    size_t unApprovals = 0, unRunning = 0;
+    size_t unApprovals = 0;
     stringstream ssType;
     Json *ptPlan = new Json;
     ptPlan->i("edit", ((bEdit)?"1":"0"), ((bEdit)?'1':'0'));
@@ -6206,11 +6206,6 @@ bool Maestro::plans(radialUser &d, string &e)
     ptPlan->i("NumFlows", to_string(p.second->f.size()), 'n');
     ptPlan->i("NumSchedules", to_string(p.second->s.size()), 'n');
     ptPlan->i("NumServices", to_string(p.second->d.size()), 'n');
-    for (auto &c : p.second->r)
-    {
-      unRunning += c.second.size();
-    }
-    ptPlan->i("NumRunning", to_string(unRunning), 'n');
     ptPlan->i("Owner", p.second->owner);
     ptPlan->i("Plan", p.first);
     ssType << p.second->t;
