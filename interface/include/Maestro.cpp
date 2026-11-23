@@ -352,7 +352,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
     string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v;
     if (isOwner(d, p))
     {
-      string strOwner, t;
+      string strDataWrite, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       m_mutex.lock();
@@ -371,6 +371,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
           }
           if (scopeIter != m_p[p]->a->m["a"]->m[a]->l.end())
           {
+            b = true;
             delete (*scopeIter);
             m_p[p]->a->m["a"]->m[a]->l.erase(scopeIter);
             if (m_p[p]->a->m["a"]->m[a]->l.empty())
@@ -390,28 +391,7 @@ bool Maestro::accessRemove(radialUser &d, string &e)
             }
             if (m_p[p]->a != NULL)
             {
-              string j;
-              m_p[p]->a->j(j);
-              if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-              {
-                b = true;
-              }
-              else
-              {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
-              }
-            }
-            else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-            {
-              b = true;
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
+              m_p[p]->a->j(strDataWrite);
             }
           }
           else
@@ -433,6 +413,21 @@ bool Maestro::accessRemove(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!strDataWrite.empty())
+        {
+          if (!dataWrite(m_strHandle, {p, "a"}, strDataWrite, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else if (!dataRemove(m_strHandle, {p, "a"}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -483,9 +478,13 @@ bool Maestro::accessRequest(radialUser &d, string &e)
   if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strOwner, t = "core";
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strAccessOwner, strDataWrite, strOwner, t = "core";
     stringstream ssHtml, ssText;
     m_mutex.lock();
+    if (m_p.find(a) != m_p.end())
+    {
+      strAccessOwner = m_p[a]->owner;
+    }
     if (m_p.find(p) != m_p.end())
     {
       strOwner = m_p[p]->owner;
@@ -516,8 +515,8 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             if (t == "application")
             {
               ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
-              ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-              ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+              ssText << "flow of the \"" << strAccessOwner << "\" plan";
+              ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
             }
             else if (t == "core")
             {
@@ -528,11 +527,11 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             else if (t == "user")
             {
               ssQuery << "select email from person where id = '" << esc(a.substr(2, (a.size() - 2))) << "'";
-              ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-              ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+              ssText << "flow of the \"" << strAccessOwner << "\" plan";
+              ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
             }
-            ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-            ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
+            ssText << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
+            ssHtml << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
             ssText << endl << endl;
             ssHtml << "<br><br>";
             ssLink << "https://" << m_strServer << "/maestro/#";
@@ -555,7 +554,6 @@ bool Maestro::accessRequest(radialUser &d, string &e)
             {
               if (!getContact->empty())
               {
-                string j;
                 b = true;
                 for (auto &getContactRow : *getContact)
                 {
@@ -575,18 +573,8 @@ bool Maestro::accessRequest(radialUser &d, string &e)
                   m_p[p]->a->m["r"]->m[a] = new Json;
                 }
                 m_p[p]->a->m["r"]->m[a]->pb(s);
-                m_p[p]->a->j(j);
+                m_p[p]->a->j(strDataWrite);
                 m_mutex.unlock();
-                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-                {
-                  b = true;
-                }
-                else
-                {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
-                }
               }
               else
               {
@@ -618,6 +606,12 @@ bool Maestro::accessRequest(radialUser &d, string &e)
     {
       list<string> nodes;
       Json *ptLive = new Json;
+      if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "a"}, strDataWrite, e))
+      {
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+      }
       m_mutexShare.lock();
       for (auto &link : m_l)
       {
@@ -664,9 +658,12 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
   if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strOwner, t = "core";
-    stringstream ssHtml, ssText;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strAccessOwner, strDataWrite, strOwner, t = "core";
     m_mutex.lock();
+    if (m_p.find(a) != m_p.end())
+    {
+      strAccessOwner = m_p[a]->owner;
+    }
     if (m_p.find(p) != m_p.end())
     {
       strOwner = m_p[p]->owner;
@@ -687,68 +684,41 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
     {
       if (haveAccessRequest(p, a, s, true))
       {
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        stringstream ssQuery;
+        if (p.substr(0, 2) == "a_")
         {
-          list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-          for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+          ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+        }
+        else if (p.substr(0, 2) == "u_")
+        {
+          ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
+        }
+        auto getContact = dbquery("central_r", ssQuery.str(), e);
+        if (getContact != NULL)
+        {
+          if (!getContact->empty())
           {
-            if ((*c)->v == s)
+            for (auto &getContactRow : *getContact)
             {
-              scopeIter = c;
+              to.push_back(getContactRow["email"]);
             }
-          }
-          if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
-          {
-            if (!haveAccess(p, a, {s}, e, false))
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end())
             {
-              stringstream ssQuery;
-              ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
-              ssHtml << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
-              if (p.substr(0, 2) == "a_")
+              if (m_p[p]->a != NULL && m_p[p]->a->exist({"r", a}))
               {
-                ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
-                if (t == "core")
+                list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+                for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
                 {
-                  ssText << " core function";
-                  ssHtml << " core function";
-                }
-                else
-                {
-                  ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                  ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
-                }
-              }
-              else if (p.substr(0, 2) == "u_")
-              {
-                ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
-                if (t == "core")
-                {
-                  ssText << " core function";
-                  ssHtml << " core function";
-                }
-                else
-                {
-                  ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                  ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
-                }
-              }
-              ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-              ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-              ssText << endl << endl;
-              ssHtml << "<br><br>";
-              ssText << "-- Maestro";
-              ssHtml << "-- Maestro";
-              auto getContact = dbquery("central_r", ssQuery.str(), e);
-              if (getContact != NULL)
-              {
-                if (!getContact->empty())
-                {
-                  string j;
-                  for (auto &getContactRow : *getContact)
+                  if ((*c)->v == s)
                   {
-                    to.push_back(getContactRow["email"]);
+                    scopeIter = c;
                   }
+                }
+                if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+                {
+                  bool bHaveAccess = haveAccess(p, a, {s}, e, false);
+                  b = true;
                   delete (*scopeIter);
                   m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
                   if (m_p[p]->a->m["r"]->m[a]->l.empty())
@@ -761,90 +731,54 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
                     delete m_p[p]->a->m["r"];
                     m_p[p]->a->m.erase("r");
                   }
-                  if (m_p[p]->a->m.find("a") == m_p[p]->a->m.end())
+                  if (!bHaveAccess)
                   {
-                    m_p[p]->a->m["a"] = new Json;
-                  }
-                  if (m_p[p]->a->m["a"]->m.find(a) == m_p[p]->a->m["a"]->m.end())
-                  {
-                    m_p[p]->a->m["a"]->m[a] = new Json;
-                  }
-                  m_p[p]->a->m["a"]->m[a]->pb(s);
-                  m_p[p]->a->j(j);
-                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-                  {
-                    b = true;
+                    if (m_p[p]->a->m.find("a") == m_p[p]->a->m.end())
+                    {
+                      m_p[p]->a->m["a"] = new Json;
+                    }
+                    if (m_p[p]->a->m["a"]->m.find(a) == m_p[p]->a->m["a"]->m.end())
+                    {
+                      m_p[p]->a->m["a"]->m[a] = new Json;
+                    }
+                    m_p[p]->a->m["a"]->m[a]->pb(s);
+                    m_p[p]->a->j(strDataWrite);
                   }
                   else
                   {
-                    ssChat.str("");
-                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                    chat("#maestro", ssChat.str());
+                    if (m_p[p]->a->m.empty())
+                    {
+                      delete m_p[p]->a;
+                      m_p[p]->a = NULL;
+                    }
+                    if (m_p[p]->a != NULL)
+                    {
+                      m_p[p]->a->j(strDataWrite);
+                    }
                   }
                 }
                 else
                 {
-                  e = "No approvers found.";
+                  e = "Scope not found.";
                 }
-              }
-              dbfree(getContact);
-            }
-            else
-            {
-              delete (*scopeIter);
-              m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-              if (m_p[p]->a->m["r"]->m[a]->l.empty())
-              {
-                delete m_p[p]->a->m["r"]->m[a];
-                m_p[p]->a->m["r"]->m.erase(a);
-              }
-              if (m_p[p]->a->m["r"]->m.empty())
-              {
-                delete m_p[p]->a->m["r"];
-                m_p[p]->a->m.erase("r");
-              }
-              if (m_p[p]->a->m.empty())
-              {
-                delete m_p[p]->a;
-                m_p[p]->a = NULL;
-              }
-              if (m_p[p]->a != NULL)
-              {
-                string j;
-                m_p[p]->a->j(j);
-                if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
-                {
-                  b = true;
-                }
-                else
-                {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
-                }
-              }
-              else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-              {
-                b = true;
               }
               else
               {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
+                e = "Access request not found.";
               }
             }
+            else
+            {
+              e = "Plan not found.";
+            }
+            m_mutex.unlock();
           }
           else
           {
-            e = "Scope not found.";
+            e = "No approvers found.";
           }
         }
-        else
-        {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
+        dbfree(getContact);
       }
       else
       {
@@ -858,7 +792,23 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
     if (b && i->val({"_broadcast"}) != "1")
     {
       list<string> nodes;
+      stringstream ssHtml, ssText;
       Json *ptLive = new Json;
+      if (!strDataWrite.empty())
+      {
+        if (!dataWrite(m_strHandle, {p, "a"}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+      }
+      else if (!dataRemove(m_strHandle, {p, "a"}, e))
+      {
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+      }
       m_mutexShare.lock();
       for (auto &link : m_l)
       {
@@ -888,6 +838,40 @@ bool Maestro::accessRequestApprove(radialUser &d, string &e)
       ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
+      ssText << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+      ssHtml << d.f << " " << d.l << " (" << d.u << ") has approved access to the \"" << s << "\" ";
+      if (p.substr(0, 2) == "a_")
+      {
+        if (t == "core")
+        {
+          ssText << " core function";
+          ssHtml << " core function";
+        }
+        else
+        {
+          ssText << "flow of the \"" << strAccessOwner << "\" plan";
+          ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
+        }
+      }
+      else if (p.substr(0, 2) == "u_")
+      {
+        if (t == "core")
+        {
+          ssText << " core function";
+          ssHtml << " core function";
+        }
+        else
+        {
+          ssText << "flow of the \"" << strAccessOwner << "\" plan";
+          ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
+        }
+      }
+      ssText << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
+      ssHtml << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
+      ssText << endl << endl;
+      ssHtml << "<br><br>";
+      ssText << "-- Maestro";
+      ssHtml << "-- Maestro";
       email("", to, "Maestro:  Access Request Approved", ssText.str(), ssHtml.str());
     }
   }
@@ -905,8 +889,17 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
   if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
-    stringstream ssHtml, ssText;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strAccessOwner, strDataWrite, strOwner, t = "core";
+    m_mutex.lock();
+    if (m_p.find(a) != m_p.end())
+    {
+      strAccessOwner = m_p[a]->owner;
+    }
+    if (m_p.find(p) != m_p.end())
+    {
+      strOwner = m_p[p]->owner;
+    }
+    m_mutex.unlock();
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -925,98 +918,78 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
         if (haveAccessRequest(p, a, s, true))
         {
           stringstream ssQuery;
-          ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
-          ssHtml << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
           if (t == "application")
           {
             ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(a.substr(2, (a.size() - 2))) << "' order by c.email";
-            ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-            ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
           }
           else if (t == "core")
           {
             ssQuery << "select distinct c.email from application a, application_contact b, person c where a.id = b.application_id and b.contact_id = c.id and b.admin = 1 and a.name = 'Maestro' order by c.email";
-            ssText << "scope of the \"" << a << "\" core function";
-            ssHtml << "scope of the \"" << a << "\" core function";
           }
           else if (t == "user")
           {
             ssQuery << "select email from person where id = '" << esc(a.substr(2, (a.size() - 2))) << "'";
-            ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-            ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
           }
-          ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-          ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-          ssText << endl << endl;
-          ssHtml << "<br><br>";
-          ssText << "-- Maestro";
-          ssHtml << "-- Maestro";
           auto getContact = dbquery("central_r", ssQuery.str(), e);
           if (getContact != NULL)
           {
             if (!getContact->empty())
             {
-              m_mutex.lock();
-              list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-              for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+              for (auto &getContactRow : *getContact)
               {
-                if ((*c)->v == s)
-                {
-                  scopeIter = c;
-                }
+                to.push_back(getContactRow["email"]);
               }
-              if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
+              m_mutex.lock();
+              if (m_p.find(p) != m_p.end())
               {
-                for (auto &getContactRow : *getContact)
+                if (m_p[p]->a != NULL && m_p[p]->a->exist({"r", a}))
                 {
-                  to.push_back(getContactRow["email"]);
-                }
-                delete (*scopeIter);
-                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-                if (m_p[p]->a->m["r"]->m[a]->l.empty())
-                {
-                  delete m_p[p]->a->m["r"]->m[a];
-                  m_p[p]->a->m["r"]->m.erase(a);
-                }
-                if (m_p[p]->a->m["r"]->m.empty())
-                {
-                  delete m_p[p]->a->m["r"];
-                  m_p[p]->a->m.erase("r");
-                }
-                if (m_p[p]->a->m.empty())
-                {
-                  delete m_p[p]->a;
-                  m_p[p]->a = NULL;
-                }
-                if (m_p[p]->a != NULL)
-                {
-                  string j;
-                  m_p[p]->a->j(j);
-                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                  list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+                  for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+                  {
+                    if ((*c)->v == s)
+                    {
+                      scopeIter = c;
+                    }
+                  }
+                  if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
                   {
                     b = true;
+                    delete (*scopeIter);
+                    m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                    if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                    {
+                      delete m_p[p]->a->m["r"]->m[a];
+                      m_p[p]->a->m["r"]->m.erase(a);
+                    }
+                    if (m_p[p]->a->m["r"]->m.empty())
+                    {
+                      delete m_p[p]->a->m["r"];
+                      m_p[p]->a->m.erase("r");
+                    }
+                    if (m_p[p]->a->m.empty())
+                    {
+                      delete m_p[p]->a;
+                      m_p[p]->a = NULL;
+                    }
+                    if (m_p[p]->a != NULL)
+                    {
+                      m_p[p]->a->j(strDataWrite);
+                    }
                   }
                   else
                   {
-                    ssChat.str("");
-                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                    chat("#maestro", ssChat.str());
+                    e = "Scope not found.";
                   }
-                }
-                else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
-                {
-                  b = true;
                 }
                 else
                 {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
+                  e = "Access request not found.";
                 }
               }
               else
               {
-                e = "Scope not found.";
+                e = "Plan not found.";
               }
               m_mutex.unlock();
             }
@@ -1044,7 +1017,23 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
     if (b && i->val({"_broadcast"}) != "1")
     {
       list<string> nodes;
+      stringstream ssHtml, ssText;
       Json *ptLive = new Json;
+      if (!strDataWrite.empty())
+      {
+        if (!dataWrite(m_strHandle, {p, "a"}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+      }
+      else if (!dataRemove(m_strHandle, {p, "a"}, e))
+      {
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+      }
       m_mutexShare.lock();
       for (auto &link : m_l)
       {
@@ -1074,6 +1063,29 @@ bool Maestro::accessRequestCancel(radialUser &d, string &e)
       ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
+      ssText << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+      ssHtml << d.f << " " << d.l << " (" << d.u << ") has canceled their request for access to the \"" << s << "\" ";
+      if (t == "application")
+      {
+        ssText << "flow of the \"" << strAccessOwner << "\" plan";
+        ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
+      }
+      else if (t == "core")
+      {
+        ssText << "scope of the \"" << a << "\" core function";
+        ssHtml << "scope of the \"" << a << "\" core function";
+      }
+      else if (t == "user")
+      {
+        ssText << "flow of the \"" << strAccessOwner << "\" plan";
+        ssHtml << "flow of the \"" << strAccessOwner << "\" plan";
+      }
+      ssText << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
+      ssHtml << " on behalf of the \"" << strOwner << "\" plan within Maestro.";
+      ssText << endl << endl;
+      ssHtml << "<br><br>";
+      ssText << "-- Maestro";
+      ssHtml << "-- Maestro";
       email("", to, "Maestro:  Access Request Canceled", ssText.str(), ssHtml.str());
     }
   }
@@ -1091,8 +1103,17 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
   if (dep({"Access", "Plan", "Scope"}, i, e))
   {
     list<string> to;
-    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, t = "core";
-    stringstream ssHtml, ssText;
+    string a = i->m["Access"]->v, p = i->m["Plan"]->v, s = i->m["Scope"]->v, strAccessOwner, strDataWrite, strOwner, t = "core";
+    m_mutex.lock();
+    if (m_p.find(a) != m_p.end())
+    {
+      strAccessOwner = m_p[a]->owner;
+    }
+    if (m_p.find(p) != m_p.end())
+    {
+      strOwner = m_p[p]->owner;
+    }
+    m_mutex.unlock();
     if (a.size() > 2)
     {
       if (a.substr(0, 2) == "a_")
@@ -1108,125 +1129,84 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
     {
       if (haveAccessRequest(p, a, s, true))
       {
-        m_mutex.lock();
-        if (m_p.find(p) != m_p.end())
+        stringstream ssQuery;
+        if (p.substr(0, 2) == "a_")
         {
-          list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
-          for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
+          ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
+        }
+        else if (p.substr(0, 2) == "u_")
+        {
+          ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
+        }
+        auto getContact = dbquery("central_r", ssQuery.str(), e);
+        if (getContact != NULL)
+        {
+          if (!getContact->empty())
           {
-            if ((*c)->v == s)
+            for (auto &getContactRow : *getContact)
             {
-              scopeIter = c;
+              to.push_back(getContactRow["email"]);
             }
-          }
-          if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
-          {
-            stringstream ssQuery;
-            ssText << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
-            ssHtml << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
-            if (p.substr(0, 2) == "a_")
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end())
             {
-              ssQuery << "select distinct c.email from application_contact a, contact_type b, person c where a.type_id = b.id and a.contact_id = c.id and b.type in ('Primary Developer', 'Backup Developer') and a.application_id = '" << esc(p.substr(2, (p.size() - 2))) << "' order by c.email";
-              if (t == "core")
+              if (m_p[p]->a != NULL && m_p[p]->a->exist({"r", a}))
               {
-                ssText << " core function";
-                ssHtml << " core function";
-              }
-              else
-              {
-                ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
-              }
-            }
-            else if (p.substr(0, 2) == "u_")
-            {
-              ssQuery << "select email from person where id = '" << esc(p.substr(2, (p.size() - 2))) << "'";
-              if (t == "core")
-              {
-                ssText << " core function";
-                ssHtml << " core function";
-              }
-              else
-              {
-                ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
-                ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
-              }
-            }
-            ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-            ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
-            ssText << endl << endl;
-            ssHtml << "<br><br>";
-            ssText << "-- Maestro";
-            ssHtml << "-- Maestro";
-            auto getContact = dbquery("central_r", ssQuery.str(), e);
-            if (getContact != NULL)
-            {
-              if (!getContact->empty())
-              {
-                for (auto &getContactRow : *getContact)
+                list<Json *>::iterator scopeIter = m_p[p]->a->m["r"]->m[a]->l.end();
+                for (auto c = m_p[p]->a->m["r"]->m[a]->l.begin(); scopeIter == m_p[p]->a->m["r"]->m[a]->l.end() && c != m_p[p]->a->m["r"]->m[a]->l.end(); c++)
                 {
-                  to.push_back(getContactRow["email"]);
-                }
-                delete (*scopeIter);
-                m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
-                if (m_p[p]->a->m["r"]->m[a]->l.empty())
-                {
-                  delete m_p[p]->a->m["r"]->m[a];
-                  m_p[p]->a->m["r"]->m.erase(a);
-                }
-                if (m_p[p]->a->m["r"]->m.empty())
-                {
-                  delete m_p[p]->a->m["r"];
-                  m_p[p]->a->m.erase("r");
-                }
-                if (m_p[p]->a->m.empty())
-                {
-                  delete m_p[p]->a;
-                  m_p[p]->a = NULL;
-                }
-                if (m_p[p]->a != NULL)
-                {
-                  string j;
-                  m_p[p]->a->j(j);
-                  if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "a"}, j, e))
+                  if ((*c)->v == s)
                   {
-                    b = true;
-                  }
-                  else
-                  {
-                    ssChat.str("");
-                    ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                    chat("#maestro", ssChat.str());
+                    scopeIter = c;
                   }
                 }
-                else if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "a"}, e))
+                if (scopeIter != m_p[p]->a->m["r"]->m[a]->l.end())
                 {
                   b = true;
+                  delete (*scopeIter);
+                  m_p[p]->a->m["r"]->m[a]->l.erase(scopeIter);
+                  if (m_p[p]->a->m["r"]->m[a]->l.empty())
+                  {
+                    delete m_p[p]->a->m["r"]->m[a];
+                    m_p[p]->a->m["r"]->m.erase(a);
+                  }
+                  if (m_p[p]->a->m["r"]->m.empty())
+                  {
+                    delete m_p[p]->a->m["r"];
+                    m_p[p]->a->m.erase("r");
+                  }
+                  if (m_p[p]->a->m.empty())
+                  {
+                    delete m_p[p]->a;
+                    m_p[p]->a = NULL;
+                  }
+                  if (m_p[p]->a != NULL)
+                  {
+                    m_p[p]->a->j(strDataWrite);
+                  }
                 }
                 else
                 {
-                  ssChat.str("");
-                  ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                  chat("#maestro", ssChat.str());
+                  e = "Scope not found.";
                 }
               }
               else
               {
-                e = "No approvers found.";
+                e = "Access request not found.";
               }
             }
-            dbfree(getContact);
+            else
+            {
+              e = "Plan not found.";
+            }
+            m_mutex.unlock();
           }
           else
           {
-            e = "Scope not found.";
+            e = "No approvers found.";
           }
         }
-        else
-        {
-          e = "Plan not found.";
-        }
-        m_mutex.unlock();
+        dbfree(getContact);
       }
       else
       {
@@ -1240,7 +1220,23 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
     if (b && i->val({"_broadcast"}) != "1")
     {
       list<string> nodes;
+      stringstream ssHtml, ssText;
       Json *ptLive = new Json;
+      if (!strDataWrite.empty())
+      {
+        if (!dataWrite(m_strHandle, {p, "a"}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+      }
+      else if (!dataRemove(m_strHandle, {p, "a"}, e))
+      {
+        ssChat.str("");
+        ssChat << char(3) << "00,06 " << p << " | " << a << " | " << s << " | " << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+        chat("#maestro", ssChat.str());
+      }
       m_mutexShare.lock();
       for (auto &link : m_l)
       {
@@ -1270,6 +1266,40 @@ bool Maestro::accessRequestDeny(radialUser &d, string &e)
       ptLive->i("Scope", s);
       live("Maestro", "", ptLive);
       delete ptLive;
+      ssText << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
+      ssHtml << d.f << " " << d.l << " (" << d.u << ") has denied access to the \"" << s << "\" ";
+      if (p.substr(0, 2) == "a_")
+      {
+        if (t == "core")
+        {
+          ssText << " core function";
+          ssHtml << " core function";
+        }
+        else
+        {
+          ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
+          ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+        }
+      }
+      else if (p.substr(0, 2) == "u_")
+      {
+        if (t == "core")
+        {
+          ssText << " core function";
+          ssHtml << " core function";
+        }
+        else
+        {
+          ssText << "flow of the \"" << m_p[a]->owner << "\" plan";
+          ssHtml << "flow of the \"" << m_p[a]->owner << "\" plan";
+        }
+      }
+      ssText << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
+      ssHtml << " on behalf of the \"" << m_p[p]->owner << "\" plan within Maestro.";
+      ssText << endl << endl;
+      ssHtml << "<br><br>";
+      ssText << "-- Maestro";
+      ssHtml << "-- Maestro";
       email("", to, "Maestro:  Access Request Denied", ssText.str(), ssHtml.str());
     }
   }
@@ -1429,7 +1459,8 @@ bool Maestro::flowAdd(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string id, t, strOwner;
+      bool bDataDirectoryAdd = false;
+      string id, t, strDataWrite, strOwner;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -1439,28 +1470,13 @@ bool Maestro::flowAdd(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) == m_p[p]->f.end())
         {
-          if (i->val({"_broadcast"}) == "1" || !m_p[p]->f.empty() || dataDirectoryAdd(m_strHandle, {p, "f"}, e))
+          b = true;
+          if (m_p[p]->f.empty())
           {
-            string j;
-            i->j(j);
-            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
-            {
-              b = true;
-              m_p[p]->f[f] = new Json(i);
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            bDataDirectoryAdd = true;
           }
-          else
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
+          i->j(strDataWrite);
+          m_p[p]->f[f] = new Json(i);
         }
         else
         {
@@ -1476,6 +1492,24 @@ bool Maestro::flowAdd(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (bDataDirectoryAdd)
+        {
+          if (dataDirectoryAdd(m_strHandle, {p, "f"}, e))
+          {
+            if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "f", f}, strDataWrite, e))
+            {
+              ssChat.str("");
+              ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+              chat("#maestro", ssChat.str());
+            }
+          }
+          else
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -1798,6 +1832,7 @@ bool Maestro::flowRemove(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
+      bool bDataDirectoryRemove = false;
       string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
@@ -1807,31 +1842,20 @@ bool Maestro::flowRemove(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
-          if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "f", f}, e))
+          b = true;
+          if (m_p[p]->r.find(f) != m_p[p]->r.end())
           {
-            b = true;
-            if (m_p[p]->r.find(f) != m_p[p]->r.end())
+            for (auto &r : m_p[p]->r[f])
             {
-              for (auto &r : m_p[p]->r[f])
-              {
-                (*r.second->pbKill) = true;
-                delete r.second;
-              }
-            }
-            delete m_p[p]->f[f];
-            m_p[p]->f.erase(f);
-            if (i->val({"_broadcast"}) != "1" && m_p[p]->f.empty() && !dataDirectoryRemove(m_strHandle, {p, "f"}, e))
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
+              (*r.second->pbKill) = true;
+              delete r.second;
             }
           }
-          else
+          delete m_p[p]->f[f];
+          m_p[p]->f.erase(f);
+          if (m_p[p]->f.empty())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            bDataDirectoryRemove = true;
           }
         }
         else
@@ -1848,6 +1872,21 @@ bool Maestro::flowRemove(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (dataRemove(m_strHandle, {p, "f", f}, e))
+        {
+          if (bDataDirectoryRemove && !dataDirectoryRemove(m_strHandle, {p, "f"}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
+        }
+        else
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -2064,7 +2103,7 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
     string f = i->m["Flow"]->v, p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
-      string id, strOwner, t;
+      string id, strDataWrite, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -2074,23 +2113,13 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->f.find(f) != m_p[p]->f.end())
         {
-          string j;
-          i->j(j);
-          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "f", f}, j, e))
+          b = true;
+          i->j(strDataWrite);
+          if (m_p[p]->f.find(f) != m_p[p]->f.end())
           {
-            b = true;
-            if (m_p[p]->f.find(f) != m_p[p]->f.end())
-            {
-              delete m_p[p]->f[f];
-            }
-            m_p[p]->f[f] = new Json(i);
+            delete m_p[p]->f[f];
           }
-          else
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
+          m_p[p]->f[f] = new Json(i);
         }
         else
         {
@@ -2106,6 +2135,12 @@ bool Maestro::flowUpdate(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "f", f}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | f | " << f << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -5909,31 +5944,22 @@ bool Maestro::planAdd(radialUser &d, string &e)
         m_mutex.lock();
         if (m_p.find(p) == m_p.end())
         {
-          if (i->val({"_broadcast"}) == "1" || dataDirectoryAdd(m_strHandle, {p}, e))
+          stringstream ssOwner;
+          b = true;
+          m_p[p] = new radialMaestroPlan;
+          m_p[p]->a = NULL;
+          m_p[p]->id = id;
+          m_p[p]->t = t[0];
+          if (m_p[p]->t == 'a')
           {
-            stringstream ssOwner;
-            b = true;
-            m_p[p] = new radialMaestroPlan;
-            m_p[p]->a = NULL;
-            m_p[p]->id = id;
-            m_p[p]->t = t[0];
-            if (m_p[p]->t == 'a')
-            {
-              ssOwner << row["name"];
-            }
-            else
-            {
-              ssOwner << row["first_name"] << " " << row["last_name"];
-            }
-            strOwner = ssOwner.str();
-            m_p[p]->owner = strOwner;
+            ssOwner << row["name"];
           }
           else
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            ssOwner << row["first_name"] << " " << row["last_name"];
           }
+          strOwner = ssOwner.str();
+          m_p[p]->owner = strOwner;
         }
         else
         {
@@ -5944,6 +5970,12 @@ bool Maestro::planAdd(radialUser &d, string &e)
         {
           list<string> nodes;
           Json *ptLive = new Json;
+          if (!dataDirectoryAdd(m_strHandle, {p}, e))
+          {
+            ssChat.str("");
+            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+            chat("#maestro", ssChat.str());
+          }
           m_mutexShare.lock();
           for (auto &link : m_l)
           {
@@ -5995,6 +6027,7 @@ bool Maestro::planRemove(radialUser &d, string &e)
     string p = i->m["Plan"]->v;
     if (isOwner(d, p))
     {
+      list<map<string, list<string> > > removals;
       string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
@@ -6017,102 +6050,43 @@ bool Maestro::planRemove(radialUser &d, string &e)
         if (m_p[p]->a != NULL)
         {
           delete m_p[p]->a;
-          if (i->val({"_broadcast"}) == "1")
-          {
-            dataRemove(m_strHandle, {p, "a"}, e);
-          }
+          removals.push_back({{"dataRemove", {p, "a"}}});
         }
         if (!m_p[p]->d.empty())
         {
           for (auto &s : m_p[p]->d)
           {
             delete s.second;
-            if (i->val({"_broadcast"}) == "1")
-            {
-              if (!dataRemove(m_strHandle, {p, "d", s.first}, e))
-              {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | d | " << s.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
-              }
-            }
+            removals.push_back({{"dataRemove", {p, "d", s.first}}});
           }
           if (isMasterSettled() && isMaster())
           {
             m_bLoadServices = true;
           }
         }
-        if (i->val({"_broadcast"}) == "1")
-        {
-          if (!dataDirectoryRemove(m_strHandle, {p, "d"}, e))
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
-        }
+        removals.push_back({{"dataDirectoryRemove", {p, "d"}}});
         for (auto &f : m_p[p]->f)
         {
           delete f.second;
-          if (i->val({"_broadcast"}) == "1")
-          {
-            if (!dataRemove(m_strHandle, {p, "f", f.first}, e))
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | f | " << f.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
-          }
+          removals.push_back({{"dataRemove", {p, "f", f.first}}});
         }
-        if (i->val({"_broadcast"}) == "1")
-        {
-          if (!dataDirectoryRemove(m_strHandle, {p, "f"}, e))
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | f " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
-        }
+        removals.push_back({{"dataDirectoryRemove", {p, "f"}}});
         if (!m_p[p]->s.empty())
         {
           for (auto &s : m_p[p]->s)
           {
             delete s.second;
-            if (i->val({"_broadcast"}) == "1")
-            {
-              if (!dataRemove(m_strHandle, {p, "s", s.first}, e))
-              {
-                ssChat.str("");
-                ssChat << char(3) << "00,06 " << p << " | s | " << s.first << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-                chat("#maestro", ssChat.str());
-              }
-            }
+            removals.push_back({{"dataRemove", {p, "s", s.first}}});
           }
           if (isMasterSettled() && isMaster())
           {
             m_bLoadSchedules = true;
           }
         }
-        if (i->val({"_broadcast"}) == "1")
-        {
-          if (!dataDirectoryRemove(m_strHandle, {p, "s"}, e))
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
-        }
+        removals.push_back({{"dataDirectoryRemove", {p, "s"}}});
         delete m_p[p];
         m_p.erase(p);
-        if (i->val({"_broadcast"}) == "1")
-        {
-          if (!dataDirectoryRemove(m_strHandle, {p}, e))
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
-        }
+        removals.push_back({{"dataDirectoryRemove", {p}}});
       }
       else
       {
@@ -6123,6 +6097,49 @@ bool Maestro::planRemove(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        while (!removals.empty())
+        {
+          for (auto &i : removals.front())
+          {
+            if (i.first == "dataDirectoryRemove")
+            {
+              if (!dataDirectoryRemove(m_strHandle, i.second, e))
+              {
+                ssChat.str("");
+                ssChat << char(3) << "00,06 ";
+                for (auto j = i.second.begin(); j != i.second.end(); j++)
+                {
+                  if (j != i.second.begin())
+                  {
+                    ssChat << " | ";
+                  }
+                  ssChat << (*j);
+                }
+                ssChat << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+            else if (i.first == "dataRemove")
+            {
+              if (!dataRemove(m_strHandle, i.second, e))
+              {
+                ssChat.str("");
+                ssChat << char(3) << "00,06 ";
+                for (auto j = i.second.begin(); j != i.second.end(); j++)
+                {
+                  if (j != i.second.begin())
+                  {
+                    ssChat << " | ";
+                  }
+                  ssChat << (*j);
+                }
+                ssChat << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+                chat("#maestro", ssChat.str());
+              }
+            }
+          }
+          removals.pop_front();
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -6319,7 +6336,8 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
-      string id, strOwner, t;
+      bool bDataDirectoryAdd = false;
+      string id, strDataWrite, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -6329,31 +6347,16 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) == m_p[p]->s.end())
         {
-          if (i->val({"_broadcast"}) == "1" || !m_p[p]->s.empty() || dataDirectoryAdd(m_strHandle, {p, "s"}, e))
+          b = true;
+          if (m_p[p]->s.empty())
           {
-            string j;
-            i->j(j);
-            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "s", s}, j, e))
-            {
-              b = true;
-              m_p[p]->s[s] = new Json(i);
-              if (isMasterSettled() && isMaster())
-              {
-                m_bLoadSchedules = true;
-              }
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            bDataDirectoryAdd = true;
           }
-          else
+          i->j(strDataWrite);
+          m_p[p]->s[s] = new Json(i);
+          if (isMasterSettled() && isMaster())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            m_bLoadSchedules = true;
           }
         }
         else
@@ -6370,6 +6373,18 @@ bool Maestro::scheduleAdd(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (bDataDirectoryAdd && !dataDirectoryAdd(m_strHandle, {p, "s"}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+        if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "s", s}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -6886,6 +6901,7 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
+      bool bDataDirectoryRemove = false;
       string strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
@@ -6895,27 +6911,16 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) != m_p[p]->s.end())
         {
-          if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "s", s}, e))
+          b = true;
+          delete m_p[p]->s[s];
+          m_p[p]->s.erase(s);
+          if (isMasterSettled() && isMaster())
           {
-            b = true;
-            delete m_p[p]->s[s];
-            m_p[p]->s.erase(s);
-            if (isMasterSettled() && isMaster())
-            {
-              m_bLoadSchedules = true;
-            }
-            if (i->val({"_broadcast"}) != "1" && m_p[p]->s.empty() && !dataDirectoryRemove(m_strHandle, {p, "s"}, e))
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            m_bLoadSchedules = true;
           }
-          else
+          if (m_p[p]->s.empty())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            bDataDirectoryRemove = true;
           }
         }
         else
@@ -6932,6 +6937,18 @@ bool Maestro::scheduleRemove(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!dataRemove(m_strHandle, {p, "s", s}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | s " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+        if (bDataDirectoryRemove && !dataDirectoryRemove(m_strHandle, {p, "s"}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -7011,7 +7028,7 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Schedule"]->v;
     if (isOwner(d, p))
     {
-      string id, strOwner, t;
+      string id, strDataWrite, strOwner, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -7021,26 +7038,16 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
         strOwner = m_p[p]->owner;
         if (m_p[p]->s.find(s) != m_p[p]->s.end())
         {
-          string j;
-          i->j(j);
-          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "s", s}, j, e))
+          b = true;
+          i->j(strDataWrite);
+          if (m_p[p]->s.find(s) != m_p[p]->s.end())
           {
-            b = true;
-            if (m_p[p]->s.find(s) != m_p[p]->s.end())
-            {
-              delete m_p[p]->s[s];
-            }
-            m_p[p]->s[s] = new Json(i);
-            if (isMasterSettled() && isMaster())
-            {
-              m_bLoadSchedules = true;
-            }
+            delete m_p[p]->s[s];
           }
-          else
+          m_p[p]->s[s] = new Json(i);
+          if (isMasterSettled() && isMaster())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            m_bLoadSchedules = true;
           }
         }
         else
@@ -7057,6 +7064,12 @@ bool Maestro::scheduleUpdate(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "s", s}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | s | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -7197,7 +7210,8 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Service"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      bool bDataDirectoryAdd = false;
+      string id, strDataWrite, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -7206,32 +7220,17 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
       {
         if (m_p[p]->d.find(s) == m_p[p]->d.end())
         {
-          if (i->val({"_broadcast"}) == "1" || !m_p[p]->d.empty() || dataDirectoryAdd(m_strHandle, {p, "d"}, e))
+          b = true;
+          if (m_p[p]->d.empty())
           {
-            string j;
-            i->j(j);
-            if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "d", s}, j, e))
-            {
-              b = true;
-              m_p[p]->d[s] = new Json(i);
-              if (isMasterSettled() && isMaster())
-              {
-                m_bLoadServices = true;
-              }
-            }
-            else
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            bDataDirectoryAdd = true;
           }
-          else
-          {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
-          }
+          i->j(strDataWrite);
+            m_p[p]->d[s] = new Json(i);
+            if (isMasterSettled() && isMaster())
+            {
+              m_bLoadServices = true;
+            }
         }
         else
         {
@@ -7247,6 +7246,18 @@ bool Maestro::serviceAdd(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (bDataDirectoryAdd && !dataDirectoryAdd(m_strHandle, {p, "d"}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryAdd() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+        if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "d", s}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -7443,6 +7454,7 @@ bool Maestro::serviceRemove(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Service"]->v;
     if (isOwner(d, p))
     {
+      bool bDataDirectoryRemove = false;
       string t;
       stringstream ssP(p);
       getline(ssP, t, '_');
@@ -7451,27 +7463,16 @@ bool Maestro::serviceRemove(radialUser &d, string &e)
       {
         if (m_p[p]->d.find(s) != m_p[p]->d.end())
         {
-          if (i->val({"_broadcast"}) == "1" || dataRemove(m_strHandle, {p, "d", s}, e))
+          b = true;
+          delete m_p[p]->d[s];
+          m_p[p]->d.erase(s);
+          if (isMasterSettled() && isMaster())
           {
-            b = true;
-            delete m_p[p]->d[s];
-            m_p[p]->d.erase(s);
-            if (isMasterSettled() && isMaster())
-            {
-              m_bLoadServices = true;
-            }
-            if (i->val({"_broadcast"}) != "1" && m_p[p]->d.empty() && !dataDirectoryRemove(m_strHandle, {p, "d"}, e))
-            {
-              ssChat.str("");
-              ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-              chat("#maestro", ssChat.str());
-            }
+            m_bLoadServices = true;
           }
-          else
+          if (m_p[p]->d.empty())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            bDataDirectoryRemove = true;
           }
         }
         else
@@ -7488,6 +7489,18 @@ bool Maestro::serviceRemove(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!dataRemove(m_strHandle, {p, "d", s}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | d " << char(3) << " " << char(2) << char(3) << "07Interface::dataRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
+        if (bDataDirectoryRemove && !dataDirectoryRemove(m_strHandle, {p, "d"}, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataDirectoryRemove() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
@@ -7567,7 +7580,7 @@ bool Maestro::serviceUpdate(radialUser &d, string &e)
     string p = i->m["Plan"]->v, s = i->m["Service"]->v;
     if (isOwner(d, p))
     {
-      string id, t;
+      string id, strDataWrite, t;
       stringstream ssP(p);
       getline(ssP, t, '_');
       getline(ssP, id);
@@ -7576,26 +7589,16 @@ bool Maestro::serviceUpdate(radialUser &d, string &e)
       {
         if (m_p[p]->d.find(s) != m_p[p]->d.end())
         {
-          string j;
-          i->j(j);
-          if (i->val({"_broadcast"}) == "1" || dataWrite(m_strHandle, {p, "d", s}, j, e))
+          b = true;
+          i->j(strDataWrite);
+          if (m_p[p]->d.find(s) != m_p[p]->d.end())
           {
-            b = true;
-            if (m_p[p]->d.find(s) != m_p[p]->d.end())
-            {
-              delete m_p[p]->d[s];
-            }
-            m_p[p]->d[s] = new Json(i);
-            if (isMasterSettled() && isMaster())
-            {
-              m_bLoadServices = true;
-            }
+            delete m_p[p]->d[s];
           }
-          else
+          m_p[p]->d[s] = new Json(i);
+          if (isMasterSettled() && isMaster())
           {
-            ssChat.str("");
-            ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
-            chat("#maestro", ssChat.str());
+            m_bLoadServices = true;
           }
         }
         else
@@ -7612,6 +7615,12 @@ bool Maestro::serviceUpdate(radialUser &d, string &e)
       {
         list<string> nodes;
         Json *ptLive = new Json;
+        if (!strDataWrite.empty() && !dataWrite(m_strHandle, {p, "d", s}, strDataWrite, e))
+        {
+          ssChat.str("");
+          ssChat << char(3) << "00,06 " << p << " | d | " << s << " " << char(3) << " " << char(2) << char(3) << "07Interface::dataWrite() " << e << " [" << d.f << " " << d.l << " (" << d.u << ")]" << char(3) << char(2);
+          chat("#maestro", ssChat.str());
+        }
         m_mutexShare.lock();
         for (auto &link : m_l)
         {
