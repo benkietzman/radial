@@ -6050,43 +6050,43 @@ bool Maestro::planRemove(radialUser &d, string &e)
         if (m_p[p]->a != NULL)
         {
           delete m_p[p]->a;
-          removals.push_back({{"dataRemove", {p, "a"}}});
+          removals.push_back({{"dataRemove", {p, "a"} }});
         }
         if (!m_p[p]->d.empty())
         {
           for (auto &s : m_p[p]->d)
           {
             delete s.second;
-            removals.push_back({{"dataRemove", {p, "d", s.first}}});
+            removals.push_back({{"dataRemove", {p, "d", s.first} }});
           }
           if (isMasterSettled() && isMaster())
           {
             m_bLoadServices = true;
           }
         }
-        removals.push_back({{"dataDirectoryRemove", {p, "d"}}});
+        removals.push_back({{"dataDirectoryRemove", {p, "d"} }});
         for (auto &f : m_p[p]->f)
         {
           delete f.second;
-          removals.push_back({{"dataRemove", {p, "f", f.first}}});
+          removals.push_back({{"dataRemove", {p, "f", f.first} }});
         }
-        removals.push_back({{"dataDirectoryRemove", {p, "f"}}});
+        removals.push_back({{"dataDirectoryRemove", {p, "f"} }});
         if (!m_p[p]->s.empty())
         {
           for (auto &s : m_p[p]->s)
           {
             delete s.second;
-            removals.push_back({{"dataRemove", {p, "s", s.first}}});
+            removals.push_back({{"dataRemove", {p, "s", s.first} }});
           }
           if (isMasterSettled() && isMaster())
           {
             m_bLoadSchedules = true;
           }
         }
-        removals.push_back({{"dataDirectoryRemove", {p, "s"}}});
+        removals.push_back({{"dataDirectoryRemove", {p, "s"} }});
         delete m_p[p];
         m_p.erase(p);
-        removals.push_back({{"dataDirectoryRemove", {p}}});
+        removals.push_back({{"dataDirectoryRemove", {p} }});
       }
       else
       {
