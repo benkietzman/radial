@@ -154,8 +154,10 @@ class Maestro : public Interface
   JSValue js_getResponse(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_getStatus(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_groupNotify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_interfaces(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_junction(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_killed(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_links(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_live(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_log(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_logger(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
@@ -166,6 +168,7 @@ class Maestro : public Interface
   JSValue js_mutexUnlock(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlQuery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_mysqlUpdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_node(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_notify(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_semCreate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_semDestroy(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);

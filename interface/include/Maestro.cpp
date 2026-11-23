@@ -100,8 +100,10 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
   jsreg("getStatus", 0, "getStatus()", "Provides the ability to retrieve the status from teh last Maestro function.");
   jsreg("groupNotify", 2, "group(group, message)", "Provides the ability to send a message to a group via the Alert framework.");
+  jsreg("interfaces", 0, "interfaces()", "Provides the ability to retrieve the interfaces in this running node.");
   jsreg("junction", 1, "junction(request)", "Provides the ability to send a request to Service Junction.");
   jsreg("killed", 0, "killed()", "Provides the ability to check if the flow has been killed.");
+  jsreg("links", 0, "links()", "Provides the ability to retrieve the links attached to this running node.");
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
   jsreg("log", 1, "log(message)", "Provides the ability to write a log message to the local Radial instance.");
   jsreg("logger", 4, "logger(application, function, label, message)", "Provides the ability to send a message to a particular application registered in Logger.");
@@ -112,6 +114,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("mutexUnlock", 1, "mutexUnlock(id)", "Provides the ability to lock a mutex.");
   jsreg("mysqlQuery", 6, "mysqlQuery(server, port, user, password, database, query)", "Provides the ability to query (SQL: select) a given MySQL server and database.");
   jsreg("mysqlUpdate", 6, "mysqlUpdate(server, port, user, password, database, query)", "Provides the ability to update (SQL: delete, insert, update) a given MySQL server and database.");
+  jsreg("node", 0, "node()", "Provides the ability to retrieve the name of this running node.");
   jsreg("notify", 1, "notify(message)", "Provides the ability to send a message to the configured notification email address.");
   jsreg("semCreate", 1, "semCreate(value)", "Provides the ability to create a mutex.");
   jsreg("semDestroy", 1, "semDestroy(id)", "Provides the ability to destroy a mutex.");
@@ -3299,6 +3302,32 @@ JSValue Maestro::js_groupNotify(JSContext *jsctx, JSValueConst, int argc, JSValu
   return JS_NewBool(jsctx, ((b)?1:0));
 }
 // }}}
+// {{{ js_interfaces()
+JSValue Maestro::js_interfaces(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  string j;
+  Json *r = new Json;
+
+  m_mutexShare.lock();
+  for (auto &i : m_i)
+  {
+    r->m[i.first] = new Json;
+    r->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
+    r->m[i.first]->i("Command", i.second->strCommand);
+    r->m[i.first]->i("Memory", to_string(i.second->ulMemory), 'n');
+    r->m[i.first]->i("Pid", to_string(i.second->nPid), 'n');
+    r->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
+    r->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+    r->m[i.first]->i("Shutdown", ((i.second->bShutdown)?"1":"0"), ((i.second->bShutdown)?'1':'0'));
+    r->m[i.first]->i("Valgrind", ((i.second->bValgrind)?"1":"0"), ((i.second->bValgrind)?'1':'0'));
+  }
+  m_mutexShare.unlock();
+  r->j(j);
+  delete r;
+
+  return JS_NewStringLen(jsctx, j.c_str(), j.size());
+}
+// }}}
 // {{{ js_junction()
 JSValue Maestro::js_junction(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -3397,6 +3426,42 @@ JSValue Maestro::js_killed(JSContext *jsctx, JSValueConst na, int argc, JSValueC
   JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_links()
+JSValue Maestro::js_links(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  string j;
+  Json *r = new Json;
+
+  m_mutexShare.lock();
+  for (auto &l : m_l)
+  {
+    Json *ptLink = new Json;
+    ptLink->i("Authenticated", ((l->bAuthenticated)?"1":"0"), ((l->bAuthenticated)?'1':'0'));
+    ptLink->m["Interfaces"] = new Json;
+    for (auto &i : l->interfaces)
+    {
+      ptLink->m["Interfaces"]->m[i.first] = new Json;
+      ptLink->m["Interfaces"]->m[i.first]->i("AccessFunction", i.second->strAccessFunction);
+      ptLink->m["Interfaces"]->m[i.first]->i("Command", i.second->strCommand);
+      ptLink->m["Interfaces"]->m[i.first]->i("Memory", to_string(i.second->ulMemory), 'n');
+      ptLink->m["Interfaces"]->m[i.first]->i("Pid", to_string(i.second->nPid), 'n');
+      ptLink->m["Interfaces"]->m[i.first]->i("Respawn", ((i.second->bRespawn)?"1":"0"), ((i.second->bRespawn)?'1':'0'));
+      ptLink->m["Interfaces"]->m[i.first]->i("Restricted", ((i.second->bRestricted)?"1":"0"), ((i.second->bRestricted)?'1':'0'));
+      ptLink->m["Interfaces"]->m[i.first]->i("Shutdown", ((i.second->bShutdown)?"1":"0"), ((i.second->bShutdown)?'1':'0'));
+      ptLink->m["Interfaces"]->m[i.first]->i("Valgrind", ((i.second->bValgrind)?"1":"0"), ((i.second->bValgrind)?'1':'0'));
+    }
+    ptLink->i("Node", l->strNode);
+    ptLink->i("Port", l->strPort);
+    ptLink->i("Server", l->strServer);
+    r->l.push_back(ptLink);
+  }
+  m_mutexShare.unlock();
+  r->j(j);
+  delete r;
+
+  return JS_NewStringLen(jsctx, j.c_str(), j.size());
 }
 // }}}
 // {{{ js_live()
@@ -4028,6 +4093,12 @@ JSValue Maestro::js_mysqlUpdate(JSContext *jsctx, JSValueConst, int argc, JSValu
   JS_FreeValue(jsctx, jsglobal);
 
   return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_node()
+JSValue Maestro::js_node(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  return JS_NewStringLen(jsctx, m_strNode.c_str(), m_strNode.size());
 }
 // }}}
 // {{{ js_notify()
