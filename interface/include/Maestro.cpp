@@ -89,6 +89,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("centralmon", 2, "centralmon(server, process)", "Provides the ability to retrieve server and/or process information from Central Monitor.");
   jsreg("chat", 3, "chat(target, message, source)", "Provides the ability to send a message to a given channel or user in Internet Relay Chat (IRC) by default or to a user in Live using a Source of live.");
   jsreg("command", 5, "command(command, arguments, input, timeout, node)", "Provides the ability to send a command to any Radial server.");
+  jsreg("curl", 1, "curl(url, type, auth, get, patch, post, put, proxy, cookies, userAgent, mobile, failOnError, customRequest)", "Provides the ability to send a cURL request.");
   jsreg("db", 2, "db(function, input)", "Provides the ability to perform a given database function.");
   jsreg("dbquery", 2, "dbquery(database, query)", "Provides the ability to query (SQL: select) a given database.");
   jsreg("dbupdate", 2, "dbupdate(database, update)", "Provides the ability to update (SQL: delete, insert, update) a given database.");
@@ -2680,6 +2681,141 @@ JSValue Maestro::js_command(JSContext *jsctx, JSValueConst, int argc, JSValueCon
   else
   {
     e = "Please provide the command, arguments, input, timeout, and node.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_curl()
+JSValue Maestro::js_curl(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc >= 1 && argc <= 13)
+  {
+    const char *pszUrl = JS_ToCString(jsctx, argv[0]), *pszType = ((argc >= 2)?JS_ToCString(jsctx, argv[1]):NULL), *pszAuth = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL), *pszGet = ((argc >= 4)?JS_ToCString(jsctx, argv[3]):NULL), *pszPatch = ((argc >= 5)?JS_ToCString(jsctx, argv[4]):NULL), *pszPost = ((argc >= 6)?JS_ToCString(jsctx, argv[5]):NULL), *pszPut = ((argc >= 7)?JS_ToCString(jsctx, argv[6]):NULL), *pszProxy = ((argc >= 8)?JS_ToCString(jsctx, argv[7]):NULL), *pszCookies = ((argc >= 9)?JS_ToCString(jsctx, argv[8]):NULL), *pszUserAgent = ((argc >= 10)?JS_ToCString(jsctx, argv[9]):NULL), *pszMobile = ((argc >= 11)?JS_ToCString(jsctx, argv[10]):NULL), *pszFailOnError = ((argc >= 12)?JS_ToCString(jsctx, argv[11]):NULL), *pszCustomRequest = ((argc >= 13)?JS_ToCString(jsctx, argv[12]):NULL);
+    if (pszUrl != NULL)
+    {
+      bool bMobile = false, bFailOnError = true;
+      string strCookies = ((pszCookies != NULL)?pszCookies:""), strHeader, strContent, strResponse;
+      Json *ptAuth = ((pszAuth != NULL && strlen(pszAuth) > 0)?new Json(pszAuth):NULL), *ptGet = ((pszGet != NULL && strlen(pszGet) > 0)?new Json(pszGet):NULL), *ptPatch = ((pszPatch != NULL && strlen(pszPatch) > 0)?new Json(pszPatch):NULL), *ptPost = ((pszPost != NULL && strlen(pszPost) > 0)?new Json(pszPost):NULL), *ptPut = ((pszPut != NULL && strlen(pszPut) > 0)?new Json(pszPut):NULL), *ptResponse = new Json;
+      if (pszMobile != NULL)
+      {
+        stringstream ssMobile(pszMobile);
+        ssMobile >> bMobile;
+      }
+      if (pszFailOnError != NULL)
+      {
+        stringstream ssFailOnError(pszFailOnError);
+        ssFailOnError >> bFailOnError;
+      }
+      if (curl(pszUrl, ((pszType != NULL)?pszType:""), ptAuth, ptGet, ptPatch, ptPost, ptPut, ((pszProxy != NULL)?pszProxy:""), strCookies, strHeader, strContent, e, ((pszUserAgent != NULL)?pszUserAgent:""), bMobile, bFailOnError, ((pszCustomRequest != NULL)?pszCustomRequest:"")))
+      {
+        b = true;
+      }
+      if (!strCookies.empty())
+      {
+        ptResponse->i("Cookies", strCookies);
+      }
+      if (!strHeader.empty())
+      {
+        ptResponse->i("Header", strHeader);
+      }
+      if (!strContent.empty())
+      {
+        ptResponse->i("Content", strContent);
+      }
+      ptResponse->j(strResponse);
+      delete ptResponse;
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+      if (ptAuth != NULL)
+      {
+        delete ptAuth;
+      }
+      if (ptGet != NULL)
+      {
+        delete ptGet;
+      }
+      if (ptPatch != NULL)
+      {
+        delete ptPatch;
+      }
+      if (ptPost != NULL)
+      {
+        delete ptPost;
+      }
+      if (ptPut != NULL)
+      {
+        delete ptPut;
+      }
+    }
+    else
+    {
+      e = "Please provide the url.";
+    }
+    if (pszUrl != NULL)
+    {
+      JS_FreeCString(jsctx, pszUrl);
+    }
+    if (pszType != NULL)
+    {
+      JS_FreeCString(jsctx, pszType);
+    }
+    if (pszAuth != NULL)
+    {
+      JS_FreeCString(jsctx, pszAuth);
+    }
+    if (pszGet != NULL)
+    {
+      JS_FreeCString(jsctx, pszGet);
+    }
+    if (pszPatch != NULL)
+    {
+      JS_FreeCString(jsctx, pszPatch);
+    }
+    if (pszPost != NULL)
+    {
+      JS_FreeCString(jsctx, pszPost);
+    }
+    if (pszPut != NULL)
+    {
+      JS_FreeCString(jsctx, pszPut);
+    }
+    if (pszProxy != NULL)
+    {
+      JS_FreeCString(jsctx, pszProxy);
+    }
+    if (pszCookies != NULL)
+    {
+      JS_FreeCString(jsctx, pszCookies);
+    }
+    if (pszUserAgent != NULL)
+    {
+      JS_FreeCString(jsctx, pszUserAgent);
+    }
+    if (pszMobile != NULL)
+    {
+      JS_FreeCString(jsctx, pszMobile);
+    }
+    if (pszFailOnError != NULL)
+    {
+      JS_FreeCString(jsctx, pszFailOnError);
+    }
+    if (pszCustomRequest != NULL)
+    {
+      JS_FreeCString(jsctx, pszCustomRequest);
+    }
+  }
+  else
+  {
+    e = "Please provide the url.";
   }
   if (!e.empty())
   {
