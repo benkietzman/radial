@@ -186,6 +186,12 @@ Maestro::~Maestro()
             delete t.second;
           }
           c.second->threads.clear();
+          for (auto &d : c.second->datas)
+          {
+            dataClose(d.second->ctx, d.second->ssl);
+            delete d.second;
+          }
+          c.second->mutexes.clear();
           for (auto &s : c.second->sems)
           {
             sem_destroy(s.second);
