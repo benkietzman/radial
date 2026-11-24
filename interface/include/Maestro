@@ -17,6 +17,14 @@ extern "C++"
 namespace radial
 {
 // {{{ structs
+// {{{ radialMaestroData
+struct radialMaestroData
+{
+  SSL *ssl;
+  SSL_CTX *ctx;
+  string strBuffer;
+};
+// }}}
 // {{{ radialMaestroJavascript
 struct radialMaestroJavascript
 {
@@ -41,9 +49,11 @@ struct radialMaestroThread
 struct radialMaestroRunning
 {
   bool *pbKill;
+  int32_t nData;
   int32_t nMutex;
   int32_t nSem;
   int32_t nThread;
+  map<int32_t, radialMaestroData *> datas;
   map<int32_t, mutex *> mutexes;
   map<int32_t, sem_t *> sems;
   map<int32_t, radialMaestroThread *> threads;
@@ -144,6 +154,15 @@ class Maestro : public Interface
   JSValue js_chat(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_command(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_curl(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataClose(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataDirectoryAdd(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataDirectoryList(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataDirectoryRemove(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataGetline(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataOpen(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataRead(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataRemove(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
+  JSValue js_dataWrite(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_db(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_dbquery(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);
   JSValue js_dbupdate(JSContext *jsctx, JSValueConst obj, int argc, JSValueConst *argv);

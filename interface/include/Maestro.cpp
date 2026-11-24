@@ -90,6 +90,15 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("chat", 3, "chat(target, message, source)", "Provides the ability to send a message to a given channel or user in Internet Relay Chat (IRC) by default or to a user in Live using a Source of live.");
   jsreg("command", 5, "command(command, arguments, input, timeout, node)", "Provides the ability to send a command to any Radial server.");
   jsreg("curl", 1, "curl(url, type, auth, get, patch, post, put, proxy, cookies, userAgent, mobile, failOnError, customRequest)", "Provides the ability to send a cURL request.");
+  jsreg("dataClose", 1, "dataClose(id)", "Provides the ability to close a data handle.");
+  jsreg("dataDirectoryAdd", 2, "dataDirectoryAdd(handle, path)", "Provides the ability to add a directory.");
+  jsreg("dataDirectoryList", 1, "dataDirectoryAdd(handle, path)", "Provides the ability to list a directory.");
+  jsreg("dataDirectoryRemove", 2, "dataDirectoryList(handle, path)", "Provides the ability to remove a directory.");
+  jsreg("dataGetline", 2, "dataGetline(id)", "Provides the ability to read a line of data.");
+  jsreg("dataOpen", 2, "dataOpen(handle, path, mode)", "Provides the ability to open a handle.");
+  jsreg("dataRead", 1, "dataRead(id)", "Provides the ability to read from a handle.");
+  jsreg("dataRemove", 2, "dataRemove(handle, path)", "Provides the ability to remove a path.");
+  jsreg("dataWrite", 2, "dataWrite(id, buffer)", "Provides the ability to write to a handle.");
   jsreg("db", 2, "db(function, input)", "Provides the ability to perform a given database function.");
   jsreg("dbquery", 2, "dbquery(database, query)", "Provides the ability to query (SQL: select) a given database.");
   jsreg("dbupdate", 2, "dbupdate(database, update)", "Provides the ability to update (SQL: delete, insert, update) a given database.");
@@ -1638,6 +1647,7 @@ bool Maestro::flowExec(radialUser &d, string &e)
               m_p[p]->r[f] = {};
             }
             time(&(ptRunning->CTime));
+            ptRunning->nData = 0;
             ptRunning->nMutex = 0;
             ptRunning->nSem = 0;
             ptRunning->nThread = 0;
@@ -2816,6 +2826,695 @@ JSValue Maestro::js_curl(JSContext *jsctx, JSValueConst, int argc, JSValueConst 
   else
   {
     e = "Please provide the url.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataClose()
+JSValue Maestro::js_dataClose(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroData *ptData = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->datas.find(nID) != m_p[p]->r[f][t]->datas.end())
+            {
+              ptData = m_p[p]->r[f][t]->datas[nID];
+              m_p[p]->r[f][t]->datas.erase(nID);
+            }
+            m_mutex.unlock();
+            if (ptData != NULL)
+            {
+              if (ptData->ssl != NULL)
+              {
+                b = true;
+                dataClose(ptData->ctx, ptData->ssl);
+              }
+              else
+              {
+                e = "Handle not connected.";
+              }
+              delete ptData;
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataDirectoryAdd()
+JSValue Maestro::js_dataDirectoryAdd(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
+    if (pszHandle != NULL && pszPath != NULL)
+    {
+      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      {
+        list<string> path;
+        Json *ptPath = new Json(pszPath);
+        for (auto &p : ptPath->l)
+        {
+          path.push_back(p->v);
+        }
+        if (dataDirectoryAdd(pszHandle, path, e))
+        {
+          b = true;
+        }
+        delete ptPath;
+      }
+    }
+    else
+    {
+      e = "Please provide the handle and path.";
+    }
+    if (pszHandle != NULL)
+    {
+      JS_FreeCString(jsctx, pszHandle);
+    }
+    if (pszPath != NULL)
+    {
+      JS_FreeCString(jsctx, pszPath);
+    }
+  }
+  else
+  {
+    e = "Please provide the handle and path.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataDirectoryList()
+JSValue Maestro::js_dataDirectoryList(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc >= 1 && argc <= 2)
+  {
+    const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = ((argc >= 2)?JS_ToCString(jsctx, argv[1]):NULL);
+    if (pszHandle != NULL && (argc < 2 || pszPath != NULL))
+    {
+      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      {
+        list<string> path;
+        Json *ptPath = ((pszPath != NULL)?new Json(pszPath):NULL), *ptResponse = NULL;
+        if (ptPath != NULL)
+        {
+          for (auto &p : ptPath->l)
+          {
+            path.push_back(p->v);
+          }
+        }
+        if (dataDirectoryList(pszHandle, path, &ptResponse, e))
+        {
+          b = true;
+          if (ptResponse != NULL)
+          {
+            string strResponse;
+            ptResponse->j(strResponse);
+            JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+          }
+        }
+        if (ptPath != NULL)
+        {
+          delete ptPath;
+        }
+        if (ptResponse != NULL)
+        {
+          delete ptResponse;
+        }
+      }
+    }
+    else
+    {
+      e = "Please provide the handle and path.";
+    }
+    if (pszHandle != NULL)
+    {
+      JS_FreeCString(jsctx, pszHandle);
+    }
+    if (pszPath != NULL)
+    {
+      JS_FreeCString(jsctx, pszPath);
+    }
+  }
+  else
+  {
+    e = "Please provide the handle and path.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataDirectoryRemover()
+JSValue Maestro::js_dataDirectoryRemove(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
+    if (pszHandle != NULL && pszPath != NULL)
+    {
+      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      {
+        list<string> path;
+        Json *ptPath = new Json(pszPath);
+        for (auto &p : ptPath->l)
+        {
+          path.push_back(p->v);
+        }
+        if (dataDirectoryRemove(pszHandle, path, e))
+        {
+          b = true;
+        }
+        delete ptPath;
+      }
+    }
+    else
+    {
+      e = "Please provide the handle and path.";
+    }
+    if (pszHandle != NULL)
+    {
+      JS_FreeCString(jsctx, pszHandle);
+    }
+    if (pszPath != NULL)
+    {
+      JS_FreeCString(jsctx, pszPath);
+    }
+  }
+  else
+  {
+    e = "Please provide the handle and path.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataGetline()
+JSValue Maestro::js_dataGetline(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroData *ptData = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->datas.find(nID) != m_p[p]->r[f][t]->datas.end())
+            {
+              ptData = m_p[p]->r[f][t]->datas[nID];
+            }
+            m_mutex.unlock();
+            if (ptData != NULL)
+            {
+              if (ptData->ssl != NULL)
+              {
+                string strLine;
+                if (dataGetline(ptData->ssl, ptData->strBuffer, strLine, e))
+                {
+                  string strEncoded, strResponse;
+                  Json *ptResponse = new Json;
+                  b = true;
+                  m_manip.encodeBase64(strLine, strEncoded);
+                  ptResponse->i("Data", strEncoded);
+                  ptResponse->j(strResponse);
+                  delete ptResponse;
+                  JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+                }
+              }
+              else
+              {
+                e = "Handle not connected.";
+              }
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataOpen()
+JSValue Maestro::js_dataOpen(JSContext *jsctx, JSValueConst na, int argc, JSValueConst *argv)
+{
+  int32_t nID = -1;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc >= 2 && argc <= 3)
+        {
+          const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]), *pszMode = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+          if (pszHandle != NULL && pszPath != NULL && (argc < 3 || pszMode != NULL))
+          {
+            list<string> path;
+            string strMode = ((pszMode != NULL)?pszMode:"fileRead");
+            Json *ptPath = new Json(pszPath);
+            for (auto &p : ptPath->l)
+            {
+              path.push_back(p->v);
+            }
+            if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+            {
+              radialMaestroData *ptData = NULL;
+              SSL *ssl;
+              SSL_CTX *ctx;
+              string strBuffer;
+              if (dataOpen(pszHandle, path, &ctx, &ssl, strBuffer, e, strMode))
+              {
+                ptData = new radialMaestroData;
+                ptData->ctx = ctx;
+                ptData->ssl = ssl;
+                ptData->strBuffer = strBuffer;
+              }
+              if (ptData != NULL)
+              {
+                m_mutex.lock();
+                if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end())
+                {
+                  while (m_p[p]->r[f][t]->nData != -1 && m_p[p]->r[f][t]->datas.find(m_p[p]->r[f][t]->nData) != m_p[p]->r[f][t]->datas.end())
+                  {
+                    m_p[p]->r[f][t]->nData++;
+                  }
+                  nID = m_p[p]->r[f][t]->nData;
+                  m_p[p]->r[f][t]->datas[nID] = ptData;
+                }
+                else
+                {
+                  e = "Failed to find plan, flow, and thread.";
+                }
+                m_mutex.unlock();
+              }
+            }
+          }
+          else
+          {
+            e = "Please provide the handle and path.";
+          }
+          if (pszHandle != NULL)
+          {
+            JS_FreeCString(jsctx, pszHandle);
+          }
+          if (pszPath != NULL)
+          {
+            JS_FreeCString(jsctx, pszPath);
+          }
+          if (pszMode != NULL)
+          {
+            JS_FreeCString(jsctx, pszMode);
+          }
+        }
+        else
+        {
+          e = "Please provide the hanadle and path.";
+        }
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewInt32(jsctx, nID);
+}
+// }}}
+// {{{ js_dataRead()
+JSValue Maestro::js_dataRead(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 1)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]);
+          if (pszID != NULL)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroData *ptData = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->datas.find(nID) != m_p[p]->r[f][t]->datas.end())
+            {
+              ptData = m_p[p]->r[f][t]->datas[nID];
+            }
+            m_mutex.unlock();
+            if (ptData != NULL)
+            {
+              if (ptData->ssl != NULL)
+              {
+                if (dataRead(ptData->ssl, ptData->strBuffer, e))
+                {
+                  string strEncoded, strResponse;
+                  Json *ptResponse = new Json;
+                  b = true;
+                  m_manip.encodeBase64(ptData->strBuffer, strEncoded);
+                  ptData->strBuffer.clear();
+                  ptResponse->i("Data", strEncoded);
+                  ptResponse->j(strResponse);
+                  delete ptResponse;
+                  JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+                }
+              }
+              else
+              {
+                e = "Handle not connected.";
+              }
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataRemove()
+JSValue Maestro::js_dataRemove(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
+    if (pszHandle != NULL && pszPath != NULL)
+    {
+      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      {
+        list<string> path;
+        Json *ptPath = new Json(pszPath);
+        for (auto &p : ptPath->l)
+        {
+          path.push_back(p->v);
+        }
+        if (dataRemove(pszHandle, path, e))
+        {
+          b = true;
+        }
+        delete ptPath;
+      }
+    }
+    else
+    {
+      e = "Please provide the handle and path.";
+    }
+    if (pszHandle != NULL)
+    {
+      JS_FreeCString(jsctx, pszHandle);
+    }
+    if (pszPath != NULL)
+    {
+      JS_FreeCString(jsctx, pszPath);
+    }
+  }
+  else
+  {
+    e = "Please provide the handle and path.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_dataWrite()
+JSValue Maestro::js_dataWrite(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx), jsrun = JS_GetPropertyStr(jsctx, jsglobal, "g_js_run");
+  const char *pszRun = JS_ToCString(jsctx, jsrun);
+
+  if (pszRun != NULL)
+  {
+    string strRun;
+    if (!m_manip.decryptAes(m_manip.decodeBase64(pszRun, strRun), m_strSecret, strRun, e, m_strCipher).empty())
+    {
+      Json *r = new Json(strRun);
+      if (dep({"f", "p", "t"}, r, e))
+      {
+        long t = atol(r->m["t"]->v.c_str());
+        string p = r->m["p"]->v, f = r->m["f"]->v;
+        if (argc == 2)
+        {
+          const char *pszID = JS_ToCString(jsctx, argv[0]), *pszBuffer = JS_ToCString(jsctx, argv[1]);
+          if (pszID != NULL && pszBuffer)
+          {
+            int32_t nID;
+            stringstream ssID(pszID);
+            radialMaestroData *ptData = NULL;
+            ssID >> nID;
+            m_mutex.lock();
+            if (m_p.find(p) != m_p.end() && m_p[p]->r.find(f) != m_p[p]->r.end() && m_p[p]->r[f].find(t) != m_p[p]->r[f].end() && m_p[p]->r[f][t]->datas.find(nID) != m_p[p]->r[f][t]->datas.end())
+            {
+              ptData = m_p[p]->r[f][t]->datas[nID];
+            }
+            m_mutex.unlock();
+            if (ptData != NULL)
+            {
+              if (ptData->ssl != NULL)
+              {
+                string strDecoded;
+                m_manip.decodeBase64(pszBuffer, strDecoded);
+                ptData->strBuffer.append(strDecoded);
+                if (dataWrite(ptData->ssl, ptData->strBuffer, e))
+                {
+                  string strEncoded, strResponse;
+                  Json *ptResponse = new Json;
+                  b = true;
+                  m_manip.encodeBase64(ptData->strBuffer, strEncoded);
+                  ptData->strBuffer.clear();
+                  ptResponse->i("Data", strEncoded);
+                  ptResponse->j(strResponse);
+                  delete ptResponse;
+                  JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, strResponse.c_str(), strResponse.size()));
+                }
+              }
+              else
+              {
+                e = "Handle not connected.";
+              }
+            }
+            else
+            {
+              e = "Please provide a valid id.";
+            }
+          }
+          else
+          {
+            e = "Please provide the id.";
+          }
+          if (pszID != NULL)
+          {
+            JS_FreeCString(jsctx, pszID);
+          }
+        }
+        else
+        {
+          e = "Please provide the id.";
+        }
+      }
+      delete r;
+    }
+    JS_FreeCString(jsctx, pszRun);
+  }
+  else
+  {
+    e = "Failed to retrieve g_js_run.";
   }
   if (!e.empty())
   {
@@ -6667,6 +7366,7 @@ void Maestro::scheduleLaunch(const string p, const string f, const string r, Jso
         m_p[p]->r[f] = {};
       }
       time(&(ptRunning->CTime));
+      ptRunning->nData = 0;
       ptRunning->nMutex = 0;
       ptRunning->nSem = 0;
       ptRunning->nThread = 0;
@@ -7552,6 +8252,7 @@ void Maestro::serviceLaunch(const string p, const string s, const string f, cons
         m_p[p]->r[f] = {};
       }
       time(&(ptRunning->CTime));
+      ptRunning->nData = 0;
       ptRunning->nMutex = 0;
       ptRunning->nSem = 0;
       ptRunning->nThread = 0;
