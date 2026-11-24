@@ -39,6 +39,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   // {{{ accesses
   m_a["application"] = {"emulator"};
   m_a["command"] = {"all"};
+  m_a["data"] = {"all", "all read-only", "all write-only"};
   m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
   m_a["dbquery"] = {"central_r", "feedback_r"};
   m_a["dbupdate"] = {"central", "feedback"};
@@ -95,7 +96,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("dataDirectoryList", 1, "dataDirectoryAdd(handle, path)", "Provides the ability to list a directory.");
   jsreg("dataDirectoryRemove", 2, "dataDirectoryList(handle, path)", "Provides the ability to remove a directory.");
   jsreg("dataGetline", 2, "dataGetline(id)", "Provides the ability to read a line of data.");
-  jsreg("dataOpen", 2, "dataOpen(handle, path, mode)", "Provides the ability to open a handle.");
+  jsreg("dataOpen", 2, "dataOpen(handle, path, function)", "Provides the ability to open a handle.");
   jsreg("dataRead", 1, "dataRead(id)", "Provides the ability to read from a handle.");
   jsreg("dataRemove", 2, "dataRemove(handle, path)", "Provides the ability to remove a path.");
   jsreg("dataWrite", 2, "dataWrite(id, buffer)", "Provides the ability to write to a handle.");
@@ -2937,7 +2938,7 @@ JSValue Maestro::js_dataDirectoryAdd(JSContext *jsctx, JSValueConst, int argc, J
     const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
     if (pszHandle != NULL && pszPath != NULL)
     {
-      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      if (haveAccess(jsctx, "data", {"all", "all write-only", pszHandle, (string)pszHandle+" write-only"}, e))
       {
         list<string> path;
         Json *ptPath = new Json(pszPath);
@@ -2990,7 +2991,7 @@ JSValue Maestro::js_dataDirectoryList(JSContext *jsctx, JSValueConst, int argc, 
     const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = ((argc >= 2)?JS_ToCString(jsctx, argv[1]):NULL);
     if (pszHandle != NULL && (argc < 2 || pszPath != NULL))
     {
-      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      if (haveAccess(jsctx, "data", {"all", "all read-only", pszHandle, (string)pszHandle+" read-only"}, e))
       {
         list<string> path;
         Json *ptPath = ((pszPath != NULL)?new Json(pszPath):NULL), *ptResponse = NULL;
@@ -3059,7 +3060,7 @@ JSValue Maestro::js_dataDirectoryRemove(JSContext *jsctx, JSValueConst, int argc
     const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
     if (pszHandle != NULL && pszPath != NULL)
     {
-      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      if (haveAccess(jsctx, "data", {"all", "all write-only", pszHandle, (string)pszHandle+" write-only"}, e))
       {
         list<string> path;
         Json *ptPath = new Json(pszPath);
@@ -3211,23 +3212,33 @@ JSValue Maestro::js_dataOpen(JSContext *jsctx, JSValueConst na, int argc, JSValu
         string p = r->m["p"]->v, f = r->m["f"]->v;
         if (argc >= 2 && argc <= 3)
         {
-          const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]), *pszMode = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
-          if (pszHandle != NULL && pszPath != NULL && (argc < 3 || pszMode != NULL))
+          const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]), *pszFunction = ((argc >= 3)?JS_ToCString(jsctx, argv[2]):NULL);
+          if (pszHandle != NULL && pszPath != NULL && (argc < 3 || pszFunction != NULL))
           {
-            list<string> path;
-            string strMode = ((pszMode != NULL)?pszMode:"fileRead");
+            list<string> a = {"all", pszHandle}, path;
+            string strFunction = ((pszFunction != NULL)?pszFunction:"fileRead");
             Json *ptPath = new Json(pszPath);
+            if (strFunction == "dirList" || strFunction == "fileRead")
+            {
+              a.push_back("all read-only");
+              a.push_back((string)pszHandle+" read-only");
+            }
+            else if (strFunction == "dirAdd" || strFunction == "dirRemove" || strFunction == "fileAppend" || strFunction == "fileRemove" || strFunction == "fileWrite")
+            {
+              a.push_back("all write-only");
+              a.push_back((string)pszHandle+" write-only");
+            }
             for (auto &p : ptPath->l)
             {
               path.push_back(p->v);
             }
-            if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+            if (haveAccess(jsctx, "data", a, e))
             {
               radialMaestroData *ptData = NULL;
               SSL *ssl;
               SSL_CTX *ctx;
               string strBuffer;
-              if (dataOpen(pszHandle, path, &ctx, &ssl, strBuffer, e, strMode))
+              if (dataOpen(pszHandle, path, &ctx, &ssl, strBuffer, e, strFunction))
               {
                 ptData = new radialMaestroData;
                 ptData->ctx = ctx;
@@ -3266,9 +3277,9 @@ JSValue Maestro::js_dataOpen(JSContext *jsctx, JSValueConst na, int argc, JSValu
           {
             JS_FreeCString(jsctx, pszPath);
           }
-          if (pszMode != NULL)
+          if (pszFunction != NULL)
           {
-            JS_FreeCString(jsctx, pszMode);
+            JS_FreeCString(jsctx, pszFunction);
           }
         }
         else
@@ -3396,7 +3407,7 @@ JSValue Maestro::js_dataRemove(JSContext *jsctx, JSValueConst, int argc, JSValue
     const char *pszHandle = JS_ToCString(jsctx, argv[0]), *pszPath = JS_ToCString(jsctx, argv[1]);
     if (pszHandle != NULL && pszPath != NULL)
     {
-      if (haveAccess(jsctx, "data", {"all", pszHandle}, e))
+      if (haveAccess(jsctx, "data", {"all", "all write-only", pszHandle, (string)pszHandle+" write-only"}, e))
       {
         list<string> path;
         Json *ptPath = new Json(pszPath);
