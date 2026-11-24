@@ -43,6 +43,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   m_a["db"] = {"dbCentralAccountTypes", "dbCentralApplicationAccountAdd", "dbCentralApplicationAccountRemove", "dbCentralApplicationAccounts", "dbCentralApplicationAccountUpdate", "dbCentralApplicationAdd", "dbCentralApplicationDependAdd", "dbCentralApplicationDependRemove", "dbCentralApplicationDepends", "dbCentralApplicationGroupAdd", "dbCentralApplicationGroupRemove", "dbCentralApplicationGroups", "dbCentralApplicationIssueAdd", "dbCentralApplicationIssueCommentAdd", "dbCentralApplicationIssueComments", "dbCentralApplicationIssueCommentUpdate", "dbCentralApplicationIssues", "dbCentralApplicationIssueUpdate", "dbCentralApplicationRemove", "dbCentralApplicationRepoAdd", "dbCentralApplicationRepoRemove", "dbCentralApplicationRepos", "dbCentralApplicationRepoUpdate", "dbCentralApplications", "dbCentralApplicationServerAdd", "dbCentralApplicationServerDetailAdd", "dbCentralApplicationServerDetailRemove", "dbCentralApplicationServerDetails", "dbCentralApplicationServerDetailUpdate", "dbCentralApplicationServerRemove", "dbCentralApplicationServers", "dbCentralApplicationUpdate", "dbCentralApplicationUserAdd", "dbCentralApplicationUserRemove", "dbCentralApplicationUsers", "dbCentralApplicationUserUpdate", "dbCentralContactTypes", "dbCentralDependents", "dbCentralGroupAdd", "dbCentralGroupRemove", "dbCentralGroups", "dbCentralGroupUpdate", "dbCentralGroupUserAdd", "dbCentralGroupUserRemove", "dbCentralGroupUsers", "dbCentralGroupUserUpdate", "dbCentralLoginTypes", "dbCentralMenuAccesses", "dbCentralNotifyPriorities", "dbCentralPackageTypes", "dbCentralPhpSession", "dbCentralPhpSessionAdd", "dbCentralPhpSessionRemove", "dbCentralRepos", "dbCentralServerAdd", "dbCentralServerDetails", "dbCentralServerGroupAdd", "dbCentralServerGroupRemove", "dbCentralServerGroups", "dbCentralServerRemove", "dbCentralServers", "dbCentralServerUpdate", "dbCentralServerUserAdd", "dbCentralServerUserRemove", "dbCentralServerUsers", "dbCentralServerUserUpdate", "dbCentralUserAdd", "dbCentralUserPasskeyAdd", "dbCentralUserPasskeyRemove", "dbCentralUserPasskeys", "dbCentralUserPasskeyUpdate", "dbCentralUserReminderAdd", "dbCentralUserReminderRemove", "dbCentralUserReminders", "dbCentralUserReminderUpdate", "dbCentralUserRemove", "dbCentralUsers", "dbCentralUserUpdate"};
   m_a["dbquery"] = {"central_r", "feedback_r"};
   m_a["dbupdate"] = {"central", "feedback"};
+  m_a["hub"] = {"all"};
   m_a["log"] = {"all"};
   m_a["logger"] = {"Radial"};
   m_a["notify"] = {"all"};
@@ -114,6 +115,7 @@ Maestro::Maestro(string strPrefix, int argc, char **argv, void (*pCallback)(stri
   jsreg("getResponse", 0, "getResponse()", "Provides the ability to retrieve the response from teh last Maestro function.");
   jsreg("getStatus", 0, "getStatus()", "Provides the ability to retrieve the status from teh last Maestro function.");
   jsreg("groupNotify", 2, "group(group, message)", "Provides the ability to send a message to a group via the Alert framework.");
+  jsreg("hub", 2, "hub(interface, request)", "Provides the ability to send a request to the Radial hub.");
   jsreg("junction", 1, "junction(request)", "Provides the ability to send a request to Service Junction.");
   jsreg("killed", 0, "killed()", "Provides the ability to check if the flow has been killed.");
   jsreg("live", 4, "live(application, user, message, wait)", "Provides the ability to send a live message to an application and/or user.");
@@ -4212,6 +4214,54 @@ JSValue Maestro::js_groupNotify(JSContext *jsctx, JSValueConst, int argc, JSValu
   else
   {
     e = "Please provide the group and message.";
+  }
+  if (!e.empty())
+  {
+    JS_SetPropertyStr(jsctx, jsglobal, "g_js_error", JS_NewStringLen(jsctx, e.c_str(), e.size()));
+  }
+  JS_FreeValue(jsctx, jsglobal);
+
+  return JS_NewBool(jsctx, ((b)?1:0));
+}
+// }}}
+// {{{ js_hub()
+JSValue Maestro::js_hub(JSContext *jsctx, JSValueConst, int argc, JSValueConst *argv)
+{
+  bool b = false;
+  string e;
+  JSValue jsglobal = JS_GetGlobalObject(jsctx);
+
+  if (argc == 2)
+  {
+    const char *pszInterface = JS_ToCString(jsctx, argv[0]), *pszRequest = JS_ToCString(jsctx, argv[1]);
+    if (pszInterface != NULL && pszRequest != NULL)
+    {
+      string j;
+      Json *ptJson = new Json(pszRequest);
+      if (hub(pszInterface, ptJson, e))
+      {
+        b = true;
+      }
+      ptJson->j(j);
+      delete ptJson;
+      JS_SetPropertyStr(jsctx, jsglobal, "g_js_internal_response", JS_NewStringLen(jsctx, j.c_str(), j.size()));
+    }
+    else
+    {
+      e = "Please provide the interface and request.";
+    }
+    if (pszInterface != NULL)
+    {
+      JS_FreeCString(jsctx, pszInterface);
+    }
+    if (pszRequest != NULL)
+    {
+      JS_FreeCString(jsctx, pszRequest);
+    }
+  }
+  else
+  {
+    e = "Please provide the interface and request.";
   }
   if (!e.empty())
   {
