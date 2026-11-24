@@ -404,12 +404,13 @@ export default
     {
       if (c.isValid())
       {
-        s['flowStatus'].v = '';
+        s['flowStatus'].v = 'saving...';
         s.editor.save();
         let request = {Interface: 'maestro', 'Function': 'flowUpdate', Request: {Plan: s.strPlan, Flow: s.strFlow, Public: s.f.Public.v, Description: s.f.Description.v, Script: document.getElementById('script').value}};
         c.wsRequest('radial', request).then((response) =>
         {
           let error = {};
+          s['flowStatus'].v = '';
           if (c.wsResponse(response, error))
           {
             s['flowStatus'].v = 'saved flow';
